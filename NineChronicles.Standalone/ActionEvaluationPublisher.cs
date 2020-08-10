@@ -46,6 +46,16 @@ namespace NineChronicles.Standalone
             {
                 await client.UpdateTipAsync(ev.Index);
             };
+            
+            _blockChain.Reorged += async (o, ev) =>
+            {
+                await client.ReportReorgAsync(
+                    ev.Branchpoint.Hash.ToByteArray(),
+                    ev.OldTip.Hash.ToByteArray(),
+                    ev.NewTip.Hash.ToByteArray()
+                );
+            };
+
             var renderer = new ActionRenderer(ActionBase.RenderSubject, ActionBase.UnrenderSubject);
             renderer.EveryRender<ActionBase>().Subscribe(
                 async ev =>
