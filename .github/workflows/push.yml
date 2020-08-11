@@ -29,7 +29,7 @@ jobs:
         access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         account_id: ${{ secrets.AWS_ACCOUNT_ID }}
-        repo: 319679068466.dkr.ecr.ap-northeast-2.amazonaws.com/nine-chronicles-standalone
+        repo: nine-chronicles-standalone
         region: ap-northeast-2
         tags: git-${{ github.sha }}
         create_repo: true
