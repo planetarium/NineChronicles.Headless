@@ -1,13 +1,11 @@
-name: main
+name: push
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
-  build-and-test:
+  build-and-push:
 
     runs-on: ubuntu-latest
 
@@ -25,3 +23,15 @@ jobs:
       run: dotnet build --configuration Release --no-restore
     - name: Test
       run: dotnet test --no-restore --verbosity normal
+    - name: Push Image
+      uses: kciter/aws-ecr-action@v1
+      with:
+        access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+        repo: 319679068466.dkr.ecr.ap-northeast-2.amazonaws.com/nine-chronicles-standalone
+        region: ap-northeast-2
+        tags: git-${{ github.sha }}
+        create_repo: true
+
+
