@@ -29,10 +29,10 @@ namespace NineChronicles.Standalone
             Broadcast(group).OnTipChanged(index);
             await Task.CompletedTask;
         }
-
-        public Task ReportReorgAsync(byte[] branchpointHash, byte[] oldTipHash, byte[] newTipHash)
+        public async Task ReportReorgAsync(byte[] branchpointHash, byte[] oldTipHash, byte[] newTipHash)
         {
-            throw new System.NotImplementedException();
+            Broadcast(group).OnReorged(branchpointHash, oldTipHash, newTipHash);
+            await Task.CompletedTask;
         }
     }
 }
