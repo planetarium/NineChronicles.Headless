@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build-env
 WORKDIR /app
+ARG COMMIT
 
 # Copy csproj and restore as distinct layers
 COPY ./Lib9c/Lib9c/Lib9c.csproj ./Lib9c/
@@ -15,7 +16,12 @@ RUN dotnet restore NineChronicles.Standalone.Executable
 
 # Copy everything else and build
 COPY . ./
-RUN dotnet publish NineChronicles.Standalone.Executable/NineChronicles.Standalone.Executable.csproj -c Release -r linux-x64 -o out --self-contained
+RUN dotnet publish NineChronicles.Standalone.Executable/NineChronicles.Standalone.Executable.csproj \
+    -c Release \
+    -r linux-x64 \
+    -o out \
+    --self-contained \
+    --version-suffix $COMMIT
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
