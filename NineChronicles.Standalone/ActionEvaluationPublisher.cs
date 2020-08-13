@@ -74,6 +74,11 @@ namespace NineChronicles.Standalone
                         // FIXME add logger as property
                         Log.Error(se, "Skip broadcasting since given action isn't serializable.");
                     }
+                    catch (Exception e)
+                    {
+                        // FIXME add logger as property
+                        Log.Error(e, "Skip broadcasting due to unexpected exception");
+                    }
                 },
                 stoppingToken
             );
