@@ -83,7 +83,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             var result = await ExecuteQueryAsync("subscription { preloadProgress { currentPhase totalPhase extra { type currentCount totalCount } } }");
             Assert.IsType<SubscriptionExecutionResult>(result);
 
-            service.StartAsync(cts.Token);
+            _ = service.StartAsync(cts.Token);
 
             await service.PreloadEnded.WaitAsync(cts.Token);
 
@@ -150,7 +150,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             var stream = subscribeResult.Streams.Values.FirstOrDefault();
             Assert.NotNull(stream);
 
-            Assert.ThrowsAsync<OperationCanceledException>(async () =>
+            await Assert.ThrowsAsync<TimeoutException>(async () =>
             {
                 await stream.Take(1).Timeout(TimeSpan.FromMilliseconds(5000)).FirstAsync();
             });

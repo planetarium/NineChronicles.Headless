@@ -119,9 +119,9 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             // 2. NineChroniclesNodeService.ConfigureStandaloneContext(standaloneContext)를 호출합니다.
             // BlockChain 객체 공유 및 PreloadEnded, BootstrapEnded 이벤트 훅의 처리를 합니다.
             // BlockChain 객체 공유는 액션 타입이 달라 생략합니다.
-            service.BootstrapEnded.WaitAsync()
+            _ = service.BootstrapEnded.WaitAsync()
                 .ContinueWith(task => StandaloneContextFx.BootstrapEnded = true);
-            service.PreloadEnded.WaitAsync()
+            _ = service.PreloadEnded.WaitAsync()
                 .ContinueWith(task => StandaloneContextFx.PreloadEnded = true);
 
             var bootstrapEndedTask = service.BootstrapEnded.WaitAsync();
@@ -139,7 +139,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             Assert.False(nodeStatus["bootstrapEnded"]);
             Assert.False(nodeStatus["preloadEnded"]);
 
-            service.StartAsync(cts.Token);
+            _ = service.StartAsync(cts.Token);
 
             await bootstrapEndedTask;
             await preloadEndedTask;

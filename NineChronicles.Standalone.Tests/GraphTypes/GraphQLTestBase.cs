@@ -112,7 +112,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             return new LibplanetNodeService<T>(
                 properties,
                 new BlockPolicy<T>(),
-                async (chain, swarm, privateKey, cancellationToken) => { },
+                (chain, swarm, privateKey, cancellationToken) => Task.CompletedTask,
                 preloadProgress);
         }
 
