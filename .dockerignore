@@ -1,0 +1,5 @@
+.git
+.dockerignore
+Dockerfile*
+**/[Bb]in/
+**/[Oo]bj/

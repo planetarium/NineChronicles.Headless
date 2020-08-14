@@ -33,5 +33,4 @@ jobs:
         region: ap-northeast-2
         tags: git-${{ github.sha }}
         create_repo: true
-
-
+        extra_build_args: "--build-arg COMMIT=${{ github.sha }}"
