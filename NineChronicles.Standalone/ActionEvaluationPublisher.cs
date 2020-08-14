@@ -21,7 +21,8 @@ namespace NineChronicles.Standalone
         private readonly string _host;
         private readonly int _port;
         private readonly BlockChain<NineChroniclesActionType> _blockChain;
-        
+        private IActionEvaluationHub _client;
+
         public ActionEvaluationPublisher(
             BlockChain<NineChroniclesActionType> blockChain,
             string host,
@@ -32,24 +33,24 @@ namespace NineChronicles.Standalone
             _host = host;
             _port = port;
         }
-        
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             await Task.Delay(1000, stoppingToken);
-            var client = StreamingHubClient.Connect<IActionEvaluationHub, IActionEvaluationHubReceiver>(
+            _client = StreamingHubClient.Connect<IActionEvaluationHub, IActionEvaluationHubReceiver>(
                 new Channel(_host, _port, ChannelCredentials.Insecure),
                 null
             );
-            await client.JoinAsync();
+            await _client.JoinAsync();
 
             _blockChain.TipChanged += async (o, ev) =>
             {
-                await client.UpdateTipAsync(ev.Index);
+                await _client.UpdateTipAsync(ev.Index);
             };
-            
+
             _blockChain.Reorged += async (o, ev) =>
             {
-                await client.ReportReorgAsync(
+                await _client.ReportReorgAsync(
                     ev.Branchpoint.Hash.ToByteArray(),
                     ev.OldTip.Hash.ToByteArray(),
                     ev.NewTip.Hash.ToByteArray()
@@ -67,7 +68,7 @@ namespace NineChronicles.Standalone
                     try
                     {
                         formatter.Serialize(df, ev);
-                        await client.BroadcastAsync(c.ToArray());
+                        await _client.BroadcastAsync(c.ToArray());
                     }
                     catch (SerializationException se)
                     {
@@ -82,6 +83,12 @@ namespace NineChronicles.Standalone
                 },
                 stoppingToken
             );
+        }
+
+        public override async Task StopAsync(CancellationToken cancellationToken)
+        {
+            await _client?.DisposeAsync();
+            await base.StopAsync(cancellationToken);
         }
     }
 }
