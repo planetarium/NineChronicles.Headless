@@ -193,14 +193,12 @@ namespace NineChronicles.Standalone.Executable
                     tasks.Add(
                         nineChroniclesNodeHostBuilder.RunConsoleAsync(Context.CancellationToken));
                 }
+                
+                await Task.WhenAll(tasks);
             }
             catch (Exception e)
             {
                 Log.Error(e, "Unexpected exception occurred during Run. {e}", e);
-            }
-            finally
-            {
-                await Task.WhenAll(tasks);
             }
 
 #if SENTRY || ! DEBUG
