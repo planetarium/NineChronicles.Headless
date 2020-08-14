@@ -13,6 +13,7 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using NineChronicles.Standalone.GraphTypes;
 using Libplanet.Crypto;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Standalone.Requests;
 using Serilog;
@@ -44,6 +45,11 @@ namespace NineChronicles.Standalone.Controllers
             try
             {
                 IHostBuilder nineChroniclesNodeHostBuilder = Host.CreateDefaultBuilder();
+                if (StandaloneContext.NineChroniclesNodeService is null)
+                {
+                  // Waiting node service.
+                  return new StatusCodeResult(StatusCodes.Status409Conflict);
+                }
                 nineChroniclesNodeHostBuilder =
                     StandaloneContext.NineChroniclesNodeService.Configure(
                         nineChroniclesNodeHostBuilder);
@@ -66,8 +72,9 @@ namespace NineChronicles.Standalone.Controllers
             }
             catch (Exception e)
             {
+                // Unexpected Error.
                 Log.Warning(e, "Failed to launch node service. {e}", e);
-                return BadRequest($"Failed to launch node service.");
+                return new StatusCodeResult(StatusCodes.Status503ServiceUnavailable);
             }
 
             return Ok("Node service started.");
