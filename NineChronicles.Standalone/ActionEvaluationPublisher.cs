@@ -87,7 +87,7 @@ namespace NineChronicles.Standalone
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            await _client.DisposeAsync();
+            await _client?.DisposeAsync();
             await base.StopAsync(cancellationToken);
         }
     }
