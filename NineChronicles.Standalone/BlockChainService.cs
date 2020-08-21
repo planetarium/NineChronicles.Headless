@@ -3,6 +3,7 @@ using Bencodex;
 using Bencodex.Types;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Net;
 using Libplanet.Tx;
@@ -65,8 +66,17 @@ namespace NineChronicles.Standalone
             var address = new Address(addressBytes);
             var serializedCurrency = (Bencodex.Types.Dictionary)_codec.Decode(currencyBytes);
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
-            BigInteger balance = _blockChain.GetBalance(address, currency);
-            byte[] encoded = _codec.Encode((Bencodex.Types.Integer)balance);
+            FungibleAssetValue balance = _blockChain.GetBalance(address, currency);
+            byte[] encoded = _codec.Encode(
+              new List(
+                new IValue[] 
+                {
+                  balance.Currency.Serialize(),
+                  (Integer) balance.MajorUnit,
+                  (Integer) balance.MinorUnit
+                }
+              )
+            );
             return UnaryResult(encoded);
         }
 

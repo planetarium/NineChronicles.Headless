@@ -21,7 +21,7 @@ namespace Libplanet.Standalone.Hosting
     public class LibplanetNodeService<T> : IHostedService, IDisposable
         where T : IAction, new()
     {
-        public readonly BaseStore Store;
+        public readonly BaseBlockStatesStore Store;
 
         public readonly BlockChain<T> BlockChain;
 
@@ -76,7 +76,7 @@ namespace Libplanet.Standalone.Hosting
                 Log.Debug($"chainId: {chainId}");
             }
 
-            BlockChain = new BlockChain<T>(blockPolicy, Store, genesisBlock, _properties.Render);
+            BlockChain = new BlockChain<T>(blockPolicy, Store, Store, genesisBlock, _properties.Render);
             _minerLoopAction = minerLoopAction;
             Swarm = new Swarm<T>(
                 BlockChain,
@@ -208,9 +208,9 @@ namespace Libplanet.Standalone.Hosting
             return Swarm.StopAsync(cancellationToken);
         }
 
-        private BaseStore LoadStore(string path, string type, int statesCacheSize)
+        private BaseBlockStatesStore LoadStore(string path, string type, int statesCacheSize)
         {
-            BaseStore store = null;
+            BaseBlockStatesStore store = null;
 
             if (type == "rocksdb")
             {

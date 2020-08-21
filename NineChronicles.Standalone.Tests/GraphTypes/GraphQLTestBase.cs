@@ -37,7 +37,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
 
             var blockPolicy = new BlockPolicy<PolymorphicAction<ActionBase>>(blockAction: new RewardGold());
             var blockChain =
-                new BlockChain<PolymorphicAction<ActionBase>>(blockPolicy, store, genesisBlock);
+                new BlockChain<PolymorphicAction<ActionBase>>(blockPolicy, store, store, genesisBlock);
 
             var tempKeyStorePath = Path.Join(Path.GetTempPath(), Path.GetRandomFileName());
             var keyStore = new Web3KeyStore(tempKeyStorePath);
@@ -81,7 +81,11 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
         )
             where T : IAction, new()
         {
-            Task task = swarm.StartAsync(200, 200, cancellationToken);
+            Task task = swarm.StartAsync(
+              millisecondsDialTimeout: 200, 
+              millisecondsBroadcastTxInterval: 200, 
+              cancellationToken: cancellationToken
+            );
             await swarm.WaitForRunningAsync();
             return task;
         }

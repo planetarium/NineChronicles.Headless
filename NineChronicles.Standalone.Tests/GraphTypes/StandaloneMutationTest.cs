@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using GraphQL;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
@@ -106,7 +107,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                             ),
                             AdminAddressState = new AdminState(adminAddress, 1500000),
                             ActivatedAccountsState = new ActivatedAccountsState(activateAccounts),
-                            GoldCurrencyState = new GoldCurrencyState(new Currency("NCG", minter: null)),
+                            GoldCurrencyState = new GoldCurrencyState(new Currency("NCG", 2, minter: null)),
                             GoldDistributions = new GoldDistribution[0],
                         },
                     }
