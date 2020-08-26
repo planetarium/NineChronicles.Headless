@@ -6,6 +6,7 @@ using Bencodex.Types;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blockchain;
+using Libplanet.Blocks;
 using Libplanet.KeyStore;
 using Microsoft.AspNetCore.Mvc;
 using Nekoyume;
@@ -56,7 +57,8 @@ namespace NineChronicles.Standalone.Controllers
                 // FIXME: StandaloneContext has both service and blockchain, which is duplicated.
                 StandaloneContext.BlockChain =
                     StandaloneContext.NineChroniclesNodeService.Swarm.BlockChain;
-                StandaloneContext.BlockChain.TipChanged += NotifyRefillActionPoint;
+                StandaloneContext.NineChroniclesNodeService.Renderer.EveryBlock()
+                    .Subscribe(pair => NotifyRefillActionPoint(pair.NewTip.Index));
                 nineChroniclesNodeHostBuilder
                     .RunConsoleAsync()
                     .ContinueWith(task =>
@@ -104,8 +106,7 @@ namespace NineChronicles.Standalone.Controllers
             return Ok($"Set mining status to {request.Mine}.");
         }
 
-        private void NotifyRefillActionPoint(
-            object sender, BlockChain<PolymorphicAction<ActionBase>>.TipChangedEventArgs args)
+        private void NotifyRefillActionPoint(long newTipIndex)
         {
             List<Tuple<Guid, ProtectedPrivateKey>> tuples =
                 StandaloneContext.KeyStore.List().ToList();
@@ -133,10 +134,8 @@ namespace NineChronicles.Standalone.Controllers
                 agentState.avatarAddresses.Values.Select(address =>
                     new AvatarState((Bencodex.Types.Dictionary) chain.GetState(address))));
 
-            bool IsDailyRewardRefilled(long dailyRewardReceivedIndex)
-            {
-                return args.Index >= dailyRewardReceivedIndex + GameConfig.DailyRewardInterval;
-            }
+            bool IsDailyRewardRefilled(long dailyRewardReceivedIndex) =>
+                newTipIndex >= dailyRewardReceivedIndex + GameConfig.DailyRewardInterval;
 
             bool NeedsRefillNotification(AvatarState avatarState)
             {
