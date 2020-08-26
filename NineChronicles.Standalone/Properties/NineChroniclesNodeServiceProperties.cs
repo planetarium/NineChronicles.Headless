@@ -144,8 +144,7 @@ namespace NineChronicles.Standalone.Properties
                 // FIXME: It might be better to make Peer.AppProtocolVersion property nullable...
                 return new BoundPeer(
                     pubKey,
-                    new DnsEndPoint(host, port),
-                    default(AppProtocolVersion));
+                    new DnsEndPoint(host, port));
             }
             catch (Exception e)
             {

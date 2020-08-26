@@ -158,7 +158,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             var apvPrivateKey = new PrivateKey();
             var apv1 = AppProtocolVersion.Sign(apvPrivateKey, 1);
             var apv2 = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var peer = new Peer(apvPrivateKey.PublicKey, apv1);
+            var peer = new Peer(apvPrivateKey.PublicKey);
             StandaloneContextFx.DifferentAppProtocolVersionEncounterSubject.OnNext(
                 new DifferentAppProtocolVersionEncounter
                 {
