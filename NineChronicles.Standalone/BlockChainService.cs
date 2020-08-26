@@ -72,8 +72,7 @@ namespace NineChronicles.Standalone
                 new IValue[] 
                 {
                   balance.Currency.Serialize(),
-                  (Integer) balance.MajorUnit,
-                  (Integer) balance.MinorUnit
+                  (Integer) balance.RawValue,
                 }
               )
             );
