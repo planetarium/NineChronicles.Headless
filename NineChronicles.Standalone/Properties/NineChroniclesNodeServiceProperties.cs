@@ -33,7 +33,8 @@ namespace NineChronicles.Standalone.Properties
                 bool noTrustedStateValidators = false,
                 string[] trustedAppProtocolVersionSigners = null,
                 bool noMiner = false,
-                bool render = false)
+                bool render = false,
+                bool mpt = false)
         {
             var privateKey = string.IsNullOrEmpty(privateKeyString)
                 ? new PrivateKey()
@@ -73,7 +74,8 @@ namespace NineChronicles.Standalone.Properties
                 StorePath = storePath,
                 StoreStatesCacheSize = storeStateCacheSize,
                 MinimumDifficulty = minimumDifficulty,
-                Render = render
+                Render = render,
+                Mpt = mpt,
             };
         }
 
