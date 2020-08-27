@@ -44,6 +44,8 @@ namespace Libplanet.Standalone.Hosting
 
         private CancellationTokenSource _miningCancellationTokenSource;
 
+        private bool _stopRequested = false;
+
         private static readonly TimeSpan PingSeedTimeout = TimeSpan.FromSeconds(5);
         
         private static readonly TimeSpan FindNeighborsTimeout = TimeSpan.FromSeconds(5);
@@ -120,77 +122,15 @@ namespace Libplanet.Standalone.Hosting
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            var peers = _properties.Peers.ToImmutableArray();
-
-            Task BootstrapSwarmAsync(int depth)
-                => Swarm.BootstrapAsync(
-                    peers,
-                    pingSeedTimeout: PingSeedTimeout,
-                    findNeighborsTimeout: FindNeighborsTimeout,
-                    depth: depth,
-                    cancellationToken: cancellationToken
-                );
-
-            if (peers.Any())
-            {
-                try
-                {
-                    await BootstrapSwarmAsync(1);
-                    BootstrapEnded.Set();
-                }
-                catch (PeerDiscoveryException e)
-                {
-                    Log.Error(e, "Bootstrap failed: {Exception}", e);
-
-                    if (!_ignoreBootstrapFailure)
-                    {
-                        throw;
-                    }
-                }
-
-                await Swarm.PreloadAsync(
-                    TimeSpan.FromSeconds(5),
-                    _preloadProgress,
-                    _properties.TrustedStateValidators,
-                    cancellationToken: cancellationToken
-                );
-                PreloadEnded.Set();
-            }
-            else
-            {
-                BootstrapEnded.Set();
-                PreloadEnded.Set();
-            }
-
-            async Task ReconnectToSeedPeers(CancellationToken token)
-            {
-                while (!token.IsCancellationRequested)
-                {
-                    await Task.Delay(BootstrapInterval);
-                    await BootstrapSwarmAsync(0).ContinueWith(t =>
-                    {
-                        if (t.IsFaulted)
-                        {
-                            Log.Error(t.Exception, "Periodic bootstrap failed.");
-                        }
-                    });
-                    token.ThrowIfCancellationRequested();
-                }
-            }
-            _swarmCancellationToken = cancellationToken;
-            try
+            bool preload = true;
+            while (!cancellationToken.IsCancellationRequested && !_stopRequested)
             {
                 await await Task.WhenAny(
-                    Swarm.StartAsync(
-                        cancellationToken: cancellationToken,
-                        millisecondsBroadcastTxInterval: 15000
-                    ),
-                    ReconnectToSeedPeers(cancellationToken)
+                    StartSwarm(preload, cancellationToken),
+                    CheckSwarm(cancellationToken)
                 );
-            }
-            catch (Exception e)
-            {
-                Log.Error(e, "Unexpected exception occurred during Swarm.StartAsync(). {e}", e);
+                preload = false;
+                await Task.Delay(TimeSpan.FromSeconds(15), cancellationToken);
             }
         }
 
@@ -225,6 +165,7 @@ namespace Libplanet.Standalone.Hosting
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
+            _stopRequested = true;
             StopMining();
             return Swarm.StopAsync(cancellationToken);
         }
@@ -255,6 +196,107 @@ namespace Libplanet.Standalone.Hosting
 
             return store ?? new DefaultStore(
                 path, flush: false, compress: true, statesCacheSize: statesCacheSize);
+        }
+
+        private async Task StartSwarm(bool preload, CancellationToken cancellationToken)
+        {
+            var peers = _properties.Peers.ToImmutableArray();
+
+            Task BootstrapSwarmAsync(int depth)
+                => Swarm.BootstrapAsync(
+                    peers,
+                    pingSeedTimeout: PingSeedTimeout,
+                    findNeighborsTimeout: FindNeighborsTimeout,
+                    depth: depth,
+                    cancellationToken: cancellationToken
+                );
+
+            if (peers.Any())
+            {
+                try
+                {
+                    await BootstrapSwarmAsync(1);
+                    BootstrapEnded.Set();
+                }
+                catch (PeerDiscoveryException e)
+                {
+                    Log.Error(e, "Bootstrap failed: {Exception}", e);
+
+                    if (!_ignoreBootstrapFailure)
+                    {
+                        throw;
+                    }
+                }
+
+                if (preload)
+                {
+                    await Swarm.PreloadAsync(
+                        TimeSpan.FromSeconds(5),
+                        _preloadProgress,
+                        _properties.TrustedStateValidators,
+                        cancellationToken: cancellationToken
+                    );
+                    PreloadEnded.Set();
+                }
+            }
+            else if (preload)
+            {
+                BootstrapEnded.Set();
+                PreloadEnded.Set();
+            }
+
+            async Task ReconnectToSeedPeers(CancellationToken token)
+            {
+                while (!token.IsCancellationRequested)
+                {
+                    await Task.Delay(BootstrapInterval);
+                    await BootstrapSwarmAsync(0).ContinueWith(t =>
+                    {
+                        if (t.IsFaulted)
+                        {
+                            Log.Error(t.Exception, "Periodic bootstrap failed.");
+                        }
+                    });
+
+                    token.ThrowIfCancellationRequested();
+                }
+            }
+
+            _swarmCancellationToken = cancellationToken;
+
+            try
+            {
+                await await Task.WhenAny(
+                    Swarm.StartAsync(
+                        cancellationToken: cancellationToken,
+                        millisecondsBroadcastTxInterval: 15000
+                    ),
+                    ReconnectToSeedPeers(cancellationToken)
+                );
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Unexpected exception occurred during Swarm.StartAsync(). {e}", e);
+            }
+        }
+
+        private async Task CheckSwarm(CancellationToken cancellationToken = default)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(BootstrapInterval, cancellationToken);
+                if (Swarm.LastMessageTimestamp + BootstrapInterval < DateTimeOffset.UtcNow)
+                {
+                    Log.Error(
+                        "No messages have been received since {lastMessageTimestamp}.",
+                        Swarm.LastMessageTimestamp
+                    );
+                    await Swarm.StopAsync(cancellationToken);
+                    break;
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+            }
         }
 
         private Block<T> LoadGenesisBlock(LibplanetNodeServiceProperties<T> properties)
