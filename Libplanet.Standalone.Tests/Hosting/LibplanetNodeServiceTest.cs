@@ -29,9 +29,10 @@ namespace Libplanet.Standalone.Tests.Hosting
                     StoreStatesCacheSize = 2,
                     Host = IPAddress.Loopback.ToString(),
                 },
-                new BlockPolicy(),
-                (chain, swarm, pk, ct) => Task.CompletedTask,
-                null
+                blockPolicy: new BlockPolicy(),
+                renderer: null,
+                minerLoopAction: (chain, swarm, pk, ct) => Task.CompletedTask,
+                preloadProgress: null
             );
 
             Assert.NotNull(service);
@@ -50,9 +51,10 @@ namespace Libplanet.Standalone.Tests.Hosting
                         StoreStatesCacheSize = 2,
                         Host = IPAddress.Loopback.ToString(),
                     },
-                    new BlockPolicy(),
-                    (chain, swarm, pk, ct) => Task.CompletedTask,
-                    null
+                    blockPolicy: new BlockPolicy(),
+                    renderer: null,
+                    minerLoopAction: (chain, swarm, pk, ct) => Task.CompletedTask,
+                    preloadProgress: null
                 );
             });
         }
@@ -81,28 +83,12 @@ namespace Libplanet.Standalone.Tests.Hosting
         {
             IValue IAction.PlainValue => Dictionary.Empty;
 
-            public void RenderError(IActionContext context, Exception exception)
-            {
-            }
-
-            public void UnrenderError(IActionContext context, Exception exception)
-            {
-            }
-
             IAccountStateDelta IAction.Execute(IActionContext context)
             {
                 return context.PreviousStates;
             }
 
             void IAction.LoadPlainValue(IValue plainValue)
-            {
-            }
-
-            void IAction.Render(IActionContext context, IAccountStateDelta nextStates)
-            {
-            }
-
-            void IAction.Unrender(IActionContext context, IAccountStateDelta nextStates)
             {
             }
         }

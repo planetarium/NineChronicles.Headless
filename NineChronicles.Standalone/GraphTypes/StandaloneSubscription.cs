@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Security.Cryptography;
@@ -11,6 +12,7 @@ using GraphQL.Types;
 using Libplanet;
 using Libplanet.Blockchain;
 using Libplanet.Net;
+using Nekoyume.Action;
 using Log = Serilog.Log;
 
 namespace NineChronicles.Standalone.GraphTypes
@@ -141,22 +143,29 @@ namespace NineChronicles.Standalone.GraphTypes
 
         public void RegisterTipChangedSubscription()
         {
-            if (StandaloneContext.BlockChain is null)
+            ActionRenderer renderer = StandaloneContext?.NineChroniclesNodeService?.Renderer ??
+                StandaloneContext?.BlockChain.Renderers.OfType<ActionRenderer>().FirstOrDefault();
+
+            if (renderer is null)
             {
-                throw new ArgumentNullException(
-                    nameof(StandaloneContext.BlockChain),
-                    $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)}" +
-                    $" should be set before calling `{nameof(RegisterTipChangedSubscription)}()`.");
+                throw new InvalidOperationException(
+                    $"Failed to find {nameof(ActionRenderer)} instance; before calling " +
+                    $"{nameof(RegisterTipChangedSubscription)}(), {nameof(StandaloneContext)}." +
+                    $"{nameof(StandaloneContext.NineChroniclesNodeService)} has to be set, or " +
+                    $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)}." +
+                    $"{nameof(StandaloneContext.BlockChain.Renderers)} have to contain an " +
+                    $"{nameof(ActionRenderer)} instance."
+                );
             }
 
-            StandaloneContext.BlockChain.TipChanged += (sender, args) =>
-            {
-                _subject.OnNext(new TipChanged
-                {
-                    Index = args.Index,
-                    Hash = args.Hash,
-                });
-            };
+            renderer.EveryBlock()
+                .Subscribe(pair =>
+                    _subject.OnNext(new TipChanged
+                    {
+                        Index = pair.NewTip.Index,
+                        Hash = pair.NewTip.Hash,
+                    })
+                );
         }
 
         private TipChanged ResolveTipChanged(IResolveFieldContext context)

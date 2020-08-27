@@ -36,8 +36,13 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock();
 
             var blockPolicy = new BlockPolicy<PolymorphicAction<ActionBase>>(blockAction: new RewardGold());
-            var blockChain =
-                new BlockChain<PolymorphicAction<ActionBase>>(blockPolicy, store, store, genesisBlock);
+            var blockChain = new BlockChain<PolymorphicAction<ActionBase>>(
+                blockPolicy,
+                store,
+                store,
+                genesisBlock,
+                renderers: new[] { new ActionRenderer() }
+            );
 
             var tempKeyStorePath = Path.Join(Path.GetTempPath(), Path.GetRandomFileName());
             var keyStore = new Web3KeyStore(tempKeyStorePath);
@@ -115,9 +120,11 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
 
             return new LibplanetNodeService<T>(
                 properties,
-                new BlockPolicy<T>(),
-                (chain, swarm, privateKey, cancellationToken) => Task.CompletedTask,
-                preloadProgress);
+                blockPolicy: new BlockPolicy<T>(),
+                renderer: null,
+                minerLoopAction: (chain, swarm, privateKey, _) => Task.CompletedTask,
+                preloadProgress: preloadProgress
+            );
         }
 
         private class TestServiceProvider : IServiceProvider

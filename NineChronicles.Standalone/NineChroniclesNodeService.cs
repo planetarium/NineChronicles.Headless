@@ -8,6 +8,7 @@ using Grpc.Core;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
+using Libplanet.Blockchain.Renderers;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Standalone.Hosting;
@@ -32,6 +33,8 @@ namespace NineChronicles.Standalone
         private LibplanetNodeServiceProperties<NineChroniclesActionType> Properties { get; }
 
         private RpcNodeServiceProperties? RpcProperties { get; }
+
+        public ActionRenderer Renderer { get; }
 
         public AsyncManualResetEvent BootstrapEnded => NodeService.BootstrapEnded;
 
@@ -66,6 +69,7 @@ namespace NineChronicles.Standalone
             IBlockPolicy<PolymorphicAction<ActionBase>> blockPolicy = BlockPolicy.GetPolicy(
                 properties.MinimumDifficulty
             );
+            Renderer = BlockPolicy.GetRenderer();
             async Task minerLoopAction(
                 BlockChain<NineChroniclesActionType> chain,
                 Swarm<NineChroniclesActionType> swarm,
@@ -105,6 +109,7 @@ namespace NineChronicles.Standalone
             NodeService = new LibplanetNodeService<NineChroniclesActionType>(
                 Properties,
                 blockPolicy,
+                Renderer,
                 minerLoopAction,
                 preloadProgress,
                 ignoreBootstrapFailure
@@ -129,7 +134,7 @@ namespace NineChronicles.Standalone
                     .ConfigureServices((ctx, services) =>
                     {
                         services.AddHostedService(provider => new ActionEvaluationPublisher(
-                            NodeService.BlockChain,
+                            Renderer,
                             IPAddress.Loopback.ToString(),
                             rpcProperties.RpcListenPort
                         ));

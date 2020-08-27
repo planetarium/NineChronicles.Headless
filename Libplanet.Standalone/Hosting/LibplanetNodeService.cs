@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
+using Libplanet.Blockchain.Renderers;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Net;
@@ -52,6 +53,7 @@ namespace Libplanet.Standalone.Hosting
         public LibplanetNodeService(
             LibplanetNodeServiceProperties<T> properties,
             IBlockPolicy<T> blockPolicy,
+            IRenderer<T> renderer,
             Func<BlockChain<T>, Swarm<T>, PrivateKey, CancellationToken, Task> minerLoopAction,
             Progress<PreloadState> preloadProgress,
             bool ignoreBootstrapFailure = false
@@ -76,7 +78,26 @@ namespace Libplanet.Standalone.Hosting
                 Log.Debug($"chainId: {chainId}");
             }
 
-            BlockChain = new BlockChain<T>(blockPolicy, Store, Store, genesisBlock, _properties.Render);
+            // Since <https://github.com/planetarium/libplanet/pull/963> Libplanet became to unify
+            // actions renders and tip change events into one interface: IRenderer<T>.
+            // The LibplanetNodeServiceProperties.Render option purposes to turn off only action
+            // renders, but Libplanet's above patch made it unable to turn off only action renders
+            // and leave tip change events turn on.
+            // Passing a thunk implementation that leaves action renders blank and fill with
+            // only block renders to renderers in the current API is not equivalent giving
+            // render: false to BlockChain<T>() constructor in the old API, because it still
+            // evaluates actions in order to calculate states of every step, which leads low
+            // performance... and that's the reason why we've made
+            // LibplanetNodeServiceProperties.Render option.  So...:
+            // TODO: We should adjust Libplanet's IRenderer<T> interface so that we can only listen
+            // to tip change events and prevent actions to be evaluated.
+            BlockChain = new BlockChain<T>(
+                policy: blockPolicy,
+                store: Store,
+                stateStore: Store,
+                genesisBlock: genesisBlock,
+                renderers: renderer is null ? null : new []{ renderer }
+            );
             _minerLoopAction = minerLoopAction;
             Swarm = new Swarm<T>(
                 BlockChain,

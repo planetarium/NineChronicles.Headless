@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.Reactive;
+using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
@@ -20,16 +22,16 @@ namespace NineChronicles.Standalone
     {
         private readonly string _host;
         private readonly int _port;
-        private readonly BlockChain<NineChroniclesActionType> _blockChain;
+        private readonly ActionRenderer _renderer;
         private IActionEvaluationHub _client;
 
         public ActionEvaluationPublisher(
-            BlockChain<NineChroniclesActionType> blockChain,
+            ActionRenderer renderer,
             string host,
             int port
         )
         {
-            _blockChain = blockChain;
+            _renderer = renderer;
             _host = host;
             _port = port;
         }
@@ -43,22 +45,22 @@ namespace NineChronicles.Standalone
             );
             await _client.JoinAsync();
 
-            _blockChain.TipChanged += async (o, ev) =>
-            {
-                await _client.UpdateTipAsync(ev.Index);
-            };
+            _renderer.EveryBlock().Subscribe(
+                async pair => await _client.UpdateTipAsync(pair.NewTip.Index),
+                stoppingToken
+            );
 
-            _blockChain.Reorged += async (o, ev) =>
-            {
-                await _client.ReportReorgAsync(
-                    ev.Branchpoint.Hash.ToByteArray(),
-                    ev.OldTip.Hash.ToByteArray(),
-                    ev.NewTip.Hash.ToByteArray()
-                );
-            };
+            _renderer.EveryReorg().Subscribe(
+                async ev =>
+                    await _client.ReportReorgAsync(
+                        ev.Branchpoint.Hash.ToByteArray(),
+                        ev.OldTip.Hash.ToByteArray(),
+                        ev.NewTip.Hash.ToByteArray()
+                    ),
+                stoppingToken
+            );
 
-            var renderer = new ActionRenderer(ActionBase.RenderSubject, ActionBase.UnrenderSubject);
-            renderer.EveryRender<ActionBase>().Subscribe(
+            _renderer.EveryRender<ActionBase>().Subscribe(
                 async ev =>
                 {
                     var formatter = new BinaryFormatter();
