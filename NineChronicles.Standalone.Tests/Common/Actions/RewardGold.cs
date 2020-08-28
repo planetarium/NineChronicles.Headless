@@ -6,13 +6,13 @@ using Nekoyume.Action;
 namespace NineChronicles.Standalone.Tests.Common.Actions
 {
     // 테스트를 위해 만든 RewardGold 액션입니다.
-    class RewardGold : IAction
+    class RewardGold : ActionBase
     {
-        public void LoadPlainValue(IValue plainValue)
+        public override void LoadPlainValue(IValue plainValue)
         {
         }
 
-        public IAccountStateDelta Execute(IActionContext context)
+        public override IAccountStateDelta Execute(IActionContext context)
         {
             var states = context.PreviousStates;
             if (context.Rehearsal)
@@ -26,22 +26,6 @@ namespace NineChronicles.Standalone.Tests.Common.Actions
             return states.SetState(context.Signer, gold);
         }
 
-        public void Render(IActionContext context, IAccountStateDelta nextStates)
-        {
-        }
-
-        public void RenderError(IActionContext context, Exception exception)
-        {
-        }
-
-        public void Unrender(IActionContext context, IAccountStateDelta nextStates)
-        {
-        }
-
-        public void UnrenderError(IActionContext context, Exception exception)
-        {
-        }
-
-        public IValue PlainValue => new Null();
+        public override IValue PlainValue => new Null();
     }
 }
