@@ -72,21 +72,11 @@ namespace Libplanet.Standalone.Hosting
 
             var iceServers = _properties.IceServers;
 
-            Store = LoadStore(
+            (Store, StateStore) = LoadStore(
                 _properties.StorePath,
                 _properties.StoreType,
-                _properties.StoreStatesCacheSize);
-
-            if (properties.Mpt)
-            {
-                IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(_properties.StorePath, "states")),
-                    stateHashKeyValueStore = new RocksDBKeyValueStore(Path.Combine(_properties.StorePath, "state_hashes"));
-                StateStore = new TrieStateStore(stateKeyValueStore, stateHashKeyValueStore);
-            }
-            else
-            {
-                StateStore = Store;
-            }
+                _properties.StoreStatesCacheSize,
+                _properties.Mpt);
 
             var chainIds = Store.ListChainIds().ToList();
             Log.Debug($"Number of chain ids: {chainIds.Count()}");
@@ -186,9 +176,10 @@ namespace Libplanet.Standalone.Hosting
             return Swarm.StopAsync(cancellationToken);
         }
 
-        private BaseBlockStatesStore LoadStore(string path, string type, int statesCacheSize)
+        private (BaseBlockStatesStore, IStateStore) LoadStore(string path, string type, int statesCacheSize, bool mpt)
         {
             BaseBlockStatesStore store = null;
+            IStateStore stateStore = null;
 
             if (type == "rocksdb")
             {
@@ -210,8 +201,21 @@ namespace Libplanet.Standalone.Hosting
                 Log.Debug($"{message}. DefaultStore will be used.");
             }
 
-            return store ?? new DefaultStore(
+            store ??= new DefaultStore(
                 path, flush: false, compress: true, statesCacheSize: statesCacheSize);
+
+            if (mpt)
+            {
+                IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states")),
+                    stateHashKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "state_hashes"));
+                stateStore = new TrieStateStore(stateKeyValueStore, stateHashKeyValueStore);
+            }
+            else
+            {
+                stateStore = store;
+            }
+
+            return (store, stateStore);
         }
 
         private async Task StartSwarm(bool preload, CancellationToken cancellationToken)
