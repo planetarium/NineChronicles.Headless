@@ -44,5 +44,7 @@ namespace Libplanet.Standalone.Hosting
         public DifferentAppProtocolVersionEncountered DifferentAppProtocolVersionEncountered { get; set; }
 
         public bool Render { get; set; }
+        
+        public bool Mpt { get; set; }
     }
 }

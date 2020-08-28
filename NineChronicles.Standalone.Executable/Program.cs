@@ -72,7 +72,9 @@ namespace NineChronicles.Standalone.Executable
             [Option("graphql-port")]
             int? graphQLPort = null,
             [Option("libplanet-node")]
-            bool libplanetNode = false
+            bool libplanetNode = false,
+            [Option("mpt", Description = "Flag to turn on the Merkle trie feature. It is experimental.")]
+            bool mpt = false
         )
         {
 #if SENTRY || ! DEBUG
@@ -161,7 +163,8 @@ namespace NineChronicles.Standalone.Executable
                         peerStrings,
                         noTrustedStateValidators,
                         trustedAppProtocolVersionSigners,
-                        noMiner);
+                        noMiner,
+                        mpt: mpt);
                 if (rpcServer)
                 {
                     rpcProperties = NineChroniclesNodeServiceProperties
