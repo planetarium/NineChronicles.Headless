@@ -34,7 +34,8 @@ namespace NineChronicles.Standalone.Properties
                 string[] trustedAppProtocolVersionSigners = null,
                 bool noMiner = false,
                 bool render = false,
-                bool mpt = false)
+                bool mpt = false,
+                int workers = 50)
         {
             var privateKey = string.IsNullOrEmpty(privateKeyString)
                 ? new PrivateKey()
@@ -76,6 +77,7 @@ namespace NineChronicles.Standalone.Properties
                 MinimumDifficulty = minimumDifficulty,
                 Render = render,
                 Mpt = mpt,
+                Workers = workers
             };
         }
 

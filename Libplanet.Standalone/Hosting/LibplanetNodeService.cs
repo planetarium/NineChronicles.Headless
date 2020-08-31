@@ -52,7 +52,7 @@ namespace Libplanet.Standalone.Hosting
         private bool _stopRequested = false;
 
         private static readonly TimeSpan PingSeedTimeout = TimeSpan.FromSeconds(5);
-        
+
         private static readonly TimeSpan FindNeighborsTimeout = TimeSpan.FromSeconds(5);
 
         private static readonly TimeSpan BootstrapInterval = TimeSpan.FromMinutes(5);
@@ -115,7 +115,7 @@ namespace Libplanet.Standalone.Hosting
                 host: _properties.Host,
                 listenPort: _properties.Port,
                 iceServers: iceServers,
-                workers: 50,
+                workers: _properties.Workers,
                 differentAppProtocolVersionEncountered: _properties.DifferentAppProtocolVersionEncountered
             );
 

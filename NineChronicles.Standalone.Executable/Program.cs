@@ -74,7 +74,9 @@ namespace NineChronicles.Standalone.Executable
             [Option("libplanet-node")]
             bool libplanetNode = false,
             [Option("mpt", Description = "Flag to turn on the Merkle trie feature. It is experimental.")]
-            bool mpt = false
+            bool mpt = false,
+            [Option("workers", Description = "Number of workers to use in Swarm")]
+            int workers = 50
         )
         {
 #if SENTRY || ! DEBUG
@@ -164,7 +166,8 @@ namespace NineChronicles.Standalone.Executable
                         noTrustedStateValidators,
                         trustedAppProtocolVersionSigners,
                         noMiner,
-                        mpt: mpt);
+                        mpt: mpt,
+                        workers: workers);
                 if (rpcServer)
                 {
                     rpcProperties = NineChroniclesNodeServiceProperties
@@ -196,7 +199,7 @@ namespace NineChronicles.Standalone.Executable
                     tasks.Add(
                         nineChroniclesNodeHostBuilder.RunConsoleAsync(Context.CancellationToken));
                 }
-                
+
                 await Task.WhenAll(tasks);
             }
             catch (Exception e)
