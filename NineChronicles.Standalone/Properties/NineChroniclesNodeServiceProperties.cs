@@ -35,7 +35,7 @@ namespace NineChronicles.Standalone.Properties
                 bool noMiner = false,
                 bool render = false,
                 bool mpt = false,
-                int workers = 50)
+                int workers = 5)
         {
             var privateKey = string.IsNullOrEmpty(privateKeyString)
                 ? new PrivateKey()

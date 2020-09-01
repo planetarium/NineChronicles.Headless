@@ -76,7 +76,7 @@ namespace NineChronicles.Standalone.Executable
             [Option("mpt", Description = "Flag to turn on the Merkle trie feature. It is experimental.")]
             bool mpt = false,
             [Option("workers", Description = "Number of workers to use in Swarm")]
-            int workers = 50
+            int workers = 5
         )
         {
 #if SENTRY || ! DEBUG
