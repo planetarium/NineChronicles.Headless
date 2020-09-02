@@ -30,7 +30,7 @@ namespace Libplanet.Standalone.Tests.Hosting
                     Host = IPAddress.Loopback.ToString(),
                 },
                 blockPolicy: new BlockPolicy(),
-                renderer: null,
+                renderers: null,
                 minerLoopAction: (chain, swarm, pk, ct) => Task.CompletedTask,
                 preloadProgress: null
             );
@@ -52,7 +52,7 @@ namespace Libplanet.Standalone.Tests.Hosting
                         Host = IPAddress.Loopback.ToString(),
                     },
                     blockPolicy: new BlockPolicy(),
-                    renderer: null,
+                    renderers: null,
                     minerLoopAction: (chain, swarm, pk, ct) => Task.CompletedTask,
                     preloadProgress: null
                 );

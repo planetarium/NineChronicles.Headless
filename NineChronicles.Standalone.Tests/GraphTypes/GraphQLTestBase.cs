@@ -8,6 +8,7 @@ using GraphQL;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
+using Libplanet.Blockchain.Renderers;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.KeyStore;
@@ -41,7 +42,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                 store,
                 store,
                 genesisBlock,
-                renderers: new[] { new ActionRenderer() }
+                renderers: new IRenderer<PolymorphicAction<ActionBase>>[] { new BlockRenderer(), new ActionRenderer() }
             );
 
             var tempKeyStorePath = Path.Join(Path.GetTempPath(), Path.GetRandomFileName());
@@ -87,8 +88,8 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             where T : IAction, new()
         {
             Task task = swarm.StartAsync(
-              millisecondsDialTimeout: 200, 
-              millisecondsBroadcastTxInterval: 200, 
+              millisecondsDialTimeout: 200,
+              millisecondsBroadcastTxInterval: 200,
               cancellationToken: cancellationToken
             );
             await swarm.WaitForRunningAsync();
@@ -121,7 +122,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             return new LibplanetNodeService<T>(
                 properties,
                 blockPolicy: new BlockPolicy<T>(),
-                renderer: null,
+                renderers: new[] { new DummyRenderer<T>() },
                 minerLoopAction: (chain, swarm, privateKey, _) => Task.CompletedTask,
                 preloadProgress: preloadProgress
             );

@@ -22,16 +22,19 @@ namespace NineChronicles.Standalone
     {
         private readonly string _host;
         private readonly int _port;
-        private readonly ActionRenderer _renderer;
+        private readonly BlockRenderer _blockRenderer;
+        private readonly ActionRenderer _actionRenderer;
         private IActionEvaluationHub _client;
 
         public ActionEvaluationPublisher(
-            ActionRenderer renderer,
+            BlockRenderer blockRenderer,
+            ActionRenderer actionRenderer,
             string host,
             int port
         )
         {
-            _renderer = renderer;
+            _blockRenderer = blockRenderer;
+            _actionRenderer = actionRenderer;
             _host = host;
             _port = port;
         }
@@ -45,12 +48,12 @@ namespace NineChronicles.Standalone
             );
             await _client.JoinAsync();
 
-            _renderer.EveryBlock().Subscribe(
+            _blockRenderer.EveryBlock().Subscribe(
                 async pair => await _client.UpdateTipAsync(pair.NewTip.Index),
                 stoppingToken
             );
 
-            _renderer.EveryReorg().Subscribe(
+            _blockRenderer.EveryReorg().Subscribe(
                 async ev =>
                     await _client.ReportReorgAsync(
                         ev.Branchpoint.Hash.ToByteArray(),
@@ -60,7 +63,7 @@ namespace NineChronicles.Standalone
                 stoppingToken
             );
 
-            _renderer.EveryRender<ActionBase>().Subscribe(
+            _actionRenderer.EveryRender<ActionBase>().Subscribe(
                 async ev =>
                 {
                     var formatter = new BinaryFormatter();

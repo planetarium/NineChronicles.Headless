@@ -143,10 +143,10 @@ namespace NineChronicles.Standalone.GraphTypes
 
         public void RegisterTipChangedSubscription()
         {
-            ActionRenderer renderer = StandaloneContext?.NineChroniclesNodeService?.Renderer ??
-                StandaloneContext?.BlockChain.Renderers.OfType<ActionRenderer>().FirstOrDefault();
+            BlockRenderer blockRenderer = StandaloneContext?.NineChroniclesNodeService?.BlockRenderer ??
+                StandaloneContext?.BlockChain.Renderers.OfType<BlockRenderer>().FirstOrDefault();
 
-            if (renderer is null)
+            if (blockRenderer is null)
             {
                 throw new InvalidOperationException(
                     $"Failed to find {nameof(ActionRenderer)} instance; before calling " +
@@ -158,7 +158,7 @@ namespace NineChronicles.Standalone.GraphTypes
                 );
             }
 
-            renderer.EveryBlock()
+            blockRenderer.EveryBlock()
                 .Subscribe(pair =>
                     _subject.OnNext(new TipChanged
                     {
