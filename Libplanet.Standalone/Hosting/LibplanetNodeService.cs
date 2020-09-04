@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
@@ -60,7 +61,7 @@ namespace Libplanet.Standalone.Hosting
         public LibplanetNodeService(
             LibplanetNodeServiceProperties<T> properties,
             IBlockPolicy<T> blockPolicy,
-            IRenderer<T> renderer,
+            IEnumerable<IRenderer<T>> renderers,
             Func<BlockChain<T>, Swarm<T>, PrivateKey, CancellationToken, Task> minerLoopAction,
             Progress<PreloadState> preloadProgress,
             bool ignoreBootstrapFailure = false
@@ -104,7 +105,7 @@ namespace Libplanet.Standalone.Hosting
                 store: Store,
                 stateStore: StateStore,
                 genesisBlock: genesisBlock,
-                renderers: renderer is null ? null : new []{ renderer }
+                renderers: renderers
             );
             _minerLoopAction = minerLoopAction;
             Swarm = new Swarm<T>(

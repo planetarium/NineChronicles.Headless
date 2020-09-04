@@ -34,7 +34,9 @@ namespace NineChronicles.Standalone
 
         private RpcNodeServiceProperties? RpcProperties { get; }
 
-        public ActionRenderer Renderer { get; }
+        public BlockRenderer BlockRenderer { get; }
+
+        public ActionRenderer ActionRenderer { get; }
 
         public AsyncManualResetEvent BootstrapEnded => NodeService.BootstrapEnded;
 
@@ -65,11 +67,17 @@ namespace NineChronicles.Standalone
                 Log.Error("Secp256K1CryptoBackend initialize failed. Use default backend. {e}", e);
             }
 
+            var blockPolicySource = new BlockPolicySource();
             // BlockPolicy shared through Lib9c.
-            IBlockPolicy<PolymorphicAction<ActionBase>> blockPolicy = BlockPolicy.GetPolicy(
+            IBlockPolicy<PolymorphicAction<ActionBase>> blockPolicy = blockPolicySource.GetPolicy(
                 properties.MinimumDifficulty
             );
-            Renderer = BlockPolicy.GetRenderer();
+            BlockRenderer = blockPolicySource.BlockRenderer;
+            ActionRenderer = blockPolicySource.ActionRenderer;
+            var renderers = Properties.Render
+                ? new IRenderer<NineChroniclesActionType>[] { BlockRenderer, ActionRenderer }
+                : new [] { BlockRenderer };
+
             async Task minerLoopAction(
                 BlockChain<NineChroniclesActionType> chain,
                 Swarm<NineChroniclesActionType> swarm,
@@ -109,17 +117,17 @@ namespace NineChronicles.Standalone
             NodeService = new LibplanetNodeService<NineChroniclesActionType>(
                 Properties,
                 blockPolicy,
-                Renderer,
+                renderers,
                 minerLoopAction,
                 preloadProgress,
                 ignoreBootstrapFailure
             );
 
             // FIXME: Agent.cs와 중복된 코드입니다.
-            if (BlockPolicy.ActivatedAccounts is null)
+            if (blockPolicySource.ActivatedAccounts is null)
             {
                 var rawState = NodeService?.BlockChain?.GetState(ActivatedAccountsState.Address);
-                BlockPolicy.UpdateActivationSet(rawState);
+                blockPolicySource.UpdateActivationSet(rawState);
             }
         }
 
@@ -134,7 +142,8 @@ namespace NineChronicles.Standalone
                     .ConfigureServices((ctx, services) =>
                     {
                         services.AddHostedService(provider => new ActionEvaluationPublisher(
-                            Renderer,
+                            BlockRenderer,
+                            ActionRenderer,
                             IPAddress.Loopback.ToString(),
                             rpcProperties.RpcListenPort
                         ));

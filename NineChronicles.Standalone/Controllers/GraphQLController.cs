@@ -6,6 +6,7 @@ using Bencodex.Types;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blockchain;
+using Libplanet.Blockchain.Renderers;
 using Libplanet.Blocks;
 using Libplanet.KeyStore;
 using Microsoft.AspNetCore.Mvc;
@@ -57,7 +58,7 @@ namespace NineChronicles.Standalone.Controllers
                 // FIXME: StandaloneContext has both service and blockchain, which is duplicated.
                 StandaloneContext.BlockChain =
                     StandaloneContext.NineChroniclesNodeService.Swarm.BlockChain;
-                StandaloneContext.NineChroniclesNodeService.Renderer.EveryBlock()
+                StandaloneContext.NineChroniclesNodeService.BlockRenderer.EveryBlock()
                     .Subscribe(pair => NotifyRefillActionPoint(pair.NewTip.Index));
                 nineChroniclesNodeHostBuilder
                     .RunConsoleAsync()
