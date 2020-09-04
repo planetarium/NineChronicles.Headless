@@ -76,7 +76,13 @@ namespace NineChronicles.Standalone.Executable
             [Option("mpt", Description = "Flag to turn on the Merkle trie feature. It is experimental.")]
             bool mpt = false,
             [Option("workers", Description = "Number of workers to use in Swarm")]
-            int workers = 5
+            int workers = 5,
+            [Option(
+                "confirmations",
+                Description =
+                    "The number of required confirmations to recognize a block.  0 by default."
+            )]
+            int confirmations = 0
         )
         {
 #if SENTRY || ! DEBUG
@@ -167,7 +173,8 @@ namespace NineChronicles.Standalone.Executable
                         trustedAppProtocolVersionSigners,
                         noMiner,
                         mpt: mpt,
-                        workers: workers);
+                        workers: workers,
+                        confirmations: confirmations);
                 if (rpcServer)
                 {
                     rpcProperties = NineChroniclesNodeServiceProperties

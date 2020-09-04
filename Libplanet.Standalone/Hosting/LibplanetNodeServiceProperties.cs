@@ -48,5 +48,7 @@ namespace Libplanet.Standalone.Hosting
         public bool Mpt { get; set; }
 
         public int Workers { get; set; } = 5;
+
+        public int Confirmations { get; set; } = 0;
     }
 }

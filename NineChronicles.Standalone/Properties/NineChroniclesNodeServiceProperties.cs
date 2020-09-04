@@ -35,7 +35,8 @@ namespace NineChronicles.Standalone.Properties
                 bool noMiner = false,
                 bool render = false,
                 bool mpt = false,
-                int workers = 5)
+                int workers = 5,
+                int confirmations = 0)
         {
             var privateKey = string.IsNullOrEmpty(privateKeyString)
                 ? new PrivateKey()
@@ -77,7 +78,8 @@ namespace NineChronicles.Standalone.Properties
                 MinimumDifficulty = minimumDifficulty,
                 Render = render,
                 Mpt = mpt,
-                Workers = workers
+                Workers = workers,
+                Confirmations = Math.Max(confirmations, 0),
             };
         }
 
