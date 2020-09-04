@@ -99,7 +99,6 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                         {
                             RankingState = new RankingState(),
                             ShopState = new ShopState(),
-                            TableSheetsState = new TableSheetsState(),
                             GameConfigState = new GameConfigState(),
                             RedeemCodeState = new RedeemCodeState(Bencodex.Types.Dictionary.Empty
                                 .Add("address", RedeemCodeState.Address.Serialize())
@@ -109,6 +108,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                             ActivatedAccountsState = new ActivatedAccountsState(activateAccounts),
                             GoldCurrencyState = new GoldCurrencyState(new Currency("NCG", 2, minter: null)),
                             GoldDistributions = new GoldDistribution[0],
+                            TableSheets = new Dictionary<string, string>(),
                         },
                     }
                 );
