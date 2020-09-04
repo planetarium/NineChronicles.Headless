@@ -165,6 +165,13 @@ namespace Libplanet.Standalone.Hosting
             _miningCancellationTokenSource?.Cancel();
         }
 
+        public async Task<bool> CheckPeer(string addr)
+        {
+            Address address = new Address(addr);
+            var boundPeer = await Swarm.FindSpecificPeerAsync(address, -1);
+            return !(boundPeer is null);
+        }
+
         public Task StopAsync(CancellationToken cancellationToken)
         {
             _stopRequested = true;
