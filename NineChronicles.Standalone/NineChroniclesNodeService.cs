@@ -161,5 +161,7 @@ namespace NineChronicles.Standalone
         public void StartMining() => NodeService.StartMining(PrivateKey);
 
         public void StopMining() => NodeService.StopMining();
+        
+        public Task<bool> CheckPeer(string addr) => NodeService.CheckPeer(addr);
     }
 }

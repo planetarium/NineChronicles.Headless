@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet;
 using Libplanet.Action;
@@ -35,6 +36,8 @@ namespace NineChronicles.Standalone.Controllers
         public const string SetPrivateKeyEndpoint = "/set-private-key";
 
         public const string SetMiningEndpoint = "/set-mining";
+
+        public const string CheckPeerEndpoint = "/check-peer";
 
         public GraphQLController(StandaloneContext standaloneContext)
         {
@@ -105,6 +108,31 @@ namespace NineChronicles.Standalone.Controllers
             }
 
             return Ok($"Set mining status to {request.Mine}.");
+        }
+
+        [HttpPost(CheckPeerEndpoint)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CheckPeer([FromBody] CheckPeerRequest request)
+        {
+            try
+            {
+                var exist = await StandaloneContext.NineChroniclesNodeService.CheckPeer(request.AddressString);
+                if (exist)
+                {
+                    return Ok($"Found peer {request.AddressString}.");
+                }
+                
+                return BadRequest($"No such peer {request.AddressString}");
+            }
+            catch (Exception e)
+            {
+                var msg = $"Unexpected error occurred during CheckPeer request. {e}";
+                // Unexpected Error.
+                Log.Warning(e, msg);
+                return StatusCode(StatusCodes.Status500InternalServerError, msg);
+            }
         }
 
         private void NotifyRefillActionPoint(long newTipIndex)
