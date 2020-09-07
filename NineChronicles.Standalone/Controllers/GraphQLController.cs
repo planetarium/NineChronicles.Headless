@@ -113,6 +113,7 @@ namespace NineChronicles.Standalone.Controllers
         [HttpPost(CheckPeerEndpoint)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CheckPeer([FromBody] CheckPeerRequest request)
         {
             try
@@ -130,7 +131,7 @@ namespace NineChronicles.Standalone.Controllers
                 var msg = $"Unexpected error occurred during CheckPeer request. {e}";
                 // Unexpected Error.
                 Log.Warning(e, msg);
-                return BadRequest(msg);
+                return StatusCode(StatusCodes.Status500InternalServerError, msg);
             }
         }
 
