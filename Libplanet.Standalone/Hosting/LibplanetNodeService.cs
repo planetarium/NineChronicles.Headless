@@ -167,7 +167,7 @@ namespace Libplanet.Standalone.Hosting
 
         public async Task<bool> CheckPeer(string addr)
         {
-            Address address = new Address(addr);
+            var address = new Address(addr);
             var boundPeer = await Swarm.FindSpecificPeerAsync(
                 address, -1, cancellationToken: _swarmCancellationToken);
             return !(boundPeer is null);
