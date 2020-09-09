@@ -2,7 +2,10 @@ name: push
 
 on:
   push:
-    branches: [ main ]
+    branches:
+    - 9c-beta-*
+    - main
+    tags: ['*']
 
 jobs:
   build-and-push:
