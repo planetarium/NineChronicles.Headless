@@ -58,6 +58,8 @@ namespace Libplanet.Standalone.Hosting
 
         private static readonly TimeSpan BootstrapInterval = TimeSpan.FromMinutes(5);
 
+        private static readonly TimeSpan CheckPeerTableInterval = TimeSpan.FromSeconds(10);
+
         public LibplanetNodeService(
             LibplanetNodeServiceProperties<T> properties,
             IBlockPolicy<T> blockPolicy,
@@ -129,7 +131,8 @@ namespace Libplanet.Standalone.Hosting
             {
                 await await Task.WhenAny(
                     StartSwarm(preload, cancellationToken),
-                    CheckSwarm(cancellationToken)
+                    CheckSwarm(cancellationToken),
+                    CheckPeerTable(cancellationToken)
                 );
                 preload = false;
                 await Task.Delay(TimeSpan.FromSeconds(15), cancellationToken);
@@ -317,6 +320,20 @@ namespace Libplanet.Standalone.Hosting
                     );
                     await Swarm.StopAsync(cancellationToken);
                     break;
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
+
+        private async Task CheckPeerTable(CancellationToken cancellationToken = default)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(CheckPeerTableInterval, cancellationToken);
+                if (!Swarm.Peers.Any())
+                {
+                    Log.Error("No any peers in swarm's routing table.");
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();
