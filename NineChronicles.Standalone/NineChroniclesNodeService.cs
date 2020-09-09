@@ -21,7 +21,7 @@ using Nekoyume.Model.State;
 using NineChronicles.Standalone.Properties;
 using Nito.AsyncEx;
 using Serilog;
-
+using Serilog.Events;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Standalone
@@ -67,7 +67,7 @@ namespace NineChronicles.Standalone
                 Log.Error("Secp256K1CryptoBackend initialize failed. Use default backend. {e}", e);
             }
 
-            var blockPolicySource = new BlockPolicySource();
+            var blockPolicySource = new BlockPolicySource(Log.Logger, LogEventLevel.Debug);
             // BlockPolicy shared through Lib9c.
             IBlockPolicy<PolymorphicAction<ActionBase>> blockPolicy = blockPolicySource.GetPolicy(
                 properties.MinimumDifficulty
@@ -75,8 +75,12 @@ namespace NineChronicles.Standalone
             BlockRenderer = blockPolicySource.BlockRenderer;
             ActionRenderer = blockPolicySource.ActionRenderer;
             var renderers = Properties.Render
-                ? new IRenderer<NineChroniclesActionType>[] { BlockRenderer, ActionRenderer }
-                : new [] { BlockRenderer };
+                ? new IRenderer<NineChroniclesActionType>[]
+                {
+                    blockPolicySource.BlockRenderer,
+                    blockPolicySource.LoggedActionRenderer
+                }
+                : new [] { blockPolicySource.LoggedBlockRenderer };
 
             async Task minerLoopAction(
                 BlockChain<NineChroniclesActionType> chain,
