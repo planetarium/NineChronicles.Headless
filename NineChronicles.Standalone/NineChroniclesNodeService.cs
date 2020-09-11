@@ -4,6 +4,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
+using Bencodex.Types;
 using Grpc.Core;
 using Libplanet.Action;
 using Libplanet.Blockchain;
@@ -132,6 +133,11 @@ namespace NineChronicles.Standalone
             {
                 var rawState = NodeService?.BlockChain?.GetState(ActivatedAccountsState.Address);
                 blockPolicySource.UpdateActivationSet(rawState);
+            }
+
+            if (NodeService?.BlockChain?.GetState(AuthorizedMinersState.Address) is Dictionary ams)
+            {
+                blockPolicySource.AuthorizedMinersState = new AuthorizedMinersState(ams);
             }
         }
 
