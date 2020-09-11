@@ -18,9 +18,15 @@ namespace NineChronicles.Standalone
             await group.RemoveAsync(Context);
         }
 
-        public async Task BroadcastAsync(byte[] outputStates)
+        public async Task BroadcastRenderAsync(byte[] outputStates)
         {
             Broadcast(group).OnRender(outputStates);
+            await Task.CompletedTask;
+        }
+
+        public async Task BroadcastUnrenderAsync(byte[] outputStates)
+        {
+            Broadcast(group).OnUnrender(outputStates);
             await Task.CompletedTask;
         }
 
@@ -29,9 +35,9 @@ namespace NineChronicles.Standalone
             Broadcast(group).OnTipChanged(index);
             await Task.CompletedTask;
         }
-        public async Task ReportReorgAsync(byte[] branchpointHash, byte[] oldTipHash, byte[] newTipHash)
+        public async Task ReportReorgAsync(byte[] oldTip, byte[] newTip, byte[] branchpoint)
         {
-            Broadcast(group).OnReorged(branchpointHash, oldTipHash, newTipHash);
+            Broadcast(group).OnReorged(oldTip, newTip, branchpoint);
             await Task.CompletedTask;
         }
     }
