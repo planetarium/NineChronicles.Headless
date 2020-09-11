@@ -320,6 +320,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                             GoldCurrencyState = new GoldCurrencyState(new Currency("NCG", 2, minter: null)),
                             GoldDistributions = new GoldDistribution[0],
                             TableSheets = new Dictionary<string, string>(),
+                            PendingActivationStates = new PendingActivationState[]{ },
                         },
                     }
                 );
