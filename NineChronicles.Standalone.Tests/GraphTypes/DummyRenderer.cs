@@ -21,6 +21,10 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
         )
         {
         }
+
+        public void RenderReorgEnd(Block<T> oldTip, Block<T> newTip, Block<T> branchpoint)
+        {
+        }
     }
 }
 
