@@ -63,6 +63,16 @@ namespace NineChronicles.Standalone
                 stoppingToken
             );
 
+            _blockRenderer.EveryReorgEnd().Subscribe(
+                async ev =>
+                    await _client.ReportReorgEndAsync(
+                        ev.OldTip.Serialize(),
+                        ev.NewTip.Serialize(),
+                        ev.Branchpoint.Serialize()
+                    ),
+                stoppingToken
+            );
+
             _actionRenderer.EveryRender<ActionBase>().Subscribe(
                 async ev =>
                 {
