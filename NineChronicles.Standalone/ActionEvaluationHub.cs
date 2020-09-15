@@ -35,9 +35,16 @@ namespace NineChronicles.Standalone
             Broadcast(group).OnTipChanged(index);
             await Task.CompletedTask;
         }
+        
         public async Task ReportReorgAsync(byte[] oldTip, byte[] newTip, byte[] branchpoint)
         {
             Broadcast(group).OnReorged(oldTip, newTip, branchpoint);
+            await Task.CompletedTask;
+        }
+        
+        public async Task ReportReorgEndAsync(byte[] oldTip, byte[] newTip, byte[] branchpoint)
+        {
+            Broadcast(group).OnReorgEnd(oldTip, newTip, branchpoint);
             await Task.CompletedTask;
         }
     }
