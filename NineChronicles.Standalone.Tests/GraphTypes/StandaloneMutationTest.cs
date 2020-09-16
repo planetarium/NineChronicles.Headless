@@ -164,5 +164,91 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             var userAddress = userPrivateKey.ToAddress();
             Assert.True(activatedAccountsState.Accounts.Contains(userAddress));
         }
+
+        [Fact]
+        public async Task TransferGold()
+        {
+            var senderPrivateKey = new PrivateKey();
+            Address senderAddress = senderPrivateKey.ToAddress();
+            var goldCurrency = new Currency("NCG", 2, minter: null);
+            Block<PolymorphicAction<ActionBase>> genesis =
+                BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+                    new PolymorphicAction<ActionBase>[]
+                    {
+                        new InitializeStates()
+                        {
+                            RankingState = new RankingState(),
+                            ShopState = new ShopState(),
+                            GameConfigState = new GameConfigState(),
+                            RedeemCodeState = new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                                .Add("address", RedeemCodeState.Address.Serialize())
+                                .Add("map", Bencodex.Types.Dictionary.Empty)
+                            ),
+                            AdminAddressState = new AdminState(default, 0),
+                            ActivatedAccountsState = new ActivatedAccountsState(),
+                            GoldCurrencyState = new GoldCurrencyState(goldCurrency),
+                            GoldDistributions = new GoldDistribution[] { },
+                            TableSheets = new Dictionary<string, string>(),
+                            PendingActivationStates = new PendingActivationState[]{ },
+                        },
+                    }
+                );
+            var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+            {
+                Host = System.Net.IPAddress.Loopback.ToString(),
+                AppProtocolVersion = default,
+                GenesisBlock = genesis,
+                StorePath = null,
+                StoreStatesCacheSize = 2,
+                PrivateKey = senderPrivateKey,
+                Port = null,
+                MinimumDifficulty = 4096,
+                NoMiner = true,
+                Render = false,
+                Peers = ImmutableHashSet<Peer>.Empty,
+                TrustedAppProtocolVersionSigners = null,
+            };
+            var service = new NineChroniclesNodeService(properties, null)
+            {
+                PrivateKey = senderPrivateKey
+            };
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
+
+            var blockChain = StandaloneContextFx.BlockChain;
+            await blockChain.MineBlock(senderAddress);
+            await blockChain.MineBlock(senderAddress);
+
+            // 10 + 10 (mining rewards)
+            Assert.Equal(
+                20 * goldCurrency, 
+                blockChain.GetBalance(senderAddress, goldCurrency)
+            );
+
+            Address recipient = new PrivateKey().ToAddress();
+            var query = $"mutation {{ transferGold(recipient: \"{recipient}\", amount: \"17.5\") }}";
+            ExecutionResult result = await ExecuteQueryAsync(query);
+
+            var expectedResult = new Dictionary<string, object>
+            {
+                ["transferGold"] = true,
+            };
+            Assert.Null(result.Errors);
+            Assert.Equal(expectedResult, result.Data);
+            
+            await blockChain.MineBlock(recipient);
+
+            // 10 + 10 - 17.5(transfer)
+            Assert.Equal(
+                FungibleAssetValue.Parse(goldCurrency, "2.5"),
+                blockChain.GetBalance(senderAddress, goldCurrency)
+            );
+
+            // 0 + 17.5(transfer) + 10(mining reward)
+            Assert.Equal(
+                FungibleAssetValue.Parse(goldCurrency, "27.5"),
+                blockChain.GetBalance(recipient, goldCurrency)
+            );
+        }
     }
 }
