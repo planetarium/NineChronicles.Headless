@@ -380,6 +380,79 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             Assert.True(result);
         }
 
+        [Fact]
+        public async Task GoldBalance()
+        {
+            var goldCurrency = new Currency("NCG", 2, minter: null);
+            Block<PolymorphicAction<ActionBase>> genesis =
+                BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+                    new PolymorphicAction<ActionBase>[]
+                    {
+                        new InitializeStates()
+                        {
+                            RankingState = new RankingState(),
+                            ShopState = new ShopState(),
+                            GameConfigState = new GameConfigState(),
+                            RedeemCodeState = new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                                .Add("address", RedeemCodeState.Address.Serialize())
+                                .Add("map", Bencodex.Types.Dictionary.Empty)
+                            ),
+                            AdminAddressState = new AdminState(default, 0),
+                            ActivatedAccountsState = new ActivatedAccountsState(),
+                            GoldCurrencyState = new GoldCurrencyState(goldCurrency),
+                            GoldDistributions = new GoldDistribution[]{ },
+                            TableSheets = new Dictionary<string, string>(),
+                            PendingActivationStates = new PendingActivationState[]{ },
+                        },
+                    }
+                );
+
+            var userPrivateKey = new PrivateKey();
+            var userAddress = userPrivateKey.ToAddress();
+            var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+            {
+                Host = System.Net.IPAddress.Loopback.ToString(),
+                AppProtocolVersion = default,
+                GenesisBlock = genesis,
+                StorePath = null,
+                StoreStatesCacheSize = 2,
+                PrivateKey = userPrivateKey,
+                Port = null,
+                MinimumDifficulty = 4096,
+                NoMiner = true,
+                Render = false,
+                Peers = ImmutableHashSet<Peer>.Empty,
+                TrustedAppProtocolVersionSigners = null,
+            };
+
+            var service = new NineChroniclesNodeService(properties, null);
+            service.PrivateKey = userPrivateKey;
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
+
+            var blockChain = StandaloneContextFx.BlockChain;
+            var query = $"query {{ goldBalance(address: \"{userAddress}\") }}";
+            var queryResult = await ExecuteQueryAsync(query);
+            Assert.Equal(
+                new Dictionary<string, object>
+                {
+                    ["goldBalance"] = "0"
+                },
+                queryResult.Data
+            );
+           
+            await blockChain.MineBlock(userAddress);
+
+            queryResult = await ExecuteQueryAsync(query);
+            Assert.Equal(
+                new Dictionary<string, object>
+                {
+                    ["goldBalance"] = "10"
+                },
+                queryResult.Data
+            );
+        }
+
         private (ProtectedPrivateKey, string) CreateProtectedPrivateKey()
         {
             string CreateRandomBase64String()
