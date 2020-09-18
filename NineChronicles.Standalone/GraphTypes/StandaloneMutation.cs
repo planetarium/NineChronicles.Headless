@@ -1,4 +1,14 @@
+using Bencodex.Types;
+using GraphQL;
 using GraphQL.Types;
+using Libplanet;
+using Libplanet.Assets;
+using Libplanet.Blockchain;
+using Libplanet.Crypto;
+using Nekoyume.Action;
+using Nekoyume.Model.State;
+using Serilog;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Standalone.GraphTypes
 {
@@ -17,6 +27,55 @@ namespace NineChronicles.Standalone.GraphTypes
             Field<ActivationStatusMutation>(
                 name: "activationStatus",
                 resolve: context => standaloneContext.NineChroniclesNodeService);
+
+            Field<NonNullGraphType<BooleanGraphType>>(
+                name: "transferGold",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "recipient",
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "amount"
+                    }
+                ),
+                resolve: context =>
+                {
+                    NineChroniclesNodeService service = standaloneContext.NineChroniclesNodeService;
+                    PrivateKey privateKey = service.PrivateKey;
+                    if (privateKey is null)
+                    {
+                        // FIXME We should cover this case on unittest.
+                        var msg = "No private key was loaded.";
+                        context.Errors.Add(new ExecutionError(msg));
+                        Log.Error(msg);
+                        return false;
+                    }
+
+                    BlockChain<NCAction> blockChain = service.Swarm.BlockChain;
+                    var currency = new GoldCurrencyState(
+                        (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
+                    ).Currency;
+                    FungibleAssetValue amount =
+                    FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
+
+                    Address recipient = context.GetArgument<Address>("recipient");
+
+                    blockChain.MakeTransaction(
+                        privateKey,
+                        new NCAction[]
+                        {
+                            new TransferAsset(
+                                privateKey.ToAddress(),
+                                recipient,
+                                amount
+                            ),
+                        }
+                    );
+                    return true;
+                }
+            );
         }
     }
 }

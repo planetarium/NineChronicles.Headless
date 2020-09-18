@@ -1,11 +1,14 @@
 using System.Security.Cryptography;
 using Bencodex;
+using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Nekoyume.Action;
+using Nekoyume.Model.State;
 
 namespace NineChronicles.Standalone.GraphTypes
 {
@@ -67,6 +70,37 @@ namespace NineChronicles.Standalone.GraphTypes
                 name: "peerChainState",
                 description: "Get the peer's block chain state",
                 resolve: context => new PeerChainStateQuery(standaloneContext));
+
+            Field<NonNullGraphType<StringGraphType>>(
+                name: "goldBalance",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "Target address to query" },
+                    new QueryArgument<ByteStringType> { Name = "hash", Description = "Offset block hash for query." }
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    Address address = context.GetArgument<Address>("address");
+                    byte[] blockHashByteArray = context.GetArgument<byte[]>("hash");
+                    var blockHash = blockHashByteArray is null
+                        ? blockChain.Tip.Hash
+                        : new HashDigest<SHA256>(blockHashByteArray);
+                    Currency currency = new GoldCurrencyState(
+                        (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
+                    ).Currency;
+
+                    return blockChain.GetBalance(
+                        address,
+                        currency,
+                        blockHash
+                    ).GetQuantityString();
+                }
+            );
         }
     }
 }
