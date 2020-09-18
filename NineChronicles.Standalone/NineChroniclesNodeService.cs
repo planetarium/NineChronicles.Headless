@@ -128,11 +128,11 @@ namespace NineChronicles.Standalone
                 ignoreBootstrapFailure
             );
 
-            // FIXME: Agent.cs와 중복된 코드입니다.
             if (blockPolicySource.ActivatedAccounts is null)
             {
-                var rawState = NodeService?.BlockChain?.GetState(ActivatedAccountsState.Address);
-                blockPolicySource.UpdateActivationSet(rawState);
+                blockPolicySource.ActivatedAccountsStateGetter = 
+                    () => NodeService.BlockChain.GetState(ActivatedAccountsState.Address);
+                blockPolicySource.UpdateActivationSet(blockPolicySource.ActivatedAccountsStateGetter());
             }
 
             if (NodeService?.BlockChain?.GetState(AuthorizedMinersState.Address) is Dictionary ams)
