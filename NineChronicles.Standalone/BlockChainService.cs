@@ -24,7 +24,7 @@ namespace NineChronicles.Standalone
         private BlockChain<NineChroniclesActionType> _blockChain;
         private Swarm<NineChroniclesActionType> _swarm;
         private Codec _codec;
-        private DelayedActionRenderer<NineChroniclesActionType> _delayedRenderer;
+        private DelayedRenderer<NineChroniclesActionType> _delayedRenderer;
 
         public BlockChainService(
             BlockChain<NineChroniclesActionType> blockChain,
@@ -33,7 +33,7 @@ namespace NineChronicles.Standalone
         {
             _blockChain = blockChain;
             _delayedRenderer = blockChain.Renderers
-                .OfType<DelayedActionRenderer<NineChroniclesActionType>>()
+                .OfType<DelayedRenderer<NineChroniclesActionType>>()
                 .FirstOrDefault();
             _swarm = swarm;
             _codec = new Codec();
