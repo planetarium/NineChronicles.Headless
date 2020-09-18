@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Numerics;
 using Bencodex;
 using Bencodex.Types;
@@ -5,6 +6,7 @@ using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
+using Libplanet.Blockchain.Renderers;
 using Libplanet.Net;
 using Libplanet.Tx;
 using MagicOnion;
@@ -22,6 +24,7 @@ namespace NineChronicles.Standalone
         private BlockChain<NineChroniclesActionType> _blockChain;
         private Swarm<NineChroniclesActionType> _swarm;
         private Codec _codec;
+        private DelayedActionRenderer<NineChroniclesActionType> _delayedRenderer;
 
         public BlockChainService(
             BlockChain<NineChroniclesActionType> blockChain,
@@ -29,6 +32,9 @@ namespace NineChronicles.Standalone
         )
         {
             _blockChain = blockChain;
+            _delayedRenderer = blockChain.Renderers
+                .OfType<DelayedActionRenderer<NineChroniclesActionType>>()
+                .FirstOrDefault();
             _swarm = swarm;
             _codec = new Codec();
         }
@@ -55,7 +61,7 @@ namespace NineChronicles.Standalone
         public UnaryResult<byte[]> GetState(byte[] addressBytes)
         {
             var address = new Address(addressBytes);
-            IValue state = _blockChain.GetState(address);
+            IValue state = _blockChain.GetState(address, _delayedRenderer?.Tip?.Hash);
             // FIXME: Null과 null 구분해서 반환해야 할 듯
             byte[] encoded = _codec.Encode(state ?? new Null());
             return UnaryResult(encoded);
