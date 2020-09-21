@@ -128,16 +128,10 @@ namespace NineChronicles.Standalone
                 ignoreBootstrapFailure
             );
 
-            if (blockPolicySource.ActivatedAccounts is null)
+            if (NodeService?.BlockChain?.GetState(AuthorizedMinersState.Address) is Dictionary ams &&
+                blockPolicy is BlockPolicy bp)
             {
-                blockPolicySource.ActivatedAccountsStateGetter = 
-                    () => NodeService.BlockChain.GetState(ActivatedAccountsState.Address);
-                blockPolicySource.UpdateActivationSet(blockPolicySource.ActivatedAccountsStateGetter());
-            }
-
-            if (NodeService?.BlockChain?.GetState(AuthorizedMinersState.Address) is Dictionary ams)
-            {
-                blockPolicySource.AuthorizedMinersState = new AuthorizedMinersState(ams);
+                bp.AuthorizedMinersState = new AuthorizedMinersState(ams);
             }
         }
 
