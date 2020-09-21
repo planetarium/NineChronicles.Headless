@@ -63,7 +63,10 @@ namespace Libplanet.Standalone.Tests.Hosting
         {
             public IAction BlockAction => null;
 
-            public bool DoesTransactionFollowsPolicy(Transaction<DummyAction> transaction)
+            public bool DoesTransactionFollowsPolicy(
+                Transaction<DummyAction> transaction,
+                BlockChain<DummyAction> blockChain
+            )
             {
                 return true;
             }
