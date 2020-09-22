@@ -39,6 +39,8 @@ namespace NineChronicles.Standalone
 
         public ActionRenderer ActionRenderer { get; }
 
+        public ExceptionRenderer ExceptionRenderer { get; }
+
         public AsyncManualResetEvent BootstrapEnded => NodeService.BootstrapEnded;
 
         public AsyncManualResetEvent PreloadEnded => NodeService.PreloadEnded;
@@ -75,6 +77,7 @@ namespace NineChronicles.Standalone
             );
             BlockRenderer = blockPolicySource.BlockRenderer;
             ActionRenderer = blockPolicySource.ActionRenderer;
+            ExceptionRenderer = new ExceptionRenderer();
             var renderers = Properties.Render
                 ? new IRenderer<NineChroniclesActionType>[]
                 {
@@ -125,6 +128,11 @@ namespace NineChronicles.Standalone
                 renderers,
                 minerLoopAction,
                 preloadProgress,
+                (code, msg) =>
+                {
+                    ExceptionRenderer.RenderException(code, msg);
+                    Log.Error(msg);
+                },
                 ignoreBootstrapFailure
             );
 
@@ -148,6 +156,7 @@ namespace NineChronicles.Standalone
                         services.AddHostedService(provider => new ActionEvaluationPublisher(
                             BlockRenderer,
                             ActionRenderer,
+                            ExceptionRenderer,
                             IPAddress.Loopback.ToString(),
                             rpcProperties.RpcListenPort
                         ));

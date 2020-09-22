@@ -18,6 +18,7 @@ using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Microsoft.Extensions.Hosting;
+using NineChronicles.RPC.Shared.Exceptions;
 using Nito.AsyncEx;
 using Serilog;
 
@@ -39,6 +40,8 @@ namespace Libplanet.Standalone.Hosting
         public AsyncManualResetEvent PreloadEnded { get; }
 
         private Func<BlockChain<T>, Swarm<T>, PrivateKey, CancellationToken, Task> _minerLoopAction;
+        
+        private Action<RPCException, string> _exceptionHandlerAction;
 
         private LibplanetNodeServiceProperties<T> _properties;
 
@@ -66,6 +69,7 @@ namespace Libplanet.Standalone.Hosting
             IEnumerable<IRenderer<T>> renderers,
             Func<BlockChain<T>, Swarm<T>, PrivateKey, CancellationToken, Task> minerLoopAction,
             Progress<PreloadState> preloadProgress,
+            Action<RPCException, string> exceptionHandlerAction,
             bool ignoreBootstrapFailure = false
         )
         {
@@ -105,6 +109,7 @@ namespace Libplanet.Standalone.Hosting
                 renderers: renderers
             );
             _minerLoopAction = minerLoopAction;
+            _exceptionHandlerAction = exceptionHandlerAction;
             Swarm = new Swarm<T>(
                 BlockChain,
                 _properties.PrivateKey,
@@ -129,11 +134,12 @@ namespace Libplanet.Standalone.Hosting
             bool preload = true;
             while (!cancellationToken.IsCancellationRequested && !_stopRequested)
             {
-                await await Task.WhenAny(
-                    StartSwarm(preload, cancellationToken),
-                    CheckSwarm(cancellationToken),
-                    CheckPeerTable(cancellationToken)
-                );
+                var tasks = new List<Task> { StartSwarm(preload, cancellationToken), CheckSwarm(cancellationToken) };
+                if (_properties.Peers.Any()) 
+                {
+                    tasks.Add(CheckPeerTable(cancellationToken));
+                }
+                await await Task.WhenAny(tasks);
                 preload = false;
                 await Task.Delay(TimeSpan.FromSeconds(15), cancellationToken);
             }
@@ -242,6 +248,7 @@ namespace Libplanet.Standalone.Hosting
             {
                 try
                 {
+                    // FIXME: It's safe to increase depth.
                     await BootstrapSwarmAsync(1);
                     BootstrapEnded.Set();
                 }
@@ -328,12 +335,26 @@ namespace Libplanet.Standalone.Hosting
 
         private async Task CheckPeerTable(CancellationToken cancellationToken = default)
         {
+            const int grace = 3;
+            var count = 0;
             while (!cancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(CheckPeerTableInterval, cancellationToken);
                 if (!Swarm.Peers.Any())
                 {
-                    Log.Error("No any peers in swarm's routing table.");
+                    if (grace == count)
+                    {
+                        _exceptionHandlerAction(
+                            RPCException.NetworkException,
+                            "No any peers are connected even seed peers were given.");
+                        break;
+                    }
+
+                    count++;
+                }
+                else
+                {
+                    count = 0;
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();

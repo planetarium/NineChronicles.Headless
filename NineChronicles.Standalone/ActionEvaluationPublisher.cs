@@ -13,6 +13,7 @@ using MagicOnion.Client;
 using Microsoft.Extensions.Hosting;
 using Nekoyume.Action;
 using Nekoyume.Shared.Hubs;
+using NineChronicles.RPC.Shared.Exceptions;
 using Serilog;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -24,17 +25,20 @@ namespace NineChronicles.Standalone
         private readonly int _port;
         private readonly BlockRenderer _blockRenderer;
         private readonly ActionRenderer _actionRenderer;
+        private readonly ExceptionRenderer _exceptionRenderer;
         private IActionEvaluationHub _client;
 
         public ActionEvaluationPublisher(
             BlockRenderer blockRenderer,
             ActionRenderer actionRenderer,
+            ExceptionRenderer exceptionRenderer,
             string host,
             int port
         )
         {
             _blockRenderer = blockRenderer;
             _actionRenderer = actionRenderer;
+            _exceptionRenderer = exceptionRenderer;
             _host = host;
             _port = port;
         }
@@ -121,6 +125,15 @@ namespace NineChronicles.Standalone
                         // FIXME add logger as property
                         Log.Error(e, "Skip broadcasting unrender due to the unexpected exception");
                     }
+                },
+                stoppingToken
+            );
+
+            _exceptionRenderer.EveryException().Subscribe(
+                async tuple =>
+                {
+                    var (code, message) = tuple;
+                    await _client.ReportExceptionAsync((int)code, message);
                 },
                 stoppingToken
             );

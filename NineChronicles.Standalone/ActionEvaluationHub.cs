@@ -47,5 +47,11 @@ namespace NineChronicles.Standalone
             Broadcast(group).OnReorgEnd(oldTip, newTip, branchpoint);
             await Task.CompletedTask;
         }
+
+        public async Task ReportExceptionAsync(int code, string message)
+        {
+            Broadcast(group).OnException(code, message);
+            await Task.CompletedTask;
+        }
     }
 }
