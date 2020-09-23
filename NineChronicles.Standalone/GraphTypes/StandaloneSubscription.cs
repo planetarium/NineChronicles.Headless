@@ -139,6 +139,14 @@ namespace NineChronicles.Standalone.GraphTypes
                 Subscriber = new EventStreamResolver<Notification>(context =>
                     StandaloneContext.NotificationSubject.AsObservable()),
             });
+            AddField(new EventStreamFieldType
+            {
+                Name = "nodeException",
+                Type = typeof(NonNullGraphType<NodeExceptionType>),
+                Resolver = new FuncFieldResolver<NodeException>(context => context.Source as NodeException),
+                Subscriber = new EventStreamResolver<NodeException>(context =>
+                    StandaloneContext.NodeExceptionSubject.AsObservable()),
+            });
         }
 
         public void RegisterTipChangedSubscription()

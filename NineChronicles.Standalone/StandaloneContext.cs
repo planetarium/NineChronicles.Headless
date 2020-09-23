@@ -18,6 +18,7 @@ namespace NineChronicles.Standalone
         public ReplaySubject<DifferentAppProtocolVersionEncounter> DifferentAppProtocolVersionEncounterSubject { get; }
             = new ReplaySubject<DifferentAppProtocolVersionEncounter>();
         public ReplaySubject<Notification> NotificationSubject { get; } = new ReplaySubject<Notification>(1);
+        public ReplaySubject<NodeException> NodeExceptionSubject { get; } = new ReplaySubject<NodeException>();
         public NineChroniclesNodeService NineChroniclesNodeService { get; set; }
         public NodeStatusType NodeStatus => new NodeStatusType()
         {
