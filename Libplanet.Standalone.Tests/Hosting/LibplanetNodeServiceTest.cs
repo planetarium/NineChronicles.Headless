@@ -32,7 +32,8 @@ namespace Libplanet.Standalone.Tests.Hosting
                 blockPolicy: new BlockPolicy(),
                 renderers: null,
                 minerLoopAction: (chain, swarm, pk, ct) => Task.CompletedTask,
-                preloadProgress: null
+                preloadProgress: null,
+                exceptionHandlerAction:  (code, msg) => throw new Exception($"{code}, {msg}")
             );
 
             Assert.NotNull(service);
@@ -54,7 +55,8 @@ namespace Libplanet.Standalone.Tests.Hosting
                     blockPolicy: new BlockPolicy(),
                     renderers: null,
                     minerLoopAction: (chain, swarm, pk, ct) => Task.CompletedTask,
-                    preloadProgress: null
+                    preloadProgress: null,
+                    exceptionHandlerAction:  (code, msg) => throw new Exception($"{code}, {msg}")
                 );
             });
         }

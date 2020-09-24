@@ -124,7 +124,8 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                 blockPolicy: new BlockPolicy<T>(),
                 renderers: new[] { new DummyRenderer<T>() },
                 minerLoopAction: (chain, swarm, privateKey, _) => Task.CompletedTask,
-                preloadProgress: preloadProgress
+                preloadProgress: preloadProgress,
+                exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}")
             );
         }
 
