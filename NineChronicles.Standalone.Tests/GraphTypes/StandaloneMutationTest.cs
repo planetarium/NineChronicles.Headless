@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using Bencodex.Types;
 using GraphQL;
 using Libplanet;
 using Libplanet.Action;
@@ -255,26 +256,31 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             var playerPrivateKey = new PrivateKey();
             Address playerAddress = playerPrivateKey.ToAddress();
             var goldCurrency = new Currency("NCG", 2, minter: null);
+            var sheets = TableSheetsImporter.ImportSheets();
+            var ranking = new RankingState();
+            for (var i = 0; i < RankingState.RankingMapCapacity; i++)
+            {
+                ranking.RankingMap[RankingState.Derive(i)] = new HashSet<Address>().ToImmutableHashSet();
+            }
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
                     new PolymorphicAction<ActionBase>[]
                     {
-                        new InitializeStates()
-                        {
-                            RankingState = new RankingState(),
-                            ShopState = new ShopState(),
-                            GameConfigState = new GameConfigState(),
-                            RedeemCodeState = new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                        new InitializeStates(
+                            rankingState: ranking,
+                            shopState: new ShopState(),
+                            gameConfigState: new GameConfigState(),
+                            redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
                                 .Add("address", RedeemCodeState.Address.Serialize())
                                 .Add("map", Bencodex.Types.Dictionary.Empty)
                             ),
-                            AdminAddressState = new AdminState(default, 0),
-                            ActivatedAccountsState = new ActivatedAccountsState(),
-                            GoldCurrencyState = new GoldCurrencyState(goldCurrency),
-                            GoldDistributions = new GoldDistribution[] { },
-                            TableSheets = new Dictionary<string, string>(),
-                            PendingActivationStates = new PendingActivationState[]{ },
-                        },
+                            adminAddressState: new AdminState(default, 0),
+                            activatedAccountsState: new ActivatedAccountsState(),
+                            goldCurrencyState: new GoldCurrencyState(goldCurrency),
+                            goldDistributions: new GoldDistribution[0],
+                            tableSheets: sheets,
+                            pendingActivationStates: new PendingActivationState[]{ }
+                        ),
                     }
                 );
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
@@ -311,7 +317,16 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             Assert.True(isCreated);
 
             await blockChain.MineBlock(playerAddress);
-            IValue state = blockChain.GetState(playerAddress);
+            var playerState = (Bencodex.Types.Dictionary)blockChain.GetState(playerAddress);
+            var agentState = new AgentState(playerState);
+
+            Assert.Equal(playerAddress, agentState.address);
+            Assert.True(agentState.avatarAddresses.ContainsKey(0));
+
+            var avatar = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
+
+            Assert.Equal("createbymutation", avatar.name);
+            
         }
     }
 }

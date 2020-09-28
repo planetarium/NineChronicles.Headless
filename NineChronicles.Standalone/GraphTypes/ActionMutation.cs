@@ -23,10 +23,12 @@ namespace NineChronicles.Standalone.GraphTypes
                         NineChroniclesNodeService service = context.Source;
                         PrivateKey privatekey = service.PrivateKey;
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
+                        Address userAddress = privatekey.PublicKey.ToAddress();
+                        Address avatarAddress = userAddress.Derive("avatar");
 
                         var action = new CreateAvatar
                         {
-                            avatarAddress = privatekey.PublicKey.ToAddress(),
+                            avatarAddress = avatarAddress,
                             index = 0,
                             hair = 0,
                             lens = 0,
