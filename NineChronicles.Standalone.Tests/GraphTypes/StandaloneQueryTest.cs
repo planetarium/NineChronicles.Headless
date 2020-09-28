@@ -306,22 +306,21 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                 BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
                     new PolymorphicAction<ActionBase>[]
                     {
-                        new InitializeStates()
-                        {
-                            RankingState = new RankingState(),
-                            ShopState = new ShopState(),
-                            GameConfigState = new GameConfigState(),
-                            RedeemCodeState = new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                        new InitializeStates(
+                            rankingState: new RankingState(),
+                            shopState: new ShopState(),
+                            gameConfigState: new GameConfigState(),
+                            redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
                                 .Add("address", RedeemCodeState.Address.Serialize())
                                 .Add("map", Bencodex.Types.Dictionary.Empty)
                             ),
-                            AdminAddressState = new AdminState(adminAddress, 1500000),
-                            ActivatedAccountsState = new ActivatedAccountsState(activatedAccounts),
-                            GoldCurrencyState = new GoldCurrencyState(new Currency("NCG", 2, minter: null)),
-                            GoldDistributions = new GoldDistribution[0],
-                            TableSheets = new Dictionary<string, string>(),
-                            PendingActivationStates = new PendingActivationState[]{ },
-                        },
+                            adminAddressState: new AdminState(adminAddress, 1500000),
+                            activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
+                            goldCurrencyState: new GoldCurrencyState(new Currency("NCG", 2, minter: null)),
+                            goldDistributions: new GoldDistribution[0],
+                            tableSheets: new Dictionary<string, string>(),
+                            pendingActivationStates: new PendingActivationState[]{ }
+                        ),
                     }
                 );
 
@@ -388,22 +387,21 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                 BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
                     new PolymorphicAction<ActionBase>[]
                     {
-                        new InitializeStates()
-                        {
-                            RankingState = new RankingState(),
-                            ShopState = new ShopState(),
-                            GameConfigState = new GameConfigState(),
-                            RedeemCodeState = new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                        new InitializeStates(
+                            rankingState: new RankingState(),
+                            shopState: new ShopState(),
+                            gameConfigState: new GameConfigState(),
+                            redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
                                 .Add("address", RedeemCodeState.Address.Serialize())
                                 .Add("map", Bencodex.Types.Dictionary.Empty)
                             ),
-                            AdminAddressState = new AdminState(default, 0),
-                            ActivatedAccountsState = new ActivatedAccountsState(),
-                            GoldCurrencyState = new GoldCurrencyState(goldCurrency),
-                            GoldDistributions = new GoldDistribution[]{ },
-                            TableSheets = new Dictionary<string, string>(),
-                            PendingActivationStates = new PendingActivationState[]{ },
-                        },
+                            adminAddressState: new AdminState(default, 0),
+                            activatedAccountsState: new ActivatedAccountsState(),
+                            goldCurrencyState: new GoldCurrencyState(goldCurrency),
+                            goldDistributions: new GoldDistribution[]{ },
+                            tableSheets: new Dictionary<string, string>(),
+                            pendingActivationStates: new PendingActivationState[]{ }
+                        ),
                     }
                 );
 
