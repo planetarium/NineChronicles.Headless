@@ -344,9 +344,9 @@ namespace Libplanet.Standalone.Hosting
                 {
                     if (grace == count)
                     {
-                        _exceptionHandlerAction(
-                            RPCException.NetworkException,
-                            "No any peers are connected even seed peers were given.");
+                        var message = "No any peers are connected even seed peers were given.";
+                        _exceptionHandlerAction(RPCException.NetworkException, message);
+                        _properties.NodeExceptionOccurred((int)RPCException.NetworkException, message);
                         break;
                     }
 

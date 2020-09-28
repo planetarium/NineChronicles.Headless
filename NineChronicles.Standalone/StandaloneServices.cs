@@ -37,6 +37,18 @@ namespace NineChronicles.Standalone
                     return false;
                 };
 
+            properties.Libplanet.NodeExceptionOccurred =
+                (code, message) =>
+                {
+                    standaloneContext.NodeExceptionSubject.OnNext(
+                        new NodeException
+                        {
+                            Code = code,
+                            Message = message,
+                        }
+                    );
+                };
+
             var service = new NineChroniclesNodeService(
                 properties.Libplanet,
                 properties.Rpc,

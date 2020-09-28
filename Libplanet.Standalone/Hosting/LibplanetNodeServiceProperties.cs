@@ -50,5 +50,7 @@ namespace Libplanet.Standalone.Hosting
         public int Workers { get; set; } = 5;
 
         public int Confirmations { get; set; } = 0;
+
+        public System.Action<int, string> NodeExceptionOccurred { get; set; }
     }
 }

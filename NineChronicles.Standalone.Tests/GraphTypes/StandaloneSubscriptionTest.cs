@@ -188,5 +188,42 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             Assert.Equal(apv2.Signature, ByteUtil.ParseHex((string)localVersion["signature"]));
             Assert.Equal(apv2.Extra, localVersion["extra"]);
         }
+
+        [Fact(Timeout = 15000)]
+        public async Task SubscribeNodeException()
+        {   
+            var result = await ExecuteQueryAsync(@"
+                subscription {
+                    nodeException {
+                        code
+                        message
+                    }
+                }
+            ");
+            var subscribeResult = (SubscriptionExecutionResult) result;
+            var stream = subscribeResult.Streams.Values.FirstOrDefault();
+            Assert.NotNull(stream);
+
+            await Assert.ThrowsAsync<TimeoutException>(async () =>
+            {
+                await stream.Take(1).Timeout(TimeSpan.FromMilliseconds(5000)).FirstAsync();
+            });
+
+            const int code = 0xcc;
+            const string message = "This is test message.";
+            StandaloneContextFx.NodeExceptionSubject.OnNext(
+                new NodeException()
+                {
+                    Code = code,
+                    Message = message,
+                }
+            );
+            var rawEvents = await stream.Take(1);
+            var rawEvent = (Dictionary<string, object>)rawEvents.Data;
+            var nodeException =
+                (Dictionary<string, object>)rawEvent["nodeException"];
+            Assert.Equal(code, nodeException["code"]);
+            Assert.Equal(message, nodeException["message"]);
+        }
     }
 }
