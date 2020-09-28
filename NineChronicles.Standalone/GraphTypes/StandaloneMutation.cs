@@ -28,6 +28,10 @@ namespace NineChronicles.Standalone.GraphTypes
                 name: "activationStatus",
                 resolve: context => standaloneContext.NineChroniclesNodeService);
 
+            Field<ActionMutation>(
+                name: "action",
+                resolve: context => standaloneContext.NineChroniclesNodeService);
+
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "transferGold",
                 arguments: new QueryArguments(
