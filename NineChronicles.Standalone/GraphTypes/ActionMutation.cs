@@ -15,7 +15,7 @@ namespace NineChronicles.Standalone.GraphTypes
     {
         public ActionMutation()
         {
-            Field<NonNullGraphType<BooleanGraphType>>("createAvata",
+            Field<NonNullGraphType<BooleanGraphType>>("createAvatar",
                 resolve: context =>
                 {
                     try

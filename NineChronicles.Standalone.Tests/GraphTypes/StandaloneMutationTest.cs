@@ -248,5 +248,70 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                 blockChain.GetBalance(recipient, goldCurrency)
             );
         }
+
+        [Fact]
+        public async Task CreateAvatar()
+        {
+            var playerPrivateKey = new PrivateKey();
+            Address playerAddress = playerPrivateKey.ToAddress();
+            var goldCurrency = new Currency("NCG", 2, minter: null);
+            Block<PolymorphicAction<ActionBase>> genesis =
+                BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+                    new PolymorphicAction<ActionBase>[]
+                    {
+                        new InitializeStates()
+                        {
+                            RankingState = new RankingState(),
+                            ShopState = new ShopState(),
+                            GameConfigState = new GameConfigState(),
+                            RedeemCodeState = new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                                .Add("address", RedeemCodeState.Address.Serialize())
+                                .Add("map", Bencodex.Types.Dictionary.Empty)
+                            ),
+                            AdminAddressState = new AdminState(default, 0),
+                            ActivatedAccountsState = new ActivatedAccountsState(),
+                            GoldCurrencyState = new GoldCurrencyState(goldCurrency),
+                            GoldDistributions = new GoldDistribution[] { },
+                            TableSheets = new Dictionary<string, string>(),
+                            PendingActivationStates = new PendingActivationState[]{ },
+                        },
+                    }
+                );
+            var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+            {
+                Host = System.Net.IPAddress.Loopback.ToString(),
+                AppProtocolVersion = default,
+                GenesisBlock = genesis,
+                StorePath = null,
+                StoreStatesCacheSize = 2,
+                PrivateKey = playerPrivateKey,
+                Port = null,
+                MinimumDifficulty = 4096,
+                NoMiner = true,
+                Render = false,
+                Peers = ImmutableHashSet<Peer>.Empty,
+                TrustedAppProtocolVersionSigners = null,
+            };
+            var service = new NineChroniclesNodeService(properties, null)
+            {
+                PrivateKey = playerPrivateKey
+            };
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
+
+            var blockChain = StandaloneContextFx.BlockChain;
+
+            var query = $"mutation {{ action {{ createAvatar }} }}";
+            ExecutionResult result = await ExecuteQueryAsync(query);
+
+            var isCreated = (bool)result.Data
+                .As<Dictionary<string, object>>()["action"]
+                .As<Dictionary<string, object>>()["createAvatar"];
+
+            Assert.True(isCreated);
+
+            await blockChain.MineBlock(playerAddress);
+            IValue state = blockChain.GetState(playerAddress);
+        }
     }
 }
