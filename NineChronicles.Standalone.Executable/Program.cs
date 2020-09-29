@@ -82,7 +82,19 @@ namespace NineChronicles.Standalone.Executable
                 Description =
                     "The number of required confirmations to recognize a block.  0 by default."
             )]
-            int confirmations = 0
+            int confirmations = 0,
+            [Option("dev", Description = "Flag to turn on the dev mode.  false by default.")]
+            bool isDev = false,
+            [Option(
+                "dev.block-interval",
+                Description =
+                    "The time interval between blocks. It's unit is seconds. Works only when dev mode is on.  10 (s) by default.")]
+            int blockInterval = 10,
+            [Option(
+                "dev.reorg-interval",
+                Description =
+                    "The size of reorg interval. Works only when dev mode is on.  0 by default.")]
+            int reorgInterval = 0
         )
         {
 #if SENTRY || ! DEBUG
@@ -189,7 +201,12 @@ namespace NineChronicles.Standalone.Executable
                 };
 
                 NineChroniclesNodeService nineChroniclesNodeService =
-                    StandaloneServices.CreateHeadless(nineChroniclesProperties, standaloneContext);
+                    StandaloneServices.CreateHeadless(
+                        nineChroniclesProperties,
+                        standaloneContext,
+                        isDev: isDev,
+                        blockInterval: blockInterval,
+                        reorgInterval: reorgInterval);
                 standaloneContext.NineChroniclesNodeService = nineChroniclesNodeService;
 
                 if (libplanetNode)
