@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using GraphQL;
+using Lib9c.Tests;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
@@ -256,7 +259,8 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             var playerPrivateKey = new PrivateKey();
             Address playerAddress = playerPrivateKey.ToAddress();
             var goldCurrency = new Currency("NCG", 2, minter: null);
-            var sheets = TableSheetsImporter.ImportSheets();
+            var fixturePath = Path.Combine("..", "..", "..", "..", "Lib9c", ".Lib9c.Tests", "Data", "TableCSV");
+            var sheets = TableSheetsImporter.ImportSheets(fixturePath);
             var ranking = new RankingState();
             for (var i = 0; i < RankingState.RankingMapCapacity; i++)
             {
