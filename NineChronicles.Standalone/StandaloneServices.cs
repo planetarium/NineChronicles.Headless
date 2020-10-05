@@ -9,7 +9,10 @@ namespace NineChronicles.Standalone
         public static NineChroniclesNodeService CreateHeadless(
             NineChroniclesNodeServiceProperties properties,
             StandaloneContext standaloneContext = null,
-            bool ignoreBootstrapFailure = true
+            bool ignoreBootstrapFailure = true,
+            bool isDev = false,
+            int blockInterval = 10,
+            int reorgInterval = 0
         )
         {
             Progress<PreloadState> progress = null;
@@ -53,7 +56,10 @@ namespace NineChronicles.Standalone
                 properties.Libplanet,
                 properties.Rpc,
                 preloadProgress: progress,
-                ignoreBootstrapFailure: ignoreBootstrapFailure);
+                ignoreBootstrapFailure: ignoreBootstrapFailure,
+                isDev: isDev,
+                blockInterval: blockInterval,
+                reorgInterval: reorgInterval);
             service.ConfigureStandaloneContext(standaloneContext);
 
             return service;

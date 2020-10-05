@@ -43,25 +43,25 @@ namespace Libplanet.Standalone.Hosting
         
         private Action<RPCException, string> _exceptionHandlerAction;
 
-        private LibplanetNodeServiceProperties<T> _properties;
+        protected LibplanetNodeServiceProperties<T> Properties;
 
-        private Progress<PreloadState> _preloadProgress;
+        protected Progress<PreloadState> PreloadProgress;
 
-        private bool _ignoreBootstrapFailure;
+        protected bool IgnoreBootstrapFailure;
 
-        private CancellationToken _swarmCancellationToken;
+        protected CancellationToken SwarmCancellationToken;
 
-        private CancellationTokenSource _miningCancellationTokenSource;
+        protected CancellationTokenSource MiningCancellationTokenSource;
 
         private bool _stopRequested = false;
 
-        private static readonly TimeSpan PingSeedTimeout = TimeSpan.FromSeconds(5);
+        protected static readonly TimeSpan PingSeedTimeout = TimeSpan.FromSeconds(5);
 
-        private static readonly TimeSpan FindNeighborsTimeout = TimeSpan.FromSeconds(5);
+        protected static readonly TimeSpan FindNeighborsTimeout = TimeSpan.FromSeconds(5);
 
-        private static readonly TimeSpan BootstrapInterval = TimeSpan.FromMinutes(5);
+        protected static readonly TimeSpan BootstrapInterval = TimeSpan.FromMinutes(5);
 
-        private static readonly TimeSpan CheckPeerTableInterval = TimeSpan.FromSeconds(10);
+        protected static readonly TimeSpan CheckPeerTableInterval = TimeSpan.FromSeconds(10);
 
         public LibplanetNodeService(
             LibplanetNodeServiceProperties<T> properties,
@@ -73,17 +73,22 @@ namespace Libplanet.Standalone.Hosting
             bool ignoreBootstrapFailure = false
         )
         {
-            _properties = properties;
+            if (blockPolicy is null)
+            {
+                throw new ArgumentNullException(nameof(blockPolicy));
+            }
+            
+            Properties = properties;
 
             var genesisBlock = LoadGenesisBlock(properties);
 
-            var iceServers = _properties.IceServers;
+            var iceServers = Properties.IceServers;
 
             (Store, StateStore) = LoadStore(
-                _properties.StorePath,
-                _properties.StoreType,
-                _properties.StoreStatesCacheSize,
-                _properties.Mpt);
+                Properties.StorePath,
+                Properties.StoreType,
+                Properties.StoreStatesCacheSize,
+                Properties.Mpt);
 
             var chainIds = Store.ListChainIds().ToList();
             Log.Debug($"Number of chain ids: {chainIds.Count()}");
@@ -93,11 +98,11 @@ namespace Libplanet.Standalone.Hosting
                 Log.Debug($"chainId: {chainId}");
             }
 
-            if (_properties.Confirmations > 0)
+            if (Properties.Confirmations > 0)
             {
                 renderers = renderers.Select(r => r is IActionRenderer<T> ar
-                    ? new DelayedActionRenderer<T>(ar, Store, _properties.Confirmations)
-                    : new DelayedRenderer<T>(r, Store, _properties.Confirmations)
+                    ? new DelayedActionRenderer<T>(ar, Store, Properties.Confirmations)
+                    : new DelayedRenderer<T>(r, Store, Properties.Confirmations)
                 );
             }
 
@@ -112,30 +117,30 @@ namespace Libplanet.Standalone.Hosting
             _exceptionHandlerAction = exceptionHandlerAction;
             Swarm = new Swarm<T>(
                 BlockChain,
-                _properties.PrivateKey,
-                _properties.AppProtocolVersion,
-                trustedAppProtocolVersionSigners: _properties.TrustedAppProtocolVersionSigners,
-                host: _properties.Host,
-                listenPort: _properties.Port,
+                Properties.PrivateKey,
+                Properties.AppProtocolVersion,
+                trustedAppProtocolVersionSigners: Properties.TrustedAppProtocolVersionSigners,
+                host: Properties.Host,
+                listenPort: Properties.Port,
                 iceServers: iceServers,
-                workers: _properties.Workers,
-                differentAppProtocolVersionEncountered: _properties.DifferentAppProtocolVersionEncountered
+                workers: Properties.Workers,
+                differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered
             );
 
             PreloadEnded = new AsyncManualResetEvent();
             BootstrapEnded = new AsyncManualResetEvent();
 
-            _preloadProgress = preloadProgress;
-            _ignoreBootstrapFailure = ignoreBootstrapFailure;
+            PreloadProgress = preloadProgress;
+            IgnoreBootstrapFailure = ignoreBootstrapFailure;
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public virtual async Task StartAsync(CancellationToken cancellationToken)
         {
             bool preload = true;
             while (!cancellationToken.IsCancellationRequested && !_stopRequested)
             {
                 var tasks = new List<Task> { StartSwarm(preload, cancellationToken), CheckSwarm(cancellationToken) };
-                if (_properties.Peers.Any()) 
+                if (Properties.Peers.Any()) 
                 {
                     tasks.Add(CheckPeerTable(cancellationToken));
                 }
@@ -146,7 +151,7 @@ namespace Libplanet.Standalone.Hosting
         }
 
         // 이 privateKey는 swarm에서 사용하는 privateKey와 다를 수 있습니다.
-        public void StartMining(PrivateKey privateKey)
+        public virtual void StartMining(PrivateKey privateKey)
         {
             if (BlockChain is null)
             {
@@ -162,34 +167,34 @@ namespace Libplanet.Standalone.Hosting
                     $"{nameof(Swarm)} is null.");
             }
 
-            _miningCancellationTokenSource =
-                CancellationTokenSource.CreateLinkedTokenSource(_swarmCancellationToken);
+            MiningCancellationTokenSource =
+                CancellationTokenSource.CreateLinkedTokenSource(SwarmCancellationToken);
             Task.Run(
-                () => _minerLoopAction(BlockChain, Swarm, privateKey, _miningCancellationTokenSource.Token),
-                _miningCancellationTokenSource.Token);
+                () => _minerLoopAction(BlockChain, Swarm, privateKey, MiningCancellationTokenSource.Token),
+                MiningCancellationTokenSource.Token);
         }
 
         public void StopMining()
         {
-            _miningCancellationTokenSource?.Cancel();
+            MiningCancellationTokenSource?.Cancel();
         }
 
         public async Task<bool> CheckPeer(string addr)
         {
             var address = new Address(addr);
             var boundPeer = await Swarm.FindSpecificPeerAsync(
-                address, -1, cancellationToken: _swarmCancellationToken);
+                address, -1, cancellationToken: SwarmCancellationToken);
             return !(boundPeer is null);
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public virtual Task StopAsync(CancellationToken cancellationToken)
         {
             _stopRequested = true;
             StopMining();
             return Swarm.StopAsync(cancellationToken);
         }
 
-        private (BaseBlockStatesStore, IStateStore) LoadStore(string path, string type, int statesCacheSize, bool mpt)
+        protected (BaseBlockStatesStore, IStateStore) LoadStore(string path, string type, int statesCacheSize, bool mpt)
         {
             BaseBlockStatesStore store = null;
             IStateStore stateStore = null;
@@ -233,7 +238,7 @@ namespace Libplanet.Standalone.Hosting
 
         private async Task StartSwarm(bool preload, CancellationToken cancellationToken)
         {
-            var peers = _properties.Peers.ToImmutableArray();
+            var peers = Properties.Peers.ToImmutableArray();
 
             Task BootstrapSwarmAsync(int depth)
                 => Swarm.BootstrapAsync(
@@ -256,7 +261,7 @@ namespace Libplanet.Standalone.Hosting
                 {
                     Log.Error(e, "Bootstrap failed: {Exception}", e);
 
-                    if (!_ignoreBootstrapFailure)
+                    if (!IgnoreBootstrapFailure)
                     {
                         throw;
                     }
@@ -266,8 +271,8 @@ namespace Libplanet.Standalone.Hosting
                 {
                     await Swarm.PreloadAsync(
                         TimeSpan.FromSeconds(5),
-                        _preloadProgress,
-                        _properties.TrustedStateValidators,
+                        PreloadProgress,
+                        Properties.TrustedStateValidators,
                         cancellationToken: cancellationToken
                     );
                     PreloadEnded.Set();
@@ -296,7 +301,7 @@ namespace Libplanet.Standalone.Hosting
                 }
             }
 
-            _swarmCancellationToken = cancellationToken;
+            SwarmCancellationToken = cancellationToken;
 
             try
             {
@@ -314,7 +319,7 @@ namespace Libplanet.Standalone.Hosting
             }
         }
 
-        private async Task CheckSwarm(CancellationToken cancellationToken = default)
+        protected async Task CheckSwarm(CancellationToken cancellationToken = default)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -333,7 +338,7 @@ namespace Libplanet.Standalone.Hosting
             }
         }
 
-        private async Task CheckPeerTable(CancellationToken cancellationToken = default)
+        protected async Task CheckPeerTable(CancellationToken cancellationToken = default)
         {
             const int grace = 3;
             var count = 0;
@@ -346,7 +351,7 @@ namespace Libplanet.Standalone.Hosting
                     {
                         var message = "No any peers are connected even seed peers were given.";
                         _exceptionHandlerAction(RPCException.NetworkException, message);
-                        _properties.NodeExceptionOccurred((int)RPCException.NetworkException, message);
+                        Properties.NodeExceptionOccurred((int)RPCException.NetworkException, message);
                         break;
                     }
 
@@ -361,7 +366,7 @@ namespace Libplanet.Standalone.Hosting
             }
         }
 
-        private Block<T> LoadGenesisBlock(LibplanetNodeServiceProperties<T> properties)
+        protected Block<T> LoadGenesisBlock(LibplanetNodeServiceProperties<T> properties)
         {
             if (!(properties.GenesisBlock is null))
             {
@@ -369,7 +374,7 @@ namespace Libplanet.Standalone.Hosting
             }
             else if (!string.IsNullOrEmpty(properties.GenesisBlockPath))
             {
-                var uri = new Uri(_properties.GenesisBlockPath);
+                var uri = new Uri(properties.GenesisBlockPath);
                 using var client = new WebClient();
                 var rawGenesisBlock = client.DownloadData(uri);
                 return Block<T>.Deserialize(rawGenesisBlock);
@@ -381,7 +386,7 @@ namespace Libplanet.Standalone.Hosting
             }
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             Log.Debug($"Disposing {nameof(LibplanetNodeService<T>)}...");
 

@@ -49,12 +49,14 @@ namespace NineChronicles.Standalone
 
         public PrivateKey PrivateKey { get; set; }
 
-
         public NineChroniclesNodeService(
             LibplanetNodeServiceProperties<NineChroniclesActionType> properties,
             RpcNodeServiceProperties? rpcNodeServiceProperties,
             Progress<PreloadState> preloadProgress = null,
-            bool ignoreBootstrapFailure = false
+            bool ignoreBootstrapFailure = false,
+            bool isDev = false,
+            int blockInterval = 10,
+            int reorgInterval = 0
         )
         {
             Properties = properties;
@@ -72,9 +74,20 @@ namespace NineChronicles.Standalone
 
             var blockPolicySource = new BlockPolicySource(Log.Logger, LogEventLevel.Debug);
             // BlockPolicy shared through Lib9c.
-            IBlockPolicy<PolymorphicAction<ActionBase>> blockPolicy = blockPolicySource.GetPolicy(
-                properties.MinimumDifficulty
-            );
+            IBlockPolicy<PolymorphicAction<ActionBase>> blockPolicy = null;
+            // Policies for dev mode.
+            IBlockPolicy<PolymorphicAction<ActionBase>> easyPolicy = null;
+            IBlockPolicy<PolymorphicAction<ActionBase>> hardPolicy = null;
+            if (isDev)
+            {
+                easyPolicy = new ReorgPolicy(new RewardGold(), 1);
+                hardPolicy = new ReorgPolicy(new RewardGold(), 2);
+            }
+            else
+            {
+                blockPolicy = blockPolicySource.GetPolicy(properties.MinimumDifficulty);
+            }
+
             BlockRenderer = blockPolicySource.BlockRenderer;
             ActionRenderer = blockPolicySource.ActionRenderer;
             ExceptionRenderer = new ExceptionRenderer();
@@ -122,19 +135,76 @@ namespace NineChronicles.Standalone
                 }
             }
 
-            NodeService = new LibplanetNodeService<NineChroniclesActionType>(
-                Properties,
-                blockPolicy,
-                renderers,
-                minerLoopAction,
-                preloadProgress,
-                (code, msg) =>
+            async Task devMinerLoopAction(
+                Swarm<NineChroniclesActionType> mainSwarm,
+                Swarm<NineChroniclesActionType> subSwarm,
+                PrivateKey privateKey,
+                CancellationToken cancellationToken)
+            {
+                var miner = new ReorgMiner(mainSwarm, subSwarm, privateKey, reorgInterval);
+                Log.Debug("Miner called.");
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    ExceptionRenderer.RenderException(code, msg);
-                    Log.Error(msg);
-                },
-                ignoreBootstrapFailure
-            );
+                    try
+                    {
+                        if (mainSwarm.Running)
+                        {
+                            Log.Debug("Start mining.");
+                            var (mainBlock, subBlock) = await miner.MineBlockAsync(cancellationToken);
+                            await Task.Delay(blockInterval * 1000, cancellationToken);
+
+                            const int txCountThreshold = 10;
+                            var txCount = mainBlock?.Transactions.Count() ?? 0;
+                            if (!(mainBlock is null) && txCount >= txCountThreshold)
+                            {
+                                Log.Error($"Block {mainBlock.Index}({mainBlock.Hash}) transaction count is {txCount}.");
+                            }
+                        }
+                        else
+                        {
+                            await Task.Delay(1000, cancellationToken);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Exception occurred.");
+                    }
+                }
+            }
+
+            if (isDev)
+            {
+                NodeService = new DevLibplanetNodeService<NineChroniclesActionType>(
+                    Properties,
+                    easyPolicy,
+                    hardPolicy,
+                    renderers,
+                    devMinerLoopAction,
+                    preloadProgress,
+                    (code, msg) =>
+                    {
+                        ExceptionRenderer.RenderException(code, msg);
+                        Log.Error(msg);
+                    },
+                    ignoreBootstrapFailure
+                );
+            }
+            else
+            {
+                NodeService = new LibplanetNodeService<NineChroniclesActionType>(
+                    Properties,
+                    blockPolicy,
+                    renderers,
+                    minerLoopAction,
+                    preloadProgress,
+                    (code, msg) =>
+                    {
+                        ExceptionRenderer.RenderException(code, msg);
+                        Log.Error(msg);
+                    },
+                    ignoreBootstrapFailure
+                );
+            }
 
             if (NodeService?.BlockChain?.GetState(AuthorizedMinersState.Address) is Dictionary ams &&
                 blockPolicy is BlockPolicy bp)
