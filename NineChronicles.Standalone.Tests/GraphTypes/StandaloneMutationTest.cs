@@ -1,7 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Threading.Tasks;
+using Bencodex.Types;
 using GraphQL;
+using Lib9c.Tests;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
@@ -247,6 +251,86 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                 FungibleAssetValue.Parse(goldCurrency, "27.5"),
                 blockChain.GetBalance(recipient, goldCurrency)
             );
+        }
+
+        [Fact]
+        public async Task CreateAvatar()
+        {
+            var playerPrivateKey = new PrivateKey();
+            Address playerAddress = playerPrivateKey.ToAddress();
+            var goldCurrency = new Currency("NCG", 2, minter: null);
+            var fixturePath = Path.Combine("..", "..", "..", "..", "Lib9c", ".Lib9c.Tests", "Data", "TableCSV");
+            var sheets = TableSheetsImporter.ImportSheets(fixturePath);
+            var ranking = new RankingState();
+            for (var i = 0; i < RankingState.RankingMapCapacity; i++)
+            {
+                ranking.RankingMap[RankingState.Derive(i)] = new HashSet<Address>().ToImmutableHashSet();
+            }
+            Block<PolymorphicAction<ActionBase>> genesis =
+                BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+                    new PolymorphicAction<ActionBase>[]
+                    {
+                        new InitializeStates(
+                            rankingState: ranking,
+                            shopState: new ShopState(),
+                            gameConfigState: new GameConfigState(),
+                            redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                                .Add("address", RedeemCodeState.Address.Serialize())
+                                .Add("map", Bencodex.Types.Dictionary.Empty)
+                            ),
+                            adminAddressState: new AdminState(default, 0),
+                            activatedAccountsState: new ActivatedAccountsState(),
+                            goldCurrencyState: new GoldCurrencyState(goldCurrency),
+                            goldDistributions: new GoldDistribution[0],
+                            tableSheets: sheets,
+                            pendingActivationStates: new PendingActivationState[]{ }
+                        ),
+                    }
+                );
+            var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+            {
+                Host = System.Net.IPAddress.Loopback.ToString(),
+                AppProtocolVersion = default,
+                GenesisBlock = genesis,
+                StorePath = null,
+                StoreStatesCacheSize = 2,
+                PrivateKey = playerPrivateKey,
+                Port = null,
+                MinimumDifficulty = 4096,
+                NoMiner = true,
+                Render = false,
+                Peers = ImmutableHashSet<Peer>.Empty,
+                TrustedAppProtocolVersionSigners = null,
+            };
+            var service = new NineChroniclesNodeService(properties, null)
+            {
+                PrivateKey = playerPrivateKey
+            };
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
+
+            var blockChain = StandaloneContextFx.BlockChain;
+
+            var query = $"mutation {{ action {{ createAvatar }} }}";
+            ExecutionResult result = await ExecuteQueryAsync(query);
+
+            var isCreated = (bool)result.Data
+                .As<Dictionary<string, object>>()["action"]
+                .As<Dictionary<string, object>>()["createAvatar"];
+
+            Assert.True(isCreated);
+
+            await blockChain.MineBlock(playerAddress);
+            var playerState = (Bencodex.Types.Dictionary)blockChain.GetState(playerAddress);
+            var agentState = new AgentState(playerState);
+
+            Assert.Equal(playerAddress, agentState.address);
+            Assert.True(agentState.avatarAddresses.ContainsKey(0));
+
+            var avatar = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
+
+            Assert.Equal("createbymutation", avatar.name);
+            
         }
     }
 }
