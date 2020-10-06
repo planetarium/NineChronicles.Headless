@@ -18,6 +18,7 @@ using Libplanet.Standalone.Hosting;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
+using Nekoyume.TableData;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -258,7 +259,12 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
         {
             var playerPrivateKey = new PrivateKey();
             Address playerAddress = playerPrivateKey.ToAddress();
-            var blockChain = GetContextFx(playerPrivateKey);
+            var ranking = new RankingState();
+            for (var i = 0; i < RankingState.RankingMapCapacity; i++)
+            {
+                ranking.RankingMap[RankingState.Derive(i)] = new HashSet<Address>().ToImmutableHashSet();
+            }
+            var blockChain = GetContextFx(playerPrivateKey, ranking);
 
             var query = $"mutation {{ action {{ createAvatar }} }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
@@ -281,16 +287,49 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             Assert.Equal("createbymutation", avatar.name);
         }
 
-        private BlockChain<PolymorphicAction<ActionBase>> GetContextFx(PrivateKey playerPrivateKey)
+        [Fact]
+        public async Task HackAndSlash()
         {
-            var goldCurrency = new Currency("NCG", 2, minter: null);
-            var fixturePath = Path.Combine("..", "..", "..", "..", "Lib9c", ".Lib9c.Tests", "Data", "TableCSV");
-            var sheets = TableSheetsImporter.ImportSheets(fixturePath);
+            var playerPrivateKey = new PrivateKey();
+            Address playerAddress = playerPrivateKey.ToAddress();
             var ranking = new RankingState();
             for (var i = 0; i < RankingState.RankingMapCapacity; i++)
             {
                 ranking.RankingMap[RankingState.Derive(i)] = new HashSet<Address>().ToImmutableHashSet();
             }
+            var blockChain = GetContextFx(playerPrivateKey, ranking);
+
+            var createAvatarQuery = $"mutation {{ action {{ createAvatar }} }}";
+            ExecutionResult createAvatarResult = await ExecuteQueryAsync(createAvatarQuery);
+            await blockChain.MineBlock(playerAddress);
+
+            var playerState = (Bencodex.Types.Dictionary)blockChain.GetState(playerAddress);
+            var agentState = new AgentState(playerState);
+            var weeklyArenaAddress = (new WeeklyArenaState(1)).address;
+            var rankingMapAddress = RankingState.Derive(0);
+
+            Assert.Equal(playerAddress, agentState.address);
+
+            var hackAndSlashQuery = $"mutation {{ action {{ hackAndSlash(weeklyArenaAddress: \"{weeklyArenaAddress.ToHex()}\", rankingArenaAddress: \"{rankingMapAddress.ToHex()}\") }} }}";
+            ExecutionResult result = await ExecuteQueryAsync(hackAndSlashQuery);
+
+            var isPlayed = (bool)result.Data
+                .As<Dictionary<string, object>>()["action"]
+                .As<Dictionary<string, object>>()["hackAndSlash"];
+            
+            await blockChain.MineBlock(playerAddress);
+            Assert.True(isPlayed);
+            
+            var avatar = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
+            Assert.True(avatar.exp > 0);
+            
+        }
+
+        private BlockChain<PolymorphicAction<ActionBase>> GetContextFx(PrivateKey playerPrivateKey, RankingState ranking)
+        {
+            var goldCurrency = new Currency("NCG", 2, minter: null);
+            var fixturePath = Path.Combine("..", "..", "..", "..", "Lib9c", ".Lib9c.Tests", "Data", "TableCSV");
+            var sheets = TableSheetsImporter.ImportSheets(fixturePath);
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
                     new PolymorphicAction<ActionBase>[]
@@ -298,7 +337,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                         new InitializeStates(
                             rankingState: ranking,
                             shopState: new ShopState(),
-                            gameConfigState: new GameConfigState(),
+                            gameConfigState: new GameConfigState(sheets[nameof(GameConfigSheet)]),
                             redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
                                 .Add("address", RedeemCodeState.Address.Serialize())
                                 .Add("map", Bencodex.Types.Dictionary.Empty)
