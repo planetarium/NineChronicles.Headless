@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using Grpc.Core;
+using Lib9c.Renderer;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;

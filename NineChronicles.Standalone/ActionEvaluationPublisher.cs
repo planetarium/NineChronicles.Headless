@@ -8,6 +8,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
+using Lib9c.Renderer;
 using Libplanet.Blockchain;
 using MagicOnion.Client;
 using Microsoft.Extensions.Hosting;

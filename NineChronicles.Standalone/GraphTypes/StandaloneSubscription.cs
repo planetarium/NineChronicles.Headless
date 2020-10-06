@@ -9,6 +9,7 @@ using GraphQL;
 using GraphQL.Resolvers;
 using GraphQL.Subscription;
 using GraphQL.Types;
+using Lib9c.Renderer;
 using Libplanet;
 using Libplanet.Blockchain;
 using Libplanet.Net;
