@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
@@ -55,6 +56,7 @@ namespace NineChronicles.Standalone
             RpcNodeServiceProperties? rpcNodeServiceProperties,
             Progress<PreloadState> preloadProgress = null,
             bool ignoreBootstrapFailure = false,
+            bool validate = false,
             bool isDev = false,
             int blockInterval = 10,
             int reorgInterval = 0
@@ -92,13 +94,21 @@ namespace NineChronicles.Standalone
             BlockRenderer = blockPolicySource.BlockRenderer;
             ActionRenderer = blockPolicySource.ActionRenderer;
             ExceptionRenderer = new ExceptionRenderer();
-            var renderers = Properties.Render
-                ? new IRenderer<NineChroniclesActionType>[]
-                {
-                    blockPolicySource.BlockRenderer,
-                    blockPolicySource.LoggedActionRenderer
-                }
-                : new [] { blockPolicySource.LoggedBlockRenderer };
+            var renderers = new List<IRenderer<NineChroniclesActionType>>();
+            if (Properties.Render)
+            {
+                renderers.Add(blockPolicySource.BlockRenderer);
+                renderers.Add(blockPolicySource.LoggedActionRenderer);
+            }
+            else
+            {
+                renderers.Add(blockPolicySource.LoggedBlockRenderer);
+            }
+
+            if (validate)
+            {
+                renderers.Add(new ValidatingActionRenderer<NineChroniclesActionType>(blockPolicy ?? easyPolicy));
+            }
 
             async Task minerLoopAction(
                 BlockChain<NineChroniclesActionType> chain,
