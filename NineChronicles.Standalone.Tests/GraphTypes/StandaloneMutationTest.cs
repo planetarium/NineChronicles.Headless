@@ -258,6 +258,31 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
         {
             var playerPrivateKey = new PrivateKey();
             Address playerAddress = playerPrivateKey.ToAddress();
+            var blockChain = GetContextFx(playerPrivateKey);
+
+            var query = $"mutation {{ action {{ createAvatar }} }}";
+            ExecutionResult result = await ExecuteQueryAsync(query);
+
+            var isCreated = (bool)result.Data
+                .As<Dictionary<string, object>>()["action"]
+                .As<Dictionary<string, object>>()["createAvatar"];
+
+            Assert.True(isCreated);
+
+            await blockChain.MineBlock(playerAddress);
+            var playerState = (Bencodex.Types.Dictionary)blockChain.GetState(playerAddress);
+            var agentState = new AgentState(playerState);
+
+            Assert.Equal(playerAddress, agentState.address);
+            Assert.True(agentState.avatarAddresses.ContainsKey(0));
+
+            var avatar = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
+
+            Assert.Equal("createbymutation", avatar.name);
+        }
+
+        private BlockChain<PolymorphicAction<ActionBase>> GetContextFx(PrivateKey playerPrivateKey)
+        {
             var goldCurrency = new Currency("NCG", 2, minter: null);
             var fixturePath = Path.Combine("..", "..", "..", "..", "Lib9c", ".Lib9c.Tests", "Data", "TableCSV");
             var sheets = TableSheetsImporter.ImportSheets(fixturePath);
@@ -309,28 +334,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
 
-            var blockChain = StandaloneContextFx.BlockChain;
-
-            var query = $"mutation {{ action {{ createAvatar }} }}";
-            ExecutionResult result = await ExecuteQueryAsync(query);
-
-            var isCreated = (bool)result.Data
-                .As<Dictionary<string, object>>()["action"]
-                .As<Dictionary<string, object>>()["createAvatar"];
-
-            Assert.True(isCreated);
-
-            await blockChain.MineBlock(playerAddress);
-            var playerState = (Bencodex.Types.Dictionary)blockChain.GetState(playerAddress);
-            var agentState = new AgentState(playerState);
-
-            Assert.Equal(playerAddress, agentState.address);
-            Assert.True(agentState.avatarAddresses.ContainsKey(0));
-
-            var avatar = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
-
-            Assert.Equal("createbymutation", avatar.name);
-            
+            return StandaloneContextFx.BlockChain;
         }
     }
 }
