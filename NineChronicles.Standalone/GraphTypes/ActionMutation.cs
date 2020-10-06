@@ -100,6 +100,54 @@ namespace NineChronicles.Standalone.GraphTypes
                     return true;
                 });
 
+            Field<NonNullGraphType<BooleanGraphType>>("combinationEquipment",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<DecimalGraphType>>
+                    {
+                        Name = "recipeId",
+                    },
+                    new QueryArgument<NonNullGraphType<DecimalGraphType>>
+                    {
+                        Name = "slotIndex",
+                    },
+                    new QueryArgument<DecimalGraphType>
+                    {
+                        Name = "subRecipeId",
+                    }),
+                resolve: context =>
+                {
+                    try
+                    {
+                        NineChroniclesNodeService service = context.Source;
+                        PrivateKey privatekey = service.PrivateKey;
+                        BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
+                        Address userAddress = privatekey.PublicKey.ToAddress();
+                        Address avatarAddress = userAddress.Derive("avatar_0");
+                        int recipeId = context.GetArgument<int>("recipeId");
+                        int slotIndex = context.GetArgument<int>("slotIndex");
+                        int? subRecipeId = context.GetArgument<int>("subRecipeId");
+
+                        var action = new CombinationEquipment
+                        {
+                            AvatarAddress = avatarAddress,
+                            RecipeId = recipeId,
+                            SlotIndex = slotIndex,
+                            SubRecipeId = subRecipeId
+                        };
+
+                        var actions = new PolymorphicAction<ActionBase>[] { action };
+                        blockChain.MakeTransaction(privatekey, actions);
+                    }
+                    catch(Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        Log.Error(msg, e);
+                        return false;
+                    }
+
+                    return true;
+                });
         }
     }
 }
