@@ -56,7 +56,7 @@ namespace NineChronicles.Standalone
             RpcNodeServiceProperties? rpcNodeServiceProperties,
             Progress<PreloadState> preloadProgress = null,
             bool ignoreBootstrapFailure = false,
-            bool validate = false,
+            bool strictRendering = false,
             bool isDev = false,
             int blockInterval = 10,
             int reorgInterval = 0
@@ -105,7 +105,7 @@ namespace NineChronicles.Standalone
                 renderers.Add(blockPolicySource.LoggedBlockRenderer);
             }
 
-            if (validate)
+            if (strictRendering)
             {
                 renderers.Add(new ValidatingActionRenderer<NineChroniclesActionType>(blockPolicy ?? easyPolicy));
             }

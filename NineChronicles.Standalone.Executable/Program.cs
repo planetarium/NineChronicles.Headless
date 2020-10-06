@@ -83,8 +83,8 @@ namespace NineChronicles.Standalone.Executable
                     "The number of required confirmations to recognize a block.  0 by default."
             )]
             int confirmations = 0,
-            [Option("validate", Description = "Flag to turn on validating action renderer.")]
-            bool validate = false,
+            [Option("strict-rendering", Description = "Flag to turn on validating action renderer.")]
+            bool strictRendering = false,
             [Option("dev", Description = "Flag to turn on the dev mode.  false by default.")]
             bool isDev = false,
             [Option(
@@ -206,7 +206,7 @@ namespace NineChronicles.Standalone.Executable
                     StandaloneServices.CreateHeadless(
                         nineChroniclesProperties,
                         standaloneContext,
-                        validate: validate,
+                        strictRendering: strictRendering,
                         isDev: isDev,
                         blockInterval: blockInterval,
                         reorgInterval: reorgInterval);

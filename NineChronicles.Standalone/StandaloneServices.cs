@@ -10,7 +10,7 @@ namespace NineChronicles.Standalone
             NineChroniclesNodeServiceProperties properties,
             StandaloneContext standaloneContext = null,
             bool ignoreBootstrapFailure = true,
-            bool validate = false,
+            bool strictRendering = false,
             bool isDev = false,
             int blockInterval = 10,
             int reorgInterval = 0
@@ -58,7 +58,7 @@ namespace NineChronicles.Standalone
                 properties.Rpc,
                 preloadProgress: progress,
                 ignoreBootstrapFailure: ignoreBootstrapFailure,
-                validate: validate,
+                strictRendering: strictRendering,
                 isDev: isDev,
                 blockInterval: blockInterval,
                 reorgInterval: reorgInterval);
