@@ -352,7 +352,6 @@ namespace Libplanet.Standalone.Hosting
                         var message = "No any peers are connected even seed peers were given.";
                         _exceptionHandlerAction(RPCException.NetworkException, message);
                         Properties.NodeExceptionOccurred((int)RPCException.NetworkException, message);
-                        break;
                     }
 
                     count++;
