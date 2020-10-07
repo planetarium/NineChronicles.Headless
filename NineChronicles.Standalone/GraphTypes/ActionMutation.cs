@@ -100,6 +100,49 @@ namespace NineChronicles.Standalone.GraphTypes
                     return true;
                 });
 
+            Field<NonNullGraphType<BooleanGraphType>>("itemEnhancement",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "itemId",
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "materialIds",
+                    }),
+                resolve: context =>
+                {
+                    try
+                    {
+                        NineChroniclesNodeService service = context.Source;
+                        PrivateKey privatekey = service.PrivateKey;
+                        BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
+                        Address userAddress = privatekey.PublicKey.ToAddress();
+                        Address avatarAddress = userAddress.Derive("avatar_0");
+                        Guid itemId = Guid.Parse(context.GetArgument<string>("itemId"));
+                        Guid materialId = Guid.Parse(context.GetArgument<string>("materialIds"));
+
+                        var action = new ItemEnhancement
+                        {
+                            avatarAddress = avatarAddress,
+                            slotIndex = 0,
+                            itemId = itemId,
+                            materialIds = new[] { materialId }
+                        };
+
+                        var actions = new PolymorphicAction<ActionBase>[] { action };
+                        blockChain.MakeTransaction(privatekey, actions);
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        Log.Error(msg, e);
+                        return false;
+                    }
+
+                    return true;
+                });
         }
     }
 }
