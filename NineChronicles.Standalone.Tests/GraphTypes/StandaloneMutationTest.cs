@@ -1,9 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
-using Bencodex.Types;
 using GraphQL;
 using Lib9c.Tests;
 using Libplanet;
@@ -15,8 +14,10 @@ using Libplanet.Crypto;
 using Libplanet.KeyStore;
 using Libplanet.Net;
 using Libplanet.Standalone.Hosting;
+using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model;
+using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using Xunit;
@@ -26,8 +27,15 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
 {
     public class StandaloneMutationTest : GraphQLTestBase
     {
+        private readonly Dictionary<string, string> _sheets = null;
+
+        private readonly TableSheets _tableSheets = null;
+
         public StandaloneMutationTest(ITestOutputHelper output) : base(output)
         {
+            var fixturePath = Path.Combine("..", "..", "..", "..", "Lib9c", ".Lib9c.Tests", "Data", "TableCSV");
+            _sheets = TableSheetsImporter.ImportSheets(fixturePath);
+            _tableSheets = new TableSheets(_sheets);
         }
 
         [Fact]
@@ -325,11 +333,66 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             
         }
 
-        private BlockChain<PolymorphicAction<ActionBase>> GetContextFx(PrivateKey playerPrivateKey, RankingState ranking)
+        [Fact]
+        public async Task QuestReward()
+        {
+            var playerPrivateKey = new PrivateKey();
+            Address playerAddress = playerPrivateKey.ToAddress();
+            var ranking = new RankingState();
+            for (var i = 0; i < RankingState.RankingMapCapacity; i++)
+            {
+                ranking.RankingMap[RankingState.Derive(i)] = new HashSet<Address>().ToImmutableHashSet();
+            }
+            var blockChain = GetContextFx(playerPrivateKey, ranking);
+
+            var createAvatarQuery = $"mutation {{ action {{ createAvatar }} }}";
+            await ExecuteQueryAsync(createAvatarQuery);
+            await blockChain.MineBlock(playerAddress);
+
+            var playerState = (Bencodex.Types.Dictionary)blockChain.GetState(playerAddress);
+            var agentState = new AgentState(playerState);
+            var weeklyArenaAddress = (new WeeklyArenaState(1)).address;
+            var rankingMapAddress = RankingState.Derive(0);
+            var gameConfigState = new GameConfigState((Bencodex.Types.Dictionary)blockChain.GetState(Addresses.GameConfig));
+            var questRow = _tableSheets.WorldQuestSheet.First;
+            var avatarState = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
+            var quest = avatarState.questList.First(q => q.Id == questRow.Id);
+
+            Assert.Equal(playerAddress, agentState.address);
+            Assert.False(quest.Complete);
+
+            var hackAndSlashQuery = $"mutation {{ action {{ hackAndSlash(weeklyArenaAddress: \"{weeklyArenaAddress.ToHex()}\", rankingArenaAddress: \"{rankingMapAddress.ToHex()}\") }} }}";
+            await ExecuteQueryAsync(hackAndSlashQuery);
+            await blockChain.MineBlock(playerAddress);
+
+            avatarState = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
+            quest = avatarState.questList.First(q => q.Id == questRow.Id);
+            Assert.True(quest.Complete);
+
+            var dailyRewardQuery = $"mutation {{ action {{ questReward(questId: \"{quest.Id}\") }} }}";
+            ExecutionResult result = await ExecuteQueryAsync(dailyRewardQuery);
+
+            var isPlayed = (bool)result.Data
+                .As<Dictionary<string, object>>()["action"]
+                .As<Dictionary<string, object>>()["questReward"];
+
+            Assert.True(isPlayed);
+            avatarState = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
+
+            foreach (var pair in quest.Reward.ItemMap)
+            {
+                var itemRow = _tableSheets.MaterialItemSheet.OrderedList
+                    .First(row => row.Id == pair.Key);
+                var item = ItemFactory.CreateMaterial(itemRow);
+                var hasItem = avatarState.inventory.HasItem(item.Id, pair.Value);
+                Assert.True(hasItem);
+            }
+
+        }
+
+            private BlockChain<PolymorphicAction<ActionBase>> GetContextFx(PrivateKey playerPrivateKey, RankingState ranking)
         {
             var goldCurrency = new Currency("NCG", 2, minter: null);
-            var fixturePath = Path.Combine("..", "..", "..", "..", "Lib9c", ".Lib9c.Tests", "Data", "TableCSV");
-            var sheets = TableSheetsImporter.ImportSheets(fixturePath);
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
                     new PolymorphicAction<ActionBase>[]
@@ -337,7 +400,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                         new InitializeStates(
                             rankingState: ranking,
                             shopState: new ShopState(),
-                            gameConfigState: new GameConfigState(sheets[nameof(GameConfigSheet)]),
+                            gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
                             redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
                                 .Add("address", RedeemCodeState.Address.Serialize())
                                 .Add("map", Bencodex.Types.Dictionary.Empty)
@@ -346,7 +409,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                             activatedAccountsState: new ActivatedAccountsState(),
                             goldCurrencyState: new GoldCurrencyState(goldCurrency),
                             goldDistributions: new GoldDistribution[0],
-                            tableSheets: sheets,
+                            tableSheets: _sheets,
                             pendingActivationStates: new PendingActivationState[]{ }
                         ),
                     }
