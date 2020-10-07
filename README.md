@@ -11,7 +11,7 @@ Usage: NineChronicles.Standalone.Executable [--no-miner] [--app-protocol-version
     [--store-path <String>] [--ice-server <String>...] [--peer <String>...] \
     [--no-trusted-state-validators] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] \
     [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] \
-    [--graphql-host <String>] [--graphql-port <Nullable`1>] [--libplanet-node] [--mpt] \
+    [--graphql-host <String>] [--graphql-port <Nullable`1>] [--libplanet-node] [--no-mpt] \
     [--workers <Int32>] [--confirmations <Int32>] [--dev] [--dev.block-interval <Int32>]
     [--dev.reorg-interval <Int32>] [--help] [--version]
 
@@ -38,7 +38,7 @@ Options:
   --graphql-host <String>                                   (Default: 0.0.0.0)
   --graphql-port <Nullable`1>                               (Default: )
   --libplanet-node
-  --mpt                                                    Flag to turn on the Merkle trie feature. It is experimental.
+  --no-mpt                                                 Flag to turn off the Merkle Patricia Trie for state saving.
   --workers <Int32>                                        Number of workers to use in Swarm (Default: 5)
   --confirmations <Int32>                                  The number of required confirmations to recognize a block.  0 by default. (Default: 0)
   --dev                                                    Flag to turn on the dev mode.  false by default.
@@ -75,7 +75,7 @@ $ docker build . -t <IMAGE_TAG>
 -  `--graphql-host`: Host name for graphQL controller.
 -  `--graphql-port`: Port number for graphQL controller.
 -  `--libplanet-node`: Run with formal Libplanet node. One of this or `graphql-server` must be set.
--  `--mpt`: Use the Merkle trie based storage.
+-  `--no-mpt`: Use legacy block state store instead of Merkle Patricia Trie for state saving.
 -  `--workers`: Number of workers to use in Swarm.
 -  `--confirmations`: Specifies the number of required confirmations to recognize a block.
 -  `--dev`: Flag to turn on the dev mode.
