@@ -299,6 +299,73 @@ namespace NineChronicles.Standalone.GraphTypes
 
                     return true;
                 });
+
+            Field<NonNullGraphType<BooleanGraphType>>("questReward",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "questId",
+                    }),
+                resolve: context =>
+                {
+                    try
+                    {
+                        NineChroniclesNodeService service = context.Source;
+                        PrivateKey privatekey = service.PrivateKey;
+                        BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
+                        Address userAddress = privatekey.PublicKey.ToAddress();
+                        Address avatarAddress = userAddress.Derive("avatar_0");
+                        int questId = int.Parse(context.GetArgument<string>("questId"));
+
+                        var action = new QuestReward
+                        {
+                            avatarAddress = avatarAddress,
+                            questId = questId
+                        };
+
+                        var actions = new PolymorphicAction<ActionBase>[] { action };
+                        blockChain.MakeTransaction(privatekey, actions);
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        Log.Error(msg, e);
+                        return false;
+                    }
+
+                    return true;
+                });
+
+            Field<NonNullGraphType<BooleanGraphType>>("dailyReward",
+                resolve: context =>
+                {
+                    try
+                    {
+                        NineChroniclesNodeService service = context.Source;
+                        PrivateKey privatekey = service.PrivateKey;
+                        BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
+                        Address userAddress = privatekey.PublicKey.ToAddress();
+                        Address avatarAddress = userAddress.Derive("avatar_0");
+
+                        var action = new DailyReward
+                        {
+                            avatarAddress = avatarAddress
+                        };
+
+                        var actions = new PolymorphicAction<ActionBase>[] { action };
+                        blockChain.MakeTransaction(privatekey, actions);
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        Log.Error(msg, e);
+                        return false;
+                    }
+
+                    return true;
+                });
         }
     }
 }
