@@ -41,7 +41,7 @@ namespace NineChronicles.Standalone.GraphTypes
                         var actions = new PolymorphicAction<ActionBase>[] { action };
                         blockChain.MakeTransaction(privatekey, actions);
                     }
-                    catch(Exception e)
+                    catch (Exception e)
                     {
                         var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
@@ -52,15 +52,67 @@ namespace NineChronicles.Standalone.GraphTypes
                     return true;
                 });
 
-                Field<NonNullGraphType<BooleanGraphType>>("hackAndSlash",
+            Field<NonNullGraphType<BooleanGraphType>>("hackAndSlash",
+            arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<StringGraphType>>
+                {
+                    Name = "weeklyArenaAddress",
+                },
+                new QueryArgument<NonNullGraphType<StringGraphType>>
+                {
+                    Name = "rankingArenaAddress",
+                }),
+            resolve: context =>
+            {
+                try
+                {
+                    NineChroniclesNodeService service = context.Source;
+                    PrivateKey privatekey = service.PrivateKey;
+                    BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
+                    Address userAddress = privatekey.PublicKey.ToAddress();
+                    Address avatarAddress = userAddress.Derive("avatar_0");
+                    Address weeklyArenaAddress = new Address(context.GetArgument<string>("weeklyArenaAddress"));
+                    Address rankingArenaAddress = new Address(context.GetArgument<string>("rankingArenaAddress"));
+
+                    var action = new HackAndSlash
+                    {
+                        avatarAddress = avatarAddress,
+                        worldId = 1,
+                        stageId = 1,
+                        WeeklyArenaAddress = weeklyArenaAddress,
+                        RankingMapAddress = rankingArenaAddress,
+                        costumes = new List<int>(),
+                        equipments = new List<Guid>(),
+                        foods = new List<Guid>(),
+                    };
+
+                    var actions = new PolymorphicAction<ActionBase>[] { action };
+                    blockChain.MakeTransaction(privatekey, actions);
+                }
+                catch (Exception e)
+                {
+                    var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                    context.Errors.Add(new ExecutionError(msg, e));
+                    Log.Error(msg, e);
+                    return false;
+                }
+
+                return true;
+            });
+
+            Field<NonNullGraphType<BooleanGraphType>>("combinationEquipment",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<DecimalGraphType>>
                     {
-                        Name = "weeklyArenaAddress",
+                        Name = "recipeId",
                     },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<DecimalGraphType>>
                     {
-                        Name = "rankingArenaAddress",
+                        Name = "slotIndex",
+                    },
+                    new QueryArgument<DecimalGraphType>
+                    {
+                        Name = "subRecipeId",
                     }),
                 resolve: context =>
                 {
@@ -71,25 +123,22 @@ namespace NineChronicles.Standalone.GraphTypes
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
                         Address userAddress = privatekey.PublicKey.ToAddress();
                         Address avatarAddress = userAddress.Derive("avatar_0");
-                        Address weeklyArenaAddress = new Address(context.GetArgument<string>("weeklyArenaAddress"));
-                        Address rankingArenaAddress = new Address(context.GetArgument<string>("rankingArenaAddress"));
+                        int recipeId = context.GetArgument<int>("recipeId");
+                        int slotIndex = context.GetArgument<int>("slotIndex");
+                        int? subRecipeId = context.GetArgument<int>("subRecipeId");
 
-                        var action = new HackAndSlash
+                        var action = new CombinationEquipment
                         {
-                            avatarAddress = avatarAddress,
-                            worldId = 1,
-                            stageId = 1,
-                            WeeklyArenaAddress = weeklyArenaAddress,
-                            RankingMapAddress = rankingArenaAddress,
-                            costumes = new List<int>(),
-                            equipments = new List<Guid>(),
-                            foods = new List<Guid>(),
+                            AvatarAddress = avatarAddress,
+                            RecipeId = recipeId,
+                            SlotIndex = slotIndex,
+                            SubRecipeId = subRecipeId
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
                         blockChain.MakeTransaction(privatekey, actions);
                     }
-                    catch(Exception e)
+                    catch (Exception e)
                     {
                         var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
