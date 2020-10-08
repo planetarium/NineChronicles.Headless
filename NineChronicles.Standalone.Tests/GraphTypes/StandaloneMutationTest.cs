@@ -354,7 +354,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             var weeklyArenaAddress = (new WeeklyArenaState(1)).address;
             var rankingMapAddress = RankingState.Derive(0);
             var gameConfigState = new GameConfigState((Bencodex.Types.Dictionary)blockChain.GetState(Addresses.GameConfig));
-            var questRow = _tableSheets.WorldQuestSheet.First;
+            var questRow = _tableSheets.WorldQuestSheet.First(row => row.Value.Goal == 1).Value;
             var avatarState = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
             var quest = avatarState.questList.First(q => q.Id == questRow.Id);
 
