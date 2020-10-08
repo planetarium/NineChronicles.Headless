@@ -12,6 +12,7 @@ using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;
+using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Standalone.Hosting;
@@ -107,7 +108,94 @@ namespace NineChronicles.Standalone
 
             if (strictRendering)
             {
-                renderers.Add(new ValidatingActionRenderer<NineChroniclesActionType>(blockPolicy ?? easyPolicy));
+                renderers.Add(new ValidatingActionRenderer<NineChroniclesActionType>(validateReorgEnd));
+            }
+
+            void validateReorgEnd(
+                IReadOnlyList<RenderRecord<NineChroniclesActionType>> records,
+                Block<NineChroniclesActionType> oldTip,
+                Block<NineChroniclesActionType> newTip,
+                Block<NineChroniclesActionType> branchpoint)
+            {
+                var store = NodeService?.Store ?? throw new Exception("Store is null.");
+                var chain = NodeService?.BlockChain ?? throw new Exception("Chain is null.");
+                
+                List<IAction> expectedUnrenderedActions = new List<IAction>();
+                List<IAction> expectedRenderedActions = new List<IAction>();
+
+                var block = oldTip;
+                bool repeat;
+                do
+                {
+                    repeat = !block.PreviousHash.Equals(branchpoint.Hash);
+                    expectedUnrenderedActions.AddRange(
+                        block.Transactions.SelectMany(t => t.Actions).Cast<IAction>());
+                    if (!(chain.Policy.BlockAction is null))
+                    {
+                        expectedUnrenderedActions.Add(chain.Policy.BlockAction);
+                    }
+
+                    block = block.PreviousHash is null ? chain.Genesis : store.GetBlock<NineChroniclesActionType>(block.PreviousHash.Value);
+                }
+                while (repeat);
+
+                block = newTip;
+                do
+                {
+                    repeat = !block.PreviousHash.Equals(branchpoint.Hash);
+                    var actions = block.Transactions.SelectMany(t => t.Actions).Cast<IAction>().ToList();
+                    if (!(chain.Policy.BlockAction is null))
+                    {
+                        actions.Add(chain.Policy.BlockAction);
+                    }
+
+                    expectedRenderedActions = actions.Concat(expectedRenderedActions).ToList();
+                    block = block.PreviousHash is null ? chain.Genesis : store.GetBlock<NineChroniclesActionType>(block.PreviousHash.Value);
+                }
+                while (repeat);
+
+                List<IAction> actualRenderedActions = new List<IAction>();
+                List<IAction> actualUnrenderedActions = new List<IAction>();
+                foreach (var record in records.Reverse())
+                {
+                    if (record is RenderRecord<NineChroniclesActionType>.Reorg b && b.Begin)
+                    {
+                        break;
+                    }
+
+                    if (record is RenderRecord<NineChroniclesActionType>.ActionBase a)
+                    {
+                        if (a.Render)
+                        {
+                            actualRenderedActions.Add(a.Action);
+                        }
+                        else
+                        {
+                            actualUnrenderedActions.Add(a.Action);
+                        }
+                    }
+                }
+
+                actualRenderedActions.Reverse();
+                actualUnrenderedActions.Reverse();
+
+                if (!actualUnrenderedActions.Select(a => a.PlainValue).SequenceEqual(expectedUnrenderedActions.Select(a => a.PlainValue)))
+                {
+                    var message =
+                        "The unrender action record does not match with actions in the block when reorg occurred. " +
+                        $"(oldTip: {oldTip}, newTip: {newTip}, branchpoint: {branchpoint}); " +
+                        $"(expected: {expectedUnrenderedActions.Count}, actual: {actualUnrenderedActions.Count})";
+                    throw new ValidatingActionRenderer<NineChroniclesActionType>.InvalidRenderException(records, message);
+                }
+
+                if (!actualRenderedActions.Select(a => a.PlainValue).SequenceEqual(expectedRenderedActions.Select(a => a.PlainValue)))
+                {
+                    var message =
+                        "The render action record does not match with actions in the block when reorg occurred. " +
+                        $"(oldTip: {oldTip}, newTip: {newTip}, branchpoint: {branchpoint}); " +
+                        $"(expected: {expectedRenderedActions.Count}, actual: {actualRenderedActions.Count})";
+                    throw new ValidatingActionRenderer<NineChroniclesActionType>.InvalidRenderException(records, message);
+                }
             }
 
             async Task minerLoopAction(
