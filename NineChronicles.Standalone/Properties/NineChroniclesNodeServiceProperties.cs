@@ -34,7 +34,7 @@ namespace NineChronicles.Standalone.Properties
                 string[] trustedAppProtocolVersionSigners = null,
                 bool noMiner = false,
                 bool render = false,
-                bool mpt = false,
+                bool mpt = true,
                 int workers = 5,
                 int confirmations = 0)
         {

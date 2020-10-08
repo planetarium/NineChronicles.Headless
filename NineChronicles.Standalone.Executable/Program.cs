@@ -73,8 +73,8 @@ namespace NineChronicles.Standalone.Executable
             int? graphQLPort = null,
             [Option("libplanet-node")]
             bool libplanetNode = false,
-            [Option("mpt", Description = "Flag to turn on the Merkle trie feature. It is experimental.")]
-            bool mpt = false,
+            [Option("no-mpt", Description = "Flag to turn off the Merkle Patricia Trie for state saving.")]
+            bool noMpt = false,
             [Option("workers", Description = "Number of workers to use in Swarm")]
             int workers = 5,
             [Option(
@@ -184,7 +184,7 @@ namespace NineChronicles.Standalone.Executable
                         noTrustedStateValidators,
                         trustedAppProtocolVersionSigners,
                         noMiner,
-                        mpt: mpt,
+                        mpt: !noMpt,
                         workers: workers,
                         confirmations: confirmations);
                 if (rpcServer)
