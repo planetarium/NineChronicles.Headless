@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Cocona;
+using Lib9c.Renderer;
 using Libplanet.KeyStore;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Standalone.Properties;
@@ -223,6 +224,39 @@ namespace NineChronicles.Standalone.Executable
                     tasks.Add(
                         nineChroniclesNodeHostBuilder.RunConsoleAsync(Context.CancellationToken));
                 }
+
+                long renderCount = -1;
+                object renderLock = new object();
+
+                nineChroniclesNodeService.ActionRenderer.ActionRenderSubject.Subscribe(a =>
+                {
+                    lock (renderLock)
+                    {
+                        if (renderCount < 0)
+                        {
+                            renderCount = a.BlockIndex;
+                        }
+                        else
+                        {
+                            renderCount++;
+                        }
+
+                        if (renderCount != a.BlockIndex)
+                        {
+                            throw new Exception($"RenderCount mismatched. #{a.BlockIndex} - {renderCount}");
+                        }
+                        Log.Debug($"#{a.BlockIndex} action is rendered, renderCount: {renderCount}");
+                    }
+                });
+
+                nineChroniclesNodeService.ActionRenderer.ActionUnrenderSubject.Subscribe(a =>
+                {
+                    lock (renderLock)
+                    {
+                        renderCount--;
+                        Log.Debug($"#{a.BlockIndex} action is unrendered, renderCount: {renderCount}");
+                    }
+                });
 
                 await Task.WhenAll(tasks);
             }
