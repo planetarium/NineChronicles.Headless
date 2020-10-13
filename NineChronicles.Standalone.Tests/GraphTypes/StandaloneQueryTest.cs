@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL;
+using Lib9c.Tests;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
@@ -19,6 +21,7 @@ using Libplanet.Standalone.Hosting;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
+using Nekoyume.TableData;
 using NineChronicles.Standalone.Tests.Common.Actions;
 using Xunit;
 using Xunit.Abstractions;
@@ -27,8 +30,12 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
 {
     public class StandaloneQueryTest : GraphQLTestBase
     {
+        private readonly Dictionary<string, string> _sheets = null;
+
         public StandaloneQueryTest(ITestOutputHelper output) : base(output)
         {
+            var fixturePath = Path.Combine("..", "..", "..", "..", "Lib9c", ".Lib9c.Tests", "Data", "TableCSV");
+            _sheets = TableSheetsImporter.ImportSheets(fixturePath);
         }
 
         [Fact]
@@ -390,7 +397,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                         new InitializeStates(
                             rankingState: new RankingState(),
                             shopState: new ShopState(),
-                            gameConfigState: new GameConfigState(),
+                            gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
                             redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
                                 .Add("address", RedeemCodeState.Address.Serialize())
                                 .Add("map", Bencodex.Types.Dictionary.Empty)
