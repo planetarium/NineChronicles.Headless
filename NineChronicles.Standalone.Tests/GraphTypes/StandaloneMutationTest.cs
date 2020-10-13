@@ -190,7 +190,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                         new InitializeStates(
                             rankingState: new RankingState(),
                             shopState: new ShopState(),
-                            gameConfigState: new GameConfigState(),
+                            gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
                             redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
                                 .Add("address", RedeemCodeState.Address.Serialize())
                                 .Add("map", Bencodex.Types.Dictionary.Empty)
