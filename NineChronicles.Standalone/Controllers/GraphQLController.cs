@@ -135,6 +135,7 @@ namespace NineChronicles.Standalone.Controllers
             }
         }
 
+        //TODO : This should be covered in test.
         private void NotifyRefillActionPoint(long newTipIndex)
         {
             List<Tuple<Guid, ProtectedPrivateKey>> tuples =
