@@ -270,7 +270,6 @@ namespace NineChronicles.Standalone.GraphTypes
                         PrivateKey privatekey = service.PrivateKey;
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
                         Address sellerAvatarAddress = new Address(context.GetArgument<string>("sellerAvatarAddress"));
-                        Guid productId = Guid.Parse(context.GetArgument<string>("productId"));
                         Guid itemId = Guid.Parse(context.GetArgument<string>("itemId"));
                         var currency = new GoldCurrencyState(
                             (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
@@ -281,7 +280,6 @@ namespace NineChronicles.Standalone.GraphTypes
                         var action = new Sell
                         {
                             sellerAvatarAddress = sellerAvatarAddress,
-                            productId = productId,
                             itemId = itemId,
                             price = price
                         };
