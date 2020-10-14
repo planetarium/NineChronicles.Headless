@@ -38,6 +38,7 @@ namespace NineChronicles.Standalone.GraphTypes
 
                         if (!(state is Bencodex.Types.Dictionary asDict))
                         {
+                            context.Errors.Add(new ExecutionError("The given key was already expired."));
                             return false;
                         }
 
@@ -45,14 +46,18 @@ namespace NineChronicles.Standalone.GraphTypes
                         ActivateAccount action = activationKey.CreateActivateAccount(
                             pendingActivationState.Nonce);
 
-                        var actions = new PolymorphicAction<ActionBase>[] { action };
+                        var actions = new NineChroniclesActionType[] { action };
                         blockChain.MakeTransaction(privateKey, actions);
+                    }
+                    catch (ArgumentException ae)
+                    {
+                        context.Errors.Add(new ExecutionError("The given key isn't in the correct foramt.", ae));
+                        return false;
                     }
                     catch (Exception e)
                     {
                         var msg = "Unexpected exception occurred during ActivatedAccountsMutation: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
-                        Log.Error(msg, e);
                         return false;
                     }
 
