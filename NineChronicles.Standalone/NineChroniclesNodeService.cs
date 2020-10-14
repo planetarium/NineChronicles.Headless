@@ -109,6 +109,8 @@ namespace NineChronicles.Standalone
 
             if (strictRendering)
             {
+                Log.Debug(
+                    $"Strict rendering is on. Add {nameof(ValidatingActionRenderer<NineChroniclesActionType>)}.");
                 renderers.Add(validatingRenderer);
             }
 

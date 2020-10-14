@@ -152,6 +152,7 @@ namespace Libplanet.Standalone.Hosting
                 {
                     // FIXME: It's safe to increase depth.
                     await BootstrapMainSwarmAsync(1);
+                    BootstrapEnded.Set();
                 }
                 catch (PeerDiscoveryException e)
                 {
@@ -171,25 +172,8 @@ namespace Libplanet.Standalone.Hosting
                         Properties.TrustedStateValidators,
                         cancellationToken: cancellationToken
                     );
-                    await SubSwarm.PreloadAsync(
-                        TimeSpan.FromSeconds(5),
-                        null,
-                        Properties.TrustedStateValidators,
-                        cancellationToken: cancellationToken
-                    );
                     PreloadEnded.Set();
                 }
-            }
-            else if (preload)
-            {
-                await SubSwarm.PreloadAsync(
-                    TimeSpan.FromSeconds(5),
-                    null,
-                    Properties.TrustedStateValidators,
-                    cancellationToken: cancellationToken
-                );
-                BootstrapEnded.Set();
-                PreloadEnded.Set();
             }
 
             async Task ReconnectToSeedPeers(CancellationToken token)
