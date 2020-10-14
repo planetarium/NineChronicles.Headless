@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -329,8 +330,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             Assert.True(isPlayed);
             
             var avatar = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
-            Assert.True(avatar.exp > 0);
-            
+            Assert.True(avatar.exp > 0);   
         }
 
         [Fact]
@@ -390,7 +390,75 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
 
         }
 
-            private BlockChain<PolymorphicAction<ActionBase>> GetContextFx(PrivateKey playerPrivateKey, RankingState ranking)
+        [Fact]
+        public async Task DailyReward()
+        {
+            _sheets[nameof(GameConfigSheet)] = string.Join(
+                Environment.NewLine,
+                "key, value",
+                "hourglass_per_block, 3",
+                "action_point_max, 120",
+                "daily_reward_interval, 4",
+                "daily_arena_interval, 500",
+                "weekly_arena_interval, 56000");
+
+            var playerPrivateKey = new PrivateKey();
+            Address playerAddress = playerPrivateKey.ToAddress();
+            var ranking = new RankingState();
+            for (var i = 0; i < RankingState.RankingMapCapacity; i++)
+            {
+                ranking.RankingMap[RankingState.Derive(i)] = new HashSet<Address>().ToImmutableHashSet();
+            }
+            var blockChain = GetContextFx(playerPrivateKey, ranking);
+
+            var createAvatarQuery = $"mutation {{ action {{ createAvatar }} }}";
+            await ExecuteQueryAsync(createAvatarQuery);
+            await blockChain.MineBlock(playerAddress);
+
+            var playerState = (Bencodex.Types.Dictionary)blockChain.GetState(playerAddress);
+            var agentState = new AgentState(playerState);
+            var weeklyArenaAddress = (new WeeklyArenaState(1)).address;
+            var rankingMapAddress = RankingState.Derive(0);
+            var gameConfigState = new GameConfigState((Bencodex.Types.Dictionary)blockChain.GetState(Addresses.GameConfig));
+            var avatarState = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
+
+            Assert.Equal(playerAddress, agentState.address);
+
+            var hackAndSlashQuery = $"mutation {{ action {{ hackAndSlash(weeklyArenaAddress: \"{weeklyArenaAddress.ToHex()}\", rankingArenaAddress: \"{rankingMapAddress.ToHex()}\") }} }}";
+            await ExecuteQueryAsync(hackAndSlashQuery);
+            await blockChain.MineBlock(playerAddress);
+
+            avatarState = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
+            Assert.True(avatarState.actionPoint < gameConfigState.ActionPointMax);
+
+            var dailyRewardQuery = $"mutation {{ action {{ dailyReward }} }}";
+            ExecutionResult result = await ExecuteQueryAsync(dailyRewardQuery);
+
+            var isPlayed = (bool)result.Data
+                .As<Dictionary<string, object>>()["action"]
+                .As<Dictionary<string, object>>()["dailyReward"];
+
+            Assert.True(isPlayed);
+            await blockChain.MineBlock(playerAddress);
+
+            avatarState = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
+            // BlockIndex : 3, Interval : 4, so actionPoint won't be charged.
+            Assert.NotEqual(avatarState.actionPoint, gameConfigState.ActionPointMax);
+
+            result = await ExecuteQueryAsync(dailyRewardQuery);
+            isPlayed = (bool)result.Data
+                .As<Dictionary<string, object>>()["action"]
+                .As<Dictionary<string, object>>()["dailyReward"];
+
+            Assert.True(isPlayed);
+            await blockChain.MineBlock(playerAddress);
+
+            avatarState = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
+            // BlockIndex : 4, Interval : 4, so actionPoint will be charged.
+            Assert.Equal(avatarState.actionPoint, gameConfigState.ActionPointMax);
+        }
+
+        private BlockChain<PolymorphicAction<ActionBase>> GetContextFx(PrivateKey playerPrivateKey, RankingState ranking)
         {
             var goldCurrency = new Currency("NCG", 2, minter: null);
             Block<PolymorphicAction<ActionBase>> genesis =
