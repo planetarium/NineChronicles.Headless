@@ -59,7 +59,7 @@ namespace NineChronicles.Standalone
             bool ignoreBootstrapFailure = false,
             bool strictRendering = false,
             bool isDev = false,
-            int blockInterval = 10,
+            int blockInterval = 10000,
             int reorgInterval = 0
         )
         {
@@ -166,7 +166,7 @@ namespace NineChronicles.Standalone
                         {
                             Log.Debug("Start mining.");
                             var (mainBlock, subBlock) = await miner.MineBlockAsync(cancellationToken);
-                            await Task.Delay(blockInterval * 1000, cancellationToken);
+                            await Task.Delay(blockInterval, cancellationToken);
 
                             const int txCountThreshold = 10;
                             var txCount = mainBlock?.Transactions.Count() ?? 0;

@@ -90,8 +90,8 @@ namespace NineChronicles.Standalone.Executable
             [Option(
                 "dev.block-interval",
                 Description =
-                    "The time interval between blocks. It's unit is seconds. Works only when dev mode is on.  10 (s) by default.")]
-            int blockInterval = 10,
+                    "The time interval between blocks. It's unit is milliseconds. Works only when dev mode is on.  10000 (ms) by default.")]
+            int blockInterval = 10000,
             [Option(
                 "dev.reorg-interval",
                 Description =

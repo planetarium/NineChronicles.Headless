@@ -12,7 +12,7 @@ namespace NineChronicles.Standalone
             bool ignoreBootstrapFailure = true,
             bool strictRendering = false,
             bool isDev = false,
-            int blockInterval = 10,
+            int blockInterval = 10000,
             int reorgInterval = 0
         )
         {
