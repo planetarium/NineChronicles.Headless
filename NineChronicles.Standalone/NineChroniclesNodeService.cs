@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
@@ -11,6 +12,7 @@ using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;
+using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Standalone.Hosting;
@@ -55,8 +57,9 @@ namespace NineChronicles.Standalone
             RpcNodeServiceProperties? rpcNodeServiceProperties,
             Progress<PreloadState> preloadProgress = null,
             bool ignoreBootstrapFailure = false,
+            bool strictRendering = false,
             bool isDev = false,
-            int blockInterval = 10,
+            int blockInterval = 10000,
             int reorgInterval = 0
         )
         {
@@ -92,13 +95,24 @@ namespace NineChronicles.Standalone
             BlockRenderer = blockPolicySource.BlockRenderer;
             ActionRenderer = blockPolicySource.ActionRenderer;
             ExceptionRenderer = new ExceptionRenderer();
-            var renderers = Properties.Render
-                ? new IRenderer<NineChroniclesActionType>[]
-                {
-                    blockPolicySource.BlockRenderer,
-                    blockPolicySource.LoggedActionRenderer
-                }
-                : new [] { blockPolicySource.LoggedBlockRenderer };
+            var renderers = new List<IRenderer<NineChroniclesActionType>>();
+            var validatingRenderer = new ValidatingActionRenderer<NineChroniclesActionType>();
+            if (Properties.Render)
+            {
+                renderers.Add(blockPolicySource.BlockRenderer);
+                renderers.Add(blockPolicySource.LoggedActionRenderer);
+            }
+            else
+            {
+                renderers.Add(blockPolicySource.LoggedBlockRenderer);
+            }
+
+            if (strictRendering)
+            {
+                Log.Debug(
+                    $"Strict rendering is on. Add {nameof(ValidatingActionRenderer<NineChroniclesActionType>)}.");
+                renderers.Add(validatingRenderer);
+            }
 
             async Task minerLoopAction(
                 BlockChain<NineChroniclesActionType> chain,
@@ -152,7 +166,7 @@ namespace NineChronicles.Standalone
                         {
                             Log.Debug("Start mining.");
                             var (mainBlock, subBlock) = await miner.MineBlockAsync(cancellationToken);
-                            await Task.Delay(blockInterval * 1000, cancellationToken);
+                            await Task.Delay(blockInterval, cancellationToken);
 
                             const int txCountThreshold = 10;
                             var txCount = mainBlock?.Transactions.Count() ?? 0;
@@ -207,6 +221,8 @@ namespace NineChronicles.Standalone
                 );
             }
 
+            validatingRenderer.Store = NodeService?.Store ?? throw new Exception("Store is null.");
+            validatingRenderer.BlockChain = NodeService?.BlockChain ?? throw new Exception("BlockChain is null.");
             if (NodeService?.BlockChain?.GetState(AuthorizedMinersState.Address) is Dictionary ams &&
                 blockPolicy is BlockPolicy bp)
             {

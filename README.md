@@ -12,8 +12,8 @@ Usage: NineChronicles.Standalone.Executable [--no-miner] [--app-protocol-version
     [--no-trusted-state-validators] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] \
     [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] \
     [--graphql-host <String>] [--graphql-port <Nullable`1>] [--libplanet-node] [--no-mpt] \
-    [--workers <Int32>] [--confirmations <Int32>] [--dev] [--dev.block-interval <Int32>]
-    [--dev.reorg-interval <Int32>] [--help] [--version]
+    [--workers <Int32>] [--confirmations <Int32>] [--strict-rendering] [--dev] \
+    [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--help] [--version]
 
 Run standalone application with options.
 
@@ -41,8 +41,9 @@ Options:
   --no-mpt                                                 Flag to turn off the Merkle Patricia Trie for state saving.
   --workers <Int32>                                        Number of workers to use in Swarm (Default: 5)
   --confirmations <Int32>                                  The number of required confirmations to recognize a block.  0 by default. (Default: 0)
+  --strict-rendering                                       Flag to turn on validating action renderer.
   --dev                                                    Flag to turn on the dev mode.  false by default.
-  --dev.block-interval <Int32>                             The time interval between blocks. It's unit is seconds. Works only when dev mode is on.  10 (s) by default. (Default: 10)
+  --dev.block-interval <Int32>                             The time interval between blocks. It's unit is milliseconds. Works only when dev mode is on.  10000 (ms) by default. (Default: 10000)
   --dev.reorg-interval <Int32>                             The size of reorg interval. Works only when dev mode is on.  0 by default. (Default: 0)
   -h, --help                                               Show help message
   --version                                                Show version
@@ -79,7 +80,7 @@ $ docker build . -t <IMAGE_TAG>
 -  `--workers`: Number of workers to use in Swarm.
 -  `--confirmations`: Specifies the number of required confirmations to recognize a block.
 -  `--dev`: Flag to turn on the dev mode.
--  `--dev.block-interval`: Specifies the time interval between blocks by seconds in dev mode.
+-  `--dev.block-interval`: Specifies the time interval between blocks by milliseconds in dev mode.
 -  `--dev.reorg-interval`: Specifies the size of reorg interval in dev mode.
 
 ### Format

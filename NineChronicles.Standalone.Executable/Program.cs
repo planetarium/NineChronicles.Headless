@@ -83,13 +83,15 @@ namespace NineChronicles.Standalone.Executable
                     "The number of required confirmations to recognize a block.  0 by default."
             )]
             int confirmations = 0,
+            [Option("strict-rendering", Description = "Flag to turn on validating action renderer.")]
+            bool strictRendering = false,
             [Option("dev", Description = "Flag to turn on the dev mode.  false by default.")]
             bool isDev = false,
             [Option(
                 "dev.block-interval",
                 Description =
-                    "The time interval between blocks. It's unit is seconds. Works only when dev mode is on.  10 (s) by default.")]
-            int blockInterval = 10,
+                    "The time interval between blocks. It's unit is milliseconds. Works only when dev mode is on.  10000 (ms) by default.")]
+            int blockInterval = 10000,
             [Option(
                 "dev.reorg-interval",
                 Description =
@@ -204,6 +206,7 @@ namespace NineChronicles.Standalone.Executable
                     StandaloneServices.CreateHeadless(
                         nineChroniclesProperties,
                         standaloneContext,
+                        strictRendering: strictRendering,
                         isDev: isDev,
                         blockInterval: blockInterval,
                         reorgInterval: reorgInterval);
