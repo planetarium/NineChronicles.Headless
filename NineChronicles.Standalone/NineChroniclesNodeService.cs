@@ -129,14 +129,7 @@ namespace NineChronicles.Standalone
                         if (swarm.Running)
                         {
                             Log.Debug("Start mining.");
-                            var block = await miner.MineBlockAsync(cancellationToken);
-
-                            const int txCountThreshold = 10;
-                            var txCount = block?.Transactions.Count() ?? 0;
-                            if (!(block is null) && txCount >= txCountThreshold)
-                            {
-                                Log.Error($"Block {block.Index}({block.Hash}) transaction count is {txCount}.");
-                            }
+                            await miner.MineBlockAsync(properties.MaximumTransactions, cancellationToken);
                         }
                         else
                         {
@@ -165,15 +158,7 @@ namespace NineChronicles.Standalone
                         if (mainSwarm.Running)
                         {
                             Log.Debug("Start mining.");
-                            var (mainBlock, subBlock) = await miner.MineBlockAsync(cancellationToken);
-                            await Task.Delay(blockInterval, cancellationToken);
-
-                            const int txCountThreshold = 10;
-                            var txCount = mainBlock?.Transactions.Count() ?? 0;
-                            if (!(mainBlock is null) && txCount >= txCountThreshold)
-                            {
-                                Log.Error($"Block {mainBlock.Index}({mainBlock.Hash}) transaction count is {txCount}.");
-                            }
+                            await miner.MineBlockAsync(properties.MaximumTransactions, cancellationToken);
                         }
                         else
                         {
