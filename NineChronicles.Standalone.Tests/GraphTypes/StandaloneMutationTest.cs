@@ -334,63 +334,6 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
         }
 
         [Fact]
-        public async Task QuestReward()
-        {
-            var playerPrivateKey = new PrivateKey();
-            Address playerAddress = playerPrivateKey.ToAddress();
-            var ranking = new RankingState();
-            for (var i = 0; i < RankingState.RankingMapCapacity; i++)
-            {
-                ranking.RankingMap[RankingState.Derive(i)] = new HashSet<Address>().ToImmutableHashSet();
-            }
-            var blockChain = GetContextFx(playerPrivateKey, ranking);
-
-            var createAvatarQuery = $"mutation {{ action {{ createAvatar }} }}";
-            await ExecuteQueryAsync(createAvatarQuery);
-            await blockChain.MineBlock(playerAddress);
-
-            var playerState = (Bencodex.Types.Dictionary)blockChain.GetState(playerAddress);
-            var agentState = new AgentState(playerState);
-            var weeklyArenaAddress = (new WeeklyArenaState(1)).address;
-            var rankingMapAddress = RankingState.Derive(0);
-            var gameConfigState = new GameConfigState((Bencodex.Types.Dictionary)blockChain.GetState(Addresses.GameConfig));
-            var questRow = _tableSheets.WorldQuestSheet.First(row => row.Value.Goal == 1).Value;
-            var avatarState = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
-            var quest = avatarState.questList.First(q => q.Id == questRow.Id);
-
-            Assert.Equal(playerAddress, agentState.address);
-            Assert.False(quest.Complete);
-
-            var hackAndSlashQuery = $"mutation {{ action {{ hackAndSlash(weeklyArenaAddress: \"{weeklyArenaAddress.ToHex()}\", rankingArenaAddress: \"{rankingMapAddress.ToHex()}\") }} }}";
-            await ExecuteQueryAsync(hackAndSlashQuery);
-            await blockChain.MineBlock(playerAddress);
-
-            avatarState = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
-            quest = avatarState.questList.First(q => q.Id == questRow.Id);
-            Assert.True(quest.Complete);
-
-            var dailyRewardQuery = $"mutation {{ action {{ questReward(questId: \"{quest.Id}\") }} }}";
-            ExecutionResult result = await ExecuteQueryAsync(dailyRewardQuery);
-
-            var isPlayed = (bool)result.Data
-                .As<Dictionary<string, object>>()["action"]
-                .As<Dictionary<string, object>>()["questReward"];
-
-            Assert.True(isPlayed);
-            avatarState = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
-
-            foreach (var pair in quest.Reward.ItemMap)
-            {
-                var itemRow = _tableSheets.MaterialItemSheet.OrderedList
-                    .First(row => row.Id == pair.Key);
-                var item = ItemFactory.CreateMaterial(itemRow);
-                var hasItem = avatarState.inventory.HasItem(item.Id, pair.Value);
-                Assert.True(hasItem);
-            }
-
-        }
-
-        [Fact]
         public async Task DailyReward()
         {
             _sheets[nameof(GameConfigSheet)] = string.Join(

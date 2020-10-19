@@ -36,7 +36,8 @@ namespace NineChronicles.Standalone.Properties
                 bool render = false,
                 bool mpt = true,
                 int workers = 5,
-                int confirmations = 0)
+                int confirmations = 0,
+                int maximumTransactions = 100)
         {
             var privateKey = string.IsNullOrEmpty(privateKeyString)
                 ? new PrivateKey()
@@ -80,6 +81,7 @@ namespace NineChronicles.Standalone.Properties
                 Mpt = mpt,
                 Workers = workers,
                 Confirmations = Math.Max(confirmations, 0),
+                MaximumTransactions = maximumTransactions,
             };
         }
 
