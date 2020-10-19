@@ -83,6 +83,13 @@ namespace NineChronicles.Standalone.Executable
                     "The number of required confirmations to recognize a block.  0 by default."
             )]
             int confirmations = 0,
+            [Option(
+                "max-transactions",
+                Description =
+                    "The number of maximum transactions can be included in a single block. " +
+                    "Unlimited if the value is less then or equal to 0.  100 by default."
+            )]
+            int maximumTransactions = 100,
             [Option("strict-rendering", Description = "Flag to turn on validating action renderer.")]
             bool strictRendering = false,
             [Option("dev", Description = "Flag to turn on the dev mode.  false by default.")]
@@ -188,7 +195,8 @@ namespace NineChronicles.Standalone.Executable
                         noMiner,
                         mpt: !noMpt,
                         workers: workers,
-                        confirmations: confirmations);
+                        confirmations: confirmations,
+                        maximumTransactions: maximumTransactions);
                 if (rpcServer)
                 {
                     rpcProperties = NineChroniclesNodeServiceProperties

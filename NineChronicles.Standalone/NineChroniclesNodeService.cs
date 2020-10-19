@@ -89,7 +89,7 @@ namespace NineChronicles.Standalone
             }
             else
             {
-                blockPolicy = blockPolicySource.GetPolicy(properties.MinimumDifficulty);
+                blockPolicy = blockPolicySource.GetPolicy(properties.MinimumDifficulty, properties.MaximumTransactions);
             }
 
             BlockRenderer = blockPolicySource.BlockRenderer;
