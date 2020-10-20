@@ -40,7 +40,7 @@ namespace Libplanet.Standalone.Hosting
         public AsyncManualResetEvent PreloadEnded { get; }
 
         private Func<BlockChain<T>, Swarm<T>, PrivateKey, CancellationToken, Task> _minerLoopAction;
-        
+
         private Action<RPCException, string> _exceptionHandlerAction;
 
         protected LibplanetNodeServiceProperties<T> Properties;
@@ -77,7 +77,7 @@ namespace Libplanet.Standalone.Hosting
             {
                 throw new ArgumentNullException(nameof(blockPolicy));
             }
-            
+
             Properties = properties;
 
             var genesisBlock = LoadGenesisBlock(properties);
@@ -140,7 +140,7 @@ namespace Libplanet.Standalone.Hosting
             while (!cancellationToken.IsCancellationRequested && !_stopRequested)
             {
                 var tasks = new List<Task> { StartSwarm(preload, cancellationToken), CheckSwarm(cancellationToken) };
-                if (Properties.Peers.Any()) 
+                if (Properties.Peers.Any())
                 {
                     tasks.Add(CheckPeerTable(cancellationToken));
                 }
@@ -288,14 +288,14 @@ namespace Libplanet.Standalone.Hosting
             {
                 while (!token.IsCancellationRequested)
                 {
-                    await Task.Delay(BootstrapInterval);
+                    await Task.Delay(BootstrapInterval, token);
                     await BootstrapSwarmAsync(0).ContinueWith(t =>
                     {
                         if (t.IsFaulted)
                         {
-                            Log.Error(t.Exception, "Periodic bootstrap failed.");
+                            Log.Information(t.Exception, "Periodic bootstrap failed.");
                         }
-                    });
+                    }, token);
 
                     token.ThrowIfCancellationRequested();
                 }
