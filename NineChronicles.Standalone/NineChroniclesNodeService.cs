@@ -159,6 +159,7 @@ namespace NineChronicles.Standalone
                         {
                             Log.Debug("Start mining.");
                             await miner.MineBlockAsync(properties.MaximumTransactions, cancellationToken);
+                            await Task.Delay(blockInterval, cancellationToken);
                         }
                         else
                         {
