@@ -5,21 +5,19 @@ using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Crypto;
+using Libplanet.Tx;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Serilog;
+using System;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Standalone.GraphTypes
 {
     public class StandaloneMutation : ObjectGraphType
     {
-        private StandaloneContext StandaloneContext { get; }
-
         public StandaloneMutation(StandaloneContext standaloneContext)
         {
-            StandaloneContext = standaloneContext;
-
             Field<KeyStoreMutation>(
                 name: "keyStore",
                 resolve: context => standaloneContext.KeyStore);
@@ -31,6 +29,44 @@ namespace NineChronicles.Standalone.GraphTypes
             Field<ActionMutation>(
                 name: "action",
                 resolve: context => standaloneContext.NineChroniclesNodeService);
+
+            Field<NonNullGraphType<BooleanGraphType>>(
+                name: "stageTx",
+                description: "Add a new transaction to staging",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "payload",
+                        Description = "Hex-encoded bytes for new transaction."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        byte[] bytes = ByteUtil.ParseHex(context.GetArgument<string>("payload"));
+                        Transaction<NCAction> tx = Transaction<NCAction>.Deserialize(bytes);
+                        NineChroniclesNodeService service = standaloneContext.NineChroniclesNodeService;
+                        BlockChain<NCAction> blockChain = service.Swarm.BlockChain;
+
+                        if (blockChain.Policy.DoesTransactionFollowsPolicy(tx, blockChain))
+                        {
+                            blockChain.StageTransaction(tx);
+                            return true;
+                        }
+                        else
+                        {
+                            context.Errors.Add(new ExecutionError("The given transaction is invalid."));
+                            return false;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        context.Errors.Add(new ExecutionError("An unexpected exception occurred.", e));
+                        return false;
+                    }
+                }
+            );
 
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "transferGold",
