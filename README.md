@@ -91,9 +91,9 @@ $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 
 Formatting for `PrivateKey` or `Peer` follows the format in [Nekoyume Project README][../README.md].
 
-### How to run NineChronicles Standalone on AWS EC2 instance using Docker
+## How to run NineChronicles Standalone on AWS EC2 instance using Docker
 
-A) On Your Local
+### A) On Your Local
 
 #### Pre-requisites
 - Docker environment: [Docker Installation Guide](https://docs.docker.com/get-started/#set-up-your-docker-environment)
@@ -102,8 +102,7 @@ A) On Your Local
 1. Build docker image with the tag name in [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] format.
 
 ```
-ex)
-$ docker build . -t 9c/9cStandalone --build-arg COMMIT=9c-1234
+ex) $ docker build . -t 9c/9cStandalone --build-arg COMMIT=9c-1234
 
 Usage: docker build . -t [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] --build-arg COMMIT=[<VERSION_SUFFIX>]
 ```
@@ -111,13 +110,12 @@ Usage: docker build . -t [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] --build-arg COMMIT=
 2. Push your docker image to your docker hub account.
 
 ```
-ex)
-$ docker push 9c/9cStandalone:latest
+ex) $ docker push 9c/9cStandalone:latest
 
 Usage: docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<VERSION>]
 ```
 
-B) On Your AWS EC2 Instance (example instance: Ubuntu Server 20.04 LTS (HVM)/t2.micro)
+### B) On Your AWS EC2 Instance (example instance: Ubuntu Server 20.04 LTS (HVM)/t2.micro)
 
 #### Pre-requisites
 - Docker environment: [Docker Installation Guide](https://docs.docker.com/get-started/#set-up-your-docker-environment)
@@ -127,8 +125,7 @@ B) On Your AWS EC2 Instance (example instance: Ubuntu Server 20.04 LTS (HVM)/t2.
 3. Pull your docker image to your AWS EC2 instance.
 
 ```
-ex)
-$ sudo docker pull 9c/9cStandalone:latest
+ex) $ sudo docker pull 9c/9cStandalone:latest
 
 Usage: sudo docker pull [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<VERSION>]
 ```
@@ -136,8 +133,7 @@ Usage: sudo docker pull [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<VERSION>]
 4. Create a docker volume for blockchain data persistance
 
 ```
-ex)
-$ sudo docker volume create 9c-volume
+ex) $ sudo docker volume create 9c-volume
 
 Usage: sudo docker volume create [<VOLUME_NAME>]
 ```
@@ -148,9 +144,22 @@ Usage: sudo docker volume create [<VOLUME_NAME>]
 ex)
 $ sudo docker run \
   -v 9c-volume:/app/9c-volume \
-  area363/ninechronicles \
-  -V=1000005/019101FEec7ed4f918D396827E1277DEda1e20D4/MEUCIQCdvof4eiiLRm187vEEh.C8fbJNKuqF47EJSZeymWA5pgIgU.+Jbm2g6tUdchIgoWDZ6Xw1HwSTi1GFz9Vcxt9I0p0= -G=https://9c-test.s3.ap-northeast-2.amazonaws.com/genesis-block-9c-beta-9-rc1 -D=5000000 --store-type=rocksdb --store-path=/app/9c-volume -I=turn://0ed3e48007413e7c2e638f13ddd75ad272c6c507e081bd76a75e4b7adc86c9af:0apejou+ycZFfwtREeXFKdfLj2gCclKzz5ZJ49Cmy6I=@turn-us.planetarium.dev:3478 -I=turn://0ed3e48007413e7c2e638f13ddd75ad272c6c507e081bd76a75e4b7adc86c9af:0apejou+ycZFfwtREeXFKdfLj2gCclKzz5ZJ49Cmy6I=@turn-us2.planetarium.dev:3478 -I=turn://0ed3e48007413e7c2e638f13ddd75ad272c6c507e081bd76a75e4b7adc86c9af:0apejou+ycZFfwtREeXFKdfLj2gCclKzz5ZJ49Cmy6I=@turn-us3.planetarium.dev:3478 --peer=027bd36895d68681290e570692ad3736750ceaab37be402442ffb203967f98f7b6,9c-internal.planetarium.dev,31236 -T=02a5e2811a9bfa4eec274e806debd622c53702bce39a809918563a4cf34189ff85 --no-trusted-state-validators=true --workers=20 --confirmations=2 --libplanet-node
+  9c/9cStandalone \
+  -V=1000005/019101FEec7ed4f918D396827E1277DEda1e20D4/MEUCIQCdvof4eiiLRm187vEEh.C8fbJNKuqF47EJSZeymWA5pgIgU.+Jbm2g6tUdchIgoWDZ6Xw1HwSTi1GFz9Vcxt9I0p0= 
+  -G=https://9c-test.s3.ap-northeast-2.amazonaws.com/genesis-block-9c-beta-9-rc1 
+  -D=5000000 \
+  --store-type=rocksdb \
+  --store-path=/app/9c-volume \
+  -I=turn://0ed3e48007413e7c2e638f13ddd75ad272c6c507e081bd76a75e4b7adc86c9af:0apejou+ycZFfwtREeXFKdfLj2gCclKzz5ZJ49Cmy6I=@turn-us.planetarium.dev:3478 \
+  -I=turn://0ed3e48007413e7c2e638f13ddd75ad272c6c507e081bd76a75e4b7adc86c9af:0apejou+ycZFfwtREeXFKdfLj2gCclKzz5ZJ49Cmy6I=@turn-us2.planetarium.dev:3478 \
+  -I=turn://0ed3e48007413e7c2e638f13ddd75ad272c6c507e081bd76a75e4b7adc86c9af:0apejou+ycZFfwtREeXFKdfLj2gCclKzz5ZJ49Cmy6I=@turn-us3.planetarium.dev:3478 \
+  --peer=027bd36895d68681290e570692ad3736750ceaab37be402442ffb203967f98f7b6,9c-internal.planetarium.dev,31236 \
+  -T=02a5e2811a9bfa4eec274e806debd622c53702bce39a809918563a4cf34189ff85 \
+  --no-trusted-state-validators=true \
+  --workers=20 \
+  --confirmations=2 \
+  --libplanet-node \
 ```
 
 - [Docker volumes usage](https://docs.docker.com/storage/volumes/)
-- [NineChronicles Standalone usage](##Run)
+- [NineChronicles Standalone usage](#run)
