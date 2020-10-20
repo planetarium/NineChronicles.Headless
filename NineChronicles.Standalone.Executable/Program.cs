@@ -239,6 +239,7 @@ namespace NineChronicles.Standalone.Executable
             }
             catch (TaskCanceledException)
             {
+                Log.Information("Terminated by the cancellation.");
             }
             catch (Exception e)
             {
