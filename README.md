@@ -57,7 +57,7 @@ Options:
 A Standalone image can be created by running the command below in the directory where the solution is located.
 
 ```
-$ docker build . -t <IMAGE_TAG>
+$ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 ```
 
 ### Command Line Options
