@@ -237,6 +237,10 @@ namespace NineChronicles.Standalone.Executable
 
                 await Task.WhenAll(tasks);
             }
+            catch (TaskCanceledException)
+            {
+                Log.Information("Terminated by the cancellation.");
+            }
             catch (Exception e)
             {
                 Log.Error(e, "Unexpected exception occurred during Run. {e}", e);
