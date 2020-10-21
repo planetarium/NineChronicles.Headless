@@ -90,3 +90,91 @@ $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 ### Format
 
 Formatting for `PrivateKey` or `Peer` follows the format in [Nekoyume Project README][../README.md].
+
+## How to run NineChronicles Standalone on AWS EC2 instance using Docker
+
+### A) On Your Local
+
+#### Pre-requisites
+
+- Docker environment: [Docker Installation Guide](https://docs.docker.com/get-started/#set-up-your-docker-environment)
+- Docker hub account: [Docker Hub Guide](https://docs.docker.com/docker-hub/)
+
+#### 1. Build docker image with the tag name in [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] format.
+
+```
+$ docker build . --tag 9c/9c-standalone --build-arg COMMIT=9c-1
+
+Usage: docker build . --tag [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] --build-arg COMMIT=[<VERSION_SUFFIX>]
+```
+- [Docker Build Guide](https://docs.docker.com/engine/reference/commandline/build/)
+
+![Docker Build](https://i.imgur.com/vc6CnbR.png)
+
+#### 2. Push your docker image to your docker hub account.
+
+```
+$ docker push 9c/9c-standalone:latest
+
+Usage: docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<VERSION>]
+```
+- [Docker Push Guide](https://docs.docker.com/engine/reference/commandline/push/)
+
+![Docker Push](https://i.imgur.com/IRIXXjg.png)
+
+### B) On Your AWS EC2 Instance
+
+#### Pre-requisites
+
+- Docker environment: [Docker Installation Guide](https://docs.docker.com/get-started/#set-up-your-docker-environment)
+- Docker hub account: [Docker Hub Guide](https://docs.docker.com/docker-hub/)
+- AWS EC2 instance: [AWS EC2 Guide](https://docs.aws.amazon.com/ec2/index.html)
+
+#### 3. Pull your docker image to your AWS EC2 instance.
+
+```
+$ docker pull 9c/9c-standalone:latest
+
+Usage: docker pull [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<VERSION>]
+```
+- [Docker Pull Guide](https://docs.docker.com/engine/reference/commandline/pull/)
+
+![Docker Pull](https://i.imgur.com/e7sSKxH.png)
+
+#### 4. Create a docker volume for blockchain data persistance
+
+```
+$ docker volume create 9c-volume
+Usage: docker volume create [<VOLUME_NAME>]
+```
+- [Docker Volume Guide](https://docs.docker.com/engine/reference/commandline/volume_create/)
+
+![Docker Volume Create](https://i.imgur.com/ISgKeLc.png)
+
+#### 5. Run your docker image with your docker volume mounted (use -d for detached mode)
+
+```
+$ docker run \
+--detach \
+--volume 9c-volume:/app/data \
+9c/9c-standalone \
+--app-protocol-version=1000005/019101FEec7ed4f918D396827E1277DEda1e20D4/MEUCIQCdvof4eiiLRm187vEEh.C8fbJNKuqF47EJSZeymWA5pgIgU.+Jbm2g6tUdchIgoWDZ6Xw1HwSTi1GFz9Vcxt9I0p0= \
+--genesis-block-path=https://9c-test.s3.ap-northeast-2.amazonaws.com/genesis-block-9c-beta-9-rc1 \
+--minimum-difficulty=5000000 \
+--store-type=rocksdb \
+--store-path=/app/data \
+--ice-server=turn://0ed3e48007413e7c2e638f13ddd75ad272c6c507e081bd76a75e4b7adc86c9af:0apejou+ycZFfwtREeXFKdfLj2gCclKzz5ZJ49Cmy6I=@turn-us.planetarium.dev:3478 \
+--ice-server=turn://0ed3e48007413e7c2e638f13ddd75ad272c6c507e081bd76a75e4b7adc86c9af:0apejou+ycZFfwtREeXFKdfLj2gCclKzz5ZJ49Cmy6I=@turn-us2.planetarium.dev:3478 \
+--ice-server=turn://0ed3e48007413e7c2e638f13ddd75ad272c6c507e081bd76a75e4b7adc86c9af:0apejou+ycZFfwtREeXFKdfLj2gCclKzz5ZJ49Cmy6I=@turn-us3.planetarium.dev:3478 \
+--peer=027bd36895d68681290e570692ad3736750ceaab37be402442ffb203967f98f7b6,9c-internal.planetarium.dev,31236 \
+--trusted-app-protocol-version-signer=02a5e2811a9bfa4eec274e806debd622c53702bce39a809918563a4cf34189ff85 \
+--no-trusted-state-validators=true \
+--workers=20 \
+--confirmations=2 \
+--libplanet-node
+```
+
+![Docker Run](https://i.imgur.com/bPlUqF1.png)
+
+- [Docker volumes usage](https://docs.docker.com/storage/volumes/)
+- [NineChronicles Standalone Docker run usage](#run)
