@@ -138,11 +138,12 @@ ex) $ sudo docker volume create 9c-volume
 Usage: sudo docker volume create [<VOLUME_NAME>]
 ```
 
-5. Run your docker image with your docker volume mounted
+5. Run your docker image with your docker volume mounted (use -d for detached mode)
 
 ```
 ex)
 $ sudo docker run \
+  -d \
   -v 9c-volume:/app/data \
   9c/9c-standalone \
   -V=1000005/019101FEec7ed4f918D396827E1277DEda1e20D4/MEUCIQCdvof4eiiLRm187vEEh.C8fbJNKuqF47EJSZeymWA5pgIgU.+Jbm2g6tUdchIgoWDZ6Xw1HwSTi1GFz9Vcxt9I0p0= \
