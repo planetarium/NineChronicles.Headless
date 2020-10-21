@@ -143,13 +143,13 @@ Usage: sudo docker volume create [<VOLUME_NAME>]
 ```
 ex)
 $ sudo docker run \
-  -v 9c-volume:/app/9c-volume \
+  -v 9c-volume:/app/data \
   9c/9c-standalone \
   -V=1000005/019101FEec7ed4f918D396827E1277DEda1e20D4/MEUCIQCdvof4eiiLRm187vEEh.C8fbJNKuqF47EJSZeymWA5pgIgU.+Jbm2g6tUdchIgoWDZ6Xw1HwSTi1GFz9Vcxt9I0p0= 
   -G=https://9c-test.s3.ap-northeast-2.amazonaws.com/genesis-block-9c-beta-9-rc1 
   -D=5000000 \
   --store-type=rocksdb \
-  --store-path=/app/9c-volume \
+  --store-path=/app/data \
   -I=turn://0ed3e48007413e7c2e638f13ddd75ad272c6c507e081bd76a75e4b7adc86c9af:0apejou+ycZFfwtREeXFKdfLj2gCclKzz5ZJ49Cmy6I=@turn-us.planetarium.dev:3478 \
   -I=turn://0ed3e48007413e7c2e638f13ddd75ad272c6c507e081bd76a75e4b7adc86c9af:0apejou+ycZFfwtREeXFKdfLj2gCclKzz5ZJ49Cmy6I=@turn-us2.planetarium.dev:3478 \
   -I=turn://0ed3e48007413e7c2e638f13ddd75ad272c6c507e081bd76a75e4b7adc86c9af:0apejou+ycZFfwtREeXFKdfLj2gCclKzz5ZJ49Cmy6I=@turn-us3.planetarium.dev:3478 \
