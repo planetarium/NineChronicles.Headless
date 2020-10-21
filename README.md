@@ -107,6 +107,8 @@ ex) $ docker build . -t 9c/9c-standalone --build-arg COMMIT=9c-1
 Usage: docker build . -t [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] --build-arg COMMIT=[<VERSION_SUFFIX>]
 ```
 
+![Docker Build](https://i.imgur.com/vc6CnbR.png)
+
 2. Push your docker image to your docker hub account.
 
 ```
@@ -114,6 +116,8 @@ ex) $ docker push 9c/9c-standalone:latest
 
 Usage: docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<VERSION>]
 ```
+
+![Docker Push](https://i.imgur.com/IRIXXjg.png)
 
 ### B) On Your AWS EC2 Instance (example instance: Ubuntu Server 20.04 LTS (HVM)/t2.micro)
 
@@ -130,6 +134,8 @@ ex) $ sudo docker pull 9c/9c-standalone:latest
 Usage: sudo docker pull [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<VERSION>]
 ```
 
+![Docker Pull](https://i.imgur.com/e7sSKxH.png)
+
 4. Create a docker volume for blockchain data persistance
 
 ```
@@ -137,6 +143,8 @@ ex) $ sudo docker volume create 9c-volume
 
 Usage: sudo docker volume create [<VOLUME_NAME>]
 ```
+
+![Docker Volume Create](https://i.imgur.com/ISgKeLc.png)
 
 5. Run your docker image with your docker volume mounted (use -d for detached mode)
 
@@ -161,6 +169,8 @@ $ sudo docker run \
   --confirmations=2 \
   --libplanet-node
 ```
+
+![Docker Run](https://i.imgur.com/bPlUqF1.png)
 
 - [Docker volumes usage](https://docs.docker.com/storage/volumes/)
 - [NineChronicles Standalone usage](#run)
