@@ -99,7 +99,7 @@ Formatting for `PrivateKey` or `Peer` follows the format in [Nekoyume Project RE
 - Docker environment: [Docker Installation Guide](https://docs.docker.com/get-started/#set-up-your-docker-environment)
 - Docker hub account: [Docker Hub Guide](https://docs.docker.com/docker-hub/)
 
-1. Build docker image with the tag name in [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] format.
+#### 1. Build docker image with the tag name in [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] format.
 
 ```
 ex) $ docker build . -t 9c/9c-standalone --build-arg COMMIT=9c-1
@@ -109,7 +109,7 @@ Usage: docker build . -t [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] --build-arg COMMIT=
 
 ![Docker Build](https://i.imgur.com/vc6CnbR.png)
 
-2. Push your docker image to your docker hub account.
+#### 2. Push your docker image to your docker hub account.
 
 ```
 ex) $ docker push 9c/9c-standalone:latest
@@ -126,7 +126,7 @@ Usage: docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<VERSION>]
 - Docker hub account: [Docker Hub Guide](https://docs.docker.com/docker-hub/)
 - AWS EC2 instance: [AWS EC2 Guide](https://docs.aws.amazon.com/ec2/index.html)
 
-3. Pull your docker image to your AWS EC2 instance.
+#### 3. Pull your docker image to your AWS EC2 instance.
 
 ```
 ex) $ sudo docker pull 9c/9c-standalone:latest
@@ -136,7 +136,7 @@ Usage: sudo docker pull [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<VERSION>]
 
 ![Docker Pull](https://i.imgur.com/e7sSKxH.png)
 
-4. Create a docker volume for blockchain data persistance
+#### 4. Create a docker volume for blockchain data persistance
 
 ```
 ex) $ sudo docker volume create 9c-volume
@@ -146,7 +146,7 @@ Usage: sudo docker volume create [<VOLUME_NAME>]
 
 ![Docker Volume Create](https://i.imgur.com/ISgKeLc.png)
 
-5. Run your docker image with your docker volume mounted (use -d for detached mode)
+#### 5. Run your docker image with your docker volume mounted (use -d for detached mode)
 
 ```
 ex)
