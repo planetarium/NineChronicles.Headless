@@ -102,7 +102,7 @@ Formatting for `PrivateKey` or `Peer` follows the format in [Nekoyume Project RE
 1. Build docker image with the tag name in [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] format.
 
 ```
-ex) $ docker build . -t 9c/9cStandalone --build-arg COMMIT=9c-1234
+ex) $ docker build . -t 9c/9c-standalone --build-arg COMMIT=9c-1
 
 Usage: docker build . -t [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] --build-arg COMMIT=[<VERSION_SUFFIX>]
 ```
@@ -110,7 +110,7 @@ Usage: docker build . -t [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] --build-arg COMMIT=
 2. Push your docker image to your docker hub account.
 
 ```
-ex) $ docker push 9c/9cStandalone:latest
+ex) $ docker push 9c/9c-standalone:latest
 
 Usage: docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<VERSION>]
 ```
@@ -125,7 +125,7 @@ Usage: docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<VERSION>]
 3. Pull your docker image to your AWS EC2 instance.
 
 ```
-ex) $ sudo docker pull 9c/9cStandalone:latest
+ex) $ sudo docker pull 9c/9c-standalone:latest
 
 Usage: sudo docker pull [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<VERSION>]
 ```
@@ -144,7 +144,7 @@ Usage: sudo docker volume create [<VOLUME_NAME>]
 ex)
 $ sudo docker run \
   -v 9c-volume:/app/9c-volume \
-  9c/9cStandalone \
+  9c/9c-standalone \
   -V=1000005/019101FEec7ed4f918D396827E1277DEda1e20D4/MEUCIQCdvof4eiiLRm187vEEh.C8fbJNKuqF47EJSZeymWA5pgIgU.+Jbm2g6tUdchIgoWDZ6Xw1HwSTi1GFz9Vcxt9I0p0= 
   -G=https://9c-test.s3.ap-northeast-2.amazonaws.com/genesis-block-9c-beta-9-rc1 
   -D=5000000 \
