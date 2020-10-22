@@ -141,7 +141,7 @@ Usage: docker pull [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<VERSION>]
 
 ![Docker Pull](https://i.imgur.com/e7sSKxH.png)
 
-#### 4. Create a docker volume for blockchain data persistance
+#### 4. Create a Docker volume for blockchain data persistance
 
 ```
 $ docker volume create 9c-volume
