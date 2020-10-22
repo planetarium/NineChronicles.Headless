@@ -151,7 +151,7 @@ Usage: docker volume create [<VOLUME_NAME>]
 
 ![Docker Volume Create](https://i.imgur.com/ISgKeLc.png)
 
-#### 5. Run your docker image with your docker volume mounted (use -d for detached mode)
+#### 5. Run your Docker image with your Docker volume mounted (use -d for detached mode)
 
 ```
 $ docker run \
