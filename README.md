@@ -59,6 +59,7 @@ A Standalone image can be created by running the command below in the directory 
 ```
 $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 ```
+* Nine Chronicles Team uses <VERSION_SUFFIX> to build an image with the latest git commit and push to the [official Docker Hub repository](https://hub.docker.com/repository/docker/planetariumhq/ninechronicles-headless). However, if you want to build and push to your own docker hub account, <VERSION_SUFFIX> can be any value.
 
 ### Command Line Options
 
