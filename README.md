@@ -111,7 +111,7 @@ Usage: docker build . --tag [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] --build-arg COMM
 
 ![Docker Build](https://i.imgur.com/vc6CnbR.png)
 
-#### 2. Push your docker image to your docker hub account.
+#### 2. Push your Docker image to your docker hub account.
 
 ```
 $ docker push 9c/9c-standalone:latest
