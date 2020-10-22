@@ -159,9 +159,9 @@ $ docker run \
 --detach \
 --volume 9c-volume:/app/data \
 9c/9c-standalone \
-<a href = "#run" title="NineChronicles Standalone options">[NineChonicles Standalone Options]</a>
+<a href = "#run" title="NineChronicles Standalone options">[NineChronicles Standalone Options]</a>
 </pre>
 
 ![Docker Run](https://i.imgur.com/bPlUqF1.png)
 
-- [Docker volumes usage](https://docs.docker.com/storage/volumes/)
+- [Docker Volumes Usage](https://docs.docker.com/storage/volumes/)
