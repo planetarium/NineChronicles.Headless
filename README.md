@@ -159,8 +159,9 @@ $ docker run \
 --detach \
 --volume 9c-volume:/app/data \
 9c/9c-standalone \
-<a href = "#run" title="NineChronicles Standalone options">[NineChronicles Standalone Options]</a>
+<a href = "#run" title="NineChronicles Standalone options">[NineChronicles Standalone Options]</a>[^1]
 </pre>
+[^1]: For mining, make sure to include "--private-key" option with your private key. Also, include "--libplanet-node" to run the default libplanet node. 
 
 ![Docker Run](https://i.imgur.com/bPlUqF1.png)
 
