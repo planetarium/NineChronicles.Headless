@@ -130,7 +130,7 @@ Usage: docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<VERSION>]
 - Docker Hub account: [Docker Hub Guide](https://docs.docker.com/docker-hub/)
 - AWS EC2 instance: [AWS EC2 Guide](https://docs.aws.amazon.com/ec2/index.html)
 
-#### 3. Pull your docker image to your AWS EC2 instance.
+#### 3. Pull your Docker image to your AWS EC2 instance.
 
 ```
 $ docker pull 9c/9c-standalone:latest
