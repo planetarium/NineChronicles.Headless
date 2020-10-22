@@ -100,7 +100,7 @@ Formatting for `PrivateKey` or `Peer` follows the format in [Nekoyume Project RE
 - Docker environment: [Docker Installation Guide](https://docs.docker.com/get-started/#set-up-your-docker-environment)
 - Docker hub account: [Docker Hub Guide](https://docs.docker.com/docker-hub/)
 
-#### 1. Build docker image with the tag name in [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] format.
+#### 1. Build Docker image with the tag name in [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] format.
 
 ```
 $ docker build . --tag 9c/9c-standalone --build-arg COMMIT=9c-1
