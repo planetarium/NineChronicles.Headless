@@ -1,0 +1,21 @@
+name: push docker image
+
+on: 
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: login
+        run: docker login --username ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: build
+        run: docker build . -t planetariumhq/ninechronicles-headless:git-${{ github.sha }} --build-arg COMMIT=git-${{ github.sha }}
+      - name: push (publish)
+        run: docker push planetariumhq/ninechronicles-headless:git-${{ github.sha }}
