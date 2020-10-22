@@ -16,6 +16,8 @@ jobs:
       - name: login
         run: docker login --username '${{ secrets.DOCKER_USERNAME }}' --password '${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}'
       - name: build
-        run: docker build . -t planetariumhq/ninechronicles-headless:git-${{ github.sha }} --build-arg COMMIT=git-${{ github.sha }}
-      - name: push (publish)
+        run: docker build . -t planetariumhq/ninechronicles-headless:git-${{ github.sha }} --build-arg COMMIT=git-${{ github.sha }} -t planetariumhq/9c-headless:latest --build-arg COMMIT=git-${{ github.sha }}
+      - name: push git-version
         run: docker push planetariumhq/ninechronicles-headless:git-${{ github.sha }}
+      - name: push latest
+        run: docker push planetariumhq/9c-headless:latest
