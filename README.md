@@ -59,7 +59,7 @@ A Standalone image can be created by running the command below in the directory 
 ```
 $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 ```
-* Nine Chronicles Team uses <VERSION_SUFFIX> to build an image with the latest git commit and push to the [official Docker Hub repository](https://hub.docker.com/repository/docker/planetariumhq/ninechronicles-headless). However, if you want to build and push to your own docker hub account, <VERSION_SUFFIX> can be any value.
+* Nine Chronicles Team uses <VERSION_SUFFIX> to build an image with the latest git commit and push to the [official Docker Hub repository](https://hub.docker.com/repository/docker/planetariumhq/ninechronicles-headless). However, if you want to build and push to your own Docker Hub account, <VERSION_SUFFIX> can be any value.
 
 ### Command Line Options
 
@@ -94,7 +94,52 @@ Formatting for `PrivateKey` or `Peer` follows the format in [Nekoyume Project RE
 
 ## How to run NineChronicles Standalone on AWS EC2 instance using Docker
 
-### A) On Your Local
+### On Your AWS EC2 Instance
+
+#### Pre-requisites
+
+- Docker environment: [Docker Installation Guide](https://docs.docker.com/get-started/#set-up-your-docker-environment)
+- AWS EC2 instance: [AWS EC2 Guide](https://docs.aws.amazon.com/ec2/index.html)
+
+#### 1. Pull ninechronicles-headless Docker image to your AWS EC2 instance from the [official Docker Hub repository](https://hub.docker.com/repository/docker/planetariumhq/ninechronicles-headless).
+
+* If you would like to build your own Docker image from your local, refer to the [appendix](#appendix-building-your-own-docker-image-from-your-local)
+
+```
+$ docker pull planetariumhq/ninechronicles-headless:latest
+
+Usage: docker pull [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<TAGNAME>]
+```
+- [Docker Pull Guide](https://docs.docker.com/engine/reference/commandline/pull/)
+
+![Docker Pull](https://i.imgur.com/oLCULZr.png)
+
+#### 2. Create a Docker volume for blockchain data persistance
+
+```
+$ docker volume create 9c-volume
+Usage: docker volume create [<VOLUME_NAME>]
+```
+- [Docker Volume Guide](https://docs.docker.com/engine/reference/commandline/volume_create/)
+
+![Docker Volume Create](https://i.imgur.com/ISgKeLc.png)
+
+#### 3. Run your Docker image with your Docker volume mounted (use -d for detached mode)
+
+<pre>
+$ docker run \
+--detach \
+--volume 9c-volume:/app/data \
+planetariumhq/ninechronicles-headless \
+<a href = "#run" title="NineChronicles Standalone options">[NineChronicles Standalone Options]</a>
+</pre>
+* For mining, make sure to include "--private-key" option with your private key. Also, include "--libplanet-node" to run the default libplanet node. 
+
+![Docker Run](https://i.imgur.com/89nf33c.png)
+
+- [Docker Volumes Usage](https://docs.docker.com/storage/volumes/)
+
+### Appendix) Building Your Own Docker Image from Your Local
 
 #### Pre-requisites
 
@@ -106,63 +151,19 @@ Formatting for `PrivateKey` or `Peer` follows the format in [Nekoyume Project RE
 ```
 $ docker build . --tag 9c/9c-standalone --build-arg COMMIT=9c-1
 
-Usage: docker build . --tag [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] --build-arg COMMIT=[<VERSION_SUFFIX>]
+Usage: docker build . --tag [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<TAGNAME>] --build-arg COMMIT=[<VERSION_SUFFIX>]
 ```
 - [Docker Build Guide](https://docs.docker.com/engine/reference/commandline/build/)
 
 ![Docker Build](https://i.imgur.com/vc6CnbR.png)
 
-#### 2. Push your Docker image to your docker hub account.
+#### 2. Push your Docker image to your Docker Hub account.
 
 ```
 $ docker push 9c/9c-standalone:latest
 
-Usage: docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<VERSION>]
+Usage: docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<TAGNAME>]
 ```
 - [Docker Push Guide](https://docs.docker.com/engine/reference/commandline/push/)
 
 ![Docker Push](https://i.imgur.com/IRIXXjg.png)
-
-### B) On Your AWS EC2 Instance
-
-#### Pre-requisites
-
-- Docker environment: [Docker Installation Guide](https://docs.docker.com/get-started/#set-up-your-docker-environment)
-- Docker Hub account: [Docker Hub Guide](https://docs.docker.com/docker-hub/)
-- AWS EC2 instance: [AWS EC2 Guide](https://docs.aws.amazon.com/ec2/index.html)
-
-#### 3. Pull your Docker image to your AWS EC2 instance.
-
-```
-$ docker pull 9c/9c-standalone:latest
-
-Usage: docker pull [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<VERSION>]
-```
-- [Docker Pull Guide](https://docs.docker.com/engine/reference/commandline/pull/)
-
-![Docker Pull](https://i.imgur.com/e7sSKxH.png)
-
-#### 4. Create a Docker volume for blockchain data persistance
-
-```
-$ docker volume create 9c-volume
-Usage: docker volume create [<VOLUME_NAME>]
-```
-- [Docker Volume Guide](https://docs.docker.com/engine/reference/commandline/volume_create/)
-
-![Docker Volume Create](https://i.imgur.com/ISgKeLc.png)
-
-#### 5. Run your Docker image with your Docker volume mounted (use -d for detached mode)
-
-<pre>
-$ docker run \
---detach \
---volume 9c-volume:/app/data \
-9c/9c-standalone \
-<a href = "#run" title="NineChronicles Standalone options">[NineChronicles Standalone Options]</a>
-</pre>
-* For mining, make sure to include "--private-key" option with your private key. Also, include "--libplanet-node" to run the default libplanet node. 
-
-![Docker Run](https://i.imgur.com/bPlUqF1.png)
-
-- [Docker Volumes Usage](https://docs.docker.com/storage/volumes/)
