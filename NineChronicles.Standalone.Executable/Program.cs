@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -270,7 +271,7 @@ namespace NineChronicles.Standalone.Executable
                 Log.Debug("Trying to check GraphQL server started...");
                 try
                 {
-                    await httpClient.GetAsync($"http://{properties.GraphQLListenHost}:{properties.GraphQLListenPort}/health-check", cancellationToken);
+                    await httpClient.GetAsync($"http://{IPAddress.Loopback}:{properties.GraphQLListenPort}/health-check", cancellationToken);
                     break;
                 }
                 catch (HttpRequestException e)
