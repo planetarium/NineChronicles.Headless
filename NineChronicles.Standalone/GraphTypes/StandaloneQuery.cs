@@ -101,6 +101,24 @@ namespace NineChronicles.Standalone.GraphTypes
                     ).GetQuantityString();
                 }
             );
+
+            Field<NonNullGraphType<LongGraphType>>(
+                name: "nextTxNonce",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "Target address to query" }
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    Address address = context.GetArgument<Address>("address");
+                    return blockChain.GetNextTxNonce(address);
+                }
+            );
         }
     }
 }
