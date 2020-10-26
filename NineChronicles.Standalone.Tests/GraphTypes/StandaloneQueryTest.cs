@@ -458,6 +458,76 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             );
         }
 
+        [Fact]
+        public async Task NextTxNonce()
+        {
+            var goldCurrency = new Currency("NCG", 2, minter: null);
+            Block<PolymorphicAction<ActionBase>> genesis =
+                BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+                    new PolymorphicAction<ActionBase>[]
+                    {
+                        new InitializeStates(
+                            rankingState: new RankingState(),
+                            shopState: new ShopState(),
+                            gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
+                            redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                                .Add("address", RedeemCodeState.Address.Serialize())
+                                .Add("map", Bencodex.Types.Dictionary.Empty)
+                            ),
+                            adminAddressState: new AdminState(default, 0),
+                            activatedAccountsState: new ActivatedAccountsState(),
+                            goldCurrencyState: new GoldCurrencyState(goldCurrency),
+                            goldDistributions: new GoldDistribution[]{ },
+                            tableSheets: new Dictionary<string, string>(),
+                            pendingActivationStates: new PendingActivationState[]{ }
+                        ),
+                    }
+                );
+
+            var userPrivateKey = new PrivateKey();
+            Address userAddress = userPrivateKey.ToAddress();
+            var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+            {
+                Host = System.Net.IPAddress.Loopback.ToString(),
+                AppProtocolVersion = default,
+                GenesisBlock = genesis,
+                StorePath = null,
+                StoreStatesCacheSize = 2,
+                PrivateKey = userPrivateKey,
+                Port = null,
+                MinimumDifficulty = 4096,
+                NoMiner = true,
+                Render = false,
+                Peers = ImmutableHashSet<Peer>.Empty,
+                TrustedAppProtocolVersionSigners = null,
+            };
+
+            var service = new NineChroniclesNodeService(properties, null);
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
+
+            var blockChain = StandaloneContextFx.BlockChain;
+            var query = $"query {{ nextTxNonce(address: \"{userAddress}\") }}";
+            var queryResult = await ExecuteQueryAsync(query);
+            Assert.Equal(
+                new Dictionary<string, object>
+                {
+                    ["nextTxNonce"] = 0L
+                },
+                queryResult.Data
+            );
+
+            blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { });
+            queryResult = await ExecuteQueryAsync(query);
+            Assert.Equal(
+                new Dictionary<string, object>
+                {
+                    ["nextTxNonce"] = 1L
+                },
+                queryResult.Data
+            );
+        }
+
         private (ProtectedPrivateKey, string) CreateProtectedPrivateKey()
         {
             string CreateRandomBase64String()
