@@ -90,6 +90,11 @@ namespace Libplanet.Standalone.Hosting
                 Properties.StoreStatesCacheSize,
                 Properties.Mpt);
 
+            var pendingTxs = Store.IterateStagedTransactionIds()
+                .ToImmutableHashSet();
+            Store.UnstageTransactionIds(pendingTxs);
+            Log.Debug("Pending txs unstaged. [{PendingCount}]", pendingTxs.Count);
+
             var chainIds = Store.ListChainIds().ToList();
             Log.Debug($"Number of chain ids: {chainIds.Count()}");
 
