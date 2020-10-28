@@ -1,9 +1,10 @@
 name: push docker image
 
-on: 
+on:
   push:
     branches:
       - main
+      - 9c-main
 
 jobs:
   build_and_push:
