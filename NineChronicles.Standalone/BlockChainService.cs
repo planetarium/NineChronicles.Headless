@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Numerics;
 using Bencodex;
@@ -14,7 +15,7 @@ using MagicOnion.Server;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Shared.Services;
-
+using Serilog;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Standalone
@@ -41,20 +42,29 @@ namespace NineChronicles.Standalone
 
         public UnaryResult<bool> PutTransaction(byte[] txBytes)
         {
-            Transaction<PolymorphicAction<ActionBase>> tx =
-                Transaction<PolymorphicAction<ActionBase>>.Deserialize(txBytes);
-
             try
             {
-                tx.Validate();
-                _blockChain.StageTransaction(tx);
-                _swarm.BroadcastTxs(new[] { tx });
+                Transaction<PolymorphicAction<ActionBase>> tx =
+                    Transaction<PolymorphicAction<ActionBase>>.Deserialize(txBytes);
 
-                return UnaryResult(true);
+                try
+                {
+                    tx.Validate();
+                    _blockChain.StageTransaction(tx);
+                    _swarm.BroadcastTxs(new[] {tx});
+
+                    return UnaryResult(true);
+                }
+                catch (InvalidTxException ite)
+                {
+                    Log.Error(ite, $"{nameof(InvalidTxException)} occurred during {nameof(PutTransaction)}(). {{e}}", ite);
+                    return UnaryResult(false);
+                }
             }
-            catch (InvalidTxException)
+            catch (Exception e)
             {
-                return UnaryResult(false);
+                Log.Error(e, $"Unexpected exception occurred during {nameof(PutTransaction)}(). {{e}}", e);
+                throw;
             }
         }
 
