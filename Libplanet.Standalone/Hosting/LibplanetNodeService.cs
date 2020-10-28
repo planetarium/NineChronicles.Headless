@@ -120,6 +120,13 @@ namespace Libplanet.Standalone.Hosting
             );
             _minerLoopAction = minerLoopAction;
             _exceptionHandlerAction = exceptionHandlerAction;
+            IEnumerable<IceServer> shuffledIceServers = null;
+            if (!(iceServers is null))
+            {
+                var rand = new Random();
+                shuffledIceServers = iceServers.OrderBy(x => rand.Next());
+            }
+
             Swarm = new Swarm<T>(
                 BlockChain,
                 Properties.PrivateKey,
@@ -127,7 +134,7 @@ namespace Libplanet.Standalone.Hosting
                 trustedAppProtocolVersionSigners: Properties.TrustedAppProtocolVersionSigners,
                 host: Properties.Host,
                 listenPort: Properties.Port,
-                iceServers: iceServers,
+                iceServers: shuffledIceServers,
                 workers: Properties.Workers,
                 differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered
             );
