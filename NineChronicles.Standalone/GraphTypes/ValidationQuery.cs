@@ -26,11 +26,16 @@ namespace NineChronicles.Standalone.GraphTypes
                     try
                     {
                         // FIXME: Thread.Sleep is temporary. Should be removed.
-                        const int sleepInterval = 3000;
-                        Log.Debug($"Sleeping for {sleepInterval}");
-                        Thread.Sleep(sleepInterval);
-                        Log.Debug($"Slept for {sleepInterval}");
-
+                        var timeSpent = 0;
+                        var retryInterval = 1000;
+                        while (standaloneContext.BlockChain is null && timeSpent < 100 * 1000)
+                        {
+                            Log.Debug("Blockchain instance is null. Sleep...");
+                            Thread.Sleep(retryInterval);
+                            timeSpent += retryInterval;
+                        }
+                        Log.Debug("Time until blockchain online: {time}ms", timeSpent);
+                        
                         var remoteIndex = JsonDocument.Parse(raw).RootElement.GetProperty("Index").GetInt32();
                         Log.Debug("Remote: {index1}, Local: {index2}",
                             remoteIndex, standaloneContext.BlockChain.Tip?.Index ?? -1);
