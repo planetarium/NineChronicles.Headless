@@ -4,6 +4,7 @@ on:
   push:
     branches:
     - 9c-beta-*
+    - 9c-main
     - main
     tags: ['*']
 
