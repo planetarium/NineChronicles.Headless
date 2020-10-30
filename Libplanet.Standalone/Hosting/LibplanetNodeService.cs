@@ -139,7 +139,8 @@ namespace Libplanet.Standalone.Hosting
                 differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered,
                 options: new SwarmOptions
                 {
-                    MaxTimeout = TimeSpan.FromSeconds(10)
+                    MaxTimeout = TimeSpan.FromSeconds(10),
+                    BlockHashRecvTimeout = TimeSpan.FromSeconds(10),
                 }
             );
 
