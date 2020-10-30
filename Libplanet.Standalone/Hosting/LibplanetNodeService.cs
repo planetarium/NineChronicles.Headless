@@ -142,7 +142,12 @@ namespace Libplanet.Standalone.Hosting
                 listenPort: Properties.Port,
                 iceServers: shuffledIceServers,
                 workers: Properties.Workers,
-                differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered
+                differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered,
+                options: new SwarmOptions
+                {
+                    MaxTimeout = TimeSpan.FromSeconds(10),
+                    BlockHashRecvTimeout = TimeSpan.FromSeconds(10),
+                }
             );
 
             PreloadEnded = new AsyncManualResetEvent();
