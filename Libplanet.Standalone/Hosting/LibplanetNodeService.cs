@@ -118,6 +118,12 @@ namespace Libplanet.Standalone.Hosting
                 genesisBlock: genesisBlock,
                 renderers: renderers
             );
+
+            foreach (Guid chainId in chainIds.Where(chainId => chainId != BlockChain.Id))
+            {
+                Store.DeleteChainId(chainId);
+            }
+
             _minerLoopAction = minerLoopAction;
             _exceptionHandlerAction = exceptionHandlerAction;
             IEnumerable<IceServer> shuffledIceServers = null;
