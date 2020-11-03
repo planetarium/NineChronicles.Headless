@@ -171,9 +171,14 @@ namespace Libplanet.Standalone.Hosting
             bool preload = true;
             while (!cancellationToken.IsCancellationRequested && !_stopRequested)
             {
-                var tasks = new List<Task> { StartSwarm(preload, cancellationToken), CheckSwarm(cancellationToken) };
+                var tasks = new List<Task>
+                {
+                    StartSwarm(preload, cancellationToken),
+                    CheckSwarm(cancellationToken)
+                };
                 if (Properties.Peers.Any())
                 {
+                    tasks.Add(CheckTipWithDemand(cancellationToken));
                     tasks.Add(CheckPeerTable(cancellationToken));
                 }
                 await await Task.WhenAny(tasks);
@@ -368,6 +373,27 @@ namespace Libplanet.Standalone.Hosting
                     );
                     await Swarm.StopAsync(cancellationToken);
                     break;
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
+
+        private async Task CheckTipWithDemand(CancellationToken cancellationToken = default)
+        {
+            const int buffer = 1150;
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(5, cancellationToken);
+                if ((Swarm.BlockDemand?.Header.Index ?? 0) > (BlockChain.Tip?.Index ?? 0) + buffer)
+                {
+                    var message =
+                        $"Chain's tip is too low. (demand: {Swarm.BlockDemand?.Header.Index}, " +
+                        $"actual: {BlockChain.Tip?.Index}, buffer: {buffer})";
+                    Log.Error(message);
+                    // TODO: Now only send to launcher because now it restarts. Should send through
+                    // gRPC also when launcher became not to relaunch.
+                    Properties.NodeExceptionOccurred((int)RPCException.ChainTooLowException, message);
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();
