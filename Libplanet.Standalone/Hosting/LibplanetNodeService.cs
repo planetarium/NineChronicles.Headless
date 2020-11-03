@@ -226,7 +226,11 @@ namespace Libplanet.Standalone.Hosting
             {
                 try
                 {
-                    store = new RocksDBStore.RocksDBStore(path, statesCacheSize: statesCacheSize);
+                    store = new RocksDBStore.RocksDBStore(
+                        path,
+                        statesCacheSize: statesCacheSize,
+                        maxTotalWalSize: 16 * 1024 * 1024,
+                        keepLogFileNum: 1);
                     Log.Debug("RocksDB is initialized.");
                 }
                 catch (TypeInitializationException e)
