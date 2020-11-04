@@ -18,6 +18,9 @@ namespace NineChronicles.Standalone.Executable
     {
         const string SentryDsn = "https://ceac97d4a7d34e7b95e4c445b9b5669e@o195672.ingest.sentry.io/5287621";
 
+        private const string LogTemplate =
+            "[{Timestamp:HH:mm:ss} {Level:u3}{SubLevel}] {Message:lj}{NewLine}{Exception}";
+
         static async Task Main(string[] args)
         {
 #if SENTRY || ! DEBUG
@@ -113,7 +116,7 @@ namespace NineChronicles.Standalone.Executable
 #endif
             // Setup logger.
             var loggerConf = new LoggerConfiguration()
-                .WriteTo.Console()
+                .WriteTo.Console(outputTemplate: LogTemplate)
                 .MinimumLevel.Debug();
 #if SENTRY || ! DEBUG
             loggerConf = loggerConf

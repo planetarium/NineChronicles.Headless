@@ -21,6 +21,7 @@ using Microsoft.Extensions.Hosting;
 using NineChronicles.RPC.Shared.Exceptions;
 using Nito.AsyncEx;
 using Serilog;
+using Serilog.Events;
 
 namespace Libplanet.Standalone.Hosting
 {
@@ -108,6 +109,14 @@ namespace Libplanet.Standalone.Hosting
                 renderers = renderers.Select(r => r is IActionRenderer<T> ar
                     ? new DelayedActionRenderer<T>(ar, Store, Properties.Confirmations)
                     : new DelayedRenderer<T>(r, Store, Properties.Confirmations)
+                );
+
+                // Log the outmost (before delayed) events as well as
+                // the innermost (after delayed) events:
+                ILogger logger = Log.ForContext("SubLevel", " RAW-RENDER-EVENT");
+                renderers = renderers.Select(r => r is IActionRenderer<T> ar
+                    ? new LoggedActionRenderer<T>(ar, logger, LogEventLevel.Verbose)
+                    : new LoggedRenderer<T>(r, logger, LogEventLevel.Verbose)
                 );
             }
 
