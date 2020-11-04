@@ -115,8 +115,8 @@ namespace Libplanet.Standalone.Hosting
                 // the innermost (after delayed) events:
                 ILogger logger = Log.ForContext("SubLevel", " RAW-RENDER-EVENT");
                 renderers = renderers.Select(r => r is IActionRenderer<T> ar
-                    ? new LoggedActionRenderer<T>(ar, logger, LogEventLevel.Verbose)
-                    : new LoggedRenderer<T>(r, logger, LogEventLevel.Verbose)
+                    ? new LoggedActionRenderer<T>(ar, logger, LogEventLevel.Debug)
+                    : new LoggedRenderer<T>(r, logger, LogEventLevel.Debug)
                 );
             }
 
