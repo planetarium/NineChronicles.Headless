@@ -346,13 +346,22 @@ namespace Libplanet.Standalone.Hosting
 
             try
             {
-                await await Task.WhenAny(
-                    Swarm.StartAsync(
+                if (peers.Any())
+                {
+                    await await Task.WhenAny(
+                        Swarm.StartAsync(
+                            cancellationToken: cancellationToken,
+                            millisecondsBroadcastTxInterval: 15000
+                        ),
+                        ReconnectToSeedPeers(cancellationToken)
+                    );
+                }
+                else
+                {
+                    await Swarm.StartAsync(
                         cancellationToken: cancellationToken,
-                        millisecondsBroadcastTxInterval: 15000
-                    ),
-                    ReconnectToSeedPeers(cancellationToken)
-                );
+                        millisecondsBroadcastTxInterval: 15000);
+                }
             }
             catch (Exception e)
             {
