@@ -30,9 +30,9 @@ namespace NineChronicles.Standalone
             await Task.CompletedTask;
         }
 
-        public async Task UpdateTipAsync(long index)
+        public async Task BroadcastRenderBlockAsync(byte[] oldTip, byte[] newTip)
         {
-            Broadcast(group).OnTipChanged(index);
+            Broadcast(group).OnRenderBlock(oldTip, newTip);
             await Task.CompletedTask;
         }
         
