@@ -129,13 +129,16 @@ Usage: docker volume create [<VOLUME_NAME>]
 <pre>
 $ docker run \
 --detach \
+--publish [HOST_PORT] : [CONTAINER_PORT] \
 --volume 9c-volume:/app/data \
 planetariumhq/ninechronicles-headless \
 <a href = "#run" title="NineChronicles Standalone options">[NineChronicles Standalone Options]</a>
 </pre>
+#### Note)
+* Instead of including the "--ice-server" option, allocate an Elastic IP to your instance and include it as the "--host" option and after adding an inbound port, include it as the "--port" option. Refer to these official docs on [Elastic IP allocation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html) and [editing inbound rules](https://docs.aws.amazon.com/cli/latest/userguide/cli-services-ec2-sg.html) for more information.
 * For mining, make sure to include "--private-key" option with your private key. Also, include "--libplanet-node" to run the default libplanet node. 
 
-![Docker Run](https://i.imgur.com/89nf33c.png)
+![Docker Run](https://i.imgur.com/VlwFybj.png)
 
 - [Docker Volumes Usage](https://docs.docker.com/storage/volumes/)
 
