@@ -5,6 +5,7 @@ using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Crypto;
+using Libplanet.Store;
 using Libplanet.Tx;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
@@ -68,7 +69,7 @@ namespace NineChronicles.Standalone.GraphTypes
                 }
             );
 
-            Field<NonNullGraphType<BooleanGraphType>>(
+            Field<TxIdType>(
                 name: "transferGold",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
@@ -90,10 +91,10 @@ namespace NineChronicles.Standalone.GraphTypes
                         var msg = "No private key was loaded.";
                         context.Errors.Add(new ExecutionError(msg));
                         Log.Error(msg);
-                        return false;
+                        return null;
                     }
 
-                    BlockChain<NCAction> blockChain = service.Swarm.BlockChain;
+                    BlockChain<NCAction> blockChain = service.BlockChain;
                     var currency = new GoldCurrencyState(
                         (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
                     ).Currency;
@@ -102,7 +103,7 @@ namespace NineChronicles.Standalone.GraphTypes
 
                     Address recipient = context.GetArgument<Address>("recipient");
 
-                    blockChain.MakeTransaction(
+                    Transaction<NCAction> tx = blockChain.MakeTransaction(
                         privateKey,
                         new NCAction[]
                         {
@@ -113,7 +114,7 @@ namespace NineChronicles.Standalone.GraphTypes
                             ),
                         }
                     );
-                    return true;
+                    return tx.Id;
                 }
             );
         }
