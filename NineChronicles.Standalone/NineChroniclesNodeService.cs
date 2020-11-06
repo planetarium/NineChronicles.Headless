@@ -238,7 +238,11 @@ namespace NineChronicles.Standalone
 
             return hostBuilder.ConfigureServices((ctx, services) =>
             {
-                services.AddHostedService(provider => NodeService);
+                services.AddHostedService(provider =>
+                {
+                    provider.GetService<IHostApplicationLifetime>().ApplicationStopped.Register(NodeService.Dispose);
+                    return NodeService;
+                });
                 services.AddSingleton(provider => NodeService.Swarm);
                 services.AddSingleton(provider => NodeService.BlockChain);
             });
