@@ -7,6 +7,7 @@ using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blocks;
+using Libplanet.Store;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Standalone.GraphTypes
@@ -18,6 +19,8 @@ namespace NineChronicles.Standalone.GraphTypes
         public bool PreloadEnded { get; set; }
 
         public BlockChain<NCAction> BlockChain { get; set; }
+
+        public IStore Store { get; set; }
 
         public NodeStatusType()
         {
@@ -40,6 +43,11 @@ namespace NineChronicles.Standalone.GraphTypes
                 resolve: context => GetTopmostBlocks(context.Source.BlockChain)
                     .Take(context.GetArgument<int>("limit"))
                     .Select(BlockHeaderType.FromBlock)
+            );
+            Field<ListGraphType<TxIdType>>(
+                name: "stagedTxIds",
+                description: "Staged TxIds from the current node.",
+                resolve: context => context.Source.Store?.IterateStagedTransactionIds()
             );
             Field<NonNullGraphType<BlockHeaderType>>(name: "genesis",
                 resolve: context => BlockHeaderType.FromBlock(context.Source.BlockChain.Genesis));

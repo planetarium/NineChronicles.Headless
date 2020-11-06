@@ -72,6 +72,7 @@ namespace NineChronicles.Standalone
             if (!(standaloneContext is null))
             {
                 standaloneContext.BlockChain = service.Swarm.BlockChain;
+                standaloneContext.Store = service.Store;
                 service.BootstrapEnded.WaitAsync().ContinueWith((task) =>
                 {
                     standaloneContext.BootstrapEnded = true;

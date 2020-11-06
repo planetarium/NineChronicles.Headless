@@ -2,6 +2,7 @@ using System.Reactive.Subjects;
 using Libplanet.Blockchain;
 using Libplanet.KeyStore;
 using Libplanet.Net;
+using Libplanet.Store;
 using NineChronicles.Standalone.GraphTypes;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -25,5 +26,7 @@ namespace NineChronicles.Standalone
             BootstrapEnded = BootstrapEnded,
             PreloadEnded = PreloadEnded,
         };
+
+        public IStore Store { get; internal set; }
     }
 }

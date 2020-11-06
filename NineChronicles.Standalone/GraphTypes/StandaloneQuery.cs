@@ -54,6 +54,7 @@ namespace NineChronicles.Standalone.GraphTypes
                     BootstrapEnded = standaloneContext.BootstrapEnded,
                     PreloadEnded = standaloneContext.PreloadEnded,
                     BlockChain = standaloneContext.BlockChain,
+                    Store = standaloneContext.Store,
                 }
             );
 
