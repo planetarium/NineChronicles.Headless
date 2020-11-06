@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
@@ -149,11 +150,12 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                 );
             NineChroniclesNodeService service = CreateNineChroniclesNodeService(genesis);
             StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
+            StandaloneContextFx.BlockChain = service.BlockChain;
 
             Address senderAddress = service.PrivateKey.ToAddress();
 
             var blockChain = StandaloneContextFx.BlockChain;
+            var store = service.Store;
             await blockChain.MineBlock(senderAddress);
             await blockChain.MineBlock(senderAddress);
 
@@ -167,9 +169,12 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             var query = $"mutation {{ transferGold(recipient: \"{recipient}\", amount: \"17.5\") }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
 
+            var stagedTxIds = store.IterateStagedTransactionIds().ToImmutableList();
+            Assert.Single(stagedTxIds);
+
             var expectedResult = new Dictionary<string, object>
             {
-                ["transferGold"] = true,
+                ["transferGold"] = stagedTxIds.Single().ToString(),
             };
             Assert.Null(result.Errors);
             Assert.Equal(expectedResult, result.Data);
