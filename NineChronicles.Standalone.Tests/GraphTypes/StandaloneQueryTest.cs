@@ -22,6 +22,7 @@ using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
+using NineChronicles.Standalone.Tests.Common;
 using NineChronicles.Standalone.Tests.Common.Actions;
 using Xunit;
 using Xunit.Abstractions;
@@ -160,6 +161,47 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             Assert.True(nodeStatus["preloadEnded"]);
 
             await seedNode.StopAsync(cts.Token);
+        }
+
+        [Fact]
+        public async Task NodeStatusStagedTxIds()
+        {
+            var apvPrivateKey = new PrivateKey();
+            var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
+            var genesis = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock();
+
+            var service = ServiceBuilder.CreateNineChroniclesNodeService(genesis);
+            StandaloneServices.ConfigureStandaloneContext(service, StandaloneContextFx);
+
+            var result = await ExecuteQueryAsync("query { nodeStatus { stagedTxIds } }");
+            var expectedResult = new Dictionary<string, object>()
+            {
+                ["nodeStatus"] = new Dictionary<string, object>()
+                {
+                    ["stagedTxIds"] = new List<object>()
+                },
+            };
+            Assert.Null(result.Errors);
+            Assert.Equal(expectedResult, result.Data);
+
+            var tx = StandaloneContextFx.BlockChain.MakeTransaction(
+                new PrivateKey(), 
+                new PolymorphicAction<ActionBase>[] { }
+            );
+
+            result = await ExecuteQueryAsync("query { nodeStatus { stagedTxIds } }");
+            expectedResult = new Dictionary<string, object>()
+            {
+                ["nodeStatus"] = new Dictionary<string, object>()
+                {
+                    ["stagedTxIds"] = new List<object>
+                    {
+                        tx.Id.ToString(),
+                    }
+                },
+            };
+            Assert.Null(result.Errors);
+            Assert.Equal(expectedResult, result.Data);
         }
 
         [Theory]
