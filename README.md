@@ -129,7 +129,7 @@ Usage: docker volume create [<VOLUME_NAME>]
 <pre>
 $ docker run \
 --detach \
---publish [HOST_PORT] : [CONTAINER_PORT] \
+--publish [HOST_PORT]:[CONTAINER_PORT] \
 --volume 9c-volume:/app/data \
 planetariumhq/ninechronicles-headless \
 <a href = "#run" title="NineChronicles Standalone options">[NineChronicles Standalone Options]</a>
