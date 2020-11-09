@@ -21,6 +21,7 @@ using Microsoft.Extensions.Hosting;
 using NineChronicles.RPC.Shared.Exceptions;
 using Nito.AsyncEx;
 using Serilog;
+using Serilog.Events;
 
 namespace Libplanet.Standalone.Hosting
 {
@@ -90,6 +91,11 @@ namespace Libplanet.Standalone.Hosting
                 Properties.StoreStatesCacheSize,
                 Properties.Mpt);
 
+            var pendingTxs = Store.IterateStagedTransactionIds()
+                .ToImmutableHashSet();
+            Store.UnstageTransactionIds(pendingTxs);
+            Log.Debug("Pending txs unstaged. [{PendingCount}]", pendingTxs.Count);
+
             var chainIds = Store.ListChainIds().ToList();
             Log.Debug($"Number of chain ids: {chainIds.Count()}");
 
@@ -104,6 +110,14 @@ namespace Libplanet.Standalone.Hosting
                     ? new DelayedActionRenderer<T>(ar, Store, Properties.Confirmations)
                     : new DelayedRenderer<T>(r, Store, Properties.Confirmations)
                 );
+
+                // Log the outmost (before delayed) events as well as
+                // the innermost (after delayed) events:
+                ILogger logger = Log.ForContext("SubLevel", " RAW-RENDER-EVENT");
+                renderers = renderers.Select(r => r is IActionRenderer<T> ar
+                    ? new LoggedActionRenderer<T>(ar, logger, LogEventLevel.Debug)
+                    : new LoggedRenderer<T>(r, logger, LogEventLevel.Debug)
+                );
             }
 
             BlockChain = new BlockChain<T>(
@@ -113,8 +127,21 @@ namespace Libplanet.Standalone.Hosting
                 genesisBlock: genesisBlock,
                 renderers: renderers
             );
+
+            foreach (Guid chainId in chainIds.Where(chainId => chainId != BlockChain.Id))
+            {
+                Store.DeleteChainId(chainId);
+            }
+
             _minerLoopAction = minerLoopAction;
             _exceptionHandlerAction = exceptionHandlerAction;
+            IEnumerable<IceServer> shuffledIceServers = null;
+            if (!(iceServers is null))
+            {
+                var rand = new Random();
+                shuffledIceServers = iceServers.OrderBy(x => rand.Next());
+            }
+
             Swarm = new Swarm<T>(
                 BlockChain,
                 Properties.PrivateKey,
@@ -122,9 +149,14 @@ namespace Libplanet.Standalone.Hosting
                 trustedAppProtocolVersionSigners: Properties.TrustedAppProtocolVersionSigners,
                 host: Properties.Host,
                 listenPort: Properties.Port,
-                iceServers: iceServers,
+                iceServers: shuffledIceServers,
                 workers: Properties.Workers,
-                differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered
+                differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered,
+                options: new SwarmOptions
+                {
+                    MaxTimeout = TimeSpan.FromSeconds(10),
+                    BlockHashRecvTimeout = TimeSpan.FromSeconds(10),
+                }
             );
 
             PreloadEnded = new AsyncManualResetEvent();
@@ -139,9 +171,14 @@ namespace Libplanet.Standalone.Hosting
             bool preload = true;
             while (!cancellationToken.IsCancellationRequested && !_stopRequested)
             {
-                var tasks = new List<Task> { StartSwarm(preload, cancellationToken), CheckSwarm(cancellationToken) };
+                var tasks = new List<Task>
+                {
+                    StartSwarm(preload, cancellationToken),
+                    CheckSwarm(cancellationToken)
+                };
                 if (Properties.Peers.Any())
                 {
+                    tasks.Add(CheckTipWithDemand(cancellationToken));
                     tasks.Add(CheckPeerTable(cancellationToken));
                 }
                 await await Task.WhenAny(tasks);
@@ -309,13 +346,22 @@ namespace Libplanet.Standalone.Hosting
 
             try
             {
-                await await Task.WhenAny(
-                    Swarm.StartAsync(
+                if (peers.Any())
+                {
+                    await await Task.WhenAny(
+                        Swarm.StartAsync(
+                            cancellationToken: cancellationToken,
+                            millisecondsBroadcastTxInterval: 15000
+                        ),
+                        ReconnectToSeedPeers(cancellationToken)
+                    );
+                }
+                else
+                {
+                    await Swarm.StartAsync(
                         cancellationToken: cancellationToken,
-                        millisecondsBroadcastTxInterval: 15000
-                    ),
-                    ReconnectToSeedPeers(cancellationToken)
-                );
+                        millisecondsBroadcastTxInterval: 15000);
+                }
             }
             catch (Exception e)
             {
@@ -336,6 +382,27 @@ namespace Libplanet.Standalone.Hosting
                     );
                     await Swarm.StopAsync(cancellationToken);
                     break;
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
+
+        private async Task CheckTipWithDemand(CancellationToken cancellationToken = default)
+        {
+            const int buffer = 1150;
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(5, cancellationToken);
+                if ((Swarm.BlockDemand?.Header.Index ?? 0) > (BlockChain.Tip?.Index ?? 0) + buffer)
+                {
+                    var message =
+                        $"Chain's tip is too low. (demand: {Swarm.BlockDemand?.Header.Index}, " +
+                        $"actual: {BlockChain.Tip?.Index}, buffer: {buffer})";
+                    Log.Error(message);
+                    // TODO: Now only send to launcher because now it restarts. Should send through
+                    // gRPC also when launcher became not to relaunch.
+                    Properties.NodeExceptionOccurred((int)RPCException.ChainTooLowException, message);
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();

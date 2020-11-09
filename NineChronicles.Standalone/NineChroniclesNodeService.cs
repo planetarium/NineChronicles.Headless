@@ -16,6 +16,7 @@ using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Standalone.Hosting;
+using Libplanet.Store;
 using MagicOnion.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -49,6 +50,10 @@ namespace NineChronicles.Standalone
         public AsyncManualResetEvent PreloadEnded => NodeService.PreloadEnded;
 
         public Swarm<NineChroniclesActionType> Swarm => NodeService?.Swarm;
+
+        public BlockChain<NineChroniclesActionType> BlockChain => NodeService?.BlockChain;
+
+        public IStore Store => NodeService?.Store;
 
         public PrivateKey PrivateKey { get; set; }
 

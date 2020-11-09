@@ -1,5 +1,6 @@
 using System;
 using System.Text.Json;
+using System.Threading;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet.Crypto;
@@ -24,6 +25,17 @@ namespace NineChronicles.Standalone.GraphTypes
                     var raw = context.GetArgument<string>("raw");
                     try
                     {
+                        // FIXME: Thread.Sleep is temporary. Should be removed.
+                        var timeSpent = 0;
+                        var retryInterval = 1000;
+                        while (standaloneContext.BlockChain is null && timeSpent < 100 * 1000)
+                        {
+                            Log.Debug("Blockchain instance is null. Sleep...");
+                            Thread.Sleep(retryInterval);
+                            timeSpent += retryInterval;
+                        }
+                        Log.Debug("Time until blockchain online: {time}ms", timeSpent);
+                        
                         var remoteIndex = JsonDocument.Parse(raw).RootElement.GetProperty("Index").GetInt32();
                         Log.Debug("Remote: {index1}, Local: {index2}",
                             remoteIndex, standaloneContext.BlockChain.Tip?.Index ?? -1);

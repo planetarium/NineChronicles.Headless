@@ -54,7 +54,11 @@ namespace NineChronicles.Standalone
             await _client.JoinAsync();
 
             _blockRenderer.EveryBlock().Subscribe(
-                async pair => await _client.UpdateTipAsync(pair.NewTip.Index),
+                async pair =>
+                    await _client.BroadcastRenderBlockAsync(
+                        pair.OldTip.Header.Serialize(),
+                        pair.NewTip.Header.Serialize()
+                    ),
                 stoppingToken
             );
 

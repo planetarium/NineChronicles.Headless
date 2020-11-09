@@ -15,10 +15,12 @@ using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
+using NineChronicles.Standalone.Tests.Common;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
@@ -106,7 +108,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
 
             Block<PolymorphicAction<ActionBase>> genesis =
                 MakeGenesisBlock(adminAddress, new Currency("NCG", 2, minters: null), activateAccounts);
-            NineChroniclesNodeService service = CreateNineChroniclesNodeService(genesis);
+            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
 
@@ -147,13 +149,14 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                     goldCurrency,
                     ImmutableHashSet<Address>.Empty
                 );
-            NineChroniclesNodeService service = CreateNineChroniclesNodeService(genesis);
+            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis);
             StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
+            StandaloneContextFx.BlockChain = service.BlockChain;
 
             Address senderAddress = service.PrivateKey.ToAddress();
 
             var blockChain = StandaloneContextFx.BlockChain;
+            var store = service.Store;
             await blockChain.MineBlock(senderAddress);
             await blockChain.MineBlock(senderAddress);
 
@@ -167,9 +170,12 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             var query = $"mutation {{ transferGold(recipient: \"{recipient}\", amount: \"17.5\") }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
 
+            var stagedTxIds = store.IterateStagedTransactionIds().ToImmutableList();
+            Assert.Single(stagedTxIds);
+
             var expectedResult = new Dictionary<string, object>
             {
-                ["transferGold"] = true,
+                ["transferGold"] = stagedTxIds.Single().ToString(),
             };
             Assert.Null(result.Errors);
             Assert.Equal(expectedResult, result.Data);
@@ -336,7 +342,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                     new Currency("NCG", 2, minters: null),
                     ImmutableHashSet<Address>.Empty
                 );
-            NineChroniclesNodeService service = CreateNineChroniclesNodeService(genesis);
+            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis);
 
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
@@ -374,32 +380,6 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
             Block<PolymorphicAction<ActionBase>> mined =
                 await StandaloneContextFx.BlockChain.MineBlock(service.PrivateKey.ToAddress());
             Assert.Contains(tx, mined.Transactions);
-        }
-
-        private NineChroniclesNodeService CreateNineChroniclesNodeService(
-            Block<PolymorphicAction<ActionBase>> genesis
-        )
-        {
-            var privateKey = new PrivateKey();
-            var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
-            {
-                Host = System.Net.IPAddress.Loopback.ToString(),
-                AppProtocolVersion = default,
-                GenesisBlock = genesis,
-                StorePath = null,
-                StoreStatesCacheSize = 2,
-                PrivateKey = privateKey,
-                Port = null,
-                MinimumDifficulty = 4096,
-                NoMiner = true,
-                Render = false,
-                Peers = ImmutableHashSet<Peer>.Empty,
-                TrustedAppProtocolVersionSigners = null,
-            };
-            return new NineChroniclesNodeService(properties, null)
-            {
-                PrivateKey = privateKey
-            };
         }
 
         private Block<PolymorphicAction<ActionBase>> MakeGenesisBlock(
