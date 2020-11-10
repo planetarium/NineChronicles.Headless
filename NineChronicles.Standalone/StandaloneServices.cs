@@ -1,5 +1,6 @@
 using System;
 using Libplanet.Net;
+using Libplanet.Standalone;
 using NineChronicles.Standalone.Properties;
 
 namespace NineChronicles.Standalone

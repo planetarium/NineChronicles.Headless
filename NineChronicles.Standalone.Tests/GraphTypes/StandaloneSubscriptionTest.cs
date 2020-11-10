@@ -13,6 +13,7 @@ using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Net;
+using Libplanet.Standalone;
 using Libplanet.Standalone.Hosting;
 using NineChronicles.Standalone.Tests.Common.Actions;
 using Xunit;

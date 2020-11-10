@@ -1,4 +1,5 @@
 ﻿using GraphQL.Types;
+using Libplanet.Standalone;
 
 namespace NineChronicles.Standalone.GraphTypes
 {

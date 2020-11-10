@@ -13,6 +13,7 @@ using Lib9c.Renderer;
 using Libplanet;
 using Libplanet.Blockchain;
 using Libplanet.Net;
+using Libplanet.Standalone;
 using Nekoyume.Action;
 using Log = Serilog.Log;
 

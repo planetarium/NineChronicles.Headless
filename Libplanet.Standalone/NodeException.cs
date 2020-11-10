@@ -1,6 +1,4 @@
-﻿using Libplanet.Net;
-
-namespace NineChronicles.Standalone
+﻿namespace Libplanet.Standalone
 {
     public class NodeException
     {
