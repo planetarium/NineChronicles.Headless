@@ -51,7 +51,7 @@ namespace Libplanet.Standalone.Hosting
 
         public int Confirmations { get; set; } = 0;
 
-        public System.Action<int, string> NodeExceptionOccurred { get; set; }
+        public System.Action<NodeExceptionType, string> NodeExceptionOccurred { get; set; }
 
         public int MaximumTransactions { get; set; } = 100;
     }

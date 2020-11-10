@@ -46,11 +46,7 @@ namespace NineChronicles.Standalone
                 (code, message) =>
                 {
                     standaloneContext.NodeExceptionSubject.OnNext(
-                        new NodeException
-                        {
-                            Code = code,
-                            Message = message,
-                        }
+                        new NodeException(code, message)
                     );
                 };
 

@@ -400,9 +400,7 @@ namespace Libplanet.Standalone.Hosting
                         $"Chain's tip is too low. (demand: {Swarm.BlockDemand?.Header.Index}, " +
                         $"actual: {BlockChain.Tip?.Index}, buffer: {buffer})";
                     Log.Error(message);
-                    // TODO: Now only send to launcher because now it restarts. Should send through
-                    // gRPC also when launcher became not to relaunch.
-                    Properties.NodeExceptionOccurred((int)RPCException.ChainTooLowException, message);
+                    Properties.NodeExceptionOccurred(NodeExceptionType.DemandTooHigh, message);
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();
@@ -420,9 +418,11 @@ namespace Libplanet.Standalone.Hosting
                 {
                     if (grace == count)
                     {
-                        var message = "No any peers are connected even seed peers were given.";
-                        _exceptionHandlerAction(RPCException.NetworkException, message);
-                        Properties.NodeExceptionOccurred((int)RPCException.NetworkException, message);
+                        var message = "No any peers are connected even seed peers were given. " +
+                                     $"(grace: {grace}";
+                        Log.Error(message);
+                        // _exceptionHandlerAction(RPCException.NetworkException, message);
+                        Properties.NodeExceptionOccurred(NodeExceptionType.NoAnyPeer, message);
                     }
 
                     count++;
