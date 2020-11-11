@@ -1,7 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Reactive;
 using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -9,12 +9,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Lib9c.Renderer;
-using Libplanet.Blockchain;
+using Libplanet;
 using MagicOnion.Client;
 using Microsoft.Extensions.Hosting;
+using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Shared.Hubs;
-using NineChronicles.RPC.Shared.Exceptions;
 using Serilog;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -29,6 +29,7 @@ namespace NineChronicles.Standalone
         private readonly ExceptionRenderer _exceptionRenderer;
         private readonly NodeStatusRenderer _nodeStatusRenderer;
         private IActionEvaluationHub _client;
+        private readonly List<Address> _addressesToSubscribe;
 
         public ActionEvaluationPublisher(
             BlockRenderer blockRenderer,
@@ -45,6 +46,8 @@ namespace NineChronicles.Standalone
             _nodeStatusRenderer = nodeStatusRenderer;
             _host = host;
             _port = port;
+            // FIXME: _addressesToSubscribe must contains an address of current AgentState
+            _addressesToSubscribe = Addresses.GetAll();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -85,7 +88,9 @@ namespace NineChronicles.Standalone
                 stoppingToken
             );
 
-            _actionRenderer.EveryRender<ActionBase>().Subscribe(
+            _actionRenderer.EveryRender<ActionBase>()
+                .Where(ContainsAddressToBroadcast)
+                .Subscribe(
                 async ev =>
                 {
                     var formatter = new BinaryFormatter();
@@ -111,7 +116,9 @@ namespace NineChronicles.Standalone
                 stoppingToken
             );
 
-            _actionRenderer.EveryUnrender<ActionBase>().Subscribe(
+            _actionRenderer.EveryUnrender<ActionBase>()
+                .Where(ContainsAddressToBroadcast)
+                .Subscribe(
                 async ev =>
                 {
                     var formatter = new BinaryFormatter();
@@ -166,6 +173,21 @@ namespace NineChronicles.Standalone
         {
             await _client?.DisposeAsync();
             await base.StopAsync(cancellationToken);
+        }
+
+        private bool ContainsAddressToBroadcast(ActionBase.ActionEvaluation<ActionBase> ev)
+        {
+            var updatedAddresses = ev.OutputStates.UpdatedAddresses;
+            for (var i = _addressesToSubscribe.Count - 1; i >= 0; i--)
+            {
+                var address = _addressesToSubscribe[i];
+                if (updatedAddresses.Contains(address))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
