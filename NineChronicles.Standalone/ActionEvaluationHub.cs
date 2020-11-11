@@ -53,5 +53,17 @@ namespace NineChronicles.Standalone
             Broadcast(group).OnException(code, message);
             await Task.CompletedTask;
         }
+
+        public async Task PreloadStartAsync()
+        {
+            Broadcast(group).OnPreloadStart();
+            await Task.CompletedTask;
+        }
+
+        public async Task PreloadEndAsync()
+        {
+            Broadcast(group).OnPreloadEnd();
+            await Task.CompletedTask;
+        }
     }
 }
