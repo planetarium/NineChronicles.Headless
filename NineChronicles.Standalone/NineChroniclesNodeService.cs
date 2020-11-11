@@ -194,6 +194,7 @@ namespace NineChronicles.Standalone
                         ExceptionRenderer.RenderException(code, msg);
                         Log.Error(msg);
                     },
+                    isPreloadStarted => { NodeStatusRenderer.PreloadStatus(isPreloadStarted); },
                     ignoreBootstrapFailure
                 );
             }
