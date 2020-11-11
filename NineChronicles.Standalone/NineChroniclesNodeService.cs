@@ -12,7 +12,6 @@ using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;
-using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Standalone.Hosting;
@@ -44,6 +43,8 @@ namespace NineChronicles.Standalone
         public ActionRenderer ActionRenderer { get; }
 
         public ExceptionRenderer ExceptionRenderer { get; }
+
+        public NodeStatusRenderer NodeStatusRenderer { get; }
 
         public AsyncManualResetEvent BootstrapEnded => NodeService.BootstrapEnded;
 
@@ -100,6 +101,7 @@ namespace NineChronicles.Standalone
             BlockRenderer = blockPolicySource.BlockRenderer;
             ActionRenderer = blockPolicySource.ActionRenderer;
             ExceptionRenderer = new ExceptionRenderer();
+            NodeStatusRenderer = new NodeStatusRenderer();
             var renderers = new List<IRenderer<NineChroniclesActionType>>();
             var validatingRenderer = new ValidatingActionRenderer<NineChroniclesActionType>();
             if (Properties.Render)
@@ -208,6 +210,10 @@ namespace NineChronicles.Standalone
                         ExceptionRenderer.RenderException(code, msg);
                         Log.Error(msg);
                     },
+                    isPreloadStarted =>
+                    {
+                        NodeStatusRenderer.PreloadStatus(isPreloadStarted);
+                    },
                     ignoreBootstrapFailure
                 );
             }
@@ -235,6 +241,7 @@ namespace NineChronicles.Standalone
                             BlockRenderer,
                             ActionRenderer,
                             ExceptionRenderer,
+                            NodeStatusRenderer,
                             IPAddress.Loopback.ToString(),
                             rpcProperties.RpcListenPort
                         ));

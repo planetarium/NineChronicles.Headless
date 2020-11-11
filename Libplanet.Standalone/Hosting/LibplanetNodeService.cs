@@ -44,6 +44,8 @@ namespace Libplanet.Standalone.Hosting
 
         private Action<RPCException, string> _exceptionHandlerAction;
 
+        private Action<bool> _preloadStatusHandlerAction;
+
         protected LibplanetNodeServiceProperties<T> Properties;
 
         protected Progress<PreloadState> PreloadProgress;
@@ -71,6 +73,7 @@ namespace Libplanet.Standalone.Hosting
             Func<BlockChain<T>, Swarm<T>, PrivateKey, CancellationToken, Task> minerLoopAction,
             Progress<PreloadState> preloadProgress,
             Action<RPCException, string> exceptionHandlerAction,
+            Action<bool> preloadStatusHandlerAction, 
             bool ignoreBootstrapFailure = false
         )
         {
@@ -135,6 +138,7 @@ namespace Libplanet.Standalone.Hosting
 
             _minerLoopAction = minerLoopAction;
             _exceptionHandlerAction = exceptionHandlerAction;
+            _preloadStatusHandlerAction = preloadStatusHandlerAction;
             IEnumerable<IceServer> shuffledIceServers = null;
             if (!(iceServers is null))
             {
@@ -169,6 +173,7 @@ namespace Libplanet.Standalone.Hosting
         public virtual async Task StartAsync(CancellationToken cancellationToken)
         {
             bool preload = true;
+            _preloadStatusHandlerAction(true);
             while (!cancellationToken.IsCancellationRequested && !_stopRequested)
             {
                 var tasks = new List<Task>
@@ -185,6 +190,7 @@ namespace Libplanet.Standalone.Hosting
                 preload = false;
                 await Task.Delay(TimeSpan.FromSeconds(15), cancellationToken);
             }
+            _preloadStatusHandlerAction(false);
         }
 
         // 이 privateKey는 swarm에서 사용하는 privateKey와 다를 수 있습니다.
