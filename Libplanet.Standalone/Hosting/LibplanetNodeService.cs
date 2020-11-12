@@ -173,7 +173,6 @@ namespace Libplanet.Standalone.Hosting
         public virtual async Task StartAsync(CancellationToken cancellationToken)
         {
             bool preload = true;
-            _preloadStatusHandlerAction(true);
             while (!cancellationToken.IsCancellationRequested && !_stopRequested)
             {
                 var tasks = new List<Task>
@@ -190,7 +189,6 @@ namespace Libplanet.Standalone.Hosting
                 preload = false;
                 await Task.Delay(TimeSpan.FromSeconds(15), cancellationToken);
             }
-            _preloadStatusHandlerAction(false);
         }
 
         // 이 privateKey는 swarm에서 사용하는 privateKey와 다를 수 있습니다.
@@ -316,6 +314,7 @@ namespace Libplanet.Standalone.Hosting
 
                 if (preload)
                 {
+                    _preloadStatusHandlerAction(true);
                     await Swarm.PreloadAsync(
                         TimeSpan.FromSeconds(5),
                         PreloadProgress,
@@ -323,6 +322,7 @@ namespace Libplanet.Standalone.Hosting
                         cancellationToken: cancellationToken
                     );
                     PreloadEnded.Set();
+                    _preloadStatusHandlerAction(false);
                 }
             }
             else if (preload)

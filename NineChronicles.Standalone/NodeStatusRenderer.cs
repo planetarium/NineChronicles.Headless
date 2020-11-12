@@ -9,9 +9,9 @@ namespace NineChronicles.Standalone
     {
         public readonly Subject<bool> PreloadStatusSubject = new Subject<bool>();
 
-        public void PreloadStatus(bool isPreloadEnded)
+        public void PreloadStatus(bool isPreloadStarted = false)
         {
-            PreloadStatusSubject.OnNext(isPreloadEnded);
+            PreloadStatusSubject.OnNext(isPreloadStarted);
         }
 
         public IObservable<bool> EveryChangedStatus() => PreloadStatusSubject.AsObservable();
