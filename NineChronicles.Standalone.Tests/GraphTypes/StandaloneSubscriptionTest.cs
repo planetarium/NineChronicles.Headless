@@ -13,6 +13,7 @@ using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Net;
+using Libplanet.Standalone;
 using Libplanet.Standalone.Hosting;
 using NineChronicles.Standalone.Tests.Common.Actions;
 using Xunit;
@@ -209,20 +210,14 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                 await stream.Take(1).Timeout(TimeSpan.FromMilliseconds(5000)).FirstAsync();
             });
 
-            const int code = 0xcc;
+            const NodeExceptionType code = (NodeExceptionType)0x01;
             const string message = "This is test message.";
-            StandaloneContextFx.NodeExceptionSubject.OnNext(
-                new NodeException()
-                {
-                    Code = code,
-                    Message = message,
-                }
-            );
+            StandaloneContextFx.NodeExceptionSubject.OnNext(new NodeException(code, message));
             var rawEvents = await stream.Take(1);
             var rawEvent = (Dictionary<string, object>)rawEvents.Data;
             var nodeException =
                 (Dictionary<string, object>)rawEvent["nodeException"];
-            Assert.Equal(code, nodeException["code"]);
+            Assert.Equal((int)code, nodeException["code"]);
             Assert.Equal(message, nodeException["message"]);
         }
     }

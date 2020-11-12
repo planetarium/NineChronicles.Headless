@@ -178,11 +178,12 @@ namespace Libplanet.Standalone.Hosting
                 var tasks = new List<Task>
                 {
                     StartSwarm(preload, cancellationToken),
-                    CheckSwarm(cancellationToken)
+                    CheckMessage(cancellationToken),
+                    CheckTip(cancellationToken)
                 };
                 if (Properties.Peers.Any())
                 {
-                    tasks.Add(CheckTipWithDemand(cancellationToken));
+                    tasks.Add(CheckDemand(cancellationToken));
                     tasks.Add(CheckPeerTable(cancellationToken));
                 }
                 await await Task.WhenAny(tasks);
@@ -375,17 +376,18 @@ namespace Libplanet.Standalone.Hosting
             }
         }
 
-        protected async Task CheckSwarm(CancellationToken cancellationToken = default)
+        protected async Task CheckMessage(CancellationToken cancellationToken = default)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(BootstrapInterval, cancellationToken);
                 if (Swarm.LastMessageTimestamp + BootstrapInterval < DateTimeOffset.UtcNow)
                 {
-                    Log.Error(
-                        "No messages have been received since {lastMessageTimestamp}.",
-                        Swarm.LastMessageTimestamp
-                    );
+                    var message =
+                        $"No messages have been received since {Swarm.LastMessageTimestamp}.";
+                        
+                    Log.Error(message);
+                    Properties.NodeExceptionOccurred(NodeExceptionType.MessageNotReceived, message);
                     await Swarm.StopAsync(cancellationToken);
                     break;
                 }
@@ -394,7 +396,35 @@ namespace Libplanet.Standalone.Hosting
             }
         }
 
-        private async Task CheckTipWithDemand(CancellationToken cancellationToken = default)
+        // FIXME: Can fixed by just restarting Swarm only (i.e. CheckMessage)
+        private async Task CheckTip(CancellationToken cancellationToken = default)
+        {
+            var tipTimeout = TimeSpan.FromMinutes(5);
+            var lastTipChanged = DateTimeOffset.Now;
+            var lastTip = BlockChain.Tip;
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(5, cancellationToken);
+                if (lastTip != BlockChain.Tip)
+                {
+                    lastTip = BlockChain.Tip;
+                    lastTipChanged = DateTimeOffset.Now;
+                }
+                
+                if (DateTimeOffset.Now - lastTipChanged > tipTimeout)
+                {
+                    var message =
+                        $"Chain's tip is stale. (index: {BlockChain.Tip?.Index}, " +
+                        $"hash: {BlockChain.Tip?.Hash}, timeout: {tipTimeout})";
+                    Log.Error(message);
+                    Properties.NodeExceptionOccurred(NodeExceptionType.TipNotChange, message);
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
+
+        private async Task CheckDemand(CancellationToken cancellationToken = default)
         {
             const int buffer = 1150;
             while (!cancellationToken.IsCancellationRequested)
@@ -406,15 +436,14 @@ namespace Libplanet.Standalone.Hosting
                         $"Chain's tip is too low. (demand: {Swarm.BlockDemand?.Header.Index}, " +
                         $"actual: {BlockChain.Tip?.Index}, buffer: {buffer})";
                     Log.Error(message);
-                    // TODO: Now only send to launcher because now it restarts. Should send through
-                    // gRPC also when launcher became not to relaunch.
-                    Properties.NodeExceptionOccurred((int)RPCException.ChainTooLowException, message);
+                    Properties.NodeExceptionOccurred(NodeExceptionType.DemandTooHigh, message);
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();
             }
         }
 
+        // FIXME: Can fixed by just restarting Swarm only (i.e. CheckMessage)
         protected async Task CheckPeerTable(CancellationToken cancellationToken = default)
         {
             const int grace = 3;
@@ -426,9 +455,11 @@ namespace Libplanet.Standalone.Hosting
                 {
                     if (grace == count)
                     {
-                        var message = "No any peers are connected even seed peers were given.";
-                        _exceptionHandlerAction(RPCException.NetworkException, message);
-                        Properties.NodeExceptionOccurred((int)RPCException.NetworkException, message);
+                        var message = "No any peers are connected even seed peers were given. " +
+                                     $"(grace: {grace}";
+                        Log.Error(message);
+                        // _exceptionHandlerAction(RPCException.NetworkException, message);
+                        Properties.NodeExceptionOccurred(NodeExceptionType.NoAnyPeer, message);
                     }
 
                     count++;

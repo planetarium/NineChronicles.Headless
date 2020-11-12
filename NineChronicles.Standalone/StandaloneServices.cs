@@ -1,5 +1,6 @@
 using System;
 using Libplanet.Net;
+using Libplanet.Standalone;
 using NineChronicles.Standalone.Properties;
 
 namespace NineChronicles.Standalone
@@ -45,11 +46,7 @@ namespace NineChronicles.Standalone
                 (code, message) =>
                 {
                     standaloneContext.NodeExceptionSubject.OnNext(
-                        new NodeException
-                        {
-                            Code = code,
-                            Message = message,
-                        }
+                        new NodeException(code, message)
                     );
                 };
 
