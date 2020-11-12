@@ -41,8 +41,9 @@ namespace Libplanet.Standalone.Hosting
             Func<Swarm<T>, Swarm<T>, PrivateKey, CancellationToken, Task> minerLoopAction,
             Progress<PreloadState> preloadProgress,
             Action<RPCException, string> exceptionHandlerAction,
+            Action<bool> preloadStatusHandlerAction, 
             bool ignoreBootstrapFailure = false
-        ) : base(properties, easyPolicy, renderers, null, preloadProgress, exceptionHandlerAction, ignoreBootstrapFailure)
+        ) : base(properties, easyPolicy, renderers, null, preloadProgress, exceptionHandlerAction, preloadStatusHandlerAction, ignoreBootstrapFailure)
         {
             if (easyPolicy is null)
             {

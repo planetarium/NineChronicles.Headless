@@ -33,7 +33,8 @@ namespace Libplanet.Standalone.Tests.Hosting
                 renderers: null,
                 minerLoopAction: (chain, swarm, pk, ct) => Task.CompletedTask,
                 preloadProgress: null,
-                exceptionHandlerAction:  (code, msg) => throw new Exception($"{code}, {msg}")
+                exceptionHandlerAction:  (code, msg) => throw new Exception($"{code}, {msg}"),
+                preloadStatusHandlerAction: isPreloadStart => { }
             );
 
             Assert.NotNull(service);
@@ -56,7 +57,8 @@ namespace Libplanet.Standalone.Tests.Hosting
                     renderers: null,
                     minerLoopAction: (chain, swarm, pk, ct) => Task.CompletedTask,
                     preloadProgress: null,
-                    exceptionHandlerAction:  (code, msg) => throw new Exception($"{code}, {msg}")
+                    exceptionHandlerAction:  (code, msg) => throw new Exception($"{code}, {msg}"),
+                    preloadStatusHandlerAction: isPreloadStart => { }
                 );
             });
         }

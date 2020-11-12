@@ -27,12 +27,14 @@ namespace NineChronicles.Standalone
         private readonly BlockRenderer _blockRenderer;
         private readonly ActionRenderer _actionRenderer;
         private readonly ExceptionRenderer _exceptionRenderer;
+        private readonly NodeStatusRenderer _nodeStatusRenderer;
         private IActionEvaluationHub _client;
 
         public ActionEvaluationPublisher(
             BlockRenderer blockRenderer,
             ActionRenderer actionRenderer,
             ExceptionRenderer exceptionRenderer,
+            NodeStatusRenderer nodeStatusRenderer,
             string host,
             int port
         )
@@ -40,6 +42,7 @@ namespace NineChronicles.Standalone
             _blockRenderer = blockRenderer;
             _actionRenderer = actionRenderer;
             _exceptionRenderer = exceptionRenderer;
+            _nodeStatusRenderer = nodeStatusRenderer;
             _host = host;
             _port = port;
         }
@@ -139,6 +142,21 @@ namespace NineChronicles.Standalone
                 {
                     var (code, message) = tuple;
                     await _client.ReportExceptionAsync((int)code, message);
+                },
+                stoppingToken
+            );
+            
+            _nodeStatusRenderer.EveryChangedStatus().Subscribe(
+                async isPreloadStarted =>
+                {
+                    if (isPreloadStarted)
+                    {
+                        await _client.PreloadStartAsync();
+                    }
+                    else
+                    {
+                        await _client.PreloadEndAsync();
+                    }
                 },
                 stoppingToken
             );

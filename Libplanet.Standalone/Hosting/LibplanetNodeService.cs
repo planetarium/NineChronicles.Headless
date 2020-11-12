@@ -44,6 +44,8 @@ namespace Libplanet.Standalone.Hosting
 
         private Action<RPCException, string> _exceptionHandlerAction;
 
+        private Action<bool> _preloadStatusHandlerAction;
+
         protected LibplanetNodeServiceProperties<T> Properties;
 
         protected Progress<PreloadState> PreloadProgress;
@@ -71,6 +73,7 @@ namespace Libplanet.Standalone.Hosting
             Func<BlockChain<T>, Swarm<T>, PrivateKey, CancellationToken, Task> minerLoopAction,
             Progress<PreloadState> preloadProgress,
             Action<RPCException, string> exceptionHandlerAction,
+            Action<bool> preloadStatusHandlerAction, 
             bool ignoreBootstrapFailure = false
         )
         {
@@ -135,6 +138,7 @@ namespace Libplanet.Standalone.Hosting
 
             _minerLoopAction = minerLoopAction;
             _exceptionHandlerAction = exceptionHandlerAction;
+            _preloadStatusHandlerAction = preloadStatusHandlerAction;
             IEnumerable<IceServer> shuffledIceServers = null;
             if (!(iceServers is null))
             {
@@ -310,6 +314,7 @@ namespace Libplanet.Standalone.Hosting
 
                 if (preload)
                 {
+                    _preloadStatusHandlerAction(true);
                     await Swarm.PreloadAsync(
                         TimeSpan.FromSeconds(5),
                         PreloadProgress,
@@ -317,6 +322,7 @@ namespace Libplanet.Standalone.Hosting
                         cancellationToken: cancellationToken
                     );
                     PreloadEnded.Set();
+                    _preloadStatusHandlerAction(false);
                 }
             }
             else if (preload)
