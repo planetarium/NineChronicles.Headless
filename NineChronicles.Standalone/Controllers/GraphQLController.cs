@@ -93,7 +93,8 @@ namespace NineChronicles.Standalone.Controllers
             StandaloneContext.NineChroniclesNodeService.PrivateKey = privateKey;
 
             var agentAddress = privateKey.ToAddress();
-            var chainAgentState = StandaloneContext.BlockChain.GetState(agentAddress);
+            // FIXME: `StandaloneContext.BlockChain` can be 'null'
+            var chainAgentState = StandaloneContext.BlockChain?.GetState(agentAddress);
             if (chainAgentState != null)
             {
                 var agentState = new AgentState((Bencodex.Types.Dictionary) chainAgentState);
