@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -12,8 +13,8 @@ using Lib9c.Renderer;
 using Libplanet;
 using MagicOnion.Client;
 using Microsoft.Extensions.Hosting;
-using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Model.State;
 using Nekoyume.Shared.Hubs;
 using Serilog;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -29,7 +30,7 @@ namespace NineChronicles.Standalone
         private readonly ExceptionRenderer _exceptionRenderer;
         private readonly NodeStatusRenderer _nodeStatusRenderer;
         private IActionEvaluationHub _client;
-        private readonly List<Address> _addressesToSubscribe;
+        private List<Address> _addressesToSubscribe;
 
         public ActionEvaluationPublisher(
             BlockRenderer blockRenderer,
@@ -46,8 +47,6 @@ namespace NineChronicles.Standalone
             _nodeStatusRenderer = nodeStatusRenderer;
             _host = host;
             _port = port;
-            // FIXME: _addressesToSubscribe must contains an address of current AgentState
-            _addressesToSubscribe = Addresses.GetAll();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -93,6 +92,8 @@ namespace NineChronicles.Standalone
                 .Subscribe(
                 async ev =>
                 {
+                    ResetAddressesToSubscribe(ev);
+                    
                     var formatter = new BinaryFormatter();
                     using var c = new MemoryStream();
                     using var df = new DeflateStream(c, System.IO.Compression.CompressionLevel.Fastest);
@@ -121,6 +122,8 @@ namespace NineChronicles.Standalone
                 .Subscribe(
                 async ev =>
                 {
+                    ResetAddressesToSubscribe(ev);
+                    
                     var formatter = new BinaryFormatter();
                     using var c = new MemoryStream();
                     using var df = new DeflateStream(c, System.IO.Compression.CompressionLevel.Fastest);
@@ -144,6 +147,10 @@ namespace NineChronicles.Standalone
                 stoppingToken
             );
 
+            _exceptionRenderer.EveryAgentAndAvatarAddresses().Subscribe(
+                ResetAddressesToSubscribe,
+                stoppingToken);
+            
             _exceptionRenderer.EveryException().Subscribe(
                 async tuple =>
                 {
@@ -177,6 +184,12 @@ namespace NineChronicles.Standalone
 
         private bool ContainsAddressToBroadcast(ActionBase.ActionEvaluation<ActionBase> ev)
         {
+            if (_addressesToSubscribe is null ||
+                !_addressesToSubscribe.Any())
+            {
+                return false;
+            }
+            
             var updatedAddresses = ev.OutputStates.UpdatedAddresses;
             for (var i = _addressesToSubscribe.Count - 1; i >= 0; i--)
             {
@@ -188,6 +201,37 @@ namespace NineChronicles.Standalone
             }
 
             return false;
+        }
+
+        private void ResetAddressesToSubscribe(ActionBase.ActionEvaluation<ActionBase> ev)
+        {
+            if (!(ev.Action is CreateAvatar _) &&
+                !(ev.Action is CreateAvatar2 _))
+            {
+                return;
+            }
+
+            var agentAddress = ev.Signer;
+            var chainAgentState = ev.OutputStates.GetState(agentAddress);
+            if (chainAgentState is null)
+            {
+                return;
+            }
+            
+            var agentState = new AgentState((Bencodex.Types.Dictionary) chainAgentState);
+            ResetAddressesToSubscribe((agentAddress, agentState.avatarAddresses.Values.ToList()));
+        }
+        
+        private void ResetAddressesToSubscribe((Address agentAddress, List<Address> avatarAddresses) tuple)
+        {
+            // FIXME: Use Addresses.GetAll() instead of new List<Address>()
+            _addressesToSubscribe = new List<Address>();
+            _addressesToSubscribe.Add(tuple.agentAddress);
+            if (tuple.avatarAddresses != null &&
+                tuple.avatarAddresses.Any())
+            {
+                _addressesToSubscribe.AddRange(tuple.avatarAddresses);
+            }
         }
     }
 }
