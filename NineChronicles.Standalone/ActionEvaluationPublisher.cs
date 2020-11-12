@@ -224,6 +224,7 @@ namespace NineChronicles.Standalone
         
         private void ResetAddressesToSubscribe((Address agentAddress, List<Address> avatarAddresses) tuple)
         {
+            Log.Debug($"ResetAddressesToSubscribe() invoked. {tuple.agentAddress} {tuple.avatarAddresses?.Count ?? 0}");
             // FIXME: Use Addresses.GetAll() instead of new List<Address>()
             _addressesToSubscribe = new List<Address>();
             _addressesToSubscribe.Add(tuple.agentAddress);
