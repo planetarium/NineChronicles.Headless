@@ -5,15 +5,10 @@
 ```
 $ dotnet run --project ./NineChronicles.Standalone.Executable/ -- --help
 
-Usage: NineChronicles.Standalone.Executable [--no-miner] [--app-protocol-version <String>] \
-    [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] \
-    [--minimum-difficulty <Int32>] [--private-key <String>] [--store-type <String>] \
-    [--store-path <String>] [--ice-server <String>...] [--peer <String>...] \
-    [--no-trusted-state-validators] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] \
-    [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] \
-    [--graphql-host <String>] [--graphql-port <Nullable`1>] [--libplanet-node] [--no-mpt] \
-    [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] \
-    [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--help] [--version]
+Usage: NineChronicles.Standalone.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--minimum-difficulty <Int32>] [--private-key <String>] [--store-type <String>] [--st
+ore-path <String>] [--ice-server <String>...] [--peer <String>...] [--no-trusted-state-validators] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [
+--graphql-host <String>] [--graphql-port <Nullable`1>] [--libplanet-node] [--no-mpt] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32
+>] [--log-minimum-level <String>] [--help] [--version]
 
 Run standalone application with options.
 
@@ -41,13 +36,12 @@ Options:
   --no-mpt                                                 Flag to turn off the Merkle Patricia Trie for state saving.
   --workers <Int32>                                        Number of workers to use in Swarm (Default: 5)
   --confirmations <Int32>                                  The number of required confirmations to recognize a block.  0 by default. (Default: 0)
-  --max-transactions <Int32>                               The number of maximum transactions can be included in a single block.
-                                                           Unlimited if the value is less then or equal to 0.  100 by default. (Default: 100)
+  --max-transactions <Int32>                               The number of maximum transactions can be included in a single block. Unlimited if the value is less then or equal to 0.  100 by default. (Default: 100)
   --strict-rendering                                       Flag to turn on validating action renderer.
   --dev                                                    Flag to turn on the dev mode.  false by default.
-  --dev.block-interval <Int32>                             The time interval between blocks. It's unit is milliseconds.
-                                                           Works only when dev mode is on.  10000 (ms) by default. (Default: 10000)
+  --dev.block-interval <Int32>                             The time interval between blocks. It's unit is milliseconds. Works only when dev mode is on.  10000 (ms) by default. (Default: 10000)
   --dev.reorg-interval <Int32>                             The size of reorg interval. Works only when dev mode is on.  0 by default. (Default: 0)
+  --log-minimum-level <String>                             The log minimum level during standalone execution. (Default: debug)
   -h, --help                                               Show help message
   --version                                                Show version
 ```

@@ -107,7 +107,9 @@ namespace NineChronicles.Standalone.Executable
                 "dev.reorg-interval",
                 Description =
                     "The size of reorg interval. Works only when dev mode is on.  0 by default.")]
-            int reorgInterval = 0
+            int reorgInterval = 0,
+            [Option(Description = "The log minimum level during standalone execution.")]
+            string logMinimumLevel = "debug"
         )
         {
 #if SENTRY || ! DEBUG
@@ -117,7 +119,7 @@ namespace NineChronicles.Standalone.Executable
             // Setup logger.
             var loggerConf = new LoggerConfiguration()
                 .WriteTo.Console(outputTemplate: LogTemplate)
-                .MinimumLevel.Debug();
+                .ConfigureMinimumLevel(logMinimumLevel);
 #if SENTRY || ! DEBUG
             loggerConf = loggerConf
                 .WriteTo.Sentry(o =>
