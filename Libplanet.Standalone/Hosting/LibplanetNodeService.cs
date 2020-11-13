@@ -404,7 +404,12 @@ namespace Libplanet.Standalone.Hosting
             var lastTip = BlockChain.Tip;
             while (!cancellationToken.IsCancellationRequested)
             {
-                await Task.Delay(5, cancellationToken);
+                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                if (!Swarm.Running)
+                {
+                    continue;
+                }
+                
                 if (lastTip != BlockChain.Tip)
                 {
                     lastTip = BlockChain.Tip;
@@ -429,7 +434,12 @@ namespace Libplanet.Standalone.Hosting
             const int buffer = 1150;
             while (!cancellationToken.IsCancellationRequested)
             {
-                await Task.Delay(5, cancellationToken);
+                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                if (!Swarm.Running)
+                {
+                    continue;
+                }
+                
                 if ((Swarm.BlockDemand?.Header.Index ?? 0) > (BlockChain.Tip?.Index ?? 0) + buffer)
                 {
                     var message =
