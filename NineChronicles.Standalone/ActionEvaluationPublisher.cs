@@ -30,6 +30,7 @@ namespace NineChronicles.Standalone
         private readonly ExceptionRenderer _exceptionRenderer;
         private readonly NodeStatusRenderer _nodeStatusRenderer;
         private IActionEvaluationHub _client;
+        private Address _agentAddress;
         private List<Address> _addressesToSubscribe;
 
         public ActionEvaluationPublisher(
@@ -189,6 +190,11 @@ namespace NineChronicles.Standalone
             {
                 return false;
             }
+
+            if (ev.OutputStates.UpdatedFungibleAssets.ContainsKey(_agentAddress))
+            {
+                return true;
+            }
             
             var updatedAddresses = ev.OutputStates.UpdatedAddresses;
             for (var i = _addressesToSubscribe.Count - 1; i >= 0; i--)
@@ -199,7 +205,7 @@ namespace NineChronicles.Standalone
                     return true;
                 }
             }
-
+            
             return false;
         }
 
@@ -225,9 +231,10 @@ namespace NineChronicles.Standalone
         private void ResetAddressesToSubscribe((Address agentAddress, List<Address> avatarAddresses) tuple)
         {
             Log.Debug($"ResetAddressesToSubscribe() invoked. {tuple.agentAddress} {tuple.avatarAddresses?.Count ?? 0}");
+            _agentAddress = tuple.agentAddress;
             // FIXME: Use Addresses.GetAll() instead of new List<Address>()
             _addressesToSubscribe = new List<Address>();
-            _addressesToSubscribe.Add(tuple.agentAddress);
+            _addressesToSubscribe.Add(_agentAddress);
             if (tuple.avatarAddresses != null &&
                 tuple.avatarAddresses.Any())
             {
