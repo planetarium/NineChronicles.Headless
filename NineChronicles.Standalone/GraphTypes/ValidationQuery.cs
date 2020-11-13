@@ -28,12 +28,21 @@ namespace NineChronicles.Standalone.GraphTypes
                         // FIXME: Thread.Sleep is temporary. Should be removed.
                         var timeSpent = 0;
                         var retryInterval = 1000;
-                        while (standaloneContext.BlockChain is null && timeSpent < 100 * 1000)
+                        while (standaloneContext.BlockChain is null)
                         {
                             Log.Debug("Blockchain instance is null. Sleep...");
                             Thread.Sleep(retryInterval);
                             timeSpent += retryInterval;
+
+                            if (timeSpent < 100 * 1000)
+                            {
+                                continue;
+                            }
+                            
+                            Log.Debug("Blockchain instance is still null.");
+                            return true;
                         }
+                        
                         Log.Debug("Time until blockchain online: {time}ms", timeSpent);
                         
                         var remoteIndex = JsonDocument.Parse(raw).RootElement.GetProperty("Index").GetInt32();
@@ -50,7 +59,8 @@ namespace NineChronicles.Standalone.GraphTypes
                     catch (Exception e)
                     {
                         Log.Warning(e, "Unexpected exception occurred. (raw: {raw})", raw);
-                        return false;
+                        // FIXME: Should return error instead.
+                        return true;
                     }
                 }
             );
