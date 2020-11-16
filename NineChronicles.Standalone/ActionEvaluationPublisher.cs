@@ -191,11 +191,12 @@ namespace NineChronicles.Standalone
                 return false;
             }
 
-            if (ev.OutputStates.UpdatedFungibleAssets.ContainsKey(_agentAddress))
+            if (ev.Signer.Equals(_agentAddress) ||
+                ev.OutputStates.UpdatedFungibleAssets.ContainsKey(_agentAddress))
             {
                 return true;
             }
-            
+
             var updatedAddresses = ev.OutputStates.UpdatedAddresses;
             foreach (var address in _addressesToSubscribe)
             {
