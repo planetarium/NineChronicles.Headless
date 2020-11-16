@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -10,11 +9,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Lib9c.Renderer;
-using Libplanet;
 using MagicOnion.Client;
 using Microsoft.Extensions.Hosting;
 using Nekoyume.Action;
-using Nekoyume.Model.State;
 using Nekoyume.Shared.Hubs;
 using Serilog;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -30,8 +27,7 @@ namespace NineChronicles.Standalone
         private readonly ExceptionRenderer _exceptionRenderer;
         private readonly NodeStatusRenderer _nodeStatusRenderer;
         private IActionEvaluationHub _client;
-        private Address _agentAddress;
-        private List<Address> _addressesToSubscribe;
+        private RpcContext _context;
 
         public ActionEvaluationPublisher(
             BlockRenderer blockRenderer,
@@ -39,7 +35,8 @@ namespace NineChronicles.Standalone
             ExceptionRenderer exceptionRenderer,
             NodeStatusRenderer nodeStatusRenderer,
             string host,
-            int port
+            int port,
+            RpcContext context
         )
         {
             _blockRenderer = blockRenderer;
@@ -48,6 +45,7 @@ namespace NineChronicles.Standalone
             _nodeStatusRenderer = nodeStatusRenderer;
             _host = host;
             _port = port;
+            _context = context;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -93,8 +91,6 @@ namespace NineChronicles.Standalone
                 .Subscribe(
                 async ev =>
                 {
-                    ResetAddressesToSubscribe(ev);
-                    
                     var formatter = new BinaryFormatter();
                     using var c = new MemoryStream();
                     using var df = new DeflateStream(c, System.IO.Compression.CompressionLevel.Fastest);
@@ -123,8 +119,6 @@ namespace NineChronicles.Standalone
                 .Subscribe(
                 async ev =>
                 {
-                    ResetAddressesToSubscribe(ev);
-                    
                     var formatter = new BinaryFormatter();
                     using var c = new MemoryStream();
                     using var df = new DeflateStream(c, System.IO.Compression.CompressionLevel.Fastest);
@@ -147,10 +141,6 @@ namespace NineChronicles.Standalone
                 },
                 stoppingToken
             );
-
-            _exceptionRenderer.EveryAgentAndAvatarAddresses().Subscribe(
-                ResetAddressesToSubscribe,
-                stoppingToken);
             
             _exceptionRenderer.EveryException().Subscribe(
                 async tuple =>
@@ -185,63 +175,10 @@ namespace NineChronicles.Standalone
 
         private bool ContainsAddressToBroadcast(ActionBase.ActionEvaluation<ActionBase> ev)
         {
-            if (_addressesToSubscribe is null ||
-                !_addressesToSubscribe.Any())
-            {
-                return false;
-            }
-
-            if (ev.Signer.Equals(_agentAddress) ||
-                ev.OutputStates.UpdatedFungibleAssets.ContainsKey(_agentAddress))
-            {
-                return true;
-            }
-
-            var updatedAddresses = ev.OutputStates.UpdatedAddresses;
-            foreach (var address in _addressesToSubscribe)
-            {
-                if (updatedAddresses.Contains(address))
-                {
-                    return true;
-                }
-            }
-            
-            return false;
-        }
-
-        private void ResetAddressesToSubscribe(ActionBase.ActionEvaluation<ActionBase> ev)
-        {
-            if (!(ev.Action is CreateAvatar _) &&
-                !(ev.Action is CreateAvatar2 _))
-            {
-                return;
-            }
-
-            if (!ev.Signer.Equals(_agentAddress))
-            {
-                return;
-            }
-            
-            var chainAgentState = ev.OutputStates.GetState(_agentAddress);
-            if (chainAgentState is null)
-            {
-                return;
-            }
-            
-            var agentState = new AgentState((Bencodex.Types.Dictionary) chainAgentState);
-            ResetAddressesToSubscribe((_agentAddress, agentState.avatarAddresses.Values.ToList()));
-        }
-        
-        private void ResetAddressesToSubscribe((Address agentAddress, List<Address> avatarAddresses) tuple)
-        {
-            Log.Debug($"ResetAddressesToSubscribe() invoked. {tuple.agentAddress} {tuple.avatarAddresses?.Count ?? 0}");
-            _agentAddress = tuple.agentAddress;
-            _addressesToSubscribe = new List<Address> {_agentAddress};
-            if (tuple.avatarAddresses != null &&
-                tuple.avatarAddresses.Any())
-            {
-                _addressesToSubscribe.AddRange(tuple.avatarAddresses);
-            }
+            var updatedAddresses =
+                ev.OutputStates.UpdatedAddresses.Union(ev.OutputStates.UpdatedFungibleAssets.Keys);
+            return _context.AddressesToSubscribe.Any(address =>
+                ev.Signer.Equals(address) || updatedAddresses.Contains(address));
         }
     }
 }

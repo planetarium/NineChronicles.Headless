@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Threading;
@@ -230,6 +229,7 @@ namespace NineChronicles.Standalone
 
         public IHostBuilder Configure(IHostBuilder hostBuilder)
         {
+            RpcContext context = new RpcContext();
             if (RpcProperties is RpcNodeServiceProperties rpcProperties)
             {
                 hostBuilder = hostBuilder
@@ -244,7 +244,8 @@ namespace NineChronicles.Standalone
                             ExceptionRenderer,
                             NodeStatusRenderer,
                             IPAddress.Loopback.ToString(),
-                            rpcProperties.RpcListenPort
+                            rpcProperties.RpcListenPort,
+                            context
                         ));
                     });
             }
@@ -258,6 +259,7 @@ namespace NineChronicles.Standalone
                 });
                 services.AddSingleton(provider => NodeService.Swarm);
                 services.AddSingleton(provider => NodeService.BlockChain);
+                services.AddSingleton(provider => context);
             });
         }
 
