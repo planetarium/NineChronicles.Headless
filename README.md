@@ -3,10 +3,9 @@
 ## Run
 
 ```
-Usage: NineChronicles.Standalone.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--minimum-difficulty <Int32>] [--private-key <String>] [--store-type <String>] [--st
-ore-path <String>] [--ice-server <String>...] [--peer <String>...] [--no-trusted-state-validators] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [
---graphql-host <String>] [--graphql-port <Nullable`1>] [--libplanet-node] [--no-mpt] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32
->] [--log-minimum-level <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--help] [--version]
+$ dotnet run --project ./NineChronicles.Standalone.Executable/ -- --help
+
+Usage: NineChronicles.Standalone.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--minimum-difficulty <Int32>] [--private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--no-trusted-state-validators] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--libplanet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-minimum-level <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--help] [--version]
 
 Run standalone application with options.
 
@@ -31,7 +30,6 @@ Options:
   --graphql-host <String>                                   (Default: 0.0.0.0)
   --graphql-port <Nullable`1>                               (Default: )
   --libplanet-node
-  --no-mpt                                                 Flag to turn off the Merkle Patricia Trie for state saving.
   --workers <Int32>                                        Number of workers to use in Swarm (Default: 5)
   --confirmations <Int32>                                  The number of required confirmations to recognize a block.  0 by default. (Default: 0)
   --max-transactions <Int32>                               The number of maximum transactions can be included in a single block. Unlimited if the value is less then or equal to 0.  100 by default. (Default: 100)
@@ -75,7 +73,6 @@ $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 -  `--graphql-host`: Host name for graphQL controller.
 -  `--graphql-port`: Port number for graphQL controller.
 -  `--libplanet-node`: Run with formal Libplanet node. One of this or `graphql-server` must be set.
--  `--no-mpt`: Use legacy block state store instead of Merkle Patricia Trie for state saving.
 -  `--workers`: Number of workers to use in Swarm.
 -  `--confirmations`: Specifies the number of required confirmations to recognize a block.
 -  `--max-transactions`: Specifies the number of maximum transactions can be included in a single block. Unlimited if the value is less then or equal to 0.
