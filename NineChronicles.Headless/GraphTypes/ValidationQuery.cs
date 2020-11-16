@@ -25,22 +25,27 @@ namespace NineChronicles.Headless.GraphTypes
                     var raw = context.GetArgument<string>("raw");
                     try
                     {
+                        Log.Debug($"Validating received raw: {raw}");
                         // FIXME: Thread.Sleep is temporary. Should be removed.
                         var timeSpent = 0;
-                        var retryInterval = 1000;
+                        const int retryInterval = 1000;
+                        const int grace = 100 * 1000;
                         while (standaloneContext.BlockChain is null)
                         {
-                            Log.Debug("Blockchain instance is null. Sleep...");
+                            Log.Debug(
+                                "Blockchain instance is null. Sleep {interval}ms...",
+                                retryInterval);
                             Thread.Sleep(retryInterval);
                             timeSpent += retryInterval;
 
-                            if (timeSpent < 100 * 1000)
+                            if (timeSpent < grace)
                             {
                                 continue;
                             }
-                            
-                            Log.Debug("Blockchain instance is still null.");
-                            return true;
+
+                            var msg = $"Blockchain instance is not initialized until {grace}ms.";
+                            Log.Debug(msg);
+                            throw new NullReferenceException(msg);
                         }
                         
                         Log.Debug("Time until blockchain online: {time}ms", timeSpent);
@@ -58,9 +63,11 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                     catch (Exception e)
                     {
-                        Log.Warning(e, "Unexpected exception occurred. (raw: {raw})", raw);
-                        // FIXME: Should return error instead.
-                        return true;
+                        Log.Warning(
+                            e,
+                            "Unexpected exception occurred. (raw: {raw}) {e}",
+                            raw, e);
+                        throw;
                     }
                 }
             );
