@@ -217,24 +217,26 @@ namespace NineChronicles.Standalone
                 return;
             }
 
-            var agentAddress = ev.Signer;
-            var chainAgentState = ev.OutputStates.GetState(agentAddress);
+            if (!ev.Signer.Equals(_agentAddress))
+            {
+                return;
+            }
+            
+            var chainAgentState = ev.OutputStates.GetState(_agentAddress);
             if (chainAgentState is null)
             {
                 return;
             }
             
             var agentState = new AgentState((Bencodex.Types.Dictionary) chainAgentState);
-            ResetAddressesToSubscribe((agentAddress, agentState.avatarAddresses.Values.ToList()));
+            ResetAddressesToSubscribe((_agentAddress, agentState.avatarAddresses.Values.ToList()));
         }
         
         private void ResetAddressesToSubscribe((Address agentAddress, List<Address> avatarAddresses) tuple)
         {
             Log.Debug($"ResetAddressesToSubscribe() invoked. {tuple.agentAddress} {tuple.avatarAddresses?.Count ?? 0}");
             _agentAddress = tuple.agentAddress;
-            // FIXME: Use Addresses.GetAll() instead of new List<Address>()
-            _addressesToSubscribe = new List<Address>();
-            _addressesToSubscribe.Add(_agentAddress);
+            _addressesToSubscribe = new List<Address> {_agentAddress};
             if (tuple.avatarAddresses != null &&
                 tuple.avatarAddresses.Any())
             {
