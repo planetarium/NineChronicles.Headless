@@ -10,14 +10,13 @@ namespace NineChronicles.Standalone
     public class ExceptionRenderer
     {
         // FIXME: Need to move to NodeStatusRenderer
-        public readonly Subject<(Address agentAddress, List<Address> avatarAddresses)> AgentAndAvatarAddressesSubject =
-            new Subject<(Address agentAddress, List<Address> avatarAddresses)>();
+        public readonly Subject<Address> AgentAddressSubject = new Subject<Address>();
 
         public readonly Subject<(RPCException, string)> ExceptionRenderSubject = new Subject<(RPCException, string)>();
 
-        public void RenderAgentAndAvatarAddresses(Address agentAddress, List<Address> avatarAddresses)
+        public void RenderAgentAddress(Address agentAddress)
         {
-            AgentAndAvatarAddressesSubject.OnNext((agentAddress, avatarAddresses));
+            AgentAddressSubject.OnNext(agentAddress);
         }
 
         public void RenderException(RPCException code, string msg)
@@ -25,8 +24,7 @@ namespace NineChronicles.Standalone
             ExceptionRenderSubject.OnNext((code, msg));
         }
 
-        public IObservable<(Address agentAddress, List<Address> avatarAddresses)> EveryAgentAndAvatarAddresses() =>
-            AgentAndAvatarAddressesSubject.AsObservable();
+        public IObservable<Address> EveryAgentAddress() => AgentAddressSubject.AsObservable();
 
         public IObservable<(RPCException, string)> EveryException() => ExceptionRenderSubject.AsObservable();
     }

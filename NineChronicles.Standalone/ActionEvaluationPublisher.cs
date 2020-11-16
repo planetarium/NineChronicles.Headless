@@ -141,7 +141,7 @@ namespace NineChronicles.Standalone
                 stoppingToken
             );
 
-            _exceptionRenderer.EveryAgentAndAvatarAddresses().Subscribe(
+            _exceptionRenderer.EveryAgentAddress().Subscribe(
                 ResetAddressesToSubscribe,
                 stoppingToken);
             
@@ -183,10 +183,10 @@ namespace NineChronicles.Standalone
                    ev.OutputStates.UpdatedFungibleAssets.ContainsKey(_agentAddress);
         }
         
-        private void ResetAddressesToSubscribe((Address agentAddress, List<Address> avatarAddresses) tuple)
+        private void ResetAddressesToSubscribe(Address agentAddress)
         {
-            Log.Debug($"ResetAddressesToSubscribe() invoked. {tuple.agentAddress} {tuple.avatarAddresses?.Count ?? 0}");
-            _agentAddress = tuple.agentAddress;
+            Log.Debug($"ResetAddressesToSubscribe() invoked. {agentAddress}");
+            _agentAddress = agentAddress;
         }
     }
 }

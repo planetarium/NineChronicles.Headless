@@ -91,17 +91,7 @@ namespace NineChronicles.Standalone.Controllers
         {
             var privateKey = new PrivateKey(ByteUtil.ParseHex(request.PrivateKeyString));
             StandaloneContext.NineChroniclesNodeService.PrivateKey = privateKey;
-
-            var agentAddress = privateKey.ToAddress();
-            // FIXME: `StandaloneContext.BlockChain` can be 'null'
-            var chainAgentState = StandaloneContext.BlockChain?.GetState(agentAddress);
-            if (chainAgentState != null)
-            {
-                var agentState = new AgentState((Bencodex.Types.Dictionary) chainAgentState);
-                StandaloneContext.NineChroniclesNodeService.ExceptionRenderer.RenderAgentAndAvatarAddresses(
-                    agentAddress,
-                    agentState.avatarAddresses.Values.ToList());
-            }
+            StandaloneContext.NineChroniclesNodeService.ExceptionRenderer.RenderAgentAddress(privateKey.ToAddress());
 
             return Ok($"Private key set ({privateKey.ToAddress()}).");
         }
