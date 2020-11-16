@@ -197,9 +197,8 @@ namespace NineChronicles.Standalone
             }
             
             var updatedAddresses = ev.OutputStates.UpdatedAddresses;
-            for (var i = _addressesToSubscribe.Count - 1; i >= 0; i--)
+            foreach (var address in _addressesToSubscribe)
             {
-                var address = _addressesToSubscribe[i];
                 if (updatedAddresses.Contains(address))
                 {
                     return true;
