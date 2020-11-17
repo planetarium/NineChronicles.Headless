@@ -45,7 +45,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                             var msg = $"Blockchain instance is not initialized until {grace}ms.";
                             Log.Debug(msg);
-                            throw new NullReferenceException(msg);
+                            throw new BlockChainInitializeException(msg);
                         }
                         
                         Log.Debug("Time until blockchain online: {time}ms", timeSpent);
