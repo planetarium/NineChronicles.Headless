@@ -1,6 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using System.Numerics;
 using Bencodex;
 using Bencodex.Types;
 using Libplanet;
@@ -24,12 +25,14 @@ namespace NineChronicles.Standalone
     {
         private BlockChain<NineChroniclesActionType> _blockChain;
         private Swarm<NineChroniclesActionType> _swarm;
+        private RpcContext _context;
         private Codec _codec;
         private DelayedRenderer<NineChroniclesActionType> _delayedRenderer;
 
         public BlockChainService(
             BlockChain<NineChroniclesActionType> blockChain,
-            Swarm<NineChroniclesActionType> swarm
+            Swarm<NineChroniclesActionType> swarm,
+            RpcContext context
         )
         {
             _blockChain = blockChain;
@@ -37,6 +40,7 @@ namespace NineChronicles.Standalone
                 .OfType<DelayedRenderer<NineChroniclesActionType>>()
                 .FirstOrDefault();
             _swarm = swarm;
+            _context = context;
             _codec = new Codec();
         }
 
@@ -84,7 +88,7 @@ namespace NineChronicles.Standalone
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
             FungibleAssetValue balance = _blockChain.GetBalance(address, currency);
             byte[] encoded = _codec.Encode(
-              new List(
+              new Bencodex.Types.List(
                 new IValue[] 
                 {
                   balance.Currency.Serialize(),
@@ -99,6 +103,16 @@ namespace NineChronicles.Standalone
         {
             var address = new Address(addressBytes);
             return UnaryResult(_blockChain.GetNextTxNonce(address));
+        }
+
+        public UnaryResult<bool> SetAddressesToSubscribe(IEnumerable<byte[]> addressesBytes)
+        {
+            _context.AddressesToSubscribe =
+                addressesBytes.Select(ba => new Address(ba)).ToImmutableHashSet();
+            Log.Debug(
+                "Subscribed addresses: {addresses}",
+                string.Join(", ", _context.AddressesToSubscribe));
+            return UnaryResult(true);
         }
     }
 }
