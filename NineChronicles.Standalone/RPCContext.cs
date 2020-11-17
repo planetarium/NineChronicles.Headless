@@ -5,6 +5,6 @@ namespace NineChronicles.Standalone
 {
     public class RpcContext
     {
-        public ImmutableList<Address> AddressesToSubscribe = ImmutableList<Address>.Empty;
+        public ImmutableHashSet<Address> AddressesToSubscribe = ImmutableHashSet<Address>.Empty;
     }
 }

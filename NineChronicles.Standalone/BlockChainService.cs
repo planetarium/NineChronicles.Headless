@@ -108,7 +108,7 @@ namespace NineChronicles.Standalone
         public UnaryResult<bool> SetAddressesToSubscribe(IEnumerable<byte[]> addressesBytes)
         {
             _context.AddressesToSubscribe =
-                addressesBytes.Select(ba => new Address(ba)).ToImmutableList();
+                addressesBytes.Select(ba => new Address(ba)).ToImmutableHashSet();
             Log.Debug(
                 "Subscribed addresses: {addresses}",
                 string.Join(", ", _context.AddressesToSubscribe));
