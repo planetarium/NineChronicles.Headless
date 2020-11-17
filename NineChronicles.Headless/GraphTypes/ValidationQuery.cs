@@ -63,11 +63,9 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                     catch (Exception e)
                     {
-                        Log.Warning(
-                            e,
-                            "Unexpected exception occurred. (raw: {raw}) {e}",
-                            raw, e);
-                        throw;
+                        var msg = $"Exception occurred while validating metadata. (raw: {raw})";
+                        Log.Warning(e, msg + " {e}", e);
+                        throw new ExecutionError(msg, e);
                     }
                 }
             );
