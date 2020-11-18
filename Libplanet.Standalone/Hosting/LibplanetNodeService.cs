@@ -378,10 +378,11 @@ namespace Libplanet.Standalone.Hosting
 
         protected async Task CheckMessage(CancellationToken cancellationToken = default)
         {
+            var messageTimeout = TimeSpan.FromMinutes(1);
             while (!cancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(BootstrapInterval, cancellationToken);
-                if (Swarm.LastMessageTimestamp + BootstrapInterval < DateTimeOffset.UtcNow)
+                if (Swarm.LastMessageTimestamp + messageTimeout < DateTimeOffset.UtcNow)
                 {
                     var message =
                         $"No messages have been received since {Swarm.LastMessageTimestamp}.";
@@ -399,7 +400,7 @@ namespace Libplanet.Standalone.Hosting
         // FIXME: Can fixed by just restarting Swarm only (i.e. CheckMessage)
         private async Task CheckTip(CancellationToken cancellationToken = default)
         {
-            var tipTimeout = TimeSpan.FromMinutes(5);
+            var tipTimeout = TimeSpan.FromMinutes(2);
             var lastTipChanged = DateTimeOffset.Now;
             var lastTip = BlockChain.Tip;
             while (!cancellationToken.IsCancellationRequested)
@@ -416,13 +417,15 @@ namespace Libplanet.Standalone.Hosting
                     lastTipChanged = DateTimeOffset.Now;
                 }
                 
-                if (DateTimeOffset.Now - lastTipChanged > tipTimeout)
+                if (lastTipChanged + tipTimeout < DateTimeOffset.Now)
                 {
                     var message =
                         $"Chain's tip is stale. (index: {BlockChain.Tip?.Index}, " +
                         $"hash: {BlockChain.Tip?.Hash}, timeout: {tipTimeout})";
                     Log.Error(message);
                     Properties.NodeExceptionOccurred(NodeExceptionType.TipNotChange, message);
+                    _stopRequested = true;
+                    break;
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();
@@ -447,6 +450,8 @@ namespace Libplanet.Standalone.Hosting
                         $"actual: {BlockChain.Tip?.Index}, buffer: {buffer})";
                     Log.Error(message);
                     Properties.NodeExceptionOccurred(NodeExceptionType.DemandTooHigh, message);
+                    _stopRequested = true;
+                    break;
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();
@@ -470,6 +475,8 @@ namespace Libplanet.Standalone.Hosting
                         Log.Error(message);
                         // _exceptionHandlerAction(RPCException.NetworkException, message);
                         Properties.NodeExceptionOccurred(NodeExceptionType.NoAnyPeer, message);
+                        _stopRequested = true;
+                        break;
                     }
 
                     count++;
