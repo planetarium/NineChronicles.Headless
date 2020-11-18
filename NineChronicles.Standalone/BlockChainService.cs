@@ -114,5 +114,16 @@ namespace NineChronicles.Standalone
                 string.Join(", ", _context.AddressesToSubscribe));
             return UnaryResult(true);
         }
+
+        public UnaryResult<bool> IsTransactionStaged(byte[] txidBytes)
+        {
+            var id = new TxId(txidBytes);
+            var isStaged = _blockChain.GetStagedTransactionIds().Contains(id);
+            Log.Debug(
+                "Transaction {id} is {1}.",
+                id,
+                isStaged ? "staged" : "not staged");
+            return UnaryResult(isStaged);
+        }
     }
 }
