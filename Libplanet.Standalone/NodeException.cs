@@ -9,6 +9,8 @@
         TipNotChange = 0x03,
         
         MessageNotReceived = 0x04,
+        
+        ActionTimeout = 0x05,
     }
     
     public class NodeException

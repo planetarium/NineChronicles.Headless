@@ -260,6 +260,7 @@ namespace NineChronicles.Standalone
                 services.AddSingleton(provider => NodeService.Swarm);
                 services.AddSingleton(provider => NodeService.BlockChain);
                 services.AddSingleton(provider => context);
+                services.AddSingleton(provider => NodeService.Properties);
             });
         }
 

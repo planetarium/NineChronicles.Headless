@@ -10,6 +10,7 @@ using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Renderers;
 using Libplanet.Net;
+using Libplanet.Standalone.Hosting;
 using Libplanet.Tx;
 using MagicOnion;
 using MagicOnion.Server;
@@ -18,6 +19,7 @@ using Nekoyume.Action;
 using Nekoyume.Shared.Services;
 using Serilog;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+using NodeExceptionType = Libplanet.Standalone.NodeExceptionType;
 
 namespace NineChronicles.Standalone
 {
@@ -27,12 +29,14 @@ namespace NineChronicles.Standalone
         private Swarm<NineChroniclesActionType> _swarm;
         private RpcContext _context;
         private Codec _codec;
+        private LibplanetNodeServiceProperties<NineChroniclesActionType> _libplanetNodeServiceProperties;
         private DelayedRenderer<NineChroniclesActionType> _delayedRenderer;
 
         public BlockChainService(
             BlockChain<NineChroniclesActionType> blockChain,
             Swarm<NineChroniclesActionType> swarm,
-            RpcContext context
+            RpcContext context,
+            LibplanetNodeServiceProperties<NineChroniclesActionType> libplanetNodeServiceProperties
         )
         {
             _blockChain = blockChain;
@@ -42,6 +46,7 @@ namespace NineChronicles.Standalone
             _swarm = swarm;
             _context = context;
             _codec = new Codec();
+            _libplanetNodeServiceProperties = libplanetNodeServiceProperties;
         }
 
         public UnaryResult<bool> PutTransaction(byte[] txBytes)
@@ -124,6 +129,19 @@ namespace NineChronicles.Standalone
                 id,
                 isStaged ? "staged" : "not staged");
             return UnaryResult(isStaged);
+        }
+
+        public UnaryResult<bool> PutException(string code, string message)
+        {
+            switch (code)
+            {
+                case "00":
+                    NodeExceptionType exceptionType = NodeExceptionType.ActionTimeout;
+                    _libplanetNodeServiceProperties.NodeExceptionOccurred(exceptionType, message);
+                    break;
+            }
+
+            return UnaryResult(true);
         }
     }
 }

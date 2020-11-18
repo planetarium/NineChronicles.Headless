@@ -36,6 +36,8 @@ namespace Libplanet.Standalone.Hosting
 
         public readonly Swarm<T> Swarm;
 
+        public readonly LibplanetNodeServiceProperties<T> Properties;
+        
         public AsyncManualResetEvent BootstrapEnded { get; }
 
         public AsyncManualResetEvent PreloadEnded { get; }
@@ -45,8 +47,6 @@ namespace Libplanet.Standalone.Hosting
         private Action<RPCException, string> _exceptionHandlerAction;
 
         private Action<bool> _preloadStatusHandlerAction;
-
-        protected LibplanetNodeServiceProperties<T> Properties;
 
         protected Progress<PreloadState> PreloadProgress;
 
