@@ -131,11 +131,11 @@ namespace NineChronicles.Standalone
             return UnaryResult(isStaged);
         }
 
-        public UnaryResult<bool> PutException(string code, string message)
+        public UnaryResult<bool> ReportException(string code, string message)
         {
             switch (code)
             {
-                case "00":
+                case "26":
                     NodeExceptionType exceptionType = NodeExceptionType.ActionTimeout;
                     _libplanetNodeServiceProperties.NodeExceptionOccurred(exceptionType, message);
                     break;
