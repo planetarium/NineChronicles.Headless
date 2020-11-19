@@ -37,8 +37,8 @@ namespace NineChronicles.Standalone.Executable
 
         public void Dispose()
         {
-            _client.Dispose();
             _cancellationTokenSource.Cancel();
+            _client.Dispose();
         }
 
         public AmazonCloudWatchLogsConfig Config { get; }
