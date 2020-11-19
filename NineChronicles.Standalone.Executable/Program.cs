@@ -116,7 +116,9 @@ namespace NineChronicles.Standalone.Executable
             [Option(Description = "The access key for AWS CloudWatch logging.")]
             string awsAccessKey = null,
             [Option(Description = "The secret key for AWS CloudWatch logging.")]
-            string awsSecretKey = null
+            string awsSecretKey = null,
+            [Option(Description = "The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2).")]
+            string awsRegion = null
         )
         {
 #if SENTRY || ! DEBUG
@@ -136,12 +138,13 @@ namespace NineChronicles.Standalone.Executable
                 });
 #endif
             AWSSink awsSink = null;
-            if (!(awsAccessKey is null) && !(awsSecretKey is null))
+            if (!(awsAccessKey is null) && !(awsSecretKey is null) && !(awsRegion is null))
             {
                 var credentials = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
+                var regionEndpoint = RegionEndpoint.GetBySystemName(awsRegion);
                 awsSink = new AWSSink(
                     credentials,
-                    RegionEndpoint.APNortheast2,
+                    regionEndpoint,
                     () => DateTime.UtcNow.Date.ToString("yyyy-MM-dd") + "_" + "9c-standalone");
                 loggerConf.WriteTo.Sink(awsSink);
             }
