@@ -66,7 +66,7 @@ namespace NineChronicles.Standalone.Executable
                 string sequenceToken = await GetSequenceToken(logGroupName, logStreamName);
 
                 cancellationToken.ThrowIfCancellationRequested();
-                var logEvent = await _queue.DequeueAsync(cancellationToken);
+                LogEvent logEvent = await _queue.DequeueAsync(cancellationToken);
                 var request = new PutLogEventsRequest(logGroupName, logStreamName, new List<InputLogEvent>
                 {
                     new InputLogEvent
