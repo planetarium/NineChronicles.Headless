@@ -63,8 +63,6 @@ namespace NineChronicles.Standalone.Executable
 
                 string logGroupName = LogGroupNameGetter();
                 string logStreamName = LogStreamNameGetter();
-                await CreateLogGroup(logGroupName);
-                await CreateLogStreamAsync(logGroupName, logStreamName);
                 string sequenceToken = await GetSequenceToken(logGroupName, logStreamName);
 
                 cancellationToken.ThrowIfCancellationRequested();
@@ -85,6 +83,9 @@ namespace NineChronicles.Standalone.Executable
 
         private async Task<string> GetSequenceToken(string logGroupName, string logStreamName)
         {
+            await CreateLogGroup(logGroupName);
+            await CreateLogStreamAsync(logGroupName, logStreamName);
+
             var logStreamsResponse = await _client.DescribeLogStreamsAsync(new DescribeLogStreamsRequest(logGroupName)
             {
                 LogStreamNamePrefix = logStreamName,
