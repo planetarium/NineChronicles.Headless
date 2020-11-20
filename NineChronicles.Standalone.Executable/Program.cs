@@ -4,7 +4,10 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon;
+using Amazon.Runtime;
 using Cocona;
+using Libplanet;
 using Libplanet.KeyStore;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Standalone.Properties;
@@ -109,13 +112,20 @@ namespace NineChronicles.Standalone.Executable
                     "The size of reorg interval. Works only when dev mode is on.  0 by default.")]
             int reorgInterval = 0,
             [Option(Description = "The log minimum level during standalone execution.")]
-            string logMinimumLevel = "debug"
+            string logMinimumLevel = "debug",
+            [Option(Description = "The access key for AWS CloudWatch logging.")]
+            string awsAccessKey = null,
+            [Option(Description = "The secret key for AWS CloudWatch logging.")]
+            string awsSecretKey = null,
+            [Option(Description = "The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2).")]
+            string awsRegion = null
         )
         {
 #if SENTRY || ! DEBUG
             try
             {
 #endif
+            
             // Setup logger.
             var loggerConf = new LoggerConfiguration()
                 .WriteTo.Console(outputTemplate: LogTemplate)
@@ -127,6 +137,18 @@ namespace NineChronicles.Standalone.Executable
                     o.InitializeSdk = false;
                 });
 #endif
+            AWSSink awsSink = null;
+            if (!(awsAccessKey is null) && !(awsSecretKey is null) && !(awsRegion is null))
+            {
+                var credentials = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
+                var regionEndpoint = RegionEndpoint.GetBySystemName(awsRegion);
+                awsSink = new AWSSink(
+                    credentials,
+                    regionEndpoint,
+                    () => DateTime.UtcNow.Date.ToString("yyyy-MM-dd") + "_" + "9c-standalone");
+                loggerConf.WriteTo.Sink(awsSink);
+            }
+
             Log.Logger = loggerConf.CreateLogger();
 
             if (!graphQLServer && !libplanetNode)
@@ -203,6 +225,8 @@ namespace NineChronicles.Standalone.Executable
                         workers: workers,
                         confirmations: confirmations,
                         maximumTransactions: maximumTransactions);
+
+
                 if (rpcServer)
                 {
                     rpcProperties = NineChroniclesNodeServiceProperties
@@ -225,6 +249,10 @@ namespace NineChronicles.Standalone.Executable
                         blockInterval: blockInterval,
                         reorgInterval: reorgInterval);
                 standaloneContext.NineChroniclesNodeService = nineChroniclesNodeService;
+                if (!(awsSink is null))
+                {
+                    awsSink.LogStreamNameGetter = () => nineChroniclesNodeService.PrivateKey.ToAddress().ToHex();   
+                }
 
                 if (libplanetNode)
                 {
