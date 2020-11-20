@@ -12,8 +12,12 @@ namespace NineChronicles.Standalone.GraphTypes
 
         public HashDigest<SHA256> Hash { get; set; }
 
+        public Address? Miner { get; set; }
+
         public BlockHeaderType()
         {
+            Name = "BlockHeader";
+
             Field<NonNullGraphType<IntGraphType>>(
                 name: "index",
                 resolve: context => context.Source.Index
@@ -26,6 +30,10 @@ namespace NineChronicles.Standalone.GraphTypes
                 name: "hash",
                 resolve: context => context.Source.Hash.ToString()
             );
+            Field<AddressType>(
+                name: "miner",
+                resolve: context => context.Source.Miner
+            );
         }
 
         public static BlockHeaderType FromBlock<T>(Block<T> block)
@@ -34,6 +42,7 @@ namespace NineChronicles.Standalone.GraphTypes
             {
                 Index = block.Index,
                 Hash = block.Hash,
+                Miner = block.Miner,
             };
     }
 }

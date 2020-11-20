@@ -37,13 +37,29 @@ namespace NineChronicles.Standalone.GraphTypes
                     {
                         Name = "limit",
                         Description = "The number of blocks to get."
+                    },
+                    new QueryArgument<AddressType>
+                    {
+                        Name = "miner",
+                        Description = "List only blocks mined by the given address.  " +
+                            "(List everything if omitted.)",
+                        DefaultValue = null,
                     }
                 ),
                 description: "The topmost blocks from the current node.",
-                resolve: context => GetTopmostBlocks(context.Source.BlockChain)
-                    .Take(context.GetArgument<int>("limit"))
-                    .Select(BlockHeaderType.FromBlock)
-            );
+                resolve: context =>
+                {
+                    IEnumerable<Block<NCAction>> blocks =
+                        GetTopmostBlocks(context.Source.BlockChain);
+                    if (context.GetArgument<Address?>("miner") is { } miner)
+                    {
+                        blocks = blocks.Where(b => b.Miner.Equals(miner));
+                    }
+
+                    return blocks
+                        .Take(context.GetArgument<int>("limit"))
+                        .Select(BlockHeaderType.FromBlock);
+                });
             Field<ListGraphType<TxIdType>>(
                 name: "stagedTxIds",
                 description: "Staged TxIds from the current node.",
