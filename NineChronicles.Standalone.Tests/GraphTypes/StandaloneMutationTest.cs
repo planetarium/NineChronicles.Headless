@@ -385,12 +385,13 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
         private Block<PolymorphicAction<ActionBase>> MakeGenesisBlock(
             Address adminAddress,
             Currency curreny,
-            IImmutableSet<Address> activatedAccounts
+            IImmutableSet<Address> activatedAccounts,
+            RankingState rankingState = null
         ) => BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
                 new PolymorphicAction<ActionBase>[]
                 {
                     new InitializeStates(
-                        rankingState: new RankingState(),
+                        rankingState: rankingState ?? new RankingState(),
                         shopState: new ShopState(),
                         gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
                         redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
@@ -401,58 +402,20 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                         activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
                         goldCurrencyState: new GoldCurrencyState(curreny),
                         goldDistributions: new GoldDistribution[0],
-                        tableSheets: new Dictionary<string, string>(),
+                        tableSheets: _sheets,
                         pendingActivationStates: new PendingActivationState[]{ }
                     ),
-                }
+                }, blockAction: ServiceBuilder.BlockPolicy.BlockAction
             );
 
         private BlockChain<PolymorphicAction<ActionBase>> GetContextFx(PrivateKey playerPrivateKey, RankingState ranking)
         {
             var goldCurrency = new Currency("NCG", 2, minter: null);
             Block<PolymorphicAction<ActionBase>> genesis =
-                BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
-                    new PolymorphicAction<ActionBase>[]
-                    {
-                        new InitializeStates(
-                            rankingState: ranking,
-                            shopState: new ShopState(),
-                            gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
-                            redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                                .Add("address", RedeemCodeState.Address.Serialize())
-                                .Add("map", Bencodex.Types.Dictionary.Empty)
-                            ),
-                            adminAddressState: new AdminState(default, 0),
-                            activatedAccountsState: new ActivatedAccountsState(),
-                            goldCurrencyState: new GoldCurrencyState(goldCurrency),
-                            goldDistributions: new GoldDistribution[0],
-                            tableSheets: _sheets,
-                            pendingActivationStates: new PendingActivationState[]{ }
-                        ),
-                    }
-                );
-            var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
-            {
-                Host = System.Net.IPAddress.Loopback.ToString(),
-                AppProtocolVersion = default,
-                GenesisBlock = genesis,
-                StorePath = null,
-                StoreStatesCacheSize = 2,
-                PrivateKey = playerPrivateKey,
-                Port = null,
-                MinimumDifficulty = 4096,
-                NoMiner = true,
-                Render = false,
-                Peers = ImmutableHashSet<Peer>.Empty,
-                TrustedAppProtocolVersionSigners = null,
-            };
-            var service = new NineChroniclesNodeService(properties, null)
-            {
-                PrivateKey = playerPrivateKey
-            };
+                MakeGenesisBlock(default, goldCurrency, ImmutableHashSet<Address>.Empty, ranking);
+            var service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, playerPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
-
             return StandaloneContextFx.BlockChain;
         }
     }

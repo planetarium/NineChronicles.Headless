@@ -112,6 +112,7 @@ namespace NineChronicles.Standalone.Tests.GraphTypes
                 GenesisBlock = genesisBlock,
                 StoreStatesCacheSize = 2,
                 PrivateKey = new PrivateKey(),
+                StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                 Port = null,
                 MinimumDifficulty = 1024,
                 NoMiner = true,

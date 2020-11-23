@@ -227,6 +227,10 @@ namespace NineChronicles.Standalone
             }
         }
 
+        internal static IBlockPolicy<PolymorphicAction<ActionBase>> GetBlockPolicy(int minimumDifficulty, int maximumTransactions) =>
+            new BlockPolicySource(Log.Logger, LogEventLevel.Debug)
+                .GetPolicy(minimumDifficulty, maximumTransactions);
+
         public IHostBuilder Configure(IHostBuilder hostBuilder)
         {
             RpcContext context = new RpcContext();
