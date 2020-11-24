@@ -135,8 +135,8 @@ namespace NineChronicles.Standalone
         {
             switch (code)
             {
-                case "27":
-                case "28":
+                case "30":
+                case "31":
                     NodeExceptionType exceptionType = NodeExceptionType.ActionTimeout;
                     _libplanetNodeServiceProperties.NodeExceptionOccurred(exceptionType, message);
                     break;
