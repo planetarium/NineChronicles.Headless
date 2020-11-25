@@ -21,7 +21,7 @@ namespace NineChronicles.Standalone.Executable
 
         private AsyncProducerConsumerQueue<LogEvent> _queue;
 
-        public AWSSink(AWSCredentials credentials, RegionEndpoint regionEndPoint, Func<string> logGroupNameGetter, Func<string> logStreamNameGetter = null)
+        public AWSSink(AWSCredentials credentials, RegionEndpoint regionEndPoint, string logGroupName, string logStreamName)
         {
             Config = new AmazonCloudWatchLogsConfig();
             Config.RegionEndpoint = regionEndPoint;
@@ -29,8 +29,8 @@ namespace NineChronicles.Standalone.Executable
             _client = new AmazonCloudWatchLogsClient(credentials, Config);
             _cancellationTokenSource = new CancellationTokenSource();
 
-            LogGroupNameGetter = logGroupNameGetter;
-            LogStreamNameGetter = logStreamNameGetter;
+            LogGroupName = logGroupName;
+            LogStreamName = logStreamName;
 
             Worker(_cancellationTokenSource.Token);
         }
@@ -43,9 +43,9 @@ namespace NineChronicles.Standalone.Executable
 
         public AmazonCloudWatchLogsConfig Config { get; }
 
-        public Func<string> LogGroupNameGetter { get; set; }
+        public string LogGroupName { get; }
 
-        [CanBeNull] public Func<string> LogStreamNameGetter { get; set; }
+        public string LogStreamName { get; }
 
         public void Emit(LogEvent logEvent)
         {
@@ -54,36 +54,42 @@ namespace NineChronicles.Standalone.Executable
 
         private async Task Worker(CancellationToken cancellationToken)
         {
+            string sequenceToken = await GetSequenceToken(LogGroupName, LogStreamName);
             while (!cancellationToken.IsCancellationRequested)
             {
-                while (LogStreamNameGetter is null)
+                try
                 {
-                    await Task.Yield();
-                }
-
-                string logGroupName = LogGroupNameGetter();
-                string logStreamName = LogStreamNameGetter();
-                string sequenceToken = await GetSequenceToken(logGroupName, logStreamName);
-
-                cancellationToken.ThrowIfCancellationRequested();
-                LogEvent logEvent = await _queue.DequeueAsync(cancellationToken);
-                var request = new PutLogEventsRequest(logGroupName, logStreamName, new List<InputLogEvent>
-                {
-                    new InputLogEvent
+                    cancellationToken.ThrowIfCancellationRequested();
+                    LogEvent logEvent = await _queue.DequeueAsync(cancellationToken);
+                    var request = new PutLogEventsRequest(LogGroupName, LogStreamName, new List<InputLogEvent>
                     {
-                        Message = logEvent.RenderMessage(),
-                        Timestamp = logEvent.Timestamp.UtcDateTime,
-                    }
-                });
-                request.SequenceToken = sequenceToken;
+                        new InputLogEvent
+                        {
+                            Message = logEvent.RenderMessage(),
+                            Timestamp = logEvent.Timestamp.UtcDateTime,
+                        }
+                    });
+                    request.SequenceToken = sequenceToken;
 
-                await _client.PutLogEventsAsync(request, cancellationToken);
+                    var resp = await _client.PutLogEventsAsync(request, cancellationToken);
+                    sequenceToken = resp.NextSequenceToken;
+                }
+                catch (OperationCanceledException e)
+                {
+                    Console.Error.WriteLine($"Worker canceled: {e}.");
+                    throw;
+                }
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine($"Worker exception occured: {e}.");
+                }
             }
+
+            Console.Error.WriteLine("Worker ended.");
         }
 
         private async Task<string> GetSequenceToken(string logGroupName, string logStreamName)
         {
-            await CreateLogGroup(logGroupName);
             await CreateLogStreamAsync(logGroupName, logStreamName);
 
             var logStreamsResponse = await _client.DescribeLogStreamsAsync(new DescribeLogStreamsRequest(logGroupName)
@@ -95,17 +101,6 @@ namespace NineChronicles.Standalone.Executable
             return stream.UploadSequenceToken;
         }
 
-        private async Task CreateLogGroup(string logGroupName)
-        {
-            try
-            {
-                await _client.CreateLogGroupAsync(new CreateLogGroupRequest(logGroupName));
-            }
-            catch (ResourceAlreadyExistsException)
-            {
-            }
-        }
-        
         private async Task CreateLogStreamAsync(string logGroupName, string logStreamName)
         {
             try
