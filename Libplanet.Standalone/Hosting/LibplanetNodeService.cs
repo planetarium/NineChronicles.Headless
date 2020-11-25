@@ -328,8 +328,10 @@ namespace Libplanet.Standalone.Hosting
             }
             else if (preload)
             {
+                _preloadStatusHandlerAction(true);
                 BootstrapEnded.Set();
                 PreloadEnded.Set();
+                _preloadStatusHandlerAction(false);
             }
 
             async Task ReconnectToSeedPeers(CancellationToken token)
