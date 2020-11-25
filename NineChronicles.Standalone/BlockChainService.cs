@@ -137,6 +137,11 @@ namespace NineChronicles.Standalone
 
         public UnaryResult<bool> ReportException(string code, string message)
         {
+            Log.Debug(
+                $"Reported exception from Unity player. " +
+                $"(code: {code}, message: {message})"
+            );
+
             switch (code)
             {
                 case "26":
