@@ -59,6 +59,8 @@ namespace NineChronicles.Standalone
                 try
                 {
                     tx.Validate();
+                    Log.Debug("PutTransaction: (nonce: {nonce}, id: {id})", tx.Nonce, tx.Id);
+                    Log.Debug("StagedTransactions: {txIds}", string.Join(", ", _blockChain.GetStagedTransactionIds()));
                     _blockChain.StageTransaction(tx);
                     _swarm.BroadcastTxs(new[] {tx});
 
@@ -107,7 +109,9 @@ namespace NineChronicles.Standalone
         public UnaryResult<long> GetNextTxNonce(byte[] addressBytes)
         {
             var address = new Address(addressBytes);
-            return UnaryResult(_blockChain.GetNextTxNonce(address));
+            var nonce = _blockChain.GetNextTxNonce(address);
+            Log.Debug("GetNextTxNonce: {nonce}", nonce);
+            return UnaryResult(nonce);
         }
 
         public UnaryResult<bool> SetAddressesToSubscribe(IEnumerable<byte[]> addressesBytes)
