@@ -67,6 +67,10 @@ namespace Libplanet.Standalone.Tests.Hosting
         {
             public IAction BlockAction => null;
 
+            public int MaxTransactionsPerBlock => int.MaxValue;
+
+            public int GetMaxBlockBytes(long index) => int.MaxValue;
+
             public bool DoesTransactionFollowsPolicy(
                 Transaction<DummyAction> transaction,
                 BlockChain<DummyAction> blockChain

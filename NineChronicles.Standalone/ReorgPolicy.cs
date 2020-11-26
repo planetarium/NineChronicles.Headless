@@ -17,6 +17,10 @@ namespace NineChronicles.Standalone
             _difficulty = difficulty;
         }
 
+        public int MaxTransactionsPerBlock => int.MaxValue;
+
+        public int GetMaxBlockBytes(long index) => int.MaxValue;
+
         public bool DoesTransactionFollowsPolicy(
             Transaction<PolymorphicAction<ActionBase>> transaction,
             BlockChain<PolymorphicAction<ActionBase>> blockChain
