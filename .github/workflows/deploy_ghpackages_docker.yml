@@ -1,0 +1,23 @@
+name: deploy github packages (docker)
+
+on: 
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Build the Docker image
+        run: docker build . -t docker.pkg.github.com/planetarium/ninechronicles.standalone/ninechronicles-headless:git-${{ github.sha }} -t docker.pkg.github.com/planetarium/ninechronicles.standalone/ninechronicles-headless:latest --build-arg COMMIT=git-${{ github.sha }}
+      - name: login
+        run: docker login docker.pkg.github.com -u '${{ secrets.GH_USERNAME }}' -p '${{ secrets.GH_ACCESS_TOKEN }}'
+      - name: push git version
+        run: docker push docker.pkg.github.com/planetarium/ninechronicles.standalone/ninechronicles-headless:git-${{ github.sha }}
+      - name: push latest version
+        run: docker push docker.pkg.github.com/planetarium/ninechronicles.standalone/ninechronicles-headless:latest
