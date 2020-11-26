@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -137,15 +138,19 @@ namespace NineChronicles.Standalone.Executable
                     o.InitializeSdk = false;
                 });
 #endif
-            AWSSink awsSink = null;
             if (!(awsAccessKey is null) && !(awsSecretKey is null) && !(awsRegion is null))
             {
                 var credentials = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
                 var regionEndpoint = RegionEndpoint.GetBySystemName(awsRegion);
-                awsSink = new AWSSink(
+
+                var guid = LoadAWSSinkGuid() ?? Guid.NewGuid();
+                StoreAWSSinkGuid(guid);
+
+                var awsSink = new AWSSink(
                     credentials,
                     regionEndpoint,
-                    () => DateTime.UtcNow.Date.ToString("yyyy-MM-dd") + "_" + "9c-standalone");
+                    "9c-standalone-logs",
+                    guid.ToString());
                 loggerConf.WriteTo.Sink(awsSink);
             }
 
@@ -249,10 +254,6 @@ namespace NineChronicles.Standalone.Executable
                         blockInterval: blockInterval,
                         reorgInterval: reorgInterval);
                 standaloneContext.NineChroniclesNodeService = nineChroniclesNodeService;
-                if (!(awsSink is null))
-                {
-                    awsSink.LogStreamNameGetter = () => nineChroniclesNodeService.PrivateKey.ToAddress().ToHex();   
-                }
 
                 if (libplanetNode)
                 {
@@ -314,6 +315,25 @@ namespace NineChronicles.Standalone.Executable
 
                 await Task.Delay(1000, cancellationToken);
             }
+        }
+
+        private Guid? LoadAWSSinkGuid()
+        {
+            string path = AWSSinkGuidPath();
+            return File.Exists(path) ? Guid.Parse(File.ReadAllText(AWSSinkGuidPath())) : (Guid?)null;
+        }
+
+        private void StoreAWSSinkGuid(Guid guid)
+        {
+            File.WriteAllText(AWSSinkGuidPath(), guid.ToString());
+        }
+
+        private string AWSSinkGuidPath()
+        {
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "planetarium",
+                ".aws_sink_cloudwatch_guid");
         }
     }
 }
