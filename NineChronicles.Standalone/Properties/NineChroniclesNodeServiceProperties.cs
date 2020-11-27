@@ -34,7 +34,6 @@ namespace NineChronicles.Standalone.Properties
                 string[] trustedAppProtocolVersionSigners = null,
                 bool noMiner = false,
                 bool render = false,
-                bool mpt = true,
                 int workers = 5,
                 int confirmations = 0,
                 int maximumTransactions = 100)
@@ -78,7 +77,6 @@ namespace NineChronicles.Standalone.Properties
                 StoreStatesCacheSize = storeStateCacheSize,
                 MinimumDifficulty = minimumDifficulty,
                 Render = render,
-                Mpt = mpt,
                 Workers = workers,
                 Confirmations = Math.Max(confirmations, 0),
                 MaximumTransactions = maximumTransactions,

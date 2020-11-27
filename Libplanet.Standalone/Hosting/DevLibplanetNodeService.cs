@@ -64,8 +64,7 @@ namespace Libplanet.Standalone.Hosting
             (SubStore, SubStateStore) = LoadStore(
                 properties.StorePath is null ? null : Path.Combine(properties.StorePath, "sub"),
                 properties.StoreType,
-                properties.StoreStatesCacheSize,
-                properties.Mpt);
+                properties.StoreStatesCacheSize);
 
             SubChain = new BlockChain<T>(
                 policy: hardPolicy,

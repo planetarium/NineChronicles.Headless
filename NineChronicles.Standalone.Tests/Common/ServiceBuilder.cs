@@ -5,30 +5,42 @@ using Libplanet.Net;
 using Libplanet.Standalone.Hosting;
 using Nekoyume.Action;
 using System.Collections.Immutable;
+using System.IO;
+using Libplanet.Blockchain.Policies;
 
 namespace NineChronicles.Standalone.Tests.Common
 {
     public static class ServiceBuilder
     {
+        public const int MinimumDifficulty = 4096;
+
+        public const int MaximumTransactions = 100;
+
+        public static IBlockPolicy<PolymorphicAction<ActionBase>> BlockPolicy =>
+            NineChroniclesNodeService.GetBlockPolicy(MinimumDifficulty, MaximumTransactions);
+
         public static NineChroniclesNodeService CreateNineChroniclesNodeService(
-            Block<PolymorphicAction<ActionBase>> genesis
+            Block<PolymorphicAction<ActionBase>> genesis,
+            PrivateKey privateKey = null
         )
         {
-            var privateKey = new PrivateKey();
+            privateKey ??= new PrivateKey();
+            var storePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
                 AppProtocolVersion = default,
                 GenesisBlock = genesis,
-                StorePath = null,
+                StorePath = storePath,
                 StoreStatesCacheSize = 2,
                 PrivateKey = privateKey,
                 Port = null,
-                MinimumDifficulty = 4096,
+                MinimumDifficulty = MinimumDifficulty,
                 NoMiner = true,
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
+                MaximumTransactions = MaximumTransactions,
             };
             return new NineChroniclesNodeService(properties, null)
             {

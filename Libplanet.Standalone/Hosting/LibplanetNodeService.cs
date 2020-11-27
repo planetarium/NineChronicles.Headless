@@ -91,8 +91,7 @@ namespace Libplanet.Standalone.Hosting
             (Store, StateStore) = LoadStore(
                 Properties.StorePath,
                 Properties.StoreType,
-                Properties.StoreStatesCacheSize,
-                Properties.Mpt);
+                Properties.StoreStatesCacheSize);
 
             var pendingTxs = Store.IterateStagedTransactionIds()
                 .ToImmutableHashSet();
@@ -236,7 +235,7 @@ namespace Libplanet.Standalone.Hosting
             return Swarm.StopAsync(cancellationToken);
         }
 
-        protected (BaseBlockStatesStore, IStateStore) LoadStore(string path, string type, int statesCacheSize, bool mpt)
+        protected (BaseBlockStatesStore, IStateStore) LoadStore(string path, string type, int statesCacheSize)
         {
             BaseBlockStatesStore store = null;
             IStateStore stateStore = null;
@@ -268,16 +267,9 @@ namespace Libplanet.Standalone.Hosting
             store ??= new DefaultStore(
                 path, flush: false, compress: true, statesCacheSize: statesCacheSize);
 
-            if (mpt)
-            {
-                IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states")),
-                    stateHashKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "state_hashes"));
-                stateStore = new TrieStateStore(stateKeyValueStore, stateHashKeyValueStore);
-            }
-            else
-            {
-                stateStore = store;
-            }
+            IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states")),
+                stateHashKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "state_hashes"));
+            stateStore = new TrieStateStore(stateKeyValueStore, stateHashKeyValueStore);
 
             return (store, stateStore);
         }

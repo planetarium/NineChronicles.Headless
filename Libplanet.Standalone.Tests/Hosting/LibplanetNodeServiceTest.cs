@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using Bencodex.Types;
@@ -27,6 +28,7 @@ namespace Libplanet.Standalone.Tests.Hosting
                     GenesisBlock = genesisBlock,
                     PrivateKey = new PrivateKey(),
                     StoreStatesCacheSize = 2,
+                    StorePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()),
                     Host = IPAddress.Loopback.ToString(),
                 },
                 blockPolicy: new BlockPolicy(),
