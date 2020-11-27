@@ -139,10 +139,21 @@ namespace NineChronicles.Standalone.Executable
                     o.InitializeSdk = false;
                 });
 #endif
-            if ((!(awsAccessKey is null) && !(awsSecretKey is null)) ^ !(awsCognitoIdentity is null) && !(awsRegion is null))
+            bool useBasicAwsCredentials = !(awsAccessKey is null) && !(awsSecretKey is null);
+            bool useCognitoCredentials = !(awsCognitoIdentity is null);
+            if (useBasicAwsCredentials && useCognitoCredentials)
+            {
+                const string message =
+                    "You must choose to use only one credential between basic credential " +
+                    "(i.e., --aws-access-key, --aws-secret-key) and " +
+                    "Cognito credential (i.e., --aws-cognito-identity).";
+                throw new CommandExitedException(message, -1);
+            }
+
+            if (useBasicAwsCredentials ^ useCognitoCredentials  && !(awsRegion is null))
             {
                 var regionEndpoint = RegionEndpoint.GetBySystemName(awsRegion);
-                AWSCredentials credentials = !(awsCognitoIdentity is null)
+                AWSCredentials credentials = useCognitoCredentials
                     ? (AWSCredentials)new CognitoAWSCredentials(awsCognitoIdentity, regionEndpoint)
                     : (AWSCredentials)new BasicAWSCredentials(awsAccessKey, awsSecretKey);
 
