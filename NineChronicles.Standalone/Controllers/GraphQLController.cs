@@ -97,7 +97,8 @@ namespace NineChronicles.Standalone.Controllers
         [HttpPost(SetMiningEndpoint)]
         public IActionResult SetMining([FromBody] SetMiningRequest request)
         {
-            if (request.Mine)
+            bool mine = request.Mine;
+            if (mine)
             {
                 StandaloneContext.NineChroniclesNodeService.StartMining();
             }
@@ -106,7 +107,8 @@ namespace NineChronicles.Standalone.Controllers
                 StandaloneContext.NineChroniclesNodeService.StopMining();
             }
 
-            return Ok($"Set mining status to {request.Mine}.");
+            StandaloneContext.IsMining = mine;
+            return Ok($"Set mining status to {mine}.");
         }
 
         [HttpPost(CheckPeerEndpoint)]
