@@ -53,6 +53,7 @@ namespace NineChronicles.Standalone.GraphTypes
                 {
                     BootstrapEnded = standaloneContext.BootstrapEnded,
                     PreloadEnded = standaloneContext.PreloadEnded,
+                    IsMining = standaloneContext.IsMining,
                     BlockChain = standaloneContext.BlockChain,
                     Store = standaloneContext.Store,
                 }

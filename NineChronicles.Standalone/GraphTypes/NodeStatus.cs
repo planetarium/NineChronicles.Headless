@@ -17,6 +17,8 @@ namespace NineChronicles.Standalone.GraphTypes
         public bool BootstrapEnded { get; set; }
 
         public bool PreloadEnded { get; set; }
+        
+        public bool IsMining { get; set; }
 
         public BlockChain<NCAction> BlockChain { get; set; }
 
@@ -67,6 +69,10 @@ namespace NineChronicles.Standalone.GraphTypes
             );
             Field<NonNullGraphType<BlockHeaderType>>(name: "genesis",
                 resolve: context => BlockHeaderType.FromBlock(context.Source.BlockChain.Genesis));
+            Field<NonNullGraphType<BooleanGraphType>>(name: "isMining",
+                description: "Whether it is mining.",
+                resolve: context => context.Source.IsMining
+            );
         }
 
         private IEnumerable<Block<T>> GetTopmostBlocks<T>(BlockChain<T> blockChain)
