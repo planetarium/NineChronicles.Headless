@@ -15,12 +15,13 @@
 
 ```
 $ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
-Usage: NineChronicles.Headless.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--minimum-difficulty <Int32>] [--private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-pro
-tocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--graphql-secret-token-path <String>] [--no-cors] [--libplanet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>]
-[--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-action-renders] [--log-minimum-level <String>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--tx-life-time <Int32>] [--message-timeout <Int32>
-] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--help] [--version]
+Usage: NineChronicles.Headless.Executable [command]
+Usage: NineChronicles.Headless.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--swarm-private-key <String>] [--minimum-difficulty <Int32>] [--private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--graphql-secret-token-path <String>] [--no-cors] [--libplanet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-action-renders] [--log-minimum-level <String>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--help] [--version]
 
-Run headless application with options.
+NineChronicles.Headless.Executable
+
+Commands:
+  validation
 
 Options:
   --no-miner
@@ -28,8 +29,9 @@ Options:
   -G, --genesis-block-path <String>                         (Default: )
   -H, --host <String>                                       (Default: )
   -P, --port <Nullable`1>                                   (Default: )
+  --swarm-private-key <String>                             The private key used for signing messages and to specify your node. If you leave this this null, randomly generated value will be used. (Default: )
   -D, --minimum-difficulty <Int32>                          (Default: 5000000)
-  --private-key <String>                                    (Default: )
+  --private-key <String>                                   The private key used for mining blocks and signing txs. Must not be null if you want to turn on mining with libplanet-node. (Default: )
   --store-type <String>                                     (Default: )
   --store-path <String>                                     (Default: )
   -I, --ice-server <String>...                              (Default: )
