@@ -63,9 +63,15 @@ namespace NineChronicles.Headless.Executable
             string host = null,
             [Option('P')]
             ushort? port = null,
+            [Option("swarm-private-key",
+                Description = "The private key used for signing messages and to specify your node. " +
+                              "If you leave this this null, randomly generated value will be used.")]
+            string swarmPrivateKeyString = null,
             [Option('D')]
             int minimumDifficulty = 5000000,
-            [Option("private-key")]
+            [Option("private-key",
+                Description = "The private key used for mining blocks and signing txs. " +
+                              "Must not be null if you want to turn on mining with libplanet-node.")]
             string privateKeyString = null,
             string storeType = null,
             string storePath = null,
