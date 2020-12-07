@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.CognitoIdentity;
 using Amazon.Runtime;
 using Cocona;
 using Libplanet;
@@ -112,6 +113,8 @@ namespace NineChronicles.Standalone.Executable
             int reorgInterval = 0,
             [Option(Description = "The log minimum level during standalone execution.")]
             string logMinimumLevel = "debug",
+            [Option(Description = "The Cognito identity for AWS CloudWatch logging.")]
+            string awsCognitoIdentity = null,
             [Option(Description = "The access key for AWS CloudWatch logging.")]
             string awsAccessKey = null,
             [Option(Description = "The secret key for AWS CloudWatch logging.")]
@@ -136,10 +139,23 @@ namespace NineChronicles.Standalone.Executable
                     o.InitializeSdk = false;
                 });
 #endif
-            if (!(awsAccessKey is null) && !(awsSecretKey is null) && !(awsRegion is null))
+            bool useBasicAwsCredentials = !(awsAccessKey is null) && !(awsSecretKey is null);
+            bool useCognitoCredentials = !(awsCognitoIdentity is null);
+            if (useBasicAwsCredentials && useCognitoCredentials)
             {
-                var credentials = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
+                const string message =
+                    "You must choose to use only one credential between basic credential " +
+                    "(i.e., --aws-access-key, --aws-secret-key) and " +
+                    "Cognito credential (i.e., --aws-cognito-identity).";
+                throw new CommandExitedException(message, -1);
+            }
+
+            if (useBasicAwsCredentials ^ useCognitoCredentials  && !(awsRegion is null))
+            {
                 var regionEndpoint = RegionEndpoint.GetBySystemName(awsRegion);
+                AWSCredentials credentials = useCognitoCredentials
+                    ? (AWSCredentials)new CognitoAWSCredentials(awsCognitoIdentity, regionEndpoint)
+                    : (AWSCredentials)new BasicAWSCredentials(awsAccessKey, awsSecretKey);
 
                 var guid = LoadAWSSinkGuid() ?? Guid.NewGuid();
                 StoreAWSSinkGuid(guid);
