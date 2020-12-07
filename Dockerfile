@@ -31,4 +31,4 @@ COPY --from=build-env /app/out .
 
 VOLUME /data
 
-ENTRYPOINT ["dotnet", "NineChronicles.Standalone.Executable.dll", "--host", "0.0.0.0", "--port", "31234"]
+ENTRYPOINT ["dotnet", "NineChronicles.Standalone.Executable.dll"]
