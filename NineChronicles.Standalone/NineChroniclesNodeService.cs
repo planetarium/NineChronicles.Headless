@@ -21,11 +21,14 @@ using Microsoft.Extensions.Hosting;
 using Nekoyume.Action;
 using Nekoyume.BlockChain;
 using Nekoyume.Model.State;
+using NineChronicles.RPC.Shared.Exceptions;
 using NineChronicles.Standalone.Properties;
 using Nito.AsyncEx;
 using Serilog;
 using Serilog.Events;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+using StrictRenderer =
+    Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer<Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>>;
 
 namespace NineChronicles.Standalone
 {
@@ -102,7 +105,12 @@ namespace NineChronicles.Standalone
             ExceptionRenderer = new ExceptionRenderer();
             NodeStatusRenderer = new NodeStatusRenderer();
             var renderers = new List<IRenderer<NineChroniclesActionType>>();
-            var validatingRenderer = new ValidatingActionRenderer<NineChroniclesActionType>();
+            var strictRenderer = new StrictRenderer(onError: exc =>
+                ExceptionRenderer.RenderException(
+                    RPCException.InvalidRenderException,
+                    exc.Message.Split("\n")[0]
+                )
+            );
             if (Properties.Render)
             {
                 renderers.Add(blockPolicySource.BlockRenderer);
@@ -116,8 +124,8 @@ namespace NineChronicles.Standalone
             if (strictRendering)
             {
                 Log.Debug(
-                    $"Strict rendering is on. Add {nameof(ValidatingActionRenderer<NineChroniclesActionType>)}.");
-                renderers.Add(validatingRenderer);
+                    $"Strict rendering is on. Add {nameof(StrictRenderer)}.");
+                renderers.Add(strictRenderer);
             }
 
             async Task minerLoopAction(
@@ -218,8 +226,7 @@ namespace NineChronicles.Standalone
                 );
             }
 
-            validatingRenderer.Store = NodeService?.Store ?? throw new Exception("Store is null.");
-            validatingRenderer.BlockChain = NodeService?.BlockChain ?? throw new Exception("BlockChain is null.");
+            strictRenderer.BlockChain = NodeService?.BlockChain ?? throw new Exception("BlockChain is null.");
             if (NodeService?.BlockChain?.GetState(AuthorizedMinersState.Address) is Dictionary ams &&
                 blockPolicy is BlockPolicy bp)
             {
