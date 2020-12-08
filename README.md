@@ -1,11 +1,11 @@
-# NineChronicles Standalone
+# NineChronicles Headless
 
 ## Run
 
 ```
-$ dotnet run --project ./NineChronicles.Standalone.Executable/ -- --help
+$ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
 
-Usage: NineChronicles.Standalone.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--minimum-difficulty <Int32>] [--private-key <String>] [--store-type <String>] [--st
+Usage: NineChronicles.Headless.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--minimum-difficulty <Int32>] [--private-key <String>] [--store-type <String>] [--st
 ore-path <String>] [--ice-server <String>...] [--peer <String>...] [--no-trusted-state-validators] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [
 --graphql-host <String>] [--graphql-port <Nullable`1>] [--libplanet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-m
 inimum-level <String>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--help] [--version]
@@ -88,7 +88,7 @@ $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 
 Formatting for `PrivateKey` or `Peer` follows the format in [Nekoyume Project README][../README.md].
 
-## How to run NineChronicles Standalone on AWS EC2 instance using Docker
+## How to run NineChronicles Headless on AWS EC2 instance using Docker
 
 ### On Your AWS EC2 Instance
 
@@ -148,21 +148,21 @@ planetariumhq/ninechronicles-headless \
 #### 1. Build Docker image with the tag name in [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] format.
 
 ```
-$ docker build . --tag 9c/9c-standalone --build-arg COMMIT=9c-1
+$ docker build . --tag 9c/9c-headless --build-arg COMMIT=9c-1
 
 Usage: docker build . --tag [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<TAGNAME>] --build-arg COMMIT=[<VERSION_SUFFIX>]
 ```
 - [Docker Build Guide](https://docs.docker.com/engine/reference/commandline/build/)
 
-![Docker Build](https://i.imgur.com/vc6CnbR.png)
+![Docker Build](https://i.imgur.com/iz74t3J.png)
 
 #### 2. Push your Docker image to your Docker Hub account.
 
 ```
-$ docker push 9c/9c-standalone:latest
+$ docker push 9c/9c-headless:latest
 
 Usage: docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<TAGNAME>]
 ```
 - [Docker Push Guide](https://docs.docker.com/engine/reference/commandline/push/)
 
-![Docker Push](https://i.imgur.com/IRIXXjg.png)
+![Docker Push](https://i.imgur.com/NWUW9LS.png)

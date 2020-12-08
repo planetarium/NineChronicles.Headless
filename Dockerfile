@@ -4,19 +4,19 @@ ARG COMMIT
 
 # Copy csproj and restore as distinct layers
 COPY ./Lib9c/Lib9c/Lib9c.csproj ./Lib9c/
-COPY ./Libplanet.Standalone/Libplanet.Standalone.csproj ./Libplanet.Standalone/
+COPY ./Libplanet.Headless/Libplanet.Headless.csproj ./Libplanet.Headless/
 COPY ./NineChronicles.RPC.Shared/NineChronicles.RPC.Shared/NineChronicles.RPC.Shared.csproj ./NineChronicles.RPC.Shared/
-COPY ./NineChronicles.Standalone/NineChronicles.Standalone.csproj ./NineChronicles.Standalone/
-COPY ./NineChronicles.Standalone.Executable/NineChronicles.Standalone.Executable.csproj ./NineChronicles.Standalone.Executable/
+COPY ./NineChronicles.Headless/NineChronicles.Headless.csproj ./NineChronicles.Headless/
+COPY ./NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj ./NineChronicles.Headless.Executable/
 RUN dotnet restore Lib9c
-RUN dotnet restore Libplanet.Standalone
+RUN dotnet restore Libplanet.Headless
 RUN dotnet restore NineChronicles.RPC.Shared
-RUN dotnet restore NineChronicles.Standalone
-RUN dotnet restore NineChronicles.Standalone.Executable
+RUN dotnet restore NineChronicles.Headless
+RUN dotnet restore NineChronicles.Headless.Executable
 
 # Copy everything else and build
 COPY . ./
-RUN dotnet publish NineChronicles.Standalone.Executable/NineChronicles.Standalone.Executable.csproj \
+RUN dotnet publish NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj \
     -c Release \
     -r linux-x64 \
     -o out \
@@ -31,4 +31,4 @@ COPY --from=build-env /app/out .
 
 VOLUME /data
 
-ENTRYPOINT ["dotnet", "NineChronicles.Standalone.Executable.dll"]
+ENTRYPOINT ["dotnet", "NineChronicles.Headless.Executable.dll"]
