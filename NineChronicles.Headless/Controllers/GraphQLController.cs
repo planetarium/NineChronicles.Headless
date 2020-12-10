@@ -47,14 +47,15 @@ namespace NineChronicles.Headless.Controllers
         [HttpPost(RunStandaloneEndpoint)]
         public IActionResult RunStandalone()
         {
+            if (StandaloneContext.NineChroniclesNodeService is null)
+            {
+                // Waiting node service.
+                return new StatusCodeResult(StatusCodes.Status409Conflict);
+            }
+
             try
             {
                 IHostBuilder nineChroniclesNodeHostBuilder = Host.CreateDefaultBuilder();
-                if (StandaloneContext.NineChroniclesNodeService is null)
-                {
-                  // Waiting node service.
-                  return new StatusCodeResult(StatusCodes.Status409Conflict);
-                }
                 nineChroniclesNodeHostBuilder =
                     StandaloneContext.NineChroniclesNodeService.Configure(
                         nineChroniclesNodeHostBuilder);
@@ -89,6 +90,12 @@ namespace NineChronicles.Headless.Controllers
         [HttpPost(SetPrivateKeyEndpoint)]
         public IActionResult SetPrivateKey([FromBody] SetPrivateKeyRequest request)
         {
+            if (StandaloneContext.NineChroniclesNodeService is null)
+            {
+                // Waiting node service.
+                return new StatusCodeResult(StatusCodes.Status409Conflict);
+            }
+
             var privateKey = new PrivateKey(ByteUtil.ParseHex(request.PrivateKeyString));
             StandaloneContext.NineChroniclesNodeService.PrivateKey = privateKey;
             return Ok($"Private key set ({privateKey.ToAddress()}).");
@@ -97,6 +104,12 @@ namespace NineChronicles.Headless.Controllers
         [HttpPost(SetMiningEndpoint)]
         public IActionResult SetMining([FromBody] SetMiningRequest request)
         {
+            if (StandaloneContext.NineChroniclesNodeService is null)
+            {
+                // Waiting node service.
+                return new StatusCodeResult(StatusCodes.Status409Conflict);
+            }
+
             bool mine = request.Mine;
             if (mine)
             {
@@ -114,9 +127,16 @@ namespace NineChronicles.Headless.Controllers
         [HttpPost(CheckPeerEndpoint)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CheckPeer([FromBody] CheckPeerRequest request)
         {
+            if (StandaloneContext.NineChroniclesNodeService is null)
+            {
+                // Waiting node service.
+                return new StatusCodeResult(StatusCodes.Status409Conflict);
+            }
+
             try
             {
                 var exist = await StandaloneContext.NineChroniclesNodeService.CheckPeer(request.AddressString);
