@@ -25,6 +25,18 @@ namespace NineChronicles.Headless.GraphTypes
                     var address = context.GetArgument<Address>("address");
                     return new AvatarState((Dictionary)context.Source.GetState(address));
                 });
+            Field<RankingMapStateType>(
+                name: "rankingMap",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "index",
+                    }),
+                resolve: context =>
+                {
+                    var index = context.GetArgument<int>("index");
+                    return new RankingMapState((Dictionary)context.Source.GetState(RankingState.Derive(index)));
+                });
         }
     }
 }
