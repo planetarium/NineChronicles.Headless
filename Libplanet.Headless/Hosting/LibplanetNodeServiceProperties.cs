@@ -29,8 +29,6 @@ namespace Libplanet.Headless.Hosting
 
         public IEnumerable<Peer> Peers { get; set; }
 
-        public IImmutableSet<Address> TrustedStateValidators { get; set; }
-
         public bool NoMiner { get; set; }
 
         public IEnumerable<IceServer> IceServers { get; set; }

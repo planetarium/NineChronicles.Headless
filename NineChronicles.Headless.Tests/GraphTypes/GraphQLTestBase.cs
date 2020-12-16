@@ -21,6 +21,7 @@ using NineChronicles.Headless.GraphTypes;
 using Serilog;
 using Xunit.Abstractions;
 using RewardGold = NineChronicles.Headless.Tests.Common.Actions.RewardGold;
+using Libplanet.Store.Trie;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -35,13 +36,17 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             _output = output;
 
             var store = new DefaultStore(null);
-            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock();
+            var stateStore = new TrieStateStore(
+                new DefaultKeyValueStore(null),
+                new DefaultKeyValueStore(null)
+            );
+            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(blockAction: new RewardGold());
 
             var blockPolicy = new BlockPolicy<PolymorphicAction<ActionBase>>(blockAction: new RewardGold());
             var blockChain = new BlockChain<PolymorphicAction<ActionBase>>(
                 blockPolicy,
                 store,
-                store,
+                stateStore,
                 genesisBlock,
                 renderers: new IRenderer<PolymorphicAction<ActionBase>>[] { new BlockRenderer(), new ActionRenderer() }
             );

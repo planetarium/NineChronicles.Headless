@@ -66,8 +66,6 @@ namespace NineChronicles.Headless.Executable
             string[] iceServerStrings = null,
             [Option("peer")]
             string[] peerStrings = null,
-            [Option("no-trusted-state-validators")]
-            bool noTrustedStateValidators = false,
             [Option("trusted-app-protocol-version-signer", new[] { 'T' },
                     Description = "Trustworthy signers who claim new app protocol versions")]
             string[] trustedAppProtocolVersionSigners = null,
@@ -237,7 +235,6 @@ namespace NineChronicles.Headless.Executable
                         100,
                         iceServerStrings,
                         peerStrings,
-                        noTrustedStateValidators,
                         trustedAppProtocolVersionSigners,
                         noMiner,
                         workers: workers,

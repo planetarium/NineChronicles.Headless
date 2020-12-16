@@ -30,7 +30,6 @@ namespace NineChronicles.Headless.Properties
                 int storeStateCacheSize = 100,
                 string[] iceServerStrings = null,
                 string[] peerStrings = null,
-                bool noTrustedStateValidators = false,
                 string[] trustedAppProtocolVersionSigners = null,
                 bool noMiner = false,
                 bool render = false,
@@ -48,16 +47,6 @@ namespace NineChronicles.Headless.Properties
             var iceServers = iceServerStrings.Select(LoadIceServer).ToImmutableArray();
             var peers = peerStrings.Select(LoadPeer).ToImmutableArray();
 
-            IImmutableSet<Address> trustedStateValidators;
-            if (noTrustedStateValidators)
-            {
-                trustedStateValidators = ImmutableHashSet<Address>.Empty;
-            }
-            else
-            {
-                trustedStateValidators = peers.Select(p => p.Address).ToImmutableHashSet();
-            }
-
             return new LibplanetNodeServiceProperties<NineChroniclesActionType>
             {
                 Host = swarmHost,
@@ -71,7 +60,6 @@ namespace NineChronicles.Headless.Properties
                 PrivateKey = privateKey,
                 IceServers = iceServers,
                 Peers = peers,
-                TrustedStateValidators = trustedStateValidators,
                 StoreType = storeType,
                 StorePath = storePath,
                 StoreStatesCacheSize = storeStateCacheSize,
