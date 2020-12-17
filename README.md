@@ -10,7 +10,7 @@ ore-path <String>] [--ice-server <String>...] [--peer <String>...] [--no-trusted
 --graphql-host <String>] [--graphql-port <Nullable`1>] [--libplanet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-m
 inimum-level <String>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--help] [--version]
 
-Run standalone application with options.
+Run headless application with options.
 
 Options:
   --no-miner
@@ -40,7 +40,7 @@ Options:
   --dev                                                    Flag to turn on the dev mode.  false by default.
   --dev.block-interval <Int32>                             The time interval between blocks. It's unit is milliseconds. Works only when dev mode is on.  10000 (ms) by default. (Default: 10000)
   --dev.reorg-interval <Int32>                             The size of reorg interval. Works only when dev mode is on.  0 by default. (Default: 0)
-  --log-minimum-level <String>                             The log minimum level during standalone execution. (Default: debug)
+  --log-minimum-level <String>                             The log minimum level during headless execution. (Default: debug)
   --aws-cognito-identity <String>                          The Cognito identity for AWS CloudWatch logging. (Default: )
   --aws-access-key <String>                                The access key for AWS CloudWatch logging. (Default: )
   --aws-secret-key <String>                                The secret key for AWS CloudWatch logging. (Default: )
@@ -51,7 +51,7 @@ Options:
 
 ## Docker Build
 
-A Standalone image can be created by running the command below in the directory where the solution is located.
+A headless image can be created by running the command below in the directory where the solution is located.
 
 ```
 $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
@@ -125,14 +125,14 @@ Usage: docker volume create [<VOLUME_NAME>]
 <pre>
 $ docker run \
 --detach \
---publish [HOST_PORT]:[CONTAINER_PORT] \
 --volume 9c-volume:/app/data \
-planetariumhq/ninechronicles-headless \
-<a href = "#run" title="NineChronicles Standalone options">[NineChronicles Standalone Options]</a>
+planetariumhq/ninechronicles-headless:latest \
+<a href = "#run" title="NineChronicles Headless options">[NineChronicles Headless Options]</a>
 </pre>
 #### Note)
-* Instead of including the "--ice-server" option, allocate an Elastic IP to your instance and include it as the "--host" option and after adding an inbound port, include it as the "--port" option. Refer to these official docs on [Elastic IP allocation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html) and [editing inbound rules](https://docs.aws.amazon.com/cli/latest/userguide/cli-services-ec2-sg.html) for more information.
-* For mining, make sure to include "--private-key" option with your private key. Also, include "--libplanet-node" to run the default libplanet node. 
+* If you want to use the same headless options as your game client, refer to **`config.json`** under **`%localappdata%\Programs\Nine Chronicles\resources\app`**.
+* If you are using an [Elastic IP](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html) on your AWS instance, you do not need to include the `--ice-server` option.
+* For mining, make sure to include the `--private-key` option with your private key. Also, include `--libplanet-node` to run the default libplanet node. 
 
 ![Docker Run](https://i.imgur.com/VlwFybj.png)
 
