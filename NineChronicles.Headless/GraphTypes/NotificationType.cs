@@ -10,6 +10,11 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "type",
                 description: "The type of Notification.",
                 resolve: context => context.Source.Type);
+
+            Field<StringGraphType>(
+                name: "message",
+                description: "The message of Notification.",
+                resolve: context => context.Source.Message);
         }
     }
 }
