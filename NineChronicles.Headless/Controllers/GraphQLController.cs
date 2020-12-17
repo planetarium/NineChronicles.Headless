@@ -5,10 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet;
-using Libplanet.Action;
-using Libplanet.Blockchain;
-using Libplanet.Blockchain.Renderers;
-using Libplanet.Blocks;
 using Libplanet.KeyStore;
 using Microsoft.AspNetCore.Mvc;
 using Nekoyume;
@@ -64,6 +60,8 @@ namespace NineChronicles.Headless.Controllers
                     StandaloneContext.NineChroniclesNodeService.Swarm.BlockChain;
                 StandaloneContext.NineChroniclesNodeService.BlockRenderer.EveryBlock()
                     .Subscribe(pair => NotifyRefillActionPoint(pair.NewTip.Index));
+                StandaloneContext.NineChroniclesNodeService.ActionRenderer.EveryRender<ActionBase>()
+                    .Subscribe(NotifyAction);
                 nineChroniclesNodeHostBuilder
                     .RunConsoleAsync()
                     .ContinueWith(task =>
@@ -219,6 +217,21 @@ namespace NineChronicles.Headless.Controllers
                     "Record notification for {AvatarAddress}",
                     avatarState.address.ToHex());
                 NotificationRecords[avatarState.address] = avatarState.dailyRewardReceivedIndex;
+            }
+        }
+
+        private void NotifyAction(ActionBase.ActionEvaluation<ActionBase> eval)
+        {
+            var addr = StandaloneContext.NineChroniclesNodeService.PrivateKey.PublicKey.ToAddress();
+            if (eval.Signer == addr)
+            {
+                switch (eval.Action)
+                {
+                    case HackAndSlash3 has:
+                        var noti = new Notification(NotificationEnum.HAS, has.Result.result.ToString());
+                        StandaloneContext.NotificationSubject.OnNext(noti);
+                        break;
+                }
             }
         }
     }
