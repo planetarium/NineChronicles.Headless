@@ -238,23 +238,14 @@ namespace NineChronicles.Headless.Controllers
                             type = NotificationEnum.HAS;
                             msg = has.stageId.ToString(CultureInfo.InvariantCulture);
                             break;
-                        case CombinationConsumable2 cc:
+                        case CombinationConsumable2 _:
                             type = NotificationEnum.CombinationConsumable;
-                            var slot = eval.OutputStates.GetCombinationSlotState(cc.AvatarAddress, cc.slotIndex);
-                            var result = (CombinationConsumable.ResultModel) slot.Result;
-                            msg = result.itemUsable.Id.ToString(CultureInfo.InvariantCulture);
                             break;
-                        case CombinationEquipment3 ce:
+                        case CombinationEquipment3 _:
                             type = NotificationEnum.CombinationEquipment;
-                            var slot2 = eval.OutputStates.GetCombinationSlotState(ce.AvatarAddress, ce.SlotIndex);
-                            var result2 = (CombinationConsumable.ResultModel) slot2.Result;
-                            msg = result2.itemUsable.Id.ToString(CultureInfo.InvariantCulture);
                             break;
-                        case Buy3 buy:
+                        case Buy3 _:
                             type = NotificationEnum.Buyer;
-                            var buyerResult = buy.buyerResult;
-                            var itemBase = buyerResult.itemUsable ?? (ItemBase) buyerResult.costume;
-                            msg = itemBase.Id.ToString(CultureInfo.InvariantCulture);
                             break;
                     }
                     var notification = new Notification(type, msg);
@@ -264,10 +255,7 @@ namespace NineChronicles.Headless.Controllers
                 {
                     if (eval.Action is Buy3 buy && buy.sellerAgentAddress == _address)
                     {
-                        var result = buy.sellerResult;
-                        var itemBase = result.itemUsable ?? (ItemBase) result.costume;
-                        var msg = itemBase.Id.ToString(CultureInfo.InvariantCulture);
-                        var notification = new Notification(NotificationEnum.Seller, msg);
+                        var notification = new Notification(NotificationEnum.Seller);
                         StandaloneContext.NotificationSubject.OnNext(notification);
                     }
                 }
