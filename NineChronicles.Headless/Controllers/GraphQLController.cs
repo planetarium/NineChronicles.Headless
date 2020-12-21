@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Bencodex.Types;
@@ -13,6 +14,7 @@ using Nekoyume.Model.State;
 using Libplanet.Crypto;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
+using Nekoyume.Model.Item;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Requests;
 using Serilog;
@@ -26,6 +28,7 @@ namespace NineChronicles.Headless.Controllers
         private ConcurrentDictionary<Address, long> NotificationRecords { get; }
             = new ConcurrentDictionary<Address, long>();
         private StandaloneContext StandaloneContext { get; }
+        private Address _address;
 
         public const string RunStandaloneEndpoint = "/run-standalone";
 
@@ -96,6 +99,7 @@ namespace NineChronicles.Headless.Controllers
 
             var privateKey = new PrivateKey(ByteUtil.ParseHex(request.PrivateKeyString));
             StandaloneContext.NineChroniclesNodeService.PrivateKey = privateKey;
+            _address = privateKey.PublicKey.ToAddress();
             return Ok($"Private key set ({privateKey.ToAddress()}).");
         }
 
@@ -222,15 +226,50 @@ namespace NineChronicles.Headless.Controllers
 
         private void NotifyAction(ActionBase.ActionEvaluation<ActionBase> eval)
         {
-            var addr = StandaloneContext.NineChroniclesNodeService.PrivateKey.PublicKey.ToAddress();
-            if (eval.Signer == addr)
+            if (eval.OutputStates.UpdatedAddresses.Contains(_address))
             {
-                switch (eval.Action)
+                if (eval.Signer == _address)
                 {
-                    case HackAndSlash3 has:
-                        var noti = new Notification(NotificationEnum.HAS, has.Result.result.ToString());
-                        StandaloneContext.NotificationSubject.OnNext(noti);
-                        break;
+                    var type = NotificationEnum.Refill;
+                    var msg = string.Empty;
+                    switch (eval.Action)
+                    {
+                        case HackAndSlash3 has:
+                            type = NotificationEnum.HAS;
+                            msg = has.stageId.ToString(CultureInfo.InvariantCulture);
+                            break;
+                        case CombinationConsumable2 cc:
+                            type = NotificationEnum.CombinationConsumable;
+                            var slot = eval.OutputStates.GetCombinationSlotState(cc.AvatarAddress, cc.slotIndex);
+                            var result = (CombinationConsumable.ResultModel) slot.Result;
+                            msg = result.itemUsable.Id.ToString(CultureInfo.InvariantCulture);
+                            break;
+                        case CombinationEquipment3 ce:
+                            type = NotificationEnum.CombinationEquipment;
+                            var slot2 = eval.OutputStates.GetCombinationSlotState(ce.AvatarAddress, ce.SlotIndex);
+                            var result2 = (CombinationConsumable.ResultModel) slot2.Result;
+                            msg = result2.itemUsable.Id.ToString(CultureInfo.InvariantCulture);
+                            break;
+                        case Buy3 buy:
+                            type = NotificationEnum.Buyer;
+                            var buyerResult = buy.buyerResult;
+                            var itemBase = buyerResult.itemUsable ?? (ItemBase) buyerResult.costume;
+                            msg = itemBase.Id.ToString(CultureInfo.InvariantCulture);
+                            break;
+                    }
+                    var notification = new Notification(type, msg);
+                    StandaloneContext.NotificationSubject.OnNext(notification);
+                }
+                else
+                {
+                    if (eval.Action is Buy3 buy && buy.sellerAgentAddress == _address)
+                    {
+                        var result = buy.sellerResult;
+                        var itemBase = result.itemUsable ?? (ItemBase) result.costume;
+                        var msg = itemBase.Id.ToString(CultureInfo.InvariantCulture);
+                        var notification = new Notification(NotificationEnum.Seller, msg);
+                        StandaloneContext.NotificationSubject.OnNext(notification);
+                    }
                 }
             }
         }

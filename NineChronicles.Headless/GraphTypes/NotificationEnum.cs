@@ -4,5 +4,9 @@ namespace NineChronicles.Headless.GraphTypes
     {
         Refill,
         HAS,
+        CombinationEquipment,
+        CombinationConsumable,
+        Buyer,
+        Seller,
     }
 }

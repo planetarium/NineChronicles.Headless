@@ -14,6 +14,5 @@ namespace NineChronicles.Headless.GraphTypes
         {
             Message = msg;
         }
-
     }
 }
