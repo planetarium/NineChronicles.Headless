@@ -45,7 +45,7 @@ namespace NineChronicles.Headless.Executable
 #endif
         }
 
-        [Command(Description = "Run standalone application with options.")]
+        [Command(Description = "Run headless application with options.")]
         public async Task Run(
             bool noMiner = false,
             [Option("app-protocol-version", new[] { 'V' }, Description = "App protocol version token")]
@@ -111,7 +111,7 @@ namespace NineChronicles.Headless.Executable
                 Description =
                     "The size of reorg interval. Works only when dev mode is on.  0 by default.")]
             int reorgInterval = 0,
-            [Option(Description = "The log minimum level during standalone execution.")]
+            [Option(Description = "The log minimum level during headless execution.  debug by default.")]
             string logMinimumLevel = "debug",
             [Option(Description = "The Cognito identity for AWS CloudWatch logging.")]
             string awsCognitoIdentity = null,
