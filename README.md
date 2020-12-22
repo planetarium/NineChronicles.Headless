@@ -130,8 +130,19 @@ planetariumhq/ninechronicles-headless:latest \
 <a href = "#run" title="NineChronicles Headless options">[NineChronicles Headless Options]</a>
 </pre>
 #### Note)
-* If you want to use the same headless options as your game client, refer to **`config.json`** under **`%localappdata%\Programs\Nine Chronicles\resources\app`**.
-* If you are using an [Elastic IP](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html) on your AWS instance, you do not need to include the `--ice-server` option.
+* If you want to use the same headless options as your Nine Chronicles game client, refer to **`config.json`** under **`%localappdata%\Programs\Nine Chronicles\resources\app`**. Inside **`config.json`**, refer to the following properties for your headless options:
+  - `GeniesisBlockPath`
+  - `MinimumDifficulty`
+  - `StoreType`
+  - `AppProtocolVersion`
+  - `TrustedAppProtocolVersionSigners`
+  - `IceServerStrings`
+  - `PeerStrings`
+  - `NoTrustedStateValidators`
+  - `NoMiner`
+  - `Confirmations`
+  - `Workers`
+* If you are using an [Elastic IP](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html) on your AWS instance, you must include the IP as the `--host` option but do not need to include the `--ice-server` option.
 * For mining, make sure to include the `--private-key` option with your private key. Also, include `--libplanet-node` to run the default libplanet node. 
 
 ![Docker Run](https://i.imgur.com/VlwFybj.png)
