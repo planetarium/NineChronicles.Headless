@@ -9,6 +9,7 @@ using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>; 
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -16,6 +17,7 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public StandaloneQuery(StandaloneContext standaloneContext)
         {
+            Field<NonNullGraphType<StateQuery<NCAction>>>(name: "stateQuery", resolve: _ => standaloneContext.BlockChain);
             Field<ByteStringType>(
                 name: "state",
                 arguments: new QueryArguments(
