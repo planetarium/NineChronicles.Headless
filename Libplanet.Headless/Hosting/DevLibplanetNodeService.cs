@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -21,7 +21,7 @@ namespace Libplanet.Headless.Hosting
     public class DevLibplanetNodeService<T> : LibplanetNodeService<T>
         where T : IAction, new()
     {
-        private readonly BaseBlockStatesStore SubStore;
+        private readonly IStore SubStore;
 
         private readonly IStateStore SubStateStore;
 
@@ -169,7 +169,6 @@ namespace Libplanet.Headless.Hosting
                     await Swarm.PreloadAsync(
                         TimeSpan.FromSeconds(5),
                         PreloadProgress,
-                        Properties.TrustedStateValidators,
                         cancellationToken: cancellationToken
                     );
                     PreloadEnded.Set();
@@ -232,7 +231,7 @@ namespace Libplanet.Headless.Hosting
             SubSwarm?.Dispose();
             Log.Debug("Sub swarm disposed.");
 
-            SubStore?.Dispose();
+            (SubStore as IDisposable)?.Dispose();
             Log.Debug("Sub store disposed.");
         }
     }

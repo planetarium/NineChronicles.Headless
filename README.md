@@ -6,7 +6,7 @@
 $ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
 
 Usage: NineChronicles.Headless.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--minimum-difficulty <Int32>] [--private-key <String>] [--store-type <String>] [--st
-ore-path <String>] [--ice-server <String>...] [--peer <String>...] [--no-trusted-state-validators] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [
+ore-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [
 --graphql-host <String>] [--graphql-port <Nullable`1>] [--libplanet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-m
 inimum-level <String>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--help] [--version]
 
@@ -24,7 +24,6 @@ Options:
   --store-path <String>                                     (Default: )
   -I, --ice-server <String>...                              (Default: )
   --peer <String>...                                        (Default: )
-  --no-trusted-state-validators
   -T, --trusted-app-protocol-version-signer <String>...    Trustworthy signers who claim new app protocol versions (Default: )
   --rpc-server
   --rpc-listen-host <String>                                (Default: 0.0.0.0)
@@ -64,7 +63,6 @@ $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 - `-P`, `--port`: Specifies the port number.
 - `--private-key`: Specifies the private Key.
 - `--no-miner`: Disables mining.
-- `--no-trusted-state-validators`: Calculates all states directly without receiving calculated states from specified peers.
 - `--store-path`: Specifies the path for storing data.
 - `-I`, `--ice-server`: Specifies the TURN server info used for NAT Traversal. If there are multiple servers, they can be added by typing: `--ice-server serverA --ice-server serverB ...`.
 - `--peer`: Adds a peer and if there are multiple peers, they can be added by typing: `--peer peerA --peer peerB ...`.

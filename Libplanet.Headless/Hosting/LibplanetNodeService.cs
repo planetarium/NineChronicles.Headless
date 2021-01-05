@@ -28,7 +28,7 @@ namespace Libplanet.Headless.Hosting
     public class LibplanetNodeService<T> : IHostedService, IDisposable
         where T : IAction, new()
     {
-        public readonly BaseBlockStatesStore Store;
+        public readonly IStore Store;
 
         public readonly IStateStore StateStore;
 
@@ -235,20 +235,19 @@ namespace Libplanet.Headless.Hosting
             return Swarm.StopAsync(cancellationToken);
         }
 
-        protected (BaseBlockStatesStore, IStateStore) LoadStore(string path, string type, int statesCacheSize)
+        protected (IStore, IStateStore) LoadStore(string path, string type, int statesCacheSize)
         {
-            BaseBlockStatesStore store = null;
-            IStateStore stateStore = null;
-
+            IStore store = null;
             if (type == "rocksdb")
             {
                 try
                 {
                     store = new RocksDBStore.RocksDBStore(
                         path,
-                        statesCacheSize: statesCacheSize,
                         maxTotalWalSize: 16 * 1024 * 1024,
-                        keepLogFileNum: 1);
+                        maxLogFileSize: 16 * 1024 * 1024,
+                        keepLogFileNum: 1
+                    );
                     Log.Debug("RocksDB is initialized.");
                 }
                 catch (TypeInitializationException e)
@@ -269,8 +268,7 @@ namespace Libplanet.Headless.Hosting
 
             IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states")),
                 stateHashKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "state_hashes"));
-            stateStore = new TrieStateStore(stateKeyValueStore, stateHashKeyValueStore);
-
+            IStateStore stateStore = new TrieStateStore(stateKeyValueStore, stateHashKeyValueStore);
             return (store, stateStore);
         }
 
@@ -311,7 +309,6 @@ namespace Libplanet.Headless.Hosting
                     await Swarm.PreloadAsync(
                         TimeSpan.FromSeconds(5),
                         PreloadProgress,
-                        Properties.TrustedStateValidators,
                         cancellationToken: cancellationToken
                     );
                     PreloadEnded.Set();
@@ -511,7 +508,7 @@ namespace Libplanet.Headless.Hosting
             Swarm?.Dispose();
             Log.Debug("Swarm disposed.");
 
-            Store?.Dispose();
+            (Store as IDisposable)?.Dispose();
             Log.Debug("Store disposed.");
         }
     }
