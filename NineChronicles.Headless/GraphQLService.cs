@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Properties;
+using Serilog;
 
 namespace NineChronicles.Headless
 {
@@ -59,10 +60,15 @@ namespace NineChronicles.Headless
 
                 services
                     .AddSingleton<StandaloneSchema>()
-                    .AddGraphQL((provider, options) =>
+                    .AddGraphQL((options, provider) =>
                     {
                         options.EnableMetrics = true;
-                        options.ExposeExceptions = true;
+                        options.UnhandledExceptionDelegate = context =>
+                        {
+                            Log.Error(
+                                context.Exception,
+                                context.ErrorMessage);
+                        };
                     })
                     .AddSystemTextJson()
                     .AddWebSockets()
