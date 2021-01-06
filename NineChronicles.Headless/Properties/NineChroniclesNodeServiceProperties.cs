@@ -35,7 +35,8 @@ namespace NineChronicles.Headless.Properties
                 bool render = false,
                 int workers = 5,
                 int confirmations = 0,
-                int maximumTransactions = 100)
+                int maximumTransactions = 100,
+                int volatileStagePolicyLifetime = 180)
         {
             var privateKey = string.IsNullOrEmpty(privateKeyString)
                 ? new PrivateKey()
@@ -68,6 +69,7 @@ namespace NineChronicles.Headless.Properties
                 Workers = workers,
                 Confirmations = Math.Max(confirmations, 0),
                 MaximumTransactions = maximumTransactions,
+                VolatileStagePolicyLifetime = TimeSpan.FromMinutes(volatileStagePolicyLifetime),
             };
         }
 

@@ -69,6 +69,7 @@ namespace Libplanet.Headless.Hosting
         public LibplanetNodeService(
             LibplanetNodeServiceProperties<T> properties,
             IBlockPolicy<T> blockPolicy,
+            IStagePolicy<T> stagePolicy,
             IEnumerable<IRenderer<T>> renderers,
             Func<BlockChain<T>, Swarm<T>, PrivateKey, CancellationToken, Task> minerLoopAction,
             Progress<PreloadState> preloadProgress,
@@ -124,6 +125,7 @@ namespace Libplanet.Headless.Hosting
 
             BlockChain = new BlockChain<T>(
                 policy: blockPolicy,
+                stagePolicy: stagePolicy,
                 store: Store,
                 stateStore: StateStore,
                 genesisBlock: genesisBlock,

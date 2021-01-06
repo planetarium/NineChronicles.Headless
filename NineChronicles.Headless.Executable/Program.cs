@@ -95,6 +95,11 @@ namespace NineChronicles.Headless.Executable
                     "Unlimited if the value is less then or equal to 0.  100 by default."
             )]
             int maximumTransactions = 100,
+            [Option(
+                "volatile-stage-policy-lifetime",
+                Description = "Volatilizes staged transactions older than this lifetime by minute.  180 by default."
+            )]
+            int volatileStagePolicyLifetime = 180,
             [Option("strict-rendering", Description = "Flag to turn on validating action renderer.")]
             bool strictRendering = false,
             [Option("dev", Description = "Flag to turn on the dev mode.  false by default.")]
@@ -239,7 +244,8 @@ namespace NineChronicles.Headless.Executable
                         noMiner,
                         workers: workers,
                         confirmations: confirmations,
-                        maximumTransactions: maximumTransactions);
+                        maximumTransactions: maximumTransactions,
+                        volatileStagePolicyLifetime: volatileStagePolicyLifetime);
 
 
                 if (rpcServer)

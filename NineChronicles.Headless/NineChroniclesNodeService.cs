@@ -100,6 +100,9 @@ namespace NineChronicles.Headless
                 blockPolicy = blockPolicySource.GetPolicy(properties.MinimumDifficulty, properties.MaximumTransactions);
             }
 
+            IStagePolicy<PolymorphicAction<ActionBase>> stagePolicy =
+                new VolatileStagePolicy<NineChroniclesActionType>(properties.VolatileStagePolicyLifetime);
+
             BlockRenderer = blockPolicySource.BlockRenderer;
             ActionRenderer = blockPolicySource.ActionRenderer;
             ExceptionRenderer = new ExceptionRenderer();
@@ -193,6 +196,7 @@ namespace NineChronicles.Headless
                     Properties,
                     easyPolicy,
                     hardPolicy,
+                    stagePolicy,
                     renderers,
                     devMinerLoopAction,
                     preloadProgress,
@@ -210,6 +214,7 @@ namespace NineChronicles.Headless
                 NodeService = new LibplanetNodeService<NineChroniclesActionType>(
                     Properties,
                     blockPolicy,
+                    stagePolicy,
                     renderers,
                     minerLoopAction,
                     preloadProgress,

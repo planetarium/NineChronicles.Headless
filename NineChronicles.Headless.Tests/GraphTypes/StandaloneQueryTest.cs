@@ -390,6 +390,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
+                VolatileStagePolicyLifetime = TimeSpan.FromMinutes(180),
             };
 
             var service = new NineChroniclesNodeService(properties, null);
@@ -534,6 +535,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
+                VolatileStagePolicyLifetime = TimeSpan.FromMinutes(180),
             };
 
             return new NineChroniclesNodeService(properties, null);

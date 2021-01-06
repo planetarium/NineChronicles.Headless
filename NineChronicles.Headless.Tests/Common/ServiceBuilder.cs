@@ -1,3 +1,4 @@
+using System;
 using Libplanet.Action;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
@@ -41,6 +42,7 @@ namespace NineChronicles.Headless.Tests.Common
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 MaximumTransactions = MaximumTransactions,
+                VolatileStagePolicyLifetime = TimeSpan.FromMinutes(180),
             };
             return new NineChroniclesNodeService(properties, null)
             {

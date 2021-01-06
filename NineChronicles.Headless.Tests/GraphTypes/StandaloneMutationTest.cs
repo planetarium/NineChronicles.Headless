@@ -170,7 +170,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var query = $"mutation {{ transferGold(recipient: \"{recipient}\", amount: \"17.5\") }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
 
-            var stagedTxIds = store.IterateStagedTransactionIds().ToImmutableList();
+            var stagedTxIds = blockChain.GetStagedTransactionIds().ToImmutableList();
             Assert.Single(stagedTxIds);
 
             var expectedResult = new Dictionary<string, object>

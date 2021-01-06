@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using Libplanet.Action;
@@ -50,5 +51,7 @@ namespace Libplanet.Headless.Hosting
         public System.Action<NodeExceptionType, string> NodeExceptionOccurred { get; set; }
 
         public int MaximumTransactions { get; set; } = 100;
+
+        public TimeSpan VolatileStagePolicyLifetime { get; set; } = TimeSpan.FromMinutes(180);
     }
 }
