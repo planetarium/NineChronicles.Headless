@@ -16,6 +16,7 @@ using Libplanet.KeyStore;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
 using Libplanet.Store;
+using Microsoft.Extensions.Configuration;
 using Nekoyume.Action;
 using NineChronicles.Headless.GraphTypes;
 using Serilog;
@@ -60,7 +61,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 KeyStore = keyStore,
             };
 
-            Schema = new StandaloneSchema(new TestServiceProvider(StandaloneContextFx));
+            var configurationBuilder = new ConfigurationBuilder();
+            var configuration = configurationBuilder.Build();
+            Schema = new StandaloneSchema(new TestServiceProvider(StandaloneContextFx, configuration));
             Schema.Subscription.As<StandaloneSubscription>().RegisterTipChangedSubscription();
 
             DocumentExecutor = new DocumentExecuter();
@@ -147,10 +150,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             private StandaloneContext StandaloneContext;
 
-            public TestServiceProvider(StandaloneContext standaloneContext)
+            public TestServiceProvider(StandaloneContext standaloneContext, IConfiguration configuration)
             {
                 Query = new StandaloneQuery(standaloneContext);
-                Mutation = new StandaloneMutation(standaloneContext);
+                Mutation = new StandaloneMutation(standaloneContext, configuration);
                 Subscription = new StandaloneSubscription(standaloneContext);
                 StandaloneContext = standaloneContext;
             }

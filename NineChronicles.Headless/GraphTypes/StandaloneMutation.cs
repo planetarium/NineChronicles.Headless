@@ -11,14 +11,21 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Serilog;
 using System;
+using GraphQL.Authorization;
+using Microsoft.Extensions.Configuration;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneMutation : ObjectGraphType
     {
-        public StandaloneMutation(StandaloneContext standaloneContext)
+        public StandaloneMutation(StandaloneContext standaloneContext, IConfiguration configuration)
         {
+            if (configuration["secret"] is { })
+            {
+                this.AuthorizeWith("LocalPolicy");   
+            }
+
             Field<KeyStoreMutation>(
                 name: "keyStore",
                 resolve: context => standaloneContext.KeyStore);

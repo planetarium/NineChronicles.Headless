@@ -1,9 +1,18 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Text.RegularExpressions;
+using GraphQL.Authorization;
 using GraphQL.Server;
+using GraphQL.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Primitives;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Properties;
 using Serilog;
@@ -27,6 +36,18 @@ namespace NineChronicles.Headless
             return hostBuilder.ConfigureWebHostDefaults(builder =>
             {
                 builder.UseStartup<GraphQLStartup>();
+                builder.ConfigureAppConfiguration(
+                    (context, builder) =>
+                    {
+                        if (GraphQlNodeServiceProperties.SecretToken is { } secretToken)
+                        {
+                            builder.AddInMemoryCollection(
+                                new Dictionary<string, string>
+                                {
+                                    { "secret", secretToken },
+                                });   
+                        }
+                    });
                 builder.ConfigureServices(
                     services => services.AddSingleton(standaloneContext));
                 builder.UseUrls($"http://{listenHost}:{listenPort}/");
@@ -73,7 +94,45 @@ namespace NineChronicles.Headless
                     .AddSystemTextJson()
                     .AddWebSockets()
                     .AddDataLoader()
+                    .AddUserContextBuilder(context =>
+                    {
+                        if (Configuration["secret"] is { } secretToken
+                            && context.Request.Headers.TryGetValue("Authorization", out StringValues v)
+                            && v.Count == 1 && v[0] == $"Basic {secretToken}")
+                        {
+                            context.User.AddIdentity(
+                                new ClaimsIdentity(
+                                    new[]
+                                    {
+                                        new Claim(
+                                            "role",
+                                            "Admin"),
+                                    }));
+                        }
+
+                        return new GraphQLUserContext
+                        {
+                            User = context.User,
+                        };
+                    })
                     .AddGraphTypes(typeof(StandaloneSchema));
+                services.AddHttpContextAccessor()
+                    .AddTransient<IValidationRule, AuthorizationValidationRule>()
+                    .AddSingleton<IAuthorizationEvaluator, AuthorizationEvaluator>()
+                    .AddTransient(
+                        s =>
+                        {
+                            var authSettings = new AuthorizationSettings();
+                            authSettings.AddPolicy(
+                                "LocalPolicy",
+                                p =>
+                                {
+                                    p.RequireClaim(
+                                        "role",
+                                        "Admin");
+                                });
+                            return authSettings;
+                        });
             }
 
             public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
