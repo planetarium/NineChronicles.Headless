@@ -21,6 +21,10 @@ namespace NineChronicles.Headless
 {
     public class GraphQLService
     {
+        public const string LocalPolicyKey = "LocalPolicy";
+
+        public const string SecretTokenKey = "secret";
+
         private GraphQLNodeServiceProperties GraphQlNodeServiceProperties { get; }
 
         public GraphQLService(GraphQLNodeServiceProperties properties)
@@ -44,7 +48,7 @@ namespace NineChronicles.Headless
                             builder.AddInMemoryCollection(
                                 new Dictionary<string, string>
                                 {
-                                    { "secret", secretToken },
+                                    { SecretTokenKey, secretToken },
                                 });   
                         }
                     });
@@ -96,7 +100,7 @@ namespace NineChronicles.Headless
                     .AddDataLoader()
                     .AddUserContextBuilder(context =>
                     {
-                        if (Configuration["secret"] is { } secretToken
+                        if (Configuration[SecretTokenKey] is { } secretToken
                             && context.Request.Headers.TryGetValue("Authorization", out StringValues v)
                             && v.Count == 1 && v[0] == $"Basic {secretToken}")
                         {
@@ -124,7 +128,7 @@ namespace NineChronicles.Headless
                         {
                             var authSettings = new AuthorizationSettings();
                             authSettings.AddPolicy(
-                                "LocalPolicy",
+                                LocalPolicyKey,
                                 p =>
                                 {
                                     p.RequireClaim(
