@@ -5,10 +5,7 @@
 ```
 $ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
 
-Usage: NineChronicles.Headless.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--minimum-difficulty <Int32>] [--private-key <String>] [--store-type <String>] [--st
-ore-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [
---graphql-host <String>] [--graphql-port <Nullable`1>] [--libplanet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-m
-inimum-level <String>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--help] [--version]
+Usage: NineChronicles.Headless.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--minimum-difficulty <Int32>] [--private-key <String>] [--store-type <String>] [--store-path <String>][--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--libplanet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--volatile-stage-policy-lifetime <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-minimum-level <String>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--help] [--version]
 
 Run standalone application with options.
 
@@ -35,6 +32,7 @@ Options:
   --workers <Int32>                                        Number of workers to use in Swarm (Default: 5)
   --confirmations <Int32>                                  The number of required confirmations to recognize a block.  0 by default. (Default: 0)
   --max-transactions <Int32>                               The number of maximum transactions can be included in a single block. Unlimited if the value is less then or equal to 0.  100 by default. (Default: 100)
+  --volatile-stage-policy-lifetime <Int32>                 Volatilizes staged transactions older than this lifetime by minute.  180 by default. (Default: 180)
   --strict-rendering                                       Flag to turn on validating action renderer.
   --dev                                                    Flag to turn on the dev mode.  false by default.
   --dev.block-interval <Int32>                             The time interval between blocks. It's unit is milliseconds. Works only when dev mode is on.  10000 (ms) by default. (Default: 10000)
