@@ -2,13 +2,13 @@ using System.Security.Cryptography;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL;
-using GraphQL.Server.Authorization.AspNetCore;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Microsoft.Extensions.Configuration;
+using Libplanet.Tx;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>; 
@@ -127,6 +127,25 @@ namespace NineChronicles.Headless.GraphTypes
 
                     Address address = context.GetArgument<Address>("address");
                     return blockChain.GetNextTxNonce(address);
+                }
+            );
+
+            Field<TransactionType<NCAction>>(
+                name: "getTx",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<TxIdType>>
+                        {Name = "txId", Description = "transaction id."}
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    var txId = context.GetArgument<TxId>("txId");
+                    return blockChain.GetTransaction(txId);
                 }
             );
         }

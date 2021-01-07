@@ -17,10 +17,12 @@ using Libplanet.Crypto;
 using Libplanet.KeyStore;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
+using Libplanet.Tx;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
+using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common;
 using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
@@ -489,6 +491,69 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 },
                 queryResult.Data
             );
+        }
+
+        [Fact]
+        public async Task GetTx()
+        {
+            var userPrivateKey = new PrivateKey();
+            var userAddress = userPrivateKey.ToAddress();
+            var service = MakeMineChroniclesNodeService(userPrivateKey);
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
+
+            var blockChain = StandaloneContextFx.BlockChain;
+            var queryFormat = @"query {{
+                getTx(txId: ""{0}"") {{
+                    id
+                    nonce
+                    signer
+                    signature
+                    timestamp
+                    updatedAddresses
+                    actions {{
+                        plainValue
+                    }}
+                }}
+            }}";
+            var queryResult = await ExecuteQueryAsync(string.Format(queryFormat, new TxId()));
+            Assert.Equal(
+                new Dictionary<string, object>
+                {
+                    ["getTx"] = null
+                },
+                queryResult.Data
+            );
+
+            var action = new CreateAvatar2
+            {
+                index = 0,
+                hair = 1,
+                lens = 2,
+                ear = 3,
+                tail = 4,
+                name = "action",
+            };
+            var transaction = blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
+            blockChain.StageTransaction(transaction);
+            await blockChain.MineBlock(new Address());
+            queryResult = await ExecuteQueryAsync(string.Format(queryFormat, transaction.Id));
+            var tx = queryResult.Data
+                .As<Dictionary<string, object>>()["getTx"]
+                .As<Dictionary<string, object>>();
+
+            Assert.Equal(tx["id"], transaction.Id.ToString());
+            Assert.Equal(tx["nonce"], transaction.Nonce);
+            Assert.Equal(tx["signer"], transaction.Signer.ToString());
+            Assert.Equal(tx["signature"], ByteUtil.Hex(transaction.Signature));
+            Assert.Equal(tx["timestamp"], transaction.Timestamp.ToString());
+            Assert.Equal(tx["updatedAddresses"], transaction.UpdatedAddresses.Select(a => a.ToString()));
+
+            var plainValue = tx["actions"]
+                .As<List<object>>()
+                .First()
+                .As<Dictionary<string, object>>()["plainValue"];
+            Assert.Equal(transaction.Actions.First().PlainValue.Inspection, plainValue);
         }
 
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)
