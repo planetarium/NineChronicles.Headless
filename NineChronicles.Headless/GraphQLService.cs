@@ -1,8 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
-using GraphQL.Authorization;
+using System.Threading.Tasks;
 using GraphQL.Server;
 using GraphQL.Validation;
 using Microsoft.AspNetCore.Builder;
@@ -85,58 +86,28 @@ namespace NineChronicles.Headless
 
                 services
                     .AddSingleton<StandaloneSchema>()
-                    .AddGraphQL((options, provider) =>
-                    {
-                        options.EnableMetrics = true;
-                        options.UnhandledExceptionDelegate = context =>
+                    .AddGraphQL(
+                        (options, provider) =>
                         {
-                            Log.Error(
-                                context.Exception,
-                                context.ErrorMessage);
-                        };
-                    })
+                            options.EnableMetrics = true;
+                            options.UnhandledExceptionDelegate = context =>
+                            {
+                                Log.Error(
+                                    context.Exception,
+                                    context.ErrorMessage);
+                            };
+                        })
                     .AddSystemTextJson()
                     .AddWebSockets()
                     .AddDataLoader()
-                    .AddUserContextBuilder(context =>
-                    {
-                        if (Configuration[SecretTokenKey] is { } secretToken
-                            && context.Request.Headers.TryGetValue("Authorization", out StringValues v)
-                            && v.Count == 1 && v[0] == $"Basic {secretToken}")
-                        {
-                            context.User.AddIdentity(
-                                new ClaimsIdentity(
-                                    new[]
-                                    {
-                                        new Claim(
-                                            "role",
-                                            "Admin"),
-                                    }));
-                        }
-
-                        return new GraphQLUserContext
-                        {
-                            User = context.User,
-                        };
-                    })
-                    .AddGraphTypes(typeof(StandaloneSchema));
-                services.AddHttpContextAccessor()
-                    .AddTransient<IValidationRule, AuthorizationValidationRule>()
-                    .AddSingleton<IAuthorizationEvaluator, AuthorizationEvaluator>()
-                    .AddTransient(
-                        s =>
-                        {
-                            var authSettings = new AuthorizationSettings();
-                            authSettings.AddPolicy(
-                                LocalPolicyKey,
-                                p =>
-                                {
-                                    p.RequireClaim(
-                                        "role",
-                                        "Admin");
-                                });
-                            return authSettings;
-                        });
+                    .AddGraphTypes(typeof(StandaloneSchema))
+                    .AddGraphQLAuthorization(
+                        options => options.AddPolicy(
+                            LocalPolicyKey,
+                            p =>
+                                p.RequireClaim(
+                                    "role",
+                                    "Admin")));
             }
 
             public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -147,9 +118,10 @@ namespace NineChronicles.Headless
                 }
 
                 app.UseCors("AllowAllOrigins");
+                app.Use(AuthenticateLocalPolicy);
 
                 app.UseRouting();
-
+                app.UseAuthorization();
                 app.UseEndpoints(endpoints =>
                 {
                     endpoints.MapControllers();
@@ -164,7 +136,25 @@ namespace NineChronicles.Headless
                 // /ui/playground 옵션을 통해서 Playground를 사용할 수 있습니다.
                 app.UseGraphQLPlayground();
             }
-        }
+            
+            private async Task AuthenticateLocalPolicy(HttpContext context, Func<Task> next)
+            {
+                if (Configuration[SecretTokenKey] is { } secretToken
+                    && context.Request.Headers.TryGetValue("Authorization", out StringValues v)
+                    && v.Count == 1 && v[0] == $"Basic {secretToken}")
+                {
+                    context.User.AddIdentity(
+                        new ClaimsIdentity(
+                            new[]
+                            {
+                                new Claim(
+                                    "role",
+                                    "Admin"),
+                            }));
+                }
 
+                await next();
+            }
+        }
     }
 }

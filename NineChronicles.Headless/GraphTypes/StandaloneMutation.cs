@@ -11,7 +11,7 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Serilog;
 using System;
-using GraphQL.Authorization;
+using GraphQL.Server.Authorization.AspNetCore;
 using Microsoft.Extensions.Configuration;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
