@@ -1,14 +1,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet;
-using Libplanet.Action;
-using Libplanet.Blockchain;
-using Libplanet.Blockchain.Renderers;
-using Libplanet.Blocks;
 using Libplanet.KeyStore;
 using Microsoft.AspNetCore.Mvc;
 using Nekoyume;
@@ -17,6 +14,7 @@ using Nekoyume.Model.State;
 using Libplanet.Crypto;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
+using Nekoyume.Model.Item;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Requests;
 using Serilog;
@@ -30,6 +28,7 @@ namespace NineChronicles.Headless.Controllers
         private ConcurrentDictionary<Address, long> NotificationRecords { get; }
             = new ConcurrentDictionary<Address, long>();
         private StandaloneContext StandaloneContext { get; }
+        private Address _address;
 
         public const string RunStandaloneEndpoint = "/run-standalone";
 
@@ -64,6 +63,8 @@ namespace NineChronicles.Headless.Controllers
                     StandaloneContext.NineChroniclesNodeService.Swarm.BlockChain;
                 StandaloneContext.NineChroniclesNodeService.BlockRenderer.EveryBlock()
                     .Subscribe(pair => NotifyRefillActionPoint(pair.NewTip.Index));
+                StandaloneContext.NineChroniclesNodeService.ActionRenderer.EveryRender<ActionBase>()
+                    .Subscribe(NotifyAction);
                 nineChroniclesNodeHostBuilder
                     .RunConsoleAsync()
                     .ContinueWith(task =>
@@ -98,6 +99,7 @@ namespace NineChronicles.Headless.Controllers
 
             var privateKey = new PrivateKey(ByteUtil.ParseHex(request.PrivateKeyString));
             StandaloneContext.NineChroniclesNodeService.PrivateKey = privateKey;
+            _address = privateKey.PublicKey.ToAddress();
             return Ok($"Private key set ({privateKey.ToAddress()}).");
         }
 
@@ -219,6 +221,44 @@ namespace NineChronicles.Headless.Controllers
                     "Record notification for {AvatarAddress}",
                     avatarState.address.ToHex());
                 NotificationRecords[avatarState.address] = avatarState.dailyRewardReceivedIndex;
+            }
+        }
+
+        private void NotifyAction(ActionBase.ActionEvaluation<ActionBase> eval)
+        {
+            if (eval.OutputStates.UpdatedAddresses.Contains(_address))
+            {
+                if (eval.Signer == _address)
+                {
+                    var type = NotificationEnum.Refill;
+                    var msg = string.Empty;
+                    switch (eval.Action)
+                    {
+                        case HackAndSlash3 has:
+                            type = NotificationEnum.HAS;
+                            msg = has.stageId.ToString(CultureInfo.InvariantCulture);
+                            break;
+                        case CombinationConsumable2 _:
+                            type = NotificationEnum.CombinationConsumable;
+                            break;
+                        case CombinationEquipment3 _:
+                            type = NotificationEnum.CombinationEquipment;
+                            break;
+                        case Buy3 _:
+                            type = NotificationEnum.Buyer;
+                            break;
+                    }
+                    var notification = new Notification(type, msg);
+                    StandaloneContext.NotificationSubject.OnNext(notification);
+                }
+                else
+                {
+                    if (eval.Action is Buy3 buy && buy.sellerAgentAddress == _address)
+                    {
+                        var notification = new Notification(NotificationEnum.Seller);
+                        StandaloneContext.NotificationSubject.OnNext(notification);
+                    }
+                }
             }
         }
     }
