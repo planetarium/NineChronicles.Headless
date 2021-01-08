@@ -100,7 +100,7 @@ namespace NineChronicles.Headless.Controllers
             var privateKey = new PrivateKey(ByteUtil.ParseHex(request.PrivateKeyString));
             StandaloneContext.NineChroniclesNodeService.PrivateKey = privateKey;
             _address = privateKey.PublicKey.ToAddress();
-            var msg = $"Private key set ({privateKey.ToAddress()}).";
+            var msg = $"Private key set ({privateKey.PublicKey.ToAddress()}).";
             Log.Debug(msg);
             return Ok(msg);
         }
