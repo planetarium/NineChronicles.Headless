@@ -12,6 +12,7 @@ namespace NineChronicles.Headless
             StandaloneContext standaloneContext = null,
             bool ignoreBootstrapFailure = true,
             bool strictRendering = false,
+            bool isAuthorizedMiner = false,
             bool isDev = false,
             int blockInterval = 10000,
             int reorgInterval = 0
@@ -58,7 +59,8 @@ namespace NineChronicles.Headless
                 strictRendering: strictRendering,
                 isDev: isDev,
                 blockInterval: blockInterval,
-                reorgInterval: reorgInterval);
+                reorgInterval: reorgInterval,
+                isAuthorizedMiner: isAuthorizedMiner);
             service.ConfigureStandaloneContext(standaloneContext);
 
             return service;

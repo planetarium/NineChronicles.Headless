@@ -123,7 +123,11 @@ namespace NineChronicles.Headless.Executable
             [Option(Description = "The secret key for AWS CloudWatch logging.")]
             string awsSecretKey = null,
             [Option(Description = "The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2).")]
-            string awsRegion = null
+            string awsRegion = null,
+            [Option(Description =
+                "Flag to use as authorized miner. " +
+                "If true, it will mine only blocks that authorized miners should mine.")]
+            bool isAuthorizedMiner = false
         )
         {
 #if SENTRY || ! DEBUG
@@ -275,7 +279,8 @@ namespace NineChronicles.Headless.Executable
                         strictRendering: strictRendering,
                         isDev: isDev,
                         blockInterval: blockInterval,
-                        reorgInterval: reorgInterval);
+                        reorgInterval: reorgInterval,
+                        isAuthorizedMiner: isAuthorizedMiner);
                 standaloneContext.NineChroniclesNodeService = nineChroniclesNodeService;
 
                 if (libplanetNode)
