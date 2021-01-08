@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
 using Amazon.Runtime;
-using JetBrains.Annotations;
 using Nito.AsyncEx;
 using Serilog.Core;
 using Serilog.Events;
@@ -54,7 +52,22 @@ namespace NineChronicles.Headless.Executable
 
         private async Task Worker(CancellationToken cancellationToken)
         {
-            string sequenceToken = await GetSequenceToken(LogGroupName, LogStreamName);
+            string sequenceToken = "token";
+            try
+            {
+                await _client.CreateLogStreamAsync(
+                    new CreateLogStreamRequest(LogGroupName, LogStreamName), cancellationToken);
+            }
+            catch (ResourceAlreadyExistsException)
+            {
+                // ignore
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("Unexpected exception occurred during CreateLogStreamAsync. {0}", e);
+                throw;
+            }
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
@@ -70,9 +83,8 @@ namespace NineChronicles.Headless.Executable
                         }
                     });
                     request.SequenceToken = sequenceToken;
-
-                    var resp = await _client.PutLogEventsAsync(request, cancellationToken);
-                    sequenceToken = resp.NextSequenceToken;
+                    PutLogEventsResponse response = await PutLogEventsAsync(request, cancellationToken);
+                    sequenceToken = response.NextSequenceToken;
                 }
                 catch (OperationCanceledException e)
                 {
@@ -81,34 +93,26 @@ namespace NineChronicles.Headless.Executable
                 }
                 catch (Exception e)
                 {
-                    Console.Error.WriteLine($"Worker exception occured: {e}.");
+                    Console.Error.WriteLine($"Worker exception occurred: {e}.");
                 }
             }
 
             Console.Error.WriteLine("Worker ended.");
         }
 
-        private async Task<string> GetSequenceToken(string logGroupName, string logStreamName)
-        {
-            await CreateLogStreamAsync(logGroupName, logStreamName);
-
-            var logStreamsResponse = await _client.DescribeLogStreamsAsync(new DescribeLogStreamsRequest(logGroupName)
-            {
-                LogStreamNamePrefix = logStreamName,
-            });
-
-            var stream = logStreamsResponse.LogStreams.First(s => s.LogStreamName == logStreamName);
-            return stream.UploadSequenceToken;
-        }
-
-        private async Task CreateLogStreamAsync(string logGroupName, string logStreamName)
+        private async Task<PutLogEventsResponse> PutLogEventsAsync(
+            PutLogEventsRequest request,
+            CancellationToken cancellationToken)
         {
             try
             {
-                await _client.CreateLogStreamAsync(new CreateLogStreamRequest(logGroupName, logStreamName));
+                return await _client.PutLogEventsAsync(request, cancellationToken);
             }
-            catch (ResourceAlreadyExistsException)
+            catch (InvalidSequenceTokenException e)
             {
+                // Try once more with expected sequence token.
+                request.SequenceToken = e.ExpectedSequenceToken;
+                return await _client.PutLogEventsAsync(request, cancellationToken);
             }
         }
     }
