@@ -52,9 +52,9 @@ namespace NineChronicles.Headless.Controllers
         [HttpPost(RunStandaloneEndpoint)]
         public IActionResult RunStandalone()
         {
-            if (AuthenticateLocalPolicy() is { } result)
+            if (!HasLocalPolicy())
             {
-                return result;
+                return Unauthorized();
             }
 
             if (StandaloneContext.NineChroniclesNodeService is null)
@@ -102,9 +102,9 @@ namespace NineChronicles.Headless.Controllers
         [HttpPost(SetPrivateKeyEndpoint)]
         public IActionResult SetPrivateKey([FromBody] SetPrivateKeyRequest request)
         {
-            if (AuthenticateLocalPolicy() is { } result)
+            if (!HasLocalPolicy())
             {
-                return result;
+                return Unauthorized();
             }
 
             if (StandaloneContext.NineChroniclesNodeService is null)
@@ -122,9 +122,9 @@ namespace NineChronicles.Headless.Controllers
         [HttpPost(SetMiningEndpoint)]
         public IActionResult SetMining([FromBody] SetMiningRequest request)
         {
-            if (AuthenticateLocalPolicy() is { } result)
+            if (!HasLocalPolicy())
             {
-                return result;
+                return Unauthorized();
             }
 
             if (StandaloneContext.NineChroniclesNodeService is null)
@@ -284,14 +284,8 @@ namespace NineChronicles.Headless.Controllers
         }
 
         // FIXME: remove this method with DI.
-        private IActionResult AuthenticateLocalPolicy()
-        {
-            if (_configuration[GraphQLService.SecretTokenKey] is { } &&
-                !_httpContextAccessor.HttpContext.User.HasClaim("role", "Admin"))
-            {
-                return Unauthorized();
-            }
-            return null;
-        }
+        private bool HasLocalPolicy() => _configuration[GraphQLService.SecretTokenKey] is { } &&
+                                                  _httpContextAccessor.HttpContext.User.HasClaim(
+                                                      "role", "Admin");
     }
 }
