@@ -13,6 +13,7 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Libplanet.Crypto;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Nekoyume.Model.Item;
 using NineChronicles.Headless.GraphTypes;
@@ -25,6 +26,9 @@ namespace NineChronicles.Headless.Controllers
     [ApiController]
     public class GraphQLController : ControllerBase
     {
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IConfiguration _configuration;
+
         private ConcurrentDictionary<Address, long> NotificationRecords { get; }
             = new ConcurrentDictionary<Address, long>();
         private StandaloneContext StandaloneContext { get; }
@@ -38,14 +42,21 @@ namespace NineChronicles.Headless.Controllers
 
         public const string CheckPeerEndpoint = "/check-peer";
 
-        public GraphQLController(StandaloneContext standaloneContext)
+        public GraphQLController(StandaloneContext standaloneContext, IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
         {
+            _httpContextAccessor = httpContextAccessor;
+            _configuration = configuration;
             StandaloneContext = standaloneContext;
         }
 
         [HttpPost(RunStandaloneEndpoint)]
         public IActionResult RunStandalone()
         {
+            if (!HasLocalPolicy())
+            {
+                return Unauthorized();
+            }
+
             if (StandaloneContext.NineChroniclesNodeService is null)
             {
                 // Waiting node service.
@@ -91,6 +102,11 @@ namespace NineChronicles.Headless.Controllers
         [HttpPost(SetPrivateKeyEndpoint)]
         public IActionResult SetPrivateKey([FromBody] SetPrivateKeyRequest request)
         {
+            if (!HasLocalPolicy())
+            {
+                return Unauthorized();
+            }
+
             if (StandaloneContext.NineChroniclesNodeService is null)
             {
                 // Waiting node service.
@@ -108,6 +124,11 @@ namespace NineChronicles.Headless.Controllers
         [HttpPost(SetMiningEndpoint)]
         public IActionResult SetMining([FromBody] SetMiningRequest request)
         {
+            if (!HasLocalPolicy())
+            {
+                return Unauthorized();
+            }
+
             if (StandaloneContext.NineChroniclesNodeService is null)
             {
                 // Waiting node service.
@@ -263,5 +284,10 @@ namespace NineChronicles.Headless.Controllers
                 }
             }
         }
+
+        // FIXME: remove this method with DI.
+        private bool HasLocalPolicy() => _configuration[GraphQLService.SecretTokenKey] is { } &&
+                                                  _httpContextAccessor.HttpContext.User.HasClaim(
+                                                      "role", "Admin");
     }
 }

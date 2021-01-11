@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL;
+using GraphQL.Server.Authorization.AspNetCore;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Action;
@@ -47,7 +48,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<KeyStoreType>(
                 name: "keyStore",
                 resolve: context => standaloneContext.KeyStore
-            );
+            ).AuthorizeWith(GraphQLService.LocalPolicyKey);
 
             Field<NonNullGraphType<NodeStatusType>>(
                 name: "nodeStatus",
@@ -67,9 +68,10 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context => new ValidationQuery(standaloneContext));
 
             Field<NonNullGraphType<ActivationStatusQuery>>(
-                name: "activationStatus",
-                description: "Check if the provided address is activated.",
-                resolve: context => new ActivationStatusQuery(standaloneContext));
+                    name: "activationStatus",
+                    description: "Check if the provided address is activated.",
+                    resolve: context => new ActivationStatusQuery(standaloneContext))
+                .AuthorizeWith(GraphQLService.LocalPolicyKey);
 
             Field<NonNullGraphType<PeerChainStateQuery>>(
                 name: "peerChainState",
