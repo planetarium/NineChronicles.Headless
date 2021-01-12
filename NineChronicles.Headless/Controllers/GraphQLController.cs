@@ -286,8 +286,7 @@ namespace NineChronicles.Headless.Controllers
         }
 
         // FIXME: remove this method with DI.
-        private bool HasLocalPolicy() => _configuration[GraphQLService.SecretTokenKey] is { } &&
-                                                  _httpContextAccessor.HttpContext.User.HasClaim(
-                                                      "role", "Admin");
+        private bool HasLocalPolicy() => !(_configuration[GraphQLService.SecretTokenKey] is { }) ||
+                                         _httpContextAccessor.HttpContext.User.HasClaim("role", "Admin");
     }
 }
