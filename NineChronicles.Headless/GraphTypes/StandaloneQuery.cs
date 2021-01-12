@@ -8,6 +8,7 @@ using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
+using Microsoft.Extensions.Configuration;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>; 
@@ -16,8 +17,10 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneQuery : ObjectGraphType
     {
-        public StandaloneQuery(StandaloneContext standaloneContext)
+        public StandaloneQuery(StandaloneContext standaloneContext, IConfiguration configuration)
         {
+            bool useSecretToken = configuration[GraphQLService.SecretTokenKey] is { };
+
             Field<NonNullGraphType<StateQuery<NCAction>>>(name: "stateQuery", resolve: _ => standaloneContext.BlockChain);
             Field<ByteStringType>(
                 name: "state",
@@ -48,7 +51,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<KeyStoreType>(
                 name: "keyStore",
                 resolve: context => standaloneContext.KeyStore
-            ).AuthorizeWith(GraphQLService.LocalPolicyKey);
+            ).AuthorizeWithLocalPolicyIf(useSecretToken);
 
             Field<NonNullGraphType<NodeStatusType>>(
                 name: "nodeStatus",
@@ -71,7 +74,7 @@ namespace NineChronicles.Headless.GraphTypes
                     name: "activationStatus",
                     description: "Check if the provided address is activated.",
                     resolve: context => new ActivationStatusQuery(standaloneContext))
-                .AuthorizeWith(GraphQLService.LocalPolicyKey);
+                .AuthorizeWithLocalPolicyIf(useSecretToken);
 
             Field<NonNullGraphType<PeerChainStateQuery>>(
                 name: "peerChainState",

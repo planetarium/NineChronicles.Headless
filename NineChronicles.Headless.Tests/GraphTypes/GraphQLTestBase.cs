@@ -152,7 +152,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             public TestServiceProvider(StandaloneContext standaloneContext, IConfiguration configuration)
             {
-                Query = new StandaloneQuery(standaloneContext);
+                Query = new StandaloneQuery(standaloneContext, configuration);
                 Mutation = new StandaloneMutation(standaloneContext, configuration);
                 Subscription = new StandaloneSubscription(standaloneContext);
                 StandaloneContext = standaloneContext;
