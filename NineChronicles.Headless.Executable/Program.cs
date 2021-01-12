@@ -124,9 +124,7 @@ namespace NineChronicles.Headless.Executable
             string awsSecretKey = null,
             [Option(Description = "The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2).")]
             string awsRegion = null,
-            [Option(Description =
-                "Flag to use as authorized miner. " +
-                "If true, it will mine only blocks that authorized miners should mine.")]
+            [Option(Description = "Run as an authorized miner, which mines only blocks that should be authorized.")]
             bool authorizedMiner = false
         )
         {
