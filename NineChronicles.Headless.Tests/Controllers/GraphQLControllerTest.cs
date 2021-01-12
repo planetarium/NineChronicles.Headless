@@ -53,8 +53,7 @@ namespace NineChronicles.Headless.Tests.Controllers
         [Fact]
         public void RunStandaloneThrowsUnauthorizedIfSecretTokenUsed()
         {
-            string secretToken = Guid.NewGuid().ToString();
-            _configuration[GraphQLService.SecretTokenKey] = secretToken;
+            ConfigureSecretToken();
             Assert.IsType<UnauthorizedResult>(_controller.RunStandalone());
         }
 
@@ -74,26 +73,27 @@ namespace NineChronicles.Headless.Tests.Controllers
         {
             if (useSecretToken)
             {
-                string secretToken = Guid.NewGuid().ToString();
-                _configuration[GraphQLService.SecretTokenKey] = secretToken;
-                _httpContextAccessor.HttpContext.User.AddIdentity(new ClaimsIdentity(new[]
-                {
-                    new Claim("role", "Admin"), 
-                }));
+                ConfigureSecretToken();
+                ConfigureAdminClaim();
             }
 
-            _standaloneContext.NineChroniclesNodeService = new NineChroniclesNodeService(
-                new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
-                {
-                    MinimumDifficulty = 500000,
-                    GenesisBlock = _standaloneContext.BlockChain.Genesis,
-                    StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
-                    AppProtocolVersion = AppProtocolVersion.Sign(new PrivateKey(), 0),
-                    PrivateKey = new PrivateKey(),
-                    Host = IPAddress.Loopback.ToString(),
-                },
-                null);
+            ConfigureNineChroniclesNodeService();
             Assert.IsType<OkObjectResult>(_controller.RunStandalone());
+        }
+
+        private string CreateSecretToken() => Guid.NewGuid().ToString();
+
+        private void ConfigureSecretToken()
+        {
+            _configuration[GraphQLService.SecretTokenKey] = CreateSecretToken();
+        }
+
+        private void ConfigureAdminClaim()
+        {
+            _httpContextAccessor.HttpContext.User.AddIdentity(new ClaimsIdentity(new[]
+            {
+                new Claim("role", "Admin"), 
+            }));
         }
     }
 }
