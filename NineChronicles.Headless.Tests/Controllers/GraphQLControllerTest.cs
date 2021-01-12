@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Nekoyume.Action;
 using NineChronicles.Headless.Controllers;
+using NineChronicles.Headless.Requests;
 using Xunit;
 using IPAddress = System.Net.IPAddress;
 
@@ -81,6 +82,43 @@ namespace NineChronicles.Headless.Tests.Controllers
             Assert.IsType<OkObjectResult>(_controller.RunStandalone());
         }
 
+        [Theory]
+        [InlineData(true, true)]
+        [InlineData(true, false)]
+        [InlineData(false, true)]
+        [InlineData(false, false)]
+        public void SetMining(bool useSecretToken, bool mine)
+        {
+            if (useSecretToken)
+            {
+                ConfigureSecretToken();
+                ConfigureAdminClaim();
+            }
+
+            ConfigureNineChroniclesNodeService();
+            Assert.IsType<OkObjectResult>(_controller.SetMining(new SetMiningRequest
+            {
+                Mine = mine,
+            }));
+            Assert.Equal(mine, _standaloneContext.IsMining);
+        }
+        
+        [Fact]
+        public void SetMiningThrowsConflict()
+        {
+            _standaloneContext.NineChroniclesNodeService = null;
+            IActionResult result = _controller.SetMining(new SetMiningRequest());
+            Assert.IsType<StatusCodeResult>(result);
+            Assert.Equal(StatusCodes.Status409Conflict, ((StatusCodeResult)result).StatusCode);
+        }
+        
+        [Fact]
+        public void SetMiningThrowsUnauthorizedIfSecretTokenUsed()
+        {
+            ConfigureSecretToken();
+            Assert.IsType<UnauthorizedResult>(_controller.SetMining(new SetMiningRequest()));
+        }
+
         private string CreateSecretToken() => Guid.NewGuid().ToString();
 
         private void ConfigureSecretToken()
@@ -94,6 +132,21 @@ namespace NineChronicles.Headless.Tests.Controllers
             {
                 new Claim("role", "Admin"), 
             }));
+        }
+
+        private void ConfigureNineChroniclesNodeService()
+        {
+            _standaloneContext.NineChroniclesNodeService = new NineChroniclesNodeService(
+                new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+                {
+                    MinimumDifficulty = 500000,
+                    GenesisBlock = _standaloneContext.BlockChain.Genesis,
+                    StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
+                    AppProtocolVersion = AppProtocolVersion.Sign(new PrivateKey(), 0),
+                    PrivateKey = new PrivateKey(),
+                    Host = IPAddress.Loopback.ToString(),
+                },
+                null);
         }
     }
 }
