@@ -7,7 +7,7 @@ $ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
 
 Usage: NineChronicles.Headless.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--minimum-difficulty <Int32>] [--private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-pro
 tocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--libplanet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval
-<Int32>] [--dev.reorg-interval <Int32>] [--log-minimum-level <String>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--is-authorized-miner] [--help] [--version]
+<Int32>] [--dev.reorg-interval <Int32>] [--log-minimum-level <String>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--help] [--version]
 
 Run headless application with options.
 
@@ -43,7 +43,7 @@ Options:
   --aws-access-key <String>                                The access key for AWS CloudWatch logging. (Default: )
   --aws-secret-key <String>                                The secret key for AWS CloudWatch logging. (Default: )
   --aws-region <String>                                    The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2). (Default: )
-  --is-authorized-miner                                    Flag to use as authorized miner. If true, it will mine only blocks that authorized miners should mine.
+  --authorized-miner                                       Run as an authorized miner, which mines only blocks that should be authorized.
   -h, --help                                               Show help message
   --version                                                Show version
 ```
