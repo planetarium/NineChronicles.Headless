@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Security.Claims;
+using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
@@ -117,6 +118,43 @@ namespace NineChronicles.Headless.Tests.Controllers
         {
             ConfigureSecretToken();
             Assert.IsType<UnauthorizedResult>(_controller.SetMining(new SetMiningRequest()));
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void SetPrivateKey(bool useSecretToken)
+        {
+            if (useSecretToken)
+            {
+                ConfigureSecretToken();
+                ConfigureAdminClaim();
+            }
+
+            ConfigureNineChroniclesNodeService();
+            var privateKey = new PrivateKey();
+            Assert.IsType<OkObjectResult>(_controller.SetPrivateKey(new SetPrivateKeyRequest
+            {
+                PrivateKeyString = ByteUtil.Hex(privateKey.ByteArray),
+            }));
+
+            Assert.Equal(_standaloneContext.NineChroniclesNodeService.PrivateKey, privateKey);
+        }
+        
+        [Fact]
+        public void SetPrivateKeyThrowsConflict()
+        {
+            _standaloneContext.NineChroniclesNodeService = null;
+            IActionResult result = _controller.SetPrivateKey(new SetPrivateKeyRequest());
+            Assert.IsType<StatusCodeResult>(result);
+            Assert.Equal(StatusCodes.Status409Conflict, ((StatusCodeResult)result).StatusCode);
+        }
+        
+        [Fact]
+        public void SetPrivateKeyThrowsUnauthorizedIfSecretTokenUsed()
+        {
+            ConfigureSecretToken();
+            Assert.IsType<UnauthorizedResult>(_controller.SetPrivateKey(new SetPrivateKeyRequest()));
         }
 
         private string CreateSecretToken() => Guid.NewGuid().ToString();
