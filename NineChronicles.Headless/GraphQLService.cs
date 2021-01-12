@@ -1,20 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using GraphQL.Server;
 using GraphQL.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Primitives;
 using NineChronicles.Headless.GraphTypes;
+using NineChronicles.Headless.Middleware;
 using NineChronicles.Headless.Properties;
 using Serilog;
 
@@ -80,6 +77,8 @@ namespace NineChronicles.Headless
                     )
                 );
 
+                services.AddTransient<LocalAuthenticationMiddleware>();
+
                 services.AddHealthChecks();
 
                 services.AddControllers();
@@ -117,8 +116,8 @@ namespace NineChronicles.Headless
                     app.UseDeveloperExceptionPage();
                 }
 
+                app.UseMiddleware<LocalAuthenticationMiddleware>();
                 app.UseCors("AllowAllOrigins");
-                app.Use(AuthenticateLocalPolicy);
 
                 app.UseRouting();
                 app.UseAuthorization();
@@ -135,25 +134,6 @@ namespace NineChronicles.Headless
 
                 // /ui/playground 옵션을 통해서 Playground를 사용할 수 있습니다.
                 app.UseGraphQLPlayground();
-            }
-            
-            private async Task AuthenticateLocalPolicy(HttpContext context, Func<Task> next)
-            {
-                if (Configuration[SecretTokenKey] is { } secretToken
-                    && context.Request.Headers.TryGetValue("Authorization", out StringValues v)
-                    && v.Count == 1 && v[0] == $"Basic {secretToken}")
-                {
-                    context.User.AddIdentity(
-                        new ClaimsIdentity(
-                            new[]
-                            {
-                                new Claim(
-                                    "role",
-                                    "Admin"),
-                            }));
-                }
-
-                await next();
             }
         }
     }
