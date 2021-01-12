@@ -66,7 +66,7 @@ namespace NineChronicles.Headless
             Progress<PreloadState> preloadProgress = null,
             bool ignoreBootstrapFailure = false,
             bool strictRendering = false,
-            bool isAuthorizedMiner = false,
+            bool authorizedMiner = false,
             bool isDev = false,
             int blockInterval = 10000,
             int reorgInterval = 0
@@ -147,7 +147,7 @@ namespace NineChronicles.Headless
                                              && nextBlockIndex > 0
                                              && nextBlockIndex <= bp.AuthorizedMinersState.ValidUntil
                                              && nextBlockIndex % bp.AuthorizedMinersState.Interval == 0;
-                        if (swarm.Running && (!isAuthorizedMiner || isTargetBlock))
+                        if (swarm.Running && (!authorizedMiner || isTargetBlock))
                         {
                             Log.Debug("Start mining.");
                             await miner.MineBlockAsync(properties.MaximumTransactions, cancellationToken);

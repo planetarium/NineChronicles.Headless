@@ -127,7 +127,7 @@ namespace NineChronicles.Headless.Executable
             [Option(Description =
                 "Flag to use as authorized miner. " +
                 "If true, it will mine only blocks that authorized miners should mine.")]
-            bool isAuthorizedMiner = false
+            bool authorizedMiner = false
         )
         {
 #if SENTRY || ! DEBUG
@@ -280,7 +280,7 @@ namespace NineChronicles.Headless.Executable
                         isDev: isDev,
                         blockInterval: blockInterval,
                         reorgInterval: reorgInterval,
-                        isAuthorizedMiner: isAuthorizedMiner);
+                        authorizedMiner: authorizedMiner);
                 standaloneContext.NineChroniclesNodeService = nineChroniclesNodeService;
 
                 if (libplanetNode)
