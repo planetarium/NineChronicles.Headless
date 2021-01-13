@@ -141,7 +141,7 @@ namespace NineChronicles.Headless
                 {
                     try
                     {
-                        long nextBlockIndex = chain.Tip.Index;
+                        long nextBlockIndex = chain.Tip.Index + 1;
                         bool isTargetBlock = blockPolicy is BlockPolicy bp
                                              // Copied from https://git.io/JLxNd
                                              && nextBlockIndex > 0
