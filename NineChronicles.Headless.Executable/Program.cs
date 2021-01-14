@@ -350,7 +350,20 @@ namespace NineChronicles.Headless.Executable
         private Guid? LoadAWSSinkGuid()
         {
             string path = AWSSinkGuidPath();
-            return File.Exists(path) ? Guid.Parse(File.ReadAllText(AWSSinkGuidPath())) : (Guid?)null;
+            if (!File.Exists(path))
+            {
+                Console.Error.WriteLine($"AWSSink id doesn't exist.");
+                return null;
+            }
+
+            string guidString = File.ReadAllText(AWSSinkGuidPath());
+            if (Guid.TryParse(guidString, out Guid guid))
+            {
+                return guid;
+            }
+
+            Console.Error.WriteLine($"AWSSink id seems broken. (id: {guidString}");
+            return null;
         }
 
         private void StoreAWSSinkGuid(Guid guid)
