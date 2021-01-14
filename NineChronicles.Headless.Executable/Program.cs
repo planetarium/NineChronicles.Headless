@@ -162,8 +162,12 @@ namespace NineChronicles.Headless.Executable
                     ? (AWSCredentials)new CognitoAWSCredentials(awsCognitoIdentity, regionEndpoint)
                     : (AWSCredentials)new BasicAWSCredentials(awsAccessKey, awsSecretKey);
 
-                var guid = LoadAWSSinkGuid() ?? Guid.NewGuid();
-                StoreAWSSinkGuid(guid);
+                var guid = LoadAWSSinkGuid();
+                if (guid is null)
+                {
+                    guid = Guid.NewGuid();
+                    StoreAWSSinkGuid(guid.Value);   
+                }
 
                 var awsSink = new AWSSink(
                     credentials,
