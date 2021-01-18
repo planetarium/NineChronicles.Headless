@@ -23,8 +23,8 @@ namespace NineChronicles.Headless.Properties
                 string genesisBlockPath = null,
                 string swarmHost = null,
                 ushort? swarmPort = null,
+                string swarmPrivateKeyString = null,
                 int minimumDifficulty = 5000000,
-                string privateKeyString = null,
                 string storeType = null,
                 string storePath = null,
                 int storeStateCacheSize = 100,
@@ -40,9 +40,9 @@ namespace NineChronicles.Headless.Properties
                 int tipTimeout = 60,
                 int demandBuffer = 1150)
         {
-            var privateKey = string.IsNullOrEmpty(privateKeyString)
+            var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
-                : new PrivateKey(ByteUtil.ParseHex(privateKeyString));
+                : new PrivateKey(ByteUtil.ParseHex(swarmPrivateKeyString));
 
             peerStrings ??= Array.Empty<string>();
             iceServerStrings ??= Array.Empty<string>();
@@ -54,13 +54,13 @@ namespace NineChronicles.Headless.Properties
             {
                 Host = swarmHost,
                 Port = swarmPort,
+                SwarmPrivateKey = swarmPrivateKey,
                 AppProtocolVersion = AppProtocolVersion.FromToken(appProtocolVersionToken),
                 TrustedAppProtocolVersionSigners = trustedAppProtocolVersionSigners
                     ?.Select(s => new PublicKey(ByteUtil.ParseHex(s)))
                     ?.ToHashSet(),
                 GenesisBlockPath = genesisBlockPath,
                 NoMiner = noMiner,
-                PrivateKey = privateKey,
                 IceServers = iceServers,
                 Peers = peers,
                 StoreType = storeType,

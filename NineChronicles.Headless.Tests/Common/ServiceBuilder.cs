@@ -34,7 +34,7 @@ namespace NineChronicles.Headless.Tests.Common
                 GenesisBlock = genesis,
                 StorePath = storePath,
                 StoreStatesCacheSize = 2,
-                PrivateKey = privateKey,
+                SwarmPrivateKey = new PrivateKey(),
                 Port = null,
                 MinimumDifficulty = MinimumDifficulty,
                 NoMiner = true,

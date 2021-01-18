@@ -10,6 +10,7 @@ using Amazon.CognitoIdentity;
 using Amazon.Runtime;
 using Cocona;
 using Libplanet;
+using Libplanet.Crypto;
 using Libplanet.KeyStore;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.Executable.Commands;
@@ -279,8 +280,8 @@ namespace NineChronicles.Headless.Executable
                         genesisBlockPath,
                         host,
                         port,
+                        swarmPrivateKeyString,
                         minimumDifficulty,
-                        privateKeyString,
                         storeType,
                         storePath,
                         100,
@@ -309,6 +310,9 @@ namespace NineChronicles.Headless.Executable
                     properties.LogActionRenders = true;
                 }
 
+                var privateKey = string.IsNullOrEmpty(privateKeyString)
+                    ? null
+                    : new PrivateKey(ByteUtil.ParseHex(privateKeyString));
                 var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
                 {
                     Rpc = rpcProperties,
@@ -331,7 +335,14 @@ namespace NineChronicles.Headless.Executable
                 {
                     if (!properties.NoMiner)
                     {
-                        nineChroniclesNodeService.PrivateKey = properties.PrivateKey;
+                        if (privateKey is null)
+                        {
+                            throw new CommandExitedException(
+                                "--private-key must be present to turn on mining at libplanet node.",
+                                -1
+                            );
+                        }
+                        
                         nineChroniclesNodeService.StartMining();
                     }
 
