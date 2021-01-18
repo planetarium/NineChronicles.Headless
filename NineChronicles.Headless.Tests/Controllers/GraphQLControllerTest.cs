@@ -176,6 +176,7 @@ namespace NineChronicles.Headless.Tests.Controllers
         private void ConfigureNineChroniclesNodeService()
         {
             _standaloneContext.NineChroniclesNodeService = new NineChroniclesNodeService(
+                new PrivateKey(),
                 new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
                 {
                     MinimumDifficulty = 500000,

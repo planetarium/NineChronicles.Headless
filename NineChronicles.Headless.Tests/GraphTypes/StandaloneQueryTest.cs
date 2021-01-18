@@ -417,8 +417,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 TrustedAppProtocolVersionSigners = null,
             };
 
-            var service = new NineChroniclesNodeService(properties, null);
-            service.PrivateKey = userPrivateKey;
+            var service = new NineChroniclesNodeService(userPrivateKey, properties, null);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
 
@@ -459,7 +458,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var userPrivateKey = new PrivateKey();
             var userAddress = userPrivateKey.ToAddress();
             var service = MakeMineChroniclesNodeService(userPrivateKey);
-            service.PrivateKey = userPrivateKey;
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
 
@@ -624,7 +622,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 TrustedAppProtocolVersionSigners = null,
             };
 
-            return new NineChroniclesNodeService(properties, null);
+            return new NineChroniclesNodeService(privateKey, properties, null);
         }
 
         private (ProtectedPrivateKey, string) CreateProtectedPrivateKey()

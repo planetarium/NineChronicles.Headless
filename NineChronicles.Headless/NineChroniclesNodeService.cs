@@ -61,6 +61,7 @@ namespace NineChronicles.Headless
         public PrivateKey PrivateKey { get; set; }
 
         public NineChroniclesNodeService(
+            PrivateKey privateKey,
             LibplanetNodeServiceProperties<NineChroniclesActionType> properties,
             RpcNodeServiceProperties? rpcNodeServiceProperties,
             Progress<PreloadState> preloadProgress = null,
@@ -74,6 +75,7 @@ namespace NineChronicles.Headless
             TimeSpan txLifeTime = default
         )
         {
+            PrivateKey = privateKey;
             Properties = properties;
             RpcProperties = rpcNodeServiceProperties;
 

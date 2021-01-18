@@ -315,6 +315,7 @@ namespace NineChronicles.Headless.Executable
                     : new PrivateKey(ByteUtil.ParseHex(privateKeyString));
                 var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
                 {
+                    PrivateKey = privateKey,
                     Rpc = rpcProperties,
                     Libplanet = properties
                 };
