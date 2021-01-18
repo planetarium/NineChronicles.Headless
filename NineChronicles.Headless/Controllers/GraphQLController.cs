@@ -113,8 +113,8 @@ namespace NineChronicles.Headless.Controllers
             }
 
             var privateKey = new PrivateKey(ByteUtil.ParseHex(request.PrivateKeyString));
-            StandaloneContext.NineChroniclesNodeService.PrivateKey = privateKey;
-            var msg = $"Private key set ({StandaloneContext.NineChroniclesNodeService.PrivateKey.PublicKey.ToAddress()}).";
+            StandaloneContext.NineChroniclesNodeService.MinerPrivateKey = privateKey;
+            var msg = $"Private key set ({StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress()}).";
             Log.Information("SetPrivateKey: {Msg}", msg);
             return Ok(msg);
         }

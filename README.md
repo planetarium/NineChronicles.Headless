@@ -16,7 +16,7 @@
 ```
 $ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
 Usage: NineChronicles.Headless.Executable [command]
-Usage: NineChronicles.Headless.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--swarm-private-key <String>] [--minimum-difficulty <Int32>] [--private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--graphql-secret-token-path <String>] [--no-cors] [--libplanet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-action-renders] [--log-minimum-level <String>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--help] [--version]
+Usage: NineChronicles.Headless.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--swarm-private-key <String>] [--minimum-difficulty <Int32>] [--miner-private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--graphql-secret-token-path <String>] [--no-cors] [--libplanet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-action-renders] [--log-minimum-level <String>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--help] [--version]
 
 NineChronicles.Headless.Executable
 
@@ -31,7 +31,7 @@ Options:
   -P, --port <Nullable`1>                                   (Default: )
   --swarm-private-key <String>                             The private key used for signing messages and to specify your node. If you leave this this null, randomly generated value will be used. (Default: )
   -D, --minimum-difficulty <Int32>                          (Default: 5000000)
-  --private-key <String>                                   The private key used for mining blocks and signing txs. Must not be null if you want to turn on mining with libplanet-node. (Default: )
+  --miner-private-key <String>                             The private key used for mining blocks. Must not be null if you want to turn on mining with libplanet-node. (Default: )
   --store-type <String>                                     (Default: )
   --store-path <String>                                     (Default: )
   -I, --ice-server <String>...                              (Default: )
@@ -81,7 +81,8 @@ $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 
 - `-H`, `--host`: Specifies the host name.
 - `-P`, `--port`: Specifies the port number.
-- `--private-key`: Specifies the private Key.
+- `--swarm-private-key`: Specifies the private Key used in swarm.
+- `--miner-private-key`: Specifies the private Key used in mining.
 - `--no-miner`: Disables mining.
 - `--store-path`: Specifies the path for storing data.
 - `-I`, `--ice-server`: Specifies the TURN server info used for NAT Traversal. If there are multiple servers, they can be added by typing: `--ice-server serverA --ice-server serverB ...`.
@@ -151,6 +152,7 @@ planetariumhq/ninechronicles-headless:latest \
 <a href = "#run" title="NineChronicles Headless options">[NineChronicles Headless Options]</a>
 </pre>
 #### Note)
+
 * If you want to use the same headless options as your Nine Chronicles game client, refer to **`config.json`** under **`%localappdata%\Programs\Nine Chronicles\resources\app`**. Inside **`config.json`**, refer to the following properties for your headless options:
   - `GeniesisBlockPath`
   - `MinimumDifficulty`
@@ -164,7 +166,7 @@ planetariumhq/ninechronicles-headless:latest \
   - `Confirmations`
   - `Workers`
 * If you are using an [Elastic IP](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html) on your AWS instance, you must include the IP as the `--host` option but do not need to include the `--ice-server` option.
-* For mining, make sure to include the `--private-key` option with your private key. Also, include `--libplanet-node` to run the default libplanet node. 
+* For mining, make sure to include the `--miner-private-key` option with your private key. Also, include `--libplanet-node` to run the default libplanet node.
 
 ![Docker Run](https://i.imgur.com/VlwFybj.png)
 

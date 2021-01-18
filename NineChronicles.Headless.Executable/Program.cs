@@ -70,10 +70,10 @@ namespace NineChronicles.Headless.Executable
             string swarmPrivateKeyString = null,
             [Option('D')]
             int minimumDifficulty = 5000000,
-            [Option("private-key",
-                Description = "The private key used for mining blocks and signing txs. " +
+            [Option("miner-private-key",
+                Description = "The private key used for mining blocks. " +
                               "Must not be null if you want to turn on mining with libplanet-node.")]
-            string privateKeyString = null,
+            string minerPrivateKeyString = null,
             string storeType = null,
             string storePath = null,
             [Option("ice-server", new [] { 'I', })]
@@ -310,12 +310,12 @@ namespace NineChronicles.Headless.Executable
                     properties.LogActionRenders = true;
                 }
 
-                var privateKey = string.IsNullOrEmpty(privateKeyString)
+                var minerPrivateKey = string.IsNullOrEmpty(minerPrivateKeyString)
                     ? null
-                    : new PrivateKey(ByteUtil.ParseHex(privateKeyString));
+                    : new PrivateKey(ByteUtil.ParseHex(minerPrivateKeyString));
                 var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
                 {
-                    PrivateKey = privateKey,
+                    MinerPrivateKey = minerPrivateKey,
                     Rpc = rpcProperties,
                     Libplanet = properties
                 };
@@ -336,10 +336,10 @@ namespace NineChronicles.Headless.Executable
                 {
                     if (!properties.NoMiner)
                     {
-                        if (privateKey is null)
+                        if (minerPrivateKey is null)
                         {
                             throw new CommandExitedException(
-                                "--private-key must be present to turn on mining at libplanet node.",
+                                "--miner-private-key must be present to turn on mining at libplanet node.",
                                 -1
                             );
                         }

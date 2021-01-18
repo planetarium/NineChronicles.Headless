@@ -58,10 +58,10 @@ namespace NineChronicles.Headless
 
         public IStore Store => NodeService?.Store;
 
-        public PrivateKey PrivateKey { get; set; }
+        public PrivateKey MinerPrivateKey { get; set; }
 
         public NineChroniclesNodeService(
-            PrivateKey privateKey,
+            PrivateKey minerPrivateKey,
             LibplanetNodeServiceProperties<NineChroniclesActionType> properties,
             RpcNodeServiceProperties? rpcNodeServiceProperties,
             Progress<PreloadState> preloadProgress = null,
@@ -75,7 +75,7 @@ namespace NineChronicles.Headless
             TimeSpan txLifeTime = default
         )
         {
-            PrivateKey = privateKey;
+            MinerPrivateKey = minerPrivateKey;
             Properties = properties;
             RpcProperties = rpcNodeServiceProperties;
 
@@ -315,7 +315,7 @@ namespace NineChronicles.Headless
             });
         }
 
-        public void StartMining() => NodeService.StartMining(PrivateKey);
+        public void StartMining() => NodeService.StartMining(MinerPrivateKey);
 
         public void StopMining() => NodeService.StopMining();
         

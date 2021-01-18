@@ -139,7 +139,7 @@ namespace NineChronicles.Headless.Tests.Controllers
                 PrivateKeyString = ByteUtil.Hex(privateKey.ByteArray),
             }));
 
-            Assert.Equal(_standaloneContext.NineChroniclesNodeService.PrivateKey, privateKey);
+            Assert.Equal(_standaloneContext.NineChroniclesNodeService.MinerPrivateKey, privateKey);
         }
         
         [Fact]

@@ -54,7 +54,7 @@ namespace NineChronicles.Headless
                 };
 
             var service = new NineChroniclesNodeService(
-                properties.PrivateKey,
+                properties.MinerPrivateKey,
                 properties.Libplanet,
                 properties.Rpc,
                 preloadProgress: progress,
