@@ -29,7 +29,7 @@ Options:
   -G, --genesis-block-path <String>                         (Default: )
   -H, --host <String>                                       (Default: )
   -P, --port <Nullable`1>                                   (Default: )
-  --swarm-private-key <String>                             The private key used for signing messages and to specify your node. If you leave this this null, randomly generated value will be used. (Default: )
+  --swarm-private-key <String>                             The private key used for signing messages and to specify your node. If you leave this null, a randomly generated value will be used. (Default: )
   -D, --minimum-difficulty <Int32>                          (Default: 5000000)
   --miner-private-key <String>                             The private key used for mining blocks. Must not be null if you want to turn on mining with libplanet-node. (Default: )
   --store-type <String>                                     (Default: )

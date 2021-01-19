@@ -66,7 +66,7 @@ namespace NineChronicles.Headless.Executable
             ushort? port = null,
             [Option("swarm-private-key",
                 Description = "The private key used for signing messages and to specify your node. " +
-                              "If you leave this this null, randomly generated value will be used.")]
+                              "If you leave this null, a randomly generated value will be used.")]
             string swarmPrivateKeyString = null,
             [Option('D')]
             int minimumDifficulty = 5000000,

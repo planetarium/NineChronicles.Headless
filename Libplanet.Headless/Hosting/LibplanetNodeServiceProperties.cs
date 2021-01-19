@@ -16,6 +16,7 @@ namespace Libplanet.Headless.Hosting
         public ushort? Port { get; set; }
 
         public PrivateKey SwarmPrivateKey { get; set; }
+
         public string StoreType { get; set; }
 
         public string StorePath { get; set; }
