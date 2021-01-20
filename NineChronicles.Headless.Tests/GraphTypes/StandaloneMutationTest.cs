@@ -1,5 +1,4 @@
 using GraphQL;
-using Lib9c.Tests;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
