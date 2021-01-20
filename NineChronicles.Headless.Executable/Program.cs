@@ -352,7 +352,7 @@ namespace NineChronicles.Headless.Executable
             string path = AWSSinkGuidPath();
             if (!File.Exists(path))
             {
-                Console.Error.WriteLine($"AWSSink id doesn't exist.");
+                Console.Error.WriteLine($"AWSSink id doesn't exist. (path: {path})");
                 return null;
             }
 
