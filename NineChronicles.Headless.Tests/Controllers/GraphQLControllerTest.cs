@@ -37,6 +37,7 @@ namespace NineChronicles.Headless.Tests.Controllers
             var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock();
             var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
                 new BlockPolicy<PolymorphicAction<ActionBase>>(),
+                new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
                 store,
                 stateStore,
                 genesisBlock);

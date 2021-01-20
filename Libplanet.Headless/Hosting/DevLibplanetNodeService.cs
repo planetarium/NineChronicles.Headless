@@ -37,13 +37,14 @@ namespace Libplanet.Headless.Hosting
             LibplanetNodeServiceProperties<T> properties,
             IBlockPolicy<T> easyPolicy,
             IBlockPolicy<T> hardPolicy,
+            IStagePolicy<T> stagePolicy,
             IEnumerable<IRenderer<T>> renderers,
             Func<Swarm<T>, Swarm<T>, PrivateKey, CancellationToken, Task> minerLoopAction,
             Progress<PreloadState> preloadProgress,
             Action<RPCException, string> exceptionHandlerAction,
             Action<bool> preloadStatusHandlerAction, 
             bool ignoreBootstrapFailure = false
-        ) : base(properties, easyPolicy, renderers, null, preloadProgress, exceptionHandlerAction, preloadStatusHandlerAction, ignoreBootstrapFailure)
+        ) : base(properties, easyPolicy, stagePolicy, renderers, null, preloadProgress, exceptionHandlerAction, preloadStatusHandlerAction, ignoreBootstrapFailure)
         {
             if (easyPolicy is null)
             {
@@ -68,7 +69,7 @@ namespace Libplanet.Headless.Hosting
 
             SubChain = new BlockChain<T>(
                 policy: hardPolicy,
-                stagePolicy : new VolatileStagePolicy<T>(),
+                stagePolicy : stagePolicy,
                 store: SubStore,
                 stateStore: SubStateStore,
                 genesisBlock: genesisBlock

@@ -91,6 +91,7 @@ namespace NineChronicles.Headless
             // Policies for dev mode.
             IBlockPolicy<PolymorphicAction<ActionBase>> easyPolicy = null;
             IBlockPolicy<PolymorphicAction<ActionBase>> hardPolicy = null;
+             IStagePolicy<PolymorphicAction<ActionBase>> stagePolicy = new VolatileStagePolicy<NineChroniclesActionType>();
             if (isDev)
             {
                 easyPolicy = new ReorgPolicy(new RewardGold(), 1);
@@ -200,6 +201,7 @@ namespace NineChronicles.Headless
                     Properties,
                     easyPolicy,
                     hardPolicy,
+                    stagePolicy,
                     renderers,
                     devMinerLoopAction,
                     preloadProgress,
@@ -217,6 +219,7 @@ namespace NineChronicles.Headless
                 NodeService = new LibplanetNodeService<NineChroniclesActionType>(
                     Properties,
                     blockPolicy,
+                    stagePolicy,
                     renderers,
                     minerLoopAction,
                     preloadProgress,
