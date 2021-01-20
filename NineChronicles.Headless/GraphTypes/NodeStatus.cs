@@ -65,7 +65,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<ListGraphType<TxIdType>>(
                 name: "stagedTxIds",
                 description: "Staged TxIds from the current node.",
-                resolve: context => context.Source.Store?.IterateStagedTransactionIds()
+                resolve: context => context.Source.BlockChain.GetStagedTransactionIds()
             );
             Field<NonNullGraphType<BlockHeaderType>>(name: "genesis",
                 resolve: context => BlockHeaderType.FromBlock(context.Source.BlockChain.Genesis));
