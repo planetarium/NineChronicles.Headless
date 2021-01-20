@@ -68,6 +68,7 @@ namespace Libplanet.Headless.Hosting
 
             SubChain = new BlockChain<T>(
                 policy: hardPolicy,
+                stagePolicy : new VolatileStagePolicy<T>()
                 store: SubStore,
                 stateStore: SubStateStore,
                 genesisBlock: genesisBlock
