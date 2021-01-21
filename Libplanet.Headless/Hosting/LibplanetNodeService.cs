@@ -380,7 +380,7 @@ namespace Libplanet.Headless.Hosting
                         
                     Log.Error(message);
                     Properties.NodeExceptionOccurred(NodeExceptionType.MessageNotReceived, message);
-                    await Swarm.StopAsync(cancellationToken);
+                    _stopRequested = true;
                     break;
                 }
 
