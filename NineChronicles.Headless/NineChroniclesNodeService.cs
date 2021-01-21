@@ -91,7 +91,7 @@ namespace NineChronicles.Headless
             // Policies for dev mode.
             IBlockPolicy<PolymorphicAction<ActionBase>> easyPolicy = null;
             IBlockPolicy<PolymorphicAction<ActionBase>> hardPolicy = null;
-             IStagePolicy<PolymorphicAction<ActionBase>> stagePolicy = new VolatileStagePolicy<NineChroniclesActionType>();
+            IStagePolicy<PolymorphicAction<ActionBase>> stagePolicy = new VolatileStagePolicy<NineChroniclesActionType>();
             if (isDev)
             {
                 easyPolicy = new ReorgPolicy(new RewardGold(), 1);
