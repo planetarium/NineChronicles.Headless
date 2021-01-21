@@ -46,6 +46,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockPolicy = new BlockPolicy<PolymorphicAction<ActionBase>>(blockAction: new RewardGold());
             var blockChain = new BlockChain<PolymorphicAction<ActionBase>>(
                 blockPolicy,
+                new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
                 store,
                 stateStore,
                 genesisBlock,
@@ -132,6 +133,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             return new LibplanetNodeService<T>(
                 properties,
                 blockPolicy: new BlockPolicy<T>(),
+                stagePolicy: new VolatileStagePolicy<T>(),
                 renderers: new[] { new DummyRenderer<T>() },
                 minerLoopAction: (chain, swarm, privateKey, _) => Task.CompletedTask,
                 preloadProgress: preloadProgress,
