@@ -162,8 +162,12 @@ namespace NineChronicles.Headless.Executable
                     ? (AWSCredentials)new CognitoAWSCredentials(awsCognitoIdentity, regionEndpoint)
                     : (AWSCredentials)new BasicAWSCredentials(awsAccessKey, awsSecretKey);
 
-                var guid = LoadAWSSinkGuid() ?? Guid.NewGuid();
-                StoreAWSSinkGuid(guid);
+                var guid = LoadAWSSinkGuid();
+                if (guid is null)
+                {
+                    guid = Guid.NewGuid();
+                    StoreAWSSinkGuid(guid.Value);   
+                }
 
                 var awsSink = new AWSSink(
                     credentials,
@@ -346,7 +350,20 @@ namespace NineChronicles.Headless.Executable
         private Guid? LoadAWSSinkGuid()
         {
             string path = AWSSinkGuidPath();
-            return File.Exists(path) ? Guid.Parse(File.ReadAllText(AWSSinkGuidPath())) : (Guid?)null;
+            if (!File.Exists(path))
+            {
+                Console.Error.WriteLine($"AWSSink id doesn't exist. (path: {path})");
+                return null;
+            }
+
+            string guidString = File.ReadAllText(AWSSinkGuidPath());
+            if (Guid.TryParse(guidString, out Guid guid))
+            {
+                return guid;
+            }
+
+            Console.Error.WriteLine($"AWSSink id seems broken. (id: {guidString}");
+            return null;
         }
 
         private void StoreAWSSinkGuid(Guid guid)
