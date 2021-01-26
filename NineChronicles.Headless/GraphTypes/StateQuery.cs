@@ -4,6 +4,7 @@ using GraphQL.Types;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blockchain;
+using Nekoyume;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
 
@@ -38,6 +39,9 @@ namespace NineChronicles.Headless.GraphTypes
                     var index = context.GetArgument<int>("index");
                     return new RankingMapState((Dictionary)context.Source.GetState(RankingState.Derive(index)));
                 });
+            Field<ShopStateType>(
+                name: "shop",
+                resolve: context => new ShopState((Dictionary) context.Source.GetState(Addresses.Shop)));
         }
     }
 }
