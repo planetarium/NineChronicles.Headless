@@ -820,6 +820,104 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(expected, queryResult.Data);
         }
 
+        [Fact]
+        public async Task StateQueryWeeklyArenaState()
+        {
+            var userPrivateKey = new PrivateKey();
+            var userAddress = userPrivateKey.PublicKey.ToAddress();
+            var avatarAddress = userAddress.Derive(string.Format(CultureInfo.InvariantCulture,
+                CreateAvatar2.DeriveFormat, 0));
+            var service = MakeMineChroniclesNodeService(userPrivateKey);
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
+
+            var blockChain = StandaloneContextFx.BlockChain;
+            await blockChain.MineBlock(userAddress);
+
+            const string query = @"query {
+                stateQuery {
+                    weeklyArena(index: 0) {
+                        address
+                        ended
+                        orderedArenaInfos {
+                            agentAddress
+                            avatarAddress
+                            arenaRecord {
+                                win
+                                lose
+                                draw
+                            }
+                            level
+                            combatPoint
+                            armorId
+                            active
+                            dailyChallengeCount
+                            score
+                        }
+                    }
+                }
+            }";
+            var queryResult = await ExecuteQueryAsync(query);
+            Assert.Equal(
+                new Dictionary<string, object>
+                {
+                    ["stateQuery"] =new Dictionary<string, object>
+                    {
+                        ["weeklyArena"] = new Dictionary<string, object>
+                        {
+                            ["address"] = WeeklyArenaState.DeriveAddress(0).ToString(),
+                            ["ended"] = false,
+                            ["orderedArenaInfos"] = new List(),
+                        },
+                    },
+                },
+                queryResult.Data
+            );
+
+            var action = new SetAvatarState();
+            StandaloneContextFx.BlockChain.MakeTransaction(
+                userPrivateKey,
+                new PolymorphicAction<ActionBase>[] { action }
+            );
+            await blockChain.MineBlock(userAddress);
+
+            queryResult = await ExecuteQueryAsync(query);
+            Assert.Equal(
+                new Dictionary<string, object>
+                {
+                    ["stateQuery"] =new Dictionary<string, object>
+                    {
+                        ["weeklyArena"] = new Dictionary<string, object>
+                        {
+                            ["address"] = WeeklyArenaState.DeriveAddress(0).ToString(),
+                            ["ended"] = false,
+                            ["orderedArenaInfos"] = new List<object>
+                            {
+                                new Dictionary<string, object>
+                                {
+                                    ["agentAddress"] = userAddress.ToString(),
+                                    ["avatarAddress"] = avatarAddress.ToString(),
+                                    ["arenaRecord"] = new Dictionary<string, object>
+                                    {
+                                        ["win"] = 0,
+                                        ["lose"] = 0,
+                                        ["draw"] = 0,
+                                    },
+                                    ["level"] = 1,
+                                    ["combatPoint"] = 1142,
+                                    ["armorId"] = 10200000,
+                                    ["active"] = false,
+                                    ["dailyChallengeCount"] = 5,
+                                    ["score"] = 1000,
+                                }
+                            },
+                        },
+                    },
+                },
+                queryResult.Data
+            );
+        }
+
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)
         {
             var goldCurrency = new Currency("NCG", 2, minter: null);

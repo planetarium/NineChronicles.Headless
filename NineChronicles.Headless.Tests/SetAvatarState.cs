@@ -59,7 +59,8 @@ namespace NineChronicles.Headless.Tests
 
                 return states
                     .SetState(avatarAddress, MarkChanged)
-                    .SetState(Addresses.Ranking, MarkChanged);
+                    .SetState(Addresses.Ranking, MarkChanged)
+                    .SetState(WeeklyArenaState.DeriveAddress(0), MarkChanged);
             }
 
             var avatarState = states.GetAvatarState(avatarAddress);
@@ -71,14 +72,16 @@ namespace NineChronicles.Headless.Tests
                 var worldSheet = states.GetSheet<WorldSheet>();
                 var worldUnlockSheet = states.GetSheet<WorldUnlockSheet>();
                 var equipmentItemSheet = states.GetSheet<EquipmentItemSheet>();
-                var costumeSheet = states.GetSheet<CostumeItemSheet>();
+                var costumeItemSheet = states.GetSheet<CostumeItemSheet>();
+                var characterSheet = states.GetSheet<CharacterSheet>();
+                var costumeStatSheet = states.GetSheet<CostumeStatSheet>();
 
                 var rankingState = states.GetRankingState();
                 var rankingMapAddress = rankingState.UpdateRankingMap(avatarAddress);
                 avatarState = CreateAvatar.CreateAvatarState("test", avatarAddress, context, materialItemSheet,
                     rankingMapAddress);
 
-                for (var i = 1; i < GameConfig.RequireClearedStageLevel.ActionsInShop + 1; i++)
+                for (var i = 1; i < GameConfig.RequireClearedStageLevel.ActionsInRankingBoard + 1; i++)
                 {
                     avatarState.worldInformation.ClearStage(
                         1,
@@ -91,7 +94,7 @@ namespace NineChronicles.Headless.Tests
 
                 var equipment = ItemFactory.CreateItemUsable(equipmentItemSheet.OrderedList.First(),
                     context.Random.GenerateRandomGuid(), 0);
-                var costume = ItemFactory.CreateCostume(costumeSheet.OrderedList.First(),
+                var costume = ItemFactory.CreateCostume(costumeItemSheet.OrderedList.First(),
                     context.Random.GenerateRandomGuid());
                 avatarState.inventory.AddItem(equipment);
                 avatarState.inventory.AddItem(costume);
@@ -103,10 +106,14 @@ namespace NineChronicles.Headless.Tests
                     states = states.SetState(address, slotState.Serialize());
                 }
 
+                var weeklyArenaState = states.GetWeeklyArenaState(0);
+                weeklyArenaState.SetV2(avatarState, characterSheet, costumeStatSheet);
+
                 states = states
                     .SetState(context.Signer, agentState.Serialize())
                     .SetState(avatarAddress, avatarState.Serialize())
-                    .SetState(Addresses.Ranking, rankingState.Serialize());
+                    .SetState(Addresses.Ranking, rankingState.Serialize())
+                    .SetState(weeklyArenaState.address, weeklyArenaState.Serialize());
             }
 
             return states;
