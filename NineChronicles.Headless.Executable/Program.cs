@@ -125,7 +125,9 @@ namespace NineChronicles.Headless.Executable
             [Option(Description = "The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2).")]
             string awsRegion = null,
             [Option(Description = "Run as an authorized miner, which mines only blocks that should be authorized.")]
-            bool authorizedMiner = false
+            bool authorizedMiner = false,
+            [Option(Description = "The lifetime of each Tx, It's unit is minute.  60 (m) by default.")]
+            int txLifeTime = 60
         )
         {
 #if SENTRY || ! DEBUG
@@ -282,7 +284,8 @@ namespace NineChronicles.Headless.Executable
                         isDev: isDev,
                         blockInterval: blockInterval,
                         reorgInterval: reorgInterval,
-                        authorizedMiner: authorizedMiner);
+                        authorizedMiner: authorizedMiner,
+                        txLifeTime: TimeSpan.FromMinutes(txLifeTime));
                 standaloneContext.NineChroniclesNodeService = nineChroniclesNodeService;
 
                 if (libplanetNode)
