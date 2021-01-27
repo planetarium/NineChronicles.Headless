@@ -15,7 +15,8 @@ namespace NineChronicles.Headless
             bool authorizedMiner = false,
             bool isDev = false,
             int blockInterval = 10000,
-            int reorgInterval = 0
+            int reorgInterval = 0,
+            TimeSpan txLifeTime = default
         )
         {
             Progress<PreloadState> progress = null;
@@ -60,7 +61,8 @@ namespace NineChronicles.Headless
                 isDev: isDev,
                 blockInterval: blockInterval,
                 reorgInterval: reorgInterval,
-                authorizedMiner: authorizedMiner);
+                authorizedMiner: authorizedMiner,
+                txLifeTime: txLifeTime);
             service.ConfigureStandaloneContext(standaloneContext);
 
             return service;

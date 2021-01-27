@@ -69,7 +69,8 @@ namespace NineChronicles.Headless
             bool authorizedMiner = false,
             bool isDev = false,
             int blockInterval = 10000,
-            int reorgInterval = 0
+            int reorgInterval = 0,
+            TimeSpan txLifeTime = default
         )
         {
             Properties = properties;
@@ -91,7 +92,10 @@ namespace NineChronicles.Headless
             // Policies for dev mode.
             IBlockPolicy<PolymorphicAction<ActionBase>> easyPolicy = null;
             IBlockPolicy<PolymorphicAction<ActionBase>> hardPolicy = null;
-            IStagePolicy<PolymorphicAction<ActionBase>> stagePolicy = new VolatileStagePolicy<NineChroniclesActionType>();
+            IStagePolicy<PolymorphicAction<ActionBase>> stagePolicy =
+                txLifeTime == default
+                    ? new VolatileStagePolicy<NineChroniclesActionType>()
+                    : new VolatileStagePolicy<NineChroniclesActionType>(txLifeTime);
             if (isDev)
             {
                 easyPolicy = new ReorgPolicy(new RewardGold(), 1);
