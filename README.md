@@ -44,7 +44,7 @@ Options:
   --aws-secret-key <String>                                The secret key for AWS CloudWatch logging. (Default: )
   --aws-region <String>                                    The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2). (Default: )
   --authorized-miner                                       Run as an authorized miner, which mines only blocks that should be authorized.
-  --tx-life-time                                           The lifetime of each Tx, It's unit is minute.  60 (m) by default. (Default: 60)
+  --tx-life-time                                           The lifetime of each transaction, which uses minute as its unit.  60 (m) by default. (Default: 60)
   -h, --help                                               Show help message
   --version                                                Show version
 ```

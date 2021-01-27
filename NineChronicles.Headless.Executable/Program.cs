@@ -126,7 +126,7 @@ namespace NineChronicles.Headless.Executable
             string awsRegion = null,
             [Option(Description = "Run as an authorized miner, which mines only blocks that should be authorized.")]
             bool authorizedMiner = false,
-            [Option(Description = "The lifetime of each Tx, It's unit is minute.  60 (m) by default.")]
+            [Option(Description = "The lifetime of each transaction, which uses minute as its unit.  60 (m) by default.")]
             int txLifeTime = 60
         )
         {
