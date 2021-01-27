@@ -18,9 +18,7 @@ namespace NineChronicles.Headless.Tests
     public class SetAvatarState : GameAction
     {
         public override IValue PlainValue =>
-            new Bencodex.Types.Dictionary(new Dictionary<IKey, IValue>
-            {
-            });
+            Bencodex.Types.Dictionary.Empty;
 
         protected override IImmutableDictionary<string, IValue> PlainValueInternal { get; }
 
