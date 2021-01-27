@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using GraphQL;
 using Lib9c.Renderer;
 using Libplanet.Action;
+using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;
@@ -23,6 +24,8 @@ using Serilog;
 using Xunit.Abstractions;
 using RewardGold = NineChronicles.Headless.Tests.Common.Actions.RewardGold;
 using Libplanet.Store.Trie;
+using Nekoyume.Model.State;
+using Nekoyume.TableData;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -41,9 +44,32 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new DefaultKeyValueStore(null),
                 new DefaultKeyValueStore(null)
             );
-            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(blockAction: new RewardGold());
+            var goldCurrency = new Currency("NCG", 2, minter: null);
 
-            var blockPolicy = new BlockPolicy<PolymorphicAction<ActionBase>>(blockAction: new RewardGold());
+            var fixturePath = Path.Combine("..", "..", "..", "..", "Lib9c", ".Lib9c.Tests", "Data", "TableCSV");
+            var sheets = TableSheetsImporter.ImportSheets(fixturePath);
+            var blockAction = new RewardGold();
+            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+                new PolymorphicAction<ActionBase>[]
+                {
+                    new InitializeStates(
+                        rankingState: new RankingState(),
+                        shopState: new ShopState(),
+                        gameConfigState: new GameConfigState(sheets[nameof(GameConfigSheet)]),
+                        redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                            .Add("address", RedeemCodeState.Address.Serialize())
+                            .Add("map", Bencodex.Types.Dictionary.Empty)
+                        ),
+                        adminAddressState: new AdminState(default, 0),
+                        activatedAccountsState: new ActivatedAccountsState(),
+                        goldCurrencyState: new GoldCurrencyState(goldCurrency),
+                        goldDistributions: new GoldDistribution[]{ },
+                        tableSheets: sheets,
+                        pendingActivationStates: new PendingActivationState[]{ }
+                    ),
+                }, blockAction: blockAction);
+
+            var blockPolicy = new BlockPolicy<PolymorphicAction<ActionBase>>(blockAction: blockAction);
             var blockChain = new BlockChain<PolymorphicAction<ActionBase>>(
                 blockPolicy,
                 new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
@@ -98,9 +124,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             where T : IAction, new()
         {
             Task task = swarm.StartAsync(
-              millisecondsDialTimeout: 200,
-              millisecondsBroadcastTxInterval: 200,
-              cancellationToken: cancellationToken
+                millisecondsDialTimeout: 200,
+                millisecondsBroadcastTxInterval: 200,
+                cancellationToken: cancellationToken
             );
             await swarm.WaitForRunningAsync();
             return task;

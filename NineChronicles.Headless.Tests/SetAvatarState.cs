@@ -93,9 +93,9 @@ namespace NineChronicles.Headless.Tests
                 }
 
                 var equipment = ItemFactory.CreateItemUsable(equipmentItemSheet.OrderedList.First(),
-                    context.Random.GenerateRandomGuid(), 0);
+                    new Guid("220acb43-095e-46f6-9725-4223c69827e8"), 0);
                 var costume = ItemFactory.CreateCostume(costumeItemSheet.OrderedList.First(),
-                    context.Random.GenerateRandomGuid());
+                    new Guid("d3d9ac06-eb91-4cc4-863a-5b4769ad633e"));
                 avatarState.inventory.AddItem(equipment);
                 avatarState.inventory.AddItem(costume);
 
