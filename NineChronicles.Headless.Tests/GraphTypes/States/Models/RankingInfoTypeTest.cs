@@ -7,18 +7,18 @@ using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 
 namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
 {
-    public class AvatarStateTypeTest
+    public class RankingInfoTypeTest
     {
         [Theory]
         [MemberData(nameof(Members))]
-        public async Task QueryAvatarState(AvatarState avatarState, Dictionary<string, object> expected)
+        public async Task QueryRankingInfo(RankingInfo rankingInfo, object expected)
         {
             const string query = @"
             {
-                address
+                avatarAddress
                 agentAddress
             }";
-            var queryResult = await ExecuteQueryAsync<AvatarStateType>(query, source: avatarState);
+            var queryResult = await ExecuteQueryAsync<RankingInfoType>(query, source: rankingInfo);
             Assert.Equal(expected, queryResult.Data);
         }
 
@@ -26,13 +26,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
         {
             new object[]
             {
-                Fixtures.AvatarStateFX,
+                new RankingInfo(Fixtures.AvatarStateFX),
                 new Dictionary<string, object>
                 {
-                    ["address"] = Fixtures.AvatarAddress.ToString(),
+                    ["avatarAddress"] = Fixtures.AvatarAddress.ToString(),
                     ["agentAddress"] = Fixtures.UserAddress.ToString(),
                 },
             },
         };
+
     }
 }
