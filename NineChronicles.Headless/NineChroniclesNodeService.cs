@@ -65,6 +65,7 @@ namespace NineChronicles.Headless
             RpcNodeServiceProperties? rpcNodeServiceProperties,
             Progress<PreloadState> preloadProgress = null,
             bool ignoreBootstrapFailure = false,
+            bool ignorePreloadFailure = false,
             bool strictRendering = false,
             bool authorizedMiner = false,
             bool isDev = false,
@@ -232,7 +233,8 @@ namespace NineChronicles.Headless
                     {
                         NodeStatusRenderer.PreloadStatus(isPreloadStarted);
                     },
-                    ignoreBootstrapFailure
+                    ignoreBootstrapFailure,
+                    ignorePreloadFailure
                 );
             }
 
