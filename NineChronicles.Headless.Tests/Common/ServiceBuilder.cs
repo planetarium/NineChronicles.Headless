@@ -38,6 +38,7 @@ namespace NineChronicles.Headless.Tests.Common
                 MinimumDifficulty = MinimumDifficulty,
                 NoMiner = true,
                 Render = false,
+                LogActionRenders = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 MaximumTransactions = MaximumTransactions,

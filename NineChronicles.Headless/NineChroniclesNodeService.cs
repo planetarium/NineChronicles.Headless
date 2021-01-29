@@ -87,7 +87,8 @@ namespace NineChronicles.Headless
                 Log.Error("Secp256K1CryptoBackend initialize failed. Use default backend. {e}", e);
             }
 
-            var blockPolicySource = new BlockPolicySource(Log.Logger, LogEventLevel.Debug);
+            LogEventLevel logLevel = LogEventLevel.Debug;
+            var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
             // BlockPolicy shared through Lib9c.
             IBlockPolicy<PolymorphicAction<ActionBase>> blockPolicy = null;
             // Policies for dev mode.
@@ -122,6 +123,21 @@ namespace NineChronicles.Headless
             {
                 renderers.Add(blockPolicySource.BlockRenderer);
                 renderers.Add(blockPolicySource.LoggedActionRenderer);
+            }
+            else if (Properties.LogActionRenders)
+            {
+                renderers.Add(blockPolicySource.BlockRenderer);
+                // The following "nullRenderer" does nothing.  It's just for filling
+                // the LoggedActionRenderer<T>() constructor's parameter:
+                IActionRenderer<NineChroniclesActionType> nullRenderer =
+                    new AnonymousActionRenderer<NineChroniclesActionType>();
+                renderers.Add(
+                    new LoggedActionRenderer<NineChroniclesActionType>(
+                        nullRenderer,
+                        Log.Logger,
+                        logLevel
+                    )
+                );
             }
             else
             {

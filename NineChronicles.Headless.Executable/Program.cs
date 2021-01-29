@@ -114,6 +114,8 @@ namespace NineChronicles.Headless.Executable
                 Description =
                     "The size of reorg interval. Works only when dev mode is on.  0 by default.")]
             int reorgInterval = 0,
+            [Option(Description = "Log action renders besides block renders.  --rpc-server implies this.")]
+            bool logActionRenders = false,
             [Option(Description = "The log minimum level during headless execution.  debug by default.")]
             string logMinimumLevel = "debug",
             [Option(Description = "The Cognito identity for AWS CloudWatch logging.")]
@@ -268,6 +270,12 @@ namespace NineChronicles.Headless.Executable
                     rpcProperties = NineChroniclesNodeServiceProperties
                         .GenerateRpcNodeServiceProperties(rpcListenHost, rpcListenPort);
                     properties.Render = true;
+                    properties.LogActionRenders = true;
+                }
+
+                if (logActionRenders)
+                {
+                    properties.LogActionRenders = true;
                 }
 
                 var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
