@@ -44,6 +44,8 @@ namespace Libplanet.Headless.Hosting
 
         private Func<BlockChain<T>, Swarm<T>, PrivateKey, CancellationToken, Task> _minerLoopAction;
 
+        private readonly bool _ignorePreloadFailure;
+
         private Action<RPCException, string> _exceptionHandlerAction;
 
         private Action<bool> _preloadStatusHandlerAction;
@@ -75,7 +77,8 @@ namespace Libplanet.Headless.Hosting
             Progress<PreloadState> preloadProgress,
             Action<RPCException, string> exceptionHandlerAction,
             Action<bool> preloadStatusHandlerAction, 
-            bool ignoreBootstrapFailure = false
+            bool ignoreBootstrapFailure = false,
+            bool ignorePreloadFailure = false
         )
         {
             if (blockPolicy is null)
@@ -169,6 +172,7 @@ namespace Libplanet.Headless.Hosting
 
             PreloadProgress = preloadProgress;
             IgnoreBootstrapFailure = ignoreBootstrapFailure;
+            _ignorePreloadFailure = ignorePreloadFailure;
         }
 
         public virtual async Task StartAsync(CancellationToken cancellationToken)
@@ -308,11 +312,24 @@ namespace Libplanet.Headless.Hosting
                 if (preload)
                 {
                     _preloadStatusHandlerAction(true);
-                    await Swarm.PreloadAsync(
-                        TimeSpan.FromSeconds(5),
-                        PreloadProgress,
-                        cancellationToken: cancellationToken
-                    );
+                    try
+                    {
+                        await Swarm.PreloadAsync(
+                            TimeSpan.FromSeconds(5),
+                            PreloadProgress,
+                            cancellationToken: cancellationToken
+                        );
+                    }
+                    catch (AggregateException e)
+                    {
+                        if (!_ignorePreloadFailure)
+                        {
+                            throw;
+                        }
+
+                        Log.Error(e, "{Message}", e.Message);
+                    }
+
                     PreloadEnded.Set();
                     _preloadStatusHandlerAction(false);
                 }
