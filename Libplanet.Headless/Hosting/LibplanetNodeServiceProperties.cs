@@ -43,6 +43,8 @@ namespace Libplanet.Headless.Hosting
 
         public bool Render { get; set; }
 
+        public bool LogActionRenders { get; set; }
+
         public int Workers { get; set; } = 5;
 
         public int Confirmations { get; set; } = 0;
