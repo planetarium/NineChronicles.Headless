@@ -4,10 +4,7 @@
 
 ```
 $ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
-
-Usage: NineChronicles.Headless.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--minimum-difficulty <Int32>] [--private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-pro
-tocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--libplanet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval
-<Int32>] [--dev.reorg-interval <Int32>] [--log-minimum-level <String>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--help] [--version]
+Usage: NineChronicles.Headless.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--minimum-difficulty <Int32>] [--private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--graphql-secret-token-path <String>] [--libplanet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-action-renders] [--log-minimum-level <String>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--tx-life-time <Int32>] [--help] [--version]
 
 Run headless application with options.
 
@@ -30,6 +27,7 @@ Options:
   --graphql-server
   --graphql-host <String>                                   (Default: 0.0.0.0)
   --graphql-port <Nullable`1>                               (Default: )
+  --graphql-secret-token-path <String>                     The path to write GraphQL secret token. If you want to protect this headless application, you should use this option and take it into headers. (Default: )
   --libplanet-node
   --workers <Int32>                                        Number of workers to use in Swarm (Default: 5)
   --confirmations <Int32>                                  The number of required confirmations to recognize a block.  0 by default. (Default: 0)
@@ -38,19 +36,21 @@ Options:
   --dev                                                    Flag to turn on the dev mode.  false by default.
   --dev.block-interval <Int32>                             The time interval between blocks. It's unit is milliseconds. Works only when dev mode is on.  10000 (ms) by default. (Default: 10000)
   --dev.reorg-interval <Int32>                             The size of reorg interval. Works only when dev mode is on.  0 by default. (Default: 0)
+  --log-action-renders                                     Log action renders besides block renders.  --rpc-server implies this.
   --log-minimum-level <String>                             The log minimum level during headless execution.  debug by default. (Default: debug)
   --aws-cognito-identity <String>                          The Cognito identity for AWS CloudWatch logging. (Default: )
   --aws-access-key <String>                                The access key for AWS CloudWatch logging. (Default: )
   --aws-secret-key <String>                                The secret key for AWS CloudWatch logging. (Default: )
   --aws-region <String>                                    The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2). (Default: )
   --authorized-miner                                       Run as an authorized miner, which mines only blocks that should be authorized.
+  --tx-life-time <Int32>                                   The lifetime of each transaction, which uses minute as its unit.  60 (m) by default. (Default: 60)
   -h, --help                                               Show help message
   --version                                                Show version
 ```
 
 ## Docker Build
 
-A Standalone image can be created by running the command below in the directory where the solution is located.
+A headless image can be created by running the command below in the directory where the solution is located.
 
 ```
 $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
@@ -123,14 +123,25 @@ Usage: docker volume create [<VOLUME_NAME>]
 <pre>
 $ docker run \
 --detach \
---publish [HOST_PORT]:[CONTAINER_PORT] \
 --volume 9c-volume:/app/data \
-planetariumhq/ninechronicles-headless \
-<a href = "#run" title="NineChronicles Standalone options">[NineChronicles Standalone Options]</a>
+planetariumhq/ninechronicles-headless:latest \
+<a href = "#run" title="NineChronicles Headless options">[NineChronicles Headless Options]</a>
 </pre>
 #### Note)
-* Instead of including the "--ice-server" option, allocate an Elastic IP to your instance and include it as the "--host" option and after adding an inbound port, include it as the "--port" option. Refer to these official docs on [Elastic IP allocation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html) and [editing inbound rules](https://docs.aws.amazon.com/cli/latest/userguide/cli-services-ec2-sg.html) for more information.
-* For mining, make sure to include "--private-key" option with your private key. Also, include "--libplanet-node" to run the default libplanet node. 
+* If you want to use the same headless options as your Nine Chronicles game client, refer to **`config.json`** under **`%localappdata%\Programs\Nine Chronicles\resources\app`**. Inside **`config.json`**, refer to the following properties for your headless options:
+  - `GeniesisBlockPath`
+  - `MinimumDifficulty`
+  - `StoreType`
+  - `AppProtocolVersion`
+  - `TrustedAppProtocolVersionSigners`
+  - `IceServerStrings`
+  - `PeerStrings`
+  - `NoTrustedStateValidators`
+  - `NoMiner`
+  - `Confirmations`
+  - `Workers`
+* If you are using an [Elastic IP](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html) on your AWS instance, you must include the IP as the `--host` option but do not need to include the `--ice-server` option.
+* For mining, make sure to include the `--private-key` option with your private key. Also, include `--libplanet-node` to run the default libplanet node. 
 
 ![Docker Run](https://i.imgur.com/VlwFybj.png)
 

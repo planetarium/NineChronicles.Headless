@@ -11,11 +11,13 @@ namespace NineChronicles.Headless
             NineChroniclesNodeServiceProperties properties,
             StandaloneContext standaloneContext = null,
             bool ignoreBootstrapFailure = true,
+            bool ignorePreloadFailure = true,
             bool strictRendering = false,
             bool authorizedMiner = false,
             bool isDev = false,
             int blockInterval = 10000,
-            int reorgInterval = 0
+            int reorgInterval = 0,
+            TimeSpan txLifeTime = default
         )
         {
             Progress<PreloadState> progress = null;
@@ -56,11 +58,13 @@ namespace NineChronicles.Headless
                 properties.Rpc,
                 preloadProgress: progress,
                 ignoreBootstrapFailure: ignoreBootstrapFailure,
+                ignorePreloadFailure: ignorePreloadFailure,
                 strictRendering: strictRendering,
                 isDev: isDev,
                 blockInterval: blockInterval,
                 reorgInterval: reorgInterval,
-                authorizedMiner: authorizedMiner);
+                authorizedMiner: authorizedMiner,
+                txLifeTime: txLifeTime);
             service.ConfigureStandaloneContext(standaloneContext);
 
             return service;

@@ -114,6 +114,8 @@ namespace NineChronicles.Headless.Executable
                 Description =
                     "The size of reorg interval. Works only when dev mode is on.  0 by default.")]
             int reorgInterval = 0,
+            [Option(Description = "Log action renders besides block renders.  --rpc-server implies this.")]
+            bool logActionRenders = false,
             [Option(Description = "The log minimum level during headless execution.  debug by default.")]
             string logMinimumLevel = "debug",
             [Option(Description = "The Cognito identity for AWS CloudWatch logging.")]
@@ -125,7 +127,9 @@ namespace NineChronicles.Headless.Executable
             [Option(Description = "The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2).")]
             string awsRegion = null,
             [Option(Description = "Run as an authorized miner, which mines only blocks that should be authorized.")]
-            bool authorizedMiner = false
+            bool authorizedMiner = false,
+            [Option(Description = "The lifetime of each transaction, which uses minute as its unit.  60 (m) by default.")]
+            int txLifeTime = 60
         )
         {
 #if SENTRY || ! DEBUG
@@ -266,6 +270,12 @@ namespace NineChronicles.Headless.Executable
                     rpcProperties = NineChroniclesNodeServiceProperties
                         .GenerateRpcNodeServiceProperties(rpcListenHost, rpcListenPort);
                     properties.Render = true;
+                    properties.LogActionRenders = true;
+                }
+
+                if (logActionRenders)
+                {
+                    properties.LogActionRenders = true;
                 }
 
                 var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
@@ -282,7 +292,8 @@ namespace NineChronicles.Headless.Executable
                         isDev: isDev,
                         blockInterval: blockInterval,
                         reorgInterval: reorgInterval,
-                        authorizedMiner: authorizedMiner);
+                        authorizedMiner: authorizedMiner,
+                        txLifeTime: TimeSpan.FromMinutes(txLifeTime));
                 standaloneContext.NineChroniclesNodeService = nineChroniclesNodeService;
 
                 if (libplanetNode)
