@@ -264,6 +264,12 @@ namespace NineChronicles.Headless
             {
                 bp.AuthorizedMinersState = new AuthorizedMinersState(ams);
             }
+
+            if (authorizedMiner && blockPolicy is BlockPolicy {AuthorizedMinersState: null})
+            {
+                throw new Exception(
+                    "--authorized-miner was set but there are no AuthorizedMinerState.");
+            }
         }
 
         internal static IBlockPolicy<PolymorphicAction<ActionBase>> GetBlockPolicy(int minimumDifficulty, int maximumTransactions) =>
