@@ -51,7 +51,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     ["active"] = active,
                     ["dailyChallengeCount"] = 5,
                     ["score"] = 1000,
-
                 },
                 queryResult.Data
             );

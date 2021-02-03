@@ -11,7 +11,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
     {
         [Theory]
         [MemberData(nameof(Members))]
-        public async Task QueryRankingMapState(RankingMapState rankingMapState, object expected)
+        public async Task Query(RankingMapState rankingMapState, object expected)
         {
             const string query = @"
             {

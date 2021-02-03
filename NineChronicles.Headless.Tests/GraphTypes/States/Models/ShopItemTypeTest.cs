@@ -13,7 +13,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
     {
         [Theory]
         [MemberData(nameof(Members))]
-        public async Task QueryShopItem(
+        public async Task Query(
             ItemUsable itemUsable,
             Costume costume,
             Dictionary<string, object> itemUsableDict,

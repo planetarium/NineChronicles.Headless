@@ -11,7 +11,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
     {
         [Theory]
         [MemberData(nameof(Members))]
-        public async Task QueryAvatarState(AvatarState avatarState, Dictionary<string, object> expected)
+        public async Task Query(AvatarState avatarState, Dictionary<string, object> expected)
         {
             const string query = @"
             {

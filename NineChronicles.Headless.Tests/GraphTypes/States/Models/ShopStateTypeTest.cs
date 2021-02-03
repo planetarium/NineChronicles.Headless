@@ -11,7 +11,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
     public class ShopStateTypeTest
     {
         [Fact]
-        public async Task QueryShopState()
+        public async Task Query()
         {
             const string query = @"{
                 address

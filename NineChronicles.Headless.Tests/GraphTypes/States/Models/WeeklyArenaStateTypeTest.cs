@@ -13,7 +13,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        public async Task QueryWeeklyArenaState(bool ended)
+        public async Task Query(bool ended)
         {
             const string query = @"
             {
