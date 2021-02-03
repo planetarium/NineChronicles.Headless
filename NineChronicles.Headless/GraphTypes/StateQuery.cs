@@ -42,6 +42,19 @@ namespace NineChronicles.Headless.GraphTypes
             Field<ShopStateType>(
                 name: "shop",
                 resolve: context => new ShopState((Dictionary) context.Source.GetState(Addresses.Shop)));
+            Field<WeeklyArenaStateType>(
+                name: "weeklyArena",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "index",
+                    }),
+                resolve: context =>
+                {
+                    var index = context.GetArgument<int>("index");
+                    return new WeeklyArenaState(
+                        (Dictionary) context.Source.GetState(WeeklyArenaState.DeriveAddress(index)));
+                });
         }
     }
 }

@@ -1,5 +1,4 @@
 using GraphQL.Types;
-using Nekoyume.Action;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
 
