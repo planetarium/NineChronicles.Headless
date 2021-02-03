@@ -1,5 +1,5 @@
+using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using Libplanet.Action;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
@@ -52,5 +52,11 @@ namespace Libplanet.Headless.Hosting
         public System.Action<NodeExceptionType, string> NodeExceptionOccurred { get; set; }
 
         public int MaximumTransactions { get; set; } = 100;
+
+        public TimeSpan MessageTimeout { get; set; } = TimeSpan.FromSeconds(60);
+
+        public TimeSpan TipTimeout { get; set; } = TimeSpan.FromSeconds(60);
+
+        public int DemandBuffer { get; set; } = 1150;
     }
 }

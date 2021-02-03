@@ -35,7 +35,10 @@ namespace NineChronicles.Headless.Properties
                 bool render = false,
                 int workers = 5,
                 int confirmations = 0,
-                int maximumTransactions = 100)
+                int maximumTransactions = 100,
+                int messageTimeout = 60,
+                int tipTimeout = 60,
+                int demandBuffer = 1150)
         {
             var privateKey = string.IsNullOrEmpty(privateKeyString)
                 ? new PrivateKey()
@@ -68,6 +71,9 @@ namespace NineChronicles.Headless.Properties
                 Workers = workers,
                 Confirmations = Math.Max(confirmations, 0),
                 MaximumTransactions = maximumTransactions,
+                MessageTimeout = TimeSpan.FromSeconds(messageTimeout),
+                TipTimeout = TimeSpan.FromSeconds(tipTimeout),
+                DemandBuffer = demandBuffer
             };
         }
 
