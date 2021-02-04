@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
@@ -69,6 +70,8 @@ namespace Libplanet.Headless.Tests.Hosting
 
         private class BlockPolicy : IBlockPolicy<DummyAction>
         {
+            public IComparer<IBlockExcerpt> CanonicalChainComparer { get; } = new TotalDifficultyComparer();
+
             public IAction BlockAction => null;
 
             public int MaxTransactionsPerBlock => int.MaxValue;
