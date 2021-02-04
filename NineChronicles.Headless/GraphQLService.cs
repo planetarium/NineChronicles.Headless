@@ -67,15 +67,7 @@ namespace NineChronicles.Headless
 
             public void ConfigureServices(IServiceCollection services)
             {
-                services.AddCors(options =>
-                    options.AddPolicy(
-                        "AllowAllOrigins",
-                        builder =>
-                            builder.AllowAnyOrigin()
-                                .AllowAnyMethod()
-                                .AllowAnyHeader()
-                    )
-                );
+                services.AddCors();
 
                 services.AddTransient<LocalAuthenticationMiddleware>();
 
