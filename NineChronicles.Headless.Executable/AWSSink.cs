@@ -1,36 +1,31 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
 using Amazon.Runtime;
-using Nito.AsyncEx;
-using Serilog.Core;
 using Serilog.Events;
+using Serilog.Sinks.PeriodicBatching;
 
 namespace NineChronicles.Headless.Executable
 {
-    public class AWSSink : ILogEventSink, IDisposable
+    public class AWSSink : IBatchedLogEventSink, IDisposable
     {
         private readonly AmazonCloudWatchLogsClient _client;
         private readonly CancellationTokenSource _cancellationTokenSource;
-
-        private AsyncProducerConsumerQueue<LogEvent> _queue;
 
         public AWSSink(AWSCredentials credentials, RegionEndpoint regionEndPoint, string logGroupName, string logStreamName)
         {
             Config = new AmazonCloudWatchLogsConfig();
             Config.RegionEndpoint = regionEndPoint;
-            _queue = new AsyncProducerConsumerQueue<LogEvent>();
             _client = new AmazonCloudWatchLogsClient(credentials, Config);
             _cancellationTokenSource = new CancellationTokenSource();
 
             LogGroupName = logGroupName;
             LogStreamName = logStreamName;
-
-            Worker(_cancellationTokenSource.Token);
         }
 
         public void Dispose()
@@ -45,18 +40,12 @@ namespace NineChronicles.Headless.Executable
 
         public string LogStreamName { get; }
 
-        public void Emit(LogEvent logEvent)
-        {
-            _queue.Enqueue(logEvent);
-        }
-
-        private async Task Worker(CancellationToken cancellationToken)
+        public async Task EmitBatchAsync(IEnumerable<LogEvent> batch)
         {
             string sequenceToken = "token";
             try
             {
-                await _client.CreateLogStreamAsync(
-                    new CreateLogStreamRequest(LogGroupName, LogStreamName), cancellationToken);
+                await _client.CreateLogStreamAsync(new CreateLogStreamRequest(LogGroupName, LogStreamName));
             }
             catch (ResourceAlreadyExistsException)
             {
@@ -68,36 +57,33 @@ namespace NineChronicles.Headless.Executable
                 throw;
             }
 
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                try
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    LogEvent logEvent = await _queue.DequeueAsync(cancellationToken);
-                    var request = new PutLogEventsRequest(LogGroupName, LogStreamName, new List<InputLogEvent>
+                List<InputLogEvent> inputLogEvents = batch.Select(
+                    e => new InputLogEvent
                     {
-                        new InputLogEvent
-                        {
-                            Message = logEvent.RenderMessage(),
-                            Timestamp = logEvent.Timestamp.UtcDateTime,
-                        }
-                    });
-                    request.SequenceToken = sequenceToken;
-                    PutLogEventsResponse response = await PutLogEventsAsync(request, cancellationToken);
-                    sequenceToken = response.NextSequenceToken;
-                }
-                catch (OperationCanceledException e)
-                {
-                    Console.Error.WriteLine($"Worker canceled: {e}.");
-                    throw;
-                }
-                catch (Exception e)
-                {
-                    Console.Error.WriteLine($"Worker exception occurred: {e}.");
-                }
-            }
+                        Message = e.RenderMessage(),
+                        Timestamp = e.Timestamp.UtcDateTime,
+                    }).ToList();
 
-            Console.Error.WriteLine("Worker ended.");
+                var request = new PutLogEventsRequest(LogGroupName, LogStreamName, inputLogEvents);
+                request.SequenceToken = sequenceToken;
+                await PutLogEventsAsync(request, CancellationToken.None);
+            }
+            catch (OperationCanceledException e)
+            {
+                Console.Error.WriteLine($"Worker canceled: {e}.");
+                throw;
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine($"Worker exception occurred: {e}.");
+            }
+        }
+
+        public Task OnEmptyBatchAsync()
+        {
+            return Task.CompletedTask;
         }
 
         private async Task<PutLogEventsResponse> PutLogEventsAsync(
@@ -112,7 +98,7 @@ namespace NineChronicles.Headless.Executable
             {
                 // Try once more with expected sequence token.
                 request.SequenceToken = e.ExpectedSequenceToken;
-                return await _client.PutLogEventsAsync(request, cancellationToken);
+                return await PutLogEventsAsync(request, cancellationToken);
             }
         }
     }

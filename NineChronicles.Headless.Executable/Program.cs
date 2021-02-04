@@ -16,6 +16,7 @@ using NineChronicles.Headless.Properties;
 using Org.BouncyCastle.Security;
 using Sentry;
 using Serilog;
+using Serilog.Sinks.PeriodicBatching;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable
@@ -178,7 +179,12 @@ namespace NineChronicles.Headless.Executable
                     regionEndpoint,
                     "9c-standalone-logs",
                     guid.ToString());
-                loggerConf.WriteTo.Sink(awsSink);
+                var periodicBatchingSink = new PeriodicBatchingSink(awsSink, new PeriodicBatchingSinkOptions
+                {
+                    Period = TimeSpan.FromSeconds(2),
+                    BatchSizeLimit = 1000,
+                });
+                loggerConf.WriteTo.Sink(periodicBatchingSink);
             }
 
             Log.Logger = loggerConf.CreateLogger();
