@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Security.Cryptography;
 using Bencodex;
 using Bencodex.Types;
@@ -9,8 +10,12 @@ using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Microsoft.Extensions.Configuration;
 using Libplanet.Tx;
+using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
+using NineChronicles.Headless.GraphTypes.States.Models.Item;
+using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>; 
 
 namespace NineChronicles.Headless.GraphTypes
@@ -146,6 +151,57 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var txId = context.GetArgument<TxId>("txId");
                     return blockChain.GetTransaction(txId);
+                }
+            );
+
+            Field<NonNullGraphType<ListGraphType<ShopItemType>>>(
+                name: "products",
+                arguments: new QueryArguments(
+                    new QueryArgument<IntGraphType>
+                    {
+                        Name = "id",
+                    },
+                    new QueryArgument<ItemSubTypeEnumType>
+                    {
+                        Name = "itemSubType"
+                    },
+                    new QueryArgument<IntGraphType>
+                    {
+                        Name = "price"
+                    }),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    var shop = new ShopState((Dictionary) blockChain.GetState(Addresses.Shop));
+                    var products = shop.Products.Values;
+                    var id = context.GetArgument<int>("id");
+                    if (id > 0)
+                    {
+                        products = products
+                            .Where(si => si.ItemUsable?.Id == id || si.Costume?.Id == id);
+                    }
+                    //Avoid default value for Consumable
+                    var subType = context.GetArgument<ItemSubType>("itemSubType", ItemSubType.EquipmentMaterial);
+                    if (subType != ItemSubType.EquipmentMaterial)
+                    {
+                        products = products
+                            .Where(si => si.ItemUsable?.ItemSubType == subType || si.Costume?.ItemSubType == subType);
+                    }
+                    var price = context.GetArgument<int>("price");
+                    if (price > 0)
+                    {
+                        var currency = new GoldCurrencyState(
+                            (Dictionary) blockChain.GetState(GoldCurrencyState.Address)
+                        ).Currency;
+                        products = products
+                            .Where(si => si.Price <= price * currency);
+                    }
+                    return products.ToList();
                 }
             );
         }

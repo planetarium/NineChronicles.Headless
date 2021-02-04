@@ -1,7 +1,10 @@
+using System;
 using System.IO;
+using System.Linq;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Crypto;
+using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 
 namespace NineChronicles.Headless.Tests
@@ -31,5 +34,26 @@ namespace NineChronicles.Headless.Tests
         );
 
         public static readonly Currency CurrencyFX = new Currency("NCG", 2, minter: null);
+
+        public static ShopState ShopStateFX()
+        {
+            var shopState = new ShopState();
+            for (var index = 0; index < TableSheetsFX.EquipmentItemSheet.OrderedList.Count; index++)
+            {
+                var row = TableSheetsFX.EquipmentItemSheet.OrderedList[index];
+                var equipment = ItemFactory.CreateItemUsable(row, default, 0);
+                var shopItem = new ShopItem(UserAddress, AvatarAddress, Guid.NewGuid(), index * CurrencyFX, equipment);
+                shopState.Register(shopItem);
+            }
+
+            for (var i = 0; i < TableSheetsFX.CostumeItemSheet.OrderedList.Count; i++)
+            {
+                var row = TableSheetsFX.CostumeItemSheet.OrderedList[i];
+                var equipment = ItemFactory.CreateCostume(row, default);
+                var shopItem = new ShopItem(UserAddress, AvatarAddress, Guid.NewGuid(), i * CurrencyFX, equipment);
+                shopState.Register(shopItem);
+            }
+            return shopState;
+        }
     }
 }
