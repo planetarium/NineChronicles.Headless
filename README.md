@@ -46,7 +46,7 @@ Options:
   --tx-life-time <Int32>                                   The lifetime of each transaction, which uses minute as its unit.  60 (m) by default. (Default: 60)
   --message-timeout <Int32>                                The grace period for new messages, which uses second as its unit.  60 (s) by default. (Default: 60)
   --tip-timeout <Int32>                                    The grace period for tip update, which uses second as its unit.  60 (s) by default. (Default: 60)
-  --demand-buffer <Int32>                                  A number that determines how far behind the demand the tip of the chain will generate an error.  1150 blocks by default. (Default: 1150)
+  --demand-buffer <Int32>                                  A number that determines how far behind the demand the tip of the chain will publish `NodeException` to GraphQL subscriptions.  1150 blocks by default. (Default: 1150)
   -h, --help                                               Show help message
   --version                                                Show version
 ```
@@ -84,9 +84,9 @@ $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 -  `--dev`: Flag to turn on the dev mode.
 -  `--dev.block-interval`: Specifies the time interval between blocks by milliseconds in dev mode.
 -  `--dev.reorg-interval`: Specifies the size of reorg interval in dev mode.
--  `--message-timeout`: Specifies the time limit that determines how old the latest message is received will generate an error.
--  `--tip-timeout`: Specifies the time limit that determines how old the blockchain's tip is updated will generate an error.
--  `--demand-buffer`: Specifies the number that determines how far behind the demand the tip of the chain will generate an error.
+-  `--message-timeout`: Specifies the time limit that determines how old the latest message is received will publish `NodeException` to GraphQL subscriptions.
+-  `--tip-timeout`: Specifies the time limit that determines how old the blockchain's tip is updated will publish `NodeException` to GraphQL subscriptions.
+-  `--demand-buffer`: Specifies the number that determines how far behind the demand the tip of the chain will publish `NodeException` to GraphQL subscriptions.
 
 ### Format
 

@@ -137,7 +137,7 @@ namespace NineChronicles.Headless.Executable
             int tipTimeout = 60,
             [Option(Description =
                 "A number that determines how far behind the demand the tip of the chain " +
-                "will generate an error.  1150 blocks by default.")]
+                "will publish `NodeException` to GraphQL subscriptions.  1150 blocks by default.")]
             int demandBuffer = 1150
         )
         {
