@@ -184,12 +184,12 @@ namespace Libplanet.Headless.Hosting
                 var tasks = new List<Task>
                 {
                     StartSwarm(preload, cancellationToken),
-                    CheckMessage(cancellationToken),
-                    CheckTip(cancellationToken)
+                    CheckMessage(Properties.MessageTimeout, cancellationToken),
+                    CheckTip(Properties.TipTimeout, cancellationToken)
                 };
                 if (Properties.Peers.Any())
                 {
-                    tasks.Add(CheckDemand(cancellationToken));
+                    tasks.Add(CheckDemand(Properties.DemandBuffer, cancellationToken));
                     tasks.Add(CheckPeerTable(cancellationToken));
                 }
                 await await Task.WhenAny(tasks);
@@ -387,9 +387,8 @@ namespace Libplanet.Headless.Hosting
             }
         }
 
-        protected async Task CheckMessage(CancellationToken cancellationToken = default)
+        protected async Task CheckMessage(TimeSpan messageTimeout, CancellationToken cancellationToken = default)
         {
-            var messageTimeout = TimeSpan.FromMinutes(1);
             while (!cancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(BootstrapInterval, cancellationToken);
@@ -409,9 +408,8 @@ namespace Libplanet.Headless.Hosting
         }
 
         // FIXME: Can fixed by just restarting Swarm only (i.e. CheckMessage)
-        private async Task CheckTip(CancellationToken cancellationToken = default)
+        private async Task CheckTip(TimeSpan tipTimeout, CancellationToken cancellationToken = default)
         {
-            var tipTimeout = TimeSpan.FromMinutes(2);
             var lastTipChanged = DateTimeOffset.Now;
             var lastTip = BlockChain.Tip;
             while (!cancellationToken.IsCancellationRequested)
@@ -443,9 +441,8 @@ namespace Libplanet.Headless.Hosting
             }
         }
 
-        private async Task CheckDemand(CancellationToken cancellationToken = default)
+        private async Task CheckDemand(int demandBuffer, CancellationToken cancellationToken = default)
         {
-            const int buffer = 1150;
             while (!cancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
@@ -454,11 +451,11 @@ namespace Libplanet.Headless.Hosting
                     continue;
                 }
                 
-                if ((Swarm.BlockDemand?.Header.Index ?? 0) > (BlockChain.Tip?.Index ?? 0) + buffer)
+                if ((Swarm.BlockDemand?.Header.Index ?? 0) > (BlockChain.Tip?.Index ?? 0) + demandBuffer)
                 {
                     var message =
                         $"Chain's tip is too low. (demand: {Swarm.BlockDemand?.Header.Index}, " +
-                        $"actual: {BlockChain.Tip?.Index}, buffer: {buffer})";
+                        $"actual: {BlockChain.Tip?.Index}, buffer: {demandBuffer})";
                     Log.Error(message);
                     Properties.NodeExceptionOccurred(NodeExceptionType.DemandTooHigh, message);
                     _stopRequested = true;

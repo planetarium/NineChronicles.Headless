@@ -93,7 +93,11 @@ namespace Libplanet.Headless.Hosting
             bool preload = true;
             while (!cancellationToken.IsCancellationRequested && !_stopRequested)
             {
-                var tasks = new List<Task> { StartSwarm(preload, cancellationToken), CheckMessage(cancellationToken) };
+                var tasks = new List<Task>
+                {
+                    StartSwarm(preload, cancellationToken),
+                    CheckMessage(Properties.MessageTimeout, cancellationToken),
+                };
                 if (Properties.Peers.Any()) 
                 {
                     tasks.Add(CheckPeerTable(cancellationToken));
