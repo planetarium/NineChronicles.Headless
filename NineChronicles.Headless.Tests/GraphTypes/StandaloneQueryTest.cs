@@ -590,7 +590,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         [Theory]
         [MemberData(nameof(ProductsMembers))]
-        public async Task ProductsWithArguments(int id, string itemSubType, int price, int expected)
+        public async Task ProductsWithArguments(int? id, string itemSubType, int? price, int expected)
         {
             var userPrivateKey = new PrivateKey();
             var service = MakeMineChroniclesNodeService(userPrivateKey);
@@ -604,11 +604,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 queryArgs += $", itemSubType: {itemSubType}";
             }
 
-            if (price > 0)
+            if (!(price is null))
             {
-                queryArgs += $", price: {price}";
+                queryArgs += $", maximumPrice: {price}";
             }
-            var query = @"query {{
+            const string query = @"query {{
                 products({0}) {{
                     sellerAgentAddress
                     sellerAvatarAddress
@@ -630,6 +630,42 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var products = queryResult.Data.As<Dictionary<string, object>>()["products"].As<List<object>>();
             Assert.Equal(expected, products.Count);
         }
+
+        [Theory]
+        [InlineData("id: 1.0")]
+        [InlineData("maximumPrice: 1.1")]
+        [InlineData("itemSubType: Costume")]
+        public async Task ProductsWithInvalidArguments(string queryArgs)
+        {
+            var userPrivateKey = new PrivateKey();
+            var service = MakeMineChroniclesNodeService(userPrivateKey);
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
+            var blockChain = service.BlockChain;
+
+            const string query = @"query {{
+                products({0}) {{
+                    sellerAgentAddress
+                    sellerAvatarAddress
+                    price
+                    itemUsable {{
+                        itemId
+                        itemType
+                        itemSubType
+                    }}
+                    costume {{
+                        itemId
+                        itemType
+                        itemSubType
+                    }}
+                }}
+            }}";
+            await blockChain.MineBlock(new Address());
+            var queryResult = await ExecuteQueryAsync(string.Format(query, queryArgs));
+            Assert.Null(queryResult.Data);
+            Assert.Equal("ARGUMENTS_OF_CORRECT_TYPE", queryResult.Errors.First().Code);
+        }
+
 
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)
         {
@@ -728,21 +764,21 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 10110000,
                 null,
                 0,
-                1,
-            },
-            new object[]
-            {
                 0,
-                null,
-                1,
-                4,
             },
             new object[]
             {
                 0,
                 null,
                 0,
-                197,
+                0,
+            },
+            new object[]
+            {
+                10110000,
+                null,
+                -1,
+                0,
             },
         };
     }

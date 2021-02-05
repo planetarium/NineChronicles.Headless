@@ -160,14 +160,17 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<IntGraphType>
                     {
                         Name = "id",
+                        Description = "Filter for item id."
                     },
                     new QueryArgument<ItemSubTypeEnumType>
                     {
-                        Name = "itemSubType"
+                        Name = "itemSubType",
+                        Description = "Filter for ItemSubType. see from https://github.com/planetarium/lib9c/blob/main/Lib9c/Model/Item/ItemType.cs#L13"
                     },
                     new QueryArgument<IntGraphType>
                     {
-                        Name = "price"
+                        Name = "maximumPrice",
+                        Description = "Filter for item maximum price."
                     }),
                 resolve: context =>
                 {
@@ -179,21 +182,20 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var shop = new ShopState((Dictionary) blockChain.GetState(Addresses.Shop));
                     var products = shop.Products.Values;
-                    var id = context.GetArgument<int>("id");
-                    if (id > 0)
+                    var id = context.GetArgument<int?>("id");
+                    if (!(id is null))
                     {
                         products = products
                             .Where(si => si.ItemUsable?.Id == id || si.Costume?.Id == id);
                     }
-                    //Avoid default value for Consumable
-                    var subType = context.GetArgument<ItemSubType>("itemSubType", ItemSubType.EquipmentMaterial);
-                    if (subType != ItemSubType.EquipmentMaterial)
+                    var subType = context.GetArgument<ItemSubType?>("itemSubType");
+                    if (!(subType is null))
                     {
                         products = products
                             .Where(si => si.ItemUsable?.ItemSubType == subType || si.Costume?.ItemSubType == subType);
                     }
-                    var price = context.GetArgument<int>("price");
-                    if (price > 0)
+                    var price = context.GetArgument<int?>("maximumPrice");
+                    if (!(price is null))
                     {
                         var currency = new GoldCurrencyState(
                             (Dictionary) blockChain.GetState(GoldCurrencyState.Address)
