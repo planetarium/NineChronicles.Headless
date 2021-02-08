@@ -64,8 +64,36 @@ namespace NineChronicles.Headless.GraphTypes
                 });
             Field<ListGraphType<TxIdType>>(
                 name: "stagedTxIds",
+                arguments: new QueryArguments(
+                    new QueryArgument<AddressType>
+                    {
+                        Name = "address",
+                        Description = "Target address to query"
+                    }
+                ),
                 description: "Staged TxIds from the current node.",
-                resolve: context => context.Source.BlockChain.GetStagedTransactionIds()
+                resolve: context =>
+                {
+                    if (!context.HasArgument("address"))
+                    {
+                        return context.Source.BlockChain.GetStagedTransactionIds();
+                    }
+                    else
+                    {
+                        Address address = context.GetArgument<Address>("address");
+                        var stagedTransactionIds = context.Source.BlockChain.GetStagedTransactionIds();
+
+                        foreach (var txId in stagedTransactionIds)
+                        {
+                            var tx = context.Source.BlockChain.GetTransaction(txId);
+                            if (tx.Signer != address)
+                            {
+                                stagedTransactionIds = stagedTransactionIds.Remove(txId);
+                            }
+                        }
+                        return stagedTransactionIds;
+                    }
+                }
             );
             Field<NonNullGraphType<BlockHeaderType>>(name: "genesis",
                 resolve: context => BlockHeaderType.FromBlock(context.Source.BlockChain.Genesis));

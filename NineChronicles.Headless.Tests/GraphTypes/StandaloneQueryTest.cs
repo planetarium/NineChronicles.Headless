@@ -202,6 +202,31 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Null(result.Errors);
             Assert.Equal(expectedResult, result.Data);
+
+            var apvTx = StandaloneContextFx.BlockChain.MakeTransaction(
+                apvPrivateKey,
+                new PolymorphicAction<ActionBase>[] { }
+            );
+
+            var apvAddress = apvPrivateKey.ToAddress();
+            var query = $@"query {{
+                nodeStatus {{
+                    stagedTxIds(address: ""{apvAddress}"")
+                }}
+            }}";
+            result = await ExecuteQueryAsync(query);
+            expectedResult = new Dictionary<string, object>()
+            {
+                ["nodeStatus"] = new Dictionary<string, object>()
+                {
+                    ["stagedTxIds"] = new List<object>
+                    {
+                        apvTx.Id.ToString(),
+                    }
+                },
+            };
+            Assert.Null(result.Errors);
+            Assert.Equal(expectedResult, result.Data);
         }
 
         [Theory]
