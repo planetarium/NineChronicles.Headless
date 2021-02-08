@@ -556,117 +556,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(transaction.Actions.First().PlainValue.Inspection, plainValue);
         }
 
-        [Fact]
-        public async Task Products()
-        {
-            var userPrivateKey = new PrivateKey();
-            var service = MakeMineChroniclesNodeService(userPrivateKey);
-            StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
-            var blockChain = service.BlockChain;
-
-            const string query = @"query {
-                products {
-                    sellerAgentAddress
-                    sellerAvatarAddress
-                    price
-                    itemUsable {
-                        itemId
-                        itemType
-                        itemSubType
-                    }
-                    costume {
-                        itemId
-                        itemType
-                        itemSubType
-                    }
-                }
-            }";
-            await blockChain.MineBlock(new Address());
-            var queryResult = await ExecuteQueryAsync(query);
-            var products = queryResult.Data.As<Dictionary<string, object>>()["products"].As<List<object>>();
-            Assert.True(products.Any());
-        }
-
-        [Theory]
-        [MemberData(nameof(ProductsMembers))]
-        public async Task ProductsWithArguments(int? id, string itemSubType, int? price, int expected)
-        {
-            var userPrivateKey = new PrivateKey();
-            var service = MakeMineChroniclesNodeService(userPrivateKey);
-            StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
-            var blockChain = service.BlockChain;
-
-            var queryArgs = $"id: {id}";
-            if (!(itemSubType is null))
-            {
-                queryArgs += $", itemSubType: {itemSubType}";
-            }
-
-            if (!(price is null))
-            {
-                queryArgs += $", maximumPrice: {price}";
-            }
-            const string query = @"query {{
-                products({0}) {{
-                    sellerAgentAddress
-                    sellerAvatarAddress
-                    price
-                    itemUsable {{
-                        itemId
-                        itemType
-                        itemSubType
-                    }}
-                    costume {{
-                        itemId
-                        itemType
-                        itemSubType
-                    }}
-                }}
-            }}";
-            await blockChain.MineBlock(new Address());
-            var queryResult = await ExecuteQueryAsync(string.Format(query, queryArgs));
-            var products = queryResult.Data.As<Dictionary<string, object>>()["products"].As<List<object>>();
-            Assert.Equal(expected, products.Count);
-        }
-
-        [Theory]
-        [InlineData("id: 1.0")]
-        [InlineData("maximumPrice: 1.1")]
-        [InlineData("itemSubType: Costume")]
-        public async Task ProductsWithInvalidArguments(string queryArgs)
-        {
-            var userPrivateKey = new PrivateKey();
-            var service = MakeMineChroniclesNodeService(userPrivateKey);
-            StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
-            var blockChain = service.BlockChain;
-
-            const string query = @"query {{
-                products({0}) {{
-                    sellerAgentAddress
-                    sellerAvatarAddress
-                    price
-                    itemUsable {{
-                        itemId
-                        itemType
-                        itemSubType
-                    }}
-                    costume {{
-                        itemId
-                        itemType
-                        itemSubType
-                    }}
-                }}
-            }}";
-            await blockChain.MineBlock(new Address());
-            var queryResult = await ExecuteQueryAsync(string.Format(query, queryArgs));
-            Assert.Null(queryResult.Data);
-            Assert.Equal("ARGUMENTS_OF_CORRECT_TYPE", queryResult.Errors.First().Code);
-        }
-
-
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)
         {
             var goldCurrency = new Currency("NCG", 2, minter: null);
@@ -679,7 +568,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     {
                         new InitializeStates(
                             rankingState: new RankingState(),
-                            shopState: Fixtures.ShopStateFX(),
+                            shopState: new ShopState(),
                             gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
                             redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
                                 .Add("address", RedeemCodeState.Address.Serialize())
@@ -742,44 +631,5 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             random.NextBytes(buffer);
             return buffer;
         }
-
-        public static IEnumerable<object[]> ProductsMembers => new List<object[]>
-        {
-            new object[]
-            {
-                10110000,
-                "Weapon",
-                1,
-                1,
-            },
-            new object[]
-            {
-                10110000,
-                null,
-                1,
-                1,
-            },
-            new object[]
-            {
-                10110000,
-                null,
-                0,
-                0,
-            },
-            new object[]
-            {
-                0,
-                null,
-                0,
-                0,
-            },
-            new object[]
-            {
-                10110000,
-                null,
-                -1,
-                0,
-            },
-        };
     }
 }

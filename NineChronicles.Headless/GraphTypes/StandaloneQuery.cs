@@ -153,59 +153,6 @@ namespace NineChronicles.Headless.GraphTypes
                     return blockChain.GetTransaction(txId);
                 }
             );
-
-            Field<NonNullGraphType<ListGraphType<ShopItemType>>>(
-                name: "products",
-                arguments: new QueryArguments(
-                    new QueryArgument<IntGraphType>
-                    {
-                        Name = "id",
-                        Description = "Filter for item id."
-                    },
-                    new QueryArgument<ItemSubTypeEnumType>
-                    {
-                        Name = "itemSubType",
-                        Description = "Filter for ItemSubType. see from https://github.com/planetarium/lib9c/blob/main/Lib9c/Model/Item/ItemType.cs#L13"
-                    },
-                    new QueryArgument<IntGraphType>
-                    {
-                        Name = "maximumPrice",
-                        Description = "Filter for item maximum price."
-                    }),
-                resolve: context =>
-                {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
-
-                    var shop = new ShopState((Dictionary) blockChain.GetState(Addresses.Shop));
-                    var products = shop.Products.Values;
-                    var id = context.GetArgument<int?>("id");
-                    if (!(id is null))
-                    {
-                        products = products
-                            .Where(si => si.ItemUsable?.Id == id || si.Costume?.Id == id);
-                    }
-                    var subType = context.GetArgument<ItemSubType?>("itemSubType");
-                    if (!(subType is null))
-                    {
-                        products = products
-                            .Where(si => si.ItemUsable?.ItemSubType == subType || si.Costume?.ItemSubType == subType);
-                    }
-                    var price = context.GetArgument<int?>("maximumPrice");
-                    if (!(price is null))
-                    {
-                        var currency = new GoldCurrencyState(
-                            (Dictionary) blockChain.GetState(GoldCurrencyState.Address)
-                        ).Currency;
-                        products = products
-                            .Where(si => si.Price <= price * currency);
-                    }
-                    return products.ToList();
-                }
-            );
         }
     }
 }
