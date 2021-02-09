@@ -198,15 +198,20 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<BooleanGraphType>>("buy",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "sellerAgentAddress",
                     },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "sellerAvatarAddress",
                     },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "buyerAvatarIndex",
+                        Description = "The index of character slot. 0 ~ 2"
+                    },
+                    new QueryArgument<NonNullGraphType<GuidGraphType>>
                     {
                         Name = "productId",
                     }),
@@ -215,15 +220,16 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privatekey = service.PrivateKey;
+                        PrivateKey privateKey = service.PrivateKey;
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
-                        Address userAddress = privatekey.PublicKey.ToAddress();
-                        Address avatarAddress = userAddress.Derive("avatar_0");
-                        Address sellerAgentAddress = new Address(context.GetArgument<string>("sellerAgentAddress"));
-                        Address sellerAvatarAddress = new Address(context.GetArgument<string>("sellerAvatarAddress"));
-                        Guid productId = Guid.Parse(context.GetArgument<string>("productId"));
+                        Address userAddress = privateKey.PublicKey.ToAddress();
+                        int buyerAvatarIndex = context.GetArgument<int>("buyerAvatarIndex");
+                        Address avatarAddress = userAddress.Derive(string.Format(CreateAvatar2.DeriveFormat, buyerAvatarIndex));
+                        Address sellerAgentAddress = context.GetArgument<Address>("sellerAgentAddress");
+                        Address sellerAvatarAddress = context.GetArgument<Address>("sellerAvatarAddress");
+                        Guid productId = context.GetArgument<Guid>("productId");
 
-                        var action = new Buy
+                        var action = new Buy4
                         {
                             buyerAvatarAddress = avatarAddress,
                             sellerAgentAddress = sellerAgentAddress,
@@ -232,7 +238,7 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
-                        blockChain.MakeTransaction(privatekey, actions);
+                        blockChain.MakeTransaction(privateKey, actions);
                     }
                     catch (Exception e)
                     {

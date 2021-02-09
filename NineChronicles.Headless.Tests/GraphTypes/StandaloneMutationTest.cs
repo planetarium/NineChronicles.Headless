@@ -333,6 +333,33 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Fact]
+        public async Task Buy()
+        {
+            var sellerAgentAddress = new Address();
+            var sellerAvatarAddress = new Address();
+            var productId = Guid.NewGuid();
+            var playerPrivateKey = new PrivateKey();
+            var blockChain = GetContextFx(playerPrivateKey, new RankingState());
+            var query = $@"mutation {{
+                action {{
+                    buy(sellerAgentAddress: ""{sellerAgentAddress}"", sellerAvatarAddress: ""{sellerAvatarAddress}"", buyerAvatarIndex: 0, productId: ""{productId}"")
+                }}
+            }}";
+            var result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
+
+            var txIds = blockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = blockChain.GetTransaction(txIds.First());
+            Assert.Single(tx.Actions);
+            var action = (Buy4) tx.Actions.First().InnerAction;
+            Assert.Equal(productId, action.productId);
+            Assert.Equal(sellerAgentAddress, action.sellerAgentAddress);
+            Assert.Equal(sellerAvatarAddress, action.sellerAvatarAddress);
+            Assert.Equal(tx.Signer.Derive(string.Format(CreateAvatar2.DeriveFormat, 0)), action.buyerAvatarAddress);
+        }
+
+        [Fact]
         public async Task Tx()
         {
             Block<PolymorphicAction<ActionBase>> genesis =
