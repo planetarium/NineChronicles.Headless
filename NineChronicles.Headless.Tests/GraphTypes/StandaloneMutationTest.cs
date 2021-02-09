@@ -21,6 +21,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -194,38 +195,68 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             );
         }
 
-        [Fact]
-        public async Task CreateAvatar()
+        [Theory]
+        [MemberData(nameof(CreateAvatarMember))]
+        public async Task CreateAvatar(string name, int index, int hair, int lens, int ear, int tail)
         {
             var playerPrivateKey = new PrivateKey();
-            Address playerAddress = playerPrivateKey.ToAddress();
             var ranking = new RankingState();
             for (var i = 0; i < RankingState.RankingMapCapacity; i++)
             {
                 ranking.RankingMap[RankingState.Derive(i)] = new HashSet<Address>().ToImmutableHashSet();
             }
             var blockChain = GetContextFx(playerPrivateKey, ranking);
-
-            var query = $"mutation {{ action {{ createAvatar }} }}";
+            var query = $@"mutation {{
+                action {{
+                    createAvatar(avatarName: ""{name}"", avatarIndex: {index}, hairIndex: {hair}, lensIndex: {lens}, earIndex: {ear}, tailIndex: {tail})
+                    }}
+                }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
 
-            var isCreated = (bool)result.Data
-                .As<Dictionary<string, object>>()["action"]
-                .As<Dictionary<string, object>>()["createAvatar"];
-
-            Assert.True(isCreated);
-
-            await blockChain.MineBlock(playerAddress);
-            var playerState = (Bencodex.Types.Dictionary)blockChain.GetState(playerAddress);
-            var agentState = new AgentState(playerState);
-
-            Assert.Equal(playerAddress, agentState.address);
-            Assert.True(agentState.avatarAddresses.ContainsKey(0));
-
-            var avatar = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
-
-            Assert.Equal("createbymutation", avatar.name);
+            var txIds = blockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = blockChain.GetTransaction(txIds.First());
+            Assert.Single(tx.Actions);
+            var action = (CreateAvatar2) tx.Actions.First().InnerAction;
+            Assert.Equal(name, action.name);
+            Assert.Equal(index, action.index);
+            Assert.Equal(hair, action.hair);
+            Assert.Equal(lens, action.lens);
+            Assert.Equal(ear, action.ear);
+            Assert.Equal(tail, action.tail);
         }
+
+        public static IEnumerable<object[]> CreateAvatarMember => new List<object[]>
+        {
+            new object[]
+            {
+                "createByMutation",
+                1,
+                2,
+                3,
+                4,
+                5,
+            },
+            new object[]
+            {
+                "createByMutation2",
+                2,
+                3,
+                4,
+                5,
+                6,
+            },
+            new object[]
+            {
+                "createByMutation3",
+                0,
+                0,
+                0,
+                0,
+                0,
+            },
+        };
 
         [Fact]
         public async Task HackAndSlash()
@@ -414,25 +445,25 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             IImmutableSet<Address> activatedAccounts,
             RankingState rankingState = null
         ) => BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
-                new PolymorphicAction<ActionBase>[]
-                {
-                    new InitializeStates(
-                        rankingState: rankingState ?? new RankingState(),
-                        shopState: new ShopState(),
-                        gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
-                        redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                            .Add("address", RedeemCodeState.Address.Serialize())
-                            .Add("map", Bencodex.Types.Dictionary.Empty)
-                        ),
-                        adminAddressState: new AdminState(adminAddress, 1500000),
-                        activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-                        goldCurrencyState: new GoldCurrencyState(curreny),
-                        goldDistributions: new GoldDistribution[0],
-                        tableSheets: _sheets,
-                        pendingActivationStates: new PendingActivationState[]{ }
+            new PolymorphicAction<ActionBase>[]
+            {
+                new InitializeStates(
+                    rankingState: rankingState ?? new RankingState(),
+                    shopState: new ShopState(),
+                    gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
+                    redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                        .Add("address", RedeemCodeState.Address.Serialize())
+                        .Add("map", Bencodex.Types.Dictionary.Empty)
                     ),
-                }, blockAction: ServiceBuilder.BlockPolicy.BlockAction
-            );
+                    adminAddressState: new AdminState(adminAddress, 1500000),
+                    activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
+                    goldCurrencyState: new GoldCurrencyState(curreny),
+                    goldDistributions: new GoldDistribution[0],
+                    tableSheets: _sheets,
+                    pendingActivationStates: new PendingActivationState[]{ }
+                ),
+            }, blockAction: ServiceBuilder.BlockPolicy.BlockAction
+        );
 
         private BlockChain<PolymorphicAction<ActionBase>> GetContextFx(PrivateKey playerPrivateKey, RankingState ranking)
         {

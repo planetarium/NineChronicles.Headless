@@ -20,6 +20,38 @@ namespace NineChronicles.Headless.GraphTypes
         public ActionMutation()
         {
             Field<NonNullGraphType<BooleanGraphType>>("createAvatar",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "avatarName",
+                        Description = "The character name."
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "avatarIndex",
+                        Description = "The index of character slot. 0 ~ 2"
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "hairIndex",
+                        Description = "The index of character hair color. 0 ~ 8"
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "lensIndex",
+                        Description = "The index of character eye color. 0 ~ 8"
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "earIndex",
+                        Description = "The index of character ear color. 0 ~ 8"
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "tailIndex",
+                        Description = "The index of character tail color. 0 ~ 8"
+                    }
+                ),
                 resolve: context =>
                 {
                     try
@@ -28,17 +60,20 @@ namespace NineChronicles.Headless.GraphTypes
                         PrivateKey privatekey = service.PrivateKey;
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
                         Address userAddress = privatekey.PublicKey.ToAddress();
-                        Address avatarAddress = userAddress.Derive("avatar_0");
-
-                        var action = new CreateAvatar
+                        var avatarName = context.GetArgument<string>("avatarName");
+                        var avatarIndex = context.GetArgument<int>("avatarIndex");
+                        var hairIndex = context.GetArgument<int>("hairIndex");
+                        var lensIndex = context.GetArgument<int>("lensIndex");
+                        var earIndex = context.GetArgument<int>("earIndex");
+                        var tailIndex = context.GetArgument<int>("tailIndex");
+                        var action = new CreateAvatar2
                         {
-                            avatarAddress = avatarAddress,
-                            index = 0,
-                            hair = 0,
-                            lens = 0,
-                            ear = 0,
-                            tail = 0,
-                            name = "createbymutation",
+                            index = avatarIndex,
+                            hair = hairIndex,
+                            lens = lensIndex,
+                            ear = earIndex,
+                            tail = tailIndex,
+                            name = avatarName,
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
@@ -56,52 +91,52 @@ namespace NineChronicles.Headless.GraphTypes
                 });
 
             Field<NonNullGraphType<BooleanGraphType>>("hackAndSlash",
-            arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<StringGraphType>>
-                {
-                    Name = "weeklyArenaAddress",
-                },
-                new QueryArgument<NonNullGraphType<StringGraphType>>
-                {
-                    Name = "rankingArenaAddress",
-                }),
-            resolve: context =>
-            {
-                try
-                {
-                    NineChroniclesNodeService service = context.Source;
-                    PrivateKey privatekey = service.PrivateKey;
-                    BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
-                    Address userAddress = privatekey.PublicKey.ToAddress();
-                    Address avatarAddress = userAddress.Derive("avatar_0");
-                    Address weeklyArenaAddress = new Address(context.GetArgument<string>("weeklyArenaAddress"));
-                    Address rankingArenaAddress = new Address(context.GetArgument<string>("rankingArenaAddress"));
-
-                    var action = new HackAndSlash
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
-                        avatarAddress = avatarAddress,
-                        worldId = 1,
-                        stageId = 1,
-                        WeeklyArenaAddress = weeklyArenaAddress,
-                        RankingMapAddress = rankingArenaAddress,
-                        costumes = new List<int>(),
-                        equipments = new List<Guid>(),
-                        foods = new List<Guid>(),
-                    };
-
-                    var actions = new PolymorphicAction<ActionBase>[] { action };
-                    blockChain.MakeTransaction(privatekey, actions);
-                }
-                catch (Exception e)
+                        Name = "weeklyArenaAddress",
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "rankingArenaAddress",
+                    }),
+                resolve: context =>
                 {
-                    var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
-                    context.Errors.Add(new ExecutionError(msg, e));
-                    Log.Error(msg, e);
-                    return false;
-                }
+                    try
+                    {
+                        NineChroniclesNodeService service = context.Source;
+                        PrivateKey privatekey = service.PrivateKey;
+                        BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
+                        Address userAddress = privatekey.PublicKey.ToAddress();
+                        Address avatarAddress = userAddress.Derive("avatar_0");
+                        Address weeklyArenaAddress = new Address(context.GetArgument<string>("weeklyArenaAddress"));
+                        Address rankingArenaAddress = new Address(context.GetArgument<string>("rankingArenaAddress"));
 
-                return true;
-            });
+                        var action = new HackAndSlash
+                        {
+                            avatarAddress = avatarAddress,
+                            worldId = 1,
+                            stageId = 1,
+                            WeeklyArenaAddress = weeklyArenaAddress,
+                            RankingMapAddress = rankingArenaAddress,
+                            costumes = new List<int>(),
+                            equipments = new List<Guid>(),
+                            foods = new List<Guid>(),
+                        };
+
+                        var actions = new PolymorphicAction<ActionBase>[] { action };
+                        blockChain.MakeTransaction(privatekey, actions);
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        Log.Error(msg, e);
+                        return false;
+                    }
+
+                    return true;
+                });
 
             Field<NonNullGraphType<BooleanGraphType>>("combinationEquipment",
                 arguments: new QueryArguments(
@@ -281,7 +316,7 @@ namespace NineChronicles.Headless.GraphTypes
                             (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
                         ).Currency;
                         FungibleAssetValue price =
-                        FungibleAssetValue.Parse(currency, context.GetArgument<string>("price"));
+                            FungibleAssetValue.Parse(currency, context.GetArgument<string>("price"));
 
                         var action = new Sell
                         {
