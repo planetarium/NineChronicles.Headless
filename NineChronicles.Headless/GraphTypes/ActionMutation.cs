@@ -92,40 +92,76 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<BooleanGraphType>>("hackAndSlash",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "AvatarState address."
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "worldId",
+                        Description = "World ID."
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "stageId",
+                        Description = "Stage ID."
+                    },
+                    new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "weeklyArenaAddress",
+                        Description = "Address of this WeeklyArenaState"
                     },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "rankingArenaAddress",
-                    }),
+                        Description = "AvatarState rankingMapAddress."
+                    },
+                    new QueryArgument<ListGraphType<GuidGraphType>>
+                    {
+                        Name = "costumeIds",
+                        Description = "List of costume id for equip."
+                    },
+                    new QueryArgument<ListGraphType<GuidGraphType>>
+                    {
+                        Name = "equipmentIds",
+                        Description = "List of equipment id for equip."
+                    },
+                    new QueryArgument<ListGraphType<GuidGraphType>>
+                    {
+                        Name = "consumableIds",
+                        Description = "List of consumable id for use."
+                    }
+                ),
                 resolve: context =>
                 {
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privatekey = service.PrivateKey;
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
-                        Address userAddress = privatekey.PublicKey.ToAddress();
-                        Address avatarAddress = userAddress.Derive("avatar_0");
-                        Address weeklyArenaAddress = new Address(context.GetArgument<string>("weeklyArenaAddress"));
-                        Address rankingArenaAddress = new Address(context.GetArgument<string>("rankingArenaAddress"));
+                        Address weeklyArenaAddress = context.GetArgument<Address>("weeklyArenaAddress");
+                        Address rankingArenaAddress = context.GetArgument<Address>("rankingArenaAddress");
+                        Address avatarAddress = context.GetArgument<Address>("avatarAddress");
+                        int worldId = context.GetArgument<int>("worldId");
+                        int stageId = context.GetArgument<int>("stageId");
+                        List<Guid> costumeIds = context.GetArgument<List<Guid>>("costumeIds") ?? new List<Guid>();
+                        List<Guid> equipmentIds = context.GetArgument<List<Guid>>("equipmentIds") ?? new List<Guid>();
+                        List<Guid> consumableIds = context.GetArgument<List<Guid>>("consumableIds") ?? new List<Guid>();
 
-                        var action = new HackAndSlash
+                        var action = new HackAndSlash4
                         {
                             avatarAddress = avatarAddress,
-                            worldId = 1,
-                            stageId = 1,
+                            worldId = worldId,
+                            stageId = stageId,
                             WeeklyArenaAddress = weeklyArenaAddress,
                             RankingMapAddress = rankingArenaAddress,
-                            costumes = new List<int>(),
-                            equipments = new List<Guid>(),
-                            foods = new List<Guid>(),
+                            costumes = costumeIds,
+                            equipments = equipmentIds,
+                            foods = consumableIds,
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
-                        blockChain.MakeTransaction(privatekey, actions);
+                        blockChain.MakeTransaction(context.Source.PrivateKey, actions);
                     }
                     catch (Exception e)
                     {

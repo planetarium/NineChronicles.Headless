@@ -6,8 +6,6 @@ using Libplanet.Blockchain;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.KeyStore;
-using Libplanet.Net;
-using Libplanet.Headless.Hosting;
 using Libplanet.Tx;
 using Nekoyume;
 using Nekoyume.Action;
@@ -21,7 +19,6 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -258,42 +255,87 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             },
         };
 
-        [Fact]
-        public async Task HackAndSlash()
+        [Theory]
+        [MemberData(nameof(HackAndSlashMember))]
+        public async Task HackAndSlash(Address avatarAddress, int worldId, int stageId, Address weeklyArenaAddress,
+            Address rankingArenaAddress, List<Guid> costumeIds, List<Guid> equipmentIds, List<Guid> consumableIds)
         {
             var playerPrivateKey = new PrivateKey();
-            Address playerAddress = playerPrivateKey.ToAddress();
             var ranking = new RankingState();
             for (var i = 0; i < RankingState.RankingMapCapacity; i++)
             {
                 ranking.RankingMap[RankingState.Derive(i)] = new HashSet<Address>().ToImmutableHashSet();
             }
             var blockChain = GetContextFx(playerPrivateKey, ranking);
+            var queryArgs= $"avatarAddress: \"{avatarAddress}\", worldId: {worldId}, stageId: {stageId}, weeklyArenaAddress: \"{weeklyArenaAddress}\", rankingArenaAddress: \"{rankingArenaAddress}\"";
+            if (costumeIds.Any())
+            {
+                queryArgs += $", costumeIds: [{string.Join(",", costumeIds.Select(r => string.Format($"\"{r}\"")))}]";
+            }
+            if (equipmentIds.Any())
+            {
+                queryArgs += $", equipmentIds: [{string.Join(",", equipmentIds.Select(r => string.Format($"\"{r}\"")))}]";
+            }
+            if (consumableIds.Any())
+            {
+                queryArgs += $", consumableIds: [{string.Join(",", consumableIds.Select(r => string.Format($"\"{r}\"")))}]";
+            }
+            var query = @$"mutation {{ action {{ hackAndSlash({queryArgs}) }} }}";
+            ExecutionResult result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
 
-            var createAvatarQuery = $"mutation {{ action {{ createAvatar }} }}";
-            ExecutionResult createAvatarResult = await ExecuteQueryAsync(createAvatarQuery);
-            await blockChain.MineBlock(playerAddress);
-
-            var playerState = (Bencodex.Types.Dictionary)blockChain.GetState(playerAddress);
-            var agentState = new AgentState(playerState);
-            var weeklyArenaAddress = (new WeeklyArenaState(1)).address;
-            var rankingMapAddress = RankingState.Derive(0);
-
-            Assert.Equal(playerAddress, agentState.address);
-
-            var hackAndSlashQuery = $"mutation {{ action {{ hackAndSlash(weeklyArenaAddress: \"{weeklyArenaAddress.ToHex()}\", rankingArenaAddress: \"{rankingMapAddress.ToHex()}\") }} }}";
-            ExecutionResult result = await ExecuteQueryAsync(hackAndSlashQuery);
-
-            var isPlayed = (bool)result.Data
-                .As<Dictionary<string, object>>()["action"]
-                .As<Dictionary<string, object>>()["hackAndSlash"];
-
-            await blockChain.MineBlock(playerAddress);
-            Assert.True(isPlayed);
-
-            var avatar = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
-            Assert.True(avatar.exp > 0);
+            var txIds = blockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = blockChain.GetTransaction(txIds.First());
+            Assert.Single(tx.Actions);
+            var action = (HackAndSlash4) tx.Actions.First().InnerAction;
+            Assert.Equal(avatarAddress, action.avatarAddress);
+            Assert.Equal(worldId, action.worldId);
+            Assert.Equal(stageId, action.stageId);
+            Assert.Equal(weeklyArenaAddress, action.WeeklyArenaAddress);
+            Assert.Equal(rankingArenaAddress, action.RankingMapAddress);
+            Assert.Equal(costumeIds, action.costumes);
+            Assert.Equal(equipmentIds, action.equipments);
+            Assert.Equal(consumableIds, action.foods);
         }
+
+        public static IEnumerable<object[]> HackAndSlashMember => new List<object[]>
+        {
+            new object[]
+            {
+                new Address(),
+                1,
+                2,
+                new Address(),
+                new Address(),
+                new List<Guid>(),
+                new List<Guid>(),
+                new List<Guid>(),
+            },
+            new object[]
+            {
+                new Address(),
+                2,
+                3,
+                new Address(),
+                new Address(),
+                new List<Guid>
+                {
+                    Guid.NewGuid(),
+                },
+                new List<Guid>
+                {
+                    Guid.NewGuid(),
+                    Guid.NewGuid(),
+                },
+                new List<Guid>
+                {
+                    Guid.NewGuid(),
+                    Guid.NewGuid(),
+                    Guid.NewGuid(),
+                },
+            },
+        };
 
         [Fact]
         public async Task DailyReward()
