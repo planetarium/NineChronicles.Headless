@@ -20,7 +20,6 @@ using Libplanet.Headless.Hosting;
 using Libplanet.Tx;
 using Nekoyume.Action;
 using Nekoyume.Model;
-using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.Tests.Common;

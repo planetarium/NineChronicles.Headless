@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using GraphQL;
 using GraphQL.Types;
@@ -35,21 +36,19 @@ namespace NineChronicles.Headless.GraphTypes.States
                     }),
                 resolve: context =>
                 {
-                    var products = context.Source.Products.Values;
-                    var id = context.GetArgument<int?>("id");
-                    if (!(id is null))
+                    IEnumerable<ShopItem> products = context.Source.Products.Values;
+                    if (context.GetArgument<int?>("id") is int id)
                     {
                         products = products
                             .Where(si => si.ItemUsable?.Id == id || si.Costume?.Id == id);
                     }
-                    var subType = context.GetArgument<ItemSubType?>("itemSubType");
-                    if (!(subType is null))
+
+                    if (context.GetArgument<ItemSubType?>("itemSubType") is ItemSubType subType)
                     {
                         products = products
                             .Where(si => si.ItemUsable?.ItemSubType == subType || si.Costume?.ItemSubType == subType);
                     }
-                    var maximumPrice = context.GetArgument<int?>("maximumPrice");
-                    if (!(maximumPrice is null))
+                    if (context.GetArgument<int?>("maximumPrice") is int maximumPrice)
                     {
                         products = products
                             .Where(si => si.Price <= maximumPrice * si.Price.Currency);

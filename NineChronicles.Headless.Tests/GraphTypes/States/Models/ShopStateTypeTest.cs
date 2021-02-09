@@ -107,6 +107,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             }}";
             var queryResult = await ExecuteQueryAsync<ShopStateType>(query, source: new ShopState());
             Assert.Null(queryResult.Data);
+            Assert.Single(queryResult.Errors);
             Assert.Equal("ARGUMENTS_OF_CORRECT_TYPE", queryResult.Errors.First().Code);
         }
 
