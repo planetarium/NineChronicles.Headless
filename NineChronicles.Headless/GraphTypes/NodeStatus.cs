@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Cryptography;
 using GraphQL;
@@ -8,6 +9,7 @@ using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blocks;
 using Libplanet.Store;
+using Libplanet.Tx;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -81,17 +83,10 @@ namespace NineChronicles.Headless.GraphTypes
                     else
                     {
                         Address address = context.GetArgument<Address>("address");
-                        var stagedTransactionIds = context.Source.BlockChain.GetStagedTransactionIds();
+                        IImmutableSet<TxId> stagedTransactionIds = context.Source.BlockChain.GetStagedTransactionIds();
 
-                        foreach (var txId in stagedTransactionIds)
-                        {
-                            var tx = context.Source.BlockChain.GetTransaction(txId);
-                            if (tx.Signer != address)
-                            {
-                                stagedTransactionIds = stagedTransactionIds.Remove(txId);
-                            }
-                        }
-                        return stagedTransactionIds;
+                        return stagedTransactionIds.Where(txId =>
+                        context.Source.BlockChain.GetTransaction(txId).Signer.Equals(address));
                     }
                 }
             );
