@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Cryptography;
 using GraphQL;
@@ -8,6 +9,7 @@ using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blocks;
 using Libplanet.Store;
+using Libplanet.Tx;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -64,8 +66,29 @@ namespace NineChronicles.Headless.GraphTypes
                 });
             Field<ListGraphType<TxIdType>>(
                 name: "stagedTxIds",
+                arguments: new QueryArguments(
+                    new QueryArgument<AddressType>
+                    {
+                        Name = "address",
+                        Description = "Target address to query"
+                    }
+                ),
                 description: "Staged TxIds from the current node.",
-                resolve: context => context.Source.BlockChain.GetStagedTransactionIds()
+                resolve: context =>
+                {
+                    if (!context.HasArgument("address"))
+                    {
+                        return context.Source.BlockChain.GetStagedTransactionIds();
+                    }
+                    else
+                    {
+                        Address address = context.GetArgument<Address>("address");
+                        IImmutableSet<TxId> stagedTransactionIds = context.Source.BlockChain.GetStagedTransactionIds();
+
+                        return stagedTransactionIds.Where(txId =>
+                        context.Source.BlockChain.GetTransaction(txId).Signer.Equals(address));
+                    }
+                }
             );
             Field<NonNullGraphType<BlockHeaderType>>(name: "genesis",
                 resolve: context => BlockHeaderType.FromBlock(context.Source.BlockChain.Genesis));
