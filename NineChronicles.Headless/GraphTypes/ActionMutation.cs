@@ -176,32 +176,39 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<BooleanGraphType>>("combinationEquipment",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<DecimalGraphType>>
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "AvatarState address."
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "recipeId",
+                        Description = "EquipmentRecipe ID."
                     },
-                    new QueryArgument<NonNullGraphType<DecimalGraphType>>
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "slotIndex",
+                        Description =  "The index of combination slot. 0 ~ 3"
                     },
-                    new QueryArgument<DecimalGraphType>
+                    new QueryArgument<IntGraphType>
                     {
                         Name = "subRecipeId",
-                    }),
+                        Description = "EquipmentSubRecipe ID."
+                    }
+                ),
                 resolve: context =>
                 {
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privatekey = service.PrivateKey;
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
-                        Address userAddress = privatekey.PublicKey.ToAddress();
-                        Address avatarAddress = userAddress.Derive("avatar_0");
                         int recipeId = context.GetArgument<int>("recipeId");
                         int slotIndex = context.GetArgument<int>("slotIndex");
-                        int? subRecipeId = context.GetArgument<int>("subRecipeId");
+                        int? subRecipeId = context.GetArgument<int?>("subRecipeId");
+                        Address avatarAddress = context.GetArgument<Address>("avatarAddress");
 
-                        var action = new CombinationEquipment
+                        var action = new CombinationEquipment4
                         {
                             AvatarAddress = avatarAddress,
                             RecipeId = recipeId,
@@ -210,7 +217,7 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
-                        blockChain.MakeTransaction(privatekey, actions);
+                        blockChain.MakeTransaction(context.Source.PrivateKey, actions);
                     }
                     catch (Exception e)
                     {

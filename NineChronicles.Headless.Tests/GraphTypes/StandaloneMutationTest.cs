@@ -432,6 +432,57 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(tx.Signer.Derive(string.Format(CreateAvatar2.DeriveFormat, 0)), action.buyerAvatarAddress);
         }
 
+        [Theory]
+        [MemberData(nameof(CombinationEquipmentMember))]
+        public async Task CombinationEquipment(Address avatarAddress, int recipeId, int slotIndex, int? subRecipeId)
+        {
+            var playerPrivateKey = new PrivateKey();
+            var blockChain = GetContextFx(playerPrivateKey, new RankingState());
+            var queryArgs = $"avatarAddress: \"{avatarAddress}\", recipeId: {recipeId} slotIndex: {slotIndex}";
+            if (!(subRecipeId is null))
+            {
+                queryArgs += $"subRecipeId: {subRecipeId}";
+            }
+            var query = @$"mutation {{ action {{ combinationEquipment({queryArgs}) }} }}";
+            var result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
+
+            var txIds = blockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = blockChain.GetTransaction(txIds.First());
+            Assert.Single(tx.Actions);
+            var action = (CombinationEquipment4) tx.Actions.First().InnerAction;
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            Assert.Equal(recipeId, action.RecipeId);
+            Assert.Equal(slotIndex, action.SlotIndex);
+            Assert.Equal(subRecipeId, action.SubRecipeId);
+        }
+
+        public static IEnumerable<object[]> CombinationEquipmentMember => new List<object[]>
+        {
+            new object[]
+            {
+                new Address(),
+                1,
+                0,
+                0,
+            },
+            new object[]
+            {
+                new Address(),
+                1,
+                2,
+                1,
+            },
+            new object[]
+            {
+                new Address(),
+                2,
+                3,
+                null,
+            },
+        };
+
         [Fact]
         public async Task Tx()
         {
