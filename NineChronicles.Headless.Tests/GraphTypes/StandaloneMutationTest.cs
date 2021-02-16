@@ -530,6 +530,46 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             },
         };
 
+        [Theory]
+        [MemberData(nameof(CombinationConsumableMember))]
+        public async Task CombinationConsumable(Address avatarAddress, int recipeId, int slotIndex)
+        {
+            var playerPrivateKey = new PrivateKey();
+            var blockChain = GetContextFx(playerPrivateKey, new RankingState());
+            var query = $@"mutation {{
+                action {{
+                    combinationConsumable(avatarAddress: ""{avatarAddress}"", recipeId: {recipeId}, slotIndex: {slotIndex})
+                }}
+            }}";
+            var result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
+
+            var txIds = blockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = blockChain.GetTransaction(txIds.First());
+            Assert.Single(tx.Actions);
+            var action = (CombinationConsumable3) tx.Actions.First().InnerAction;
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            Assert.Equal(recipeId, action.recipeId);
+            Assert.Equal(slotIndex, action.slotIndex);
+        }
+
+        public static IEnumerable<object[]> CombinationConsumableMember => new List<object[]>
+        {
+            new object[]
+            {
+                new Address(),
+                1,
+                0,
+            },
+            new object[]
+            {
+                new Address(),
+                2,
+                3,
+            },
+        };
+
         [Fact]
         public async Task Tx()
         {

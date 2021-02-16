@@ -431,6 +431,56 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return true;
                 });
+
+            Field<NonNullGraphType<BooleanGraphType>>("combinationConsumable",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "AvatarState address."
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "recipeId",
+                        Description = "ConsumableRecipe ID."
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "slotIndex",
+                        Description =  "The index of combination slot. 0 ~ 3"
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        NineChroniclesNodeService service = context.Source;
+                        BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
+                        int recipeId = context.GetArgument<int>("recipeId");
+                        int slotIndex = context.GetArgument<int>("slotIndex");
+                        Address avatarAddress = context.GetArgument<Address>("avatarAddress");
+
+                        var action = new CombinationConsumable3
+                        {
+                            AvatarAddress = avatarAddress,
+                            recipeId = recipeId,
+                            slotIndex = slotIndex,
+                        };
+
+                        var actions = new PolymorphicAction<ActionBase>[] { action };
+                        blockChain.MakeTransaction(context.Source.PrivateKey, actions);
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        Log.Error(msg, e);
+                        return false;
+                    }
+
+                    return true;
+                }
+            );
         }
     }
 }
