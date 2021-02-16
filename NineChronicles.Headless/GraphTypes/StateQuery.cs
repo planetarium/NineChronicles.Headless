@@ -55,6 +55,18 @@ namespace NineChronicles.Headless.GraphTypes
                     return new WeeklyArenaState(
                         (Dictionary) context.Source.GetState(WeeklyArenaState.DeriveAddress(index)));
                 });
+            Field<AgentStateType>(
+                name: "agent",
+                arguments: new QueryArguments(new QueryArgument<AddressType>
+                {
+                    Name = "address",
+                }),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("address");
+                    return new AgentState((Dictionary) context.Source.GetState(address));
+                }
+            );
         }
     }
 }
