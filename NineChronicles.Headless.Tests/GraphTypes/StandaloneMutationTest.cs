@@ -373,9 +373,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var productId = Guid.NewGuid();
             var playerPrivateKey = new PrivateKey();
             var blockChain = GetContextFx(playerPrivateKey, new RankingState());
+            var buyerAvatarAddress = playerPrivateKey.PublicKey.ToAddress().Derive(string.Format(CreateAvatar2.DeriveFormat, 0));
             var query = $@"mutation {{
                 action {{
-                    buy(sellerAgentAddress: ""{sellerAgentAddress}"", sellerAvatarAddress: ""{sellerAvatarAddress}"", buyerAvatarIndex: 0, productId: ""{productId}"")
+                    buy(sellerAgentAddress: ""{sellerAgentAddress}"", sellerAvatarAddress: ""{sellerAvatarAddress}"", buyerAvatarAddress: ""{buyerAvatarAddress}"", productId: ""{productId}"")
                 }}
             }}";
             var result = await ExecuteQueryAsync(query);
@@ -389,7 +390,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(productId, action.productId);
             Assert.Equal(sellerAgentAddress, action.sellerAgentAddress);
             Assert.Equal(sellerAvatarAddress, action.sellerAvatarAddress);
-            Assert.Equal(tx.Signer.Derive(string.Format(CreateAvatar2.DeriveFormat, 0)), action.buyerAvatarAddress);
+            Assert.Equal(buyerAvatarAddress, action.buyerAvatarAddress);
         }
 
         [Theory]

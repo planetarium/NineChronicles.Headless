@@ -299,10 +299,10 @@ namespace NineChronicles.Headless.GraphTypes
                         Name = "sellerAvatarAddress",
                         Description = "ShopItem SellerAvatarAddress."
                     },
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    new QueryArgument<NonNullGraphType<AddressType>>
                     {
-                        Name = "buyerAvatarIndex",
-                        Description = "The index of character slot. 0 ~ 2"
+                        Name = "buyerAvatarAddress",
+                        Description = "AvatarState address."
                     },
                     new QueryArgument<NonNullGraphType<GuidGraphType>>
                     {
@@ -316,16 +316,14 @@ namespace NineChronicles.Headless.GraphTypes
                         NineChroniclesNodeService service = context.Source;
                         PrivateKey privateKey = service.PrivateKey;
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
-                        Address userAddress = privateKey.PublicKey.ToAddress();
-                        int buyerAvatarIndex = context.GetArgument<int>("buyerAvatarIndex");
-                        Address avatarAddress = userAddress.Derive(string.Format(CreateAvatar2.DeriveFormat, buyerAvatarIndex));
+                        Address buyerAvatarAddress = context.GetArgument<Address>("buyerAvatarAddress");
                         Address sellerAgentAddress = context.GetArgument<Address>("sellerAgentAddress");
                         Address sellerAvatarAddress = context.GetArgument<Address>("sellerAvatarAddress");
                         Guid productId = context.GetArgument<Guid>("productId");
 
                         var action = new Buy4
                         {
-                            buyerAvatarAddress = avatarAddress,
+                            buyerAvatarAddress = buyerAvatarAddress,
                             sellerAgentAddress = sellerAgentAddress,
                             sellerAvatarAddress = sellerAvatarAddress,
                             productId = productId,
