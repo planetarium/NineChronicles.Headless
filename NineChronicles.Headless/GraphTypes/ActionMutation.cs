@@ -232,14 +232,27 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<BooleanGraphType>>("itemEnhancement",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "AvatarState address."
+                    },
+                    new QueryArgument<NonNullGraphType<GuidGraphType>>
                     {
                         Name = "itemId",
+                        Description = "Equipment Guid."
                     },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<GuidGraphType>>
                     {
-                        Name = "materialIds",
-                    }),
+                        Name = "materialId",
+                        Description = "Material Guid."
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "slotIndex",
+                        Description =  "The index of combination slot. 0 ~ 3"
+                    }
+                ),
                 resolve: context =>
                 {
                     try
@@ -247,17 +260,17 @@ namespace NineChronicles.Headless.GraphTypes
                         NineChroniclesNodeService service = context.Source;
                         PrivateKey privatekey = service.PrivateKey;
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
-                        Address userAddress = privatekey.PublicKey.ToAddress();
-                        Address avatarAddress = userAddress.Derive("avatar_0");
-                        Guid itemId = Guid.Parse(context.GetArgument<string>("itemId"));
-                        Guid materialId = Guid.Parse(context.GetArgument<string>("materialIds"));
+                        Guid itemId = context.GetArgument<Guid>("itemId");
+                        Guid materialId = context.GetArgument<Guid>("materialId");
+                        Address avatarAddress = context.GetArgument<Address>("avatarAddress");
+                        int slotIndex = context.GetArgument<int>("slotIndex");
 
-                        var action = new ItemEnhancement
+                        var action = new ItemEnhancement5
                         {
                             avatarAddress = avatarAddress,
-                            slotIndex = 0,
+                            slotIndex = slotIndex,
                             itemId = itemId,
-                            materialIds = new[] { materialId }
+                            materialId = materialId,
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };

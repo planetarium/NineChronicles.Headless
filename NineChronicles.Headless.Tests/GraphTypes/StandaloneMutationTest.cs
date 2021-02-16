@@ -483,6 +483,49 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             },
         };
 
+        [Theory]
+        [MemberData(nameof(ItemEnhancementMember))]
+        public async Task ItemEnhancement(Address avatarAddress, Guid itemId, Guid materialId, int slotIndex)
+        {
+            var playerPrivateKey = new PrivateKey();
+            var blockChain = GetContextFx(playerPrivateKey, new RankingState());
+            var query = $@"mutation {{
+                action {{
+                    itemEnhancement(avatarAddress: ""{avatarAddress}"", itemId: ""{itemId}"", materialId: ""{materialId}"", slotIndex: {slotIndex})
+                }}
+            }}";
+            var result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
+
+            var txIds = blockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = blockChain.GetTransaction(txIds.First());
+            Assert.Single(tx.Actions);
+            var action = (ItemEnhancement5) tx.Actions.First().InnerAction;
+            Assert.Equal(avatarAddress, action.avatarAddress);
+            Assert.Equal(itemId, action.itemId);
+            Assert.Equal(materialId, action.materialId);
+            Assert.Equal(slotIndex, action.slotIndex);
+        }
+
+        public static IEnumerable<object[]> ItemEnhancementMember => new List<object[]>
+        {
+            new object[]
+            {
+                new Address(),
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                0,
+            },
+            new object[]
+            {
+                new Address(),
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                3,
+            },
+        };
+
         [Fact]
         public async Task Tx()
         {
