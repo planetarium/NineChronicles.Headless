@@ -6,10 +6,7 @@ using Libplanet.Blockchain;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.KeyStore;
-using Libplanet.Net;
-using Libplanet.Headless.Hosting;
 using Libplanet.Tx;
-using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
@@ -21,6 +18,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Bencodex.Types;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -194,142 +192,200 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             );
         }
 
-        [Fact]
-        public async Task CreateAvatar()
+        [Theory]
+        [MemberData(nameof(CreateAvatarMember))]
+        public async Task CreateAvatar(string name, int index, int hair, int lens, int ear, int tail)
         {
             var playerPrivateKey = new PrivateKey();
-            Address playerAddress = playerPrivateKey.ToAddress();
             var ranking = new RankingState();
             for (var i = 0; i < RankingState.RankingMapCapacity; i++)
             {
                 ranking.RankingMap[RankingState.Derive(i)] = new HashSet<Address>().ToImmutableHashSet();
             }
             var blockChain = GetContextFx(playerPrivateKey, ranking);
-
-            var query = $"mutation {{ action {{ createAvatar }} }}";
+            var query = $@"mutation {{
+                action {{
+                    createAvatar(avatarName: ""{name}"", avatarIndex: {index}, hairIndex: {hair}, lensIndex: {lens}, earIndex: {ear}, tailIndex: {tail})
+                    }}
+                }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
 
-            var isCreated = (bool)result.Data
-                .As<Dictionary<string, object>>()["action"]
-                .As<Dictionary<string, object>>()["createAvatar"];
-
-            Assert.True(isCreated);
-
-            await blockChain.MineBlock(playerAddress);
-            var playerState = (Bencodex.Types.Dictionary)blockChain.GetState(playerAddress);
-            var agentState = new AgentState(playerState);
-
-            Assert.Equal(playerAddress, agentState.address);
-            Assert.True(agentState.avatarAddresses.ContainsKey(0));
-
-            var avatar = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
-
-            Assert.Equal("createbymutation", avatar.name);
+            var txIds = blockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = blockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["createAvatar"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
+            Assert.Single(tx.Actions);
+            var action = (CreateAvatar2) tx.Actions.First().InnerAction;
+            Assert.Equal(name, action.name);
+            Assert.Equal(index, action.index);
+            Assert.Equal(hair, action.hair);
+            Assert.Equal(lens, action.lens);
+            Assert.Equal(ear, action.ear);
+            Assert.Equal(tail, action.tail);
         }
 
-        [Fact]
-        public async Task HackAndSlash()
+        public static IEnumerable<object[]> CreateAvatarMember => new List<object[]>
+        {
+            new object[]
+            {
+                "createByMutation",
+                1,
+                2,
+                3,
+                4,
+                5,
+            },
+            new object[]
+            {
+                "createByMutation2",
+                2,
+                3,
+                4,
+                5,
+                6,
+            },
+            new object[]
+            {
+                "createByMutation3",
+                0,
+                0,
+                0,
+                0,
+                0,
+            },
+        };
+
+        [Theory]
+        [MemberData(nameof(HackAndSlashMember))]
+        public async Task HackAndSlash(Address avatarAddress, int worldId, int stageId, Address weeklyArenaAddress,
+            Address rankingArenaAddress, List<Guid> costumeIds, List<Guid> equipmentIds, List<Guid> consumableIds)
         {
             var playerPrivateKey = new PrivateKey();
-            Address playerAddress = playerPrivateKey.ToAddress();
             var ranking = new RankingState();
             for (var i = 0; i < RankingState.RankingMapCapacity; i++)
             {
                 ranking.RankingMap[RankingState.Derive(i)] = new HashSet<Address>().ToImmutableHashSet();
             }
             var blockChain = GetContextFx(playerPrivateKey, ranking);
+            var queryArgs = $"avatarAddress: \"{avatarAddress}\", worldId: {worldId}, stageId: {stageId}, weeklyArenaAddress: \"{weeklyArenaAddress}\", rankingArenaAddress: \"{rankingArenaAddress}\"";
+            if (costumeIds.Any())
+            {
+                queryArgs += $", costumeIds: [{string.Join(",", costumeIds.Select(r => string.Format($"\"{r}\"")))}]";
+            }
+            if (equipmentIds.Any())
+            {
+                queryArgs += $", equipmentIds: [{string.Join(",", equipmentIds.Select(r => string.Format($"\"{r}\"")))}]";
+            }
+            if (consumableIds.Any())
+            {
+                queryArgs += $", consumableIds: [{string.Join(",", consumableIds.Select(r => string.Format($"\"{r}\"")))}]";
+            }
+            var query = @$"mutation {{ action {{ hackAndSlash({queryArgs}) }} }}";
+            ExecutionResult result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
 
-            var createAvatarQuery = $"mutation {{ action {{ createAvatar }} }}";
-            ExecutionResult createAvatarResult = await ExecuteQueryAsync(createAvatarQuery);
-            await blockChain.MineBlock(playerAddress);
-
-            var playerState = (Bencodex.Types.Dictionary)blockChain.GetState(playerAddress);
-            var agentState = new AgentState(playerState);
-            var weeklyArenaAddress = (new WeeklyArenaState(1)).address;
-            var rankingMapAddress = RankingState.Derive(0);
-
-            Assert.Equal(playerAddress, agentState.address);
-
-            var hackAndSlashQuery = $"mutation {{ action {{ hackAndSlash(weeklyArenaAddress: \"{weeklyArenaAddress.ToHex()}\", rankingArenaAddress: \"{rankingMapAddress.ToHex()}\") }} }}";
-            ExecutionResult result = await ExecuteQueryAsync(hackAndSlashQuery);
-
-            var isPlayed = (bool)result.Data
-                .As<Dictionary<string, object>>()["action"]
-                .As<Dictionary<string, object>>()["hackAndSlash"];
-
-            await blockChain.MineBlock(playerAddress);
-            Assert.True(isPlayed);
-
-            var avatar = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
-            Assert.True(avatar.exp > 0);
+            var txIds = blockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = blockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["hackAndSlash"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
+            Assert.Single(tx.Actions);
+            var action = (HackAndSlash4) tx.Actions.First().InnerAction;
+            Assert.Equal(avatarAddress, action.avatarAddress);
+            Assert.Equal(worldId, action.worldId);
+            Assert.Equal(stageId, action.stageId);
+            Assert.Equal(weeklyArenaAddress, action.WeeklyArenaAddress);
+            Assert.Equal(rankingArenaAddress, action.RankingMapAddress);
+            Assert.Equal(costumeIds, action.costumes);
+            Assert.Equal(equipmentIds, action.equipments);
+            Assert.Equal(consumableIds, action.foods);
         }
+
+        public static IEnumerable<object[]> HackAndSlashMember => new List<object[]>
+        {
+            new object[]
+            {
+                new Address(),
+                1,
+                2,
+                new Address(),
+                new Address(),
+                new List<Guid>(),
+                new List<Guid>(),
+                new List<Guid>(),
+            },
+            new object[]
+            {
+                new Address(),
+                2,
+                3,
+                new Address(),
+                new Address(),
+                new List<Guid>
+                {
+                    Guid.NewGuid(),
+                },
+                new List<Guid>
+                {
+                    Guid.NewGuid(),
+                    Guid.NewGuid(),
+                },
+                new List<Guid>
+                {
+                    Guid.NewGuid(),
+                    Guid.NewGuid(),
+                    Guid.NewGuid(),
+                },
+            },
+        };
 
         [Fact]
         public async Task DailyReward()
         {
-            _sheets[nameof(GameConfigSheet)] = string.Join(
-                Environment.NewLine,
-                "key, value",
-                "hourglass_per_block, 3",
-                "action_point_max, 120",
-                "daily_reward_interval, 4",
-                "daily_arena_interval, 500",
-                "weekly_arena_interval, 56000");
-
             var playerPrivateKey = new PrivateKey();
-            Address playerAddress = playerPrivateKey.ToAddress();
             var ranking = new RankingState();
             for (var i = 0; i < RankingState.RankingMapCapacity; i++)
             {
                 ranking.RankingMap[RankingState.Derive(i)] = new HashSet<Address>().ToImmutableHashSet();
             }
             var blockChain = GetContextFx(playerPrivateKey, ranking);
+            var avatarAddress = new Address();
+            var query = $@"mutation {{
+                action {{
+                    dailyReward(avatarAddress: ""{avatarAddress}"")
+                    }}
+                }}";
+            ExecutionResult result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
 
-            var createAvatarQuery = $"mutation {{ action {{ createAvatar }} }}";
-            await ExecuteQueryAsync(createAvatarQuery);
-            await blockChain.MineBlock(playerAddress);
-
-            var playerState = (Bencodex.Types.Dictionary)blockChain.GetState(playerAddress);
-            var agentState = new AgentState(playerState);
-            var weeklyArenaAddress = (new WeeklyArenaState(1)).address;
-            var rankingMapAddress = RankingState.Derive(0);
-            var gameConfigState = new GameConfigState((Bencodex.Types.Dictionary)blockChain.GetState(Addresses.GameConfig));
-            var avatarState = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
-
-            Assert.Equal(playerAddress, agentState.address);
-
-            var hackAndSlashQuery = $"mutation {{ action {{ hackAndSlash(weeklyArenaAddress: \"{weeklyArenaAddress.ToHex()}\", rankingArenaAddress: \"{rankingMapAddress.ToHex()}\") }} }}";
-            await ExecuteQueryAsync(hackAndSlashQuery);
-            await blockChain.MineBlock(playerAddress);
-
-            avatarState = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
-            Assert.True(avatarState.actionPoint < gameConfigState.ActionPointMax);
-
-            var dailyRewardQuery = $"mutation {{ action {{ dailyReward }} }}";
-            ExecutionResult result = await ExecuteQueryAsync(dailyRewardQuery);
-
-            var isPlayed = (bool)result.Data
-                .As<Dictionary<string, object>>()["action"]
-                .As<Dictionary<string, object>>()["dailyReward"];
-
-            Assert.True(isPlayed);
-            await blockChain.MineBlock(playerAddress);
-
-            avatarState = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
-            // BlockIndex : 3, Interval : 4, so actionPoint won't be charged.
-            Assert.NotEqual(avatarState.actionPoint, gameConfigState.ActionPointMax);
-
-            result = await ExecuteQueryAsync(dailyRewardQuery);
-            isPlayed = (bool)result.Data
-                .As<Dictionary<string, object>>()["action"]
-                .As<Dictionary<string, object>>()["dailyReward"];
-
-            Assert.True(isPlayed);
-            await blockChain.MineBlock(playerAddress);
-
-            avatarState = new AvatarState((Bencodex.Types.Dictionary)blockChain.GetState(agentState.avatarAddresses[0]));
-            // BlockIndex : 4, Interval : 4, so actionPoint will be charged.
-            Assert.Equal(avatarState.actionPoint, gameConfigState.ActionPointMax);
+            var txIds = blockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = blockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["dailyReward"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
+            Assert.Single(tx.Actions);
+            var action = (DailyReward) tx.Actions.First().InnerAction;
+            Assert.Equal(avatarAddress, action.avatarAddress);
         }
 
         [Fact]
@@ -340,9 +396,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var productId = Guid.NewGuid();
             var playerPrivateKey = new PrivateKey();
             var blockChain = GetContextFx(playerPrivateKey, new RankingState());
+            var buyerAvatarAddress = playerPrivateKey.PublicKey.ToAddress().Derive(string.Format(CreateAvatar2.DeriveFormat, 0));
             var query = $@"mutation {{
                 action {{
-                    buy(sellerAgentAddress: ""{sellerAgentAddress}"", sellerAvatarAddress: ""{sellerAvatarAddress}"", buyerAvatarIndex: 0, productId: ""{productId}"")
+                    buy(sellerAgentAddress: ""{sellerAgentAddress}"", sellerAvatarAddress: ""{sellerAvatarAddress}"", buyerAvatarAddress: ""{buyerAvatarAddress}"", productId: ""{productId}"")
                 }}
             }}";
             var result = await ExecuteQueryAsync(query);
@@ -351,13 +408,231 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var txIds = blockChain.GetStagedTransactionIds();
             Assert.Single(txIds);
             var tx = blockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["buy"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
             var action = (Buy4) tx.Actions.First().InnerAction;
             Assert.Equal(productId, action.productId);
             Assert.Equal(sellerAgentAddress, action.sellerAgentAddress);
             Assert.Equal(sellerAvatarAddress, action.sellerAvatarAddress);
-            Assert.Equal(tx.Signer.Derive(string.Format(CreateAvatar2.DeriveFormat, 0)), action.buyerAvatarAddress);
+            Assert.Equal(buyerAvatarAddress, action.buyerAvatarAddress);
         }
+
+        [Theory]
+        [MemberData(nameof(CombinationEquipmentMember))]
+        public async Task CombinationEquipment(Address avatarAddress, int recipeId, int slotIndex, int? subRecipeId)
+        {
+            var playerPrivateKey = new PrivateKey();
+            var blockChain = GetContextFx(playerPrivateKey, new RankingState());
+            var queryArgs = $"avatarAddress: \"{avatarAddress}\", recipeId: {recipeId} slotIndex: {slotIndex}";
+            if (!(subRecipeId is null))
+            {
+                queryArgs += $"subRecipeId: {subRecipeId}";
+            }
+            var query = @$"mutation {{ action {{ combinationEquipment({queryArgs}) }} }}";
+            var result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
+
+            var txIds = blockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = blockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["combinationEquipment"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
+            Assert.Single(tx.Actions);
+            var action = (CombinationEquipment4) tx.Actions.First().InnerAction;
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            Assert.Equal(recipeId, action.RecipeId);
+            Assert.Equal(slotIndex, action.SlotIndex);
+            Assert.Equal(subRecipeId, action.SubRecipeId);
+        }
+
+        public static IEnumerable<object[]> CombinationEquipmentMember => new List<object[]>
+        {
+            new object[]
+            {
+                new Address(),
+                1,
+                0,
+                0,
+            },
+            new object[]
+            {
+                new Address(),
+                1,
+                2,
+                1,
+            },
+            new object[]
+            {
+                new Address(),
+                2,
+                3,
+                null,
+            },
+        };
+
+        [Theory]
+        [MemberData(nameof(ItemEnhancementMember))]
+        public async Task ItemEnhancement(Address avatarAddress, Guid itemId, Guid materialId, int slotIndex)
+        {
+            var playerPrivateKey = new PrivateKey();
+            var blockChain = GetContextFx(playerPrivateKey, new RankingState());
+            var query = $@"mutation {{
+                action {{
+                    itemEnhancement(avatarAddress: ""{avatarAddress}"", itemId: ""{itemId}"", materialId: ""{materialId}"", slotIndex: {slotIndex})
+                }}
+            }}";
+            var result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
+
+            var txIds = blockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = blockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["itemEnhancement"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
+            Assert.Single(tx.Actions);
+            var action = (ItemEnhancement5) tx.Actions.First().InnerAction;
+            Assert.Equal(avatarAddress, action.avatarAddress);
+            Assert.Equal(itemId, action.itemId);
+            Assert.Equal(materialId, action.materialId);
+            Assert.Equal(slotIndex, action.slotIndex);
+        }
+
+        public static IEnumerable<object[]> ItemEnhancementMember => new List<object[]>
+        {
+            new object[]
+            {
+                new Address(),
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                0,
+            },
+            new object[]
+            {
+                new Address(),
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                3,
+            },
+        };
+
+        [Theory]
+        [MemberData(nameof(SellMember))]
+        public async Task Sell(Address sellerAvatarAddress, Guid itemId, int price)
+        {
+            var playerPrivateKey = new PrivateKey();
+            var blockChain = GetContextFx(playerPrivateKey, new RankingState());
+            var query = $@"mutation {{
+                action {{
+                    sell(sellerAvatarAddress: ""{sellerAvatarAddress}"", itemId: ""{itemId}"", price: {price})
+                }}
+            }}";
+            var result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
+
+            var txIds = blockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = blockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["sell"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
+            Assert.Single(tx.Actions);
+            var action = (Sell3) tx.Actions.First().InnerAction;
+            Assert.Equal(sellerAvatarAddress, action.sellerAvatarAddress);
+            Assert.Equal(itemId, action.itemId);
+            var currency = new GoldCurrencyState(
+                (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
+            ).Currency;
+
+            Assert.Equal(price * currency, action.price);
+        }
+
+        public static IEnumerable<object[]> SellMember => new List<object[]>
+        {
+            new object[]
+            {
+                new Address(),
+                Guid.NewGuid(),
+                0,
+            },
+            new object[]
+            {
+                new Address(),
+                Guid.NewGuid(),
+                100,
+            },
+        };
+
+        [Theory]
+        [MemberData(nameof(CombinationConsumableMember))]
+        public async Task CombinationConsumable(Address avatarAddress, int recipeId, int slotIndex)
+        {
+            var playerPrivateKey = new PrivateKey();
+            var blockChain = GetContextFx(playerPrivateKey, new RankingState());
+            var query = $@"mutation {{
+                action {{
+                    combinationConsumable(avatarAddress: ""{avatarAddress}"", recipeId: {recipeId}, slotIndex: {slotIndex})
+                }}
+            }}";
+            var result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
+
+            var txIds = blockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = blockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["combinationConsumable"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
+            Assert.Single(tx.Actions);
+            var action = (CombinationConsumable3) tx.Actions.First().InnerAction;
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            Assert.Equal(recipeId, action.recipeId);
+            Assert.Equal(slotIndex, action.slotIndex);
+        }
+
+        public static IEnumerable<object[]> CombinationConsumableMember => new List<object[]>
+        {
+            new object[]
+            {
+                new Address(),
+                1,
+                0,
+            },
+            new object[]
+            {
+                new Address(),
+                2,
+                3,
+            },
+        };
 
         [Fact]
         public async Task Tx()
@@ -414,25 +689,25 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             IImmutableSet<Address> activatedAccounts,
             RankingState rankingState = null
         ) => BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
-                new PolymorphicAction<ActionBase>[]
-                {
-                    new InitializeStates(
-                        rankingState: rankingState ?? new RankingState(),
-                        shopState: new ShopState(),
-                        gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
-                        redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                            .Add("address", RedeemCodeState.Address.Serialize())
-                            .Add("map", Bencodex.Types.Dictionary.Empty)
-                        ),
-                        adminAddressState: new AdminState(adminAddress, 1500000),
-                        activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-                        goldCurrencyState: new GoldCurrencyState(curreny),
-                        goldDistributions: new GoldDistribution[0],
-                        tableSheets: _sheets,
-                        pendingActivationStates: new PendingActivationState[]{ }
+            new PolymorphicAction<ActionBase>[]
+            {
+                new InitializeStates(
+                    rankingState: rankingState ?? new RankingState(),
+                    shopState: new ShopState(),
+                    gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
+                    redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                        .Add("address", RedeemCodeState.Address.Serialize())
+                        .Add("map", Bencodex.Types.Dictionary.Empty)
                     ),
-                }, blockAction: ServiceBuilder.BlockPolicy.BlockAction
-            );
+                    adminAddressState: new AdminState(adminAddress, 1500000),
+                    activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
+                    goldCurrencyState: new GoldCurrencyState(curreny),
+                    goldDistributions: new GoldDistribution[0],
+                    tableSheets: _sheets,
+                    pendingActivationStates: new PendingActivationState[]{ }
+                ),
+            }, blockAction: ServiceBuilder.BlockPolicy.BlockAction
+        );
 
         private BlockChain<PolymorphicAction<ActionBase>> GetContextFx(PrivateKey playerPrivateKey, RankingState ranking)
         {
