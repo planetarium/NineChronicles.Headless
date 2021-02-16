@@ -19,6 +19,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Bencodex.Types;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -523,6 +524,50 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Guid.NewGuid(),
                 Guid.NewGuid(),
                 3,
+            },
+        };
+
+        [Theory]
+        [MemberData(nameof(SellMember))]
+        public async Task Sell(Address sellerAvatarAddress, Guid itemId, int price)
+        {
+            var playerPrivateKey = new PrivateKey();
+            var blockChain = GetContextFx(playerPrivateKey, new RankingState());
+            var query = $@"mutation {{
+                action {{
+                    sell(sellerAvatarAddress: ""{sellerAvatarAddress}"", itemId: ""{itemId}"", price: {price})
+                }}
+            }}";
+            var result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
+
+            var txIds = blockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = blockChain.GetTransaction(txIds.First());
+            Assert.Single(tx.Actions);
+            var action = (Sell3) tx.Actions.First().InnerAction;
+            Assert.Equal(sellerAvatarAddress, action.sellerAvatarAddress);
+            Assert.Equal(itemId, action.itemId);
+            var currency = new GoldCurrencyState(
+                (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
+            ).Currency;
+
+            Assert.Equal(price * currency, action.price);
+        }
+
+        public static IEnumerable<object[]> SellMember => new List<object[]>
+        {
+            new object[]
+            {
+                new Address(),
+                Guid.NewGuid(),
+                0,
+            },
+            new object[]
+            {
+                new Address(),
+                Guid.NewGuid(),
+                100,
             },
         };
 

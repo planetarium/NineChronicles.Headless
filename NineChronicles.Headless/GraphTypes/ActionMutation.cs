@@ -346,38 +346,36 @@ namespace NineChronicles.Headless.GraphTypes
                 });
             Field<NonNullGraphType<BooleanGraphType>>("sell",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "sellerAvatarAddress",
+                        Description = "AvatarState address."
                     },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "productId",
-                    },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<GuidGraphType>>
                     {
                         Name = "itemId",
+                        Description = "Item Guid."
                     },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "price",
+                        Description = "Item price."
                     }),
                 resolve: context =>
                 {
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privatekey = service.PrivateKey;
+                        PrivateKey privateKey = service.PrivateKey;
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
-                        Address sellerAvatarAddress = new Address(context.GetArgument<string>("sellerAvatarAddress"));
-                        Guid itemId = Guid.Parse(context.GetArgument<string>("itemId"));
+                        Address sellerAvatarAddress = context.GetArgument<Address>("sellerAvatarAddress");
+                        Guid itemId = context.GetArgument<Guid>("itemId");
                         var currency = new GoldCurrencyState(
                             (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
                         ).Currency;
-                        FungibleAssetValue price =
-                            FungibleAssetValue.Parse(currency, context.GetArgument<string>("price"));
+                        FungibleAssetValue price = currency * context.GetArgument<int>("price");
 
-                        var action = new Sell
+                        var action = new Sell3
                         {
                             sellerAvatarAddress = sellerAvatarAddress,
                             itemId = itemId,
@@ -385,7 +383,7 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
-                        blockChain.MakeTransaction(privatekey, actions);
+                        blockChain.MakeTransaction(privateKey, actions);
                     }
                     catch (Exception e)
                     {
