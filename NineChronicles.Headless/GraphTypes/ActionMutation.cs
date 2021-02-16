@@ -292,10 +292,12 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "sellerAgentAddress",
+                        Description = "ShopItem SellerAgentAddress."
                     },
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "sellerAvatarAddress",
+                        Description = "ShopItem SellerAvatarAddress."
                     },
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
@@ -305,6 +307,7 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<GuidGraphType>>
                     {
                         Name = "productId",
+                        Description = "ShopItem Guid."
                     }),
                 resolve: context =>
                 {
