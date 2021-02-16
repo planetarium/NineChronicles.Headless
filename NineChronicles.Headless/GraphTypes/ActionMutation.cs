@@ -397,15 +397,21 @@ namespace NineChronicles.Headless.GraphTypes
                 });
 
             Field<NonNullGraphType<BooleanGraphType>>("dailyReward",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "AvatarState address."
+                    }
+                ),
                 resolve: context =>
                 {
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privatekey = service.PrivateKey;
+                        PrivateKey privateKey = service.PrivateKey;
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
-                        Address userAddress = privatekey.PublicKey.ToAddress();
-                        Address avatarAddress = userAddress.Derive("avatar_0");
+                        Address avatarAddress = context.GetArgument<Address>("avatarAddress");
 
                         var action = new DailyReward
                         {
@@ -413,7 +419,7 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
-                        blockChain.MakeTransaction(privatekey, actions);
+                        blockChain.MakeTransaction(privateKey, actions);
                     }
                     catch (Exception e)
                     {
