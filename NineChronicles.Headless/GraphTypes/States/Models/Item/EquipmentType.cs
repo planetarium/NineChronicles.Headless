@@ -10,6 +10,7 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
             Field<NonNullGraphType<IntGraphType>>(nameof(Equipment.SetId));
             Field<NonNullGraphType<DecimalStatType>>(nameof(Equipment.Stat));
             Field<NonNullGraphType<BooleanGraphType>>(nameof(Equipment.Equipped));
+            Field<NonNullGraphType<GuidGraphType>>(nameof(Equipment.ItemId));
         }
     }
 }
