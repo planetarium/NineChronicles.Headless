@@ -7,7 +7,6 @@ using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.KeyStore;
 using Libplanet.Tx;
-using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
@@ -215,6 +214,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var txIds = blockChain.GetStagedTransactionIds();
             Assert.Single(txIds);
             var tx = blockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["createAvatar"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
             var action = (CreateAvatar2) tx.Actions.First().InnerAction;
             Assert.Equal(name, action.name);
@@ -288,6 +295,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var txIds = blockChain.GetStagedTransactionIds();
             Assert.Single(txIds);
             var tx = blockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["hackAndSlash"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
             var action = (HackAndSlash4) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
@@ -360,6 +375,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var txIds = blockChain.GetStagedTransactionIds();
             Assert.Single(txIds);
             var tx = blockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["dailyReward"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
             var action = (DailyReward) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
@@ -385,6 +408,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var txIds = blockChain.GetStagedTransactionIds();
             Assert.Single(txIds);
             var tx = blockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["buy"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
             var action = (Buy4) tx.Actions.First().InnerAction;
             Assert.Equal(productId, action.productId);
@@ -411,6 +442,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var txIds = blockChain.GetStagedTransactionIds();
             Assert.Single(txIds);
             var tx = blockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["combinationEquipment"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
             var action = (CombinationEquipment4) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.AvatarAddress);
@@ -461,6 +500,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var txIds = blockChain.GetStagedTransactionIds();
             Assert.Single(txIds);
             var tx = blockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["itemEnhancement"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
             var action = (ItemEnhancement5) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
@@ -504,6 +551,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var txIds = blockChain.GetStagedTransactionIds();
             Assert.Single(txIds);
             var tx = blockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["sell"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
             var action = (Sell3) tx.Actions.First().InnerAction;
             Assert.Equal(sellerAvatarAddress, action.sellerAvatarAddress);
@@ -548,6 +603,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var txIds = blockChain.GetStagedTransactionIds();
             Assert.Single(txIds);
             var tx = blockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["combinationConsumable"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
             var action = (CombinationConsumable3) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.AvatarAddress);

@@ -11,6 +11,7 @@ using Nekoyume.Model.State;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using Libplanet.Tx;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -19,7 +20,7 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public ActionMutation()
         {
-            Field<NonNullGraphType<BooleanGraphType>>("createAvatar",
+            Field<NonNullGraphType<TxIdType>>("createAvatar",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
@@ -57,9 +58,8 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privatekey = service.PrivateKey;
+                        PrivateKey privateKey = service.PrivateKey;
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
-                        Address userAddress = privatekey.PublicKey.ToAddress();
                         var avatarName = context.GetArgument<string>("avatarName");
                         var avatarIndex = context.GetArgument<int>("avatarIndex");
                         var hairIndex = context.GetArgument<int>("hairIndex");
@@ -77,20 +77,19 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
-                        blockChain.MakeTransaction(privatekey, actions);
+                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(privateKey, actions);
+                        return tx.Id;
                     }
                     catch (Exception e)
                     {
                         var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
                         Log.Error(msg, e);
-                        return false;
+                        throw;
                     }
-
-                    return true;
                 });
 
-            Field<NonNullGraphType<BooleanGraphType>>("hackAndSlash",
+            Field<NonNullGraphType<TxIdType>>("hackAndSlash",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
@@ -161,20 +160,19 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
-                        blockChain.MakeTransaction(context.Source.PrivateKey, actions);
+                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(context.Source.PrivateKey, actions);
+                        return tx.Id;
                     }
                     catch (Exception e)
                     {
                         var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
                         Log.Error(msg, e);
-                        return false;
+                        throw;
                     }
-
-                    return true;
                 });
 
-            Field<NonNullGraphType<BooleanGraphType>>("combinationEquipment",
+            Field<NonNullGraphType<TxIdType>>("combinationEquipment",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
@@ -217,20 +215,19 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
-                        blockChain.MakeTransaction(context.Source.PrivateKey, actions);
+                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(context.Source.PrivateKey, actions);
+                        return tx.Id;
                     }
                     catch (Exception e)
                     {
                         var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
                         Log.Error(msg, e);
-                        return false;
+                        throw;
                     }
-
-                    return true;
                 });
 
-            Field<NonNullGraphType<BooleanGraphType>>("itemEnhancement",
+            Field<NonNullGraphType<TxIdType>>("itemEnhancement",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
@@ -274,20 +271,19 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
-                        blockChain.MakeTransaction(privatekey, actions);
+                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(privatekey, actions);
+                        return tx.Id;
                     }
                     catch (Exception e)
                     {
                         var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
                         Log.Error(msg, e);
-                        return false;
+                        throw;
                     }
-
-                    return true;
                 });
 
-            Field<NonNullGraphType<BooleanGraphType>>("buy",
+            Field<NonNullGraphType<TxIdType>>("buy",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
@@ -330,19 +326,18 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
-                        blockChain.MakeTransaction(privateKey, actions);
+                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(privateKey, actions);
+                        return tx.Id;
                     }
                     catch (Exception e)
                     {
                         var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
                         Log.Error(msg, e);
-                        return false;
+                        throw;
                     }
-
-                    return true;
                 });
-            Field<NonNullGraphType<BooleanGraphType>>("sell",
+            Field<NonNullGraphType<TxIdType>>("sell",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
@@ -381,20 +376,18 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
-                        blockChain.MakeTransaction(privateKey, actions);
+                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(privateKey, actions);
+                        return tx.Id;
                     }
                     catch (Exception e)
                     {
                         var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
-                        Log.Error(msg, e);
-                        return false;
+                        throw;
                     }
-
-                    return true;
                 });
 
-            Field<NonNullGraphType<BooleanGraphType>>("dailyReward",
+            Field<NonNullGraphType<TxIdType>>("dailyReward",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
@@ -417,20 +410,19 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
-                        blockChain.MakeTransaction(privateKey, actions);
+                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(privateKey, actions);
+                        return tx.Id;
                     }
                     catch (Exception e)
                     {
                         var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
                         Log.Error(msg, e);
-                        return false;
+                        throw;
                     }
-
-                    return true;
                 });
 
-            Field<NonNullGraphType<BooleanGraphType>>("combinationConsumable",
+            Field<NonNullGraphType<TxIdType>>("combinationConsumable",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
@@ -466,17 +458,15 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
-                        blockChain.MakeTransaction(context.Source.PrivateKey, actions);
+                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(context.Source.PrivateKey, actions);
+                        return tx.Id;
                     }
                     catch (Exception e)
                     {
                         var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
-                        Log.Error(msg, e);
-                        return false;
+                        throw;
                     }
-
-                    return true;
                 }
             );
         }
