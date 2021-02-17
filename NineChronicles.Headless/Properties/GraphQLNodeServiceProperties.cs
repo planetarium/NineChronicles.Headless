@@ -9,5 +9,7 @@ namespace NineChronicles.Headless.Properties
         public int? GraphQLListenPort { get; set; }
         
         public string SecretToken { get; set; }
+
+        public bool NoCors { get; set; }
     }
 }
