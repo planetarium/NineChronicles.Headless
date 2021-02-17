@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
@@ -18,14 +19,29 @@ namespace NineChronicles.Headless.GraphTypes
             Name = "StateQuery";
             Field<AvatarStateType>(
                 name: "avatar",
-                arguments: new QueryArguments(new QueryArgument<AddressType>
-                {
-                    Name = "address",
-                }),
+                arguments: new QueryArguments(
+                    new QueryArgument<AddressType>
+                    {
+                        Name = "address",
+                    },
+                    new QueryArgument<ByteStringType>
+                    {
+                        Name = "hash",
+                        Description = "Offset block hash for query."
+                    }),
                 resolve: context =>
                 {
                     var address = context.GetArgument<Address>("address");
-                    return new AvatarState((Dictionary)context.Source.GetState(address));
+                    byte[] blockHashByteArray = context.GetArgument<byte[]>("hash");
+                    if (blockHashByteArray is null)
+                    {
+                        return new AvatarState((Dictionary)context.Source.GetState(address));
+                    }
+                    else
+                    {
+                        HashDigest<SHA256> blockHash = new HashDigest<SHA256>(blockHashByteArray);
+                        return new AvatarState((Dictionary)context.Source.GetState(address, blockHash));
+                    }
                 });
             Field<RankingMapStateType>(
                 name: "rankingMap",
@@ -33,27 +49,76 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "index",
+                    },
+                    new QueryArgument<ByteStringType>
+                    {
+                        Name = "hash",
+                        Description = "Offset block hash for query."
                     }),
                 resolve: context =>
                 {
                     var index = context.GetArgument<int>("index");
-                    return new RankingMapState((Dictionary)context.Source.GetState(RankingState.Derive(index)));
+                    byte[] blockHashByteArray = context.GetArgument<byte[]>("hash");
+                    if (blockHashByteArray is null)
+                    {
+                        return new RankingMapState(
+                            (Dictionary)context.Source.GetState(RankingState.Derive(index)));
+                    }
+                    else
+                    {
+                        HashDigest<SHA256> blockHash = new HashDigest<SHA256>(blockHashByteArray);
+                        return new RankingMapState(
+                            (Dictionary)context.Source.GetState(RankingState.Derive(index), blockHash));
+                    }
                 });
             Field<ShopStateType>(
                 name: "shop",
-                resolve: context => new ShopState((Dictionary) context.Source.GetState(Addresses.Shop)));
+                arguments: new QueryArguments(
+                    new QueryArgument<ByteStringType>
+                    {
+                        Name = "hash",
+                        Description = "Offset block hash for query."
+                    }),
+                resolve: context =>
+                {
+                    byte[] blockHashByteArray = context.GetArgument<byte[]>("hash");
+                    if (blockHashByteArray is null)
+                    {
+                        return new ShopState((Dictionary) context.Source.GetState(Addresses.Shop));
+                    }
+                    else
+                    {
+                        HashDigest<SHA256> blockHash = new HashDigest<SHA256>(blockHashByteArray);
+                        return new ShopState((Dictionary) context.Source.GetState(Addresses.Shop, blockHash));
+                    }
+                });
             Field<WeeklyArenaStateType>(
                 name: "weeklyArena",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "index",
+                    },
+                    new QueryArgument<ByteStringType>
+                    {
+                        Name = "hash",
+                        Description = "Offset block hash for query."
                     }),
                 resolve: context =>
                 {
                     var index = context.GetArgument<int>("index");
-                    return new WeeklyArenaState(
-                        (Dictionary) context.Source.GetState(WeeklyArenaState.DeriveAddress(index)));
+                    byte[] blockHashByteArray = context.GetArgument<byte[]>("hash");
+                    if (blockHashByteArray is null)
+                    {
+                        return new WeeklyArenaState(
+                            (Dictionary) context.Source.GetState(WeeklyArenaState.DeriveAddress(index)));
+                    }
+                    else
+                    {
+                        HashDigest<SHA256> blockHash = new HashDigest<SHA256>(blockHashByteArray);
+                        return new WeeklyArenaState(
+                            (Dictionary) context.Source.GetState(WeeklyArenaState.DeriveAddress(index), blockHash));
+                    }
                 });
         }
     }
