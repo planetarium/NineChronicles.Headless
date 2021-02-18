@@ -1,3 +1,4 @@
+#nullable enable
 using System.Security.Cryptography;
 using Bencodex;
 using Bencodex.Types;
@@ -21,7 +22,29 @@ namespace NineChronicles.Headless.GraphTypes
         {
             bool useSecretToken = configuration[GraphQLService.SecretTokenKey] is { };
 
-            Field<NonNullGraphType<StateQuery<NCAction>>>(name: "stateQuery", resolve: _ => standaloneContext.BlockChain);
+            Field<NonNullGraphType<StateQuery<NCAction>>>(name: "stateQuery", arguments: new QueryArguments(
+                new QueryArgument<ByteStringType>
+                {
+                    Name = "hash",
+                    Description = "Offset block hash for query.",
+                }),
+                resolve: context =>
+                {
+                    HashDigest<SHA256>? blockHash = context.GetArgument<byte[]>("hash") switch
+                    {
+                        byte[] bytes => new HashDigest<SHA256>(bytes),
+                        null => null,
+                    };
+
+                    IValue? GetState(Address address) =>
+                        standaloneContext.BlockChain.GetState(
+                            address,
+                            blockHash);
+
+                    return (AccountStateGetter)GetState;
+                }
+            );
+
             Field<ByteStringType>(
                 name: "state",
                 arguments: new QueryArguments(
