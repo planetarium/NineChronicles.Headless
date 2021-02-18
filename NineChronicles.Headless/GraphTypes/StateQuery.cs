@@ -9,8 +9,7 @@ using NineChronicles.Headless.GraphTypes.States;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    public class StateQuery<T> : ObjectGraphType<AccountStateGetter>
-        where T : IAction, new()
+    public class StateQuery : ObjectGraphType<AccountStateGetter>
     {
         public StateQuery()
         {
