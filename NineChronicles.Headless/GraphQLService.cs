@@ -21,7 +21,11 @@ namespace NineChronicles.Headless
     {
         public const string LocalPolicyKey = "LocalPolicy";
 
+        public const string NoCorsPolicyName = "AllowAllOrigins";
+
         public const string SecretTokenKey = "secret";
+
+        public const string NoCorsKey = "noCors";
 
         private GraphQLNodeServiceProperties GraphQlNodeServiceProperties { get; }
 
@@ -41,14 +45,18 @@ namespace NineChronicles.Headless
                 builder.ConfigureAppConfiguration(
                     (context, builder) =>
                     {
+                        var dictionary = new Dictionary<string, string>();
                         if (GraphQlNodeServiceProperties.SecretToken is { } secretToken)
                         {
-                            builder.AddInMemoryCollection(
-                                new Dictionary<string, string>
-                                {
-                                    { SecretTokenKey, secretToken },
-                                });   
+                            dictionary[SecretTokenKey] = secretToken;
                         }
+
+                        if (GraphQlNodeServiceProperties.NoCors)
+                        {
+                            dictionary[NoCorsKey] = string.Empty;
+                        }
+
+                        builder.AddInMemoryCollection(dictionary);
                     });
                 builder.ConfigureServices(
                     services => services.AddSingleton(standaloneContext));
@@ -56,7 +64,7 @@ namespace NineChronicles.Headless
             });
         }
 
-        class GraphQLStartup
+        internal class GraphQLStartup
         {
             public GraphQLStartup(IConfiguration configuration)
             {
@@ -67,7 +75,15 @@ namespace NineChronicles.Headless
 
             public void ConfigureServices(IServiceCollection services)
             {
-                services.AddCors();
+                if (!(Configuration[NoCorsKey] is null))
+                {
+                    services.AddCors(
+                        options =>
+                            options.AddPolicy(
+                                NoCorsPolicyName,
+                                builder =>
+                                    builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+                }
 
                 services.AddTransient<LocalAuthenticationMiddleware>();
 
@@ -109,7 +125,14 @@ namespace NineChronicles.Headless
                 }
 
                 app.UseMiddleware<LocalAuthenticationMiddleware>();
-                app.UseCors("AllowAllOrigins");
+                if (Configuration[NoCorsKey] is null)
+                {
+                    app.UseCors();
+                }
+                else
+                {
+                    app.UseCors("AllowAllOrigins");
+                }
 
                 app.UseRouting();
                 app.UseAuthorization();

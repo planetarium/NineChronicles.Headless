@@ -84,6 +84,8 @@ namespace NineChronicles.Headless.Executable
                                                                "If you want to protect this headless application, " +
                                                                "you should use this option and take it into headers.")]
             string graphQLSecretTokenPath = null,
+            [Option(Description = "Run without CORS policy.")]
+            bool noCors = false,
             [Option("libplanet-node")]
             bool libplanetNode = false,
             [Option("workers", Description = "Number of workers to use in Swarm")]
@@ -231,6 +233,7 @@ namespace NineChronicles.Headless.Executable
                         GraphQLListenHost = graphQLHost,
                         GraphQLListenPort = graphQLPort,
                         SecretToken = secretToken,
+                        NoCors = noCors,
                     };
 
                     var graphQLService = new GraphQLService(graphQLNodeServiceProperties);
