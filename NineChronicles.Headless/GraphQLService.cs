@@ -1,14 +1,9 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
 using GraphQL.Server;
-using GraphQL.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Middleware;
@@ -51,7 +46,33 @@ namespace NineChronicles.Headless
                         }
                     });
                 builder.ConfigureServices(
-                    services => services.AddSingleton(standaloneContext));
+                    services => services.AddSingleton(standaloneContext)
+                        .AddGraphQL(
+                            (options, provider) =>
+                            {
+                                options.EnableMetrics = true;
+                                options.UnhandledExceptionDelegate = context =>
+                                {
+                                    Log.Error(
+                                        context.Exception,
+                                        context.ErrorMessage);
+                                };
+                            })
+                        .AddSystemTextJson()
+                        .AddWebSockets()
+                        .AddDataLoader()
+                        .AddGraphTypes(typeof(StandaloneSchema))
+                        .AddUserContextBuilder(context => new Dictionary<string, object>
+                        {
+                            ["standAloneContext"] = standaloneContext
+                        })
+                        .AddGraphQLAuthorization(
+                            options => options.AddPolicy(
+                                LocalPolicyKey,
+                                p =>
+                                    p.RequireClaim(
+                                        "role",
+                                        "Admin"))));
                 builder.UseUrls($"http://{listenHost}:{listenPort}/");
             });
         }
@@ -75,30 +96,7 @@ namespace NineChronicles.Headless
 
                 services.AddControllers();
 
-                services
-                    .AddSingleton<StandaloneSchema>()
-                    .AddGraphQL(
-                        (options, provider) =>
-                        {
-                            options.EnableMetrics = true;
-                            options.UnhandledExceptionDelegate = context =>
-                            {
-                                Log.Error(
-                                    context.Exception,
-                                    context.ErrorMessage);
-                            };
-                        })
-                    .AddSystemTextJson()
-                    .AddWebSockets()
-                    .AddDataLoader()
-                    .AddGraphTypes(typeof(StandaloneSchema))
-                    .AddGraphQLAuthorization(
-                        options => options.AddPolicy(
-                            LocalPolicyKey,
-                            p =>
-                                p.RequireClaim(
-                                    "role",
-                                    "Admin")));
+                services.AddSingleton<StandaloneSchema>();
             }
 
             public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
