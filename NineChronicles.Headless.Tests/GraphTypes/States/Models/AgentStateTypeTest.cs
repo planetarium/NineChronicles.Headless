@@ -72,11 +72,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 renderers: new IRenderer<PolymorphicAction<ActionBase>>[] { new BlockRenderer(), new ActionRenderer() }
             );
             standAloneContext.BlockChain = blockChain;
-            var queryResult = await ExecuteQueryAsync<AgentStateType>(query, source: agentState,
-                userContext: new Dictionary<string, object>
-                {
-                    ["standAloneContext"] = standAloneContext,
-                });
+            var queryResult = await ExecuteQueryAsync<AgentStateType>(
+                query,
+                source: agentState,
+                standaloneContext: standAloneContext);
             var expected = new Dictionary<string, object>()
             {
                 ["address"] = agentState.address.ToString(),

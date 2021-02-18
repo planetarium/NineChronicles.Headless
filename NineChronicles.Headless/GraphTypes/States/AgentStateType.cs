@@ -12,7 +12,7 @@ namespace NineChronicles.Headless.GraphTypes.States
 {
     public class AgentStateType : ObjectGraphType<AgentState>
     {
-        public AgentStateType()
+        public AgentStateType(StandaloneContext standaloneContext)
         {
             Field<NonNullGraphType<AddressType>>(
                 nameof(AgentState.address),
@@ -23,7 +23,6 @@ namespace NineChronicles.Headless.GraphTypes.States
             Field<NonNullGraphType<StringGraphType>>("gold",
                 resolve: context =>
                 {
-                    StandaloneContext standaloneContext = (StandaloneContext) context.UserContext["standAloneContext"];
                     if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
                     {
                         throw new ExecutionError(

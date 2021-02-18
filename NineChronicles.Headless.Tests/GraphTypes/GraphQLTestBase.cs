@@ -24,6 +24,7 @@ using Serilog;
 using Xunit.Abstractions;
 using RewardGold = NineChronicles.Headless.Tests.Common.Actions.RewardGold;
 using Libplanet.Store.Trie;
+using Microsoft.Extensions.DependencyInjection;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 
@@ -90,7 +91,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var configurationBuilder = new ConfigurationBuilder();
             var configuration = configurationBuilder.Build();
-            Schema = new StandaloneSchema(new TestServiceProvider(StandaloneContextFx, configuration));
+
+            var services = new ServiceCollection();
+            services.AddSingleton(StandaloneContextFx);
+            services.AddSingleton<IConfiguration>(configuration);
+            services.AddGraphTypes();
+            services.AddSingleton<StateQuery<PolymorphicAction<ActionBase>>>();
+            ServiceProvider serviceProvider = services.BuildServiceProvider();
+            Schema = new StandaloneSchema(serviceProvider);
             Schema.Subscription.As<StandaloneSubscription>().RegisterTipChangedSubscription();
 
             DocumentExecutor = new DocumentExecuter();
@@ -166,60 +174,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),
                 preloadStatusHandlerAction: isPreloadStart => { }
             );
-        }
-
-        private class TestServiceProvider : IServiceProvider
-        {
-            private StandaloneQuery Query;
-
-            private StandaloneMutation Mutation;
-
-            private StandaloneSubscription Subscription;
-
-            private StandaloneContext StandaloneContext;
-
-            public TestServiceProvider(StandaloneContext standaloneContext, IConfiguration configuration)
-            {
-                Query = new StandaloneQuery(standaloneContext, configuration);
-                Mutation = new StandaloneMutation(standaloneContext, configuration);
-                Subscription = new StandaloneSubscription(standaloneContext);
-                StandaloneContext = standaloneContext;
-            }
-
-            public object GetService(Type serviceType)
-            {
-                if (serviceType == typeof(StandaloneQuery))
-                {
-                    return Query;
-                }
-
-                if (serviceType == typeof(StandaloneMutation))
-                {
-                    return Mutation;
-                }
-
-                if (serviceType == typeof(StandaloneSubscription))
-                {
-                    return Subscription;
-                }
-
-                if (serviceType == typeof(ValidationQuery))
-                {
-                    return new ValidationQuery(StandaloneContext);
-                }
-
-                if (serviceType == typeof(ActivationStatusQuery))
-                {
-                    return new ActivationStatusQuery(StandaloneContext);
-                }
-
-                if (serviceType == typeof(PeerChainStateQuery))
-                {
-                    return new PeerChainStateQuery(StandaloneContext);
-                }
-
-                return Activator.CreateInstance(serviceType);
-            }
         }
     }
 }

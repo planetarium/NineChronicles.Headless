@@ -57,7 +57,7 @@ namespace NineChronicles.Headless.GraphTypes
                 });
             Field<AgentStateType>(
                 name: "agent",
-                arguments: new QueryArguments(new QueryArgument<AddressType>
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
                 {
                     Name = "address",
                 }),

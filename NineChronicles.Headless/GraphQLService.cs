@@ -46,33 +46,7 @@ namespace NineChronicles.Headless
                         }
                     });
                 builder.ConfigureServices(
-                    services => services.AddSingleton(standaloneContext)
-                        .AddGraphQL(
-                            (options, provider) =>
-                            {
-                                options.EnableMetrics = true;
-                                options.UnhandledExceptionDelegate = context =>
-                                {
-                                    Log.Error(
-                                        context.Exception,
-                                        context.ErrorMessage);
-                                };
-                            })
-                        .AddSystemTextJson()
-                        .AddWebSockets()
-                        .AddDataLoader()
-                        .AddGraphTypes(typeof(StandaloneSchema))
-                        .AddUserContextBuilder(context => new Dictionary<string, object>
-                        {
-                            ["standAloneContext"] = standaloneContext
-                        })
-                        .AddGraphQLAuthorization(
-                            options => options.AddPolicy(
-                                LocalPolicyKey,
-                                p =>
-                                    p.RequireClaim(
-                                        "role",
-                                        "Admin"))));
+                    services => services.AddSingleton(standaloneContext));
                 builder.UseUrls($"http://{listenHost}:{listenPort}/");
             });
         }
@@ -95,8 +69,29 @@ namespace NineChronicles.Headless
                 services.AddHealthChecks();
 
                 services.AddControllers();
-
-                services.AddSingleton<StandaloneSchema>();
+                services.AddGraphQL(
+                        (options, provider) =>
+                        {
+                            options.EnableMetrics = true;
+                            options.UnhandledExceptionDelegate = context =>
+                            {
+                                Log.Error(
+                                    context.Exception,
+                                    context.ErrorMessage);
+                            };
+                        })
+                    .AddSystemTextJson()
+                    .AddWebSockets()
+                    .AddDataLoader()
+                    .AddGraphTypes(typeof(StandaloneSchema))
+                    .AddGraphQLAuthorization(
+                        options => options.AddPolicy(
+                            LocalPolicyKey,
+                            p =>
+                                p.RequireClaim(
+                                    "role",
+                                    "Admin")));
+                services.AddGraphTypes();
             }
 
             public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
