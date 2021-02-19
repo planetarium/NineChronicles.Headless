@@ -4,6 +4,8 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <VersionPrefix>1.0.0</VersionPrefix>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <CodeAnalysisRuleSet>..\NineChronicles.Headless.Common.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   
   <ItemGroup>
@@ -12,6 +14,14 @@
     <PackageReference Include="Cocona.Lite" Version="1.3.*" />
     <PackageReference Include="Sentry.Serilog" Version="2.1.*" />
     <PackageReference Include="Serilog.Sinks.PeriodicBatching" Version="2.3.*" />
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.18.0.27296">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
   
   <ItemGroup>
