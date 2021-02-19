@@ -3,15 +3,13 @@ using GraphQL;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Action;
-using Libplanet.Blockchain;
 using Nekoyume;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    public class StateQuery<T> : ObjectGraphType<BlockChain<T>>
-        where T : IAction, new()
+    public class StateQuery : ObjectGraphType<AccountStateGetter>
     {
         public StateQuery()
         {
@@ -25,7 +23,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var address = context.GetArgument<Address>("address");
-                    return new AvatarState((Dictionary)context.Source.GetState(address));
+                    return new AvatarState((Dictionary)context.Source(address));
                 });
             Field<RankingMapStateType>(
                 name: "rankingMap",
@@ -37,11 +35,11 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var index = context.GetArgument<int>("index");
-                    return new RankingMapState((Dictionary)context.Source.GetState(RankingState.Derive(index)));
+                    return new RankingMapState((Dictionary)context.Source(RankingState.Derive(index)));
                 });
             Field<ShopStateType>(
                 name: "shop",
-                resolve: context => new ShopState((Dictionary) context.Source.GetState(Addresses.Shop)));
+                resolve: context => new ShopState((Dictionary) context.Source(Addresses.Shop)));
             Field<WeeklyArenaStateType>(
                 name: "weeklyArena",
                 arguments: new QueryArguments(
@@ -53,7 +51,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var index = context.GetArgument<int>("index");
                     return new WeeklyArenaState(
-                        (Dictionary) context.Source.GetState(WeeklyArenaState.DeriveAddress(index)));
+                        (Dictionary) context.Source(WeeklyArenaState.DeriveAddress(index)));
                 });
             Field<AgentStateType>(
                 name: "agent",
@@ -64,7 +62,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var address = context.GetArgument<Address>("address");
-                    return new AgentState((Dictionary) context.Source.GetState(address));
+                    return new AgentState((Dictionary) context.Source(address));
                 }
             );
         }

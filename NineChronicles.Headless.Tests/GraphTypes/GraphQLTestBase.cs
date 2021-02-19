@@ -96,7 +96,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             services.AddSingleton(StandaloneContextFx);
             services.AddSingleton<IConfiguration>(configuration);
             services.AddGraphTypes();
-            services.AddSingleton<StateQuery<PolymorphicAction<ActionBase>>>();
+            services.AddSingleton<StateQuery>();
             ServiceProvider serviceProvider = services.BuildServiceProvider();
             Schema = new StandaloneSchema(serviceProvider);
             Schema.Subscription.As<StandaloneSubscription>().RegisterTipChangedSubscription();
