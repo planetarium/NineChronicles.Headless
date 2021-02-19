@@ -62,7 +62,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var address = context.GetArgument<Address>("address");
-                    return new AgentState((Dictionary) context.Source.GetState(address));
+                    return new AgentState((Dictionary) context.Source(address));
                 }
             );
         }
