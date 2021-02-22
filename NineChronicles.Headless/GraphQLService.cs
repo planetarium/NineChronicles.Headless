@@ -85,6 +85,7 @@ namespace NineChronicles.Headless
                 services.AddHealthChecks();
 
                 services.AddControllers();
+                services.AddSingleton<StandaloneSchema>();
                 services.AddGraphQL(
                         (options, provider) =>
                         {
@@ -107,7 +108,6 @@ namespace NineChronicles.Headless
                                 p.RequireClaim(
                                     "role",
                                     "Admin")));
-                services.AddGraphTypes();
             }
 
             public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

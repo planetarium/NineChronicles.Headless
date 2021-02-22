@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using GraphQL;
+using GraphQL.Server;
 using Lib9c.Renderer;
 using Libplanet.Action;
 using Libplanet.Assets;
@@ -95,8 +96,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var services = new ServiceCollection();
             services.AddSingleton(StandaloneContextFx);
             services.AddSingleton<IConfiguration>(configuration);
-            services.AddGraphTypes();
-            services.AddSingleton<StateQuery>();
+            services.AddSingleton<StandaloneSchema>();
+            services.AddGraphQL().AddGraphTypes(typeof(StandaloneSchema));
             ServiceProvider serviceProvider = services.BuildServiceProvider();
             Schema = new StandaloneSchema(serviceProvider);
             Schema.Subscription.As<StandaloneSubscription>().RegisterTipChangedSubscription();
