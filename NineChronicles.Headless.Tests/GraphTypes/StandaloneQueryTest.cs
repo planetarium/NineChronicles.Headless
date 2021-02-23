@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -19,10 +18,8 @@ using Libplanet.KeyStore;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
 using Libplanet.Tx;
-using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model;
-using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.Tests.Common;
@@ -200,6 +197,31 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     ["stagedTxIds"] = new List<object>
                     {
                         tx.Id.ToString(),
+                    }
+                },
+            };
+            Assert.Null(result.Errors);
+            Assert.Equal(expectedResult, result.Data);
+
+            var apvTx = StandaloneContextFx.BlockChain.MakeTransaction(
+                apvPrivateKey,
+                new PolymorphicAction<ActionBase>[] { }
+            );
+
+            var apvAddress = apvPrivateKey.ToAddress();
+            var query = $@"query {{
+                nodeStatus {{
+                    stagedTxIds(address: ""{apvAddress}"")
+                }}
+            }}";
+            result = await ExecuteQueryAsync(query);
+            expectedResult = new Dictionary<string, object>()
+            {
+                ["nodeStatus"] = new Dictionary<string, object>()
+                {
+                    ["stagedTxIds"] = new List<object>
+                    {
+                        apvTx.Id.ToString(),
                     }
                 },
             };
@@ -556,268 +578,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 .First()
                 .As<Dictionary<string, object>>()["plainValue"];
             Assert.Equal(transaction.Actions.First().PlainValue.Inspection, plainValue);
-        }
-
-
-        [Fact]
-        public async Task StateQueryAvatarState()
-        {
-            var userPrivateKey = new PrivateKey();
-            var userAddress = userPrivateKey.PublicKey.ToAddress();
-            var avatarAddress = userAddress.Derive(string.Format(CultureInfo.InvariantCulture,
-                CreateAvatar2.DeriveFormat, 0));
-            var service = MakeMineChroniclesNodeService(userPrivateKey);
-            StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
-
-            var blockChain = StandaloneContextFx.BlockChain;
-            var query = $@"query {{
-                stateQuery {{
-                    avatar(address: ""{avatarAddress}"") {{
-                        address
-                        agentAddress
-                    }}
-                }}
-            }}";
-            var queryResult = await ExecuteQueryAsync(query);
-            Assert.Equal(
-                new Dictionary<string, object>
-                {
-                    ["stateQuery"] =new Dictionary<string, object>
-                    {
-                        ["avatar"] = null,
-                    }
-                },
-                queryResult.Data
-            );
-
-            var action = new SetAvatarState();
-            var tx = StandaloneContextFx.BlockChain.MakeTransaction(
-                userPrivateKey,
-                new PolymorphicAction<ActionBase>[] { action }
-            );
-            await blockChain.MineBlock(userAddress);
-
-            queryResult = await ExecuteQueryAsync(query);
-            Assert.Equal(
-                new Dictionary<string, object>
-                {
-                    ["stateQuery"] =new Dictionary<string, object>
-                    {
-                        ["avatar"] = new Dictionary<string, object>
-                        {
-                            ["address"] = avatarAddress.ToString(),
-                            ["agentAddress"] = userAddress.ToString(),
-                        },
-                    },
-                },
-                queryResult.Data
-            );
-        }
-
-        [Fact]
-        public async Task StateQueryRankingMapState()
-        {
-            var userPrivateKey = new PrivateKey();
-            var userAddress = userPrivateKey.PublicKey.ToAddress();
-            var avatarAddress = userAddress.Derive(string.Format(CultureInfo.InvariantCulture,
-                CreateAvatar2.DeriveFormat, 0));
-            var service = MakeMineChroniclesNodeService(userPrivateKey);
-            StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
-
-            var blockChain = StandaloneContextFx.BlockChain;
-            const string query = @"query {
-                stateQuery {
-                    rankingMap(index: 0) {
-                        address
-                        capacity
-                        rankingInfos {
-                            agentAddress
-                            avatarAddress
-                        }
-                    }
-                }
-            }";
-            var queryResult = await ExecuteQueryAsync(query);
-            var rankingMapAddress = RankingState.Derive(0);
-            Assert.Equal(
-                new Dictionary<string, object>
-                {
-                    ["stateQuery"] =new Dictionary<string, object>
-                    {
-                        ["rankingMap"] = new Dictionary<string, object>
-                        {
-                            ["address"] = rankingMapAddress.ToString(),
-                            ["capacity"] = RankingMapState.Capacity,
-                            ["rankingInfos"] = new List()
-                        }
-                    }
-                },
-                queryResult.Data
-            );
-
-            var action = new SetAvatarState();
-            var action2 = new HackAndSlash4
-            {
-                avatarAddress = avatarAddress,
-                costumes = new List<Guid>(),
-                equipments = new List<Guid>(),
-                foods = new List<Guid>(),
-                RankingMapAddress = rankingMapAddress,
-                stageId = 1,
-                worldId = 1,
-                WeeklyArenaAddress = WeeklyArenaState.DeriveAddress(0),
-            };
-            StandaloneContextFx.BlockChain.MakeTransaction(
-                userPrivateKey,
-                new PolymorphicAction<ActionBase>[] { action }
-            );
-            await blockChain.MineBlock(userAddress);
-
-            StandaloneContextFx.BlockChain.MakeTransaction(
-                userPrivateKey,
-                new PolymorphicAction<ActionBase>[] { action2 }
-            );
-            await blockChain.MineBlock(userAddress);
-
-            queryResult = await ExecuteQueryAsync(query);
-            Assert.Equal(
-                new Dictionary<string, object>
-                {
-                    ["stateQuery"] =new Dictionary<string, object>
-                    {
-                        ["rankingMap"] = new Dictionary<string, object>
-                        {
-                            ["address"] = rankingMapAddress.ToString(),
-                            ["capacity"] = RankingMapState.Capacity,
-                            ["rankingInfos"] = new List<object>
-                            {
-                                new Dictionary<string, object>
-                                {
-                                    ["agentAddress"] = userAddress.ToString(),
-                                    ["avatarAddress"] = avatarAddress.ToString(),
-                                },
-                            },
-                        },
-                    },
-                },
-                queryResult.Data
-            );
-        }
-
-        [Theory]
-        [InlineData(ItemType.Equipment)]
-        [InlineData(ItemType.Costume)]
-        public async Task StateQueryShopState(ItemType itemType)
-        {
-            var userPrivateKey = new PrivateKey();
-            var userAddress = userPrivateKey.PublicKey.ToAddress();
-            var avatarAddress = userAddress.Derive(string.Format(CultureInfo.InvariantCulture,
-                CreateAvatar2.DeriveFormat, 0));
-            var service = MakeMineChroniclesNodeService(userPrivateKey);
-            StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
-
-            var blockChain = StandaloneContextFx.BlockChain;
-            const string query = @"query {
-                stateQuery {
-                    shop {
-                        address
-                        products {
-                            sellerAgentAddress
-                            sellerAvatarAddress
-                            price
-                            itemUsable {
-                                itemId
-                                itemType
-                                itemSubType
-                            }
-                            costume {
-                                itemId
-                                itemType
-                                itemSubType
-                            }
-                        }
-                    }
-                }
-            }";
-            var queryResult = await ExecuteQueryAsync(query);
-            Assert.Equal(
-                new Dictionary<string, object>
-                {
-                    ["stateQuery"] =new Dictionary<string, object>
-                    {
-                        ["shop"] = new Dictionary<string, object>
-                        {
-                            ["address"] = Addresses.Shop.ToString(),
-                            ["products"] = new List()
-                        },
-                    },
-                },
-                queryResult.Data
-            );
-
-            var action = new SetAvatarState();
-            StandaloneContextFx.BlockChain.MakeTransaction(
-                userPrivateKey,
-                new PolymorphicAction<ActionBase>[] { action }
-            );
-            await blockChain.MineBlock(userAddress);
-
-            var avatarState = new AvatarState((Dictionary)blockChain.GetState(avatarAddress));
-            var itemId = itemType == ItemType.Equipment
-                ? avatarState.inventory.Equipments.First().ItemId
-                : avatarState.inventory.Costumes.First().ItemId;
-            var action2 = new Sell3
-            {
-                sellerAvatarAddress = avatarAddress,
-                itemId = itemId,
-                price = new Currency("NCG", 2, minter: null) * 100
-            };
-            StandaloneContextFx.BlockChain.MakeTransaction(
-                userPrivateKey,
-                new PolymorphicAction<ActionBase>[] { action2 }
-            );
-            await blockChain.MineBlock(userAddress);
-
-            queryResult = await ExecuteQueryAsync(query);
-
-            var itemUsable = itemType == ItemType.Equipment ? new Dictionary<string, object>
-            {
-                ["itemId"] = itemId,
-                ["itemType"] = ItemType.Equipment.ToString().ToUpper(),
-                ["itemSubType"] = ItemSubType.Weapon.ToString().ToUpper(),
-            } : null;
-            var costume = itemUsable is null ? new Dictionary<string, object>
-            {
-                ["itemId"] = itemId,
-                ["itemType"] = ItemType.Costume.ToString().ToUpper(),
-                ["itemSubType"] = "FULL_COSTUME",
-            } : null;
-            var expected = new Dictionary<string, object>
-            {
-                ["stateQuery"] = new Dictionary<string, object>
-                {
-                    ["shop"] = new Dictionary<string, object>
-                    {
-                        ["address"] = Addresses.Shop.ToString(),
-                        ["products"] = new List<object>
-                        {
-                            new Dictionary<string, object>
-                            {
-                                ["sellerAgentAddress"] = userAddress.ToString(),
-                                ["sellerAvatarAddress"] = avatarAddress.ToString(),
-                                ["price"] = "100 NCG",
-                                ["itemUsable"] = itemUsable,
-                                ["costume"] = costume,
-                            }
-                        }
-                    },
-                },
-            };
-
-            Assert.Equal(expected, queryResult.Data);
         }
 
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)

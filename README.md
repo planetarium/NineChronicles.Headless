@@ -4,7 +4,10 @@
 
 ```
 $ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
-Usage: NineChronicles.Headless.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--minimum-difficulty <Int32>] [--private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--graphql-secret-token-path <String>] [--libplanet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-action-renders] [--log-minimum-level <String>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--tx-life-time <Int32>] [--help] [--version]
+Usage: NineChronicles.Headless.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--minimum-difficulty <Int32>] [--private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-pro
+tocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--graphql-secret-token-path <String>] [--no-cors] [--libplanet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>]
+[--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-action-renders] [--log-minimum-level <String>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--tx-life-time <Int32>] [--message-timeout <Int32>
+] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--help] [--version]
 
 Run headless application with options.
 
@@ -28,6 +31,7 @@ Options:
   --graphql-host <String>                                   (Default: 0.0.0.0)
   --graphql-port <Nullable`1>                               (Default: )
   --graphql-secret-token-path <String>                     The path to write GraphQL secret token. If you want to protect this headless application, you should use this option and take it into headers. (Default: )
+  --no-cors                                                Run without CORS policy.
   --libplanet-node
   --workers <Int32>                                        Number of workers to use in Swarm (Default: 5)
   --confirmations <Int32>                                  The number of required confirmations to recognize a block.  0 by default. (Default: 0)
@@ -44,6 +48,9 @@ Options:
   --aws-region <String>                                    The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2). (Default: )
   --authorized-miner                                       Run as an authorized miner, which mines only blocks that should be authorized.
   --tx-life-time <Int32>                                   The lifetime of each transaction, which uses minute as its unit.  60 (m) by default. (Default: 60)
+  --message-timeout <Int32>                                The grace period for new messages, which uses second as its unit.  60 (s) by default. (Default: 60)
+  --tip-timeout <Int32>                                    The grace period for tip update, which uses second as its unit.  60 (s) by default. (Default: 60)
+  --demand-buffer <Int32>                                  A number that determines how far behind the demand the tip of the chain will publish `NodeException` to GraphQL subscriptions.  1150 blocks by default. (Default: 1150)
   -h, --help                                               Show help message
   --version                                                Show version
 ```
@@ -81,6 +88,9 @@ $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 -  `--dev`: Flag to turn on the dev mode.
 -  `--dev.block-interval`: Specifies the time interval between blocks by milliseconds in dev mode.
 -  `--dev.reorg-interval`: Specifies the size of reorg interval in dev mode.
+-  `--message-timeout`: Specifies the time limit that determines how old the latest message is received will publish `NodeException` to GraphQL subscriptions.
+-  `--tip-timeout`: Specifies the time limit that determines how old the blockchain's tip is updated will publish `NodeException` to GraphQL subscriptions.
+-  `--demand-buffer`: Specifies the number that determines how far behind the demand the tip of the chain will publish `NodeException` to GraphQL subscriptions.
 
 ### Format
 

@@ -16,6 +16,7 @@ using NineChronicles.Headless.Properties;
 using Org.BouncyCastle.Security;
 using Sentry;
 using Serilog;
+using Serilog.Sinks.PeriodicBatching;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable
@@ -83,6 +84,8 @@ namespace NineChronicles.Headless.Executable
                                                                "If you want to protect this headless application, " +
                                                                "you should use this option and take it into headers.")]
             string graphQLSecretTokenPath = null,
+            [Option(Description = "Run without CORS policy.")]
+            bool noCors = false,
             [Option("libplanet-node")]
             bool libplanetNode = false,
             [Option("workers", Description = "Number of workers to use in Swarm")]
@@ -129,7 +132,15 @@ namespace NineChronicles.Headless.Executable
             [Option(Description = "Run as an authorized miner, which mines only blocks that should be authorized.")]
             bool authorizedMiner = false,
             [Option(Description = "The lifetime of each transaction, which uses minute as its unit.  60 (m) by default.")]
-            int txLifeTime = 60
+            int txLifeTime = 60,
+            [Option(Description = "The grace period for new messages, which uses second as its unit.  60 (s) by default.")]
+            int messageTimeout = 60,
+            [Option(Description = "The grace period for tip update, which uses second as its unit.  60 (s) by default.")]
+            int tipTimeout = 60,
+            [Option(Description =
+                "A number that determines how far behind the demand the tip of the chain " +
+                "will publish `NodeException` to GraphQL subscriptions.  1150 blocks by default.")]
+            int demandBuffer = 1150
         )
         {
 #if SENTRY || ! DEBUG
@@ -178,7 +189,12 @@ namespace NineChronicles.Headless.Executable
                     regionEndpoint,
                     "9c-standalone-logs",
                     guid.ToString());
-                loggerConf.WriteTo.Sink(awsSink);
+                var periodicBatchingSink = new PeriodicBatchingSink(awsSink, new PeriodicBatchingSinkOptions
+                {
+                    Period = TimeSpan.FromSeconds(2),
+                    BatchSizeLimit = 1000,
+                });
+                loggerConf.WriteTo.Sink(periodicBatchingSink);
             }
 
             Log.Logger = loggerConf.CreateLogger();
@@ -217,6 +233,7 @@ namespace NineChronicles.Headless.Executable
                         GraphQLListenHost = graphQLHost,
                         GraphQLListenPort = graphQLPort,
                         SecretToken = secretToken,
+                        NoCors = noCors,
                     };
 
                     var graphQLService = new GraphQLService(graphQLNodeServiceProperties);
@@ -262,7 +279,10 @@ namespace NineChronicles.Headless.Executable
                         noMiner,
                         workers: workers,
                         confirmations: confirmations,
-                        maximumTransactions: maximumTransactions);
+                        maximumTransactions: maximumTransactions,
+                        messageTimeout: messageTimeout,
+                        tipTimeout: tipTimeout,
+                        demandBuffer: demandBuffer);
 
 
                 if (rpcServer)

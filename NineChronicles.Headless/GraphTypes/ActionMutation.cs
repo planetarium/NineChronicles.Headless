@@ -11,6 +11,7 @@ using Nekoyume.Model.State;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using Libplanet.Tx;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -19,118 +20,193 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public ActionMutation()
         {
-            Field<NonNullGraphType<BooleanGraphType>>("createAvatar",
+            Field<NonNullGraphType<TxIdType>>("createAvatar",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "avatarName",
+                        Description = "The character name."
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "avatarIndex",
+                        Description = "The index of character slot. 0 ~ 2"
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "hairIndex",
+                        Description = "The index of character hair color. 0 ~ 8"
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "lensIndex",
+                        Description = "The index of character eye color. 0 ~ 8"
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "earIndex",
+                        Description = "The index of character ear color. 0 ~ 8"
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "tailIndex",
+                        Description = "The index of character tail color. 0 ~ 8"
+                    }
+                ),
                 resolve: context =>
                 {
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privatekey = service.PrivateKey;
+                        PrivateKey privateKey = service.PrivateKey;
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
-                        Address userAddress = privatekey.PublicKey.ToAddress();
-                        Address avatarAddress = userAddress.Derive("avatar_0");
-
-                        var action = new CreateAvatar
+                        var avatarName = context.GetArgument<string>("avatarName");
+                        var avatarIndex = context.GetArgument<int>("avatarIndex");
+                        var hairIndex = context.GetArgument<int>("hairIndex");
+                        var lensIndex = context.GetArgument<int>("lensIndex");
+                        var earIndex = context.GetArgument<int>("earIndex");
+                        var tailIndex = context.GetArgument<int>("tailIndex");
+                        var action = new CreateAvatar2
                         {
-                            avatarAddress = avatarAddress,
-                            index = 0,
-                            hair = 0,
-                            lens = 0,
-                            ear = 0,
-                            tail = 0,
-                            name = "createbymutation",
+                            index = avatarIndex,
+                            hair = hairIndex,
+                            lens = lensIndex,
+                            ear = earIndex,
+                            tail = tailIndex,
+                            name = avatarName,
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
-                        blockChain.MakeTransaction(privatekey, actions);
+                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(privateKey, actions);
+                        return tx.Id;
                     }
                     catch (Exception e)
                     {
                         var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
                         Log.Error(msg, e);
-                        return false;
+                        throw;
                     }
-
-                    return true;
                 });
 
-            Field<NonNullGraphType<BooleanGraphType>>("hackAndSlash",
-            arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<StringGraphType>>
-                {
-                    Name = "weeklyArenaAddress",
-                },
-                new QueryArgument<NonNullGraphType<StringGraphType>>
-                {
-                    Name = "rankingArenaAddress",
-                }),
-            resolve: context =>
-            {
-                try
-                {
-                    NineChroniclesNodeService service = context.Source;
-                    PrivateKey privatekey = service.PrivateKey;
-                    BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
-                    Address userAddress = privatekey.PublicKey.ToAddress();
-                    Address avatarAddress = userAddress.Derive("avatar_0");
-                    Address weeklyArenaAddress = new Address(context.GetArgument<string>("weeklyArenaAddress"));
-                    Address rankingArenaAddress = new Address(context.GetArgument<string>("rankingArenaAddress"));
-
-                    var action = new HackAndSlash
-                    {
-                        avatarAddress = avatarAddress,
-                        worldId = 1,
-                        stageId = 1,
-                        WeeklyArenaAddress = weeklyArenaAddress,
-                        RankingMapAddress = rankingArenaAddress,
-                        costumes = new List<int>(),
-                        equipments = new List<Guid>(),
-                        foods = new List<Guid>(),
-                    };
-
-                    var actions = new PolymorphicAction<ActionBase>[] { action };
-                    blockChain.MakeTransaction(privatekey, actions);
-                }
-                catch (Exception e)
-                {
-                    var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
-                    context.Errors.Add(new ExecutionError(msg, e));
-                    Log.Error(msg, e);
-                    return false;
-                }
-
-                return true;
-            });
-
-            Field<NonNullGraphType<BooleanGraphType>>("combinationEquipment",
+            Field<NonNullGraphType<TxIdType>>("hackAndSlash",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<DecimalGraphType>>
+                    new QueryArgument<NonNullGraphType<AddressType>>
                     {
-                        Name = "recipeId",
+                        Name = "avatarAddress",
+                        Description = "AvatarState address."
                     },
-                    new QueryArgument<NonNullGraphType<DecimalGraphType>>
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
-                        Name = "slotIndex",
+                        Name = "worldId",
+                        Description = "World ID."
                     },
-                    new QueryArgument<DecimalGraphType>
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
-                        Name = "subRecipeId",
-                    }),
+                        Name = "stageId",
+                        Description = "Stage ID."
+                    },
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "weeklyArenaAddress",
+                        Description = "Address of this WeeklyArenaState"
+                    },
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "rankingArenaAddress",
+                        Description = "AvatarState rankingMapAddress."
+                    },
+                    new QueryArgument<ListGraphType<GuidGraphType>>
+                    {
+                        Name = "costumeIds",
+                        Description = "List of costume id for equip."
+                    },
+                    new QueryArgument<ListGraphType<GuidGraphType>>
+                    {
+                        Name = "equipmentIds",
+                        Description = "List of equipment id for equip."
+                    },
+                    new QueryArgument<ListGraphType<GuidGraphType>>
+                    {
+                        Name = "consumableIds",
+                        Description = "List of consumable id for use."
+                    }
+                ),
                 resolve: context =>
                 {
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privatekey = service.PrivateKey;
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
-                        Address userAddress = privatekey.PublicKey.ToAddress();
-                        Address avatarAddress = userAddress.Derive("avatar_0");
+                        Address weeklyArenaAddress = context.GetArgument<Address>("weeklyArenaAddress");
+                        Address rankingArenaAddress = context.GetArgument<Address>("rankingArenaAddress");
+                        Address avatarAddress = context.GetArgument<Address>("avatarAddress");
+                        int worldId = context.GetArgument<int>("worldId");
+                        int stageId = context.GetArgument<int>("stageId");
+                        List<Guid> costumeIds = context.GetArgument<List<Guid>>("costumeIds") ?? new List<Guid>();
+                        List<Guid> equipmentIds = context.GetArgument<List<Guid>>("equipmentIds") ?? new List<Guid>();
+                        List<Guid> consumableIds = context.GetArgument<List<Guid>>("consumableIds") ?? new List<Guid>();
+
+                        var action = new HackAndSlash4
+                        {
+                            avatarAddress = avatarAddress,
+                            worldId = worldId,
+                            stageId = stageId,
+                            WeeklyArenaAddress = weeklyArenaAddress,
+                            RankingMapAddress = rankingArenaAddress,
+                            costumes = costumeIds,
+                            equipments = equipmentIds,
+                            foods = consumableIds,
+                        };
+
+                        var actions = new PolymorphicAction<ActionBase>[] { action };
+                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(context.Source.PrivateKey, actions);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        Log.Error(msg, e);
+                        throw;
+                    }
+                });
+
+            Field<NonNullGraphType<TxIdType>>("combinationEquipment",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "AvatarState address."
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "recipeId",
+                        Description = "EquipmentRecipe ID."
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "slotIndex",
+                        Description =  "The index of combination slot. 0 ~ 3"
+                    },
+                    new QueryArgument<IntGraphType>
+                    {
+                        Name = "subRecipeId",
+                        Description = "EquipmentSubRecipe ID."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        NineChroniclesNodeService service = context.Source;
+                        BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
                         int recipeId = context.GetArgument<int>("recipeId");
                         int slotIndex = context.GetArgument<int>("slotIndex");
-                        int? subRecipeId = context.GetArgument<int>("subRecipeId");
+                        int? subRecipeId = context.GetArgument<int?>("subRecipeId");
+                        Address avatarAddress = context.GetArgument<Address>("avatarAddress");
 
-                        var action = new CombinationEquipment
+                        var action = new CombinationEquipment4
                         {
                             AvatarAddress = avatarAddress,
                             RecipeId = recipeId,
@@ -139,29 +215,41 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
-                        blockChain.MakeTransaction(privatekey, actions);
+                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(context.Source.PrivateKey, actions);
+                        return tx.Id;
                     }
                     catch (Exception e)
                     {
                         var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
                         Log.Error(msg, e);
-                        return false;
+                        throw;
                     }
-
-                    return true;
                 });
 
-            Field<NonNullGraphType<BooleanGraphType>>("itemEnhancement",
+            Field<NonNullGraphType<TxIdType>>("itemEnhancement",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "AvatarState address."
+                    },
+                    new QueryArgument<NonNullGraphType<GuidGraphType>>
                     {
                         Name = "itemId",
+                        Description = "Equipment Guid."
                     },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<GuidGraphType>>
                     {
-                        Name = "materialIds",
-                    }),
+                        Name = "materialId",
+                        Description = "Material Guid."
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "slotIndex",
+                        Description =  "The index of combination slot. 0 ~ 3"
+                    }
+                ),
                 resolve: context =>
                 {
                     try
@@ -169,115 +257,118 @@ namespace NineChronicles.Headless.GraphTypes
                         NineChroniclesNodeService service = context.Source;
                         PrivateKey privatekey = service.PrivateKey;
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
-                        Address userAddress = privatekey.PublicKey.ToAddress();
-                        Address avatarAddress = userAddress.Derive("avatar_0");
-                        Guid itemId = Guid.Parse(context.GetArgument<string>("itemId"));
-                        Guid materialId = Guid.Parse(context.GetArgument<string>("materialIds"));
+                        Guid itemId = context.GetArgument<Guid>("itemId");
+                        Guid materialId = context.GetArgument<Guid>("materialId");
+                        Address avatarAddress = context.GetArgument<Address>("avatarAddress");
+                        int slotIndex = context.GetArgument<int>("slotIndex");
 
-                        var action = new ItemEnhancement
+                        var action = new ItemEnhancement5
                         {
                             avatarAddress = avatarAddress,
-                            slotIndex = 0,
+                            slotIndex = slotIndex,
                             itemId = itemId,
-                            materialIds = new[] { materialId }
+                            materialId = materialId,
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
-                        blockChain.MakeTransaction(privatekey, actions);
+                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(privatekey, actions);
+                        return tx.Id;
                     }
                     catch (Exception e)
                     {
                         var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
                         Log.Error(msg, e);
-                        return false;
+                        throw;
                     }
-
-                    return true;
                 });
 
-            Field<NonNullGraphType<BooleanGraphType>>("buy",
+            Field<NonNullGraphType<TxIdType>>("buy",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "sellerAgentAddress",
+                        Description = "ShopItem SellerAgentAddress."
                     },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "sellerAvatarAddress",
+                        Description = "ShopItem SellerAvatarAddress."
                     },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "buyerAvatarAddress",
+                        Description = "AvatarState address."
+                    },
+                    new QueryArgument<NonNullGraphType<GuidGraphType>>
                     {
                         Name = "productId",
+                        Description = "ShopItem Guid."
                     }),
                 resolve: context =>
                 {
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privatekey = service.PrivateKey;
+                        PrivateKey privateKey = service.PrivateKey;
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
-                        Address userAddress = privatekey.PublicKey.ToAddress();
-                        Address avatarAddress = userAddress.Derive("avatar_0");
-                        Address sellerAgentAddress = new Address(context.GetArgument<string>("sellerAgentAddress"));
-                        Address sellerAvatarAddress = new Address(context.GetArgument<string>("sellerAvatarAddress"));
-                        Guid productId = Guid.Parse(context.GetArgument<string>("productId"));
+                        Address buyerAvatarAddress = context.GetArgument<Address>("buyerAvatarAddress");
+                        Address sellerAgentAddress = context.GetArgument<Address>("sellerAgentAddress");
+                        Address sellerAvatarAddress = context.GetArgument<Address>("sellerAvatarAddress");
+                        Guid productId = context.GetArgument<Guid>("productId");
 
-                        var action = new Buy
+                        var action = new Buy4
                         {
-                            buyerAvatarAddress = avatarAddress,
+                            buyerAvatarAddress = buyerAvatarAddress,
                             sellerAgentAddress = sellerAgentAddress,
                             sellerAvatarAddress = sellerAvatarAddress,
                             productId = productId,
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
-                        blockChain.MakeTransaction(privatekey, actions);
+                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(privateKey, actions);
+                        return tx.Id;
                     }
                     catch (Exception e)
                     {
                         var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
                         Log.Error(msg, e);
-                        return false;
+                        throw;
                     }
-
-                    return true;
                 });
-            Field<NonNullGraphType<BooleanGraphType>>("sell",
+            Field<NonNullGraphType<TxIdType>>("sell",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "sellerAvatarAddress",
+                        Description = "AvatarState address."
                     },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "productId",
-                    },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<GuidGraphType>>
                     {
                         Name = "itemId",
+                        Description = "Item Guid."
                     },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "price",
+                        Description = "Item price."
                     }),
                 resolve: context =>
                 {
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privatekey = service.PrivateKey;
+                        PrivateKey privateKey = service.PrivateKey;
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
-                        Address sellerAvatarAddress = new Address(context.GetArgument<string>("sellerAvatarAddress"));
-                        Guid itemId = Guid.Parse(context.GetArgument<string>("itemId"));
+                        Address sellerAvatarAddress = context.GetArgument<Address>("sellerAvatarAddress");
+                        Guid itemId = context.GetArgument<Guid>("itemId");
                         var currency = new GoldCurrencyState(
                             (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
                         ).Currency;
-                        FungibleAssetValue price =
-                        FungibleAssetValue.Parse(currency, context.GetArgument<string>("price"));
+                        FungibleAssetValue price = currency * context.GetArgument<int>("price");
 
-                        var action = new Sell
+                        var action = new Sell3
                         {
                             sellerAvatarAddress = sellerAvatarAddress,
                             itemId = itemId,
@@ -285,29 +376,33 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
-                        blockChain.MakeTransaction(privatekey, actions);
+                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(privateKey, actions);
+                        return tx.Id;
                     }
                     catch (Exception e)
                     {
                         var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
-                        Log.Error(msg, e);
-                        return false;
+                        throw;
                     }
-
-                    return true;
                 });
 
-            Field<NonNullGraphType<BooleanGraphType>>("dailyReward",
+            Field<NonNullGraphType<TxIdType>>("dailyReward",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "AvatarState address."
+                    }
+                ),
                 resolve: context =>
                 {
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privatekey = service.PrivateKey;
+                        PrivateKey privateKey = service.PrivateKey;
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
-                        Address userAddress = privatekey.PublicKey.ToAddress();
-                        Address avatarAddress = userAddress.Derive("avatar_0");
+                        Address avatarAddress = context.GetArgument<Address>("avatarAddress");
 
                         var action = new DailyReward
                         {
@@ -315,18 +410,65 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
-                        blockChain.MakeTransaction(privatekey, actions);
+                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(privateKey, actions);
+                        return tx.Id;
                     }
                     catch (Exception e)
                     {
                         var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
                         Log.Error(msg, e);
-                        return false;
+                        throw;
                     }
-
-                    return true;
                 });
+
+            Field<NonNullGraphType<TxIdType>>("combinationConsumable",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "AvatarState address."
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "recipeId",
+                        Description = "ConsumableRecipe ID."
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "slotIndex",
+                        Description =  "The index of combination slot. 0 ~ 3"
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        NineChroniclesNodeService service = context.Source;
+                        BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
+                        int recipeId = context.GetArgument<int>("recipeId");
+                        int slotIndex = context.GetArgument<int>("slotIndex");
+                        Address avatarAddress = context.GetArgument<Address>("avatarAddress");
+
+                        var action = new CombinationConsumable3
+                        {
+                            AvatarAddress = avatarAddress,
+                            recipeId = recipeId,
+                            slotIndex = slotIndex,
+                        };
+
+                        var actions = new PolymorphicAction<ActionBase>[] { action };
+                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(context.Source.PrivateKey, actions);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
         }
     }
 }

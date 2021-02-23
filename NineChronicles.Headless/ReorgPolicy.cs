@@ -1,4 +1,6 @@
-﻿using Libplanet.Action;
+using System;
+using System.Collections.Generic;
+using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
@@ -35,6 +37,8 @@ namespace NineChronicles.Headless
         {
             return blocks.Tip is null ? 0 : _difficulty;
         }
+
+        public IComparer<BlockPerception> CanonicalChainComparer { get; } = new TotalDifficultyComparer(TimeSpan.FromSeconds(30));
 
         public IAction BlockAction { get; }
     }
