@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - 9c-main
+      - rc-*
 
 jobs:
   build_and_push:
