@@ -15,9 +15,11 @@ namespace NineChronicles.Headless.GraphTypes.States
         {
             Field<NonNullGraphType<AddressType>>(
                 nameof(ShopState.address),
+                description: "Address of shop.",
                 resolve: context => context.Source.address);
             Field<NonNullGraphType<ListGraphType<ShopItemType>>>(
                 nameof(ShopState.Products),
+                description: "List of ShopItem.",
                 arguments: new QueryArguments(
                     new QueryArgument<IntGraphType>
                     {

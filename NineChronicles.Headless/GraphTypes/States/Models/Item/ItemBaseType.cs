@@ -9,12 +9,28 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
     {
         protected ItemBaseType()
         {
-            Field<NonNullGraphType<IntGraphType>>(nameof(ItemBase.Grade));
-            Field<NonNullGraphType<IntGraphType>>(nameof(ItemBase.Id));
+            Field<NonNullGraphType<IntGraphType>>(
+                nameof(ItemBase.Grade),
+                description: "Grade from ItemSheet."
+            );
+            Field<NonNullGraphType<IntGraphType>>(
+                nameof(ItemBase.Id),
+                description: "Id from ItemSheet."
+            );
             
-            Field<NonNullGraphType<ItemTypeEnumType>>(nameof(ItemBase.ItemType), resolve: context => context.Source.ItemType);
-            Field<NonNullGraphType<ItemSubTypeEnumType>>(nameof(ItemBase.ItemSubType));
-            Field<NonNullGraphType<ElementalTypeEnumType>>(nameof(ItemBase.ElementalType));
+            Field<NonNullGraphType<ItemTypeEnumType>>(
+                nameof(ItemBase.ItemType),
+                description: "Item category.",
+                resolve: context => context.Source.ItemType
+            );
+            Field<NonNullGraphType<ItemSubTypeEnumType>>(
+                nameof(ItemBase.ItemSubType),
+                description: "Item subcategory."
+            );
+            Field<NonNullGraphType<ElementalTypeEnumType>>(
+                nameof(ItemBase.ElementalType),
+                description: "Item elemental."
+            );
         }
     }
 }
