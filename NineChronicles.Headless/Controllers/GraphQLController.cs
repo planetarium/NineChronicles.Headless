@@ -249,9 +249,10 @@ namespace NineChronicles.Headless.Controllers
         {
             if (StandaloneContext.NineChroniclesNodeService.PrivateKey is null)
             {
+                Log.Information("PrivateKey is not set. please call SetPrivateKey() first.");
                 return;
             }
-            var address = StandaloneContext.NineChroniclesNodeService.PrivateKey.PublicKey.ToAddress();
+            Address address = StandaloneContext.NineChroniclesNodeService.PrivateKey.PublicKey.ToAddress();
             if (eval.OutputStates.UpdatedAddresses.Contains(address) || eval.Signer == address)
             {
                 if (eval.Signer == address)
