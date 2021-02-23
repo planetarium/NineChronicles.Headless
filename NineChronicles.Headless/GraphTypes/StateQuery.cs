@@ -16,7 +16,7 @@ namespace NineChronicles.Headless.GraphTypes
             Name = "StateQuery";
             Field<AvatarStateType>(
                 name: "avatar",
-                description: "State for character.",
+                description: "State for avatar.",
                 arguments: new QueryArguments(new QueryArgument<AddressType>
                 {
                     Name = "address",
