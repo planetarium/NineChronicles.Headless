@@ -5,6 +5,7 @@ using GraphQL.Types;
 using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
+using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 

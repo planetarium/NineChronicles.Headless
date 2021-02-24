@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using GraphQL;
 using GraphQL.Types;
+using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;

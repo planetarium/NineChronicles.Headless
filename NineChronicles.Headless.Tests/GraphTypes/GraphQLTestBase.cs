@@ -27,6 +27,7 @@ using Libplanet.Store.Trie;
 using Microsoft.Extensions.DependencyInjection;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -96,6 +97,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             services.AddSingleton(StandaloneContextFx);
             services.AddSingleton<IConfiguration>(configuration);
             services.AddGraphTypes();
+            services.AddLibplanetExplorer<NCAction>();
             services.AddSingleton<StateQuery>();
             ServiceProvider serviceProvider = services.BuildServiceProvider();
             Schema = new StandaloneSchema(serviceProvider);
