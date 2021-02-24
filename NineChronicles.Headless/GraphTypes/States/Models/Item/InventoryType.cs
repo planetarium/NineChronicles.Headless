@@ -9,19 +9,19 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
         {
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<ConsumableType>>>>(
                 nameof(Inventory.Consumables),
-                description: "List of Consumable."
+                description: "List of Consumables."
             );
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<MaterialType>>>>(
                 nameof(Inventory.Materials),
-                description: "List of Material."
+                description: "List of Materials."
             );
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<EquipmentType>>>>(
                 nameof(Inventory.Equipments),
-                description: "List of Equipment."
+                description: "List of Equipments."
             );
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<CostumeType>>>>(
                 nameof(Inventory.Costumes),
-                description: "List of Costumez."
+                description: "List of Costumes."
             );
         }
     }

@@ -9,35 +9,35 @@ namespace NineChronicles.Headless.GraphTypes.States
         {
             Field<NonNullGraphType<LongGraphType>>(
                 nameof(RankingInfo.Exp),
-                description: "AvatarState total EXP.",
+                description: "Avatar total EXP.",
                 resolve: context => context.Source.Exp);
             Field<NonNullGraphType<IntGraphType>>(
                 nameof(RankingInfo.Level),
-                description: "AvatarState Level.",
+                description: "Avatar Level.",
                 resolve: context => context.Source.Level);
             Field<NonNullGraphType<IntGraphType>>(
                 nameof(RankingInfo.ArmorId),
-                description: "Equipped Armor id from EquipmentItemSheet.",
+                description: "Equipped Armor ID from EquipmentItemSheet.",
                 resolve: context => context.Source.ArmorId);
             Field<NonNullGraphType<LongGraphType>>(
                 nameof(RankingInfo.UpdatedAt),
-                description: "RankingInfo updated block index.",
+                description: "Block index at RankingInfo update.",
                 resolve: context => context.Source.UpdatedAt);
             Field<NonNullGraphType<LongGraphType>>(
                 nameof(RankingInfo.StageClearedBlockIndex),
-                description: "Latest stage cleared block index.",
+                description: "Block index at Latest stage cleared.",
                 resolve: context => context.Source.StageClearedBlockIndex);
             Field<NonNullGraphType<AddressType>>(
                 nameof(RankingInfo.AgentAddress),
-                description: "Address of AgentState.",
+                description: "Address of agent.",
                 resolve: context => context.Source.AgentAddress);
             Field<NonNullGraphType<AddressType>>(
                 nameof(RankingInfo.AvatarAddress),
-                description: "Address of AvatarState.",
+                description: "Address of avatar.",
                 resolve: context => context.Source.AvatarAddress);
             Field<NonNullGraphType<StringGraphType>>(
                 nameof(RankingInfo.AvatarName),
-                description: "AvatarState name.",
+                description: "Avatar name.",
                 resolve: context => context.Source.AvatarName);
         }
     }

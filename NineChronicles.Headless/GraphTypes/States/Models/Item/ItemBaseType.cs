@@ -15,7 +15,7 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
             );
             Field<NonNullGraphType<IntGraphType>>(
                 nameof(ItemBase.Id),
-                description: "Id from ItemSheet."
+                description: "ID from ItemSheet."
             );
             
             Field<NonNullGraphType<ItemTypeEnumType>>(

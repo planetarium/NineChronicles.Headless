@@ -17,7 +17,7 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
                 resolve: context => context.Source.SellerAvatarAddress);
             Field<NonNullGraphType<GuidGraphType>>(
                 nameof(ShopItem.ProductId),
-                description: "Guid of shop registered.",
+                description: "Guid of product registered.",
                 resolve: context => context.Source.ProductId);
             Field<NonNullGraphType<StringGraphType>>(
                 nameof(ShopItem.Price),

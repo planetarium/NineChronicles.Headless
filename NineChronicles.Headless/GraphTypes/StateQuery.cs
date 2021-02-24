@@ -20,7 +20,7 @@ namespace NineChronicles.Headless.GraphTypes
                 arguments: new QueryArguments(new QueryArgument<AddressType>
                 {
                     Name = "address",
-                    Description = "Address of AvatarState."
+                    Description = "Address of avatar."
                 }),
                 resolve: context =>
                 {
@@ -29,7 +29,7 @@ namespace NineChronicles.Headless.GraphTypes
                 });
             Field<RankingMapStateType>(
                 name: "rankingMap",
-                description: "State for Record AvatarState EXP.",
+                description: "State for avatar EXP record.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
@@ -43,11 +43,11 @@ namespace NineChronicles.Headless.GraphTypes
                 });
             Field<ShopStateType>(
                 name: "shop",
-                description: "State for market.",
+                description: "State for shop.",
                 resolve: context => new ShopState((Dictionary) context.Source(Addresses.Shop)));
             Field<WeeklyArenaStateType>(
                 name: "weeklyArena",
-                description: "State for arena.",
+                description: "State for weekly arena.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
@@ -62,11 +62,11 @@ namespace NineChronicles.Headless.GraphTypes
                 });
             Field<AgentStateType>(
                 name: "agent",
-                description: "State for account.",
+                description: "State for agent.",
                 arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
                 {
                     Name = "address",
-                    Description = "Address of AgentState."
+                    Description = "Address of agent."
                 }),
                 resolve: context =>
                 {

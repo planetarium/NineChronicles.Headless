@@ -14,11 +14,11 @@ namespace NineChronicles.Headless.GraphTypes.States
         {
             Field<NonNullGraphType<AddressType>>(
                 nameof(AvatarState.address),
-                description: "Address of AvatarState.",
+                description: "Address of avatar.",
                 resolve: context => context.Source.address);
             Field<NonNullGraphType<IntGraphType>>(
                 nameof(AvatarState.blockIndex),
-                description: "Block index at latest action was executed.",
+                description: "Block index at the latest executed action.",
                 resolve: context => context.Source.blockIndex);
             Field<NonNullGraphType<IntGraphType>>(
                 nameof(AvatarState.characterId),
@@ -26,11 +26,11 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context => context.Source.characterId);
             Field<NonNullGraphType<LongGraphType>>(
                 nameof(AvatarState.dailyRewardReceivedIndex),
-                description: "Block index at DailyReward was executed.",
+                description: "Block index at the DailyReward execution.",
                 resolve: context => context.Source.dailyRewardReceivedIndex);
             Field<NonNullGraphType<AddressType>>(
                 nameof(AvatarState.agentAddress),
-                description: "Address of AgentState.",
+                description: "Address of agent.",
                 resolve: context => context.Source.agentAddress);
             Field<NonNullGraphType<AddressType>>(
                 nameof(AvatarState.RankingMapAddress),
@@ -38,20 +38,20 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context => context.Source.RankingMapAddress);
             Field<NonNullGraphType<LongGraphType>>(
                 nameof(AvatarState.updatedAt),
-                description: "Block index at latest action was executed.",
+                description: "Block index at the latest executed action.",
                 resolve: context => context.Source.updatedAt);
 
             Field<NonNullGraphType<StringGraphType>>(
                 nameof(AvatarState.name),
-                description: "AvatarState name.",
+                description: "Avatar name.",
                 resolve: context => context.Source.name);
             Field<NonNullGraphType<IntGraphType>>(
                 nameof(AvatarState.exp),
-                description: "AvatarState total EXP.",
+                description: "Avatar total EXP.",
                 resolve: context => context.Source.exp);
             Field<NonNullGraphType<IntGraphType>>(
                 nameof(AvatarState.level),
-                description: "AvatarState Level.",
+                description: "Avatar Level.",
                 resolve: context => context.Source.level);
             Field<NonNullGraphType<IntGraphType>>(
                 nameof(AvatarState.actionPoint),
@@ -77,7 +77,7 @@ namespace NineChronicles.Headless.GraphTypes.States
 
             Field<NonNullGraphType<InventoryType>>(
                 nameof(AvatarState.inventory),
-                description: "AvatarState inventory.",
+                description: "Avatar inventory.",
                 resolve: context => context.Source.inventory);
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>(
                 nameof(AvatarState.combinationSlotAddresses),
