@@ -47,7 +47,7 @@ namespace NineChronicles.Headless.Executable
 #endif
         }
 
-        [Command(Description = "Run headless application with options.")]
+        [PrimaryCommand]
         public async Task Run(
             bool noMiner = false,
             [Option("app-protocol-version", new[] { 'V' }, Description = "App protocol version token")]
