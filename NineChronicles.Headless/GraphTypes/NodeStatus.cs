@@ -31,14 +31,23 @@ namespace NineChronicles.Headless.GraphTypes
 
         public NodeStatusType()
         {
-            Field<NonNullGraphType<BooleanGraphType>>(name: "bootstrapEnded",
-                resolve: context => context.Source.BootstrapEnded);
-            Field<NonNullGraphType<BooleanGraphType>>(name: "preloadEnded",
-                resolve: context => context.Source.PreloadEnded);
-            Field<NonNullGraphType<BlockHeaderType>>(name: "tip",
+            Field<NonNullGraphType<BooleanGraphType>>(
+                name: "bootstrapEnded",
+                description: "Whether the current libplanet node had ended bootstrapping.",
+                resolve: context => context.Source.BootstrapEnded
+            );
+            Field<NonNullGraphType<BooleanGraphType>>(
+                name: "preloadEnded",
+                description: "Whether the current libplanet node had ended preloading.",
+                resolve: context => context.Source.PreloadEnded
+            );
+            Field<NonNullGraphType<BlockHeaderType>>(
+                name: "tip",
+                description: "The block header of tip block from the current canonical chain."
                 resolve: context => context.Source.BlockChain is { } blockChain
                     ? BlockHeaderType.FromBlock(blockChain.Tip)
-                    : null);
+                    : null
+            );
             Field<NonNullGraphType<ListGraphType<BlockHeaderType>>>(
                 name: "topmostBlocks",
                 arguments: new QueryArguments(
@@ -83,7 +92,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "Target address to query"
                     }
                 ),
-                description: "Staged TxIds from the current node.",
+                description: "Ids of staged transactions from the current node.",
                 resolve: context =>
                 {
                     if (context.Source?.BlockChain is null)
@@ -105,13 +114,17 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 }
             );
-            Field<NonNullGraphType<BlockHeaderType>>(name: "genesis",
+            Field<NonNullGraphType<BlockHeaderType>>(
+                name: "genesis",
+                description: "The block header from gensis block of current chain.",
                 resolve: context =>
                     context.Source.BlockChain is { } blockChain
                         ? BlockHeaderType.FromBlock(blockChain.Genesis)
-                        : null);
-            Field<NonNullGraphType<BooleanGraphType>>(name: "isMining",
-                description: "Whether it is mining.",
+                        : null
+            );
+            Field<NonNullGraphType<BooleanGraphType>>(
+                name: "isMining",
+                description: "Whether the current node is mining.",
                 resolve: context => context.Source.IsMining
             );
         }
