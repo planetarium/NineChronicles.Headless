@@ -91,7 +91,7 @@ namespace NineChronicles.Headless.GraphTypes
                 });
 
             Field<NonNullGraphType<TxIdType>>("hackAndSlash",
-                description: "Start stage for get material.",
+                description: "Start stage to get material.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
@@ -175,7 +175,7 @@ namespace NineChronicles.Headless.GraphTypes
                 });
 
             Field<NonNullGraphType<TxIdType>>("combinationEquipment",
-                description: "Combination new equipment.",
+                description: "Combine new equipment.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
@@ -190,7 +190,7 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "slotIndex",
-                        Description =  "The index of empty combination slot for combination equipment. 0 ~ 3"
+                        Description =  "The empty combination slot index to combine equipment. 0 ~ 3"
                     },
                     new QueryArgument<IntGraphType>
                     {
@@ -246,12 +246,12 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<GuidGraphType>>
                     {
                         Name = "materialId",
-                        Description = "Equipment Guid for upgrade material."
+                        Description = "Material Guid for equipment upgrade."
                     },
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "slotIndex",
-                        Description =  "The index of empty combination slot for upgrade equipment. 0 ~ 3"
+                        Description =  "The empty combination slot index to upgrade equipment. 0 ~ 3"
                     }
                 ),
                 resolve: context =>
@@ -293,12 +293,12 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "sellerAgentAddress",
-                        Description = "Agent address from Registered ShopItem."
+                        Description = "Agent address from registered ShopItem."
                     },
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "sellerAvatarAddress",
-                        Description = "Avatar address from Registered ShopItem."
+                        Description = "Avatar address from registered ShopItem."
                     },
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
@@ -348,12 +348,12 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "sellerAvatarAddress",
-                        Description = "Avatar address for register shop item."
+                        Description = "Avatar address to register shop item."
                     },
                     new QueryArgument<NonNullGraphType<GuidGraphType>>
                     {
                         Name = "itemId",
-                        Description = "Item Guid to be registered shop."
+                        Description = "Item Guid to register on shop."
                     },
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
@@ -430,12 +430,12 @@ namespace NineChronicles.Headless.GraphTypes
                 });
 
             Field<NonNullGraphType<TxIdType>>("combinationConsumable",
-                description: "Combination new Consumable.",
+                description: "Combine new Consumable.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "avatarAddress",
-                        Description = "Avatar address to combination consumable."
+                        Description = "Avatar address to combine consumable."
                     },
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
@@ -445,7 +445,7 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "slotIndex",
-                        Description =  "The index of empty combination slot for combination consumable. 0 ~ 3"
+                        Description =  "The empty combination slot index to combine consumable. 0 ~ 3"
                     }
                 ),
                 resolve: context =>
