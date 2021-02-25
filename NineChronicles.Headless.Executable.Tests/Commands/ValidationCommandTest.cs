@@ -23,5 +23,17 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         {
             Assert.Equal(exitCode, _command.PrivateKey(privateKeyHex));
         }
+        
+        [Theory]
+        [InlineData("", -1)]
+        [InlineData("invalid hexadecimal", -1)]
+        [InlineData("000000000000000000000000000000000000000000000000000000000000000000", -1)]
+        [InlineData("03b0868d9301b30c512d307ea67af4c8bef637ef099e39d32b808a43e6b41469c5", 0)]
+        [InlineData("03308c1618a75e85a5fb57f7e453a642c307dc6310e90a7418b1aec565d963534a", 0)]
+        [InlineData("028a6190bf643175b20e4a2d1d86fe6c4b8f7d5fe3d163632be4e59f83335824b8", 0)]
+        public void PublicKey(string publicKeyHex, int exitCode)
+        {
+            Assert.Equal(exitCode, _command.PublicKey(publicKeyHex));
+        }
     }
 }

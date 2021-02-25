@@ -23,5 +23,23 @@ namespace NineChronicles.Headless.Executable.Commands
                 return -1;
             }
         }
+        
+        [Command(Description = "Validate public key")]
+        public int PublicKey(
+            [Argument(
+                Name = "PUBLIC-KEY",
+                Description = "A hexadecimal representation of public key to validate.")]
+            string publicKeyHex)
+        {
+            try
+            {
+                _ = new PublicKey(ByteUtil.ParseHex(publicKeyHex));
+                return 0;
+            }
+            catch
+            {
+                return -1;
+            }
+        }
     }
 }
