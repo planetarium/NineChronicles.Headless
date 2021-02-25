@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using GraphQL.Server;
-using GraphQL.Utilities;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -85,6 +85,9 @@ namespace NineChronicles.Headless
 
                 services.AddTransient<LocalAuthenticationMiddleware>();
 
+                services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                    .AddCookie();
+
                 services.AddHealthChecks();
 
                 services.AddControllers();
@@ -132,7 +135,9 @@ namespace NineChronicles.Headless
                 }
 
                 app.UseRouting();
+                app.UseAuthentication();
                 app.UseAuthorization();
+                app.UseCookiePolicy();
                 app.UseEndpoints(endpoints =>
                 {
                     endpoints.MapControllers();
