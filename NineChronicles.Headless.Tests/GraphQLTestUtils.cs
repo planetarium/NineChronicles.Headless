@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests
 {
@@ -22,6 +23,8 @@ namespace NineChronicles.Headless.Tests
             {
                 services.AddSingleton(standaloneContext);
             }
+
+            services.AddLibplanetExplorer<NCAction>();
 
             var serviceProvider = services.BuildServiceProvider();
             return ExecuteQueryAsync<TObjectGraphType>(

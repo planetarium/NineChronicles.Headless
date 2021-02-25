@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using GraphQL.Server;
 using Microsoft.AspNetCore.Builder;
@@ -9,6 +10,7 @@ using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Middleware;
 using NineChronicles.Headless.Properties;
 using Serilog;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless
 {
@@ -91,15 +93,16 @@ namespace NineChronicles.Headless
                             options.EnableMetrics = true;
                             options.UnhandledExceptionDelegate = context =>
                             {
-                                Log.Error(
-                                    context.Exception,
-                                    context.ErrorMessage);
+                                Console.Error.WriteLine(context.Exception.ToString());
+                                Console.Error.WriteLine(context.ErrorMessage);
                             };
                         })
                     .AddSystemTextJson()
                     .AddWebSockets()
                     .AddDataLoader()
                     .AddGraphTypes(typeof(StandaloneSchema))
+                    .AddLibplanetExplorer<NCAction>()
+                    .AddUserContextBuilder<UserContextBuilder>()
                     .AddGraphQLAuthorization(
                         options => options.AddPolicy(
                             LocalPolicyKey,

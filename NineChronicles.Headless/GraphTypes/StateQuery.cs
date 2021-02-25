@@ -3,6 +3,7 @@ using GraphQL;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;

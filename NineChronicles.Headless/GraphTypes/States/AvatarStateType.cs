@@ -1,4 +1,5 @@
 using GraphQL.Types;
+using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States.Models;
 using NineChronicles.Headless.GraphTypes.States.Models.World;

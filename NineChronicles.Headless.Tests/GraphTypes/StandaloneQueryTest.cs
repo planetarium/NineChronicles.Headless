@@ -536,7 +536,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     timestamp
                     updatedAddresses
                     actions {{
-                        plainValue
+                        inspection
                     }}
                 }}
             }}";
@@ -576,7 +576,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var plainValue = tx["actions"]
                 .As<List<object>>()
                 .First()
-                .As<Dictionary<string, object>>()["plainValue"];
+                .As<Dictionary<string, object>>()["inspection"];
             Assert.Equal(transaction.Actions.First().PlainValue.Inspection, plainValue);
         }
 

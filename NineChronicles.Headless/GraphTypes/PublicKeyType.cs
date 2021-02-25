@@ -2,6 +2,7 @@ using GraphQL;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Crypto;
+using Libplanet.Explorer.GraphTypes;
 
 namespace NineChronicles.Headless.GraphTypes
 {

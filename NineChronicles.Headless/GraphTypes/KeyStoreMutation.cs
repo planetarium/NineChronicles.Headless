@@ -4,6 +4,7 @@ using GraphQL;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Crypto;
+using Libplanet.Explorer.GraphTypes;
 using Libplanet.KeyStore;
 
 namespace NineChronicles.Headless.GraphTypes
