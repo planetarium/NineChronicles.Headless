@@ -13,6 +13,7 @@ using Libplanet;
 using Libplanet.KeyStore;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.Executable.Commands;
+using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Properties;
 using Org.BouncyCastle.Security;
 using Sentry;
@@ -35,7 +36,9 @@ namespace NineChronicles.Headless.Executable
 #if SENTRY || ! DEBUG
             using var _ = SentrySdk.Init(ConfigureSentryOptions);
 #endif
-            await CoconaLiteApp.RunAsync<Program>(args);
+            await CoconaLiteApp.Create()
+                .ConfigureServices(services => services.AddSingleton<IConsole, StandardConsole>())
+                .RunAsync<Program>(args);
         }
 
         static void ConfigureSentryOptions(SentryOptions o)

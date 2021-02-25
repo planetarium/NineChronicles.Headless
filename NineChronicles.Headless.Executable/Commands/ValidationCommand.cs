@@ -1,11 +1,19 @@
 using Cocona;
 using Libplanet;
 using Libplanet.Crypto;
+using NineChronicles.Headless.Executable.IO;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
     public class ValidationCommand : CoconaLiteConsoleAppBase
     {
+        private readonly IConsole _console;
+
+        public ValidationCommand(IConsole console)
+        {
+            _console = console;
+        }
+
         [Command(Description = "Validate private key")]
         public int PrivateKey(
             [Argument(
@@ -20,6 +28,7 @@ namespace NineChronicles.Headless.Executable.Commands
             }
             catch
             {
+                _console.Error.WriteLine($"The given private key, '{privateKeyHex}', had an issue during parsing.");
                 return -1;
             }
         }
@@ -38,6 +47,7 @@ namespace NineChronicles.Headless.Executable.Commands
             }
             catch
             {
+                _console.Error.WriteLine($"The given public key, '{publicKeyHex}', had an issue during parsing.");
                 return -1;
             }
         }
