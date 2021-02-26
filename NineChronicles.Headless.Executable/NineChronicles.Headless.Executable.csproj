@@ -9,7 +9,7 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="AWSSDK.CloudWatchLogs" Version="3.5.0.37" />
+    <PackageReference Include="AWSSDK.CloudWatchLogs" Version="3.5.0.72" />
     <PackageReference Include="AWSSDK.CognitoIdentity" Version="3.5.1.2" />
     <PackageReference Include="Cocona.Lite" Version="1.3.*" />
     <PackageReference Include="Sentry.Serilog" Version="2.1.*" />
