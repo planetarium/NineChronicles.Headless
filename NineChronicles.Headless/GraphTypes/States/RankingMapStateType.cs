@@ -1,4 +1,5 @@
 using GraphQL.Types;
+using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 

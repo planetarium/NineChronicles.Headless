@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Security.Cryptography;
 using Bencodex;
 using Bencodex.Types;
@@ -8,6 +9,9 @@ using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
+using Libplanet.Explorer.GraphTypes;
+using Libplanet.Explorer.Interfaces;
+using Libplanet.Store;
 using Microsoft.Extensions.Configuration;
 using Libplanet.Tx;
 using Nekoyume.Action;
@@ -86,6 +90,11 @@ namespace NineChronicles.Headless.GraphTypes
                     BlockChain = standaloneContext.BlockChain,
                     Store = standaloneContext.Store,
                 }
+            );
+
+            Field<NonNullGraphType<Libplanet.Explorer.Queries.Query<NCAction>>>(
+                name: "chainQuery",
+                resolve: context => new { }
             );
 
             Field<NonNullGraphType<ValidationQuery>>(

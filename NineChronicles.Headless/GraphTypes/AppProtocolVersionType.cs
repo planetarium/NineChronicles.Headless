@@ -1,6 +1,7 @@
 using Bencodex;
 using Libplanet.Net;
 using GraphQL.Types;
+using Libplanet.Explorer.GraphTypes;
 
 namespace NineChronicles.Headless.GraphTypes
 {

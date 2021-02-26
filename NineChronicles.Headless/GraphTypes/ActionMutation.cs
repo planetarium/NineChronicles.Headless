@@ -11,6 +11,7 @@ using Nekoyume.Model.State;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using Libplanet.Explorer.GraphTypes;
 using Libplanet.Tx;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
