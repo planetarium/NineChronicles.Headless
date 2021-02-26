@@ -27,7 +27,7 @@ jobs:
             ${{ runner.os }}-build-
             ${{ runner.os }}-
       - name: Install dependencies
-        run: npm install @2fd/graphdoc
+        run: npm install -g @2fd/graphdoc
       - name: Build
         run: grpahqldoc -s schema.graphql -o doc
       - name: Deploy
