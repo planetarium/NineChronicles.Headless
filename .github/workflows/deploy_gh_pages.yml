@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: npm install -g @2fd/graphdoc
       - name: Build
-        run: grpahdoc -s schema.graphql -o doc
+        run: graphdoc -s schema.graphql -o doc
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
