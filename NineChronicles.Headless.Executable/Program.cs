@@ -12,6 +12,8 @@ using Cocona;
 using Libplanet;
 using Libplanet.KeyStore;
 using Microsoft.Extensions.Hosting;
+using NineChronicles.Headless.Executable.Commands;
+using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Properties;
 using Org.BouncyCastle.Security;
 using Sentry;
@@ -21,6 +23,7 @@ using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Act
 
 namespace NineChronicles.Headless.Executable
 {
+    [HasSubCommands(typeof(ValidationCommand), "validation")]
     public class Program : CoconaLiteConsoleAppBase
     {
         const string SentryDsn = "https://ceac97d4a7d34e7b95e4c445b9b5669e@o195672.ingest.sentry.io/5287621";
@@ -33,7 +36,9 @@ namespace NineChronicles.Headless.Executable
 #if SENTRY || ! DEBUG
             using var _ = SentrySdk.Init(ConfigureSentryOptions);
 #endif
-            await CoconaLiteApp.RunAsync<Program>(args);
+            await CoconaLiteApp.Create()
+                .ConfigureServices(services => services.AddSingleton<IConsole, StandardConsole>())
+                .RunAsync<Program>(args);
         }
 
         static void ConfigureSentryOptions(SentryOptions o)
@@ -47,7 +52,7 @@ namespace NineChronicles.Headless.Executable
 #endif
         }
 
-        [Command(Description = "Run headless application with options.")]
+        [PrimaryCommand]
         public async Task Run(
             bool noMiner = false,
             [Option("app-protocol-version", new[] { 'V' }, Description = "App protocol version token")]

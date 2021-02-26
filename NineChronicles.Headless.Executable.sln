@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.RocksDBStore", "L
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Stun", "Lib9c\.Libplanet\Libplanet.Stun\Libplanet.Stun.csproj", "{3B2875B4-B6C6-4929-B885-18A922110ED2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NineChronicles.Headless.Executable.Tests", "NineChronicles.Headless.Executable.Tests\NineChronicles.Headless.Executable.Tests.csproj", "{6E38A2CF-B93F-4CD5-9CAC-DE121998FF18}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -153,6 +155,18 @@ Global
 		{3B2875B4-B6C6-4929-B885-18A922110ED2}.Release|x64.Build.0 = Release|Any CPU
 		{3B2875B4-B6C6-4929-B885-18A922110ED2}.Release|x86.ActiveCfg = Release|Any CPU
 		{3B2875B4-B6C6-4929-B885-18A922110ED2}.Release|x86.Build.0 = Release|Any CPU
+		{6E38A2CF-B93F-4CD5-9CAC-DE121998FF18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E38A2CF-B93F-4CD5-9CAC-DE121998FF18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E38A2CF-B93F-4CD5-9CAC-DE121998FF18}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6E38A2CF-B93F-4CD5-9CAC-DE121998FF18}.Debug|x64.Build.0 = Debug|Any CPU
+		{6E38A2CF-B93F-4CD5-9CAC-DE121998FF18}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6E38A2CF-B93F-4CD5-9CAC-DE121998FF18}.Debug|x86.Build.0 = Debug|Any CPU
+		{6E38A2CF-B93F-4CD5-9CAC-DE121998FF18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E38A2CF-B93F-4CD5-9CAC-DE121998FF18}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E38A2CF-B93F-4CD5-9CAC-DE121998FF18}.Release|x64.ActiveCfg = Release|Any CPU
+		{6E38A2CF-B93F-4CD5-9CAC-DE121998FF18}.Release|x64.Build.0 = Release|Any CPU
+		{6E38A2CF-B93F-4CD5-9CAC-DE121998FF18}.Release|x86.ActiveCfg = Release|Any CPU
+		{6E38A2CF-B93F-4CD5-9CAC-DE121998FF18}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
