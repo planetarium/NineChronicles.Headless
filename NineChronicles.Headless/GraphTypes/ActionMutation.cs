@@ -22,11 +22,12 @@ namespace NineChronicles.Headless.GraphTypes
         public ActionMutation()
         {
             Field<NonNullGraphType<TxIdType>>("createAvatar",
+                description: "Create new avatar.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
                         Name = "avatarName",
-                        Description = "The character name."
+                        Description = "Avatar name."
                     },
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
@@ -91,16 +92,17 @@ namespace NineChronicles.Headless.GraphTypes
                 });
 
             Field<NonNullGraphType<TxIdType>>("hackAndSlash",
+                description: "Start stage to get material.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "avatarAddress",
-                        Description = "AvatarState address."
+                        Description = "Avatar address."
                     },
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "worldId",
-                        Description = "World ID."
+                        Description = "World ID containing the stage ID."
                     },
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
@@ -115,7 +117,7 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "rankingArenaAddress",
-                        Description = "AvatarState rankingMapAddress."
+                        Description = "Address of RankingMapState containing the avatar address."
                     },
                     new QueryArgument<ListGraphType<GuidGraphType>>
                     {
@@ -174,26 +176,27 @@ namespace NineChronicles.Headless.GraphTypes
                 });
 
             Field<NonNullGraphType<TxIdType>>("combinationEquipment",
+                description: "Combine new equipment.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "avatarAddress",
-                        Description = "AvatarState address."
+                        Description = "Avatar address to create equipment."
                     },
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "recipeId",
-                        Description = "EquipmentRecipe ID."
+                        Description = "EquipmentRecipe ID from EquipmentRecipeSheet."
                     },
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "slotIndex",
-                        Description =  "The index of combination slot. 0 ~ 3"
+                        Description =  "The empty combination slot index to combine equipment. 0 ~ 3"
                     },
                     new QueryArgument<IntGraphType>
                     {
                         Name = "subRecipeId",
-                        Description = "EquipmentSubRecipe ID."
+                        Description = "EquipmentSubRecipe ID from EquipmentSubRecipeSheet."
                     }
                 ),
                 resolve: context =>
@@ -229,26 +232,27 @@ namespace NineChronicles.Headless.GraphTypes
                 });
 
             Field<NonNullGraphType<TxIdType>>("itemEnhancement",
+                description: "Upgrade equipment.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "avatarAddress",
-                        Description = "AvatarState address."
+                        Description = "Avatar address to upgrade equipment."
                     },
                     new QueryArgument<NonNullGraphType<GuidGraphType>>
                     {
                         Name = "itemId",
-                        Description = "Equipment Guid."
+                        Description = "Equipment Guid for upgrade."
                     },
                     new QueryArgument<NonNullGraphType<GuidGraphType>>
                     {
                         Name = "materialId",
-                        Description = "Material Guid."
+                        Description = "Material Guid for equipment upgrade."
                     },
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "slotIndex",
-                        Description =  "The index of combination slot. 0 ~ 3"
+                        Description =  "The empty combination slot index to upgrade equipment. 0 ~ 3"
                     }
                 ),
                 resolve: context =>
@@ -285,26 +289,27 @@ namespace NineChronicles.Headless.GraphTypes
                 });
 
             Field<NonNullGraphType<TxIdType>>("buy",
+                description: "Buy registered shop item.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "sellerAgentAddress",
-                        Description = "ShopItem SellerAgentAddress."
+                        Description = "Agent address from registered ShopItem."
                     },
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "sellerAvatarAddress",
-                        Description = "ShopItem SellerAvatarAddress."
+                        Description = "Avatar address from registered ShopItem."
                     },
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "buyerAvatarAddress",
-                        Description = "AvatarState address."
+                        Description = "Avatar address."
                     },
                     new QueryArgument<NonNullGraphType<GuidGraphType>>
                     {
                         Name = "productId",
-                        Description = "ShopItem Guid."
+                        Description = "ShopItem product ID."
                     }),
                 resolve: context =>
                 {
@@ -339,21 +344,22 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 });
             Field<NonNullGraphType<TxIdType>>("sell",
+                description: "Register item to the shop.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "sellerAvatarAddress",
-                        Description = "AvatarState address."
+                        Description = "Avatar address to register shop item."
                     },
                     new QueryArgument<NonNullGraphType<GuidGraphType>>
                     {
                         Name = "itemId",
-                        Description = "Item Guid."
+                        Description = "Item Guid to register on shop."
                     },
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "price",
-                        Description = "Item price."
+                        Description = "Item selling price."
                     }),
                 resolve: context =>
                 {
@@ -389,11 +395,12 @@ namespace NineChronicles.Headless.GraphTypes
                 });
 
             Field<NonNullGraphType<TxIdType>>("dailyReward",
+                description: "Get daily reward.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "avatarAddress",
-                        Description = "AvatarState address."
+                        Description = "Avatar address to receive reward."
                     }
                 ),
                 resolve: context =>
@@ -424,21 +431,22 @@ namespace NineChronicles.Headless.GraphTypes
                 });
 
             Field<NonNullGraphType<TxIdType>>("combinationConsumable",
+                description: "Combine new Consumable.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "avatarAddress",
-                        Description = "AvatarState address."
+                        Description = "Avatar address to combine consumable."
                     },
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "recipeId",
-                        Description = "ConsumableRecipe ID."
+                        Description = "ConsumableRecipe ID from ConsumableRecipeSheet."
                     },
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "slotIndex",
-                        Description =  "The index of combination slot. 0 ~ 3"
+                        Description =  "The empty combination slot index to combine consumable. 0 ~ 3"
                     }
                 ),
                 resolve: context =>
