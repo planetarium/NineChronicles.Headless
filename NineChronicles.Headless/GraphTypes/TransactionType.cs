@@ -11,7 +11,7 @@ namespace NineChronicles.Headless.GraphTypes
         {
             Field<NonNullGraphType<TxIdType>>(
                 nameof(Transaction<T>.Id),
-                description: "A unique identifier derived from this transactions content.",
+                description: "A unique identifier derived from this transaction content.",
                 resolve: context => context.Source.Id
             );
             Field<NonNullGraphType<LongGraphType>>(
@@ -31,17 +31,17 @@ namespace NineChronicles.Headless.GraphTypes
             );
             Field<NonNullGraphType<AddressType>>(
                 nameof(Transaction<T>.Signer),
-                description: "An address of the account who signs this transaction.",
+                description: "An address of the account who signed this transaction.",
                 resolve: context => context.Source.Signer
             );
             Field<NonNullGraphType<StringGraphType>>(
                 nameof(Transaction<T>.Timestamp),
-                description: "The time this transaction is created and signed.",
+                description: "The time this transaction was created and signed.",
                 resolve: context => context.Source.Timestamp
             );
             Field<NonNullGraphType<ListGraphType<AddressType>>>(
                 nameof(Transaction<T>.UpdatedAddresses),
-                description: "Addresses whose states affected by Actions.",
+                description: "Addresses whose states were affected by Actions.",
                 resolve: context => context.Source.UpdatedAddresses
             );
             Field<NonNullGraphType<ListGraphType<ActionType<T>>>>(

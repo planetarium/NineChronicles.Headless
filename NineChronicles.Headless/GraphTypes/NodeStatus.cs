@@ -33,17 +33,17 @@ namespace NineChronicles.Headless.GraphTypes
         {
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "bootstrapEnded",
-                description: "Whether the current libplanet node had ended bootstrapping.",
+                description: "Whether the current libplanet node has ended bootstrapping.",
                 resolve: context => context.Source.BootstrapEnded
             );
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "preloadEnded",
-                description: "Whether the current libplanet node had ended preloading.",
+                description: "Whether the current libplanet node has ended preloading.",
                 resolve: context => context.Source.PreloadEnded
             );
             Field<NonNullGraphType<BlockHeaderType>>(
                 name: "tip",
-                description: "The block header of tip block from the current canonical chain."
+                description: "Block header of the tip block from the current canonical chain."
                 resolve: context => context.Source.BlockChain is { } blockChain
                     ? BlockHeaderType.FromBlock(blockChain.Tip)
                     : null
@@ -116,7 +116,7 @@ namespace NineChronicles.Headless.GraphTypes
             );
             Field<NonNullGraphType<BlockHeaderType>>(
                 name: "genesis",
-                description: "The block header from gensis block of current chain.",
+                description: "Block header of the genesis block from the current chain.",
                 resolve: context =>
                     context.Source.BlockChain is { } blockChain
                         ? BlockHeaderType.FromBlock(blockChain.Genesis)
