@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="./styles/graphdoc.css" />
+    <title>ProtectedPrivateKeyType</title>
+    <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700" rel="stylesheet"><link type="text/css" rel="stylesheet" href="./assets/code.css" /><link type="text/css" rel="stylesheet" href="./assets/require-by.css" />
+</head>
+<body class="slds-scrollable--y">
+    <nav class="slds-grid slds-grid--vertical slds-col--rule-right">
+        <header class="slds-p-around--medium slds-col slds-shrik slds-grow-none">
+            <button class="slds-button slds-button--icon slds-float--right js-toggle-navigation less-than-medium">
+                <i class="material-icons">close</i>
+            </button>
+                <h3 class="slds-text-heading--medium"><a href="./">GraphQL Schema</a></h3>
+            <div class="slds-p-top--small">
+                <input id="type-search" type="text" placeholder="Search a type" autofocus="" class="slds-input" />
+            </div>
+        </header>
+        <div id="navication-scroll" class="slds-scrollable--y slds-col slds-grow">
+<div class="slds-grid slds-grid--vertical slds-navigation-list--vertical">
+    <h4 class="slds-text-title--caps slds-p-around--medium">Schema</h4>
+    <ul>
+        <li  title="StandaloneQuery">
+            <a href="standalonequery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                StandaloneQuery
+            </a>
+        </li>
+        <li  title="StandaloneMutation">
+            <a href="standalonemutation.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                StandaloneMutation
+            </a>
+        </li>
+        <li  title="StandaloneSubscription">
+            <a href="standalonesubscription.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                StandaloneSubscription
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="slds-grid slds-grid--vertical slds-navigation-list--vertical">
+    <h4 class="slds-text-title--caps slds-p-around--medium">Scalars</h4>
+    <ul>
+        <li  title="Address">
+            <a href="address.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Address
+            </a>
+        </li>
+        <li  title="Boolean">
+            <a href="boolean.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Boolean
+            </a>
+        </li>
+        <li  title="ByteString">
+            <a href="bytestring.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ByteString
+            </a>
+        </li>
+        <li  title="Decimal">
+            <a href="decimal.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Decimal
+            </a>
+        </li>
+        <li  title="Guid">
+            <a href="guid.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Guid
+            </a>
+        </li>
+        <li  title="ID">
+            <a href="id.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ID
+            </a>
+        </li>
+        <li  title="Int">
+            <a href="int.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Int
+            </a>
+        </li>
+        <li  title="Long">
+            <a href="long.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Long
+            </a>
+        </li>
+        <li  title="String">
+            <a href="string.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                String
+            </a>
+        </li>
+        <li  title="TxId">
+            <a href="txid.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                TxId
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="slds-grid slds-grid--vertical slds-navigation-list--vertical">
+    <h4 class="slds-text-title--caps slds-p-around--medium">Enums</h4>
+    <ul>
+        <li  title="ElementalType">
+            <a href="elementaltype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ElementalType
+            </a>
+        </li>
+        <li  title="ItemSubType">
+            <a href="itemsubtype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ItemSubType
+            </a>
+        </li>
+        <li  title="ItemType">
+            <a href="itemtype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ItemType
+            </a>
+        </li>
+        <li  title="NotificationEnum">
+            <a href="notificationenum.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                NotificationEnum
+            </a>
+        </li>
+        <li  title="StatType">
+            <a href="stattype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                StatType
+            </a>
+        </li>
+        <li  title="__DirectiveLocation">
+            <a href="directivelocation.spec.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                __DirectiveLocation
+            </a>
+        </li>
+        <li  title="__TypeKind">
+            <a href="typekind.spec.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                __TypeKind
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="slds-grid slds-grid--vertical slds-navigation-list--vertical">
+    <h4 class="slds-text-title--caps slds-p-around--medium">Objects</h4>
+    <ul>
+        <li  title="Action">
+            <a href="action.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Action
+            </a>
+        </li>
+        <li  title="ActionMutation">
+            <a href="actionmutation.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ActionMutation
+            </a>
+        </li>
+        <li  title="ActivationStatusMutation">
+            <a href="activationstatusmutation.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ActivationStatusMutation
+            </a>
+        </li>
+        <li  title="ActivationStatusQuery">
+            <a href="activationstatusquery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ActivationStatusQuery
+            </a>
+        </li>
+        <li  title="AgentStateType">
+            <a href="agentstatetype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                AgentStateType
+            </a>
+        </li>
+        <li  title="AppProtocolVersionType">
+            <a href="appprotocolversiontype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                AppProtocolVersionType
+            </a>
+        </li>
+        <li  title="ArenaInfoType">
+            <a href="arenainfotype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ArenaInfoType
+            </a>
+        </li>
+        <li  title="ArenaRecordType">
+            <a href="arenarecordtype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ArenaRecordType
+            </a>
+        </li>
+        <li  title="AvatarStateType">
+            <a href="avatarstatetype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                AvatarStateType
+            </a>
+        </li>
+        <li  title="BlockHeader">
+            <a href="blockheader.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                BlockHeader
+            </a>
+        </li>
+        <li  title="CollectionMapType">
+            <a href="collectionmaptype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                CollectionMapType
+            </a>
+        </li>
+        <li  title="ConsumableType">
+            <a href="consumabletype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ConsumableType
+            </a>
+        </li>
+        <li  title="CostumeType">
+            <a href="costumetype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                CostumeType
+            </a>
+        </li>
+        <li  title="DecimalStatType">
+            <a href="decimalstattype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                DecimalStatType
+            </a>
+        </li>
+        <li  title="DifferentAppProtocolVersionEncounterType">
+            <a href="differentappprotocolversionencountertype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                DifferentAppProtocolVersionEncounterType
+            </a>
+        </li>
+        <li  title="EquipmentType">
+            <a href="equipmenttype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                EquipmentType
+            </a>
+        </li>
+        <li  title="InventoryType">
+            <a href="inventorytype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                InventoryType
+            </a>
+        </li>
+        <li  title="ItemUsableType">
+            <a href="itemusabletype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ItemUsableType
+            </a>
+        </li>
+        <li  title="KeyStoreMutation">
+            <a href="keystoremutation.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                KeyStoreMutation
+            </a>
+        </li>
+        <li  title="KeyStoreType">
+            <a href="keystoretype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                KeyStoreType
+            </a>
+        </li>
+        <li  title="MailBoxType">
+            <a href="mailboxtype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                MailBoxType
+            </a>
+        </li>
+        <li  title="MailType">
+            <a href="mailtype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                MailType
+            </a>
+        </li>
+        <li  title="MaterialType">
+            <a href="materialtype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                MaterialType
+            </a>
+        </li>
+        <li  title="NodeExceptionType">
+            <a href="nodeexceptiontype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                NodeExceptionType
+            </a>
+        </li>
+        <li  title="NodeStatusType">
+            <a href="nodestatustype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                NodeStatusType
+            </a>
+        </li>
+        <li  title="NotificationType">
+            <a href="notificationtype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                NotificationType
+            </a>
+        </li>
+        <li  title="PeerChainStateQuery">
+            <a href="peerchainstatequery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                PeerChainStateQuery
+            </a>
+        </li>
+        <li  title="PreloadStateExtraType">
+            <a href="preloadstateextratype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                PreloadStateExtraType
+            </a>
+        </li>
+        <li  title="PreloadStateType">
+            <a href="preloadstatetype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                PreloadStateType
+            </a>
+        </li>
+        <li  title="PrivateKeyType">
+            <a href="privatekeytype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                PrivateKeyType
+            </a>
+        </li>
+        <li class="slds-is-active" title="ProtectedPrivateKeyType">
+            <a href="protectedprivatekeytype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ProtectedPrivateKeyType
+            </a>
+        </li>
+        <li  title="PublicKeyType">
+            <a href="publickeytype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                PublicKeyType
+            </a>
+        </li>
+        <li  title="QuestListType">
+            <a href="questlisttype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                QuestListType
+            </a>
+        </li>
+        <li  title="RankingInfoType">
+            <a href="rankinginfotype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                RankingInfoType
+            </a>
+        </li>
+        <li  title="RankingMapStateType">
+            <a href="rankingmapstatetype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                RankingMapStateType
+            </a>
+        </li>
+        <li  title="ShopItemType">
+            <a href="shopitemtype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ShopItemType
+            </a>
+        </li>
+        <li  title="ShopStateType">
+            <a href="shopstatetype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ShopStateType
+            </a>
+        </li>
+        <li  title="StateQuery">
+            <a href="statequery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                StateQuery
+            </a>
+        </li>
+        <li  title="TipChanged">
+            <a href="tipchanged.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                TipChanged
+            </a>
+        </li>
+        <li  title="TransactionType_1">
+            <a href="transactiontype_1.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                TransactionType_1
+            </a>
+        </li>
+        <li  title="ValidationQuery">
+            <a href="validationquery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ValidationQuery
+            </a>
+        </li>
+        <li  title="WeeklyArenaStateType">
+            <a href="weeklyarenastatetype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                WeeklyArenaStateType
+            </a>
+        </li>
+        <li  title="WorldInformationType">
+            <a href="worldinformationtype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                WorldInformationType
+            </a>
+        </li>
+        <li  title="WorldType">
+            <a href="worldtype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                WorldType
+            </a>
+        </li>
+        <li  title="__Directive">
+            <a href="directive.spec.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                __Directive
+            </a>
+        </li>
+        <li  title="__EnumValue">
+            <a href="enumvalue.spec.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                __EnumValue
+            </a>
+        </li>
+        <li  title="__Field">
+            <a href="field.spec.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                __Field
+            </a>
+        </li>
+        <li  title="__InputValue">
+            <a href="inputvalue.spec.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                __InputValue
+            </a>
+        </li>
+        <li  title="__Schema">
+            <a href="schema.spec.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                __Schema
+            </a>
+        </li>
+        <li  title="__Type">
+            <a href="type.spec.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                __Type
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="slds-grid slds-grid--vertical slds-navigation-list--vertical">
+    <h4 class="slds-text-title--caps slds-p-around--medium">Directives</h4>
+    <ul>
+        <li  title="deprecated">
+            <a href="deprecated.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                deprecated
+            </a>
+        </li>
+        <li  title="include">
+            <a href="include.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                include
+            </a>
+        </li>
+        <li  title="skip">
+            <a href="skip.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                skip
+            </a>
+        </li>
+    </ul>
+</div>
+        </div>
+    </nav>
+    <main><section class="title slds-theme--inverse">
+    <div class="container slds-grid">
+        <div>
+        <button class="slds-button js-toggle-navigation less-than-medium">
+            <i class="material-icons slds-button__icon slds-button__icon--left">menu</i>
+            <span class="slds-text-title--caps">Types<span>
+        </button>
+        </div>
+        </div>
+    </div>
+    <div class="container">
+        <p class="slds-text-title--caps slds-text-color--weak">OBJECT</p>
+        <h1 class="slds-text-heading--large">ProtectedPrivateKeyType</h1>
+        <div class="slds-text-body--regular"><p>Protects a  with a passphrase (i.e., password).</p>
+</div>
+    </div>
+</section>
+<section>
+    <div class="container">
+        <h2 id="graphql-schema-definition" class="graphdoc-section__title slds-text-heading--medium slds-m-top--small">
+            <a href="#graphql-schema-definition">
+                <i class="material-icons">link</i>
+            </a>
+            GraphQL Schema definition
+        </h2>
+        <code class="highlight"><ul class="code" style="padding-left:28px"><li><span class="keyword operator ts">type</span> <span class="identifier">ProtectedPrivateKeyType</span> {</li><li></li><li><span class="tab"><span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>! </span></li><li>}</li></ul></code>
+    </div>
+</section>
+<section>
+    <div class="container">
+        <h2 id="require-by" class="graphdoc-section__title slds-text-heading--medium slds-m-top--small">
+            <a href="#require-by">
+                <i class="material-icons">link</i>
+            </a>
+            Require by
+        </h2>
+        <ul class="require-by"><li><a href="keystoremutation.doc.html" title="KeyStoreMutation - The interface to store s.  An appropriate implementation
+            should be used according to a running platform.">KeyStoreMutation<em>The interface to store s.  An appropriate implementation
+            should be used according to a running platform.</em></a><li><li><a href="keystoretype.doc.html" title="KeyStoreType - The interface to store s.  An appropriate implementation
+            should be used according to a running platform.">KeyStoreType<em>The interface to store s.  An appropriate implementation
+            should be used according to a running platform.</em></a><li></ul>
+    </div>
+</section>
+<footer>
+<div class="container slds-p-around--large">
+    <p class="slds-text-align--right slds-text-title--caps">
+        Generated with <a href="https://github.com/2fd/graphdoc#readme" target="_blank">graphdoc 2.4.0</a>
+    </p>
+</div>
+</footer>
+</main>
+    <script src="./scripts/focus-active.js"></script>
+    <script src="./scripts/filter-types.js"></script>
+    <script src="./scripts/toggle-navigation.js"></script>
+</body>
