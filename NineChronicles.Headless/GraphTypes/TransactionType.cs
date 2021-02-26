@@ -21,7 +21,7 @@ namespace NineChronicles.Headless.GraphTypes
             );
             Field<NonNullGraphType<PublicKeyType>>(
                 nameof(Transaction<T>.PublicKey),
-                description: "A PublicKey of the account who signs this transaction.",
+                description: "A PublicKey of the account who signed this transaction.",
                 resolve: context => context.Source.PublicKey
             );
             Field<NonNullGraphType<ByteStringType>>(

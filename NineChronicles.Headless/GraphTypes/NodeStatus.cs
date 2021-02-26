@@ -43,7 +43,7 @@ namespace NineChronicles.Headless.GraphTypes
             );
             Field<NonNullGraphType<BlockHeaderType>>(
                 name: "tip",
-                description: "Block header of the tip block from the current canonical chain."
+                description: "Block header of the tip block from the current canonical chain.",
                 resolve: context => context.Source.BlockChain is { } blockChain
                     ? BlockHeaderType.FromBlock(blockChain.Tip)
                     : null
