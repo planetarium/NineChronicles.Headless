@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet;
@@ -12,7 +13,10 @@ using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Libplanet.Crypto;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Session;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Nekoyume.Model.Item;
@@ -116,6 +120,15 @@ namespace NineChronicles.Headless.Controllers
 
             var privateKey = new PrivateKey(ByteUtil.ParseHex(request.PrivateKeyString));
             StandaloneContext.NineChroniclesNodeService.MinerPrivateKey = privateKey;
+            // FIXME: move sign in into login query. 
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, privateKey.ToAddress().ToHex()),
+                new Claim(ClaimTypes.Role, "User"),
+            };
+            var claimsIdentity = new ClaimsIdentity(claims, "Login");
+            _httpContextAccessor.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
+            _httpContextAccessor.HttpContext.Session.SetPrivateKey(privateKey);
             var msg = $"Private key set ({StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress()}).";
             Log.Information("SetPrivateKey: {Msg}", msg);
             return Ok(msg);

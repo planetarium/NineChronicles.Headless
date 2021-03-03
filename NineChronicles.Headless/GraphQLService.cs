@@ -88,6 +88,14 @@ namespace NineChronicles.Headless
                 services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                     .AddCookie();
 
+                services.AddSession(options =>
+                {
+                    options.Cookie.Name = ".NineChronicles.Session";
+                    options.Cookie.IsEssential = true;
+                });
+
+                services.AddDistributedMemoryCache();
+
                 services.AddHealthChecks();
 
                 services.AddControllers();
@@ -134,6 +142,7 @@ namespace NineChronicles.Headless
                     app.UseCors("AllowAllOrigins");
                 }
 
+                app.UseSession();
                 app.UseRouting();
                 app.UseAuthentication();
                 app.UseAuthorization();
