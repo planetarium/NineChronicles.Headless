@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,7 +10,7 @@ namespace NineChronicles.Headless.Tests
     {
         private readonly Dictionary<string, byte[]> _value;
 
-        public InMemorySession(string id, bool isAvailable, Dictionary<string, byte[]> value = null)
+        public InMemorySession(string id, bool isAvailable, Dictionary<string, byte[]>? value = null)
         {
             Id = id;
             IsAvailable = isAvailable;
@@ -55,7 +56,7 @@ namespace NineChronicles.Headless.Tests
         }
 
         /// <inheritdoc/>
-        public bool TryGetValue(string key, out byte[] value)
+        public bool TryGetValue(string key, out byte[]? value)
         {
             return _value.TryGetValue(key, out value);
         }

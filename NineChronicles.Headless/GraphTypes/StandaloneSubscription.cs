@@ -7,11 +7,13 @@ using System.Threading.Tasks;
 using BTAI;
 using GraphQL;
 using GraphQL.Resolvers;
+using GraphQL.Server.Authorization.AspNetCore;
 using GraphQL.Subscription;
 using GraphQL.Types;
 using Lib9c.Renderer;
 using Libplanet;
 using Libplanet.Blockchain;
+using Libplanet.Crypto;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Net;
 using Libplanet.Headless;
@@ -135,8 +137,9 @@ namespace NineChronicles.Headless.GraphTypes
                 Type = typeof(NonNullGraphType<NotificationType>),
                 Resolver = new FuncFieldResolver<Notification>(context => (context.Source as Notification)!),
                 Subscriber = new EventStreamResolver<Notification>(context =>
-                    StandaloneContext.NotificationSubject.AsObservable()),
-            });
+                    StandaloneContext.NotificationSubject.AsObservable()
+                        .Where(notification => notification.Receiver == context.UserContext[GraphQLService.UserContextPrivateKeyKey].As<PrivateKey>()?.ToAddress())),
+            }).AuthorizeWith(GraphQLService.UserPolicyKey);
             AddField(new EventStreamFieldType
             {
                 Name = "nodeException",

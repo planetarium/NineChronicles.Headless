@@ -26,7 +26,7 @@ namespace NineChronicles.Headless.Tests
 
             Assert.False(session.TryGetValue(ISessionExtensions.SessionPrivateKeyKey, out byte[] _));
             session.SetPrivateKey(privateKey);
-            Assert.True(session.TryGetValue(ISessionExtensions.SessionPrivateKeyKey, out byte[] bytes));
+            Assert.True(session.TryGetValue(ISessionExtensions.SessionPrivateKeyKey, out byte[]? bytes));
             Assert.Equal(privateKey.ByteArray, bytes);
         }
     }
