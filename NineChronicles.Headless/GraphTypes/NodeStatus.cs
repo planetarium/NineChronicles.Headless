@@ -8,6 +8,7 @@ using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blocks;
+using Libplanet.Explorer.GraphTypes;
 using Libplanet.Store;
 using Libplanet.Tx;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;

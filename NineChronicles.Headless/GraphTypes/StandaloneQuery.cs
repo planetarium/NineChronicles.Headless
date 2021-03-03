@@ -1,3 +1,5 @@
+#nullable enable
+using System;
 using System.Security.Cryptography;
 using Bencodex;
 using Bencodex.Types;
@@ -7,6 +9,9 @@ using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
+using Libplanet.Explorer.GraphTypes;
+using Libplanet.Explorer.Interfaces;
+using Libplanet.Store;
 using Microsoft.Extensions.Configuration;
 using Libplanet.Tx;
 using Nekoyume.Action;
@@ -21,7 +26,29 @@ namespace NineChronicles.Headless.GraphTypes
         {
             bool useSecretToken = configuration[GraphQLService.SecretTokenKey] is { };
 
-            Field<NonNullGraphType<StateQuery<NCAction>>>(name: "stateQuery", resolve: _ => standaloneContext.BlockChain);
+            Field<NonNullGraphType<StateQuery>>(name: "stateQuery", arguments: new QueryArguments(
+                new QueryArgument<ByteStringType>
+                {
+                    Name = "hash",
+                    Description = "Offset block hash for query.",
+                }),
+                resolve: context =>
+                {
+                    HashDigest<SHA256>? blockHash = context.GetArgument<byte[]>("hash") switch
+                    {
+                        byte[] bytes => new HashDigest<SHA256>(bytes),
+                        null => null,
+                    };
+
+                    IValue? GetState(Address address) =>
+                        standaloneContext.BlockChain.GetState(
+                            address,
+                            blockHash);
+
+                    return (AccountStateGetter)GetState;
+                }
+            );
+
             Field<ByteStringType>(
                 name: "state",
                 arguments: new QueryArguments(
@@ -63,6 +90,11 @@ namespace NineChronicles.Headless.GraphTypes
                     BlockChain = standaloneContext.BlockChain,
                     Store = standaloneContext.Store,
                 }
+            );
+
+            Field<NonNullGraphType<Libplanet.Explorer.Queries.Query<NCAction>>>(
+                name: "chainQuery",
+                resolve: context => new { }
             );
 
             Field<NonNullGraphType<ValidationQuery>>(

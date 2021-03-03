@@ -12,6 +12,7 @@ using GraphQL.Types;
 using Lib9c.Renderer;
 using Libplanet;
 using Libplanet.Blockchain;
+using Libplanet.Explorer.GraphTypes;
 using Libplanet.Net;
 using Libplanet.Headless;
 using Nekoyume.Action;

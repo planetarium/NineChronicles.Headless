@@ -167,8 +167,8 @@ namespace NineChronicles.Headless
                         bool isTargetBlock = blockPolicy is BlockPolicy bp
                                              // Copied from https://git.io/JLxNd
                                              && nextBlockIndex > 0
-                                             && nextBlockIndex <= bp.AuthorizedMinersState.ValidUntil
-                                             && nextBlockIndex % bp.AuthorizedMinersState.Interval == 0;
+                                             && nextBlockIndex <= bp.AuthorizedMinersState?.ValidUntil
+                                             && nextBlockIndex % bp.AuthorizedMinersState?.Interval == 0;
                         if (swarm.Running && (!authorizedMiner || isTargetBlock))
                         {
                             Log.Debug("Start mining.");
@@ -263,6 +263,12 @@ namespace NineChronicles.Headless
                 blockPolicy is BlockPolicy bp)
             {
                 bp.AuthorizedMinersState = new AuthorizedMinersState(ams);
+            }
+
+            if (authorizedMiner && blockPolicy is BlockPolicy {AuthorizedMinersState: null})
+            {
+                throw new Exception(
+                    "--authorized-miner was set but there are no AuthorizedMinerState.");
             }
         }
 

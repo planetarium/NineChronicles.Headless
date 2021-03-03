@@ -1,19 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
 using GraphQL.Server;
-using GraphQL.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Middleware;
 using NineChronicles.Headless.Properties;
 using Serilog;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless
 {
@@ -90,24 +87,22 @@ namespace NineChronicles.Headless
                 services.AddHealthChecks();
 
                 services.AddControllers();
-
-                services
-                    .AddSingleton<StandaloneSchema>()
-                    .AddGraphQL(
+                services.AddGraphQL(
                         (options, provider) =>
                         {
                             options.EnableMetrics = true;
                             options.UnhandledExceptionDelegate = context =>
                             {
-                                Log.Error(
-                                    context.Exception,
-                                    context.ErrorMessage);
+                                Console.Error.WriteLine(context.Exception.ToString());
+                                Console.Error.WriteLine(context.ErrorMessage);
                             };
                         })
                     .AddSystemTextJson()
                     .AddWebSockets()
                     .AddDataLoader()
                     .AddGraphTypes(typeof(StandaloneSchema))
+                    .AddLibplanetExplorer<NCAction>()
+                    .AddUserContextBuilder<UserContextBuilder>()
                     .AddGraphQLAuthorization(
                         options => options.AddPolicy(
                             LocalPolicyKey,
@@ -115,6 +110,7 @@ namespace NineChronicles.Headless
                                 p.RequireClaim(
                                     "role",
                                     "Admin")));
+                services.AddGraphTypes();
             }
 
             public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

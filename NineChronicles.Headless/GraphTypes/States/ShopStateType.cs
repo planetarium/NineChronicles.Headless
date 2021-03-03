@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using GraphQL;
 using GraphQL.Types;
+using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
@@ -15,9 +16,11 @@ namespace NineChronicles.Headless.GraphTypes.States
         {
             Field<NonNullGraphType<AddressType>>(
                 nameof(ShopState.address),
+                description: "Address of shop.",
                 resolve: context => context.Source.address);
             Field<NonNullGraphType<ListGraphType<ShopItemType>>>(
                 nameof(ShopState.Products),
+                description: "List of ShopItem.",
                 arguments: new QueryArguments(
                     new QueryArgument<IntGraphType>
                     {
