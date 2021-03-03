@@ -4,6 +4,7 @@ using System.Threading;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet.Crypto;
+using Libplanet.Explorer.GraphTypes;
 using Serilog;
 
 namespace NineChronicles.Headless.GraphTypes

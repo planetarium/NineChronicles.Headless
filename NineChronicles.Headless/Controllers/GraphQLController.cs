@@ -32,7 +32,6 @@ namespace NineChronicles.Headless.Controllers
         private ConcurrentDictionary<Address, long> NotificationRecords { get; }
             = new ConcurrentDictionary<Address, long>();
         private StandaloneContext StandaloneContext { get; }
-        private Address _address;
 
         public const string RunStandaloneEndpoint = "/run-standalone";
 
@@ -115,9 +114,8 @@ namespace NineChronicles.Headless.Controllers
 
             var privateKey = new PrivateKey(ByteUtil.ParseHex(request.PrivateKeyString));
             StandaloneContext.NineChroniclesNodeService.PrivateKey = privateKey;
-            _address = privateKey.PublicKey.ToAddress();
-            var msg = $"Private key set ({privateKey.PublicKey.ToAddress()}).";
-            Log.Debug(msg);
+            var msg = $"Private key set ({StandaloneContext.NineChroniclesNodeService.PrivateKey.PublicKey.ToAddress()}).";
+            Log.Information("SetPrivateKey: {Msg}", msg);
             return Ok(msg);
         }
 
@@ -249,34 +247,41 @@ namespace NineChronicles.Headless.Controllers
 
         private void NotifyAction(ActionBase.ActionEvaluation<ActionBase> eval)
         {
-            if (eval.OutputStates.UpdatedAddresses.Contains(_address))
+            if (StandaloneContext.NineChroniclesNodeService.PrivateKey is null)
             {
-                if (eval.Signer == _address)
+                Log.Information("PrivateKey is not set. please call SetPrivateKey() first.");
+                return;
+            }
+            Address address = StandaloneContext.NineChroniclesNodeService.PrivateKey.PublicKey.ToAddress();
+            if (eval.OutputStates.UpdatedAddresses.Contains(address) || eval.Signer == address)
+            {
+                if (eval.Signer == address)
                 {
                     var type = NotificationEnum.Refill;
                     var msg = string.Empty;
                     switch (eval.Action)
                     {
-                        case HackAndSlash3 has:
+                        case HackAndSlash4 has:
                             type = NotificationEnum.HAS;
                             msg = has.stageId.ToString(CultureInfo.InvariantCulture);
                             break;
-                        case CombinationConsumable2 _:
+                        case CombinationConsumable3 _:
                             type = NotificationEnum.CombinationConsumable;
                             break;
-                        case CombinationEquipment3 _:
+                        case CombinationEquipment4 _:
                             type = NotificationEnum.CombinationEquipment;
                             break;
-                        case Buy3 _:
+                        case Buy4 _:
                             type = NotificationEnum.Buyer;
                             break;
                     }
+                    Log.Information("NotifyAction: Type: {Type} MSG: {Msg}", type, msg);
                     var notification = new Notification(type, msg);
                     StandaloneContext.NotificationSubject.OnNext(notification);
                 }
                 else
                 {
-                    if (eval.Action is Buy3 buy && buy.sellerAgentAddress == _address)
+                    if (eval.Action is Buy4 buy && buy.sellerAgentAddress == address)
                     {
                         var notification = new Notification(NotificationEnum.Seller);
                         StandaloneContext.NotificationSubject.OnNext(notification);
