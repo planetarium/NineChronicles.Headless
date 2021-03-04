@@ -9,7 +9,7 @@
 - [How to run NineChronicles Headless on AWS EC2 instance using Docker](#how-to-run-ninechronicles-headless-on-aws-ec2-instance-using-docker)
   * [On Your AWS EC2 Instance](#on-your-aws-ec2-instance)
   * [Building Your Own Docker Image from Your Local](#building-your-own-docker-image-from-your-local)
-- [GraphQL Documentation](#graphql-documentation)
+- [Nine Chronicles GraphQL API Documentation](#nine-chronicles-graphql-api-documentation)
 
 ## Run
 
@@ -197,6 +197,8 @@ Usage: docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<TAGNAME>]
 
 ![Docker Push](https://i.imgur.com/NWUW9LS.png)
 
-## GraphQL Documentation
+## Nine Chronicles GraphQL API Documentation
 
-To use GraphQL query on NineChronicles Headless, refer to the [NineChronicles Headless GraphQL Documentation](http://api.nine-chronicles.com/).
+Check out [Nine Chronicles GraphQL API Tutorial](https://www.notion.so/Getting-Started-with-Nine-Chronicles-GraphQL-API-a14388a910844a93ab8dc0a2fe269f06) to get you started with using GraphQL API with NineChronicles Headless.
+
+For more information on the GraphQL API, refer to the [NineChronicles Headless GraphQL Documentation](http://api.nine-chronicles.com/).
