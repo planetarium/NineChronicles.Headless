@@ -1,5 +1,16 @@
 # NineChronicles Headless
 
+## Table of Contents
+
+- [Run](#run)
+- [Docker Build](#docker-build)
+  * [Command Line Options](#command-line-options)
+  * [Format](#format)
+- [How to run NineChronicles Headless on AWS EC2 instance using Docker](#how-to-run-ninechronicles-headless-on-aws-ec2-instance-using-docker)
+  * [On Your AWS EC2 Instance](#on-your-aws-ec2-instance)
+  * [Building Your Own Docker Image from Your Local](#building-your-own-docker-image-from-your-local)
+- [GraphQL Documentation](#graphql-documentation)
+
 ## Run
 
 ```
@@ -157,7 +168,7 @@ planetariumhq/ninechronicles-headless:latest \
 
 - [Docker Volumes Usage](https://docs.docker.com/storage/volumes/)
 
-### Appendix) Building Your Own Docker Image from Your Local
+### Building Your Own Docker Image from Your Local
 
 #### Pre-requisites
 
@@ -185,3 +196,7 @@ Usage: docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<TAGNAME>]
 - [Docker Push Guide](https://docs.docker.com/engine/reference/commandline/push/)
 
 ![Docker Push](https://i.imgur.com/NWUW9LS.png)
+
+## GraphQL Documentation
+
+To use GraphQL query on NineChronicles Headless, refer to the [NineChronicles Headless GraphQL Documentation](https://planetarium.github.io/NineChronicles.Headless/).
