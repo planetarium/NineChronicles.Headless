@@ -1,5 +1,16 @@
 # NineChronicles Headless
 
+## Table of Contents
+
+- [Run](#run)
+- [Docker Build](#docker-build)
+  * [Command Line Options](#command-line-options)
+  * [Format](#format)
+- [How to run NineChronicles Headless on AWS EC2 instance using Docker](#how-to-run-ninechronicles-headless-on-aws-ec2-instance-using-docker)
+  * [On Your AWS EC2 Instance](#on-your-aws-ec2-instance)
+  * [Building Your Own Docker Image from Your Local](#building-your-own-docker-image-from-your-local)
+- [Nine Chronicles GraphQL API Documentation](#nine-chronicles-graphql-api-documentation)
+
 ## Run
 
 ```
@@ -107,7 +118,7 @@ Formatting for `PrivateKey` or `Peer` follows the format in [Nekoyume Project RE
 
 #### 1. Pull ninechronicles-headless Docker image to your AWS EC2 instance from the [official Docker Hub repository](https://hub.docker.com/repository/docker/planetariumhq/ninechronicles-headless).
 
-* If you would like to build your own Docker image from your local, refer to the [appendix](#appendix-building-your-own-docker-image-from-your-local)
+* If you would like to build your own Docker image from your local, refer to [this section](#building-your-own-docker-image-from-your-local).
 
 ```
 $ docker pull planetariumhq/ninechronicles-headless:latest
@@ -157,7 +168,7 @@ planetariumhq/ninechronicles-headless:latest \
 
 - [Docker Volumes Usage](https://docs.docker.com/storage/volumes/)
 
-### Appendix) Building Your Own Docker Image from Your Local
+### Building Your Own Docker Image from Your Local
 
 #### Pre-requisites
 
@@ -185,3 +196,9 @@ Usage: docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<TAGNAME>]
 - [Docker Push Guide](https://docs.docker.com/engine/reference/commandline/push/)
 
 ![Docker Push](https://i.imgur.com/NWUW9LS.png)
+
+## Nine Chronicles GraphQL API Documentation
+
+Check out [Nine Chronicles GraphQL API Tutorial](https://www.notion.so/Getting-Started-with-Nine-Chronicles-GraphQL-API-a14388a910844a93ab8dc0a2fe269f06) to get you started with using GraphQL API with NineChronicles Headless.
+
+For more information on the GraphQL API, refer to the [NineChronicles Headless GraphQL Documentation](http://api.nine-chronicles.com/).
