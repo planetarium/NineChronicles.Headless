@@ -199,4 +199,4 @@ Usage: docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<TAGNAME>]
 
 ## GraphQL Documentation
 
-To use GraphQL query on NineChronicles Headless, refer to the [NineChronicles Headless GraphQL Documentation](https://planetarium.github.io/NineChronicles.Headless/).
+To use GraphQL query on NineChronicles Headless, refer to the [NineChronicles Headless GraphQL Documentation](http://api.nine-chronicles.com/).
