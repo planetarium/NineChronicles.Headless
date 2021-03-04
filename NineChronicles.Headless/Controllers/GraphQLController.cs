@@ -247,12 +247,12 @@ namespace NineChronicles.Headless.Controllers
 
         private void NotifyAction(ActionBase.ActionEvaluation<ActionBase> eval)
         {
-            if (StandaloneContext.NineChroniclesNodeService.PrivateKey is null)
+            if (StandaloneContext.NineChroniclesNodeService.MinerPrivateKey is null)
             {
                 Log.Information("PrivateKey is not set. please call SetPrivateKey() first.");
                 return;
             }
-            Address address = StandaloneContext.NineChroniclesNodeService.PrivateKey.PublicKey.ToAddress();
+            Address address = StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress();
             if (eval.OutputStates.UpdatedAddresses.Contains(address) || eval.Signer == address)
             {
                 if (eval.Signer == address)
