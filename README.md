@@ -118,7 +118,7 @@ Formatting for `PrivateKey` or `Peer` follows the format in [Nekoyume Project RE
 
 #### 1. Pull ninechronicles-headless Docker image to your AWS EC2 instance from the [official Docker Hub repository](https://hub.docker.com/repository/docker/planetariumhq/ninechronicles-headless).
 
-* If you would like to build your own Docker image from your local, refer to the [appendix](#appendix-building-your-own-docker-image-from-your-local)
+* If you would like to build your own Docker image from your local, refer to [this section](#building-your-own-docker-image-from-your-local).
 
 ```
 $ docker pull planetariumhq/ninechronicles-headless:latest
