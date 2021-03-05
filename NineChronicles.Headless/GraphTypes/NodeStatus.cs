@@ -137,7 +137,7 @@ namespace NineChronicles.Headless.GraphTypes
             while (true)
             {
                 yield return block;
-                if (block.PreviousHash is HashDigest<SHA256> prev)
+                if (block.PreviousHash is { } prev)
                 {
                     block = blockChain[prev];
                 }
