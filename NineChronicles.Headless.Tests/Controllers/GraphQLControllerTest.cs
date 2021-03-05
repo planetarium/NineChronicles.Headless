@@ -139,7 +139,7 @@ namespace NineChronicles.Headless.Tests.Controllers
                 PrivateKeyString = ByteUtil.Hex(privateKey.ByteArray),
             }));
 
-            Assert.Equal(_standaloneContext.NineChroniclesNodeService.PrivateKey, privateKey);
+            Assert.Equal(_standaloneContext.NineChroniclesNodeService.MinerPrivateKey, privateKey);
         }
         
         [Fact]
@@ -176,13 +176,14 @@ namespace NineChronicles.Headless.Tests.Controllers
         private void ConfigureNineChroniclesNodeService()
         {
             _standaloneContext.NineChroniclesNodeService = new NineChroniclesNodeService(
+                new PrivateKey(),
                 new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
                 {
                     MinimumDifficulty = 500000,
                     GenesisBlock = _standaloneContext.BlockChain.Genesis,
                     StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                     AppProtocolVersion = AppProtocolVersion.Sign(new PrivateKey(), 0),
-                    PrivateKey = new PrivateKey(),
+                    SwarmPrivateKey = new PrivateKey(),
                     Host = IPAddress.Loopback.ToString(),
                 },
                 null);

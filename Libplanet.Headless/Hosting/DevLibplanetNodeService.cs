@@ -76,9 +76,13 @@ namespace Libplanet.Headless.Hosting
             );
             
             _minerLoopAction = minerLoopAction;
+            var subSwarmPrivateKey = new PrivateKey();
+            Log.Debug(
+                "Address of sub-swarm is: {address}",
+                subSwarmPrivateKey.ToAddress());
             SubSwarm = new Swarm<T>(
                 SubChain,
-                new PrivateKey(), 
+                subSwarmPrivateKey, 
                 properties.AppProtocolVersion,
                 trustedAppProtocolVersionSigners: properties.TrustedAppProtocolVersionSigners,
                 host: "localhost",

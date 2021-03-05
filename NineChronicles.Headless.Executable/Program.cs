@@ -10,6 +10,7 @@ using Amazon.CognitoIdentity;
 using Amazon.Runtime;
 using Cocona;
 using Libplanet;
+using Libplanet.Crypto;
 using Libplanet.KeyStore;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.Executable.Commands;
@@ -63,10 +64,16 @@ namespace NineChronicles.Headless.Executable
             string host = null,
             [Option('P')]
             ushort? port = null,
+            [Option("swarm-private-key",
+                Description = "The private key used for signing messages and to specify your node. " +
+                              "If you leave this null, a randomly generated value will be used.")]
+            string swarmPrivateKeyString = null,
             [Option('D')]
             int minimumDifficulty = 5000000,
-            [Option("private-key")]
-            string privateKeyString = null,
+            [Option("miner-private-key",
+                Description = "The private key used for mining blocks. " +
+                              "Must not be null if you want to turn on mining with libplanet-node.")]
+            string minerPrivateKeyString = null,
             string storeType = null,
             string storePath = null,
             [Option("ice-server", new [] { 'I', })]
@@ -273,8 +280,8 @@ namespace NineChronicles.Headless.Executable
                         genesisBlockPath,
                         host,
                         port,
+                        swarmPrivateKeyString,
                         minimumDifficulty,
-                        privateKeyString,
                         storeType,
                         storePath,
                         100,
@@ -303,8 +310,12 @@ namespace NineChronicles.Headless.Executable
                     properties.LogActionRenders = true;
                 }
 
+                var minerPrivateKey = string.IsNullOrEmpty(minerPrivateKeyString)
+                    ? null
+                    : new PrivateKey(ByteUtil.ParseHex(minerPrivateKeyString));
                 var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
                 {
+                    MinerPrivateKey = minerPrivateKey,
                     Rpc = rpcProperties,
                     Libplanet = properties
                 };
@@ -325,7 +336,14 @@ namespace NineChronicles.Headless.Executable
                 {
                     if (!properties.NoMiner)
                     {
-                        nineChroniclesNodeService.PrivateKey = properties.PrivateKey;
+                        if (minerPrivateKey is null)
+                        {
+                            throw new CommandExitedException(
+                                "--miner-private-key must be present to turn on mining at libplanet node.",
+                                -1
+                            );
+                        }
+                        
                         nineChroniclesNodeService.StartMining();
                     }
 

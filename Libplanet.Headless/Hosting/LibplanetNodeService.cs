@@ -153,7 +153,7 @@ namespace Libplanet.Headless.Hosting
 
             Swarm = new Swarm<T>(
                 BlockChain,
-                Properties.PrivateKey,
+                Properties.SwarmPrivateKey,
                 Properties.AppProtocolVersion,
                 trustedAppProtocolVersionSigners: Properties.TrustedAppProtocolVersionSigners,
                 host: Properties.Host,
@@ -213,6 +213,13 @@ namespace Libplanet.Headless.Hosting
                 throw new InvalidOperationException(
                     $"An exception occurred during {nameof(StartMining)}(). " +
                     $"{nameof(Swarm)} is null.");
+            }
+
+            if (privateKey is null)
+            {
+                throw new InvalidOperationException(
+                    $"An exception occurred during {nameof(StartMining)}(). " +
+                    $"{nameof(privateKey)} is null.");
             }
 
             MiningCancellationTokenSource =
