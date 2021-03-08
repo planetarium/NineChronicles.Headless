@@ -25,7 +25,8 @@ namespace NineChronicles.Headless.GraphTypes
 
             FieldAsync<NonNullGraphType<BooleanGraphType>>(
                 "login",
-                "",
+                "Log in with the the given address and the given passphrase. " +
+                    "If the address doesn't exist in the key store, it will fail.",
                 new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
@@ -61,7 +62,7 @@ namespace NineChronicles.Headless.GraphTypes
                     return true;
                 });
 
-            FieldAsync<NonNullGraphType<BooleanGraphType>>("logout", "", resolve: async context =>
+            FieldAsync<NonNullGraphType<BooleanGraphType>>("logout", "Logout the session.", resolve: async context =>
             {
                 if (!_httpContextAccessor.HttpContext.User.HasClaim(ClaimTypes.Role, "User"))
                 {
