@@ -17,6 +17,12 @@ namespace NineChronicles.Headless.Executable.Tests.IO
         {
         }
 
+        public void SetNewLine(string newLine)
+        {
+            Out.NewLine = newLine;
+            Error.NewLine = newLine;
+        }
+
         public StringReader In { get; }
 
         public StringWriter Out { get; }

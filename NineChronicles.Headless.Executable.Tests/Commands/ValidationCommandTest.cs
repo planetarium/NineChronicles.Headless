@@ -13,6 +13,8 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         {
             _console = new StringIOConsole();
             _command = new ValidationCommand(_console);
+
+            _console.SetNewLine("\n");
         }
 
         [Theory]
