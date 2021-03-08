@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Types;
+using Libplanet.KeyStore;
 using Microsoft.Extensions.DependencyInjection;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -23,6 +25,8 @@ namespace NineChronicles.Headless.Tests
             {
                 services.AddSingleton(standaloneContext);
             }
+
+            services.AddSingleton(standaloneContext?.KeyStore ?? CreateRandomWeb3KeyStore());
 
             services.AddLibplanetExplorer<NCAction>();
 
@@ -53,6 +57,11 @@ namespace NineChronicles.Headless.Tests
                 UserContext = userContext,
                 Root = source,
             });
+        }
+
+        public static Web3KeyStore CreateRandomWeb3KeyStore()
+        {
+            return new Web3KeyStore(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
         }
     }
 }
