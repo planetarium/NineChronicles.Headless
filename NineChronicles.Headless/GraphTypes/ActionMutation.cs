@@ -150,7 +150,7 @@ namespace NineChronicles.Headless.GraphTypes
                         List<Guid> equipmentIds = context.GetArgument<List<Guid>>("equipmentIds") ?? new List<Guid>();
                         List<Guid> consumableIds = context.GetArgument<List<Guid>>("consumableIds") ?? new List<Guid>();
 
-                        var action = new HackAndSlash4
+                        var action = new HackAndSlash
                         {
                             avatarAddress = avatarAddress,
                             worldId = worldId,
@@ -210,7 +210,7 @@ namespace NineChronicles.Headless.GraphTypes
                         int? subRecipeId = context.GetArgument<int?>("subRecipeId");
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
 
-                        var action = new CombinationEquipment4
+                        var action = new CombinationEquipment
                         {
                             AvatarAddress = avatarAddress,
                             RecipeId = recipeId,
@@ -267,7 +267,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
                         int slotIndex = context.GetArgument<int>("slotIndex");
 
-                        var action = new ItemEnhancement5
+                        var action = new ItemEnhancement
                         {
                             avatarAddress = avatarAddress,
                             slotIndex = slotIndex,
@@ -323,7 +323,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Address sellerAvatarAddress = context.GetArgument<Address>("sellerAvatarAddress");
                         Guid productId = context.GetArgument<Guid>("productId");
 
-                        var action = new Buy4
+                        var action = new Buy
                         {
                             buyerAvatarAddress = buyerAvatarAddress,
                             sellerAgentAddress = sellerAgentAddress,
@@ -375,7 +375,7 @@ namespace NineChronicles.Headless.GraphTypes
                         ).Currency;
                         FungibleAssetValue price = currency * context.GetArgument<int>("price");
 
-                        var action = new Sell3
+                        var action = new Sell
                         {
                             sellerAvatarAddress = sellerAvatarAddress,
                             itemId = itemId,
@@ -459,7 +459,7 @@ namespace NineChronicles.Headless.GraphTypes
                         int slotIndex = context.GetArgument<int>("slotIndex");
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
 
-                        var action = new CombinationConsumable3
+                        var action = new CombinationConsumable
                         {
                             AvatarAddress = avatarAddress,
                             recipeId = recipeId,

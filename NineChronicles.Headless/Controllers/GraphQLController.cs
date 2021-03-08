@@ -261,17 +261,17 @@ namespace NineChronicles.Headless.Controllers
                     var msg = string.Empty;
                     switch (eval.Action)
                     {
-                        case HackAndSlash4 has:
+                        case HackAndSlash has:
                             type = NotificationEnum.HAS;
                             msg = has.stageId.ToString(CultureInfo.InvariantCulture);
                             break;
-                        case CombinationConsumable3 _:
+                        case CombinationConsumable _:
                             type = NotificationEnum.CombinationConsumable;
                             break;
-                        case CombinationEquipment4 _:
+                        case CombinationEquipment _:
                             type = NotificationEnum.CombinationEquipment;
                             break;
-                        case Buy4 _:
+                        case Buy _:
                             type = NotificationEnum.Buyer;
                             break;
                     }
