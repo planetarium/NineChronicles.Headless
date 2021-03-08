@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using GraphQL;
 using Libplanet;
 using Libplanet.Crypto;
 using Libplanet.KeyStore;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using NineChronicles.Headless.GraphTypes;
 using Xunit;
 
@@ -29,6 +32,17 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 Session = new InMemorySession(string.Empty, true),
             };
+            
+            var authServiceMock = new Mock<IAuthenticationService>();
+            authServiceMock
+                .Setup(_ => _.SignInAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<AuthenticationProperties>()))
+                .Returns(Task.FromResult((object)null));
+            var serviceProviderMock = new Mock<IServiceProvider>();
+            serviceProviderMock
+                .Setup(_ => _.GetService(typeof(IAuthenticationService)))
+                .Returns(authServiceMock.Object);
+            _httpContextAccessor.HttpContext.RequestServices = serviceProviderMock.Object;
+
             _privateKey = new PrivateKey();
             _passphrase = Guid.NewGuid().ToString();
             _keyStore.Add(ProtectedPrivateKey.Protect(_privateKey, _passphrase));
