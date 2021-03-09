@@ -37,7 +37,7 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
             );
             Field<NonNullGraphType<LongGraphType>>(
                 nameof(ShopItem.ExpiredBlockIndex),
-                description: "Block index at the shop item expiration.",
+                description: "Block index limit that locks the shop item. If the current block index is greater than the ExpiredBlockIndex, the item cannot be traded.",
                 resolve: context => context.Source.ExpiredBlockIndex
             );
         }

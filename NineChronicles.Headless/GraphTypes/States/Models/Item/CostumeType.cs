@@ -17,7 +17,7 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
             );
             Field<NonNullGraphType<LongGraphType>>(
                 nameof(Costume.RequiredBlockIndex),
-                description: "Block index at the costume can use."
+                description: "Block index limit that locks the costume item. If the current block index is less than the RequiredBlockIndex, the item cannot be used."
             );
         }
     }

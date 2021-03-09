@@ -308,7 +308,7 @@ type CostumeType {
   # Item category.
   itemType: ItemType!
 
-  # Block index at the costume can use.
+  # Block index limit that locks the costume item. If the current block index is less than the RequiredBlockIndex, the item cannot be used.
   requiredBlockIndex: Long!
 }
 
@@ -408,7 +408,7 @@ type ShopItemType {
   # Costume information.
   costume: CostumeType
 
-  # Block index at the shop item expiration.
+  # Block index limit that locks the shop item. If the current block index is greater than the ExpiredBlockIndex, the item cannot be traded.
   expiredBlockIndex: Long!
 
   # Equipment / Consumable information.
