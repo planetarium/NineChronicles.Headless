@@ -304,7 +304,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (HackAndSlash4) tx.Actions.First().InnerAction;
+            var action = (HackAndSlash) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(worldId, action.worldId);
             Assert.Equal(stageId, action.stageId);
@@ -417,7 +417,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (Buy4) tx.Actions.First().InnerAction;
+            var action = (Buy) tx.Actions.First().InnerAction;
             Assert.Equal(productId, action.productId);
             Assert.Equal(sellerAgentAddress, action.sellerAgentAddress);
             Assert.Equal(sellerAvatarAddress, action.sellerAvatarAddress);
@@ -451,7 +451,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (CombinationEquipment4) tx.Actions.First().InnerAction;
+            var action = (CombinationEquipment) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(recipeId, action.RecipeId);
             Assert.Equal(slotIndex, action.SlotIndex);
@@ -509,7 +509,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (ItemEnhancement5) tx.Actions.First().InnerAction;
+            var action = (ItemEnhancement) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(itemId, action.itemId);
             Assert.Equal(materialId, action.materialId);
@@ -560,7 +560,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (Sell3) tx.Actions.First().InnerAction;
+            var action = (Sell) tx.Actions.First().InnerAction;
             Assert.Equal(sellerAvatarAddress, action.sellerAvatarAddress);
             Assert.Equal(itemId, action.itemId);
             var currency = new GoldCurrencyState(
@@ -612,7 +612,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (CombinationConsumable3) tx.Actions.First().InnerAction;
+            var action = (CombinationConsumable) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(recipeId, action.recipeId);
             Assert.Equal(slotIndex, action.slotIndex);
