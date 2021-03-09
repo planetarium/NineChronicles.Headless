@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link type="text/css" rel="stylesheet" href="./styles/graphdoc.css" />
-    <title>ItemUsableType</title>
+    <title>BigInt</title>
     <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700" rel="stylesheet"><link type="text/css" rel="stylesheet" href="./assets/code.css" /><link type="text/css" rel="stylesheet" href="./assets/require-by.css" />
 </head>
 <body class="slds-scrollable--y">
@@ -50,7 +50,7 @@
                 Address
             </a>
         </li>
-        <li  title="BigInt">
+        <li class="slds-is-active" title="BigInt">
             <a href="bigint.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 BigInt
             </a>
@@ -245,7 +245,7 @@
                 InventoryType
             </a>
         </li>
-        <li class="slds-is-active" title="ItemUsableType">
+        <li  title="ItemUsableType">
             <a href="itemusabletype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 ItemUsableType
             </a>
@@ -465,8 +465,8 @@
         </div>
     </div>
     <div class="container">
-        <p class="slds-text-title--caps slds-text-color--weak">OBJECT</p>
-        <h1 class="slds-text-heading--large">ItemUsableType</h1>
+        <p class="slds-text-title--caps slds-text-color--weak">SCALAR</p>
+        <h1 class="slds-text-heading--large">BigInt</h1>
         <div class="slds-text-body--regular"></div>
     </div>
 </section>
@@ -478,7 +478,7 @@
             </a>
             GraphQL Schema definition
         </h2>
-        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">ItemUsableType</span> {</li><li></li><li><span class="tab"><span class="comment line">#   Item elemental.</span></span></li><li><span class="tab"><span class="meta">elementalType</span>: <a class="support type" href="elementaltype.doc.html">ElementalType</a>! </span></li><li></li><li><span class="tab"><span class="comment line">#   Grade from ItemSheet.</span></span></li><li><span class="tab"><span class="meta">grade</span>: <a class="support type" href="int.doc.html">Int</a>! </span></li><li></li><li><span class="tab"><span class="comment line">#   ID from ItemSheet.</span></span></li><li><span class="tab"><span class="meta">id</span>: <a class="support type" href="int.doc.html">Int</a>! </span></li><li></li><li><span class="tab"><span class="comment line">#   Guid of item.</span></span></li><li><span class="tab"><span class="meta">itemId</span>: <a class="support type" href="guid.doc.html">Guid</a>! </span></li><li></li><li><span class="tab"><span class="comment line">#   Item subcategory.</span></span></li><li><span class="tab"><span class="meta">itemSubType</span>: <a class="support type" href="itemsubtype.doc.html">ItemSubType</a>! </span></li><li></li><li><span class="tab"><span class="comment line">#   Item category.</span></span></li><li><span class="tab"><span class="meta">itemType</span>: <a class="support type" href="itemtype.doc.html">ItemType</a>! </span></li><li>}</li></ul></code>
+        <code class="highlight"><ul class="code" style="padding-left:28px"><li><span class="keyword operator ts">scalar</span> <span class="identifier">BigInt</span></li></ul></code>
     </div>
 </section>
 <section>
@@ -489,7 +489,7 @@
             </a>
             Require by
         </h2>
-        <ul class="require-by"><li><a href="shopitemtype.doc.html" title="ShopItemType - ">ShopItemType<em></em></a><li></ul>
+        <ul class="require-by"><li><a href="block.doc.html" title="Block - ">Block<em></em></a><li></ul>
     </div>
 </section>
 <footer>
