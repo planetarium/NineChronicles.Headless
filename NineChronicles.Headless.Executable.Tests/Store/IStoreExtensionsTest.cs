@@ -35,6 +35,16 @@ namespace NineChronicles.Headless.Executable.Tests.Store
             (store as IDisposable)?.Dispose();
         }
 
+        [Theory]
+        [InlineData(StoreType.Default)]
+        [InlineData(StoreType.RocksDb)]
+        public void GetGenesisBlock_ThrowsInvalidOperationException_IfChainIdNotExist(StoreType storeType)
+        {
+            IStore store = storeType.CreateStore(_storePath);
+            Assert.Throws<InvalidOperationException>(() => store.GetGenesisBlock<NCAction>());
+            (store as IDisposable)?.Dispose();
+        }
+
         public void Dispose()
         {
             if (Directory.Exists(_storePath))
