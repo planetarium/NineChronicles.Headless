@@ -23,7 +23,7 @@ namespace NineChronicles.Headless.Executable.Tests.Store
         [InlineData(StoreType.RocksDb)]
         public void GetGenesisBlock(StoreType storeType)
         {
-            IStore store = storeType.ToStoreConstructor()(_storePath);
+            IStore store = storeType.CreateStore(_storePath);
             Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock();
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);

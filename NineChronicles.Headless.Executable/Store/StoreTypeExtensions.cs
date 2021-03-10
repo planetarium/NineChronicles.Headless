@@ -6,10 +6,10 @@ namespace NineChronicles.Headless.Executable.Store
 {
     public static class StoreTypeExtensions
     {
-        public static Func<string, IStore> ToStoreConstructor(this StoreType storeType) => storeType switch
+        public static IStore CreateStore(this StoreType storeType, string storePath) => storeType switch
         {
-            StoreType.RocksDb => path => new RocksDBStore(path),
-            StoreType.Default => path => new DefaultStore(path),
+            StoreType.RocksDb => new RocksDBStore(storePath),
+            StoreType.Default => new DefaultStore(storePath),
             _ => throw new ArgumentOutOfRangeException(nameof(storeType))
         };
     }

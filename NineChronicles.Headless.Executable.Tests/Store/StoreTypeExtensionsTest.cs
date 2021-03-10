@@ -21,7 +21,7 @@ namespace NineChronicles.Headless.Executable.Tests.Store
         [InlineData(StoreType.Default, typeof(DefaultStore))]
         public void ToStoreConstructor(StoreType storeType, Type expectedType)
         {
-            IStore store = storeType.ToStoreConstructor()(_storePath);
+            IStore store = storeType.CreateStore(_storePath);
             Assert.IsType(expectedType, store);
             (store as IDisposable)?.Dispose();
         }

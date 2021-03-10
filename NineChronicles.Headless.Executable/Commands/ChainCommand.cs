@@ -46,7 +46,7 @@ namespace NineChronicles.Headless.Executable.Commands
             const int minimumDifficulty = 5000000, maximumTransactions = 100;
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<PolymorphicAction<ActionBase>>();
             IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy(minimumDifficulty, maximumTransactions);
-            IStore store = storeType.ToStoreConstructor()(storePath);
+            IStore store = storeType.CreateStore(storePath);
             Block<NCAction> genesisBlock = store.GetGenesisBlock<NCAction>();
             BlockChain<NCAction> chain = new BlockChain<NCAction>(
                 blockPolicy,

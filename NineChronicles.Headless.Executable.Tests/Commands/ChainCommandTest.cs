@@ -33,7 +33,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         public void Tip(StoreType storeType)
         {
             Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock();
-            IStore store = storeType.ToStoreConstructor()(_storePath);
+            IStore store = storeType.CreateStore(_storePath);
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
             store.PutBlock(genesisBlock);
