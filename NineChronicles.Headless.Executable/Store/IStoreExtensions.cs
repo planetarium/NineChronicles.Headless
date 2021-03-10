@@ -14,7 +14,7 @@ namespace NineChronicles.Headless.Executable.Store
         public static Block<T> GetGenesisBlock<T>(this IStore store)
             where T : IAction, new()
         {
-            var chainId = store.GetCanonicalChainId();
+            Guid? chainId = store.GetCanonicalChainId();
             if (chainId is null)
             {
                 throw new ArgumentException("The store doesn't have genesis block.", nameof(store));
