@@ -73,8 +73,10 @@ namespace NineChronicles.Headless.Controllers
                     StandaloneContext.NineChroniclesNodeService.Swarm.BlockChain;
                 StandaloneContext.NineChroniclesNodeService.BlockRenderer.EveryBlock()
                     .Subscribe(pair => NotifyRefillActionPoint(pair.NewTip.Index));
-                StandaloneContext.NineChroniclesNodeService.ActionRenderer.EveryRender<ActionBase>()
-                    .Subscribe(NotifyAction);
+
+                // FIXME We disabled notifications due to an issue where the action is repeatedly executed during reorg
+                // StandaloneContext.NineChroniclesNodeService.ActionRenderer.EveryRender<ActionBase>()
+                //    .Subscribe(NotifyAction);
                 nineChroniclesNodeHostBuilder
                     .RunConsoleAsync()
                     .ContinueWith(task =>
