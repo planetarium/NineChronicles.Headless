@@ -17,7 +17,7 @@ namespace NineChronicles.Headless.Executable.Store
             Guid? chainId = store.GetCanonicalChainId();
             if (chainId is null)
             {
-                throw new ArgumentException("The store doesn't have genesis block.", nameof(store));
+                throw new InvalidOperationException("The store doesn't have genesis block.");
             }
 
             HashDigest<SHA256> genesisBlockHash = store.IterateIndexes(chainId.Value).First();
