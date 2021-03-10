@@ -10,6 +10,11 @@ tocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [-
 ] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--help] [--version]
 
 Run headless application with options.
+=======
+
+Commands:
+  validation
+  chain
 
 Options:
   --no-miner
