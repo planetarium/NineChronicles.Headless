@@ -22,6 +22,7 @@ NineChronicles.Headless.Executable
 
 Commands:
   validation
+  chain
 
 Options:
   --no-miner
