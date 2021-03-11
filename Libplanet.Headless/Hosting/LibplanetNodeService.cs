@@ -271,7 +271,7 @@ namespace Libplanet.Headless.Hosting
             }
             else if (type == "monorocksdb")
             {
-                 try
+                try
                 {
                     store = new RocksDBStore.MonoRocksDBStore(
                         path,
