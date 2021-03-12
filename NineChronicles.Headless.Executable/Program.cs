@@ -12,6 +12,7 @@ using Cocona;
 using Cocona.Lite;
 using Libplanet;
 using Libplanet.Crypto;
+using Libplanet.Extensions.Cocona.Commands;
 using Libplanet.KeyStore;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.Executable.Commands;
@@ -27,6 +28,7 @@ namespace NineChronicles.Headless.Executable
 {
     [HasSubCommands(typeof(ValidationCommand), "validation")]
     [HasSubCommands(typeof(ChainCommand), "chain")]
+    [HasSubCommands(typeof(KeyCommand), "key")]
     public class Program : CoconaLiteConsoleAppBase
     {
         const string SentryDsn = "https://ceac97d4a7d34e7b95e4c445b9b5669e@o195672.ingest.sentry.io/5287621";
