@@ -50,12 +50,12 @@ namespace Libplanet.Extensions.Cocona.Commands
                 Description = "Take passphrase through this option instead of prompt."
             )]
             string? passphrase = null,
-            bool force = false
+            bool noPassphrase = false
         )
         {
             try
             {
-                if (!force)
+                if (!noPassphrase)
                 {
                     UnprotectKey(keyId, passphrase);
                 }
