@@ -42,7 +42,11 @@ namespace NineChronicles.Headless.Executable
             using var _ = SentrySdk.Init(ConfigureSentryOptions);
 #endif
             await CoconaLiteApp.Create()
-                .ConfigureServices(services => services.AddSingleton<IConsole, StandardConsole>())
+                .ConfigureServices(services =>
+                {
+                    services.AddSingleton<IConsole, StandardConsole>();
+                    services.AddSingleton<IKeyStore>(Web3KeyStore.DefaultKeyStore);
+                })
                 .RunAsync<Program>(args);
         }
 

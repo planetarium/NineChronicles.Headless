@@ -12,9 +12,9 @@ namespace Libplanet.Extensions.Cocona.Commands
 
     public class KeyCommand
     {
-        public KeyCommand()
+        public KeyCommand(IKeyStore keyStore)
         {
-            KeyStore = Web3KeyStore.DefaultKeyStore;
+            KeyStore = keyStore;
         }
 
         public IKeyStore KeyStore { get; }
