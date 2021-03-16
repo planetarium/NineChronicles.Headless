@@ -262,6 +262,23 @@ namespace Libplanet.Headless.Hosting
                     Log.Error("RocksDB is not available. DefaultStore will be used. {0}", e);
                 }
             }
+            else if (type == "monorocksdb")
+            {
+                 try
+                {
+                    store = new RocksDBStore.MonoRocksDBStore(
+                        path,
+                        maxTotalWalSize: 16 * 1024 * 1024,
+                        maxLogFileSize: 16 * 1024 * 1024,
+                        keepLogFileNum: 1
+                    );
+                    Log.Debug("MonoRocksDB is initialized.");
+                }
+                catch (TypeInitializationException e)
+                {
+                    Log.Error("MonoRocksDB is not available. DefaultStore will be used. {0}", e);
+                }
+            }
             else
             {
                 var message = type is null
