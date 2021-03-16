@@ -1,3 +1,5 @@
+using NineChronicles.Headless.Executable.Commands;
+
 #nullable enable
 // Copied from https://git.io/Jqc0q
 namespace Libplanet.Extensions.Cocona.Commands
@@ -10,6 +12,7 @@ namespace Libplanet.Extensions.Cocona.Commands
     using Libplanet.Crypto;
     using Libplanet.KeyStore;
 
+    [HasSubCommands(typeof(ConversionCommand), "convert")]
     public class KeyCommand
     {
         public KeyCommand(IKeyStore keyStore)
