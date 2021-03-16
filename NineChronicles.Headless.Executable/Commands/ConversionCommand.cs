@@ -1,5 +1,6 @@
 using System;
 using Cocona;
+using Cocona.Help;
 using Libplanet;
 using Libplanet.Crypto;
 using NineChronicles.Headless.Executable.IO;
@@ -32,6 +33,12 @@ namespace NineChronicles.Headless.Executable.Commands
             };
 
             _console.Out.WriteLine(output);
+        }
+
+        [PrimaryCommand]
+        public void Help([FromService] ICoconaHelpMessageBuilder helpMessageBuilder)
+        {
+            _console.Out.WriteLine(helpMessageBuilder.BuildAndRenderForCurrentContext());
         }
     }
 }
