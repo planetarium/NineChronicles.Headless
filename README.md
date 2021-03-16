@@ -24,7 +24,6 @@ Commands:
   validation
   chain
   key
-  conversion
 
 Options:
   --no-miner
