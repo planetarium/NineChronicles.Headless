@@ -1,3 +1,5 @@
+using NineChronicles.Headless.Executable.Commands.Key;
+
 #nullable enable
 // Copied from https://git.io/Jqc0q
 namespace Libplanet.Extensions.Cocona.Commands
@@ -10,11 +12,12 @@ namespace Libplanet.Extensions.Cocona.Commands
     using Libplanet.Crypto;
     using Libplanet.KeyStore;
 
+    [HasSubCommands(typeof(ConversionCommand), "convert")]
     public class KeyCommand
     {
-        public KeyCommand()
+        public KeyCommand(IKeyStore keyStore)
         {
-            KeyStore = Web3KeyStore.DefaultKeyStore;
+            KeyStore = keyStore;
         }
 
         public IKeyStore KeyStore { get; }
@@ -49,12 +52,16 @@ namespace Libplanet.Extensions.Cocona.Commands
                 ValueName = "PASSPHRASE",
                 Description = "Take passphrase through this option instead of prompt."
             )]
-            string? passphrase = null
+            string? passphrase = null,
+            bool noPassphrase = false
         )
         {
             try
             {
-                UnprotectKey(keyId, passphrase);
+                if (!noPassphrase)
+                {
+                    UnprotectKey(keyId, passphrase);
+                }
                 KeyStore.Remove(keyId);
             }
             catch (NoKeyException)
