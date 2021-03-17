@@ -115,8 +115,8 @@ namespace NineChronicles.Headless.Controllers
             }
 
             var privateKey = new PrivateKey(ByteUtil.ParseHex(request.PrivateKeyString));
-            StandaloneContext.NineChroniclesNodeService.PrivateKey = privateKey;
-            var msg = $"Private key set ({StandaloneContext.NineChroniclesNodeService.PrivateKey.PublicKey.ToAddress()}).";
+            StandaloneContext.NineChroniclesNodeService.MinerPrivateKey = privateKey;
+            var msg = $"Private key set ({StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress()}).";
             Log.Information("SetPrivateKey: {Msg}", msg);
             return Ok(msg);
         }
@@ -249,12 +249,12 @@ namespace NineChronicles.Headless.Controllers
 
         private void NotifyAction(ActionBase.ActionEvaluation<ActionBase> eval)
         {
-            if (StandaloneContext.NineChroniclesNodeService.PrivateKey is null)
+            if (StandaloneContext.NineChroniclesNodeService.MinerPrivateKey is null)
             {
                 Log.Information("PrivateKey is not set. please call SetPrivateKey() first.");
                 return;
             }
-            Address address = StandaloneContext.NineChroniclesNodeService.PrivateKey.PublicKey.ToAddress();
+            Address address = StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress();
             if (eval.OutputStates.UpdatedAddresses.Contains(address) || eval.Signer == address)
             {
                 if (eval.Signer == address)
@@ -263,17 +263,17 @@ namespace NineChronicles.Headless.Controllers
                     var msg = string.Empty;
                     switch (eval.Action)
                     {
-                        case HackAndSlash4 has:
+                        case HackAndSlash has:
                             type = NotificationEnum.HAS;
                             msg = has.stageId.ToString(CultureInfo.InvariantCulture);
                             break;
-                        case CombinationConsumable3 _:
+                        case CombinationConsumable _:
                             type = NotificationEnum.CombinationConsumable;
                             break;
-                        case CombinationEquipment4 _:
+                        case CombinationEquipment _:
                             type = NotificationEnum.CombinationEquipment;
                             break;
-                        case Buy4 _:
+                        case Buy _:
                             type = NotificationEnum.Buyer;
                             break;
                     }

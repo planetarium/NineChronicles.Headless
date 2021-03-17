@@ -105,7 +105,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             Block<PolymorphicAction<ActionBase>> genesis =
                 MakeGenesisBlock(adminAddress, new Currency("NCG", 2, minters: null), activateAccounts);
-            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis);
+            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
 
@@ -132,7 +132,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var state = (Bencodex.Types.Dictionary)blockChain.GetState(
                 ActivatedAccountsState.Address);
             var activatedAccountsState = new ActivatedAccountsState(state);
-            Address userAddress = service.PrivateKey.ToAddress();
+            Address userAddress = service.MinerPrivateKey.ToAddress();
             Assert.True(activatedAccountsState.Accounts.Contains(userAddress));
         }
 
@@ -146,11 +146,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     goldCurrency,
                     ImmutableHashSet<Address>.Empty
                 );
-            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis);
+            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.BlockChain;
 
-            Address senderAddress = service.PrivateKey.ToAddress();
+            Address senderAddress = service.MinerPrivateKey.ToAddress();
 
             var blockChain = StandaloneContextFx.BlockChain;
             var store = service.Store;
@@ -304,7 +304,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (HackAndSlash4) tx.Actions.First().InnerAction;
+            var action = (HackAndSlash) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(worldId, action.worldId);
             Assert.Equal(stageId, action.stageId);
@@ -417,7 +417,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (Buy4) tx.Actions.First().InnerAction;
+            var action = (Buy) tx.Actions.First().InnerAction;
             Assert.Equal(productId, action.productId);
             Assert.Equal(sellerAgentAddress, action.sellerAgentAddress);
             Assert.Equal(sellerAvatarAddress, action.sellerAvatarAddress);
@@ -451,7 +451,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (CombinationEquipment4) tx.Actions.First().InnerAction;
+            var action = (CombinationEquipment) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(recipeId, action.RecipeId);
             Assert.Equal(slotIndex, action.SlotIndex);
@@ -509,7 +509,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (ItemEnhancement5) tx.Actions.First().InnerAction;
+            var action = (ItemEnhancement) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(itemId, action.itemId);
             Assert.Equal(materialId, action.materialId);
@@ -560,7 +560,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (Sell3) tx.Actions.First().InnerAction;
+            var action = (Sell) tx.Actions.First().InnerAction;
             Assert.Equal(sellerAvatarAddress, action.sellerAvatarAddress);
             Assert.Equal(itemId, action.itemId);
             var currency = new GoldCurrencyState(
@@ -612,7 +612,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (CombinationConsumable3) tx.Actions.First().InnerAction;
+            var action = (CombinationConsumable) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(recipeId, action.recipeId);
             Assert.Equal(slotIndex, action.slotIndex);
@@ -643,7 +643,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     new Currency("NCG", 2, minters: null),
                     ImmutableHashSet<Address>.Empty
                 );
-            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis);
+            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
 
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
@@ -663,7 +663,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Transaction<PolymorphicAction<ActionBase>> tx =
                 Transaction<PolymorphicAction<ActionBase>>.Create(
                     0,
-                    service.PrivateKey,
+                    service.MinerPrivateKey,
                     genesis.Hash,
                     new PolymorphicAction<ActionBase>[] { }
                 );
@@ -679,7 +679,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 result.Data
             );
             Block<PolymorphicAction<ActionBase>> mined =
-                await StandaloneContextFx.BlockChain.MineBlock(service.PrivateKey.ToAddress());
+                await StandaloneContextFx.BlockChain.MineBlock(service.MinerPrivateKey.ToAddress());
             Assert.Contains(tx, mined.Transactions);
         }
 
