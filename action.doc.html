@@ -50,11 +50,6 @@
                 Address
             </a>
         </li>
-        <li  title="BigInt">
-            <a href="bigint.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
-                BigInt
-            </a>
-        </li>
         <li  title="Boolean">
             <a href="boolean.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 Boolean
@@ -63,11 +58,6 @@
         <li  title="ByteString">
             <a href="bytestring.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 ByteString
-            </a>
-        </li>
-        <li  title="DateTimeOffset">
-            <a href="datetimeoffset.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
-                DateTimeOffset
             </a>
         </li>
         <li  title="Decimal">
@@ -195,19 +185,9 @@
                 AvatarStateType
             </a>
         </li>
-        <li  title="Block">
-            <a href="block.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
-                Block
-            </a>
-        </li>
         <li  title="BlockHeader">
             <a href="blockheader.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 BlockHeader
-            </a>
-        </li>
-        <li  title="BlockQuery">
-            <a href="blockquery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
-                BlockQuery
             </a>
         </li>
         <li  title="CollectionMapType">
@@ -280,11 +260,6 @@
                 NodeExceptionType
             </a>
         </li>
-        <li  title="NodeState">
-            <a href="nodestate.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
-                NodeState
-            </a>
-        </li>
         <li  title="NodeStatusType">
             <a href="nodestatustype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 NodeStatusType
@@ -325,11 +300,6 @@
                 PublicKeyType
             </a>
         </li>
-        <li  title="Query">
-            <a href="query.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
-                Query
-            </a>
-        </li>
         <li  title="QuestListType">
             <a href="questlisttype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 QuestListType
@@ -363,16 +333,6 @@
         <li  title="TipChanged">
             <a href="tipchanged.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 TipChanged
-            </a>
-        </li>
-        <li  title="Transaction">
-            <a href="transaction.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
-                Transaction
-            </a>
-        </li>
-        <li  title="TransactionQuery">
-            <a href="transactionquery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
-                TransactionQuery
             </a>
         </li>
         <li  title="TransactionType_1">
@@ -467,36 +427,7 @@
     <div class="container">
         <p class="slds-text-title--caps slds-text-color--weak">OBJECT</p>
         <h1 class="slds-text-heading--large">Action</h1>
-        <div class="slds-text-body--regular"><p>An in-game action.  Every action should be replayable, because
-            multiple nodes in a network should execute an action and get the same
-            result.
-            A “class” which implements this interface is
-            analogous to a function, and its instance is analogous to a
-            partial
-            function application, in other words, a function with some bound
-            arguments.  Those parameters that will be bound at runtime should be
-            represented as fields or properties in an action class, and bound
-            argument values to these parameters should be received through
-            a constructor parameters of that class.From a perspective of security, an action class belongs to
-            the network protocol, and property values in an action belong to
-            a node&#39;s will (i.e., a user/player&#39;s choice).
-            That means if you define an action class it also defines what every
-            honest node can do in the network.  Even if a malicious node changes
-            their own action code it won&#39;t affect other honest nodes in
-            the network.For example, where honest nodes share the common action
-            Heal(Target) =&gt; PreviousStates[Target] + 1, suppose a malicious
-            node m changes their own Heal action code to
-            Heal(Target) =&gt; PreviousStates[Target] + 2 (2 instead of 1),
-            and then send an action Heal(m).
-            Fortunately, this action does not work as m&#39;s intention,
-            because the changed code in itself is not used by other honest nodes,
-            so they still increase only 1, not 2.  The effect of that double healing
-            is a sort of “illusion” only visible to the malicious node
-            alone.In conclusion, action code is a part of the protocol and it works with
-            consensus in the network, so only things each node can affect the network
-            in general is property values of each action they sign and send,
-            not code of an action.</p>
-</div>
+        <div class="slds-text-body--regular"></div>
     </div>
 </section>
 <section>
@@ -507,7 +438,7 @@
             </a>
             GraphQL Schema definition
         </h2>
-        <code class="highlight"><ul class="code" style="padding-left:28px"><li><span class="keyword operator ts">type</span> <span class="identifier">Action</span> {</li><li></li><li><span class="tab"><span class="meta">inspection</span>: <a class="support type" href="string.doc.html">String</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>encode</strong>: </span></span></li><li><span class="tab"><span class="meta">raw</span>(<span class="meta">encode</span>: <a class="support type" href="string.doc.html">String</a>): <a class="support type" href="string.doc.html">String</a>! </span></li><li>}</li></ul></code>
+        <code class="highlight"><ul class="code" style="padding-left:28px"><li><span class="keyword operator ts">type</span> <span class="identifier">Action</span> {</li><li></li><li><span class="tab"><span class="meta">plainValue</span>: <a class="support type" href="string.doc.html">String</a>! </span></li><li>}</li></ul></code>
     </div>
 </section>
 <section>
@@ -518,7 +449,7 @@
             </a>
             Require by
         </h2>
-        <ul class="require-by"><li><a href="transaction.doc.html" title="Transaction - ">Transaction<em></em></a><li><li><a href="transactiontype_1.doc.html" title="TransactionType_1 - ">TransactionType_1<em></em></a><li></ul>
+        <ul class="require-by"><li><a href="transactiontype_1.doc.html" title="TransactionType_1 - ">TransactionType_1<em></em></a><li></ul>
     </div>
 </section>
 <footer>
