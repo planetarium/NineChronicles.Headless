@@ -15,10 +15,6 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
                 nameof(Costume.Equipped),
                 description: "Status of Avatar equipped."
             );
-            Field<NonNullGraphType<LongGraphType>>(
-                nameof(Costume.RequiredBlockIndex),
-                description: "Block index limit that locks the costume item. If the current block index is less than the RequiredBlockIndex, the item cannot be used."
-            );
         }
     }
 }
