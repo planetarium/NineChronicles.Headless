@@ -35,11 +35,6 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
                 description: "Costume information.",
                 resolve: context => context.Source.Costume
             );
-            Field<NonNullGraphType<LongGraphType>>(
-                nameof(ShopItem.ExpiredBlockIndex),
-                description: "Block index limit that locks the shop item. If the current block index is greater than the ExpiredBlockIndex, the item cannot be traded.",
-                resolve: context => context.Source.ExpiredBlockIndex
-            );
         }
     }
 }
