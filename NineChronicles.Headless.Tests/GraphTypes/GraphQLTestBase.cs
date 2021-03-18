@@ -111,10 +111,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         protected StandaloneContext StandaloneContextFx { get; }
 
         protected BlockChain<PolymorphicAction<ActionBase>> BlockChain =>
-            StandaloneContextFx.BlockChain;
+            StandaloneContextFx.BlockChain!;
 
         protected IKeyStore KeyStore =>
-            StandaloneContextFx.KeyStore;
+            StandaloneContextFx.KeyStore!;
 
         protected IDocumentExecuter DocumentExecutor { get; }
 
@@ -146,8 +146,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Block<T> genesisBlock,
             AppProtocolVersion appProtocolVersion,
             PublicKey appProtocolVersionSigner,
-            Progress<PreloadState> preloadProgress = null,
-            IEnumerable<Peer> peers = null)
+            Progress<PreloadState>? preloadProgress = null,
+            IEnumerable<Peer>? peers = null)
             where T : IAction, new()
         {
             var properties = new LibplanetNodeServiceProperties<T>

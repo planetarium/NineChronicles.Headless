@@ -16,7 +16,7 @@ namespace NineChronicles.Headless
     {
         public static IServiceCollection AddGraphTypes(this IServiceCollection services)
         {
-            var graphTypes = Assembly.GetAssembly(typeof(GraphQLServiceExtensions))?.GetTypes().Where(
+            var graphTypes = Assembly.GetAssembly(typeof(GraphQLServiceExtensions))!.GetTypes().Where(
                 type => type.Namespace is {} @namespace &&
                         @namespace.StartsWith($"{nameof(NineChronicles)}.{nameof(Headless)}.{nameof(GraphTypes)}") &&
                         (typeof(IGraphType).IsAssignableFrom(type) || typeof(ISchema).IsAssignableFrom(type)) &&

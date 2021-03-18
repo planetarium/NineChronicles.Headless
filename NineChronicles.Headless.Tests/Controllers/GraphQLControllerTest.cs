@@ -139,7 +139,7 @@ namespace NineChronicles.Headless.Tests.Controllers
                 PrivateKeyString = ByteUtil.Hex(privateKey.ByteArray),
             }));
 
-            Assert.Equal(_standaloneContext.NineChroniclesNodeService.MinerPrivateKey, privateKey);
+            Assert.Equal(_standaloneContext.NineChroniclesNodeService!.MinerPrivateKey, privateKey);
         }
         
         [Fact]
@@ -180,7 +180,7 @@ namespace NineChronicles.Headless.Tests.Controllers
                 new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
                 {
                     MinimumDifficulty = 500000,
-                    GenesisBlock = _standaloneContext.BlockChain.Genesis,
+                    GenesisBlock = _standaloneContext.BlockChain!.Genesis,
                     StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                     AppProtocolVersion = AppProtocolVersion.Sign(new PrivateKey(), 0),
                     SwarmPrivateKey = new PrivateKey(),

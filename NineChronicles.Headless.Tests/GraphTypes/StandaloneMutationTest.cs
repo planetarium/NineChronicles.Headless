@@ -26,9 +26,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 {
     public class StandaloneMutationTest : GraphQLTestBase
     {
-        private readonly Dictionary<string, string> _sheets = null;
+        private readonly Dictionary<string, string> _sheets;
 
-        private readonly TableSheets _tableSheets = null;
+        private readonly TableSheets? _tableSheets = null;
 
         public StandaloneMutationTest(ITestOutputHelper output) : base(output)
         {
@@ -107,9 +107,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 MakeGenesisBlock(adminAddress, new Currency("NCG", 2, minters: null), activateAccounts);
             NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
             StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
+            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
-            var blockChain = StandaloneContextFx.BlockChain;
+            var blockChain = StandaloneContextFx.BlockChain!;
 
             var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
             var privateKey = new PrivateKey();
@@ -132,7 +132,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var state = (Bencodex.Types.Dictionary)blockChain.GetState(
                 ActivatedAccountsState.Address);
             var activatedAccountsState = new ActivatedAccountsState(state);
-            Address userAddress = service.MinerPrivateKey.ToAddress();
+            Address userAddress = service.MinerPrivateKey!.ToAddress();
             Assert.True(activatedAccountsState.Accounts.Contains(userAddress));
         }
 
@@ -150,7 +150,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.BlockChain;
 
-            Address senderAddress = service.MinerPrivateKey.ToAddress();
+            Address senderAddress = service.MinerPrivateKey!.ToAddress();
 
             var blockChain = StandaloneContextFx.BlockChain;
             var store = service.Store;
@@ -232,9 +232,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(tail, action.tail);
         }
 
-        public static IEnumerable<object[]> CreateAvatarMember => new List<object[]>
+        public static IEnumerable<object?[]> CreateAvatarMember => new List<object?[]>
         {
-            new object[]
+            new object?[]
             {
                 "createByMutation",
                 1,
@@ -243,7 +243,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 4,
                 5,
             },
-            new object[]
+            new object?[]
             {
                 "createByMutation2",
                 2,
@@ -252,7 +252,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 5,
                 6,
             },
-            new object[]
+            new object?[]
             {
                 "createByMutation3",
                 0,
@@ -315,9 +315,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(consumableIds, action.foods);
         }
 
-        public static IEnumerable<object[]> HackAndSlashMember => new List<object[]>
+        public static IEnumerable<object?[]> HackAndSlashMember => new List<object?[]>
         {
-            new object[]
+            new object?[]
             {
                 new Address(),
                 1,
@@ -328,7 +328,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new List<Guid>(),
                 new List<Guid>(),
             },
-            new object[]
+            new object?[]
             {
                 new Address(),
                 2,
@@ -458,23 +458,23 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(subRecipeId, action.SubRecipeId);
         }
 
-        public static IEnumerable<object[]> CombinationEquipmentMember => new List<object[]>
+        public static IEnumerable<object?[]> CombinationEquipmentMember => new List<object?[]>
         {
-            new object[]
+            new object?[]
             {
                 new Address(),
                 1,
                 0,
                 0,
             },
-            new object[]
+            new object?[]
             {
                 new Address(),
                 1,
                 2,
                 1,
             },
-            new object[]
+            new object?[]
             {
                 new Address(),
                 2,
@@ -516,16 +516,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(slotIndex, action.slotIndex);
         }
 
-        public static IEnumerable<object[]> ItemEnhancementMember => new List<object[]>
+        public static IEnumerable<object?[]> ItemEnhancementMember => new List<object?[]>
         {
-            new object[]
+            new object?[]
             {
                 new Address(),
                 Guid.NewGuid(),
                 Guid.NewGuid(),
                 0,
             },
-            new object[]
+            new object?[]
             {
                 new Address(),
                 Guid.NewGuid(),
@@ -570,15 +570,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(price * currency, action.price);
         }
 
-        public static IEnumerable<object[]> SellMember => new List<object[]>
+        public static IEnumerable<object?[]> SellMember => new List<object?[]>
         {
-            new object[]
+            new object?[]
             {
                 new Address(),
                 Guid.NewGuid(),
                 0,
             },
-            new object[]
+            new object?[]
             {
                 new Address(),
                 Guid.NewGuid(),
@@ -618,15 +618,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(slotIndex, action.slotIndex);
         }
 
-        public static IEnumerable<object[]> CombinationConsumableMember => new List<object[]>
+        public static IEnumerable<object?[]> CombinationConsumableMember => new List<object?[]>
         {
-            new object[]
+            new object?[]
             {
                 new Address(),
                 1,
                 0,
             },
-            new object[]
+            new object?[]
             {
                 new Address(),
                 2,
@@ -646,7 +646,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
 
             StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
+            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
             // Error: empty payload
             var query = $"mutation {{ stageTx(payload: \"\") }}";
@@ -679,7 +679,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 result.Data
             );
             Block<PolymorphicAction<ActionBase>> mined =
-                await StandaloneContextFx.BlockChain.MineBlock(service.MinerPrivateKey.ToAddress());
+                await StandaloneContextFx.BlockChain!.MineBlock(service.MinerPrivateKey!.ToAddress());
             Assert.Contains(tx, mined.Transactions);
         }
 
@@ -687,7 +687,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Address adminAddress,
             Currency curreny,
             IImmutableSet<Address> activatedAccounts,
-            RankingState rankingState = null
+            RankingState? rankingState = null
         ) => BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
             new PolymorphicAction<ActionBase>[]
             {
@@ -716,7 +716,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 MakeGenesisBlock(default, goldCurrency, ImmutableHashSet<Address>.Empty, ranking);
             var service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, playerPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
+            StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
             return StandaloneContextFx.BlockChain;
         }
     }

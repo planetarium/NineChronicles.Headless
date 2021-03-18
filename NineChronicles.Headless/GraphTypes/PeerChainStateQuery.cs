@@ -15,7 +15,6 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var service = standaloneContext.NineChroniclesNodeService;
-
                     if (service is null)
                     {
                         Log.Error($"{nameof(NineChroniclesNodeService)} is null.");
@@ -23,7 +22,11 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     var swarm = service.Swarm;
-                    var chain = swarm.BlockChain;
+                    if (!(swarm?.BlockChain is { } chain))
+                    {
+                        throw new InvalidOperationException($"{nameof(swarm.BlockChain)} is null.");
+                    }
+
                     var chainStates = new List<string>
                     {
                         $"{swarm.AsPeer.Address}, {chain.Tip.Index}, {chain.Tip.TotalDifficulty}"

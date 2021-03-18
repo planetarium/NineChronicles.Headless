@@ -28,7 +28,7 @@ namespace NineChronicles.Headless
             BlockChain<PolymorphicAction<ActionBase>> blockChain
         ) => true;
 
-        public InvalidBlockException ValidateNextBlock(BlockChain<PolymorphicAction<ActionBase>> blocks, Block<PolymorphicAction<ActionBase>> nextBlock)
+        public InvalidBlockException? ValidateNextBlock(BlockChain<PolymorphicAction<ActionBase>> blocks, Block<PolymorphicAction<ActionBase>> nextBlock)
         {
             return null;
         }

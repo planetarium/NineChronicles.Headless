@@ -60,8 +60,16 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privateKey = service.MinerPrivateKey;
-                        BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
+                        if (!(service.MinerPrivateKey is { } privateKey))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                        }
+
+                        if (!(service.Swarm?.BlockChain is { } blockChain))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
+                        }
+
                         var avatarName = context.GetArgument<string>("avatarName");
                         var avatarIndex = context.GetArgument<int>("avatarIndex");
                         var hairIndex = context.GetArgument<int>("hairIndex");
@@ -140,7 +148,12 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
+                        BlockChain<NineChroniclesActionType>? blockChain = service.Swarm.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
                         Address weeklyArenaAddress = context.GetArgument<Address>("weeklyArenaAddress");
                         Address rankingArenaAddress = context.GetArgument<Address>("rankingArenaAddress");
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
@@ -204,7 +217,12 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
+                        BlockChain<NineChroniclesActionType>? blockChain = service.Swarm?.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
                         int recipeId = context.GetArgument<int>("recipeId");
                         int slotIndex = context.GetArgument<int>("slotIndex");
                         int? subRecipeId = context.GetArgument<int?>("subRecipeId");
@@ -260,8 +278,16 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privatekey = service.MinerPrivateKey;
-                        BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
+                        if (!(service.MinerPrivateKey is { } privatekey))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                        }
+
+                        if (!(service.Swarm?.BlockChain is { } blockChain))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
+                        }
+
                         Guid itemId = context.GetArgument<Guid>("itemId");
                         Guid materialId = context.GetArgument<Guid>("materialId");
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
@@ -316,8 +342,16 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privateKey = service.MinerPrivateKey;
-                        BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
+                        if (!(service.MinerPrivateKey is { } privateKey))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                        }
+
+                        if (!(service.Swarm?.BlockChain is { } blockChain))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
+                        }
+
                         Address buyerAvatarAddress = context.GetArgument<Address>("buyerAvatarAddress");
                         Address sellerAgentAddress = context.GetArgument<Address>("sellerAgentAddress");
                         Address sellerAvatarAddress = context.GetArgument<Address>("sellerAvatarAddress");
@@ -366,8 +400,17 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privateKey = service.MinerPrivateKey;
-                        BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
+                        if (!(service.MinerPrivateKey is { } privateKey))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                        }
+
+                        if (!(service.Swarm?.BlockChain is { } blockChain))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
+                        }
+
+
                         Address sellerAvatarAddress = context.GetArgument<Address>("sellerAvatarAddress");
                         Guid itemId = context.GetArgument<Guid>("itemId");
                         var currency = new GoldCurrencyState(
@@ -408,8 +451,16 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privateKey = service.MinerPrivateKey;
-                        BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
+                        if (!(service.MinerPrivateKey is { } privateKey))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                        }
+
+                        if (!(service.Swarm?.BlockChain is { } blockChain))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
+                        }
+
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
 
                         var action = new DailyReward
@@ -454,7 +505,12 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
+                        BlockChain<NineChroniclesActionType>? blockChain = service.Swarm?.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
                         int recipeId = context.GetArgument<int>("recipeId");
                         int slotIndex = context.GetArgument<int>("slotIndex");
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");

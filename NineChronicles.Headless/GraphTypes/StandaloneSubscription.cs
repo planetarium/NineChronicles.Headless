@@ -39,9 +39,16 @@ namespace NineChronicles.Headless.GraphTypes
         {
             private class PreloadStateExtra
             {
-                public string Type { get; set; }
-                public long CurrentCount { get; set; }
-                public long TotalCount { get; set; }
+                public string Type { get; }
+                public long CurrentCount { get; }
+                public long TotalCount { get; }
+
+                public PreloadStateExtra(string type, long currentCount, long totalCount)
+                {
+                    Type = type;
+                    CurrentCount = currentCount;
+                    TotalCount = totalCount;
+                }
             }
 
             private class PreloadStateExtraType : ObjectGraphType<PreloadStateExtra>
@@ -63,36 +70,24 @@ namespace NineChronicles.Headless.GraphTypes
                     var preloadState = context.Source;
                     return preloadState switch
                     {
-                        ActionExecutionState actionExecutionState => new PreloadStateExtra
-                        {
-                            Type = nameof(ActionExecutionState),
-                            CurrentCount = actionExecutionState.ExecutedBlockCount,
-                            TotalCount = actionExecutionState.TotalBlockCount,
-                        },
-                        BlockDownloadState blockDownloadState => new PreloadStateExtra
-                        {
-                            Type = nameof(BlockDownloadState),
-                            CurrentCount = blockDownloadState.ReceivedBlockCount,
-                            TotalCount = blockDownloadState.TotalBlockCount,
-                        },
-                        BlockHashDownloadState blockHashDownloadState => new PreloadStateExtra
-                        {
-                            Type = nameof(BlockHashDownloadState),
-                            CurrentCount = blockHashDownloadState.ReceivedBlockHashCount,
-                            TotalCount = blockHashDownloadState.EstimatedTotalBlockHashCount,
-                        },
-                        BlockVerificationState blockVerificationState => new PreloadStateExtra
-                        {
-                            Type = nameof(BlockVerificationState),
-                            CurrentCount = blockVerificationState.VerifiedBlockCount,
-                            TotalCount = blockVerificationState.TotalBlockCount,
-                        },
-                        StateDownloadState stateDownloadState => new PreloadStateExtra
-                        {
-                            Type = nameof(StateDownloadState),
-                            CurrentCount = stateDownloadState.ReceivedIterationCount,
-                            TotalCount = stateDownloadState.TotalIterationCount,
-                        },
+                        ActionExecutionState actionExecutionState => new PreloadStateExtra(nameof(ActionExecutionState),
+                            actionExecutionState.ExecutedBlockCount,
+                            actionExecutionState.TotalBlockCount),
+                        BlockDownloadState blockDownloadState => new PreloadStateExtra(nameof(BlockDownloadState),
+                            blockDownloadState.ReceivedBlockCount,
+                            blockDownloadState.TotalBlockCount),
+                        BlockHashDownloadState blockHashDownloadState => new PreloadStateExtra(
+                            nameof(BlockHashDownloadState),
+                            blockHashDownloadState.ReceivedBlockHashCount,
+                            blockHashDownloadState.EstimatedTotalBlockHashCount),
+                        BlockVerificationState blockVerificationState => new PreloadStateExtra(
+                            nameof(BlockVerificationState),
+                            blockVerificationState.VerifiedBlockCount,
+                            blockVerificationState.TotalBlockCount),
+                        StateDownloadState stateDownloadState => new PreloadStateExtra(
+                            nameof(StateDownloadState),
+                            stateDownloadState.ReceivedIterationCount,
+                            stateDownloadState.TotalIterationCount),
                         _ => throw new ExecutionError($"Not supported preload state. {preloadState.GetType()}"),
                     };
                 });
@@ -115,14 +110,14 @@ namespace NineChronicles.Headless.GraphTypes
             AddField(new EventStreamFieldType {
                 Name = "preloadProgress",
                 Type = typeof(PreloadStateType),
-                Resolver = new FuncFieldResolver<PreloadState>(context => context.Source as PreloadState),
+                Resolver = new FuncFieldResolver<PreloadState>(context => (context.Source as PreloadState)!),
                 Subscriber = new EventStreamResolver<PreloadState>(context => StandaloneContext.PreloadStateSubject.AsObservable()),
             });
             AddField(new EventStreamFieldType
             {
                 Name = "nodeStatus",
                 Type = typeof(NodeStatusType),
-                Resolver = new FuncFieldResolver<NodeStatusType>(context => context.Source as NodeStatusType),
+                Resolver = new FuncFieldResolver<NodeStatusType>(context => (context.Source as NodeStatusType)!),
                 Subscriber = new EventStreamResolver<NodeStatusType>(context => StandaloneContext.NodeStatusSubject.AsObservable()),
             });
             AddField(new EventStreamFieldType
@@ -138,7 +133,7 @@ namespace NineChronicles.Headless.GraphTypes
             {
                 Name = "notification",
                 Type = typeof(NonNullGraphType<NotificationType>),
-                Resolver = new FuncFieldResolver<Notification>(context => context.Source as Notification),
+                Resolver = new FuncFieldResolver<Notification>(context => (context.Source as Notification)!),
                 Subscriber = new EventStreamResolver<Notification>(context =>
                     StandaloneContext.NotificationSubject.AsObservable()),
             });
@@ -146,7 +141,7 @@ namespace NineChronicles.Headless.GraphTypes
             {
                 Name = "nodeException",
                 Type = typeof(NonNullGraphType<NodeExceptionType>),
-                Resolver = new FuncFieldResolver<NodeException>(context => context.Source as NodeException),
+                Resolver = new FuncFieldResolver<NodeException>(context => (context.Source as NodeException)!),
                 Subscriber = new EventStreamResolver<NodeException>(context =>
                     StandaloneContext.NodeExceptionSubject.AsObservable()),
             });
@@ -155,10 +150,7 @@ namespace NineChronicles.Headless.GraphTypes
         public void RegisterTipChangedSubscription()
         {
             BlockRenderer blockRenderer = StandaloneContext?.NineChroniclesNodeService?.BlockRenderer ??
-                StandaloneContext?.BlockChain.Renderers.OfType<BlockRenderer>().FirstOrDefault();
-
-            if (blockRenderer is null)
-            {
+                StandaloneContext?.BlockChain?.Renderers.OfType<BlockRenderer>().FirstOrDefault() ??
                 throw new InvalidOperationException(
                     $"Failed to find {nameof(ActionRenderer)} instance; before calling " +
                     $"{nameof(RegisterTipChangedSubscription)}(), {nameof(StandaloneContext)}." +
@@ -167,7 +159,6 @@ namespace NineChronicles.Headless.GraphTypes
                     $"{nameof(StandaloneContext.BlockChain.Renderers)} have to contain an " +
                     $"{nameof(ActionRenderer)} instance."
                 );
-            }
 
             blockRenderer.EveryBlock()
                 .Subscribe(pair =>
@@ -181,7 +172,7 @@ namespace NineChronicles.Headless.GraphTypes
 
         private TipChanged ResolveTipChanged(IResolveFieldContext context)
         {
-            return context.Source as TipChanged;
+            return context.Source as TipChanged ?? throw new InvalidOperationException();
         }
 
         private IObservable<TipChanged> SubscribeTipChanged(IResolveEventStreamContext context)
