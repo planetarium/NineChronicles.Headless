@@ -9,10 +9,11 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          submodules: recursive
           node-version: '14'
       - name: Cache node modules
         uses: actions/cache@v2
