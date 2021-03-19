@@ -17,6 +17,7 @@ namespace NineChronicles.Headless.Executable.Tests.Store
         }
 
         [Theory]
+        [InlineData(StoreType.MonoRocksDb, typeof(MonoRocksDBStore))]
         [InlineData(StoreType.RocksDb, typeof(RocksDBStore))]
         [InlineData(StoreType.Default, typeof(DefaultStore))]
         public void ToStoreConstructor(StoreType storeType, Type expectedType)

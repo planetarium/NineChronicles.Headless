@@ -30,6 +30,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [Theory]
         [InlineData(StoreType.Default)]
         [InlineData(StoreType.RocksDb)]
+        [InlineData(StoreType.MonoRocksDb)]
         public void Tip(StoreType storeType)
         {
             Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock();
