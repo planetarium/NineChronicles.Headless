@@ -48,6 +48,8 @@ jobs:
         run: npm install -g @2fd/graphdoc
       - name: Build
         run: graphdoc -s schema.graphql -o doc
+      - name: Copy GraphQL Schema to deploy
+        run: cp schema.graphql doc
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
