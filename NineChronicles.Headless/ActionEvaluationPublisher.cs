@@ -26,7 +26,7 @@ namespace NineChronicles.Headless
         private readonly ActionRenderer _actionRenderer;
         private readonly ExceptionRenderer _exceptionRenderer;
         private readonly NodeStatusRenderer _nodeStatusRenderer;
-        private IActionEvaluationHub _client;
+        private IActionEvaluationHub? _client;
         private RpcContext _context;
 
         public ActionEvaluationPublisher(
@@ -53,7 +53,7 @@ namespace NineChronicles.Headless
             await Task.Delay(1000, stoppingToken);
             _client = StreamingHubClient.Connect<IActionEvaluationHub, IActionEvaluationHubReceiver>(
                 new Channel(_host, _port, ChannelCredentials.Insecure),
-                null
+                null!
             );
             await _client.JoinAsync();
 
@@ -169,7 +169,11 @@ namespace NineChronicles.Headless
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            await _client?.DisposeAsync();
+            if (!(_client is null))
+            {
+                await _client.DisposeAsync();
+            }
+
             await base.StopAsync(cancellationToken);
         }
 

@@ -17,7 +17,7 @@ namespace NineChronicles.Headless
         }
 
         public bool Preloaded => _standaloneContext.NodeStatus.PreloadEnded;
-        public BlockChain<PolymorphicAction<ActionBase>> BlockChain => _standaloneContext.BlockChain;
-        public IStore Store => _standaloneContext.Store;
+        public BlockChain<PolymorphicAction<ActionBase>>? BlockChain => _standaloneContext.BlockChain;
+        public IStore? Store => _standaloneContext.Store;
     }
 }

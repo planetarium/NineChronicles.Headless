@@ -21,7 +21,7 @@ namespace NineChronicles.Headless.Tests
                     throw new Exception(sb.ToString());
                 }
 
-                var sheetObject = Activator.CreateInstance(sheetPropertyInfo.PropertyType);
+                var sheetObject = Activator.CreateInstance(sheetPropertyInfo.PropertyType)!;
                 var iSheet = (ISheet)sheetObject;
                 if (iSheet is null)
                 {
@@ -39,6 +39,7 @@ namespace NineChronicles.Headless.Tests
             QuestSheetInitialize();
         }
 
+#nullable disable
         public WorldSheet WorldSheet { get; private set; }
 
         public StageWaveSheet StageWaveSheet { get; private set; }
@@ -124,6 +125,7 @@ namespace NineChronicles.Headless.Tests
         public WeeklyArenaRewardSheet WeeklyArenaRewardSheet { get; internal set; }
 
         public CostumeStatSheet CostumeStatSheet { get; private set; }
+#nullable restore
 
         public void ItemSheetInitialize()
         {

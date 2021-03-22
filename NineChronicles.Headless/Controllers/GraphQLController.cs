@@ -184,6 +184,11 @@ namespace NineChronicles.Headless.Controllers
         //TODO : This should be covered in test.
         private void NotifyRefillActionPoint(long newTipIndex)
         {
+            if (StandaloneContext.KeyStore is null)
+            {
+                throw new InvalidOperationException($"{nameof(StandaloneContext.KeyStore)} is null.");
+            }
+
             List<Tuple<Guid, ProtectedPrivateKey>> tuples =
                 StandaloneContext.KeyStore.List().ToList();
             if (!tuples.Any())
@@ -193,6 +198,10 @@ namespace NineChronicles.Headless.Controllers
 
             IEnumerable<Address> playerAddresses = tuples.Select(tuple => tuple.Item2.Address);
             var chain = StandaloneContext.BlockChain;
+            if (chain is null)
+            {
+                throw new InvalidOperationException($"{nameof(chain)} is null.");
+            }
 
             List<IValue> states = playerAddresses
                 .Select(addr => chain.GetState(addr))
@@ -249,6 +258,12 @@ namespace NineChronicles.Headless.Controllers
 
         private void NotifyAction(ActionBase.ActionEvaluation<ActionBase> eval)
         {
+            if (StandaloneContext.NineChroniclesNodeService is null)
+            {
+                throw new InvalidOperationException(
+                    $"{nameof(StandaloneContext.NineChroniclesNodeService)} is null.");
+            }
+
             if (StandaloneContext.NineChroniclesNodeService.MinerPrivateKey is null)
             {
                 Log.Information("PrivateKey is not set. please call SetPrivateKey() first.");

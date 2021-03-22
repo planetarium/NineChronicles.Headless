@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -11,6 +12,7 @@ using Libplanet.Blocks;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Store;
 using Libplanet.Tx;
+using Nekoyume.Action;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -23,9 +25,9 @@ namespace NineChronicles.Headless.GraphTypes
         
         public bool IsMining { get; set; }
 
-        public BlockChain<NCAction> BlockChain { get; set; }
+        public BlockChain<NCAction>? BlockChain { get; set; }
 
-        public IStore Store { get; set; }
+        public IStore? Store { get; set; }
 
         public NodeStatusType()
         {
@@ -34,7 +36,9 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<BooleanGraphType>>(name: "preloadEnded",
                 resolve: context => context.Source.PreloadEnded);
             Field<NonNullGraphType<BlockHeaderType>>(name: "tip",
-                resolve: context => BlockHeaderType.FromBlock(context.Source.BlockChain.Tip));
+                resolve: context => context.Source.BlockChain is { } blockChain
+                    ? BlockHeaderType.FromBlock(blockChain.Tip)
+                    : null);
             Field<NonNullGraphType<ListGraphType<BlockHeaderType>>>(
                 name: "topmostBlocks",
                 arguments: new QueryArguments(
@@ -54,6 +58,11 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "The topmost blocks from the current node.",
                 resolve: context =>
                 {
+                    if (context.Source.BlockChain is null)
+                    {
+                        throw new InvalidOperationException($"{nameof(context.Source.BlockChain)} is null.");
+                    }
+
                     IEnumerable<Block<NCAction>> blocks =
                         GetTopmostBlocks(context.Source.BlockChain);
                     if (context.GetArgument<Address?>("miner") is { } miner)
@@ -77,6 +86,11 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Staged TxIds from the current node.",
                 resolve: context =>
                 {
+                    if (context.Source?.BlockChain is null)
+                    {
+                        throw new InvalidOperationException($"{nameof(context.Source.BlockChain)} is null.");
+                    }
+
                     if (!context.HasArgument("address"))
                     {
                         return context.Source.BlockChain.GetStagedTransactionIds();
@@ -92,7 +106,10 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
             Field<NonNullGraphType<BlockHeaderType>>(name: "genesis",
-                resolve: context => BlockHeaderType.FromBlock(context.Source.BlockChain.Genesis));
+                resolve: context =>
+                    context.Source.BlockChain is { } blockChain
+                        ? BlockHeaderType.FromBlock(blockChain.Genesis)
+                        : null);
             Field<NonNullGraphType<BooleanGraphType>>(name: "isMining",
                 description: "Whether it is mining.",
                 resolve: context => context.Source.IsMining

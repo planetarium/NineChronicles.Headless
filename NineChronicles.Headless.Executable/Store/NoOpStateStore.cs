@@ -15,7 +15,7 @@ namespace NineChronicles.Headless.Executable.Store
         {
         }
 
-        public IValue GetState(string stateKey, HashDigest<SHA256>? blockHash = null, Guid? chainId = null)
+        public IValue? GetState(string stateKey, HashDigest<SHA256>? blockHash = null, Guid? chainId = null)
         {
             return null;
         }

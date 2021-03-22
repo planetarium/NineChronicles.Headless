@@ -11,8 +11,8 @@ namespace NineChronicles.Headless
 {
     public class StandaloneContext
     {
-        public BlockChain<NineChroniclesActionType> BlockChain { get; set; }
-        public IKeyStore KeyStore { get; set; }
+        public BlockChain<NineChroniclesActionType>? BlockChain { get; set; }
+        public IKeyStore? KeyStore { get; set; }
         public bool BootstrapEnded { get; set; }
         public bool PreloadEnded { get; set; }
         public bool IsMining { get; set; }
@@ -22,7 +22,7 @@ namespace NineChronicles.Headless
             = new ReplaySubject<DifferentAppProtocolVersionEncounter>();
         public ReplaySubject<Notification> NotificationSubject { get; } = new ReplaySubject<Notification>(1);
         public ReplaySubject<NodeException> NodeExceptionSubject { get; } = new ReplaySubject<NodeException>();
-        public NineChroniclesNodeService NineChroniclesNodeService { get; set; }
+        public NineChroniclesNodeService? NineChroniclesNodeService { get; set; }
         public NodeStatusType NodeStatus => new NodeStatusType()
         {
             BootstrapEnded = BootstrapEnded,
@@ -30,6 +30,6 @@ namespace NineChronicles.Headless
             IsMining = IsMining,
         };
 
-        public IStore Store { get; internal set; }
+        public IStore? Store { get; internal set; }
     }
 }

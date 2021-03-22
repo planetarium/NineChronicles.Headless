@@ -63,9 +63,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             Assert.Equal(expected, queryResult.Data);
         }
 
-        public static IEnumerable<object[]> Members => new List<object[]>
+        public static IEnumerable<object?[]> Members => new List<object?[]>
         {
-            new object[]
+            new object?[]
             {
                 Equipment(),
                 null,
@@ -77,7 +77,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 },
                 null,
             },
-            new object[]
+            new object?[]
             {
                 null,
                 Costume(),

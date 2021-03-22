@@ -31,9 +31,17 @@ namespace NineChronicles.Headless.GraphTypes
                             context.GetArgument<string>("encodedActivationKey");
                         NineChroniclesNodeService service = context.Source;
                         // FIXME: Private key may not exists at this moment.
-                        PrivateKey privateKey = service.MinerPrivateKey;
+                        if (!(service.MinerPrivateKey is { } privateKey))
+                        {
+                            throw new InvalidOperationException($"{nameof(privateKey)} is null.");
+                        }
+
                         ActivationKey activationKey = ActivationKey.Decode(encodedActivationKey);
-                        BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
+                        if (!(service.Swarm?.BlockChain is { } blockChain))
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
                         IValue state = blockChain.GetState(activationKey.PendingAddress);
 
                         if (!(state is Bencodex.Types.Dictionary asDict))

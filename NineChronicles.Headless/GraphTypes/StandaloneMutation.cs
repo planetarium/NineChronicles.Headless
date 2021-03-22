@@ -55,8 +55,13 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         byte[] bytes = ByteUtil.ParseHex(context.GetArgument<string>("payload"));
                         Transaction<NCAction> tx = Transaction<NCAction>.Deserialize(bytes);
-                        NineChroniclesNodeService service = standaloneContext.NineChroniclesNodeService;
-                        BlockChain<NCAction> blockChain = service.Swarm.BlockChain;
+                        NineChroniclesNodeService? service = standaloneContext.NineChroniclesNodeService;
+                        BlockChain<NCAction>? blockChain = service?.Swarm.BlockChain;
+
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
 
                         if (blockChain.Policy.DoesTransactionFollowsPolicy(tx, blockChain))
                         {
@@ -91,8 +96,12 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    NineChroniclesNodeService service = standaloneContext.NineChroniclesNodeService;
-                    PrivateKey privateKey = service.MinerPrivateKey;
+                    if (!(standaloneContext.NineChroniclesNodeService is { } service))
+                    {
+                        throw new InvalidOperationException($"{nameof(NineChroniclesNodeService)} is null.");
+                    }
+    
+                    PrivateKey? privateKey = service.MinerPrivateKey;
                     if (privateKey is null)
                     {
                         // FIXME We should cover this case on unittest.

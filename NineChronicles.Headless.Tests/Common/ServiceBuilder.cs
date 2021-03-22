@@ -22,7 +22,7 @@ namespace NineChronicles.Headless.Tests.Common
 
         public static NineChroniclesNodeService CreateNineChroniclesNodeService(
             Block<PolymorphicAction<ActionBase>> genesis,
-            PrivateKey privateKey = null
+            PrivateKey? privateKey = null
         )
         {
             var storePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
