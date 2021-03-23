@@ -50,6 +50,11 @@
                 Address
             </a>
         </li>
+        <li  title="BigInt">
+            <a href="bigint.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                BigInt
+            </a>
+        </li>
         <li  title="Boolean">
             <a href="boolean.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 Boolean
@@ -58,6 +63,11 @@
         <li  title="ByteString">
             <a href="bytestring.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 ByteString
+            </a>
+        </li>
+        <li  title="DateTimeOffset">
+            <a href="datetimeoffset.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                DateTimeOffset
             </a>
         </li>
         <li  title="Decimal">
@@ -185,9 +195,19 @@
                 AvatarStateType
             </a>
         </li>
+        <li  title="Block">
+            <a href="block.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Block
+            </a>
+        </li>
         <li  title="BlockHeader">
             <a href="blockheader.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 BlockHeader
+            </a>
+        </li>
+        <li  title="BlockQuery">
+            <a href="blockquery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                BlockQuery
             </a>
         </li>
         <li  title="CollectionMapType">
@@ -260,6 +280,11 @@
                 NodeExceptionType
             </a>
         </li>
+        <li  title="NodeState">
+            <a href="nodestate.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                NodeState
+            </a>
+        </li>
         <li  title="NodeStatusType">
             <a href="nodestatustype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 NodeStatusType
@@ -300,6 +325,11 @@
                 PublicKeyType
             </a>
         </li>
+        <li  title="Query">
+            <a href="query.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Query
+            </a>
+        </li>
         <li  title="QuestListType">
             <a href="questlisttype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 QuestListType
@@ -333,6 +363,16 @@
         <li  title="TipChanged">
             <a href="tipchanged.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 TipChanged
+            </a>
+        </li>
+        <li  title="Transaction">
+            <a href="transaction.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Transaction
+            </a>
+        </li>
+        <li  title="TransactionQuery">
+            <a href="transactionquery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                TransactionQuery
             </a>
         </li>
         <li  title="TransactionType_1">
@@ -438,7 +478,7 @@
             </a>
             GraphQL Schema definition
         </h2>
-        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">StandaloneMutation</span> {</li><li></li><li><span class="tab"><span class="meta">action</span>: <a class="support type" href="actionmutation.doc.html">ActionMutation</a> </span></li><li></li><li><span class="tab"><span class="meta">activationStatus</span>: <a class="support type" href="activationstatusmutation.doc.html">ActivationStatusMutation</a> </span></li><li></li><li><span class="tab"><span class="meta">keyStore</span>: <a class="support type" href="keystoremutation.doc.html">KeyStoreMutation</a> </span></li><li></li><li><span class="tab"><span class="comment line">#   Add a new transaction to staging</span></span></li><li><span class="tab"><span class="comment line"># </span></span></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>payload</strong>: Hex-encoded bytes for new transaction.</span></span></li><li><span class="tab"><span class="meta">stageTx</span>(<span class="meta">payload</span>: <a class="support type" href="string.doc.html">String</a>!): <a class="support type" href="boolean.doc.html">Boolean</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>recipient</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>amount</strong>: </span></span></li><li><span class="tab"><span class="meta">transferGold</span>(<span class="meta">recipient</span>: <a class="support type" href="address.doc.html">Address</a>!, <span class="meta">amount</span>: <a class="support type" href="string.doc.html">String</a>!): <a class="support type" href="txid.doc.html">TxId</a> </span></li><li>}</li></ul></code>
+        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">StandaloneMutation</span> {</li><li></li><li><span class="tab"><span class="meta">keyStore</span>: <a class="support type" href="keystoremutation.doc.html">KeyStoreMutation</a> </span></li><li></li><li><span class="tab"><span class="meta">activationStatus</span>: <a class="support type" href="activationstatusmutation.doc.html">ActivationStatusMutation</a> </span></li><li></li><li><span class="tab"><span class="meta">action</span>: <a class="support type" href="actionmutation.doc.html">ActionMutation</a> </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>payload</strong>: </span></span></li><li><span class="tab"><span class="meta">stageTx</span>(<span class="meta">payload</span>: <a class="support type" href="string.doc.html">String</a>!): <a class="support type" href="boolean.doc.html">Boolean</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>recipient</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>amount</strong>: </span></span></li><li><span class="tab"><span class="meta">transferGold</span>(<span class="meta">recipient</span>: <a class="support type" href="address.doc.html">Address</a>!, <span class="meta">amount</span>: <a class="support type" href="string.doc.html">String</a>!): <a class="support type" href="txid.doc.html">TxId</a> </span></li><li>}</li></ul></code>
     </div>
 </section>
 <section>

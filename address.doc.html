@@ -50,6 +50,11 @@
                 Address
             </a>
         </li>
+        <li  title="BigInt">
+            <a href="bigint.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                BigInt
+            </a>
+        </li>
         <li  title="Boolean">
             <a href="boolean.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 Boolean
@@ -58,6 +63,11 @@
         <li  title="ByteString">
             <a href="bytestring.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 ByteString
+            </a>
+        </li>
+        <li  title="DateTimeOffset">
+            <a href="datetimeoffset.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                DateTimeOffset
             </a>
         </li>
         <li  title="Decimal">
@@ -185,9 +195,19 @@
                 AvatarStateType
             </a>
         </li>
+        <li  title="Block">
+            <a href="block.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Block
+            </a>
+        </li>
         <li  title="BlockHeader">
             <a href="blockheader.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 BlockHeader
+            </a>
+        </li>
+        <li  title="BlockQuery">
+            <a href="blockquery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                BlockQuery
             </a>
         </li>
         <li  title="CollectionMapType">
@@ -260,6 +280,11 @@
                 NodeExceptionType
             </a>
         </li>
+        <li  title="NodeState">
+            <a href="nodestate.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                NodeState
+            </a>
+        </li>
         <li  title="NodeStatusType">
             <a href="nodestatustype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 NodeStatusType
@@ -300,6 +325,11 @@
                 PublicKeyType
             </a>
         </li>
+        <li  title="Query">
+            <a href="query.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Query
+            </a>
+        </li>
         <li  title="QuestListType">
             <a href="questlisttype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 QuestListType
@@ -333,6 +363,16 @@
         <li  title="TipChanged">
             <a href="tipchanged.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 TipChanged
+            </a>
+        </li>
+        <li  title="Transaction">
+            <a href="transaction.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Transaction
+            </a>
+        </li>
+        <li  title="TransactionQuery">
+            <a href="transactionquery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                TransactionQuery
             </a>
         </li>
         <li  title="TransactionType_1">
@@ -449,53 +489,7 @@
             </a>
             Require by
         </h2>
-        <ul class="require-by"><li><a href="actionmutation.doc.html" title="ActionMutation - ">ActionMutation<em></em></a><li><li><a href="agentstatetype.doc.html" title="AgentStateType - ">AgentStateType<em></em></a><li><li><a href="appprotocolversiontype.doc.html" title="AppProtocolVersionType - A claim of a version.
-            Every peer in network shows others their  information.
-            As every peer can change its software by itself, this
-            is theoretically arbitrary, hence a “claim.” (i.e., no authority).In order to verify who claimed a version, every
-            has its  which is made by its .
-             method purposes to determine whether an information
-            is claimed by its corresponding  in fact.">AppProtocolVersionType<em>A claim of a version.
-            Every peer in network shows others their  information.
-            As every peer can change its software by itself, this
-            is theoretically arbitrary, hence a “claim.” (i.e., no authority).In order to verify who claimed a version, every
-            has its  which is made by its .
-             method purposes to determine whether an information
-            is claimed by its corresponding  in fact.</em></a><li><li><a href="arenainfotype.doc.html" title="ArenaInfoType - ">ArenaInfoType<em></em></a><li><li><a href="avatarstatetype.doc.html" title="AvatarStateType - ">AvatarStateType<em></em></a><li><li><a href="blockheader.doc.html" title="BlockHeader - ">BlockHeader<em></em></a><li><li><a href="keystoremutation.doc.html" title="KeyStoreMutation - The interface to store s.  An appropriate implementation
-            should be used according to a running platform.">KeyStoreMutation<em>The interface to store s.  An appropriate implementation
-            should be used according to a running platform.</em></a><li><li><a href="keystoretype.doc.html" title="KeyStoreType - The interface to store s.  An appropriate implementation
-            should be used according to a running platform.">KeyStoreType<em>The interface to store s.  An appropriate implementation
-            should be used according to a running platform.</em></a><li><li><a href="nodestatustype.doc.html" title="NodeStatusType - ">NodeStatusType<em></em></a><li><li><a href="protectedprivatekeytype.doc.html" title="ProtectedPrivateKeyType - Protects a  with a passphrase (i.e., password).">ProtectedPrivateKeyType<em>Protects a  with a passphrase (i.e., password).</em></a><li><li><a href="publickeytype.doc.html" title="PublicKeyType - A public part of a key pair involved in
-            ECDSA, the digital
-            signature algorithm on which the Libplanet is based.
-            It can be used to verify signatures created with the corresponding
-             and to encrypt messages for someone
-            possessing the corresponding .
-            This can be distributed publicly, hence the name.
-            Note that it uses secp256k1 as the parameters of the elliptic curve, which is same to
-            Bitcoin and
-            Ethereum.
-            It means public keys generated for Bitcoin/Ethereum can be used by
-            Libplanet-backed games/apps too.">PublicKeyType<em>A public part of a key pair involved in
-            ECDSA, the digital
-            signature algorithm on which the Libplanet is based.
-            It can be used to verify signatures created with the corresponding
-             and to encrypt messages for someone
-            possessing the corresponding .
-            This can be distributed publicly, hence the name.
-            Note that it uses secp256k1 as the parameters of the elliptic curve, which is same to
-            Bitcoin and
-            Ethereum.
-            It means public keys generated for Bitcoin/Ethereum can be used by
-            Libplanet-backed games/apps too.</em></a><li><li><a href="rankinginfotype.doc.html" title="RankingInfoType - ">RankingInfoType<em></em></a><li><li><a href="rankingmapstatetype.doc.html" title="RankingMapStateType - ">RankingMapStateType<em></em></a><li><li><a href="shopitemtype.doc.html" title="ShopItemType - ">ShopItemType<em></em></a><li><li><a href="shopstatetype.doc.html" title="ShopStateType - ">ShopStateType<em></em></a><li><li><a href="standalonemutation.doc.html" title="StandaloneMutation - ">StandaloneMutation<em></em></a><li><li><a href="standalonequery.doc.html" title="StandaloneQuery - ">StandaloneQuery<em></em></a><li><li><a href="statequery.doc.html" title="StateQuery - An delegate to provide read-only view of account states.
-            Gets an account state of the given
-            .If the given  has never been set
-            its account status, returns null instead of throwing
-            any exception.">StateQuery<em>An delegate to provide read-only view of account states.
-            Gets an account state of the given
-            .If the given  has never been set
-            its account status, returns null instead of throwing
-            any exception.</em></a><li><li><a href="transactiontype_1.doc.html" title="TransactionType_1 - ">TransactionType_1<em></em></a><li><li><a href="weeklyarenastatetype.doc.html" title="WeeklyArenaStateType - ">WeeklyArenaStateType<em></em></a><li></ul>
+        <ul class="require-by"><li><a href="actionmutation.doc.html" title="ActionMutation - ">ActionMutation<em></em></a><li><li><a href="agentstatetype.doc.html" title="AgentStateType - ">AgentStateType<em></em></a><li><li><a href="appprotocolversiontype.doc.html" title="AppProtocolVersionType - ">AppProtocolVersionType<em></em></a><li><li><a href="arenainfotype.doc.html" title="ArenaInfoType - ">ArenaInfoType<em></em></a><li><li><a href="avatarstatetype.doc.html" title="AvatarStateType - ">AvatarStateType<em></em></a><li><li><a href="block.doc.html" title="Block - ">Block<em></em></a><li><li><a href="blockheader.doc.html" title="BlockHeader - ">BlockHeader<em></em></a><li><li><a href="blockquery.doc.html" title="BlockQuery - ">BlockQuery<em></em></a><li><li><a href="keystoremutation.doc.html" title="KeyStoreMutation - ">KeyStoreMutation<em></em></a><li><li><a href="keystoretype.doc.html" title="KeyStoreType - ">KeyStoreType<em></em></a><li><li><a href="nodestatustype.doc.html" title="NodeStatusType - ">NodeStatusType<em></em></a><li><li><a href="protectedprivatekeytype.doc.html" title="ProtectedPrivateKeyType - ">ProtectedPrivateKeyType<em></em></a><li><li><a href="publickeytype.doc.html" title="PublicKeyType - ">PublicKeyType<em></em></a><li><li><a href="rankinginfotype.doc.html" title="RankingInfoType - ">RankingInfoType<em></em></a><li><li><a href="rankingmapstatetype.doc.html" title="RankingMapStateType - ">RankingMapStateType<em></em></a><li><li><a href="shopitemtype.doc.html" title="ShopItemType - ">ShopItemType<em></em></a><li><li><a href="shopstatetype.doc.html" title="ShopStateType - ">ShopStateType<em></em></a><li><li><a href="standalonemutation.doc.html" title="StandaloneMutation - ">StandaloneMutation<em></em></a><li><li><a href="standalonequery.doc.html" title="StandaloneQuery - ">StandaloneQuery<em></em></a><li><li><a href="statequery.doc.html" title="StateQuery - ">StateQuery<em></em></a><li><li><a href="transaction.doc.html" title="Transaction - ">Transaction<em></em></a><li><li><a href="transactionquery.doc.html" title="TransactionQuery - ">TransactionQuery<em></em></a><li><li><a href="transactiontype_1.doc.html" title="TransactionType_1 - ">TransactionType_1<em></em></a><li><li><a href="weeklyarenastatetype.doc.html" title="WeeklyArenaStateType - ">WeeklyArenaStateType<em></em></a><li></ul>
     </div>
 </section>
 <footer>

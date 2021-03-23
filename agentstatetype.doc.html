@@ -50,6 +50,11 @@
                 Address
             </a>
         </li>
+        <li  title="BigInt">
+            <a href="bigint.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                BigInt
+            </a>
+        </li>
         <li  title="Boolean">
             <a href="boolean.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 Boolean
@@ -58,6 +63,11 @@
         <li  title="ByteString">
             <a href="bytestring.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 ByteString
+            </a>
+        </li>
+        <li  title="DateTimeOffset">
+            <a href="datetimeoffset.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                DateTimeOffset
             </a>
         </li>
         <li  title="Decimal">
@@ -185,9 +195,19 @@
                 AvatarStateType
             </a>
         </li>
+        <li  title="Block">
+            <a href="block.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Block
+            </a>
+        </li>
         <li  title="BlockHeader">
             <a href="blockheader.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 BlockHeader
+            </a>
+        </li>
+        <li  title="BlockQuery">
+            <a href="blockquery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                BlockQuery
             </a>
         </li>
         <li  title="CollectionMapType">
@@ -260,6 +280,11 @@
                 NodeExceptionType
             </a>
         </li>
+        <li  title="NodeState">
+            <a href="nodestate.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                NodeState
+            </a>
+        </li>
         <li  title="NodeStatusType">
             <a href="nodestatustype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 NodeStatusType
@@ -300,6 +325,11 @@
                 PublicKeyType
             </a>
         </li>
+        <li  title="Query">
+            <a href="query.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Query
+            </a>
+        </li>
         <li  title="QuestListType">
             <a href="questlisttype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 QuestListType
@@ -333,6 +363,16 @@
         <li  title="TipChanged">
             <a href="tipchanged.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 TipChanged
+            </a>
+        </li>
+        <li  title="Transaction">
+            <a href="transaction.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Transaction
+            </a>
+        </li>
+        <li  title="TransactionQuery">
+            <a href="transactionquery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                TransactionQuery
             </a>
         </li>
         <li  title="TransactionType_1">
@@ -438,7 +478,7 @@
             </a>
             GraphQL Schema definition
         </h2>
-        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">AgentStateType</span> {</li><li></li><li><span class="tab"><span class="comment line">#   Address of agent.</span></span></li><li><span class="tab"><span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>! </span></li><li></li><li><span class="tab"><span class="comment line">#   Address list of avatar.</span></span></li><li><span class="tab"><span class="meta">avatarAddresses</span>: [<a class="support type" href="address.doc.html">Address</a>!] </span></li><li></li><li><span class="tab"><span class="comment line">#   Current NCG.</span></span></li><li><span class="tab"><span class="meta">gold</span>: <a class="support type" href="string.doc.html">String</a>! </span></li><li>}</li></ul></code>
+        <code class="highlight"><ul class="code" style="padding-left:28px"><li><span class="keyword operator ts">type</span> <span class="identifier">AgentStateType</span> {</li><li></li><li><span class="tab"><span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>! </span></li><li></li><li><span class="tab"><span class="meta">avatarAddresses</span>: [<a class="support type" href="address.doc.html">Address</a>!] </span></li><li></li><li><span class="tab"><span class="meta">gold</span>: <a class="support type" href="string.doc.html">String</a>! </span></li><li>}</li></ul></code>
     </div>
 </section>
 <section>
@@ -449,15 +489,7 @@
             </a>
             Require by
         </h2>
-        <ul class="require-by"><li><a href="statequery.doc.html" title="StateQuery - An delegate to provide read-only view of account states.
-            Gets an account state of the given
-            .If the given  has never been set
-            its account status, returns null instead of throwing
-            any exception.">StateQuery<em>An delegate to provide read-only view of account states.
-            Gets an account state of the given
-            .If the given  has never been set
-            its account status, returns null instead of throwing
-            any exception.</em></a><li></ul>
+        <ul class="require-by"><li><a href="statequery.doc.html" title="StateQuery - ">StateQuery<em></em></a><li></ul>
     </div>
 </section>
 <footer>

@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link type="text/css" rel="stylesheet" href="./styles/graphdoc.css" />
-    <title>DifferentAppProtocolVersionEncounterType</title>
+    <title>Transaction</title>
     <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700" rel="stylesheet"><link type="text/css" rel="stylesheet" href="./assets/code.css" /><link type="text/css" rel="stylesheet" href="./assets/require-by.css" />
 </head>
 <body class="slds-scrollable--y">
@@ -230,7 +230,7 @@
                 DecimalStatType
             </a>
         </li>
-        <li class="slds-is-active" title="DifferentAppProtocolVersionEncounterType">
+        <li  title="DifferentAppProtocolVersionEncounterType">
             <a href="differentappprotocolversionencountertype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 DifferentAppProtocolVersionEncounterType
             </a>
@@ -365,7 +365,7 @@
                 TipChanged
             </a>
         </li>
-        <li  title="Transaction">
+        <li class="slds-is-active" title="Transaction">
             <a href="transaction.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 Transaction
             </a>
@@ -466,7 +466,7 @@
     </div>
     <div class="container">
         <p class="slds-text-title--caps slds-text-color--weak">OBJECT</p>
-        <h1 class="slds-text-heading--large">DifferentAppProtocolVersionEncounterType</h1>
+        <h1 class="slds-text-heading--large">Transaction</h1>
         <div class="slds-text-body--regular"></div>
     </div>
 </section>
@@ -478,7 +478,7 @@
             </a>
             GraphQL Schema definition
         </h2>
-        <code class="highlight"><ul class="code" style="padding-left:28px"><li><span class="keyword operator ts">type</span> <span class="identifier">DifferentAppProtocolVersionEncounterType</span> {</li><li></li><li><span class="tab"><span class="meta">peer</span>: <a class="support type" href="string.doc.html">String</a>! </span></li><li></li><li><span class="tab"><span class="meta">peerVersion</span>: <a class="support type" href="appprotocolversiontype.doc.html">AppProtocolVersionType</a>! </span></li><li></li><li><span class="tab"><span class="meta">localVersion</span>: <a class="support type" href="appprotocolversiontype.doc.html">AppProtocolVersionType</a>! </span></li><li>}</li></ul></code>
+        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">Transaction</span> {</li><li></li><li><span class="tab"><span class="meta">id</span>: <a class="support type" href="id.doc.html">ID</a>! </span></li><li></li><li><span class="tab"><span class="meta">nonce</span>: <a class="support type" href="long.doc.html">Long</a>! </span></li><li></li><li><span class="tab"><span class="meta">signer</span>: <a class="support type" href="address.doc.html">Address</a>! </span></li><li></li><li><span class="tab"><span class="meta">publicKey</span>: <a class="support type" href="bytestring.doc.html">ByteString</a>! </span></li><li></li><li><span class="tab"><span class="meta">updatedAddresses</span>: [<a class="support type" href="address.doc.html">Address</a>!]! </span></li><li></li><li><span class="tab"><span class="meta">signature</span>: <a class="support type" href="bytestring.doc.html">ByteString</a>! </span></li><li></li><li><span class="tab"><span class="meta">timestamp</span>: <a class="support type" href="datetimeoffset.doc.html">DateTimeOffset</a>! </span></li><li></li><li><span class="tab"><span class="meta">actions</span>: [<a class="support type" href="action.doc.html">Action</a>!]! </span></li><li></li><li><span class="tab"><span class="meta">blockRef</span>: [<a class="support type" href="block.doc.html">Block</a>!] </span></li><li>}</li></ul></code>
     </div>
 </section>
 <section>
@@ -489,7 +489,7 @@
             </a>
             Require by
         </h2>
-        <ul class="require-by"><li><a href="standalonesubscription.doc.html" title="StandaloneSubscription - ">StandaloneSubscription<em></em></a><li></ul>
+        <ul class="require-by"><li><a href="block.doc.html" title="Block - ">Block<em></em></a><li><li><a href="transactionquery.doc.html" title="TransactionQuery - ">TransactionQuery<em></em></a><li></ul>
     </div>
 </section>
 <footer>

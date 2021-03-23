@@ -50,6 +50,11 @@
                 Address
             </a>
         </li>
+        <li  title="BigInt">
+            <a href="bigint.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                BigInt
+            </a>
+        </li>
         <li  title="Boolean">
             <a href="boolean.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 Boolean
@@ -58,6 +63,11 @@
         <li  title="ByteString">
             <a href="bytestring.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 ByteString
+            </a>
+        </li>
+        <li  title="DateTimeOffset">
+            <a href="datetimeoffset.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                DateTimeOffset
             </a>
         </li>
         <li  title="Decimal">
@@ -185,9 +195,19 @@
                 AvatarStateType
             </a>
         </li>
+        <li  title="Block">
+            <a href="block.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Block
+            </a>
+        </li>
         <li  title="BlockHeader">
             <a href="blockheader.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 BlockHeader
+            </a>
+        </li>
+        <li  title="BlockQuery">
+            <a href="blockquery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                BlockQuery
             </a>
         </li>
         <li  title="CollectionMapType">
@@ -260,6 +280,11 @@
                 NodeExceptionType
             </a>
         </li>
+        <li  title="NodeState">
+            <a href="nodestate.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                NodeState
+            </a>
+        </li>
         <li class="slds-is-active" title="NodeStatusType">
             <a href="nodestatustype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 NodeStatusType
@@ -300,6 +325,11 @@
                 PublicKeyType
             </a>
         </li>
+        <li  title="Query">
+            <a href="query.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Query
+            </a>
+        </li>
         <li  title="QuestListType">
             <a href="questlisttype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 QuestListType
@@ -333,6 +363,16 @@
         <li  title="TipChanged">
             <a href="tipchanged.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 TipChanged
+            </a>
+        </li>
+        <li  title="Transaction">
+            <a href="transaction.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Transaction
+            </a>
+        </li>
+        <li  title="TransactionQuery">
+            <a href="transactionquery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                TransactionQuery
             </a>
         </li>
         <li  title="TransactionType_1">
@@ -438,7 +478,7 @@
             </a>
             GraphQL Schema definition
         </h2>
-        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">NodeStatusType</span> {</li><li></li><li><span class="tab"><span class="meta">bootstrapEnded</span>: <a class="support type" href="boolean.doc.html">Boolean</a>! </span></li><li></li><li><span class="tab"><span class="meta">genesis</span>: <a class="support type" href="blockheader.doc.html">BlockHeader</a>! </span></li><li></li><li><span class="tab"><span class="comment line">#   Whether it is mining.</span></span></li><li><span class="tab"><span class="meta">isMining</span>: <a class="support type" href="boolean.doc.html">Boolean</a>! </span></li><li></li><li><span class="tab"><span class="meta">preloadEnded</span>: <a class="support type" href="boolean.doc.html">Boolean</a>! </span></li><li></li><li><span class="tab"><span class="comment line">#   Staged TxIds from the current node.</span></span></li><li><span class="tab"><span class="comment line"># </span></span></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: Target address to query</span></span></li><li><span class="tab"><span class="meta">stagedTxIds</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>): [<a class="support type" href="txid.doc.html">TxId</a>] </span></li><li></li><li><span class="tab"><span class="meta">tip</span>: <a class="support type" href="blockheader.doc.html">BlockHeader</a>! </span></li><li></li><li><span class="tab"><span class="comment line">#   The topmost blocks from the current node.</span></span></li><li><span class="tab"><span class="comment line"># </span></span></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>limit</strong>: The number of blocks to get.</span></span></li><li><span class="tab"><span class="comment line">#   <strong>miner</strong>: List only blocks mined by the given address.  (List </span></span></li><li><span class="tab"><span class="comment line">#   everything if omitted.)</span></span></li><li><span class="tab"><span class="meta">topmostBlocks</span>(<span class="meta">limit</span>: <a class="support type" href="int.doc.html">Int</a>!, <span class="meta">miner</span>: <a class="support type" href="address.doc.html">Address</a>): [<a class="support type" href="blockheader.doc.html">BlockHeader</a>]! </span></li><li>}</li></ul></code>
+        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">NodeStatusType</span> {</li><li></li><li><span class="tab"><span class="meta">bootstrapEnded</span>: <a class="support type" href="boolean.doc.html">Boolean</a>! </span></li><li></li><li><span class="tab"><span class="meta">preloadEnded</span>: <a class="support type" href="boolean.doc.html">Boolean</a>! </span></li><li></li><li><span class="tab"><span class="meta">tip</span>: <a class="support type" href="blockheader.doc.html">BlockHeader</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>limit</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>miner</strong>: </span></span></li><li><span class="tab"><span class="meta">topmostBlocks</span>(<span class="meta">limit</span>: <a class="support type" href="int.doc.html">Int</a>!, <span class="meta">miner</span>: <a class="support type" href="address.doc.html">Address</a>): [<a class="support type" href="blockheader.doc.html">BlockHeader</a>]! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="meta">stagedTxIds</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>): [<a class="support type" href="txid.doc.html">TxId</a>] </span></li><li></li><li><span class="tab"><span class="meta">genesis</span>: <a class="support type" href="blockheader.doc.html">BlockHeader</a>! </span></li><li></li><li><span class="tab"><span class="meta">isMining</span>: <a class="support type" href="boolean.doc.html">Boolean</a>! </span></li><li>}</li></ul></code>
     </div>
 </section>
 <section>
