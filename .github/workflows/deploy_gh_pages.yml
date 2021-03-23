@@ -15,6 +15,23 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '14'
+      - uses: actions/setup-dotnet@v1.7.2
+        name: Set up .NET Core SDK
+        with:
+          dotnet-version: '3.1.406'
+      - name: Build GraphQL Schema
+        run: |
+          dotnet restore
+          dotnet build
+          dotnet run -p NineChronicles.Headless.Executable -- \
+            --graphql-server \
+            --graphql-port 30000 \
+            --graphql-host localhost \
+            --store-path /tmp/store \
+            -V "0/CbfC996ad185c61a031f40CeeE80a055e6D83005/MEUCIQCtoZmiFgg5NXW7+5jYMae80lTlj7xO4tQfX9CnvomAtwIgWViM8s.4mYQ89wlGkohmynZ43olDzZLBk.bHShKCVrc=" \
+            -G "https://download.nine-chronicles.com/genesis-block-9c-main" &
+          sleep 10
+          wget http://localhost:30000/schema.graphql -O schema.graphql
       - name: Cache node modules
         uses: actions/cache@v2
         env:
@@ -31,6 +48,8 @@ jobs:
         run: npm install -g @2fd/graphdoc
       - name: Build
         run: graphdoc -s schema.graphql -o doc
+      - name: Copy GraphQL Schema to deploy
+        run: cp schema.graphql doc
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
