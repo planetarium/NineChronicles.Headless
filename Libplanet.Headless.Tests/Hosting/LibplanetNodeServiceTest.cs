@@ -27,7 +27,7 @@ namespace Libplanet.Headless.Tests.Hosting
                 {
                     AppProtocolVersion = new AppProtocolVersion(),
                     GenesisBlock = genesisBlock,
-                    PrivateKey = new PrivateKey(),
+                    SwarmPrivateKey = new PrivateKey(),
                     StoreStatesCacheSize = 2,
                     StorePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()),
                     Host = IPAddress.Loopback.ToString(),
@@ -53,7 +53,7 @@ namespace Libplanet.Headless.Tests.Hosting
                     new LibplanetNodeServiceProperties<DummyAction>()
                     {
                         AppProtocolVersion = new AppProtocolVersion(),
-                        PrivateKey = new PrivateKey(),
+                        SwarmPrivateKey = new PrivateKey(),
                         StoreStatesCacheSize = 2,
                         Host = IPAddress.Loopback.ToString(),
                     },

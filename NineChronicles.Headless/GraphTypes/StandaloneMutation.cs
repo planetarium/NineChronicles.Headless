@@ -92,7 +92,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     NineChroniclesNodeService service = standaloneContext.NineChroniclesNodeService;
-                    PrivateKey privateKey = service.PrivateKey;
+                    PrivateKey privateKey = service.MinerPrivateKey;
                     if (privateKey is null)
                     {
                         // FIXME We should cover this case on unittest.

@@ -153,7 +153,7 @@ namespace Libplanet.Headless.Hosting
 
             Swarm = new Swarm<T>(
                 BlockChain,
-                Properties.PrivateKey,
+                Properties.SwarmPrivateKey,
                 Properties.AppProtocolVersion,
                 trustedAppProtocolVersionSigners: Properties.TrustedAppProtocolVersionSigners,
                 host: Properties.Host,
@@ -178,12 +178,11 @@ namespace Libplanet.Headless.Hosting
 
         public virtual async Task StartAsync(CancellationToken cancellationToken)
         {
-            bool preload = true;
-            while (!cancellationToken.IsCancellationRequested && !_stopRequested)
+            if (!cancellationToken.IsCancellationRequested && !_stopRequested)
             {
                 var tasks = new List<Task>
                 {
-                    StartSwarm(preload, cancellationToken),
+                    StartSwarm(true, cancellationToken),
                     CheckMessage(Properties.MessageTimeout, cancellationToken),
                     CheckTip(Properties.TipTimeout, cancellationToken)
                 };
@@ -193,8 +192,6 @@ namespace Libplanet.Headless.Hosting
                     tasks.Add(CheckPeerTable(cancellationToken));
                 }
                 await await Task.WhenAny(tasks);
-                preload = false;
-                await Task.Delay(TimeSpan.FromSeconds(15), cancellationToken);
             }
         }
 
@@ -213,6 +210,13 @@ namespace Libplanet.Headless.Hosting
                 throw new InvalidOperationException(
                     $"An exception occurred during {nameof(StartMining)}(). " +
                     $"{nameof(Swarm)} is null.");
+            }
+
+            if (privateKey is null)
+            {
+                throw new InvalidOperationException(
+                    $"An exception occurred during {nameof(StartMining)}(). " +
+                    $"{nameof(privateKey)} is null.");
             }
 
             MiningCancellationTokenSource =
@@ -264,7 +268,7 @@ namespace Libplanet.Headless.Hosting
             }
             else if (type == "monorocksdb")
             {
-                 try
+                try
                 {
                     store = new RocksDBStore.MonoRocksDBStore(
                         path,

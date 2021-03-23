@@ -28,7 +28,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     try
                     {
-                        PrivateKey privateKey = service.PrivateKey;
+                        PrivateKey privateKey = service.MinerPrivateKey;
                         Address address = privateKey.ToAddress();
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
                         IValue state = blockChain.GetState(ActivatedAccountsState.Address);

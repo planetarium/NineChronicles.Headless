@@ -105,7 +105,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             Block<PolymorphicAction<ActionBase>> genesis =
                 MakeGenesisBlock(adminAddress, new Currency("NCG", 2, minters: null), activateAccounts);
-            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis);
+            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
 
@@ -132,7 +132,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var state = (Bencodex.Types.Dictionary)blockChain.GetState(
                 ActivatedAccountsState.Address);
             var activatedAccountsState = new ActivatedAccountsState(state);
-            Address userAddress = service.PrivateKey.ToAddress();
+            Address userAddress = service.MinerPrivateKey.ToAddress();
             Assert.True(activatedAccountsState.Accounts.Contains(userAddress));
         }
 
@@ -146,11 +146,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     goldCurrency,
                     ImmutableHashSet<Address>.Empty
                 );
-            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis);
+            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.BlockChain;
 
-            Address senderAddress = service.PrivateKey.ToAddress();
+            Address senderAddress = service.MinerPrivateKey.ToAddress();
 
             var blockChain = StandaloneContextFx.BlockChain;
             var store = service.Store;
@@ -643,7 +643,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     new Currency("NCG", 2, minters: null),
                     ImmutableHashSet<Address>.Empty
                 );
-            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis);
+            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
 
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
@@ -663,7 +663,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Transaction<PolymorphicAction<ActionBase>> tx =
                 Transaction<PolymorphicAction<ActionBase>>.Create(
                     0,
-                    service.PrivateKey,
+                    service.MinerPrivateKey,
                     genesis.Hash,
                     new PolymorphicAction<ActionBase>[] { }
                 );
@@ -679,7 +679,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 result.Data
             );
             Block<PolymorphicAction<ActionBase>> mined =
-                await StandaloneContextFx.BlockChain.MineBlock(service.PrivateKey.ToAddress());
+                await StandaloneContextFx.BlockChain.MineBlock(service.MinerPrivateKey.ToAddress());
             Assert.Contains(tx, mined.Transactions);
         }
 

@@ -25,7 +25,6 @@ namespace NineChronicles.Headless.Tests.Common
             PrivateKey privateKey = null
         )
         {
-            privateKey ??= new PrivateKey();
             var storePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
@@ -34,7 +33,7 @@ namespace NineChronicles.Headless.Tests.Common
                 GenesisBlock = genesis,
                 StorePath = storePath,
                 StoreStatesCacheSize = 2,
-                PrivateKey = privateKey,
+                SwarmPrivateKey = new PrivateKey(),
                 Port = null,
                 MinimumDifficulty = MinimumDifficulty,
                 NoMiner = true,
@@ -47,10 +46,7 @@ namespace NineChronicles.Headless.Tests.Common
                 TipTimeout = TimeSpan.FromMinutes(1),
                 DemandBuffer = 1150,
             };
-            return new NineChroniclesNodeService(properties, null)
-            {
-                PrivateKey = privateKey
-            };
+            return new NineChroniclesNodeService(privateKey, properties, null);
         }
     }
 }
