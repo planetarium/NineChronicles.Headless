@@ -107,6 +107,11 @@ namespace NineChronicles.Headless
             return UnaryResult(encoded);
         }
 
+        public UnaryResult<byte[]> GetTip()
+        {
+            return UnaryResult(_delayedRenderer?.Tip?.Header.Serialize());
+        }
+
         public UnaryResult<long> GetNextTxNonce(byte[] addressBytes)
         {
             var address = new Address(addressBytes);
