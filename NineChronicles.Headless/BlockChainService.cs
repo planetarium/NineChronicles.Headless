@@ -32,6 +32,7 @@ namespace NineChronicles.Headless
         private Codec _codec;
         private LibplanetNodeServiceProperties<NineChroniclesActionType> _libplanetNodeServiceProperties;
         private DelayedRenderer<NineChroniclesActionType> _delayedRenderer;
+        
         public BlockChainService(
             BlockChain<NineChroniclesActionType> blockChain,
             Swarm<NineChroniclesActionType> swarm,
