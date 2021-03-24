@@ -148,25 +148,6 @@ namespace NineChronicles.Headless.GraphTypes
                     return blockChain.GetNextTxNonce(address);
                 }
             );
-
-            Field<TransactionType<NCAction>>(
-                name: "getTx",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<TxIdType>>
-                        {Name = "txId", Description = "transaction id."}
-                ),
-                resolve: context =>
-                {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
-
-                    var txId = context.GetArgument<TxId>("txId");
-                    return blockChain.GetTransaction(txId);
-                }
-            );
         }
     }
 }
