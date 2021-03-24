@@ -11,7 +11,7 @@ using NineChronicles.Headless.GraphTypes.States;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    public class StateQuery : ObjectGraphType<AccountStateGetter>
+    public class StateQuery : ObjectGraphType<(AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter)>
     {
         public StateQuery()
         {
@@ -27,7 +27,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var address = context.GetArgument<Address>("address");
-                    if (!(context.Source(address) is { } state))
+                    if (!(context.Source.accountStateGetter(address) is { } state))
                     {
                         throw new InvalidOperationException($"The state {address} doesn't exists");
                     }
@@ -45,7 +45,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var index = context.GetArgument<int>("index");
-                    if (context.Source(RankingState.Derive(index)) is { } state)
+                    if (context.Source.accountStateGetter(RankingState.Derive(index)) is { } state)
                     {
                         return new RankingMapState((Dictionary) state);
                     }
@@ -55,7 +55,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<ShopStateType>(
                 name: "shop",
                 description: "State for shop.",
-                resolve: context => context.Source(Addresses.Shop) is { } state
+                resolve: context => context.Source.accountStateGetter(Addresses.Shop) is { } state
                     ? new ShopState((Dictionary) state)
                     : null);
             Field<WeeklyArenaStateType>(
@@ -70,7 +70,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var index = context.GetArgument<int>("index");
-                    if (context.Source(WeeklyArenaState.DeriveAddress(index)) is { } state)
+                    if (context.Source.accountStateGetter(WeeklyArenaState.DeriveAddress(index)) is { } state)
                     {
                         return new WeeklyArenaState((Dictionary) state);
                     }
@@ -88,9 +88,9 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var address = context.GetArgument<Address>("address");
-                    if (context.Source(address) is { } state)
+                    if (context.Source.accountStateGetter(address) is { } state)
                     {
-                        return new AgentState((Dictionary) state);
+                        return (new AgentState((Dictionary) state), context.Source.accountStateGetter, context.Source.accountBalanceGetter);
                     }
 
                     return null;

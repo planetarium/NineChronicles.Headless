@@ -41,12 +41,8 @@ namespace NineChronicles.Headless.GraphTypes
                         null => null,
                     };
 
-                    IValue? GetState(Address address) =>
-                        standaloneContext.BlockChain?.GetState(
-                            address,
-                            blockHash);
-
-                    return (AccountStateGetter)GetState;
+                    return (standaloneContext.BlockChain?.ToAccountStateGetter(blockHash),
+                        standaloneContext.BlockChain?.ToAccountBalanceGetter(blockHash));
                 }
             );
 
