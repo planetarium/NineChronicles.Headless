@@ -72,11 +72,6 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            Field<KeyStoreType>(
-                name: "keyStore",
-                resolve: context => standaloneContext.KeyStore
-            ).AuthorizeWithLocalPolicyIf(useSecretToken);
-
             Field<NonNullGraphType<NodeStatusType>>(
                 name: "nodeStatus",
                 resolve: context => new NodeStatusType
