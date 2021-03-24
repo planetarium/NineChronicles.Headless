@@ -12,6 +12,7 @@ namespace NineChronicles.Headless.GraphTypes
         {
             Field<NonNullGraphType<ListGraphType<StringGraphType>>>(
                 name: "state",
+                description: "Summary of other peers connected to this node. It consists of address, chain height, and total difficulty.",
                 resolve: context =>
                 {
                     var service = standaloneContext.NineChroniclesNodeService;
