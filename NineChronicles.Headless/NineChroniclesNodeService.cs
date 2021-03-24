@@ -260,8 +260,8 @@ namespace NineChronicles.Headless
                 );
             }
 
-            strictRenderer.BlockChain = NodeService?.BlockChain ?? throw new Exception("BlockChain is null.");
-            if (NodeService?.BlockChain?.GetState(AuthorizedMinersState.Address) is Dictionary ams &&
+            strictRenderer.BlockChain = NodeService.BlockChain ?? throw new Exception("BlockChain is null.");
+            if (NodeService.BlockChain?.GetState(AuthorizedMinersState.Address) is Dictionary ams &&
                 blockPolicy is BlockPolicy bp)
             {
                 bp.AuthorizedMinersState = new AuthorizedMinersState(ams);
