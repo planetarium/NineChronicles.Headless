@@ -32,7 +32,6 @@ namespace NineChronicles.Headless
         private Codec _codec;
         private LibplanetNodeServiceProperties<NineChroniclesActionType> _libplanetNodeServiceProperties;
         private DelayedRenderer<NineChroniclesActionType> _delayedRenderer;
-
         public BlockChainService(
             BlockChain<NineChroniclesActionType> blockChain,
             Swarm<NineChroniclesActionType> swarm,
@@ -109,7 +108,7 @@ namespace NineChronicles.Headless
 
         public UnaryResult<byte[]> GetTip()
         {
-            return UnaryResult(_delayedRenderer?.Tip?.Header.Serialize());
+            return UnaryResult(_blockChain.Tip?.Header.Serialize());
         }
 
         public UnaryResult<long> GetNextTxNonce(byte[] addressBytes)
