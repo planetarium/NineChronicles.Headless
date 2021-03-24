@@ -26,7 +26,7 @@ namespace NineChronicles.Headless.GraphTypes
             );
             Field<NonNullGraphType<ByteStringType>>(
                 nameof(Transaction<T>.Signature),
-                description: "A digital signature of the content of this Transaction<T>.",
+                description: "A digital signature of the content of this transaction.",
                 resolve: context => context.Source.Signature
             );
             Field<NonNullGraphType<AddressType>>(
