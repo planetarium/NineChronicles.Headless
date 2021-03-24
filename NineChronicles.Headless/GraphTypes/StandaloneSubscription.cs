@@ -137,9 +137,8 @@ namespace NineChronicles.Headless.GraphTypes
                 Type = typeof(NonNullGraphType<NotificationType>),
                 Resolver = new FuncFieldResolver<Notification>(context => (context.Source as Notification)!),
                 Subscriber = new EventStreamResolver<Notification>(context =>
-                    StandaloneContext.NotificationSubject.AsObservable()
-                        .Where(notification => notification.Receiver == context.UserContext[GraphQLService.UserContextPrivateKeyKey].As<PrivateKey>()?.ToAddress())),
-            }).AuthorizeWith(GraphQLService.UserPolicyKey);
+                    StandaloneContext.NotificationSubject.AsObservable()),
+            });
             AddField(new EventStreamFieldType
             {
                 Name = "nodeException",
