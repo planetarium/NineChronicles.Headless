@@ -16,17 +16,14 @@ using Xunit;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
-    public class AuthenticationMutationTest : IDisposable
+    public class AuthenticationMutationTest
     {
-        private readonly Web3KeyStore _keyStore;
         private readonly PrivateKey _privateKey;
-        private readonly string _passphrase;
         private readonly ServiceCollection _services;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public AuthenticationMutationTest()
         {
-            _keyStore = GraphQLTestUtils.CreateRandomWeb3KeyStore();
             _httpContextAccessor = new HttpContextAccessor();
             _httpContextAccessor.HttpContext = new DefaultHttpContext
             {
@@ -44,33 +41,25 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             _httpContextAccessor.HttpContext.RequestServices = serviceProviderMock.Object;
 
             _privateKey = new PrivateKey();
-            _passphrase = Guid.NewGuid().ToString();
-            _keyStore.Add(ProtectedPrivateKey.Protect(_privateKey, _passphrase));
             _services = new ServiceCollection();
-            _services.AddSingleton<IKeyStore>(_keyStore);
             _services.AddSingleton(_httpContextAccessor);
         }
 
         [Fact]
         public async Task Login_Success()
         {
-            var result = await ExecuteAsync(LoginQuery(_privateKey.ToAddress(), _passphrase));
+            var result = await ExecuteAsync(LoginQuery(_privateKey));
             Assert.Equal(true, result.Data.As<Dictionary<string, object>>()["login"]);
             Assert.Null(result.Errors);
         }
 
-        [Fact]
-        public async Task Login_ShouldFailWithNotExistedKey()
+        [Theory]
+        [InlineData("")]
+        [InlineData("a")]
+        [InlineData("00")]
+        public async Task Login_ShouldFailWithIncorrectPrivateKey(string incorrectPrivateKeyHex)
         {
-            var result = await ExecuteAsync(LoginQuery(new PrivateKey().ToAddress(), _passphrase));
-            Assert.Null(result.Data);
-            Assert.NotNull(result.Errors);
-        }
-
-        [Fact]
-        public async Task Login_ShouldFailWithIncorrectPassphrase()
-        {
-            var result = await ExecuteAsync(LoginQuery(_privateKey.ToAddress(), Guid.NewGuid().ToString()));
+            var result = await ExecuteAsync(LoginQuery(incorrectPrivateKeyHex));
             Assert.Null(result.Data);
             Assert.NotNull(result.Errors);
         }
@@ -83,8 +72,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.NotNull(result.Errors);
         }
 
-        private string LoginQuery(Address address, string passphrase) =>
-            @$"mutation {{ login(address: ""{address}"", passphrase: ""{passphrase}"") }}";
+        private string LoginQuery(PrivateKey privateKey) =>
+            LoginQuery(ByteUtil.Hex(privateKey.ByteArray));
+        
+        private string LoginQuery(string privateKeyHex) =>
+            @$"mutation {{ login(privateKey: ""{privateKeyHex}"") }}";
 
         private string LogoutQuery() =>
             "mutation { logout }";
@@ -92,12 +84,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         private Task<ExecutionResult> ExecuteAsync(string query)
         {
             return GraphQLTestUtils.ExecuteQueryAsync<AuthenticationMutation>(_services, query, executionMode: GraphQLTestUtils.ExecutionMode.Mutation, source: new object());
-        }
-        
-
-        public void Dispose()
-        {
-            Directory.Delete(_keyStore.Path, true);
         }
     }
 }

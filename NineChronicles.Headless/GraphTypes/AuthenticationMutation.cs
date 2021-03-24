@@ -15,42 +15,25 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class AuthenticationMutation : ObjectGraphType
     {
-        private readonly IKeyStore _keyStore;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public AuthenticationMutation(IKeyStore keyStore, IHttpContextAccessor httpContextAccessor)
+        public AuthenticationMutation(IHttpContextAccessor httpContextAccessor)
         {
-            _keyStore = keyStore;
             _httpContextAccessor = httpContextAccessor;
 
             FieldAsync<NonNullGraphType<BooleanGraphType>>(
                 "login",
-                "Log in with the the given address and the given passphrase. " +
-                    "If the address doesn't exist in the key store, it will fail.",
+                "Log in with the given private key.",
                 new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
+                    new QueryArgument<NonNullGraphType<ByteStringType>>
                     {
-                        Name = "address",
-                        Description = "The address of the private key to use in this session.",
-                    },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "passphrase",
-                        Description = "The passphrase to unlock the protected private key.",
+                        Name = "privateKey",
+                        Description = "The private key to use in this session.",
                     }
                 ), resolve: async context =>
                 {
-                    Address address = context.GetArgument<Address>("address");
-                    string passphrase = context.GetArgument<string>("passphrase");
-                    if (!(_keyStore.List().First(t => t.Item2.Address == address)?.Item2 is { } protectedPrivateKey))
-                    {
-                        context.Errors.Add(
-                            new ExecutionError(
-                                $"The given address '{address}' didn't exist in protected private keys."));
-                        return false;
-                    }
-
-                    PrivateKey privateKey = protectedPrivateKey.Unprotect(passphrase);
+                    byte[] privateKeyBytes = context.GetArgument<byte[]>("privateKey");
+                    PrivateKey privateKey = new PrivateKey(privateKeyBytes);
                     var claims = new List<Claim>
                     {
                         new Claim(ClaimTypes.Name, privateKey.ToAddress().ToHex()),
