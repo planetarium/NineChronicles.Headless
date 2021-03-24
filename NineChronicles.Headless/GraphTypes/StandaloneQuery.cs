@@ -46,32 +46,6 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            Field<ByteStringType>(
-                name: "state",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "The address of state to fetch from the chain." },
-                    new QueryArgument<ByteStringType> { Name = "hash", Description = "The hash of the block used to fetch state from chain." }
-                ),
-                resolve: context =>
-                {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
-
-                    var address = context.GetArgument<Address>("address");
-                    var blockHashByteArray = context.GetArgument<byte[]>("hash");
-                    var blockHash = blockHashByteArray is null
-                        ? blockChain.Tip.Hash
-                        : new HashDigest<SHA256>(blockHashByteArray);
-
-                    var state = blockChain.GetState(address, blockHash);
-
-                    return new Codec().Encode(state);
-                }
-            );
-
             Field<NonNullGraphType<NodeStatusType>>(
                 name: "nodeStatus",
                 resolve: context => new NodeStatusType
