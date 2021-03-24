@@ -94,11 +94,6 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context => new { }
             );
 
-            Field<NonNullGraphType<ValidationQuery>>(
-                name: "validation",
-                description: "The validation method provider for Libplanet types.",
-                resolve: context => new ValidationQuery(standaloneContext));
-
             Field<NonNullGraphType<ActivationStatusQuery>>(
                     name: "activationStatus",
                     description: "Check if the provided address is activated.",
