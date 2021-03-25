@@ -7,11 +7,13 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
+using Bencodex.Types;
 using Grpc.Core;
 using Lib9c.Renderer;
 using MagicOnion.Client;
 using Microsoft.Extensions.Hosting;
 using Nekoyume.Action;
+using Nekoyume.Model.State;
 using Nekoyume.Shared.Hubs;
 using Serilog;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -128,6 +130,10 @@ namespace NineChronicles.Headless
 
                     try
                     {
+                        // FIXME Strip shop state from aev due to its size.
+                        //       we should remove this code after resizing it.
+                        ev.PreviousStates = ev.PreviousStates.SetState(ShopState.Address, new Null());
+                        ev.OutputStates = ev.OutputStates.SetState(ShopState.Address, new Null());
                         formatter.Serialize(df, ev);
                         await _client.BroadcastRenderAsync(c.ToArray());
                     }
@@ -156,6 +162,10 @@ namespace NineChronicles.Headless
 
                     try
                     {
+                        // FIXME Strip shop state from aev due to its size.
+                        //       we should remove this code after resizing it.
+                        ev.PreviousStates = ev.PreviousStates.SetState(ShopState.Address, new Null());
+                        ev.OutputStates = ev.OutputStates.SetState(ShopState.Address, new Null());
                         formatter.Serialize(df, ev);
                         await _client.BroadcastUnrenderAsync(c.ToArray());
                     }
