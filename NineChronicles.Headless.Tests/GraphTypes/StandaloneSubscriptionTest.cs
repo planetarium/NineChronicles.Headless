@@ -41,7 +41,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
                 Assert.IsType<SubscriptionExecutionResult>(result);
                 var subscribeResult = (SubscriptionExecutionResult) result;
-                Assert.Equal(index, StandaloneContextFx.BlockChain.Tip.Index);
+                Assert.Equal(index, BlockChain.Tip.Index);
                 var stream = subscribeResult.Streams.Values.FirstOrDefault();
                 var rawEvents = await stream.Take((int)index);
                 Assert.NotNull(rawEvents);
@@ -161,12 +161,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var apv2 = AppProtocolVersion.Sign(apvPrivateKey, 0);
             var peer = new Peer(apvPrivateKey.PublicKey);
             StandaloneContextFx.DifferentAppProtocolVersionEncounterSubject.OnNext(
-                new DifferentAppProtocolVersionEncounter
-                {
-                    Peer = peer,
-                    PeerVersion = apv1,
-                    LocalVersion = apv2,
-                }
+                new DifferentAppProtocolVersionEncounter(peer, apv1, apv2)
             );
             var rawEvents = await stream.Take(1);
             var rawEvent = (Dictionary<string, object>)rawEvents.Data;

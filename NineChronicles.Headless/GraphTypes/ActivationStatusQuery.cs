@@ -28,9 +28,17 @@ namespace NineChronicles.Headless.GraphTypes
 
                     try
                     {
-                        PrivateKey privateKey = service.MinerPrivateKey;
+                        if (!(service.MinerPrivateKey is { } privateKey))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                        }
+
+                        if (!(service.Swarm?.BlockChain is { } blockChain))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
+                        }
+
                         Address address = privateKey.ToAddress();
-                        BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
                         IValue state = blockChain.GetState(ActivatedAccountsState.Address);
 
                         if (state is Bencodex.Types.Dictionary asDict)

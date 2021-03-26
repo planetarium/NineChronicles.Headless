@@ -23,7 +23,7 @@ namespace NineChronicles.Headless.GraphTypes
             return value;
         }
 
-        public override object ParseValue(object value)
+        public override object? ParseValue(object value)
         {
             switch (value)
             {
@@ -37,7 +37,7 @@ namespace NineChronicles.Headless.GraphTypes
             }
         }
 
-        public override object ParseLiteral(IValue value)
+        public override object? ParseLiteral(IValue value)
         {
             if (value is StringValue)
             {

@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿#nullable disable
+using System;
+using System.Threading.Tasks;
 using MagicOnion.Server.Hubs;
 using Nekoyume.Shared.Hubs;
 
@@ -15,6 +17,11 @@ namespace NineChronicles.Headless
 
         public async Task LeaveAsync()
         {
+            if (group is null)
+            {
+                throw new InvalidOperationException();
+            }
+
             await group.RemoveAsync(Context);
         }
 

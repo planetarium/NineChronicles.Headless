@@ -4,8 +4,20 @@ namespace NineChronicles.Headless
 {
     public class DifferentAppProtocolVersionEncounter
     {
-        public Peer Peer;
-        public AppProtocolVersion PeerVersion;
-        public AppProtocolVersion LocalVersion;
+        public Peer Peer { get; }
+
+        public AppProtocolVersion PeerVersion { get; }
+
+        public AppProtocolVersion LocalVersion { get; }
+
+        public DifferentAppProtocolVersionEncounter(
+            Peer peer,
+            AppProtocolVersion peerVersion,
+            AppProtocolVersion localVersion)
+        {
+            Peer = peer;
+            PeerVersion = peerVersion;
+            LocalVersion = localVersion;
+        }
     }
 }

@@ -9,7 +9,7 @@ namespace NineChronicles.Headless
     {
         public static NineChroniclesNodeService CreateHeadless(
             NineChroniclesNodeServiceProperties properties,
-            StandaloneContext standaloneContext = null,
+            StandaloneContext? standaloneContext = null,
             bool ignoreBootstrapFailure = true,
             bool ignorePreloadFailure = true,
             bool strictRendering = false,
@@ -20,25 +20,26 @@ namespace NineChronicles.Headless
             TimeSpan txLifeTime = default
         )
         {
-            Progress<PreloadState> progress = null;
-            if (!(standaloneContext is null))
+            if (standaloneContext is null)
             {
-                progress = new Progress<PreloadState>(state =>
+                throw new InvalidOperationException($"{nameof(standaloneContext)} is null.");
+            }
+            
+            Progress<PreloadState> progress = new Progress<PreloadState>(state =>
                 {
                     standaloneContext.PreloadStateSubject.OnNext(state);
                 });
+                
+            if (properties.Libplanet is null)
+            {
+                throw new InvalidOperationException($"{nameof(properties.Libplanet)} is null.");
             }
 
             properties.Libplanet.DifferentAppProtocolVersionEncountered =
                 (Peer peer, AppProtocolVersion peerVersion, AppProtocolVersion localVersion) =>
                 {
                     standaloneContext.DifferentAppProtocolVersionEncounterSubject.OnNext(
-                        new DifferentAppProtocolVersionEncounter
-                        {
-                            Peer = peer,
-                            PeerVersion = peerVersion,
-                            LocalVersion = localVersion,
-                        }
+                        new DifferentAppProtocolVersionEncounter(peer, peerVersion, localVersion)
                     );
 
                     // FIXME: 일단은 버전이 다른 피어는 마주쳐도 쌩깐다.
@@ -67,11 +68,10 @@ namespace NineChronicles.Headless
                 authorizedMiner: authorizedMiner,
                 txLifeTime: txLifeTime);
             service.ConfigureStandaloneContext(standaloneContext);
-
             return service;
         }
 
-        internal static void ConfigureStandaloneContext(this NineChroniclesNodeService service, StandaloneContext standaloneContext)
+        internal static void ConfigureStandaloneContext(this NineChroniclesNodeService service, StandaloneContext? standaloneContext)
         {
             if (!(standaloneContext is null))
             {

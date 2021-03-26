@@ -12,9 +12,9 @@ namespace NineChronicles.Headless.Tests
     {
         public static Task<ExecutionResult> ExecuteQueryAsync<TObjectGraphType>(
             string query,
-            IDictionary<string, object> userContext = null,
-            object source = null,
-            StandaloneContext standaloneContext = null)
+            IDictionary<string, object>? userContext = null,
+            object? source = null,
+            StandaloneContext? standaloneContext = null)
             where TObjectGraphType : class, IObjectGraphType
         {
             var services = new ServiceCollection();
@@ -37,8 +37,8 @@ namespace NineChronicles.Headless.Tests
         public static Task<ExecutionResult> ExecuteQueryAsync<TObjectGraphType>(
             IServiceProvider serviceProvider,
             string query,
-            IDictionary<string, object> userContext = null,
-            object source = null)
+            IDictionary<string, object>? userContext = null,
+            object? source = null)
             where TObjectGraphType : IObjectGraphType
         {
             var graphType = (IObjectGraphType)serviceProvider.GetService(typeof(TObjectGraphType));

@@ -65,32 +65,32 @@ namespace NineChronicles.Headless.Executable
         public async Task Run(
             bool noMiner = false,
             [Option("app-protocol-version", new[] { 'V' }, Description = "App protocol version token")]
-            string appProtocolVersionToken = null,
+            string? appProtocolVersionToken = null,
             [Option('G')]
-            string genesisBlockPath = null,
+            string? genesisBlockPath = null,
             [Option('H')]
-            string host = null,
+            string? host = null,
             [Option('P')]
             ushort? port = null,
             [Option("swarm-private-key",
                 Description = "The private key used for signing messages and to specify your node. " +
                               "If you leave this null, a randomly generated value will be used.")]
-            string swarmPrivateKeyString = null,
+            string? swarmPrivateKeyString = null,
             [Option('D')]
             int minimumDifficulty = 5000000,
             [Option("miner-private-key",
                 Description = "The private key used for mining blocks. " +
                               "Must not be null if you want to turn on mining with libplanet-node.")]
-            string minerPrivateKeyString = null,
-            string storeType = null,
-            string storePath = null,
+            string? minerPrivateKeyString = null,
+            string? storeType = null,
+            string? storePath = null,
             [Option("ice-server", new [] { 'I', })]
-            string[] iceServerStrings = null,
+            string[]? iceServerStrings = null,
             [Option("peer")]
-            string[] peerStrings = null,
+            string[]? peerStrings = null,
             [Option("trusted-app-protocol-version-signer", new[] { 'T' },
                     Description = "Trustworthy signers who claim new app protocol versions")]
-            string[] trustedAppProtocolVersionSigners = null,
+            string[]? trustedAppProtocolVersionSigners = null,
             bool rpcServer = false,
             string rpcListenHost = "0.0.0.0",
             int? rpcListenPort = null,
@@ -103,7 +103,7 @@ namespace NineChronicles.Headless.Executable
             [Option("graphql-secret-token-path", Description = "The path to write GraphQL secret token. " +
                                                                "If you want to protect this headless application, " +
                                                                "you should use this option and take it into headers.")]
-            string graphQLSecretTokenPath = null,
+            string? graphQLSecretTokenPath = null,
             [Option(Description = "Run without CORS policy.")]
             bool noCors = false,
             [Option("libplanet-node")]
@@ -142,13 +142,13 @@ namespace NineChronicles.Headless.Executable
             [Option(Description = "The log minimum level during headless execution.  debug by default.")]
             string logMinimumLevel = "debug",
             [Option(Description = "The Cognito identity for AWS CloudWatch logging.")]
-            string awsCognitoIdentity = null,
+            string? awsCognitoIdentity = null,
             [Option(Description = "The access key for AWS CloudWatch logging.")]
-            string awsAccessKey = null,
+            string? awsAccessKey = null,
             [Option(Description = "The secret key for AWS CloudWatch logging.")]
-            string awsSecretKey = null,
+            string? awsSecretKey = null,
             [Option(Description = "The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2).")]
-            string awsRegion = null,
+            string? awsRegion = null,
             [Option(Description = "Run as an authorized miner, which mines only blocks that should be authorized.")]
             bool authorizedMiner = false,
             [Option(Description = "The lifetime of each transaction, which uses minute as its unit.  60 (m) by default.")]
@@ -208,7 +208,7 @@ namespace NineChronicles.Headless.Executable
                     credentials,
                     regionEndpoint,
                     "9c-standalone-logs",
-                    guid.ToString());
+                    guid.ToString()!);
                 var periodicBatchingSink = new PeriodicBatchingSink(awsSink, new PeriodicBatchingSinkOptions
                 {
                     Period = TimeSpan.FromSeconds(2),
@@ -239,7 +239,7 @@ namespace NineChronicles.Headless.Executable
 
                 if (graphQLServer)
                 {
-                    string secretToken = null;
+                    string? secretToken = null;
                     if (graphQLSecretTokenPath is { })
                     {
                         var buffer = new byte[40];

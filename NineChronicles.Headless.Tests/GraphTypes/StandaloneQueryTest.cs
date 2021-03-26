@@ -31,7 +31,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 {
     public class StandaloneQueryTest : GraphQLTestBase
     {
-        private readonly Dictionary<string, string> _sheets = null;
+        private readonly Dictionary<string, string> _sheets;
 
         public StandaloneQueryTest(ITestOutputHelper output) : base(output)
         {
@@ -184,7 +184,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Null(result.Errors);
             Assert.Equal(expectedResult, result.Data);
 
-            var tx = StandaloneContextFx.BlockChain.MakeTransaction(
+            var tx = StandaloneContextFx.BlockChain!.MakeTransaction(
                 new PrivateKey(), 
                 new PolymorphicAction<ActionBase>[] { }
             );
@@ -419,9 +419,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var service = new NineChroniclesNodeService(userPrivateKey, properties, null);
             StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
+            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
-            var blockChain = StandaloneContextFx.BlockChain;
+            var blockChain = StandaloneContextFx.BlockChain!;
 
             var queryResult = await ExecuteQueryAsync( "query { activationStatus { activated } }");
             var result = (bool)queryResult.Data
@@ -459,7 +459,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var userAddress = userPrivateKey.ToAddress();
             var service = MakeMineChroniclesNodeService(userPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
+            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
             var blockChain = StandaloneContextFx.BlockChain;
             var query = $"query {{ goldBalance(address: \"{userAddress}\") }}";
@@ -472,7 +472,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 queryResult.Data
             );
            
-            await blockChain.MineBlock(userAddress);
+            await blockChain!.MineBlock(userAddress);
 
             queryResult = await ExecuteQueryAsync(query);
             Assert.Equal(
@@ -491,9 +491,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var userAddress = userPrivateKey.ToAddress();
             var service = MakeMineChroniclesNodeService(userPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
+            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
-            var blockChain = StandaloneContextFx.BlockChain;
+            var blockChain = StandaloneContextFx.BlockChain!;
             var query = $"query {{ nextTxNonce(address: \"{userAddress}\") }}";
             var queryResult = await ExecuteQueryAsync(query);
             Assert.Equal(
@@ -522,7 +522,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var userAddress = userPrivateKey.ToAddress();
             var service = MakeMineChroniclesNodeService(userPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm.BlockChain;
+            StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
 
             var blockChain = StandaloneContextFx.BlockChain;
             var queryFormat = @"query {{
@@ -540,7 +540,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }}";
             var queryResult = await ExecuteQueryAsync(string.Format(queryFormat, new TxId()));
             Assert.Equal(
-                new Dictionary<string, object>
+                new Dictionary<string, object?>
                 {
                     ["getTx"] = null
                 },

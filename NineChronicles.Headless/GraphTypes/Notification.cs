@@ -5,13 +5,9 @@ namespace NineChronicles.Headless.GraphTypes
         public NotificationEnum Type { get; set; }
         public string Message { get; set; }
 
-        public Notification(NotificationEnum type)
+        public Notification(NotificationEnum type, string msg = "")
         {
-            Type = type;
-        }
-
-        public Notification(NotificationEnum type, string msg) : this(type)
-        {
+            Type = type;   
             Message = msg;
         }
     }

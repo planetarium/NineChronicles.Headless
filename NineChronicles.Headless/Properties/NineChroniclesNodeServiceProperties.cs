@@ -18,26 +18,26 @@ namespace NineChronicles.Headless.Properties
         /// with the private key used in swarm to sign messages.
         /// </summary>
         /// <seealso cref="LibplanetNodeServiceProperties{T}.SwarmPrivateKey"/>
-        public PrivateKey MinerPrivateKey { get; set; }
+        public PrivateKey? MinerPrivateKey { get; set; }
         
         public RpcNodeServiceProperties? Rpc { get; set; }
 
-        public LibplanetNodeServiceProperties<NineChroniclesActionType> Libplanet { get; set; }
+        public LibplanetNodeServiceProperties<NineChroniclesActionType>? Libplanet { get; set; }
 
         public static LibplanetNodeServiceProperties<NineChroniclesActionType>
             GenerateLibplanetNodeServiceProperties(
-                string appProtocolVersionToken = null,
-                string genesisBlockPath = null,
-                string swarmHost = null,
+                string? appProtocolVersionToken = null,
+                string? genesisBlockPath = null,
+                string? swarmHost = null,
                 ushort? swarmPort = null,
-                string swarmPrivateKeyString = null,
+                string? swarmPrivateKeyString = null,
                 int minimumDifficulty = 5000000,
-                string storeType = null,
-                string storePath = null,
+                string? storeType = null,
+                string? storePath = null,
                 int storeStateCacheSize = 100,
-                string[] iceServerStrings = null,
-                string[] peerStrings = null,
-                string[] trustedAppProtocolVersionSigners = null,
+                string[]? iceServerStrings = null,
+                string[]? peerStrings = null,
+                string[]? trustedAppProtocolVersionSigners = null,
                 bool noMiner = false,
                 bool render = false,
                 int workers = 5,

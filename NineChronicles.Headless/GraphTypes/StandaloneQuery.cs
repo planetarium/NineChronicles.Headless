@@ -41,7 +41,7 @@ namespace NineChronicles.Headless.GraphTypes
                     };
 
                     IValue? GetState(Address address) =>
-                        standaloneContext.BlockChain.GetState(
+                        standaloneContext.BlockChain?.GetState(
                             address,
                             blockHash);
 

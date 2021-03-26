@@ -39,7 +39,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             store.SetCanonicalChainId(chainId);
             store.PutBlock(genesisBlock);
             store.AppendIndex(chainId, genesisBlock.Hash);
-            (store as IDisposable).Dispose();
+            (store as IDisposable)?.Dispose();
 
             _command.Tip(storeType, _storePath);
 

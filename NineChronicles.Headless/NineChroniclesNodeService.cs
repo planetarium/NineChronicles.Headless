@@ -52,19 +52,19 @@ namespace NineChronicles.Headless
 
         public AsyncManualResetEvent PreloadEnded => NodeService.PreloadEnded;
 
-        public Swarm<NineChroniclesActionType> Swarm => NodeService?.Swarm;
+        public Swarm<NineChroniclesActionType> Swarm => NodeService.Swarm;
 
-        public BlockChain<NineChroniclesActionType> BlockChain => NodeService?.BlockChain;
+        public BlockChain<NineChroniclesActionType> BlockChain => NodeService.BlockChain;
 
-        public IStore Store => NodeService?.Store;
+        public IStore Store => NodeService.Store;
 
-        public PrivateKey MinerPrivateKey { get; set; }
+        public PrivateKey? MinerPrivateKey { get; set; }
 
         public NineChroniclesNodeService(
-            PrivateKey minerPrivateKey,
+            PrivateKey? minerPrivateKey,
             LibplanetNodeServiceProperties<NineChroniclesActionType> properties,
             RpcNodeServiceProperties? rpcNodeServiceProperties,
-            Progress<PreloadState> preloadProgress = null,
+            Progress<PreloadState>? preloadProgress = null,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false,
             bool strictRendering = false,
@@ -92,10 +92,10 @@ namespace NineChronicles.Headless
             LogEventLevel logLevel = LogEventLevel.Debug;
             var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
             // BlockPolicy shared through Lib9c.
-            IBlockPolicy<PolymorphicAction<ActionBase>> blockPolicy = null;
+            IBlockPolicy<PolymorphicAction<ActionBase>>? blockPolicy = null;
             // Policies for dev mode.
-            IBlockPolicy<PolymorphicAction<ActionBase>> easyPolicy = null;
-            IBlockPolicy<PolymorphicAction<ActionBase>> hardPolicy = null;
+            IBlockPolicy<PolymorphicAction<ActionBase>>? easyPolicy = null;
+            IBlockPolicy<PolymorphicAction<ActionBase>>? hardPolicy = null;
             IStagePolicy<PolymorphicAction<ActionBase>> stagePolicy =
                 txLifeTime == default
                     ? new VolatileStagePolicy<NineChroniclesActionType>()
@@ -260,8 +260,8 @@ namespace NineChronicles.Headless
                 );
             }
 
-            strictRenderer.BlockChain = NodeService?.BlockChain ?? throw new Exception("BlockChain is null.");
-            if (NodeService?.BlockChain?.GetState(AuthorizedMinersState.Address) is Dictionary ams &&
+            strictRenderer.BlockChain = NodeService.BlockChain ?? throw new Exception("BlockChain is null.");
+            if (NodeService.BlockChain?.GetState(AuthorizedMinersState.Address) is Dictionary ams &&
                 blockPolicy is BlockPolicy bp)
             {
                 bp.AuthorizedMinersState = new AuthorizedMinersState(ams);
@@ -305,20 +305,23 @@ namespace NineChronicles.Headless
             {
                 services.AddHostedService(provider =>
                 {
-                    provider.GetService<IHostApplicationLifetime>().ApplicationStopped.Register(NodeService.Dispose);
+                    provider.GetService<IHostApplicationLifetime>().ApplicationStopped.Register(() =>
+                    {
+                        NodeService?.Dispose();
+                    });
                     return NodeService;
                 });
-                services.AddSingleton(provider => NodeService.Swarm);
-                services.AddSingleton(provider => NodeService.BlockChain);
+                services.AddSingleton(provider => NodeService?.Swarm);
+                services.AddSingleton(provider => NodeService?.BlockChain);
                 services.AddSingleton(provider => context);
-                services.AddSingleton(provider => NodeService.Properties);
+                services.AddSingleton(provider => NodeService?.Properties);
             });
         }
 
-        public void StartMining() => NodeService.StartMining(MinerPrivateKey);
+        public void StartMining() => NodeService?.StartMining(MinerPrivateKey);
 
-        public void StopMining() => NodeService.StopMining();
+        public void StopMining() => NodeService?.StopMining();
         
-        public Task<bool> CheckPeer(string addr) => NodeService.CheckPeer(addr);
+        public Task<bool> CheckPeer(string addr) => NodeService?.CheckPeer(addr) ?? throw new InvalidOperationException();
     }
 }

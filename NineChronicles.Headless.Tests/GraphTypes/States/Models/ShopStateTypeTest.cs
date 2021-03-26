@@ -111,37 +111,37 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             Assert.Equal("ARGUMENTS_OF_CORRECT_TYPE", queryResult.Errors.First().Code);
         }
 
-        public static IEnumerable<object[]> Members => new List<object[]>
+        public static IEnumerable<object?[]> Members => new List<object?[]>
         {
-            new object[]
+            new object?[]
             {
                 10110000,
                 "Weapon",
                 1,
                 1,
             },
-            new object[]
+            new object?[]
             {
                 10110000,
                 null,
                 1,
                 1,
             },
-            new object[]
+            new object?[]
             {
                 10110000,
                 null,
                 0,
                 0,
             },
-            new object[]
+            new object?[]
             {
                 0,
                 null,
                 0,
                 0,
             },
-            new object[]
+            new object?[]
             {
                 10110000,
                 null,
