@@ -138,8 +138,6 @@ namespace NineChronicles.Headless.Executable
             int reorgInterval = 0,
             [Option(Description = "Log action renders besides block renders.  --rpc-server implies this.")]
             bool logActionRenders = false,
-            [Option(Description = "The log minimum level during headless execution.  debug by default.")]
-            string logMinimumLevel = "debug",
             [Option(Description = "The Cognito identity for AWS CloudWatch logging.")]
             string? awsCognitoIdentity = null,
             [Option(Description = "The access key for AWS CloudWatch logging.")]
