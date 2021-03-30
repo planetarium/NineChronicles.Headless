@@ -62,6 +62,11 @@ type ArenaRecordType {
   draw: Int
 }
 
+type AuthenticationMutation {
+  login(privateKey: ByteString!): Boolean!
+  logout: Boolean!
+}
+
 type AvatarStateType {
   address: Address!
   blockIndex: Int!
@@ -289,6 +294,7 @@ enum NotificationEnum {
 type NotificationType {
   type: NotificationEnum!
   message: String
+  receiver: Address!
 }
 
 type PeerChainStateQuery {
@@ -363,6 +369,7 @@ type ShopStateType {
 }
 
 type StandaloneMutation {
+  auth: AuthenticationMutation
   keyStore: KeyStoreMutation
   activationStatus: ActivationStatusMutation
   action: ActionMutation

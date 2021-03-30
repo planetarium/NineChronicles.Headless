@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link type="text/css" rel="stylesheet" href="./styles/graphdoc.css" />
-    <title>NotificationEnum</title>
+    <title>AuthenticationMutation</title>
     <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700" rel="stylesheet"><link type="text/css" rel="stylesheet" href="./assets/code.css" /><link type="text/css" rel="stylesheet" href="./assets/require-by.css" />
 </head>
 <body class="slds-scrollable--y">
@@ -125,7 +125,7 @@
                 ItemType
             </a>
         </li>
-        <li class="slds-is-active" title="NotificationEnum">
+        <li  title="NotificationEnum">
             <a href="notificationenum.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 NotificationEnum
             </a>
@@ -190,7 +190,7 @@
                 ArenaRecordType
             </a>
         </li>
-        <li  title="AuthenticationMutation">
+        <li class="slds-is-active" title="AuthenticationMutation">
             <a href="authenticationmutation.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 AuthenticationMutation
             </a>
@@ -470,8 +470,8 @@
         </div>
     </div>
     <div class="container">
-        <p class="slds-text-title--caps slds-text-color--weak">ENUM</p>
-        <h1 class="slds-text-heading--large">NotificationEnum</h1>
+        <p class="slds-text-title--caps slds-text-color--weak">OBJECT</p>
+        <h1 class="slds-text-heading--large">AuthenticationMutation</h1>
         <div class="slds-text-body--regular"></div>
     </div>
 </section>
@@ -483,7 +483,7 @@
             </a>
             GraphQL Schema definition
         </h2>
-        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">enum</span> <span class="identifier">NotificationEnum</span> {</li><li><span class="tab"></span></li><li><span class="tab"><span class="meta">REFILL</span></span></li><li><span class="tab"></span></li><li><span class="tab"><span class="meta">HAS</span></span></li><li><span class="tab"></span></li><li><span class="tab"><span class="meta">COMBINATION_EQUIPMENT</span></span></li><li><span class="tab"></span></li><li><span class="tab"><span class="meta">COMBINATION_CONSUMABLE</span></span></li><li><span class="tab"></span></li><li><span class="tab"><span class="meta">BUYER</span></span></li><li><span class="tab"></span></li><li><span class="tab"><span class="meta">SELLER</span></span></li><li>}</li></ul></code>
+        <code class="highlight"><ul class="code" style="padding-left:28px"><li><span class="keyword operator ts">type</span> <span class="identifier">AuthenticationMutation</span> {</li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>privateKey</strong>: </span></span></li><li><span class="tab"><span class="meta">login</span>(<span class="meta">privateKey</span>: <a class="support type" href="bytestring.doc.html">ByteString</a>!): <a class="support type" href="boolean.doc.html">Boolean</a>! </span></li><li></li><li><span class="tab"><span class="meta">logout</span>: <a class="support type" href="boolean.doc.html">Boolean</a>! </span></li><li>}</li></ul></code>
     </div>
 </section>
 <section>
@@ -494,7 +494,7 @@
             </a>
             Require by
         </h2>
-        <ul class="require-by"><li><a href="notificationtype.doc.html" title="NotificationType - ">NotificationType<em></em></a><li></ul>
+        <ul class="require-by"><li><a href="standalonemutation.doc.html" title="StandaloneMutation - ">StandaloneMutation<em></em></a><li></ul>
     </div>
 </section>
 <footer>
