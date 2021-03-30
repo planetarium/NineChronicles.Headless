@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using GraphQL;
+using GraphQL.Server.Authorization.AspNetCore;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Crypto;

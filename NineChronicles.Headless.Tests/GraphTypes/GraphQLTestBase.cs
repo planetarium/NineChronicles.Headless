@@ -24,6 +24,7 @@ using Serilog;
 using Xunit.Abstractions;
 using RewardGold = NineChronicles.Headless.Tests.Common.Actions.RewardGold;
 using Libplanet.Store.Trie;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -35,11 +36,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
     {
         protected ITestOutputHelper _output;
 
+        protected readonly IHttpContextAccessor _httpContextAccessor;
+
         public GraphQLTestBase(ITestOutputHelper output)
         {
             Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console().CreateLogger();
 
             _output = output;
+            _httpContextAccessor = new HttpContextAccessor();
 
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(
@@ -95,6 +99,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var services = new ServiceCollection();
             services.AddSingleton(StandaloneContextFx);
+            services.AddSingleton(StandaloneContextFx.KeyStore ?? GraphQLTestUtils.CreateRandomWeb3KeyStore());
+            services.AddSingleton(_httpContextAccessor);
             services.AddSingleton<IConfiguration>(configuration);
             services.AddGraphTypes();
             services.AddLibplanetExplorer<NCAction>();

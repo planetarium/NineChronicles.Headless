@@ -27,17 +27,24 @@ namespace NineChronicles.Headless.GraphTypes
                 this.AuthorizeWith(GraphQLService.LocalPolicyKey);   
             }
 
+            Field<AuthenticationMutation>(
+                "auth",
+                resolve: context => new { });
+
             Field<KeyStoreMutation>(
-                name: "keyStore",
-                resolve: context => standaloneContext.KeyStore);
+                    name: "keyStore",
+                    resolve: context => standaloneContext.KeyStore)
+                .AuthorizeWith(GraphQLService.UserPolicyKey);
 
             Field<ActivationStatusMutation>(
-                name: "activationStatus",
-                resolve: context => standaloneContext.NineChroniclesNodeService);
+                    name: "activationStatus",
+                    resolve: context => standaloneContext.NineChroniclesNodeService)
+                .AuthorizeWith(GraphQLService.UserPolicyKey);
 
             Field<ActionMutation>(
-                name: "action",
-                resolve: context => standaloneContext.NineChroniclesNodeService);
+                    name: "action",
+                    resolve: context => standaloneContext.NineChroniclesNodeService)
+                .AuthorizeWith(GraphQLService.UserPolicyKey);
 
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "stageTx",
@@ -80,7 +87,7 @@ namespace NineChronicles.Headless.GraphTypes
                         return false;
                     }
                 }
-            );
+            ).AuthorizeWith(GraphQLService.UserPolicyKey);
 
             Field<TxIdType>(
                 name: "transferGold",
@@ -113,10 +120,10 @@ namespace NineChronicles.Headless.GraphTypes
 
                     BlockChain<NCAction> blockChain = service.BlockChain;
                     var currency = new GoldCurrencyState(
-                        (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
+                        (Dictionary) blockChain.GetState(GoldCurrencyState.Address)
                     ).Currency;
                     FungibleAssetValue amount =
-                    FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
+                        FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
 
                     Address recipient = context.GetArgument<Address>("recipient");
 
@@ -133,7 +140,7 @@ namespace NineChronicles.Headless.GraphTypes
                     );
                     return tx.Id;
                 }
-            );
+            ).AuthorizeWith(GraphQLService.UserPolicyKey);
         }
     }
 }
