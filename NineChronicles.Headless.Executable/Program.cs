@@ -166,8 +166,8 @@ namespace NineChronicles.Headless.Executable
 #endif
             
             // Setup logger.
-            var builder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
-            var configuration = builder.Build();
+            var configurationBuilder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
+            var configuration = configurationBuilder.Build();
             var loggerConf = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration);
 #if SENTRY || ! DEBUG
