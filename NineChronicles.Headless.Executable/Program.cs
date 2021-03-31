@@ -14,6 +14,7 @@ using Libplanet;
 using Libplanet.Crypto;
 using Libplanet.Extensions.Cocona.Commands;
 using Libplanet.KeyStore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.Executable.Commands;
 using NineChronicles.Headless.Executable.IO;
@@ -21,6 +22,7 @@ using NineChronicles.Headless.Properties;
 using Org.BouncyCastle.Security;
 using Sentry;
 using Serilog;
+using Serilog.Filters;
 using Serilog.Sinks.PeriodicBatching;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -32,9 +34,6 @@ namespace NineChronicles.Headless.Executable
     public class Program : CoconaLiteConsoleAppBase
     {
         const string SentryDsn = "https://ceac97d4a7d34e7b95e4c445b9b5669e@o195672.ingest.sentry.io/5287621";
-
-        private const string LogTemplate =
-            "[{Timestamp:HH:mm:ss} {Level:u3}{SubLevel}] {Message:lj}{NewLine}{Exception}";
 
         static async Task Main(string[] args)
         {
@@ -139,8 +138,6 @@ namespace NineChronicles.Headless.Executable
             int reorgInterval = 0,
             [Option(Description = "Log action renders besides block renders.  --rpc-server implies this.")]
             bool logActionRenders = false,
-            [Option(Description = "The log minimum level during headless execution.  debug by default.")]
-            string logMinimumLevel = "debug",
             [Option(Description = "The Cognito identity for AWS CloudWatch logging.")]
             string? awsCognitoIdentity = null,
             [Option(Description = "The access key for AWS CloudWatch logging.")]
@@ -169,9 +166,10 @@ namespace NineChronicles.Headless.Executable
 #endif
             
             // Setup logger.
+            var configurationBuilder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
+            var configuration = configurationBuilder.Build();
             var loggerConf = new LoggerConfiguration()
-                .WriteTo.Console(outputTemplate: LogTemplate)
-                .ConfigureMinimumLevel(logMinimumLevel);
+                .ReadFrom.Configuration(configuration);
 #if SENTRY || ! DEBUG
             loggerConf = loggerConf
                 .WriteTo.Sentry(o =>
