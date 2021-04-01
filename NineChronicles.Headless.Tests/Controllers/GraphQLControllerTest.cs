@@ -1,6 +1,4 @@
-using System;
 using System.IO;
-using System.Security.Claims;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blockchain;
@@ -59,13 +57,6 @@ namespace NineChronicles.Headless.Tests.Controllers
         }
 
         [Fact]
-        public void RunStandaloneThrowsUnauthorizedIfSecretTokenUsed()
-        {
-            ConfigureSecretToken();
-            Assert.IsType<UnauthorizedResult>(_controller.RunStandalone());
-        }
-
-        [Fact]
         public void RunStandaloneThrowsConflict()
         {
             _standaloneContext.NineChroniclesNodeService = null;
@@ -74,34 +65,18 @@ namespace NineChronicles.Headless.Tests.Controllers
             Assert.Equal(StatusCodes.Status409Conflict, ((StatusCodeResult)result).StatusCode);
         }
         
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public void RunStandalone(bool useSecretToken)
+        [Fact]
+        public void RunStandalone()
         {
-            if (useSecretToken)
-            {
-                ConfigureSecretToken();
-                ConfigureAdminClaim();
-            }
-
             ConfigureNineChroniclesNodeService();
             Assert.IsType<OkObjectResult>(_controller.RunStandalone());
         }
 
         [Theory]
-        [InlineData(true, true)]
-        [InlineData(true, false)]
-        [InlineData(false, true)]
-        [InlineData(false, false)]
-        public void SetMining(bool useSecretToken, bool mine)
+        [InlineData(true)]
+        [InlineData(false)]
+        public void SetMining(bool mine)
         {
-            if (useSecretToken)
-            {
-                ConfigureSecretToken();
-                ConfigureAdminClaim();
-            }
-
             ConfigureNineChroniclesNodeService();
             Assert.IsType<OkObjectResult>(_controller.SetMining(new SetMiningRequest
             {
@@ -118,25 +93,10 @@ namespace NineChronicles.Headless.Tests.Controllers
             Assert.IsType<StatusCodeResult>(result);
             Assert.Equal(StatusCodes.Status409Conflict, ((StatusCodeResult)result).StatusCode);
         }
-        
+
         [Fact]
-        public void SetMiningThrowsUnauthorizedIfSecretTokenUsed()
+        public void SetPrivateKey()
         {
-            ConfigureSecretToken();
-            Assert.IsType<UnauthorizedResult>(_controller.SetMining(new SetMiningRequest()));
-        }
-
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public void SetPrivateKey(bool useSecretToken)
-        {
-            if (useSecretToken)
-            {
-                ConfigureSecretToken();
-                ConfigureAdminClaim();
-            }
-
             ConfigureNineChroniclesNodeService();
             var privateKey = new PrivateKey();
             Assert.IsType<OkObjectResult>(_controller.SetPrivateKey(new SetPrivateKeyRequest
@@ -154,28 +114,6 @@ namespace NineChronicles.Headless.Tests.Controllers
             IActionResult result = _controller.SetPrivateKey(new SetPrivateKeyRequest());
             Assert.IsType<StatusCodeResult>(result);
             Assert.Equal(StatusCodes.Status409Conflict, ((StatusCodeResult)result).StatusCode);
-        }
-        
-        [Fact]
-        public void SetPrivateKeyThrowsUnauthorizedIfSecretTokenUsed()
-        {
-            ConfigureSecretToken();
-            Assert.IsType<UnauthorizedResult>(_controller.SetPrivateKey(new SetPrivateKeyRequest()));
-        }
-
-        private string CreateSecretToken() => Guid.NewGuid().ToString();
-
-        private void ConfigureSecretToken()
-        {
-            _configuration[GraphQLService.SecretTokenKey] = CreateSecretToken();
-        }
-
-        private void ConfigureAdminClaim()
-        {
-            _httpContextAccessor.HttpContext.User.AddIdentity(new ClaimsIdentity(new[]
-            {
-                new Claim("role", "Admin"), 
-            }));
         }
 
         private void ConfigureNineChroniclesNodeService()

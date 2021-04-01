@@ -20,15 +20,11 @@ namespace NineChronicles.Headless
 {
     public class GraphQLService
     {
-        public const string LocalPolicyKey = "LocalPolicy";
-
         public const string UserPolicyKey = "UserPolicy";
 
         public const string UserContextPrivateKeyKey = "UserPrivateKey";
 
         public const string NoCorsPolicyName = "AllowAllOrigins";
-
-        public const string SecretTokenKey = "secret";
 
         public const string NoCorsKey = "noCors";
 
@@ -51,10 +47,6 @@ namespace NineChronicles.Headless
                     (context, builder) =>
                     {
                         var dictionary = new Dictionary<string, string>();
-                        if (GraphQlNodeServiceProperties.SecretToken is { } secretToken)
-                        {
-                            dictionary[SecretTokenKey] = secretToken;
-                        }
 
                         if (GraphQlNodeServiceProperties.NoCors)
                         {
@@ -91,7 +83,6 @@ namespace NineChronicles.Headless
                                     builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
                 }
 
-                services.AddTransient<LocalAuthenticationMiddleware>();
                 services.AddTransient<AuthenticationValidationMiddleware>();
 
                 services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -131,12 +122,6 @@ namespace NineChronicles.Headless
                             options.AddPolicy(
                                 UserPolicyKey, 
                                 p => p.RequireClaim(ClaimTypes.Role, "User"));
-                            options.AddPolicy(
-                                LocalPolicyKey,
-                                p =>
-                                    p.RequireClaim(
-                                        "role",
-                                        "Admin"));
                         });
                 services.AddGraphTypes();
             }
@@ -163,7 +148,6 @@ namespace NineChronicles.Headless
                 app.UseAuthorization();
                 app.UseCookiePolicy();
 
-                app.UseMiddleware<LocalAuthenticationMiddleware>();
                 app.UseMiddleware<AuthenticationValidationMiddleware>();
 
                 app.UseEndpoints(endpoints =>

@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet;
@@ -55,11 +54,6 @@ namespace NineChronicles.Headless.Controllers
         [HttpPost(RunStandaloneEndpoint)]
         public IActionResult RunStandalone()
         {
-            if (!HasLocalPolicy())
-            {
-                return Unauthorized();
-            }
-
             if (StandaloneContext.NineChroniclesNodeService is null)
             {
                 // Waiting node service.
@@ -107,11 +101,6 @@ namespace NineChronicles.Headless.Controllers
         [HttpPost(SetPrivateKeyEndpoint)]
         public IActionResult SetPrivateKey([FromBody] SetPrivateKeyRequest request)
         {
-            if (!HasLocalPolicy())
-            {
-                return Unauthorized();
-            }
-
             if (StandaloneContext.NineChroniclesNodeService is null)
             {
                 // Waiting node service.
@@ -128,11 +117,6 @@ namespace NineChronicles.Headless.Controllers
         [HttpPost(SetMiningEndpoint)]
         public IActionResult SetMining([FromBody] SetMiningRequest request)
         {
-            if (!HasLocalPolicy())
-            {
-                return Unauthorized();
-            }
-
             if (StandaloneContext.NineChroniclesNodeService is null)
             {
                 // Waiting node service.
@@ -305,9 +289,5 @@ namespace NineChronicles.Headless.Controllers
                 }
             }
         }
-
-        // FIXME: remove this method with DI.
-        private bool HasLocalPolicy() => !(_configuration[GraphQLService.SecretTokenKey] is { }) ||
-                                         _httpContextAccessor.HttpContext.User.HasClaim("role", "Admin");
     }
 }

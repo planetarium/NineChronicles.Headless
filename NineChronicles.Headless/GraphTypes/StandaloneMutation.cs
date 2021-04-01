@@ -22,11 +22,6 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public StandaloneMutation(StandaloneContext standaloneContext, IConfiguration configuration)
         {
-            if (configuration[GraphQLService.SecretTokenKey] is { })
-            {
-                this.AuthorizeWith(GraphQLService.LocalPolicyKey);   
-            }
-
             Field<AuthenticationMutation>(
                 "auth",
                 resolve: context => new { });

@@ -25,8 +25,6 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public StandaloneQuery(StandaloneContext standaloneContext, IConfiguration configuration)
         {
-            bool useSecretToken = configuration[GraphQLService.SecretTokenKey] is { };
-
             Field<NonNullGraphType<StateQuery>>(name: "stateQuery", arguments: new QueryArguments(
                 new QueryArgument<ByteStringType>
                 {
@@ -64,10 +62,9 @@ namespace NineChronicles.Headless.GraphTypes
             );
 
             Field<NonNullGraphType<ActivationStatusQuery>>(
-                    name: "activationStatus",
-                    description: "Check if the provided address is activated.",
-                    resolve: context => new ActivationStatusQuery(standaloneContext))
-                .AuthorizeWithLocalPolicyIf(useSecretToken);
+                name: "activationStatus",
+                description: "Check if the provided address is activated.",
+                resolve: context => new ActivationStatusQuery(standaloneContext));
 
             Field<NonNullGraphType<PeerChainStateQuery>>(
                 name: "peerChainState",
