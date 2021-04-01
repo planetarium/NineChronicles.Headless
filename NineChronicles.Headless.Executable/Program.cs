@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.CognitoIdentity;
 using Amazon.Runtime;
+using Amazon.S3;
 using Cocona;
 using Cocona.Lite;
 using Libplanet;
@@ -22,9 +23,6 @@ using NineChronicles.Headless.Properties;
 using Org.BouncyCastle.Security;
 using Sentry;
 using Serilog;
-using Serilog.Filters;
-using Serilog.Sinks.PeriodicBatching;
-using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable
 {
@@ -190,7 +188,7 @@ namespace NineChronicles.Headless.Executable
 
             if (useBasicAwsCredentials ^ useCognitoCredentials  && !(awsRegion is null))
             {
-                var regionEndpoint = RegionEndpoint.GetBySystemName(awsRegion);
+                RegionEndpoint regionEndpoint = RegionEndpoint.GetBySystemName(awsRegion);
                 AWSCredentials credentials = useCognitoCredentials
                     ? (AWSCredentials)new CognitoAWSCredentials(awsCognitoIdentity, regionEndpoint)
                     : (AWSCredentials)new BasicAWSCredentials(awsAccessKey, awsSecretKey);
@@ -202,17 +200,15 @@ namespace NineChronicles.Headless.Executable
                     StoreAWSSinkGuid(guid.Value);   
                 }
 
-                var awsSink = new AWSSink(
-                    credentials,
-                    regionEndpoint,
-                    "9c-standalone-logs",
-                    guid.ToString()!);
-                var periodicBatchingSink = new PeriodicBatchingSink(awsSink, new PeriodicBatchingSinkOptions
-                {
-                    Period = TimeSpan.FromSeconds(2),
-                    BatchSizeLimit = 1000,
-                });
-                loggerConf.WriteTo.Sink(periodicBatchingSink);
+                loggerConf = loggerConf.WriteTo.AmazonS3(
+                    new AmazonS3Client(credentials, regionEndpoint),
+                    "log.txt",
+                    "9c-headless-logs",
+                    rollingInterval: Serilog.Sinks.AmazonS3.RollingInterval.Hour,
+                    batchingPeriod: TimeSpan.FromMinutes(10),
+                    batchSizeLimit: 10000,
+                    bucketPath: guid.ToString()
+                );
             }
 
             Log.Logger = loggerConf.CreateLogger();
