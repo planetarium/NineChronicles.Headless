@@ -23,6 +23,7 @@ using NineChronicles.Headless.Properties;
 using Org.BouncyCastle.Security;
 using Sentry;
 using Serilog;
+using Serilog.Formatting.Compact;
 
 namespace NineChronicles.Headless.Executable
 {
@@ -202,8 +203,9 @@ namespace NineChronicles.Headless.Executable
 
                 loggerConf = loggerConf.WriteTo.AmazonS3(
                     new AmazonS3Client(credentials, regionEndpoint),
-                    "log.txt",
+                    "log.json",
                     "9c-headless-logs",
+                    formatter: new CompactJsonFormatter(),
                     rollingInterval: Serilog.Sinks.AmazonS3.RollingInterval.Hour,
                     batchingPeriod: TimeSpan.FromMinutes(10),
                     batchSizeLimit: 10000,
