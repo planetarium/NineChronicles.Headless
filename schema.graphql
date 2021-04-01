@@ -230,17 +230,6 @@ type ItemUsableType {
   itemId: Guid!
 }
 
-type KeyStoreMutation {
-  createPrivateKey(passphrase: String!, privateKey: ByteString): PrivateKeyType!
-  revokePrivateKey(address: Address!): ProtectedPrivateKeyType!
-}
-
-type KeyStoreType {
-  protectedPrivateKeys: [ProtectedPrivateKeyType!]!
-  decryptedPrivateKey(address: Address!, passphrase: String!): ByteString!
-  privateKey(hex: ByteString!): PrivateKeyType!
-}
-
 scalar Long
 
 type MailBoxType {
@@ -313,20 +302,6 @@ type PreloadStateType {
   extra: PreloadStateExtraType!
 }
 
-type PrivateKeyType {
-  hex: ByteString!
-  publicKey: PublicKeyType!
-}
-
-type ProtectedPrivateKeyType {
-  address: Address!
-}
-
-type PublicKeyType {
-  hex(compress: Boolean): ByteString!
-  address: Address!
-}
-
 type Query {
   blockQuery: BlockQuery
   transactionQuery: TransactionQuery
@@ -370,7 +345,6 @@ type ShopStateType {
 
 type StandaloneMutation {
   auth: AuthenticationMutation
-  keyStore: KeyStoreMutation
   activationStatus: ActivationStatusMutation
   action: ActionMutation
   stageTx(payload: String!): Boolean!
@@ -379,16 +353,12 @@ type StandaloneMutation {
 
 type StandaloneQuery {
   stateQuery(hash: ByteString): StateQuery!
-  state(address: Address!, hash: ByteString): ByteString
-  keyStore: KeyStoreType
   nodeStatus: NodeStatusType!
   chainQuery: Query!
-  validation: ValidationQuery!
   activationStatus: ActivationStatusQuery!
   peerChainState: PeerChainStateQuery!
   goldBalance(address: Address!, hash: ByteString): String!
   nextTxNonce(address: Address!): Long!
-  getTx(txId: TxId!): TransactionType_1
 }
 
 type StandaloneSubscription {
@@ -416,6 +386,7 @@ type StateQuery {
   shop: ShopStateType
   weeklyArena(index: Int!): WeeklyArenaStateType
   agent(address: Address!): AgentStateType
+  raw(address: Address!): ByteString
 }
 
 type TipChanged {
@@ -441,24 +412,7 @@ type TransactionQuery {
   transaction(id: ID): Transaction
 }
 
-type TransactionType_1 {
-  id: TxId!
-  nonce: Long!
-  publicKey: PublicKeyType!
-  signature: ByteString!
-  signer: Address!
-  timestamp: String!
-  updatedAddresses: [Address]!
-  actions: [Action]!
-}
-
 scalar TxId
-
-type ValidationQuery {
-  metadata(raw: String!): Boolean!
-  privateKey(hex: ByteString!): Boolean!
-  publicKey(hex: ByteString!): Boolean!
-}
 
 type WeeklyArenaStateType {
   address: Address!
