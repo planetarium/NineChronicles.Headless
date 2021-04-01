@@ -64,7 +64,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<ActivationStatusQuery>>(
                 name: "activationStatus",
                 description: "Check if the provided address is activated.",
-                resolve: context => new ActivationStatusQuery(standaloneContext));
+                resolve: context => new { });
 
             Field<NonNullGraphType<PeerChainStateQuery>>(
                 name: "peerChainState",

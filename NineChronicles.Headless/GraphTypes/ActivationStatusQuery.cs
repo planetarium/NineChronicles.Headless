@@ -5,6 +5,7 @@ using GraphQL.Types;
 using Libplanet;
 using Libplanet.Blockchain;
 using Libplanet.Crypto;
+using Microsoft.AspNetCore.Http;
 using Nekoyume.Model.State;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Log = Serilog.Log;
@@ -13,7 +14,7 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class ActivationStatusQuery : ObjectGraphType
     {
-        public ActivationStatusQuery(StandaloneContext standaloneContext)
+        public ActivationStatusQuery(StandaloneContext standaloneContext, IHttpContextAccessor httpContextAccessor)
         {
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "activated",
@@ -28,9 +29,9 @@ namespace NineChronicles.Headless.GraphTypes
 
                     try
                     {
-                        if (!(service.MinerPrivateKey is { } privateKey))
+                        if (!(httpContextAccessor.HttpContext.Session.GetPrivateKey() is { } privateKey))
                         {
-                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                            throw new InvalidOperationException("The session private key is null.");
                         }
 
                         if (!(service.Swarm?.BlockChain is { } blockChain))

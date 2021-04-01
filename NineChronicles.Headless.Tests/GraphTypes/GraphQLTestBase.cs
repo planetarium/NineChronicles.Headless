@@ -44,6 +44,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             _output = output;
             _httpContextAccessor = new HttpContextAccessor();
+            _httpContextAccessor.HttpContext = new DefaultHttpContext();
+            _httpContextAccessor.HttpContext.Session = new InMemorySession(string.Empty, true);
 
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(

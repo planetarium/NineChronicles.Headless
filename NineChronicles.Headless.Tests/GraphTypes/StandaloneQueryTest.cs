@@ -239,6 +239,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var service = new NineChroniclesNodeService(userPrivateKey, properties, null);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
+            _httpContextAccessor.HttpContext.Session.SetPrivateKey(userPrivateKey);
 
             var blockChain = StandaloneContextFx.BlockChain!;
 
