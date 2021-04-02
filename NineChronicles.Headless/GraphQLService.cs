@@ -21,6 +21,8 @@ namespace NineChronicles.Headless
     public class GraphQLService
     {
         public const string UserPolicyKey = "UserPolicy";
+        
+        public const string AdminPolicyKey = "AdminPolicy";
 
         public const string UserContextPrivateKeyKey = "UserPrivateKey";
 
@@ -122,6 +124,10 @@ namespace NineChronicles.Headless
                             options.AddPolicy(
                                 UserPolicyKey, 
                                 p => p.RequireClaim(ClaimTypes.Role, "User"));
+
+                            options.AddPolicy(
+                                AdminPolicyKey,
+                                p => p.RequireClaim(ClaimTypes.Role, "Admin"));
                         });
                 services.AddGraphTypes();
             }

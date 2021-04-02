@@ -10,6 +10,8 @@ using Libplanet.KeyStore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using NineChronicles.Headless.Options;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -17,7 +19,7 @@ namespace NineChronicles.Headless.GraphTypes
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public AuthenticationMutation(IHttpContextAccessor httpContextAccessor)
+        public AuthenticationMutation(IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
         {
             _httpContextAccessor = httpContextAccessor;
 
@@ -29,15 +31,34 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "privateKey",
                         Description = "The private key to use in this session.",
+                    },
+                    new QueryArgument<StringGraphType>
+                    {
+                        Name = "adminPassphrase",
+                        Description = "The passphrase given through command line when execution, to prove permission for admin role.",
                     }
                 ), resolve: async context =>
                 {
                     byte[] privateKeyBytes = context.GetArgument<byte[]>("privateKey");
+                    string? adminPassphrase = context.GetArgument<string?>("adminPassphrase");
+
+                    bool isAdmin = false;
+                    AuthenticationMutationOptions options = configuration.Get<AuthenticationMutationOptions>();
+                    if (!(options.AdminPassphrase is null) && !(adminPassphrase is null))
+                    {
+                        if (adminPassphrase != options.AdminPassphrase)
+                        {
+                            throw new ExecutionError($"The given {nameof(adminPassphrase)} is not mismatched.");
+                        }
+
+                        isAdmin = true;
+                    }
+
                     PrivateKey privateKey = new PrivateKey(privateKeyBytes);
                     var claims = new List<Claim>
                     {
                         new Claim(ClaimTypes.Name, privateKey.ToAddress().ToHex()),
-                        new Claim(ClaimTypes.Role, "User"),
+                        new Claim(ClaimTypes.Role, isAdmin ? "Admin" : "User"),
                     };
                     var claimsIdentity = new ClaimsIdentity(claims, "Login");
                     await _httpContextAccessor.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
