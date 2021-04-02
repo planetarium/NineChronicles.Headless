@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Middleware;
+using NineChronicles.Headless.Options;
 using NineChronicles.Headless.Properties;
 using Serilog;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -49,6 +50,12 @@ namespace NineChronicles.Headless
                     (context, builder) =>
                     {
                         var dictionary = new Dictionary<string, string>();
+
+                        if (!(GraphQlNodeServiceProperties.AdminPassphrase is null))
+                        {
+                            dictionary[nameof(AuthenticationMutationOptions.AdminPassphrase)] =
+                                GraphQlNodeServiceProperties.AdminPassphrase;
+                        }
 
                         if (GraphQlNodeServiceProperties.NoCors)
                         {

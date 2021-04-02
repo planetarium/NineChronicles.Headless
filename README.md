@@ -16,7 +16,15 @@
 ```
 $ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
 Usage: NineChronicles.Headless.Executable [command]
-Usage: NineChronicles.Headless.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--swarm-private-key <String>] [--minimum-difficulty <Int32>] [--miner-private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--graphql-secret-token-path <String>] [--no-cors] [--libplanet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-action-renders] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--help] [--version]
+Usage: NineChronicles.Headless.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [
+--host <String>] [--port <Nullable`1>] [--swarm-private-key <String>] [--minimum-difficulty <Int32>] [--miner-private-key
+<String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-p
+rotocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphq
+l-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--graphql-admin-passphrase <String>] [--no-cors] [--lib
+planet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--de
+v.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-action-renders] [--aws-cognito-identity <String>] [--aws-a
+ccess-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--tx-life-time <Int32>] [--m
+essage-timeout <Int32>] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--completion] [--help] [--version]
 
 NineChronicles.Headless.Executable
 
@@ -27,44 +35,58 @@ Commands:
 
 Options:
   --no-miner
-  -V, --app-protocol-version <String>                      App protocol version token (Default: )
-  -G, --genesis-block-path <String>                         (Default: )
-  -H, --host <String>                                       (Default: )
-  -P, --port <Nullable`1>                                   (Default: )
-  --swarm-private-key <String>                             The private key used for signing messages and to specify your node. If you leave this null, a randomly generated value will be used. (Default: )
+  -V, --app-protocol-version <String>                      App protocol version token
+  -G, --genesis-block-path <String>
+  -H, --host <String>
+  -P, --port <Nullable`1>
+  --swarm-private-key <String>                             The private key used for signing messages and to specify your n
+ode. If you leave this null, a randomly generated value will be used.
   -D, --minimum-difficulty <Int32>                          (Default: 5000000)
-  --miner-private-key <String>                             The private key used for mining blocks. Must not be null if you want to turn on mining with libplanet-node. (Default: )
-  --store-type <String>                                     (Default: )
-  --store-path <String>                                     (Default: )
-  -I, --ice-server <String>...                              (Default: )
-  --peer <String>...                                        (Default: )
-  -T, --trusted-app-protocol-version-signer <String>...    Trustworthy signers who claim new app protocol versions (Default: )
+  --miner-private-key <String>                             The private key used for mining blocks. Must not be null if you
+ want to turn on mining with libplanet-node.
+  --store-type <String>
+  --store-path <String>
+  -I, --ice-server <String>...
+  --peer <String>...
+  -T, --trusted-app-protocol-version-signer <String>...    Trustworthy signers who claim new app protocol versions
   --rpc-server
   --rpc-listen-host <String>                                (Default: 0.0.0.0)
-  --rpc-listen-port <Nullable`1>                            (Default: )
+  --rpc-listen-port <Nullable`1>
   --graphql-server
   --graphql-host <String>                                   (Default: 0.0.0.0)
-  --graphql-port <Nullable`1>                               (Default: )
-  --graphql-secret-token-path <String>                     The path to write GraphQL secret token. If you want to protect this headless application, you should use this option and take it into headers. (Default: )
+  --graphql-port <Nullable`1>
+  --graphql-admin-passphrase <String>                      The secret passphrase to prove you are admin.
   --no-cors                                                Run without CORS policy.
   --libplanet-node
   --workers <Int32>                                        Number of workers to use in Swarm (Default: 5)
-  --confirmations <Int32>                                  The number of required confirmations to recognize a block.  0 by default. (Default: 0)
-  --max-transactions <Int32>                               The number of maximum transactions can be included in a single block. Unlimited if the value is less then or equal to 0.  100 by default. (Default: 100)
+  --confirmations <Int32>                                  The number of required confirmations to recognize a block.  0 b
+y default. (Default: 0)
+  --max-transactions <Int32>                               The number of maximum transactions can be included in a single
+block. Unlimited if the value is less then or equal to 0.  100 by default. (Default: 100)
   --strict-rendering                                       Flag to turn on validating action renderer.
   --dev                                                    Flag to turn on the dev mode.  false by default.
-  --dev.block-interval <Int32>                             The time interval between blocks. It's unit is milliseconds. Works only when dev mode is on.  10000 (ms) by default. (Default: 10000)
-  --dev.reorg-interval <Int32>                             The size of reorg interval. Works only when dev mode is on.  0 by default. (Default: 0)
-  --log-action-renders                                     Log action renders besides block renders.  --rpc-server implies this.
-  --aws-cognito-identity <String>                          The Cognito identity for AWS CloudWatch logging. (Default: )
-  --aws-access-key <String>                                The access key for AWS CloudWatch logging. (Default: )
-  --aws-secret-key <String>                                The secret key for AWS CloudWatch logging. (Default: )
-  --aws-region <String>                                    The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2). (Default: )
-  --authorized-miner                                       Run as an authorized miner, which mines only blocks that should be authorized.
-  --tx-life-time <Int32>                                   The lifetime of each transaction, which uses minute as its unit.  60 (m) by default. (Default: 60)
-  --message-timeout <Int32>                                The grace period for new messages, which uses second as its unit.  60 (s) by default. (Default: 60)
-  --tip-timeout <Int32>                                    The grace period for tip update, which uses second as its unit.  60 (s) by default. (Default: 60)
-  --demand-buffer <Int32>                                  A number that determines how far behind the demand the tip of the chain will publish `NodeException` to GraphQL subscriptions.  1150 blocks by default. (Default: 1150)
+  --dev.block-interval <Int32>                             The time interval between blocks. It's unit is milliseconds. Wo
+rks only when dev mode is on.  10000 (ms) by default. (Default: 10000)
+  --dev.reorg-interval <Int32>                             The size of reorg interval. Works only when dev mode is on.  0
+by default. (Default: 0)
+  --log-action-renders                                     Log action renders besides block renders.  --rpc-server implies
+ this.
+  --aws-cognito-identity <String>                          The Cognito identity for AWS CloudWatch logging.
+  --aws-access-key <String>                                The access key for AWS CloudWatch logging.
+  --aws-secret-key <String>                                The secret key for AWS CloudWatch logging.
+  --aws-region <String>                                    The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeas
+t-2).
+  --authorized-miner                                       Run as an authorized miner, which mines only blocks that should
+ be authorized.
+  --tx-life-time <Int32>                                   The lifetime of each transaction, which uses minute as its unit
+.  60 (m) by default. (Default: 60)
+  --message-timeout <Int32>                                The grace period for new messages, which uses second as its uni
+t.  60 (s) by default. (Default: 60)
+  --tip-timeout <Int32>                                    The grace period for tip update, which uses second as its unit.
+  60 (s) by default. (Default: 60)
+  --demand-buffer <Int32>                                  A number that determines how far behind the demand the tip of t
+he chain will publish `NodeException` to GraphQL subscriptions.  1150 blocks by default. (Default: 1150)
+  --completion                                             Generate a shell completion code
   -h, --help                                               Show help message
   --version                                                Show version
 ```

@@ -98,10 +98,8 @@ namespace NineChronicles.Headless.Executable
             string graphQLHost = "0.0.0.0",
             [Option("graphql-port")]
             int? graphQLPort = null,
-            [Option("graphql-secret-token-path", Description = "The path to write GraphQL secret token. " +
-                                                               "If you want to protect this headless application, " +
-                                                               "you should use this option and take it into headers.")]
-            string? graphQLSecretTokenPath = null,
+            [Option("graphql-admin-passphrase", Description = "The secret passphrase to prove you are admin.")]
+            string? graphQLAdminPassphrase = null,
             [Option(Description = "Run without CORS policy.")]
             bool noCors = false,
             [Option("libplanet-node")]
@@ -235,20 +233,12 @@ namespace NineChronicles.Headless.Executable
 
                 if (graphQLServer)
                 {
-                    string? secretToken = null;
-                    if (graphQLSecretTokenPath is { })
-                    {
-                        var buffer = new byte[40];
-                        new SecureRandom().NextBytes(buffer);
-                        secretToken = Convert.ToBase64String(buffer);
-                        await File.WriteAllTextAsync(graphQLSecretTokenPath, secretToken);
-                    }
                     var graphQLNodeServiceProperties = new GraphQLNodeServiceProperties
                     {
                         GraphQLServer = graphQLServer,
                         GraphQLListenHost = graphQLHost,
                         GraphQLListenPort = graphQLPort,
-                        SecretToken = secretToken,
+                        AdminPassphrase = graphQLAdminPassphrase,
                         NoCors = noCors,
                     };
 
