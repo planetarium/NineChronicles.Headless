@@ -98,45 +98,6 @@ namespace NineChronicles.Headless.Controllers
             return Ok("Node service started.");
         }
 
-        [HttpPost(SetPrivateKeyEndpoint)]
-        public IActionResult SetPrivateKey([FromBody] SetPrivateKeyRequest request)
-        {
-            if (StandaloneContext.NineChroniclesNodeService is null)
-            {
-                // Waiting node service.
-                return new StatusCodeResult(StatusCodes.Status409Conflict);
-            }
-
-            var privateKey = new PrivateKey(ByteUtil.ParseHex(request.PrivateKeyString));
-            StandaloneContext.NineChroniclesNodeService.MinerPrivateKey = privateKey;
-            var msg = $"Private key set ({StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress()}).";
-            Log.Information("SetPrivateKey: {Msg}", msg);
-            return Ok(msg);
-        }
-
-        [HttpPost(SetMiningEndpoint)]
-        public IActionResult SetMining([FromBody] SetMiningRequest request)
-        {
-            if (StandaloneContext.NineChroniclesNodeService is null)
-            {
-                // Waiting node service.
-                return new StatusCodeResult(StatusCodes.Status409Conflict);
-            }
-
-            bool mine = request.Mine;
-            if (mine)
-            {
-                StandaloneContext.NineChroniclesNodeService.StartMining();
-            }
-            else
-            {
-                StandaloneContext.NineChroniclesNodeService.StopMining();
-            }
-
-            StandaloneContext.IsMining = mine;
-            return Ok($"Set mining status to {mine}.");
-        }
-
         [HttpPost(CheckPeerEndpoint)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
