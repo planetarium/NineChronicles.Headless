@@ -25,6 +25,10 @@ namespace NineChronicles.Headless.GraphTypes
             Field<AuthenticationMutation>(
                 "auth",
                 resolve: context => new { });
+            
+            Field<NonNullGraphType<MinerMutation>>(
+                "miner",
+                resolve: context => new { }).AuthorizeWith(GraphQLService.AdminPolicyKey);
 
             Field<ActivationStatusMutation>(
                     name: "activationStatus",

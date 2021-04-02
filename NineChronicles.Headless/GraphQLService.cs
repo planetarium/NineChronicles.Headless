@@ -66,7 +66,8 @@ namespace NineChronicles.Headless
                     });
                 builder.ConfigureServices(
                     services => services.AddSingleton(standaloneContext)
-                        .AddSingleton(standaloneContext.KeyStore));
+                        .AddSingleton(standaloneContext.KeyStore)
+                        .AddSingleton<IMiner>(standaloneContext.NineChroniclesNodeService!));
                 builder.UseUrls($"http://{listenHost}:{listenPort}/");
             });
         }
