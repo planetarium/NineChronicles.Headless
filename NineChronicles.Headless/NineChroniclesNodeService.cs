@@ -32,7 +32,7 @@ using StrictRenderer =
 
 namespace NineChronicles.Headless
 {
-    public class NineChroniclesNodeService
+    public class NineChroniclesNodeService : IMiner
     {
         private LibplanetNodeService<NineChroniclesActionType> NodeService { get; set; }
 
@@ -316,6 +316,12 @@ namespace NineChronicles.Headless
                 services.AddSingleton(provider => context);
                 services.AddSingleton(provider => NodeService?.Properties);
             });
+        }
+
+        PrivateKey? IMiner.PrivateKey
+        {
+            get => MinerPrivateKey;
+            set => MinerPrivateKey = value;
         }
 
         public void StartMining() => NodeService?.StartMining(MinerPrivateKey);
