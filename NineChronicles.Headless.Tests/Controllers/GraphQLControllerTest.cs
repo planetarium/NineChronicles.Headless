@@ -58,37 +58,6 @@ namespace NineChronicles.Headless.Tests.Controllers
             _controller = new GraphQLController(_standaloneContext, _httpContextAccessor, _configuration);
         }
 
-        [Fact]
-        public void RunStandaloneThrowsUnauthorizedIfSecretTokenUsed()
-        {
-            ConfigureSecretToken();
-            Assert.IsType<UnauthorizedResult>(_controller.RunStandalone());
-        }
-
-        [Fact]
-        public void RunStandaloneThrowsConflict()
-        {
-            _standaloneContext.NineChroniclesNodeService = null;
-            IActionResult result = _controller.RunStandalone();
-            Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status409Conflict, ((StatusCodeResult)result).StatusCode);
-        }
-        
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public void RunStandalone(bool useSecretToken)
-        {
-            if (useSecretToken)
-            {
-                ConfigureSecretToken();
-                ConfigureAdminClaim();
-            }
-
-            ConfigureNineChroniclesNodeService();
-            Assert.IsType<OkObjectResult>(_controller.RunStandalone());
-        }
-
         [Theory]
         [InlineData(true, true)]
         [InlineData(true, false)]
