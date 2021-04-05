@@ -26,6 +26,7 @@ using RewardGold = NineChronicles.Headless.Tests.Common.Actions.RewardGold;
 using Libplanet.Store.Trie;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -99,6 +100,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var configurationBuilder = new ConfigurationBuilder();
             var configuration = configurationBuilder.Build();
 
+            var minerMock = new Mock<IMiner>();
+
             var services = new ServiceCollection();
             services.AddSingleton(StandaloneContextFx);
             services.AddSingleton(StandaloneContextFx.KeyStore ?? GraphQLTestUtils.CreateRandomWeb3KeyStore());
@@ -107,6 +110,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             services.AddGraphTypes();
             services.AddLibplanetExplorer<NCAction>();
             services.AddSingleton<StateQuery>();
+            services.AddSingleton(minerMock.Object);
             ServiceProvider serviceProvider = services.BuildServiceProvider();
             Schema = new StandaloneSchema(serviceProvider);
             Schema.Subscription.As<StandaloneSubscription>().RegisterTipChangedSubscription();
