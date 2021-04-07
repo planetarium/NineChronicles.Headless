@@ -104,8 +104,6 @@ namespace NineChronicles.Headless.Executable
             string? graphQLSecretTokenPath = null,
             [Option(Description = "Run without CORS policy.")]
             bool noCors = false,
-            [Option("libplanet-node")]
-            bool libplanetNode = false,
             [Option("workers", Description = "Number of workers to use in Swarm")]
             int workers = 5,
             [Option(
@@ -214,14 +212,6 @@ namespace NineChronicles.Headless.Executable
             }
 
             Log.Logger = loggerConf.CreateLogger();
-
-            if (!graphQLServer && !libplanetNode)
-            {
-                throw new CommandExitedException(
-                    "Either --graphql-server or --libplanet-node must be present.",
-                    -1
-                );
-            }
 
             var tasks = new List<Task>();
             try
@@ -336,27 +326,24 @@ namespace NineChronicles.Headless.Executable
                         txLifeTime: TimeSpan.FromMinutes(txLifeTime));
                 standaloneContext.NineChroniclesNodeService = nineChroniclesNodeService;
 
-                if (libplanetNode)
+                if (!properties.NoMiner)
                 {
-                    if (!properties.NoMiner)
+                    if (minerPrivateKey is null)
                     {
-                        if (minerPrivateKey is null)
-                        {
-                            throw new CommandExitedException(
-                                "--miner-private-key must be present to turn on mining at libplanet node.",
-                                -1
-                            );
-                        }
-                        
-                        nineChroniclesNodeService.StartMining();
+                        throw new CommandExitedException(
+                            "--miner-private-key must be present to turn on mining at libplanet node.",
+                            -1
+                        );
                     }
-
-                    IHostBuilder nineChroniclesNodeHostBuilder = Host.CreateDefaultBuilder();
-                    nineChroniclesNodeHostBuilder =
-                        nineChroniclesNodeService.Configure(nineChroniclesNodeHostBuilder);
-                    tasks.Add(
-                        nineChroniclesNodeHostBuilder.RunConsoleAsync(Context.CancellationToken));
+                    
+                    nineChroniclesNodeService.StartMining();
                 }
+
+                IHostBuilder nineChroniclesNodeHostBuilder = Host.CreateDefaultBuilder();
+                nineChroniclesNodeHostBuilder =
+                    nineChroniclesNodeService.Configure(nineChroniclesNodeHostBuilder);
+                tasks.Add(
+                    nineChroniclesNodeHostBuilder.RunConsoleAsync(Context.CancellationToken));
 
                 await Task.WhenAll(tasks);
             }
