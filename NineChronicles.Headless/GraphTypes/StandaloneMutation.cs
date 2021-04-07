@@ -15,13 +15,22 @@ using GraphQL.Server.Authorization.AspNetCore;
 using Libplanet.Explorer.GraphTypes;
 using Microsoft.Extensions.Configuration;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+using Microsoft.AspNetCore.Http;
 
 namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneMutation : ObjectGraphType
     {
-        public StandaloneMutation(StandaloneContext standaloneContext, IConfiguration configuration)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        
+        public StandaloneMutation(
+            IHttpContextAccessor httpContextAccessor,
+            StandaloneContext standaloneContext,
+            IConfiguration configuration
+        )
         {
+            _httpContextAccessor = httpContextAccessor;
+            
             if (configuration[GraphQLService.SecretTokenKey] is { })
             {
                 this.AuthorizeWith(GraphQLService.LocalPolicyKey);   
@@ -115,15 +124,10 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         throw new InvalidOperationException($"{nameof(NineChroniclesNodeService)} is null.");
                     }
-
-                    PrivateKey? privateKey = service.MinerPrivateKey;
-                    if (privateKey is null)
+                    
+                    if (!(_httpContextAccessor.HttpContext.Session.GetPrivateKey() is { } privateKey))
                     {
-                        // FIXME We should cover this case on unittest.
-                        var msg = "No private key was loaded.";
-                        context.Errors.Add(new ExecutionError(msg));
-                        Log.Error(msg);
-                        return null;
+                        throw new InvalidOperationException("The session private key is null.");
                     }
 
                     BlockChain<NCAction> blockChain = service.BlockChain;

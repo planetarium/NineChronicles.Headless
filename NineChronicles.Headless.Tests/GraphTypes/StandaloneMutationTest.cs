@@ -100,7 +100,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.BlockChain;
 
-            Address senderAddress = service.MinerPrivateKey!.ToAddress();
+            Address senderAddress = _privateKey.ToAddress();
 
             var blockChain = StandaloneContextFx.BlockChain;
             var store = service.Store;
