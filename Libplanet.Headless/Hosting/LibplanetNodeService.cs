@@ -68,6 +68,8 @@ namespace Libplanet.Headless.Hosting
 
         protected static readonly TimeSpan CheckPeerTableInterval = TimeSpan.FromSeconds(10);
 
+        private List<Guid> _obsoletedChainIds;
+
         public LibplanetNodeService(
             LibplanetNodeServiceProperties<T> properties,
             IBlockPolicy<T> blockPolicy,
@@ -105,11 +107,6 @@ namespace Libplanet.Headless.Hosting
             var chainIds = Store.ListChainIds().ToList();
             Log.Debug($"Number of chain ids: {chainIds.Count()}");
 
-            foreach (var chainId in chainIds)
-            {
-                Log.Debug($"chainId: {chainId}");
-            }
-
             if (Properties.Confirmations > 0)
             {
                 IComparer<BlockPerception> comparer = blockPolicy.CanonicalChainComparer;
@@ -136,10 +133,7 @@ namespace Libplanet.Headless.Hosting
                 renderers: renderers
             );
 
-            foreach (Guid chainId in chainIds.Where(chainId => chainId != BlockChain.Id))
-            {
-                Store.DeleteChainId(chainId);
-            }
+            _obsoletedChainIds = chainIds.Where(chainId => chainId != BlockChain.Id).ToList();
 
             _minerLoopAction = minerLoopAction;
             _exceptionHandlerAction = exceptionHandlerAction;
@@ -178,6 +172,15 @@ namespace Libplanet.Headless.Hosting
 
         public virtual async Task StartAsync(CancellationToken cancellationToken)
         {
+            Log.Debug("Trying to delete {count} obsoleted chains...", _obsoletedChainIds.Count());
+            _ = Task.Run(() =>
+            {
+                foreach (Guid chainId in _obsoletedChainIds)
+                {
+                    Store.DeleteChainId(chainId);
+                    Log.Debug("Obsoleted chain[{chainId}] has been deleted.", chainId);
+                }
+            });
             if (!cancellationToken.IsCancellationRequested && !_stopRequested)
             {
                 var tasks = new List<Task>
