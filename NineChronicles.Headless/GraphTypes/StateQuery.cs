@@ -32,7 +32,7 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         throw new InvalidOperationException($"The state {address} doesn't exists");
                     }
-                    return new AvatarState((Dictionary)state);
+                    return (new AvatarState((Dictionary)state), context.Source.accountStateGetter);
                 });
             Field<RankingMapStateType>(
                 name: "rankingMap",
@@ -56,9 +56,15 @@ namespace NineChronicles.Headless.GraphTypes
             Field<ShopStateType>(
                 name: "shop",
                 description: "State for shop.",
-                resolve: context => context.Source.accountStateGetter(Addresses.Shop) is { } state
-                    ? new ShopState((Dictionary) state)
-                    : null);
+                resolve: context =>
+                {
+                    if (context.Source.accountStateGetter(Addresses.Shop) is { } state)
+                    {
+                        return (new ShopState((Dictionary) state), context.Source.accountStateGetter);
+                    }
+
+                    return null;
+                });
             Field<WeeklyArenaStateType>(
                 name: "weeklyArena",
                 description: "State for weekly arena.",

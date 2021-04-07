@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
+using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
+using Libplanet.Action;
 using Libplanet.Explorer.GraphTypes;
+using Nekoyume.Action;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
@@ -10,14 +13,14 @@ using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
 
 namespace NineChronicles.Headless.GraphTypes.States
 {
-    public class ShopStateType : ObjectGraphType<ShopState>
+    public class ShopStateType : ObjectGraphType<(ShopState shopState, AccountStateGetter accountStateGetter)>
     {
         public ShopStateType()
         {
             Field<NonNullGraphType<AddressType>>(
                 nameof(ShopState.address),
                 description: "Address of shop.",
-                resolve: context => context.Source.address);
+                resolve: context => context.Source.shopState.address);
             Field<NonNullGraphType<ListGraphType<ShopItemType>>>(
                 nameof(ShopState.Products),
                 description: "List of ShopItem.",
@@ -39,7 +42,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                     }),
                 resolve: context =>
                 {
-                    IEnumerable<ShopItem> products = context.Source.Products.Values;
+                    IEnumerable<ShopItem> products = context.Source.shopState.Products.Values;
                     if (context.GetArgument<int?>("id") is int id)
                     {
                         products = products
@@ -56,7 +59,10 @@ namespace NineChronicles.Headless.GraphTypes.States
                         products = products
                             .Where(si => si.Price <= maximumPrice * si.Price.Currency);
                     }
-                    return products.ToList();
+
+                    return products.Select(product => (product, context.Source.accountStateGetter)).ToList();
+                }
+            );
                 }
             );
         }

@@ -10,7 +10,7 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
         {
             Field<NonNullGraphType<ByteStringType>>(
                 nameof(Material.ItemId),
-                resolve: context => context.Source.ItemId.ToByteArray());
+                resolve: context => context.Source.itemBase.ItemId.ToByteArray());
         }
     }
 }
