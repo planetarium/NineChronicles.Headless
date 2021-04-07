@@ -530,10 +530,18 @@ namespace Libplanet.Headless.Hosting
             }
             else if (!string.IsNullOrEmpty(properties.GenesisBlockPath))
             {
-                var uri = new Uri(properties.GenesisBlockPath);
-                using var client = new WebClient();
-                var rawGenesisBlock = client.DownloadData(uri);
-                return Block<T>.Deserialize(rawGenesisBlock);
+                byte[] rawBlock;
+                if (File.Exists(Path.GetFullPath(properties.GenesisBlockPath)))
+                {
+                    rawBlock = File.ReadAllBytes(Path.GetFullPath(properties.GenesisBlockPath));
+                }
+                else
+                {
+                    var uri = new Uri(properties.GenesisBlockPath);
+                    using var client = new WebClient();
+                    rawBlock = client.DownloadData(uri);
+                }
+                return Block<T>.Deserialize(rawBlock);
             }
             else
             {
