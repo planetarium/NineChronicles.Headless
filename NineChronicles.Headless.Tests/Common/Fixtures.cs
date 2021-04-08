@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Libplanet;
@@ -50,7 +51,8 @@ namespace NineChronicles.Headless.Tests
             {
                 var row = TableSheetsFX.CostumeItemSheet.OrderedList[i];
                 var equipment = ItemFactory.CreateCostume(row, default);
-                var shopItem = new ShopItem(UserAddress, AvatarAddress, Guid.NewGuid(), i * CurrencyFX, equipment);
+                var shopItem = new ShopItem(UserAddress, AvatarAddress, Guid.NewGuid(),
+                    (i + shopState.Products.Count + 1) * CurrencyFX, equipment);
                 shopState.Register(shopItem);
             }
             return shopState;

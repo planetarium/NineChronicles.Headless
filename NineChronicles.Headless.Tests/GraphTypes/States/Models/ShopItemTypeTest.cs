@@ -2,7 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Bencodex.Types;
+using Libplanet;
+using Libplanet.Action;
+using Nekoyume;
 using Nekoyume.Model.Item;
+using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
 using Xunit;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
@@ -59,7 +64,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 ["costume"] = costumeDict,
             };
 
-            var queryResult = await ExecuteQueryAsync<ShopItemType>(query, source: shopItem);
+            Address sheetAddress = Addresses.GetSheetAddress<CostumeStatSheet>();
+
+            IValue? GetStateMock(Address address)
+            {
+                return sheetAddress == address ? Fixtures.TableSheetsFX.CostumeStatSheet.Serialize() : null;
+            }
+
+            var queryResult = await ExecuteQueryAsync<ShopItemType>(query, source: (shopItem, (AccountStateGetter) GetStateMock));
             Assert.Equal(expected, queryResult.Data);
         }
 
