@@ -46,6 +46,37 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
+            Field<ByteStringType>(
+                name: "state",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "The address of state to fetch from the chain." },
+                    new QueryArgument<ByteStringType> { Name = "hash", Description = "The hash of the block used to fetch state from chain." }
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    var address = context.GetArgument<Address>("address");
+                    var blockHashByteArray = context.GetArgument<byte[]>("hash");
+                    var blockHash = blockHashByteArray is null
+                        ? blockChain.Tip.Hash
+                        : new HashDigest<SHA256>(blockHashByteArray);
+
+                    var state = blockChain.GetState(address, blockHash);
+
+                    return new Codec().Encode(state);
+                }
+            );
+
+            Field<KeyStoreType>(
+                name: "keyStore",
+                resolve: context => standaloneContext.KeyStore
+            ).AuthorizeWithLocalPolicyIf(useSecretToken);
+
             Field<NonNullGraphType<NodeStatusType>>(
                 name: "nodeStatus",
                 resolve: context => new NodeStatusType
@@ -62,6 +93,11 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "chainQuery",
                 resolve: context => new { }
             );
+
+            Field<NonNullGraphType<ValidationQuery>>(
+                name: "validation",
+                description: "The validation method provider for Libplanet types.",
+                resolve: context => new ValidationQuery(standaloneContext));
 
             Field<NonNullGraphType<ActivationStatusQuery>>(
                     name: "activationStatus",
@@ -120,6 +156,25 @@ namespace NineChronicles.Headless.GraphTypes
 
                     Address address = context.GetArgument<Address>("address");
                     return blockChain.GetNextTxNonce(address);
+                }
+            );
+
+            Field<TransactionType<NCAction>>(
+                name: "getTx",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<TxIdType>>
+                        {Name = "txId", Description = "transaction id."}
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    var txId = context.GetArgument<TxId>("txId");
+                    return blockChain.GetTransaction(txId);
                 }
             );
         }

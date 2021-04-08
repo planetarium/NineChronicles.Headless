@@ -1,5 +1,4 @@
 using System;
-using Bencodex;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
@@ -95,19 +94,6 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return null;
-                }
-            );
-
-            Field<ByteStringType>(
-                name: "raw",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "The address of state to fetch from the chain." }
-                ),
-                resolve: context =>
-                {
-                    var address = context.GetArgument<Address>("address");
-                    var state = context.Source.accountStateGetter(address);
-                    return state is null ? null : new Codec().Encode(state);
                 }
             );
         }

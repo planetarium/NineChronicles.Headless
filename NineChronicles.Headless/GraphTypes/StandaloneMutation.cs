@@ -31,6 +31,11 @@ namespace NineChronicles.Headless.GraphTypes
                 "auth",
                 resolve: context => new { });
 
+            Field<KeyStoreMutation>(
+                    name: "keyStore",
+                    resolve: context => standaloneContext.KeyStore)
+                .AuthorizeWith(GraphQLService.UserPolicyKey);
+
             Field<ActivationStatusMutation>(
                     name: "activationStatus",
                     resolve: context => standaloneContext.NineChroniclesNodeService)
