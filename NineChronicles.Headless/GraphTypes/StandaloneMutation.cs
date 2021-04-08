@@ -15,13 +15,22 @@ using GraphQL.Server.Authorization.AspNetCore;
 using Libplanet.Explorer.GraphTypes;
 using Microsoft.Extensions.Configuration;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+using Microsoft.AspNetCore.Http;
 
 namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneMutation : ObjectGraphType
     {
-        public StandaloneMutation(StandaloneContext standaloneContext, IConfiguration configuration)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        
+        public StandaloneMutation(
+            IHttpContextAccessor httpContextAccessor,
+            StandaloneContext standaloneContext,
+            IConfiguration configuration
+        )
         {
+            _httpContextAccessor = httpContextAccessor;
+            
             if (configuration[GraphQLService.SecretTokenKey] is { })
             {
                 this.AuthorizeWith(GraphQLService.LocalPolicyKey);   
@@ -85,6 +94,70 @@ namespace NineChronicles.Headless.GraphTypes
             ).AuthorizeWith(GraphQLService.UserPolicyKey);
 
             Field<TxIdType>(
+                name: "transfer",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Description = "A hex-encoded value for address of recipient.",
+                        Name = "recipient",
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Description = "A string value of the value to be transferred.",
+                        Name = "amount",
+                    },
+                    new QueryArgument<NonNullGraphType<LongGraphType>>
+                    {
+                        Description = "A sender's transaction counter. You can get it through nextTxNonce().",
+                        Name = "txNonce",
+                    },
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Description = "A hex-encoded value for address of currency to be transferred. The default is the NCG's address.",
+                        DefaultValue = GoldCurrencyState.Address,
+                        Name = "currencyAddress"
+                    }
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.NineChroniclesNodeService is { } service))
+                    {
+                        throw new InvalidOperationException($"{nameof(NineChroniclesNodeService)} is null.");
+                    }
+                    
+                    if (!(_httpContextAccessor.HttpContext.Session.GetPrivateKey() is { } privateKey))
+                    {
+                        throw new InvalidOperationException("The session private key is null.");
+                    }
+
+                    BlockChain<NCAction> blockChain = service.BlockChain;
+                    var currency = new GoldCurrencyState(
+                        (Dictionary)blockChain.GetState(context.GetArgument<Address>("currencyAddress"))
+                    ).Currency;
+                    FungibleAssetValue amount =
+                        FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
+
+                    Address recipient = context.GetArgument<Address>("recipient");
+                    Transaction<NCAction> tx = Transaction<NCAction>.Create(
+                        context.GetArgument<long>("txNonce"),
+                        privateKey,
+                        blockChain.Genesis.Hash,
+                        new NCAction[]
+                        {
+                            new TransferAsset(
+                                privateKey.ToAddress(),
+                                recipient,
+                                amount
+                            ),
+                        }
+                    );
+                    blockChain.StageTransaction(tx);
+                    return tx.Id;
+                }
+            ).AuthorizeWith(GraphQLService.UserPolicyKey);
+
+            Field<TxIdType>(
+                deprecationReason: "Incorrect remittance may occur when using transferGold() to the same address consecutively. Use transfer() instead.",
                 name: "transferGold",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
