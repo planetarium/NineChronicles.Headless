@@ -110,6 +110,26 @@ namespace NineChronicles.Headless.GraphTypes
                     return state is null ? null : new Codec().Encode(state);
                 }
             );
+
+            Field<CombinationSlotStateType>(
+                name: "combinationSlot",
+                description: "State for combination slot.",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "address",
+                    Description = "Address of combination slot."
+                }),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("address");
+                    if (context.Source.accountStateGetter(address) is { } state)
+                    {
+                        return new CombinationSlotState((Dictionary) state);
+                    }
+
+                    return null;
+                }
+            );
         }
     }
 }
