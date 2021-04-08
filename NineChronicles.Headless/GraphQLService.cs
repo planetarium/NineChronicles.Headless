@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Security.Claims;
 using GraphQL.Server;
-using GraphQL.Server.Ui.Playground;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using GraphQL.Utilities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Session;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -21,10 +18,6 @@ namespace NineChronicles.Headless
     public class GraphQLService
     {
         public const string LocalPolicyKey = "LocalPolicy";
-
-        public const string UserPolicyKey = "UserPolicy";
-
-        public const string UserContextPrivateKeyKey = "UserPrivateKey";
 
         public const string NoCorsPolicyName = "AllowAllOrigins";
 
@@ -64,8 +57,7 @@ namespace NineChronicles.Headless
                         builder.AddInMemoryCollection(dictionary);
                     });
                 builder.ConfigureServices(
-                    services => services.AddSingleton(standaloneContext)
-                        .AddSingleton(standaloneContext.KeyStore));
+                    services => services.AddSingleton(standaloneContext));
                 builder.UseUrls($"http://{listenHost}:{listenPort}/");
             });
         }
@@ -92,19 +84,6 @@ namespace NineChronicles.Headless
                 }
 
                 services.AddTransient<LocalAuthenticationMiddleware>();
-                services.AddTransient<AuthenticationValidationMiddleware>();
-
-                services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                    .AddCookie();
-
-                services.AddSession(options =>
-                {
-                    options.Cookie.Name = ".NineChronicles.Session";
-                    options.Cookie.IsEssential = true;
-                    options.Cookie.HttpOnly = true;
-                });
-
-                services.AddDistributedMemoryCache();
 
                 services.AddHealthChecks();
 
@@ -126,18 +105,12 @@ namespace NineChronicles.Headless
                     .AddLibplanetExplorer<NCAction>()
                     .AddUserContextBuilder<UserContextBuilder>()
                     .AddGraphQLAuthorization(
-                        options =>
-                        {
-                            options.AddPolicy(
-                                UserPolicyKey, 
-                                p => p.RequireClaim(ClaimTypes.Role, "User"));
-                            options.AddPolicy(
-                                LocalPolicyKey,
-                                p =>
-                                    p.RequireClaim(
-                                        "role",
-                                        "Admin"));
-                        });
+                        options => options.AddPolicy(
+                            LocalPolicyKey,
+                            p =>
+                                p.RequireClaim(
+                                    "role",
+                                    "Admin")));
                 services.AddGraphTypes();
             }
 
@@ -148,6 +121,7 @@ namespace NineChronicles.Headless
                     app.UseDeveloperExceptionPage();
                 }
 
+                app.UseMiddleware<LocalAuthenticationMiddleware>();
                 if (Configuration[NoCorsKey] is null)
                 {
                     app.UseCors();
@@ -157,15 +131,8 @@ namespace NineChronicles.Headless
                     app.UseCors("AllowAllOrigins");
                 }
 
-                app.UseSession();
                 app.UseRouting();
-                app.UseAuthentication();
                 app.UseAuthorization();
-                app.UseCookiePolicy();
-
-                app.UseMiddleware<LocalAuthenticationMiddleware>();
-                app.UseMiddleware<AuthenticationValidationMiddleware>();
-
                 app.UseEndpoints(endpoints =>
                 {
                     endpoints.MapControllers();
@@ -181,10 +148,7 @@ namespace NineChronicles.Headless
                 app.UseMiddleware<GraphQLSchemaMiddleware<StandaloneSchema>>("/schema.graphql");
 
                 // /ui/playground 옵션을 통해서 Playground를 사용할 수 있습니다.
-                app.UseGraphQLPlayground(new GraphQLPlaygroundOptions
-                {
-                    RequestCredentials = RequestCredentials.Include,
-                });
+                app.UseGraphQLPlayground();
             }
         }
     }
