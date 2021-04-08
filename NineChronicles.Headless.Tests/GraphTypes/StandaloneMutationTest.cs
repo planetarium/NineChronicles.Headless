@@ -87,7 +87,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Fact]
-        public async Task Trasnfer()
+        public async Task Transfer()
         {
             var goldCurrency = new Currency("NCG", 2, minter: null);
             Block<PolymorphicAction<ActionBase>> genesis =
