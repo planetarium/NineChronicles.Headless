@@ -157,7 +157,7 @@ namespace NineChronicles.Headless.GraphTypes
             ).AuthorizeWith(GraphQLService.UserPolicyKey);
 
             Field<TxIdType>(
-                deprecationReason: "Incorrect remittance may occur when doing to the same address consecutively. Use transfer() instead.",
+                deprecationReason: "Incorrect remittance may occur when using transferGold() to the same address consecutively. Use transfer() instead.",
                 name: "transferGold",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
