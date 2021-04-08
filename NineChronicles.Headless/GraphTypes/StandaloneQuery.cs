@@ -4,7 +4,6 @@ using System.Security.Cryptography;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL;
-using GraphQL.Server.Authorization.AspNetCore;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Action;
