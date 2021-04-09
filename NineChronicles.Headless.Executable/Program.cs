@@ -155,7 +155,10 @@ namespace NineChronicles.Headless.Executable
             [Option(Description =
                 "A number that determines how far behind the demand the tip of the chain " +
                 "will publish `NodeException` to GraphQL subscriptions.  1150 blocks by default.")]
-            int demandBuffer = 1150
+            int demandBuffer = 1150,
+            [Option("static-peer",
+                Description = "A list of peers that the node will continue to maintain.")]
+            string[]? staticPeerStrings = null
         )
         {
 #if SENTRY || ! DEBUG
@@ -289,7 +292,8 @@ namespace NineChronicles.Headless.Executable
                         maximumTransactions: maximumTransactions,
                         messageTimeout: messageTimeout,
                         tipTimeout: tipTimeout,
-                        demandBuffer: demandBuffer);
+                        demandBuffer: demandBuffer,
+                        staticPeerStrings: staticPeerStrings);
 
 
                 if (rpcServer)
