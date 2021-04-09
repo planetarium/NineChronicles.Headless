@@ -27,7 +27,7 @@ namespace NineChronicles.Headless.Executable.Commands
         [Command(Description = "Query app protocol version (a.k.a. APV) of target node.")]
         public void APV(
             [Argument(
-                Name = "target",
+                Name = "TARGET",
                 Description = "Comma seperated peer information of target node.")]
             string peerInfo)
         {
