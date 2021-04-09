@@ -6,8 +6,8 @@ using Libplanet;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
-using NineChronicles.Headless.Exceptions;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+using Libplanet.Headless;
 
 namespace NineChronicles.Headless.Properties
 {
@@ -54,8 +54,8 @@ namespace NineChronicles.Headless.Properties
             peerStrings ??= Array.Empty<string>();
             iceServerStrings ??= Array.Empty<string>();
 
-            var iceServers = iceServerStrings.Select(LoadIceServer).ToImmutableArray();
-            var peers = peerStrings.Select(LoadPeer).ToImmutableArray();
+            var iceServers = iceServerStrings.Select(PropertyParser.ParseIceServer).ToImmutableArray();
+            var peers = peerStrings.Select(PropertyParser.ParsePeer).ToImmutableArray();
 
             return new LibplanetNodeServiceProperties<NineChroniclesActionType>
             {
@@ -106,60 +106,6 @@ namespace NineChronicles.Headless.Properties
                 RpcListenHost = rpcListenHost,
                 RpcListenPort = rpcPortValue
             };
-        }
-
-        private static IceServer LoadIceServer(string iceServerInfo)
-        {
-            try
-            {
-                var uri = new Uri(iceServerInfo);
-                string[] userInfo = uri.UserInfo.Split(':');
-
-                return new IceServer(new[] {uri}, userInfo[0], userInfo[1]);
-            }
-            catch (Exception e)
-            {
-                throw new IceServerInvalidException(
-                    $"--ice-server '{iceServerInfo}' seems invalid.\n" +
-                    $"{e.GetType()} {e.Message}\n" +
-                    $"{e.StackTrace}", innerException: e);
-            }
-        }
-
-        private static BoundPeer LoadPeer(string peerInfo)
-        {
-            var tokens = peerInfo.Split(',');
-            if (tokens.Length != 3)
-            {
-                throw new PeerInvalidException(
-                    $"--peer '{peerInfo}', should have format <pubkey>,<host>,<port>");
-            }
-
-            if (!(tokens[0].Length == 130 || tokens[0].Length == 66))
-            {
-                throw new PeerInvalidException(
-                    $"--peer '{peerInfo}', a length of public key must be 130 or 66 in hexadecimal," +
-                    $" but the length of given public key '{tokens[0]}' doesn't.");
-            }
-
-            try
-            {
-                var pubKey = new PublicKey(ByteUtil.ParseHex(tokens[0]));
-                var host = tokens[1];
-                var port = int.Parse(tokens[2]);
-
-                // FIXME: It might be better to make Peer.AppProtocolVersion property nullable...
-                return new BoundPeer(
-                    pubKey,
-                    new DnsEndPoint(host, port));
-            }
-            catch (Exception e)
-            {
-                throw new PeerInvalidException(
-                    $"--peer '{peerInfo}' seems invalid.\n" +
-                    $"{e.GetType()} {e.Message}\n" +
-                    $"{e.StackTrace}", innerException: e);
-            }
         }
     }
 }

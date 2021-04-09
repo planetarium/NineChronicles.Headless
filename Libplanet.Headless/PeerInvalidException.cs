@@ -1,6 +1,6 @@
 using System;
 
-namespace NineChronicles.Headless.Exceptions
+namespace Libplanet.Headless
 {
     [Serializable]
     public class PeerInvalidException: Exception
