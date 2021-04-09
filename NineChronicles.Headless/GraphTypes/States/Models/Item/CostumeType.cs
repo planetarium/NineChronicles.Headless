@@ -19,7 +19,7 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
             );
             Field<NonNullGraphType<BooleanGraphType>>(
                 nameof(Costume.Equipped),
-                description: "Status of Avatar equipped.",
+                description: "Whether the avatar is equipped.",
                 resolve: context => context.Source.itemBase.equipped
             );
             Field<NonNullGraphType<IntGraphType>>(

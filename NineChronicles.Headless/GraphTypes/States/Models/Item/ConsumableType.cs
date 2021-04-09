@@ -16,7 +16,7 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
             );
             Field<NonNullGraphType<StatTypeEnumType>>(
                 nameof(Consumable.MainStat),
-                description: "Increase stat type when eat this food.",
+                description: "The stat type to increase when eat this food.",
                 resolve: context => context.Source.itemBase.MainStat
             );
             Field<NonNullGraphType<IntGraphType>>(

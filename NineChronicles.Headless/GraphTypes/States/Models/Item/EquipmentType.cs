@@ -10,12 +10,12 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
         {
             Field<NonNullGraphType<IntGraphType>>(
                 nameof(Equipment.SetId),
-                description: "Set effect id of equipment.",
+                description: "The effect set id of equipment.",
                 resolve: context => context.Source.itemBase.ItemId
             );
             Field<NonNullGraphType<DecimalStatType>>(
                 nameof(Equipment.Stat),
-                description: "Increase stat type when equip this equipment.",
+                description: "The stat type to increase when equip this equipment.",
                 resolve: context => context.Source.itemBase.Stat
             );
             Field<NonNullGraphType<BooleanGraphType>>(

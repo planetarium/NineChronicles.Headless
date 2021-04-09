@@ -116,17 +116,17 @@ namespace NineChronicles.Headless.GraphTypes.States
                     var shopItems = products.ToList();
                     orderedQuery = priceSorting switch
                     {
-                        ShopSortingEnum.asc => shopItems.OrderBy(orderByPrice),
-                        ShopSortingEnum.desc => shopItems.OrderByDescending(orderByPrice),
+                        ShopSortingEnum.Asc => shopItems.OrderBy(orderByPrice),
+                        ShopSortingEnum.Desc => shopItems.OrderByDescending(orderByPrice),
                         _ => orderedQuery
                     };
 
                     orderedQuery = gradeSorting switch
                     {
-                        ShopSortingEnum.asc => orderedQuery is null
+                        ShopSortingEnum.Asc => orderedQuery is null
                             ? shopItems.OrderBy(orderByGrade)
                             : orderedQuery.ThenBy(orderByGrade),
-                        ShopSortingEnum.desc => orderedQuery is null
+                        ShopSortingEnum.Desc => orderedQuery is null
                             ? shopItems.OrderByDescending(orderByGrade)
                             : orderedQuery.ThenByDescending(orderByGrade),
                         _ => orderedQuery
@@ -134,10 +134,10 @@ namespace NineChronicles.Headless.GraphTypes.States
 
                     orderedQuery = cpSorting switch
                     {
-                        ShopSortingEnum.asc => orderedQuery is null
+                        ShopSortingEnum.Asc => orderedQuery is null
                             ? shopItems.OrderBy(orderByCP)
                             : orderedQuery.ThenBy(orderByCP),
-                        ShopSortingEnum.desc => orderedQuery is null
+                        ShopSortingEnum.Desc => orderedQuery is null
                             ? shopItems.OrderByDescending(orderByCP)
                             : orderedQuery.ThenByDescending(orderByCP),
                         _ => orderedQuery

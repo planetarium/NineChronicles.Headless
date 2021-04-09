@@ -119,8 +119,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
         }
 
         [Theory]
-        [InlineData(ShopSortingEnum.asc, ShopSortingEnum.asc, ShopSortingEnum.asc)]
-        [InlineData(ShopSortingEnum.desc, ShopSortingEnum.desc, ShopSortingEnum.desc)]
+        [InlineData(ShopSortingEnum.Asc, ShopSortingEnum.Asc, ShopSortingEnum.Asc)]
+        [InlineData(ShopSortingEnum.Desc, ShopSortingEnum.Desc, ShopSortingEnum.Desc)]
         public async Task QueryWithSorting(ShopSortingEnum priceSorting, ShopSortingEnum gradeSorting, ShopSortingEnum cpSorting)
         {
             string queryArgs = $"price: {priceSorting}, grade: {gradeSorting}, combatPoint: {cpSorting}";
@@ -158,7 +158,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             int cp = (int) item["combatPoint"];
             int cp2 = (int) item2["combatPoint"];
 
-            if (priceSorting is ShopSortingEnum.asc)
+            if (priceSorting is ShopSortingEnum.Asc)
             {
                 Assert.True(price < price2);
             }
@@ -167,7 +167,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 Assert.True(price > price2);
             }
 
-            if (gradeSorting is ShopSortingEnum.asc)
+            if (gradeSorting is ShopSortingEnum.Asc)
             {
                 Assert.True(grade < grade2);
             }
@@ -176,7 +176,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 Assert.True(grade > grade2);
             }
 
-            if (cpSorting is ShopSortingEnum.asc)
+            if (cpSorting is ShopSortingEnum.Asc)
             {
                 Assert.True(cp < cp2);
             }

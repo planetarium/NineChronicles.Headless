@@ -4,8 +4,8 @@ namespace NineChronicles.Headless.GraphTypes.States
 {
     public enum ShopSortingEnum
     {
-        asc,
-        desc,
+        Asc,
+        Desc,
     }
 
     public class ShopSortingEnumType : EnumerationGraphType<ShopSortingEnum>
