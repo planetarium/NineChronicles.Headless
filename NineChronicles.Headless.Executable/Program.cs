@@ -30,7 +30,7 @@ namespace NineChronicles.Headless.Executable
     [HasSubCommands(typeof(ValidationCommand), "validation")]
     [HasSubCommands(typeof(ChainCommand), "chain")]
     [HasSubCommands(typeof(KeyCommand), "key")]
-    [HasSubCommands(typeof(NetworkCommand), "net")]
+    [HasSubCommands(typeof(ApvCommand), "apv")]
     public class Program : CoconaLiteConsoleAppBase
     {
         const string SentryDsn = "https://ceac97d4a7d34e7b95e4c445b9b5669e@o195672.ingest.sentry.io/5287621";
