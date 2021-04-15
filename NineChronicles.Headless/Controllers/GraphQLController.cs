@@ -33,8 +33,6 @@ namespace NineChronicles.Headless.Controllers
             = new ConcurrentDictionary<Address, long>();
         private StandaloneContext StandaloneContext { get; }
 
-        public const string RunStandaloneEndpoint = "/run-standalone";
-
         public const string SetPrivateKeyEndpoint = "/set-private-key";
 
         public const string SetMiningEndpoint = "/set-mining";
@@ -46,58 +44,6 @@ namespace NineChronicles.Headless.Controllers
             _httpContextAccessor = httpContextAccessor;
             _configuration = configuration;
             StandaloneContext = standaloneContext;
-        }
-
-        [HttpPost(RunStandaloneEndpoint)]
-        public IActionResult RunStandalone()
-        {
-            if (!HasLocalPolicy())
-            {
-                return Unauthorized();
-            }
-
-            if (StandaloneContext.NineChroniclesNodeService is null)
-            {
-                // Waiting node service.
-                return new StatusCodeResult(StatusCodes.Status409Conflict);
-            }
-
-            try
-            {
-                IHostBuilder nineChroniclesNodeHostBuilder = Host.CreateDefaultBuilder();
-                nineChroniclesNodeHostBuilder =
-                    StandaloneContext.NineChroniclesNodeService.Configure(
-                        nineChroniclesNodeHostBuilder);
-                // FIXME: StandaloneContext has both service and blockchain, which is duplicated.
-                StandaloneContext.BlockChain =
-                    StandaloneContext.NineChroniclesNodeService.Swarm.BlockChain;
-                StandaloneContext.NineChroniclesNodeService.BlockRenderer.EveryBlock()
-                    .Subscribe(pair => NotifyRefillActionPoint(pair.NewTip.Index));
-
-                // FIXME We disabled notifications due to an issue where the action is repeatedly executed during reorg
-                // StandaloneContext.NineChroniclesNodeService.ActionRenderer.EveryRender<ActionBase>()
-                //    .Subscribe(NotifyAction);
-                nineChroniclesNodeHostBuilder
-                    .RunConsoleAsync()
-                    .ContinueWith(task =>
-                    {
-                        if (task.IsFaulted)
-                        {
-                            Log.Error(
-                                task.Exception,
-                                "An unexpected error occurred while running NineChroniclesNodeService.",
-                                task.Exception);
-                        }
-                    });
-            }
-            catch (Exception e)
-            {
-                // Unexpected Error.
-                Log.Warning(e, "Failed to launch node service. {e}", e);
-                return new StatusCodeResult(StatusCodes.Status503ServiceUnavailable);
-            }
-
-            return Ok("Node service started.");
         }
 
         [HttpPost(SetPrivateKeyEndpoint)]

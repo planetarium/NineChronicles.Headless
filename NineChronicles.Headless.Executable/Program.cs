@@ -30,6 +30,7 @@ namespace NineChronicles.Headless.Executable
     [HasSubCommands(typeof(ValidationCommand), "validation")]
     [HasSubCommands(typeof(ChainCommand), "chain")]
     [HasSubCommands(typeof(KeyCommand), "key")]
+    [HasSubCommands(typeof(ApvCommand), "apv")]
     public class Program : CoconaLiteConsoleAppBase
     {
         const string SentryDsn = "https://ceac97d4a7d34e7b95e4c445b9b5669e@o195672.ingest.sentry.io/5287621";
@@ -104,8 +105,6 @@ namespace NineChronicles.Headless.Executable
             string? graphQLSecretTokenPath = null,
             [Option(Description = "Run without CORS policy.")]
             bool noCors = false,
-            [Option("libplanet-node")]
-            bool libplanetNode = false,
             [Option("workers", Description = "Number of workers to use in Swarm")]
             int workers = 5,
             [Option(
@@ -156,7 +155,10 @@ namespace NineChronicles.Headless.Executable
             [Option(Description =
                 "A number that determines how far behind the demand the tip of the chain " +
                 "will publish `NodeException` to GraphQL subscriptions.  1150 blocks by default.")]
-            int demandBuffer = 1150
+            int demandBuffer = 1150,
+            [Option("static-peer",
+                Description = "A list of peers that the node will continue to maintain.")]
+            string[]? staticPeerStrings = null
         )
         {
 #if SENTRY || ! DEBUG
@@ -214,14 +216,6 @@ namespace NineChronicles.Headless.Executable
             }
 
             Log.Logger = loggerConf.CreateLogger();
-
-            if (!graphQLServer && !libplanetNode)
-            {
-                throw new CommandExitedException(
-                    "Either --graphql-server or --libplanet-node must be present.",
-                    -1
-                );
-            }
 
             var tasks = new List<Task>();
             try
@@ -298,7 +292,8 @@ namespace NineChronicles.Headless.Executable
                         maximumTransactions: maximumTransactions,
                         messageTimeout: messageTimeout,
                         tipTimeout: tipTimeout,
-                        demandBuffer: demandBuffer);
+                        demandBuffer: demandBuffer,
+                        staticPeerStrings: staticPeerStrings);
 
 
                 if (rpcServer)
@@ -336,27 +331,24 @@ namespace NineChronicles.Headless.Executable
                         txLifeTime: TimeSpan.FromMinutes(txLifeTime));
                 standaloneContext.NineChroniclesNodeService = nineChroniclesNodeService;
 
-                if (libplanetNode)
+                if (!properties.NoMiner)
                 {
-                    if (!properties.NoMiner)
+                    if (minerPrivateKey is null)
                     {
-                        if (minerPrivateKey is null)
-                        {
-                            throw new CommandExitedException(
-                                "--miner-private-key must be present to turn on mining at libplanet node.",
-                                -1
-                            );
-                        }
-                        
-                        nineChroniclesNodeService.StartMining();
+                        throw new CommandExitedException(
+                            "--miner-private-key must be present to turn on mining at libplanet node.",
+                            -1
+                        );
                     }
-
-                    IHostBuilder nineChroniclesNodeHostBuilder = Host.CreateDefaultBuilder();
-                    nineChroniclesNodeHostBuilder =
-                        nineChroniclesNodeService.Configure(nineChroniclesNodeHostBuilder);
-                    tasks.Add(
-                        nineChroniclesNodeHostBuilder.RunConsoleAsync(Context.CancellationToken));
+                    
+                    nineChroniclesNodeService.StartMining();
                 }
+
+                IHostBuilder nineChroniclesNodeHostBuilder = Host.CreateDefaultBuilder();
+                nineChroniclesNodeHostBuilder =
+                    nineChroniclesNodeService.Configure(nineChroniclesNodeHostBuilder);
+                tasks.Add(
+                    nineChroniclesNodeHostBuilder.RunConsoleAsync(Context.CancellationToken));
 
                 await Task.WhenAll(tasks);
             }
