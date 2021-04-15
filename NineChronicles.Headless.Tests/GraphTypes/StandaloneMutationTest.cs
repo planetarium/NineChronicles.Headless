@@ -137,6 +137,64 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Fact]
+        public async Task Transfer()
+        {
+            var goldCurrency = new Currency("NCG", 2, minter: null);
+            Block<PolymorphicAction<ActionBase>> genesis =
+                MakeGenesisBlock(
+                    default,
+                    goldCurrency,
+                    ImmutableHashSet<Address>.Empty
+                );
+            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.BlockChain;
+
+            Address senderAddress = service.MinerPrivateKey!.ToAddress();
+
+            var blockChain = StandaloneContextFx.BlockChain;
+            var store = service.Store;
+            await blockChain.MineBlock(senderAddress);
+            await blockChain.MineBlock(senderAddress);
+
+            // 10 + 10 (mining rewards)
+            Assert.Equal(
+                20 * goldCurrency,
+                blockChain.GetBalance(senderAddress, goldCurrency)
+            );
+
+            Address recipient = new PrivateKey().ToAddress();
+            long txNonce = blockChain.GetNextTxNonce(senderAddress);
+            var query = $"mutation {{ transfer(recipient: \"{recipient}\", txNonce: {txNonce}, amount: \"17.5\") }}";
+            ExecutionResult result = await ExecuteQueryAsync(query);
+
+            var stagedTxIds = blockChain.GetStagedTransactionIds().ToImmutableList();
+            Assert.Single(stagedTxIds);
+
+            var expectedResult = new Dictionary<string, object>
+            {
+                ["transfer"] = stagedTxIds.Single().ToString(),
+            };
+            Assert.Null(result.Errors);
+            Assert.Equal(expectedResult, result.Data);
+
+            await blockChain.MineBlock(recipient);
+
+            // 10 + 10 - 17.5(transfer)
+            Assert.Equal(
+                FungibleAssetValue.Parse(goldCurrency, "2.5"),
+                blockChain.GetBalance(senderAddress, goldCurrency)
+            );
+
+            // 0 + 17.5(transfer) + 10(mining reward)
+            Assert.Equal(
+                FungibleAssetValue.Parse(goldCurrency, "27.5"),
+                blockChain.GetBalance(recipient, goldCurrency)
+            );
+
+        }
+
+        [Fact]
         public async Task TransferGold()
         {
             var goldCurrency = new Currency("NCG", 2, minter: null);
