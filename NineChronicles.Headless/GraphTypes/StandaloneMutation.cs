@@ -15,22 +15,16 @@ using GraphQL.Server.Authorization.AspNetCore;
 using Libplanet.Explorer.GraphTypes;
 using Microsoft.Extensions.Configuration;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
-using Microsoft.AspNetCore.Http;
 
 namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneMutation : ObjectGraphType
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        
         public StandaloneMutation(
-            IHttpContextAccessor httpContextAccessor,
             StandaloneContext standaloneContext,
             IConfiguration configuration
         )
         {
-            _httpContextAccessor = httpContextAccessor;
-            
             if (configuration[GraphQLService.SecretTokenKey] is { })
             {
                 this.AuthorizeWith(GraphQLService.LocalPolicyKey);   
