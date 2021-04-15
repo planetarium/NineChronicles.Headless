@@ -50,15 +50,63 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 await BlockChain.MineBlock(miner);
 
-                var result = await ExecuteQueryAsync($"query {{ stateQuery {{ raw(address: \"{miner.ToHex()}\") }} }}");
+                var result = await ExecuteQueryAsync($"query {{ state(address: \"{miner.ToHex()}\") }}");
 
                 var data = (Dictionary<string, object>) result.Data;
-                var state = (Integer) codec.Decode(
-                    ByteUtil.ParseHex((string) data["stateQuery"].As<Dictionary<string, object>>()["raw"]));
+                var state = (Integer)codec.Decode(ByteUtil.ParseHex((string) data["state"]));
 
                 // TestRewardGold에서 miner에게 1 gold 씩 주므로 block index와 같을 것입니다.
                 Assert.Equal((Integer)index, state);
             }
+        }
+
+        [Theory]
+        [InlineData(2)]
+        [InlineData(16)]
+        [InlineData(32)]
+        public async Task ListPrivateKeys(int repeat)
+        {
+            var generatedProtectedPrivateKeys = new List<ProtectedPrivateKey>();
+            foreach (var _ in Enumerable.Range(0, repeat))
+            {
+                var (protectedPrivateKey, _) = CreateProtectedPrivateKey();
+                generatedProtectedPrivateKeys.Add(protectedPrivateKey);
+                KeyStore.Add(protectedPrivateKey);
+            }
+
+            var result = await ExecuteQueryAsync("query { keyStore { protectedPrivateKeys { address } } }");
+
+            var data = (Dictionary<string, object>) result.Data;
+            var keyStoreResult = (Dictionary<string, object>) data["keyStore"];
+            var protectedPrivateKeyAddresses =
+                keyStoreResult["protectedPrivateKeys"].As<List<object>>()
+                    .Cast<Dictionary<string, object>>()
+                    .Select(x => x["address"].As<string>())
+                    .ToImmutableList();
+
+            foreach (var protectedPrivateKey in generatedProtectedPrivateKeys)
+            {
+                Assert.Contains(protectedPrivateKey.Address.ToString(), protectedPrivateKeyAddresses);
+            }
+
+            var (notStoredProtectedPrivateKey, _) = CreateProtectedPrivateKey();
+            Assert.DoesNotContain(notStoredProtectedPrivateKey.Address.ToString(), protectedPrivateKeyAddresses);
+        }
+
+        [Fact]
+        public async Task DecryptedPrivateKey()
+        {
+            var (protectedPrivateKey, passphrase) = CreateProtectedPrivateKey();
+            var privateKey = protectedPrivateKey.Unprotect(passphrase);
+            KeyStore.Add(protectedPrivateKey);
+
+            var result = await ExecuteQueryAsync($"query {{ keyStore {{ decryptedPrivateKey(address: \"{privateKey.ToAddress()}\", passphrase: \"{passphrase}\") }} }}");
+
+            var data = (Dictionary<string, object>) result.Data;
+            var keyStoreResult = (Dictionary<string, object>) data["keyStore"];
+            var decryptedPrivateKeyResult = (string) keyStoreResult["decryptedPrivateKey"];
+
+            Assert.Equal(ByteUtil.Hex(privateKey.ByteArray), decryptedPrivateKeyResult);
         }
 
         [Fact]
@@ -179,6 +227,139 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Null(result.Errors);
             Assert.Equal(expectedResult, result.Data);
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task ValidateMetadata(bool valid)
+        {
+            var minerAddress = new PrivateKey().ToAddress();
+            var lowMetadata = "{\\\"Index\\\":1}";
+            var highMetadata = "{\\\"Index\\\":13340}";
+
+            for (int i = 0; i < 10; i++)
+            {
+                await BlockChain.MineBlock(minerAddress);
+            }
+            var query = $@"query {{
+                validation {{
+                    metadata(raw: ""{(valid ? highMetadata : lowMetadata)}"")
+                }}
+            }}";
+
+            var result = await ExecuteQueryAsync(query);
+
+            var validationResult =
+                result.Data
+                    .As<Dictionary<string, object>>()["validation"]
+                    .As<Dictionary<string, object>>()["metadata"];
+            Assert.IsType<bool>(validationResult);
+            Assert.Equal(valid, validationResult);
+        }
+
+        // TODO: partial class로 세부 쿼리 별 테스트 분리하기.
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task ValidatePrivateKey(bool valid)
+        {
+            var privateKey = new PrivateKey();
+            var privateKeyHex = valid
+                ? ByteUtil.Hex(privateKey.ByteArray)
+                : "0000000000000000000000000000000000000000";
+            var query = $@"query {{
+                validation {{
+                    privateKey(hex: ""{privateKeyHex}"")
+                }}
+            }}";
+
+            var result = await ExecuteQueryAsync(query);
+            var validationResult =
+                result.Data
+                    .As<Dictionary<string, object>>()["validation"]
+                    .As<Dictionary<string, object>>()["privateKey"];
+            Assert.IsType<bool>(validationResult);
+            Assert.Equal(valid, validationResult);
+        }
+
+        // TODO: partial class로 세부 쿼리 별 테스트 분리하기.
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task ValidatePublicKey(bool valid)
+        {
+            var privateKey = new PrivateKey();
+            var publicKey = privateKey.PublicKey;
+
+            string CreateInvalidPublicKeyHexString(bool compress)
+            {
+                int length = compress ? 33 : 66;
+                do
+                {
+                    byte[] publicKeyBytes = CreateRandomBytes(length);
+
+                    try
+                    {
+                        var _ = new PublicKey(publicKeyBytes);
+                    }
+                    catch (FormatException)
+                    {
+                        return ByteUtil.Hex(publicKeyBytes);
+                    }
+                    catch (ArgumentException)
+                    {
+                        return ByteUtil.Hex(publicKeyBytes);
+                    }
+                } while (true);
+            }
+
+            var publicKeyHex = valid ? ByteUtil.Hex(publicKey.Format(false)) : CreateInvalidPublicKeyHexString(false);
+            var query = $@"query {{
+                validation {{
+                    publicKey(hex: ""{publicKeyHex}"")
+                }}
+            }}";
+
+            var result = await ExecuteQueryAsync(query);
+
+            var validationResult =
+                result.Data
+                    .As<Dictionary<string, object>>()["validation"]
+                    .As<Dictionary<string, object>>()["publicKey"];
+            Assert.IsType<bool>(validationResult);
+            Assert.Equal(valid, validationResult);
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task ConvertPrivateKey(bool compress)
+        {
+            var privateKey = new PrivateKey();
+            var privateKeyHex = ByteUtil.Hex(privateKey.ByteArray);
+            var query = $@"
+            query {{
+                keyStore {{
+                    privateKey(hex: ""{privateKeyHex}"") {{
+                        hex
+                        publicKey {{
+                            hex(compress: {compress.ToString().ToLowerInvariant()})
+                            address
+                        }}
+                    }}
+                }}
+            }}
+            ";
+
+            var result = await ExecuteQueryAsync(query);
+            var privateKeyResult = result.Data.As<Dictionary<string, object>>()["keyStore"]
+                .As<Dictionary<string, object>>()["privateKey"]
+                .As<Dictionary<string, object>>();
+            Assert.Equal(privateKeyHex, privateKeyResult["hex"]);
+            var publicKeyResult = privateKeyResult["publicKey"].As<Dictionary<string, object>>();
+            Assert.Equal(ByteUtil.Hex(privateKey.PublicKey.Format(compress)), publicKeyResult["hex"]);
+            Assert.Equal(privateKey.ToAddress().ToString(), publicKeyResult["address"]);
         }
 
         [Theory]
@@ -333,6 +514,69 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 },
                 queryResult.Data
             );
+        }
+
+        [Fact]
+        public async Task GetTx()
+        {
+            var userPrivateKey = new PrivateKey();
+            var userAddress = userPrivateKey.ToAddress();
+            var service = MakeMineChroniclesNodeService(userPrivateKey);
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
+
+            var blockChain = StandaloneContextFx.BlockChain;
+            var queryFormat = @"query {{
+                getTx(txId: ""{0}"") {{
+                    id
+                    nonce
+                    signer
+                    signature
+                    timestamp
+                    updatedAddresses
+                    actions {{
+                        inspection
+                    }}
+                }}
+            }}";
+            var queryResult = await ExecuteQueryAsync(string.Format(queryFormat, new TxId()));
+            Assert.Equal(
+                new Dictionary<string, object?>
+                {
+                    ["getTx"] = null
+                },
+                queryResult.Data
+            );
+
+            var action = new CreateAvatar2
+            {
+                index = 0,
+                hair = 1,
+                lens = 2,
+                ear = 3,
+                tail = 4,
+                name = "action",
+            };
+            var transaction = blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
+            blockChain.StageTransaction(transaction);
+            await blockChain.MineBlock(new Address());
+            queryResult = await ExecuteQueryAsync(string.Format(queryFormat, transaction.Id));
+            var tx = queryResult.Data
+                .As<Dictionary<string, object>>()["getTx"]
+                .As<Dictionary<string, object>>();
+
+            Assert.Equal(tx["id"], transaction.Id.ToString());
+            Assert.Equal(tx["nonce"], transaction.Nonce);
+            Assert.Equal(tx["signer"], transaction.Signer.ToString());
+            Assert.Equal(tx["signature"], ByteUtil.Hex(transaction.Signature));
+            Assert.Equal(tx["timestamp"], transaction.Timestamp.ToString());
+            Assert.Equal(tx["updatedAddresses"], transaction.UpdatedAddresses.Select(a => a.ToString()));
+
+            var plainValue = tx["actions"]
+                .As<List<object>>()
+                .First()
+                .As<Dictionary<string, object>>()["inspection"];
+            Assert.Equal(transaction.Actions.First().PlainValue.Inspection, plainValue);
         }
 
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)

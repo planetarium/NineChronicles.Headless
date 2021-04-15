@@ -1,5 +1,4 @@
 using System;
-using Bencodex;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
@@ -92,39 +91,6 @@ namespace NineChronicles.Headless.GraphTypes
                     if (context.Source.accountStateGetter(address) is { } state)
                     {
                         return (new AgentState((Dictionary) state), context.Source.accountStateGetter, context.Source.accountBalanceGetter);
-                    }
-
-                    return null;
-                }
-            );
-
-            Field<ByteStringType>(
-                name: "raw",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "The address of state to fetch from the chain." }
-                ),
-                resolve: context =>
-                {
-                    var address = context.GetArgument<Address>("address");
-                    var state = context.Source.accountStateGetter(address);
-                    return state is null ? null : new Codec().Encode(state);
-                }
-            );
-
-            Field<CombinationSlotStateType>(
-                name: "combinationSlot",
-                description: "State for combination slot.",
-                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
-                {
-                    Name = "address",
-                    Description = "Address of combination slot."
-                }),
-                resolve: context =>
-                {
-                    var address = context.GetArgument<Address>("address");
-                    if (context.Source.accountStateGetter(address) is { } state)
-                    {
-                        return new CombinationSlotState((Dictionary) state);
                     }
 
                     return null;

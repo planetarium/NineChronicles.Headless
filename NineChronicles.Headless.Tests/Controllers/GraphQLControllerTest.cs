@@ -13,7 +13,6 @@ using Libplanet.Store.Trie;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Nekoyume.Action;
 using NineChronicles.Headless.Controllers;
 using NineChronicles.Headless.Requests;
@@ -50,11 +49,7 @@ namespace NineChronicles.Headless.Tests.Controllers
             _configuration = new ConfigurationBuilder().AddInMemoryCollection().Build();
             _httpContextAccessor = new HttpContextAccessor();
             _httpContextAccessor.HttpContext = new DefaultHttpContext();
-            _httpContextAccessor.HttpContext.Session = new InMemorySession(string.Empty, true);
-            var services = new ServiceCollection();
-            services.AddAuthentication();
-            _httpContextAccessor.HttpContext.RequestServices = services.BuildServiceProvider();
-
+            
             _controller = new GraphQLController(_standaloneContext, _httpContextAccessor, _configuration);
         }
 

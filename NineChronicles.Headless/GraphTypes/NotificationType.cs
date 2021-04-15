@@ -1,5 +1,4 @@
 using GraphQL.Types;
-using Libplanet.Explorer.GraphTypes;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -16,11 +15,6 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "message",
                 description: "The message of Notification.",
                 resolve: context => context.Source.Message);
-            
-            Field<NonNullGraphType<AddressType>>(
-                name: "receiver",
-                description: "The receiver of Notification.",
-                resolve: context => context.Source.Receiver);
         }
     }
 }

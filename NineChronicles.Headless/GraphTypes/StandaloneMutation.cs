@@ -15,40 +15,32 @@ using GraphQL.Server.Authorization.AspNetCore;
 using Libplanet.Explorer.GraphTypes;
 using Microsoft.Extensions.Configuration;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
-using Microsoft.AspNetCore.Http;
 
 namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneMutation : ObjectGraphType
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        
         public StandaloneMutation(
-            IHttpContextAccessor httpContextAccessor,
             StandaloneContext standaloneContext,
             IConfiguration configuration
         )
         {
-            _httpContextAccessor = httpContextAccessor;
-            
             if (configuration[GraphQLService.SecretTokenKey] is { })
             {
                 this.AuthorizeWith(GraphQLService.LocalPolicyKey);   
             }
 
-            Field<AuthenticationMutation>(
-                "auth",
-                resolve: context => new { });
+            Field<KeyStoreMutation>(
+                name: "keyStore",
+                resolve: context => standaloneContext.KeyStore);
 
             Field<ActivationStatusMutation>(
-                    name: "activationStatus",
-                    resolve: context => standaloneContext.NineChroniclesNodeService)
-                .AuthorizeWith(GraphQLService.UserPolicyKey);
+                name: "activationStatus",
+                resolve: context => standaloneContext.NineChroniclesNodeService);
 
             Field<ActionMutation>(
-                    name: "action",
-                    resolve: context => standaloneContext.NineChroniclesNodeService)
-                .AuthorizeWith(GraphQLService.UserPolicyKey);
+                name: "action",
+                resolve: context => standaloneContext.NineChroniclesNodeService);
 
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "stageTx",
@@ -91,7 +83,7 @@ namespace NineChronicles.Headless.GraphTypes
                         return false;
                     }
                 }
-            ).AuthorizeWith(GraphQLService.UserPolicyKey);
+            );
 
             Field<TxIdType>(
                 name: "transfer",
@@ -124,10 +116,15 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         throw new InvalidOperationException($"{nameof(NineChroniclesNodeService)} is null.");
                     }
-                    
-                    if (!(_httpContextAccessor.HttpContext.Session.GetPrivateKey() is { } privateKey))
+
+                    PrivateKey? privateKey = service.MinerPrivateKey;
+                    if (privateKey is null)
                     {
-                        throw new InvalidOperationException("The session private key is null.");
+                        // FIXME We should cover this case on unittest.
+                        var msg = "No private key was loaded.";
+                        context.Errors.Add(new ExecutionError(msg));
+                        Log.Error(msg);
+                        return null;
                     }
 
                     BlockChain<NCAction> blockChain = service.BlockChain;
@@ -154,7 +151,7 @@ namespace NineChronicles.Headless.GraphTypes
                     blockChain.StageTransaction(tx);
                     return tx.Id;
                 }
-            ).AuthorizeWith(GraphQLService.UserPolicyKey);
+            );
 
             Field<TxIdType>(
                 deprecationReason: "Incorrect remittance may occur when using transferGold() to the same address consecutively. Use transfer() instead.",
@@ -188,10 +185,10 @@ namespace NineChronicles.Headless.GraphTypes
 
                     BlockChain<NCAction> blockChain = service.BlockChain;
                     var currency = new GoldCurrencyState(
-                        (Dictionary) blockChain.GetState(GoldCurrencyState.Address)
+                        (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
                     ).Currency;
                     FungibleAssetValue amount =
-                        FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
+                    FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
 
                     Address recipient = context.GetArgument<Address>("recipient");
 
@@ -208,7 +205,7 @@ namespace NineChronicles.Headless.GraphTypes
                     );
                     return tx.Id;
                 }
-            ).AuthorizeWith(GraphQLService.UserPolicyKey);
+            );
         }
     }
 }
