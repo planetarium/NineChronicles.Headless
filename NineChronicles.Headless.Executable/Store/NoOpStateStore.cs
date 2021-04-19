@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Immutable;
-using System.Security.Cryptography;
 using Bencodex.Types;
-using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blocks;
 using Libplanet.Store;
@@ -15,15 +13,11 @@ namespace NineChronicles.Headless.Executable.Store
         {
         }
 
-        public IValue? GetState(string stateKey, HashDigest<SHA256>? blockHash = null, Guid? chainId = null)
-        {
-            return null;
-        }
+        public IValue? GetState(string stateKey, BlockHash? blockHash = null, Guid? chainId = null) =>
+            null;
 
-        public bool ContainsBlockStates(HashDigest<SHA256> blockHash)
-        {
-            return false;
-        }
+        public bool ContainsBlockStates(BlockHash blockHash) =>
+            false;
 
         public void ForkStates<T>(Guid sourceChainId, Guid destinationChainId, Block<T> branchpoint) where T : IAction, new()
         {

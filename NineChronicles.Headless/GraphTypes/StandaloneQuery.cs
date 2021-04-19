@@ -1,6 +1,4 @@
 #nullable enable
-using System;
-using System.Security.Cryptography;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL;
@@ -9,9 +7,8 @@ using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
+using Libplanet.Blocks;
 using Libplanet.Explorer.GraphTypes;
-using Libplanet.Explorer.Interfaces;
-using Libplanet.Store;
 using Microsoft.Extensions.Configuration;
 using Libplanet.Tx;
 using Nekoyume.Action;
@@ -34,9 +31,9 @@ namespace NineChronicles.Headless.GraphTypes
                 }),
                 resolve: context =>
                 {
-                    HashDigest<SHA256>? blockHash = context.GetArgument<byte[]>("hash") switch
+                    BlockHash? blockHash = context.GetArgument<byte[]>("hash") switch
                     {
-                        byte[] bytes => new HashDigest<SHA256>(bytes),
+                        byte[] bytes => new BlockHash(bytes),
                         null => null,
                     };
 
@@ -63,7 +60,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var blockHashByteArray = context.GetArgument<byte[]>("hash");
                     var blockHash = blockHashByteArray is null
                         ? blockChain.Tip.Hash
-                        : new HashDigest<SHA256>(blockHashByteArray);
+                        : new BlockHash(blockHashByteArray);
 
                     var state = blockChain.GetState(address, blockHash);
 
@@ -127,7 +124,7 @@ namespace NineChronicles.Headless.GraphTypes
                     byte[] blockHashByteArray = context.GetArgument<byte[]>("hash");
                     var blockHash = blockHashByteArray is null
                         ? blockChain.Tip.Hash
-                        : new HashDigest<SHA256>(blockHashByteArray);
+                        : new BlockHash(blockHashByteArray);
                     Currency currency = new GoldCurrencyState(
                         (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
                     ).Currency;
