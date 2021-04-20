@@ -1,46 +1,37 @@
 using System.Linq;
 using Bencodex.Types;
-using GraphQL;
 using GraphQL.Types;
 using Libplanet.Action;
 using Libplanet.Assets;
-using Libplanet.Blockchain;
 using Libplanet.Explorer.GraphTypes;
-using Nekoyume.Action;
 using Nekoyume.Model.State;
 
 namespace NineChronicles.Headless.GraphTypes.States
 {
-    public class AgentStateType : ObjectGraphType<AgentState>
+    public class AgentStateType : ObjectGraphType<(AgentState agentState, AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter)>
     {
-        public AgentStateType(StandaloneContext standaloneContext)
+        public AgentStateType()
         {
             Field<NonNullGraphType<AddressType>>(
                 nameof(AgentState.address),
                 description: "Address of agent.",
-                resolve: context => context.Source.address);
+                resolve: context => context.Source.agentState.address);
             Field<ListGraphType<NonNullGraphType<AddressType>>>(
                 nameof(AgentState.avatarAddresses),
                 description: "Address list of avatar.",
-                resolve: context => context.Source.avatarAddresses.Select(a => a.Value));
+                resolve: context => context.Source.agentState.avatarAddresses.Select(a => a.Value));
             Field<NonNullGraphType<StringGraphType>>(
                 "gold",
                 description: "Current NCG.",
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
                     Currency currency = new GoldCurrencyState(
-                        (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
+                        (Dictionary)context.Source.accountStateGetter(GoldCurrencyState.Address)!
                     ).Currency;
 
-                    return blockChain.GetBalance(
-                        context.Source.address,
-                        currency,
-                        blockChain.Tip.Hash
+                    return context.Source.accountBalanceGetter(
+                        context.Source.agentState.address,
+                        currency
                     ).GetQuantityString();
                 });
         }
