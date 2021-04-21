@@ -693,6 +693,140 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         };
 
         [Fact]
+        public async Task Stake()
+        {
+            var playerPrivateKey = new PrivateKey();
+            var blockChain = GetContextFx(playerPrivateKey, new RankingState());
+            const string query = @"mutation {
+                action {
+                    stake(level: 1)
+                }
+            }";
+
+            PolymorphicAction<ActionBase> createAvatar = new CreateAvatar2
+            {
+                index = 0,
+                hair = 0,
+                lens = 0,
+                ear = 0,
+                tail = 0,
+                name = "avatar",
+            };
+            blockChain.MakeTransaction(playerPrivateKey, new[] { createAvatar });
+            await blockChain.MineBlock(playerPrivateKey.ToAddress());
+
+            Assert.NotNull(blockChain.GetState(playerPrivateKey.ToAddress()));
+            var result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
+
+            var txIds = blockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = blockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["stake"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
+            Assert.Single(tx.Actions);
+            var action = (Stake) tx.Actions.First().InnerAction;
+            Assert.Equal(1, action.level);
+            Assert.Equal(0, action.stakingRound);
+        }
+
+        [Fact]
+        public async Task ClaimStakingReward()
+        {
+            var playerPrivateKey = new PrivateKey();
+            var blockChain = GetContextFx(playerPrivateKey, new RankingState());
+            var avatarAddress = playerPrivateKey.ToAddress();
+            string query = $@"mutation {{
+                action {{
+                    claimStakingReward(avatarAddress: ""{avatarAddress}"")
+                }}
+            }}";
+
+            PolymorphicAction<ActionBase> createAvatar = new CreateAvatar2
+            {
+                index = 0,
+                hair = 0,
+                lens = 0,
+                ear = 0,
+                tail = 0,
+                name = "avatar",
+            };
+            blockChain.MakeTransaction(playerPrivateKey, new[] { createAvatar });
+            await blockChain.MineBlock(playerPrivateKey.ToAddress());
+
+            Assert.NotNull(blockChain.GetState(playerPrivateKey.ToAddress()));
+
+            var result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
+
+            var txIds = blockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = blockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["claimStakingReward"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
+            Assert.Single(tx.Actions);
+            var action = (ClaimStakingReward) tx.Actions.First().InnerAction;
+            Assert.Equal(avatarAddress, action.avatarAddress);
+            Assert.Equal(0, action.stakingRound);
+        }
+        [Fact]
+        public async Task CancelStaking()
+        {
+            var playerPrivateKey = new PrivateKey();
+            var blockChain = GetContextFx(playerPrivateKey, new RankingState());
+            const string query = @"mutation {
+                action {
+                    cancelStaking(level: 1)
+                }
+            }";
+
+            PolymorphicAction<ActionBase> createAvatar = new CreateAvatar2
+            {
+                index = 0,
+                hair = 0,
+                lens = 0,
+                ear = 0,
+                tail = 0,
+                name = "avatar",
+            };
+            blockChain.MakeTransaction(playerPrivateKey, new[] { createAvatar });
+            await blockChain.MineBlock(playerPrivateKey.ToAddress());
+
+            Assert.NotNull(blockChain.GetState(playerPrivateKey.ToAddress()));
+
+            var result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
+
+            var txIds = blockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = blockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["cancelStaking"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
+            Assert.Single(tx.Actions);
+            var action = (CancelStaking) tx.Actions.First().InnerAction;
+            Assert.Equal(1, action.level);
+            Assert.Equal(0, action.stakingRound);
+        }
+
+        [Fact]
         public async Task Tx()
         {
             Block<PolymorphicAction<ActionBase>> genesis =

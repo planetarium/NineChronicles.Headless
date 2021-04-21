@@ -5,7 +5,6 @@ using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
-using Libplanet.Crypto;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Serilog;
@@ -520,6 +519,151 @@ namespace NineChronicles.Headless.GraphTypes
                             AvatarAddress = avatarAddress,
                             recipeId = recipeId,
                             slotIndex = slotIndex,
+                        };
+
+                        var actions = new PolymorphicAction<ActionBase>[] { action };
+                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(context.Source.MinerPrivateKey, actions);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+
+            Field<NonNullGraphType<TxIdType>>(nameof(Stake),
+                description: "Staking NCG.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "level",
+                        Description = "The staking level.(1 ~ 7)"
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        NineChroniclesNodeService service = context.Source;
+                        BlockChain<NineChroniclesActionType>? blockChain = service.Swarm?.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        if (context.Source.MinerPrivateKey is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(context.Source.MinerPrivateKey)} is null.");
+                        }
+
+                        int level = context.GetArgument<int>("level");
+                        Address agentAddress = context.Source.MinerPrivateKey.ToAddress();
+                        AgentState agentState = new AgentState((Dictionary) context.Source.BlockChain.GetState(agentAddress));
+
+                        var action = new Stake
+                        {
+                            level = level,
+                            stakingRound = agentState.StakingRound,
+                        };
+
+                        var actions = new PolymorphicAction<ActionBase>[] { action };
+                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(context.Source.MinerPrivateKey, actions);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+
+            Field<NonNullGraphType<TxIdType>>(nameof(ClaimStakingReward),
+                description: "Get staking reward.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "Address of avatar for get reward."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        NineChroniclesNodeService service = context.Source;
+                        BlockChain<NineChroniclesActionType>? blockChain = service.Swarm?.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+
+                        if (context.Source.MinerPrivateKey is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(context.Source.MinerPrivateKey)} is null.");
+                        }
+
+                        Address avatarAddress = context.GetArgument<Address>("avatarAddress");
+                        Address agentAddress = context.Source.MinerPrivateKey.ToAddress();
+                        AgentState agentState = new AgentState((Dictionary) context.Source.BlockChain.GetState(agentAddress));
+
+                        var action = new ClaimStakingReward
+                        {
+                            avatarAddress = avatarAddress,
+                            stakingRound = agentState.StakingRound,
+                        };
+
+                        var actions = new PolymorphicAction<ActionBase>[] { action };
+                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(context.Source.MinerPrivateKey, actions);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+
+            Field<NonNullGraphType<TxIdType>>(nameof(CancelStaking),
+                description: "Downgrade staking level.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "level",
+                        Description = "The staking level.(1 ~ 6)"
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        NineChroniclesNodeService service = context.Source;
+                        BlockChain<NineChroniclesActionType>? blockChain = service.Swarm?.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        if (context.Source.MinerPrivateKey is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(context.Source.MinerPrivateKey)} is null.");
+                        }
+
+                        int level = context.GetArgument<int>("level");
+                        Address agentAddress = context.Source.MinerPrivateKey.ToAddress();
+                        AgentState agentState = new AgentState((Dictionary) context.Source.BlockChain.GetState(agentAddress));
+
+                        var action = new CancelStaking
+                        {
+                            level = level,
+                            stakingRound = agentState.StakingRound,
                         };
 
                         var actions = new PolymorphicAction<ActionBase>[] { action };
