@@ -11,6 +11,8 @@ using Libplanet.Blocks;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Net;
 using Libplanet.Headless;
+using Nekoyume.Model.State;
+using NineChronicles.Headless.GraphTypes.States;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -138,6 +140,13 @@ namespace NineChronicles.Headless.GraphTypes
                 Resolver = new FuncFieldResolver<NodeException>(context => (context.Source as NodeException)!),
                 Subscriber = new EventStreamResolver<NodeException>(context =>
                     StandaloneContext.NodeExceptionSubject.AsObservable()),
+            });
+            AddField(new EventStreamFieldType
+            {
+                Name = nameof(StakingState),
+                Type = typeof(NonNullGraphType<StakingStateType>),
+                Resolver = new FuncFieldResolver<StakingState>(context => (context.Source as StakingState)!),
+                Subscriber = new EventStreamResolver<StakingState>(context => standaloneContext.StakingStateSubject.AsObservable()),
             });
         }
 

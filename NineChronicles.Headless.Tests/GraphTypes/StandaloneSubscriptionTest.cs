@@ -5,16 +5,14 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using GraphQL;
 using GraphQL.Subscription;
 using Libplanet;
-using Libplanet.Action;
 using Libplanet.Blockchain;
-using Libplanet.Blockchain.Policies;
-using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless;
-using Libplanet.Headless.Hosting;
+using Nekoyume.Model.State;
 using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
 using Xunit.Abstractions;
@@ -215,6 +213,85 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 (Dictionary<string, object>)rawEvent["nodeException"];
             Assert.Equal((int)code, nodeException["code"]);
             Assert.Equal(message, nodeException["message"]);
+        }
+
+        [Fact]
+        public async Task SubscribeStakingState()
+        {
+            ExecutionResult result = await ExecuteQueryAsync(@"
+                subscription {
+                    stakingState {
+                        address
+                        level
+                        expiredBlockIndex
+                        startedBlockIndex
+                        receivedBlockIndex
+                        rewardLevel
+                        end
+                        rewardLevelMap {
+                            itemId
+                            quantity
+                        }
+                    }
+                }"
+            );
+            Assert.IsType<SubscriptionExecutionResult>(result);
+            SubscriptionExecutionResult subscribeResult = (SubscriptionExecutionResult) result;
+            IObservable<ExecutionResult> stream = subscribeResult.Streams.Values.First();
+            Assert.NotNull(stream);
+
+            StakingState stakingState = new StakingState(default, 1, 2, Fixtures.TableSheetsFX.StakingRewardSheet);
+            StandaloneContextFx.StakingStateSubject.OnNext(stakingState);
+            ExecutionResult rawEvents = await stream.Take(1);
+            Dictionary<string, object> rawEvent = (Dictionary<string, object>)rawEvents.Data;
+            Dictionary<string, object> stakingSubject =
+                (Dictionary<string, object>)rawEvent["stakingState"];
+            Dictionary<string, object> expected = new Dictionary<string, object>
+            {
+                ["address"] = stakingState.address.ToString(),
+                ["level"] = 1L,
+                ["expiredBlockIndex"] = 160002L,
+                ["startedBlockIndex"] = 2L,
+                ["receivedBlockIndex"] = 0L,
+                ["rewardLevel"] = 0L,
+                ["end"] = false,
+                ["rewardLevelMap"] = new List<object>
+                {
+                    new List<object>
+                    {
+                        new Dictionary<string, object>
+                        {
+                            ["itemId"] = 400000,
+                            ["quantity"] = 200,
+                        },
+                    },
+                    new List<object>
+                    {
+                        new Dictionary<string, object>
+                        {
+                            ["itemId"] = 400000,
+                            ["quantity"] = 200,
+                        },
+                    },
+                    new List<object>
+                    {
+                        new Dictionary<string, object>
+                        {
+                            ["itemId"] = 400000,
+                            ["quantity"] = 200,
+                        },
+                    },
+                    new List<object>
+                    {
+                        new Dictionary<string, object>
+                        {
+                            ["itemId"] = 400000,
+                            ["quantity"] = 200,
+                        },
+                    },
+                }
+            };
+            Assert.Equal(expected, stakingSubject);
         }
     }
 }

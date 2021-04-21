@@ -1,6 +1,7 @@
 using System.Linq;
 using Bencodex.Types;
 using GraphQL.Types;
+using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
@@ -34,6 +35,26 @@ namespace NineChronicles.Headless.GraphTypes.States
                         currency
                     ).GetQuantityString();
                 });
+            Field<NonNullGraphType<LongGraphType>>(
+                nameof(AgentState.StakingRound),
+                description: "Staking round of agent.",
+                resolve: context => context.Source.agentState.StakingRound
+            );
+            Field<NonNullGraphType<LongGraphType>>(
+                "stakingLevel",
+                description: "Current staking level.",
+                resolve: context =>
+                {
+                    Address stakingAddress = StakingState.DeriveAddress(context.Source.agentState.address,
+                        context.Source.agentState.StakingRound);
+                    if (context.Source.accountStateGetter(stakingAddress) is { } state)
+                    {
+                        return new StakingState((Dictionary) state).Level;
+                    }
+
+                    return null;
+                });
+
         }
     }
 }

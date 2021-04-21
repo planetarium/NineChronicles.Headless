@@ -24,15 +24,25 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 address
                 avatarAddresses
                 gold
+                stakingRound
+                stakingLevel
             }";
             var goldCurrency = new Currency("NCG", 2, minter: null);
             var agentState = new AgentState(new Address());
+
+            Address stakingAddress = StakingState.DeriveAddress(agentState.address, 0);
+            StakingState stakingState = new StakingState(stakingAddress, 7, 0, Fixtures.TableSheetsFX.StakingRewardSheet);
             
             IValue? GetStateMock(Address address)
             {
                 if (GoldCurrencyState.Address == address)
                 {
                     return new GoldCurrencyState(goldCurrency).Serialize();
+                }
+
+                if (stakingAddress == address)
+                {
+                    return stakingState.Serialize();
                 }
 
                 return null;
@@ -59,7 +69,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             {
                 ["address"] = agentState.address.ToString(),
                 ["avatarAddresses"] = new List<string>(),
-                ["gold"] = goldBalance.ToString()
+                ["gold"] = goldBalance.ToString(),
+                ["stakingRound"] = 0L,
+                ["stakingLevel"] = 7L,
             };
             Assert.Equal(expected, queryResult.Data);
         }

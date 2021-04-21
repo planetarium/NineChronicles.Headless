@@ -125,6 +125,10 @@ namespace NineChronicles.Headless.Tests
         public WeeklyArenaRewardSheet WeeklyArenaRewardSheet { get; internal set; }
 
         public CostumeStatSheet CostumeStatSheet { get; private set; }
+
+        public StakingSheet StakingSheet { get; private set; }
+
+        public StakingRewardSheet StakingRewardSheet { get; private set; }
 #nullable restore
 
         public void ItemSheetInitialize()
