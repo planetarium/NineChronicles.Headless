@@ -1,18 +1,14 @@
 #nullable enable
-using System;
-using System.Security.Cryptography;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL;
-using GraphQL.Server.Authorization.AspNetCore;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
+using Libplanet.Blocks;
 using Libplanet.Explorer.GraphTypes;
-using Libplanet.Explorer.Interfaces;
-using Libplanet.Store;
 using Microsoft.Extensions.Configuration;
 using Libplanet.Tx;
 using Nekoyume.Action;
@@ -35,9 +31,9 @@ namespace NineChronicles.Headless.GraphTypes
                 }),
                 resolve: context =>
                 {
-                    HashDigest<SHA256>? blockHash = context.GetArgument<byte[]>("hash") switch
+                    BlockHash? blockHash = context.GetArgument<byte[]>("hash") switch
                     {
-                        byte[] bytes => new HashDigest<SHA256>(bytes),
+                        byte[] bytes => new BlockHash(bytes),
                         null => null,
                     };
 
@@ -45,6 +41,37 @@ namespace NineChronicles.Headless.GraphTypes
                         standaloneContext.BlockChain?.ToAccountBalanceGetter(blockHash));
                 }
             );
+
+            Field<ByteStringType>(
+                name: "state",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "The address of state to fetch from the chain." },
+                    new QueryArgument<ByteStringType> { Name = "hash", Description = "The hash of the block used to fetch state from chain." }
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    var address = context.GetArgument<Address>("address");
+                    var blockHashByteArray = context.GetArgument<byte[]>("hash");
+                    var blockHash = blockHashByteArray is null
+                        ? blockChain.Tip.Hash
+                        : new BlockHash(blockHashByteArray);
+
+                    var state = blockChain.GetState(address, blockHash);
+
+                    return new Codec().Encode(state);
+                }
+            );
+
+            Field<KeyStoreType>(
+                name: "keyStore",
+                resolve: context => standaloneContext.KeyStore
+            ).AuthorizeWithLocalPolicyIf(useSecretToken);
 
             Field<NonNullGraphType<NodeStatusType>>(
                 name: "nodeStatus",
@@ -62,6 +89,11 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "chainQuery",
                 resolve: context => new { }
             );
+
+            Field<NonNullGraphType<ValidationQuery>>(
+                name: "validation",
+                description: "The validation method provider for Libplanet types.",
+                resolve: context => new ValidationQuery(standaloneContext));
 
             Field<NonNullGraphType<ActivationStatusQuery>>(
                     name: "activationStatus",
@@ -92,7 +124,7 @@ namespace NineChronicles.Headless.GraphTypes
                     byte[] blockHashByteArray = context.GetArgument<byte[]>("hash");
                     var blockHash = blockHashByteArray is null
                         ? blockChain.Tip.Hash
-                        : new HashDigest<SHA256>(blockHashByteArray);
+                        : new BlockHash(blockHashByteArray);
                     Currency currency = new GoldCurrencyState(
                         (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
                     ).Currency;
@@ -120,6 +152,25 @@ namespace NineChronicles.Headless.GraphTypes
 
                     Address address = context.GetArgument<Address>("address");
                     return blockChain.GetNextTxNonce(address);
+                }
+            );
+
+            Field<TransactionType<NCAction>>(
+                name: "getTx",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<TxIdType>>
+                        {Name = "txId", Description = "transaction id."}
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    var txId = context.GetArgument<TxId>("txId");
+                    return blockChain.GetTransaction(txId);
                 }
             );
         }

@@ -194,6 +194,12 @@ namespace Libplanet.Headless.Hosting
                     tasks.Add(CheckDemand(Properties.DemandBuffer, cancellationToken));
                     tasks.Add(CheckPeerTable(cancellationToken));
                 }
+
+                if (Properties.StaticPeers.Any())
+                {
+                    tasks.Add(
+                        CheckStaticPeersAsync(Properties.StaticPeers, cancellationToken));
+                }
                 await await Task.WhenAny(tasks);
             }
         }
@@ -522,6 +528,41 @@ namespace Libplanet.Headless.Hosting
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
+
+        private async Task CheckStaticPeersAsync(
+            IEnumerable<Peer> peers,
+            CancellationToken cancellationToken)
+        {
+            var peerArray = peers as Peer[] ?? peers.ToArray();
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
+                    Log.Warning("Checking static peers. {Peers}", peerArray);
+                    var peersToAdd = peerArray.Where(peer => !Swarm.Peers.Contains(peer)).ToArray();
+                    if (peersToAdd.Any())
+                    {
+                        Log.Warning("Some of peers are not in routing table. {Peers}", peersToAdd);
+                        await Swarm.AddPeersAsync(
+                            peersToAdd,
+                            TimeSpan.FromSeconds(5),
+                            cancellationToken);
+                    }
+                }
+                catch (OperationCanceledException e)
+                {
+                    Log.Warning(e, $"{nameof(CheckStaticPeersAsync)}() is cancelled.");
+                    throw;
+                }
+                catch (Exception e)
+                {
+                    var msg = "Unexpected exception occurred during " +
+                              $"{nameof(CheckStaticPeersAsync)}(): {{0}}";
+                    Log.Warning(e, msg, e);
+                }
             }
         }
 

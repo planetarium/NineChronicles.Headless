@@ -45,7 +45,8 @@ namespace NineChronicles.Headless.Properties
                 int maximumTransactions = 100,
                 int messageTimeout = 60,
                 int tipTimeout = 60,
-                int demandBuffer = 1150)
+                int demandBuffer = 1150,
+                string[]? staticPeerStrings = null)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
@@ -53,9 +54,11 @@ namespace NineChronicles.Headless.Properties
 
             peerStrings ??= Array.Empty<string>();
             iceServerStrings ??= Array.Empty<string>();
+            staticPeerStrings ??= Array.Empty<string>();
 
             var iceServers = iceServerStrings.Select(PropertyParser.ParseIceServer).ToImmutableArray();
             var peers = peerStrings.Select(PropertyParser.ParsePeer).ToImmutableArray();
+            var staticPeers = staticPeerStrings.Select(PropertyParser.ParsePeer).ToImmutableArray();
 
             return new LibplanetNodeServiceProperties<NineChroniclesActionType>
             {
@@ -80,7 +83,8 @@ namespace NineChronicles.Headless.Properties
                 MaximumTransactions = maximumTransactions,
                 MessageTimeout = TimeSpan.FromSeconds(messageTimeout),
                 TipTimeout = TimeSpan.FromSeconds(tipTimeout),
-                DemandBuffer = demandBuffer
+                DemandBuffer = demandBuffer,
+                StaticPeers = staticPeers
             };
         }
 

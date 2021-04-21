@@ -1,8 +1,6 @@
 #nullable enable
 using System;
 using System.Linq;
-using System.Security.Cryptography;
-using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blocks;
 using Libplanet.Store;
@@ -20,7 +18,7 @@ namespace NineChronicles.Headless.Executable.Store
                 throw new InvalidOperationException("The store doesn't have genesis block.");
             }
 
-            HashDigest<SHA256> genesisBlockHash = store.IterateIndexes(chainId.Value).First();
+            BlockHash genesisBlockHash = store.IterateIndexes(chainId.Value).First();
             Block<T> genesisBlock = store.GetBlock<T>(genesisBlockHash);
             return genesisBlock;
         }
