@@ -419,7 +419,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
 
             var service = new NineChroniclesNodeService(userPrivateKey, properties, null);
-            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.SetNineChroniclesNodeService(service);
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
             var blockChain = StandaloneContextFx.BlockChain!;
@@ -459,7 +459,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var userPrivateKey = new PrivateKey();
             var userAddress = userPrivateKey.ToAddress();
             var service = MakeMineChroniclesNodeService(userPrivateKey);
-            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.SetNineChroniclesNodeService(service);
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
             var blockChain = StandaloneContextFx.BlockChain;
@@ -491,7 +491,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var userPrivateKey = new PrivateKey();
             var userAddress = userPrivateKey.ToAddress();
             var service = MakeMineChroniclesNodeService(userPrivateKey);
-            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.SetNineChroniclesNodeService(service);
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
             var blockChain = StandaloneContextFx.BlockChain!;
@@ -522,7 +522,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var userPrivateKey = new PrivateKey();
             var userAddress = userPrivateKey.ToAddress();
             var service = MakeMineChroniclesNodeService(userPrivateKey);
-            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.SetNineChroniclesNodeService(service);
             StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
 
             var blockChain = StandaloneContextFx.BlockChain;

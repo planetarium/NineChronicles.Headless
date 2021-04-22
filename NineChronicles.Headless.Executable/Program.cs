@@ -329,7 +329,7 @@ namespace NineChronicles.Headless.Executable
                         reorgInterval: reorgInterval,
                         authorizedMiner: authorizedMiner,
                         txLifeTime: TimeSpan.FromMinutes(txLifeTime));
-                standaloneContext.NineChroniclesNodeService = nineChroniclesNodeService;
+                standaloneContext.SetNineChroniclesNodeService(nineChroniclesNodeService);
 
                 if (!properties.NoMiner)
                 {

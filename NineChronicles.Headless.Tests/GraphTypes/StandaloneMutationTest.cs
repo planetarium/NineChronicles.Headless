@@ -106,7 +106,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Block<PolymorphicAction<ActionBase>> genesis =
                 MakeGenesisBlock(adminAddress, new Currency("NCG", 2, minters: null), activateAccounts);
             NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
-            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.SetNineChroniclesNodeService(service);
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
             var blockChain = StandaloneContextFx.BlockChain!;
@@ -147,7 +147,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     ImmutableHashSet<Address>.Empty
                 );
             NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
-            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.SetNineChroniclesNodeService(service);
             StandaloneContextFx.BlockChain = service.BlockChain;
 
             Address senderAddress = service.MinerPrivateKey!.ToAddress();
@@ -205,7 +205,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     ImmutableHashSet<Address>.Empty
                 );
             NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
-            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.SetNineChroniclesNodeService(service);
             StandaloneContextFx.BlockChain = service.BlockChain;
 
             Address senderAddress = service.MinerPrivateKey!.ToAddress();
@@ -837,7 +837,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 );
             NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
 
-            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.SetNineChroniclesNodeService(service);
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
             // Error: empty payload
@@ -907,7 +907,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Block<PolymorphicAction<ActionBase>> genesis =
                 MakeGenesisBlock(default, goldCurrency, ImmutableHashSet<Address>.Empty, ranking);
             var service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, playerPrivateKey);
-            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.SetNineChroniclesNodeService(service);
             StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
             return StandaloneContextFx.BlockChain;
         }

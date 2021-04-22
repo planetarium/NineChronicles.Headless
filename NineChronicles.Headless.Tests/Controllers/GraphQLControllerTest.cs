@@ -77,7 +77,7 @@ namespace NineChronicles.Headless.Tests.Controllers
         [Fact]
         public void SetMiningThrowsConflict()
         {
-            _standaloneContext.NineChroniclesNodeService = null;
+            _standaloneContext.SetNineChroniclesNodeService(null);
             IActionResult result = _controller.SetMining(new SetMiningRequest());
             Assert.IsType<StatusCodeResult>(result);
             Assert.Equal(StatusCodes.Status409Conflict, ((StatusCodeResult)result).StatusCode);
@@ -114,7 +114,7 @@ namespace NineChronicles.Headless.Tests.Controllers
         [Fact]
         public void SetPrivateKeyThrowsConflict()
         {
-            _standaloneContext.NineChroniclesNodeService = null;
+            _standaloneContext.SetNineChroniclesNodeService(null);
             IActionResult result = _controller.SetPrivateKey(new SetPrivateKeyRequest());
             Assert.IsType<StatusCodeResult>(result);
             Assert.Equal(StatusCodes.Status409Conflict, ((StatusCodeResult)result).StatusCode);
@@ -144,7 +144,7 @@ namespace NineChronicles.Headless.Tests.Controllers
 
         private void ConfigureNineChroniclesNodeService()
         {
-            _standaloneContext.NineChroniclesNodeService = new NineChroniclesNodeService(
+            _standaloneContext.SetNineChroniclesNodeService(new NineChroniclesNodeService(
                 new PrivateKey(),
                 new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
                 {
@@ -155,7 +155,7 @@ namespace NineChronicles.Headless.Tests.Controllers
                     SwarmPrivateKey = new PrivateKey(),
                     Host = IPAddress.Loopback.ToString(),
                 },
-                null);
+                null));
         }
     }
 }
