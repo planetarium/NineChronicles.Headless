@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Bencodex.Types;
 using GraphQL.Types;
@@ -17,10 +18,22 @@ namespace NineChronicles.Headless.GraphTypes.States
                 nameof(AgentState.address),
                 description: "Address of agent.",
                 resolve: context => context.Source.agentState.address);
-            Field<ListGraphType<NonNullGraphType<AddressType>>>(
-                nameof(AgentState.avatarAddresses),
-                description: "Address list of avatar.",
-                resolve: context => context.Source.agentState.avatarAddresses.Select(a => a.Value));
+            Field<ListGraphType<NonNullGraphType<AvatarStateType>>>(
+                "avatarStates",
+                description: "List of avatar.",
+                resolve: context =>
+                {
+                    List<AvatarState> avatarStates = new List<AvatarState>();
+                    foreach (var kv in context.Source.agentState.avatarAddresses.OrderBy(a => a.Key))
+                    {
+                        if (context.Source.accountStateGetter(kv.Value) is { } state)
+                        {
+                            avatarStates.Add(new AvatarState((Dictionary)state));
+                        }
+                    }
+
+                    return avatarStates;
+                });
             Field<NonNullGraphType<StringGraphType>>(
                 "gold",
                 description: "Current NCG.",
@@ -52,7 +65,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                         return new StakingState((Dictionary) state).Level;
                     }
 
-                    return null;
+                    return 0;
                 });
 
         }

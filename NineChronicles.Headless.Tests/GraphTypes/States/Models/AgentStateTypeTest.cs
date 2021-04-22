@@ -22,13 +22,17 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             const string query = @"
             {
                 address
-                avatarAddresses
+                avatarStates {
+                    address
+                    name
+                }
                 gold
                 stakingRound
                 stakingLevel
             }";
             var goldCurrency = new Currency("NCG", 2, minter: null);
             var agentState = new AgentState(new Address());
+            agentState.avatarAddresses[0] = Fixtures.AvatarAddress;
 
             Address stakingAddress = StakingState.DeriveAddress(agentState.address, 0);
             StakingState stakingState = new StakingState(stakingAddress, 7, 0, Fixtures.TableSheetsFX.StakingRewardSheet);
@@ -43,6 +47,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 if (stakingAddress == address)
                 {
                     return stakingState.Serialize();
+                }
+
+                if (Fixtures.AvatarAddress == address)
+                {
+                    return Fixtures.AvatarStateFX.Serialize();
                 }
 
                 return null;
@@ -64,11 +73,18 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     agentState,
                     (AccountStateGetter)GetStateMock,
                     (AccountBalanceGetter)GetBalanceMock)
-                );
+            );
             var expected = new Dictionary<string, object>()
             {
                 ["address"] = agentState.address.ToString(),
-                ["avatarAddresses"] = new List<string>(),
+                ["avatarStates"] = new List<Dictionary<string, object>>
+                {
+                    new Dictionary<string, object>
+                    {
+                        ["address"] = Fixtures.AvatarAddress.ToString(),
+                        ["name"] = Fixtures.AvatarStateFX.name,
+                    },
+                },
                 ["gold"] = goldBalance.ToString(),
                 ["stakingRound"] = 0L,
                 ["stakingLevel"] = 7L,
