@@ -29,7 +29,7 @@ namespace NineChronicles.Headless.Executable
 {
     [HasSubCommands(typeof(ValidationCommand), "validation")]
     [HasSubCommands(typeof(ChainCommand), "chain")]
-    [HasSubCommands(typeof(KeyCommand), "key")]
+    [HasSubCommands(typeof(NineChronicles.Headless.Executable.Commands.KeyCommand), "key")]
     [HasSubCommands(typeof(ApvCommand), "apv")]
     public class Program : CoconaLiteConsoleAppBase
     {
