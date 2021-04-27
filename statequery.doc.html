@@ -190,11 +190,6 @@
                 ArenaRecordType
             </a>
         </li>
-        <li  title="AuthenticationMutation">
-            <a href="authenticationmutation.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
-                AuthenticationMutation
-            </a>
-        </li>
         <li  title="AvatarStateType">
             <a href="avatarstatetype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 AvatarStateType
@@ -255,6 +250,16 @@
                 ItemUsableType
             </a>
         </li>
+        <li  title="KeyStoreMutation">
+            <a href="keystoremutation.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                KeyStoreMutation
+            </a>
+        </li>
+        <li  title="KeyStoreType">
+            <a href="keystoretype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                KeyStoreType
+            </a>
+        </li>
         <li  title="MailBoxType">
             <a href="mailboxtype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 MailBoxType
@@ -305,6 +310,21 @@
                 PreloadStateType
             </a>
         </li>
+        <li  title="PrivateKeyType">
+            <a href="privatekeytype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                PrivateKeyType
+            </a>
+        </li>
+        <li  title="ProtectedPrivateKeyType">
+            <a href="protectedprivatekeytype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ProtectedPrivateKeyType
+            </a>
+        </li>
+        <li  title="PublicKeyType">
+            <a href="publickeytype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                PublicKeyType
+            </a>
+        </li>
         <li  title="Query">
             <a href="query.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 Query
@@ -353,6 +373,16 @@
         <li  title="TransactionQuery">
             <a href="transactionquery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 TransactionQuery
+            </a>
+        </li>
+        <li  title="TransactionType_1">
+            <a href="transactiontype_1.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                TransactionType_1
+            </a>
+        </li>
+        <li  title="ValidationQuery">
+            <a href="validationquery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ValidationQuery
             </a>
         </li>
         <li  title="WeeklyArenaStateType">
@@ -448,7 +478,7 @@
             </a>
             GraphQL Schema definition
         </h2>
-        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">StateQuery</span> {</li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="meta">avatar</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>): <a class="support type" href="avatarstatetype.doc.html">AvatarStateType</a> </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>index</strong>: </span></span></li><li><span class="tab"><span class="meta">rankingMap</span>(<span class="meta">index</span>: <a class="support type" href="int.doc.html">Int</a>!): <a class="support type" href="rankingmapstatetype.doc.html">RankingMapStateType</a> </span></li><li></li><li><span class="tab"><span class="meta">shop</span>: <a class="support type" href="shopstatetype.doc.html">ShopStateType</a> </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>index</strong>: </span></span></li><li><span class="tab"><span class="meta">weeklyArena</span>(<span class="meta">index</span>: <a class="support type" href="int.doc.html">Int</a>!): <a class="support type" href="weeklyarenastatetype.doc.html">WeeklyArenaStateType</a> </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="meta">agent</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>!): <a class="support type" href="agentstatetype.doc.html">AgentStateType</a> </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="meta">raw</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>!): <a class="support type" href="bytestring.doc.html">ByteString</a> </span></li><li>}</li></ul></code>
+        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">StateQuery</span> {</li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="meta">avatar</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>): <a class="support type" href="avatarstatetype.doc.html">AvatarStateType</a> </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>index</strong>: </span></span></li><li><span class="tab"><span class="meta">rankingMap</span>(<span class="meta">index</span>: <a class="support type" href="int.doc.html">Int</a>!): <a class="support type" href="rankingmapstatetype.doc.html">RankingMapStateType</a> </span></li><li></li><li><span class="tab"><span class="meta">shop</span>: <a class="support type" href="shopstatetype.doc.html">ShopStateType</a> </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>index</strong>: </span></span></li><li><span class="tab"><span class="meta">weeklyArena</span>(<span class="meta">index</span>: <a class="support type" href="int.doc.html">Int</a>!): <a class="support type" href="weeklyarenastatetype.doc.html">WeeklyArenaStateType</a> </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="meta">agent</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>!): <a class="support type" href="agentstatetype.doc.html">AgentStateType</a> </span></li><li>}</li></ul></code>
     </div>
 </section>
 <section>

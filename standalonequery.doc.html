@@ -190,11 +190,6 @@
                 ArenaRecordType
             </a>
         </li>
-        <li  title="AuthenticationMutation">
-            <a href="authenticationmutation.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
-                AuthenticationMutation
-            </a>
-        </li>
         <li  title="AvatarStateType">
             <a href="avatarstatetype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 AvatarStateType
@@ -255,6 +250,16 @@
                 ItemUsableType
             </a>
         </li>
+        <li  title="KeyStoreMutation">
+            <a href="keystoremutation.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                KeyStoreMutation
+            </a>
+        </li>
+        <li  title="KeyStoreType">
+            <a href="keystoretype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                KeyStoreType
+            </a>
+        </li>
         <li  title="MailBoxType">
             <a href="mailboxtype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 MailBoxType
@@ -305,6 +310,21 @@
                 PreloadStateType
             </a>
         </li>
+        <li  title="PrivateKeyType">
+            <a href="privatekeytype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                PrivateKeyType
+            </a>
+        </li>
+        <li  title="ProtectedPrivateKeyType">
+            <a href="protectedprivatekeytype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ProtectedPrivateKeyType
+            </a>
+        </li>
+        <li  title="PublicKeyType">
+            <a href="publickeytype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                PublicKeyType
+            </a>
+        </li>
         <li  title="Query">
             <a href="query.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 Query
@@ -353,6 +373,16 @@
         <li  title="TransactionQuery">
             <a href="transactionquery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 TransactionQuery
+            </a>
+        </li>
+        <li  title="TransactionType_1">
+            <a href="transactiontype_1.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                TransactionType_1
+            </a>
+        </li>
+        <li  title="ValidationQuery">
+            <a href="validationquery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ValidationQuery
             </a>
         </li>
         <li  title="WeeklyArenaStateType">
@@ -448,7 +478,7 @@
             </a>
             GraphQL Schema definition
         </h2>
-        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">StandaloneQuery</span> {</li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>hash</strong>: </span></span></li><li><span class="tab"><span class="meta">stateQuery</span>(<span class="meta">hash</span>: <a class="support type" href="bytestring.doc.html">ByteString</a>): <a class="support type" href="statequery.doc.html">StateQuery</a>! </span></li><li></li><li><span class="tab"><span class="meta">nodeStatus</span>: <a class="support type" href="nodestatustype.doc.html">NodeStatusType</a>! </span></li><li></li><li><span class="tab"><span class="meta">chainQuery</span>: <a class="support type" href="query.doc.html">Query</a>! </span></li><li></li><li><span class="tab"><span class="meta">activationStatus</span>: <a class="support type" href="activationstatusquery.doc.html">ActivationStatusQuery</a>! </span></li><li></li><li><span class="tab"><span class="meta">peerChainState</span>: <a class="support type" href="peerchainstatequery.doc.html">PeerChainStateQuery</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>hash</strong>: </span></span></li><li><span class="tab"><span class="meta">goldBalance</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>!, <span class="meta">hash</span>: <a class="support type" href="bytestring.doc.html">ByteString</a>): <a class="support type" href="string.doc.html">String</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="meta">nextTxNonce</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>!): <a class="support type" href="long.doc.html">Long</a>! </span></li><li>}</li></ul></code>
+        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">StandaloneQuery</span> {</li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>hash</strong>: </span></span></li><li><span class="tab"><span class="meta">stateQuery</span>(<span class="meta">hash</span>: <a class="support type" href="bytestring.doc.html">ByteString</a>): <a class="support type" href="statequery.doc.html">StateQuery</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>hash</strong>: </span></span></li><li><span class="tab"><span class="meta">state</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>!, <span class="meta">hash</span>: <a class="support type" href="bytestring.doc.html">ByteString</a>): <a class="support type" href="bytestring.doc.html">ByteString</a> </span></li><li></li><li><span class="tab"><span class="meta">keyStore</span>: <a class="support type" href="keystoretype.doc.html">KeyStoreType</a> </span></li><li></li><li><span class="tab"><span class="meta">nodeStatus</span>: <a class="support type" href="nodestatustype.doc.html">NodeStatusType</a>! </span></li><li></li><li><span class="tab"><span class="meta">chainQuery</span>: <a class="support type" href="query.doc.html">Query</a>! </span></li><li></li><li><span class="tab"><span class="meta">validation</span>: <a class="support type" href="validationquery.doc.html">ValidationQuery</a>! </span></li><li></li><li><span class="tab"><span class="meta">activationStatus</span>: <a class="support type" href="activationstatusquery.doc.html">ActivationStatusQuery</a>! </span></li><li></li><li><span class="tab"><span class="meta">peerChainState</span>: <a class="support type" href="peerchainstatequery.doc.html">PeerChainStateQuery</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>hash</strong>: </span></span></li><li><span class="tab"><span class="meta">goldBalance</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>!, <span class="meta">hash</span>: <a class="support type" href="bytestring.doc.html">ByteString</a>): <a class="support type" href="string.doc.html">String</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="meta">nextTxNonce</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>!): <a class="support type" href="long.doc.html">Long</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>txId</strong>: </span></span></li><li><span class="tab"><span class="meta">getTx</span>(<span class="meta">txId</span>: <a class="support type" href="txid.doc.html">TxId</a>!): <a class="support type" href="transactiontype_1.doc.html">TransactionType_1</a> </span></li><li>}</li></ul></code>
     </div>
 </section>
 <section>
