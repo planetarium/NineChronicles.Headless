@@ -1,7 +1,7 @@
 using System;
 using Libplanet.Crypto;
-using Libplanet.Extensions.Cocona.Commands;
 using Libplanet.KeyStore;
+using NineChronicles.Headless.Executable.Commands;
 using NineChronicles.Headless.Executable.Tests.KeyStore;
 using Xunit;
 

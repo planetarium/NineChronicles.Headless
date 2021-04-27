@@ -65,11 +65,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             // 에러로 인하여 NineChroniclesNodeService 를 사용할 수 없습니다. https://git.io/JfS0M
             // 따라서 LibplanetNodeService로 비슷한 환경을 맞춥니다.
             // 1. 노드를 생성합니다.
-            var seedNode = CreateLibplanetNodeService<EmptyAction>(genesisBlock, apv, apvPrivateKey.PublicKey);
+            var seedNode = CreateLibplanetNodeService(genesisBlock, apv, apvPrivateKey.PublicKey);
             await StartAsync(seedNode.Swarm, cts.Token);
 
             // 2. Progress를 넘겨 preloadProgress subscription 과 연결합니다.
-            var service = CreateLibplanetNodeService<EmptyAction>(
+            var service = CreateLibplanetNodeService(
                 genesisBlock,
                 apv,
                 apvPrivateKey.PublicKey,
@@ -91,20 +91,21 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var subscribeResult = (SubscriptionExecutionResult) result;
             var stream = subscribeResult.Streams.Values.FirstOrDefault();
 
-            // BlockHashDownloadState  : 1
+            // BlockHashDownloadState  : 2
             // BlockDownloadState      : 1
             // BlockVerificationState  : 1
             // ActionExecutionState    : 1
-            const int preloadStatesCount = 4;
+            const int preloadStatesCount = 5;
             var preloadProgressRecords =
                 new List<(long currentPhase, long totalPhase, string type, long currentCount, long totalCount)>();
-            var expectedPreloadProgress = new List<(long currentPhase, long totalPhase, string type, long currentCount, long totalCount)>
+            var expectedPreloadProgress = new[]
             {
-                (1, 5, "BlockHashDownloadState", 1, 1),
-                (2, 5, "BlockDownloadState", 1, 1),
-                (3, 5, "BlockVerificationState", 1, 1),
-                (5, 5, "ActionExecutionState", 1, 1),
-            };
+                (1L, 5L, "BlockHashDownloadState", 0L, 0L),
+                (1L, 5L, "BlockHashDownloadState", 1L, 1L),
+                (2L, 5L, "BlockDownloadState", 1L, 1L),
+                (3L, 5L, "BlockVerificationState", 1L, 1L),
+                (5L, 5L, "ActionExecutionState", 1L, 1L),
+            }.ToImmutableHashSet();
             foreach (var index in Enumerable.Range(1, preloadStatesCount))
             {
                 var rawEvents = await stream.Take(index);
@@ -119,7 +120,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     (long)preloadProgressExtra["totalCount"]));
             }
 
-            Assert.True(preloadProgressRecords.ToImmutableHashSet().SetEquals(expectedPreloadProgress));
+            Assert.Equal(expectedPreloadProgress, preloadProgressRecords.ToImmutableHashSet());
 
             await seedNode.StopAsync(cts.Token);
             await service.StopAsync(cts.Token);

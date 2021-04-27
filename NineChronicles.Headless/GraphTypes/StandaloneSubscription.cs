@@ -2,21 +2,15 @@ using System;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Security.Cryptography;
-using System.Threading.Tasks;
-using BTAI;
 using GraphQL;
 using GraphQL.Resolvers;
 using GraphQL.Subscription;
 using GraphQL.Types;
 using Lib9c.Renderer;
-using Libplanet;
-using Libplanet.Blockchain;
+using Libplanet.Blocks;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Net;
 using Libplanet.Headless;
-using Nekoyume.Action;
-using Log = Serilog.Log;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -26,7 +20,7 @@ namespace NineChronicles.Headless.GraphTypes
         {
             public long Index { get; set; }
 
-            public HashDigest<SHA256> Hash { get; set; }
+            public BlockHash Hash { get; set; }
 
             public TipChanged()
             {

@@ -68,6 +68,8 @@ namespace Libplanet.Headless.Hosting
 
         protected static readonly TimeSpan CheckPeerTableInterval = TimeSpan.FromSeconds(10);
 
+        private List<Guid> _obsoletedChainIds;
+
         public LibplanetNodeService(
             LibplanetNodeServiceProperties<T> properties,
             IBlockPolicy<T> blockPolicy,
@@ -105,11 +107,6 @@ namespace Libplanet.Headless.Hosting
             var chainIds = Store.ListChainIds().ToList();
             Log.Debug($"Number of chain ids: {chainIds.Count()}");
 
-            foreach (var chainId in chainIds)
-            {
-                Log.Debug($"chainId: {chainId}");
-            }
-
             if (Properties.Confirmations > 0)
             {
                 IComparer<BlockPerception> comparer = blockPolicy.CanonicalChainComparer;
@@ -136,10 +133,7 @@ namespace Libplanet.Headless.Hosting
                 renderers: renderers
             );
 
-            foreach (Guid chainId in chainIds.Where(chainId => chainId != BlockChain.Id))
-            {
-                Store.DeleteChainId(chainId);
-            }
+            _obsoletedChainIds = chainIds.Where(chainId => chainId != BlockChain.Id).ToList();
 
             _minerLoopAction = minerLoopAction;
             _exceptionHandlerAction = exceptionHandlerAction;
@@ -178,6 +172,15 @@ namespace Libplanet.Headless.Hosting
 
         public virtual async Task StartAsync(CancellationToken cancellationToken)
         {
+            Log.Debug("Trying to delete {count} obsoleted chains...", _obsoletedChainIds.Count());
+            _ = Task.Run(() =>
+            {
+                foreach (Guid chainId in _obsoletedChainIds)
+                {
+                    Store.DeleteChainId(chainId);
+                    Log.Debug("Obsoleted chain[{chainId}] has been deleted.", chainId);
+                }
+            });
             if (!cancellationToken.IsCancellationRequested && !_stopRequested)
             {
                 var tasks = new List<Task>
@@ -190,6 +193,12 @@ namespace Libplanet.Headless.Hosting
                 {
                     tasks.Add(CheckDemand(Properties.DemandBuffer, cancellationToken));
                     tasks.Add(CheckPeerTable(cancellationToken));
+                }
+
+                if (Properties.StaticPeers.Any())
+                {
+                    tasks.Add(
+                        CheckStaticPeersAsync(Properties.StaticPeers, cancellationToken));
                 }
                 await await Task.WhenAny(tasks);
             }
@@ -312,6 +321,9 @@ namespace Libplanet.Headless.Hosting
                     depth: depth,
                     cancellationToken: cancellationToken
                 );
+
+            // We assume the first phase of preloading is BlockHashDownloadState...
+            ((IProgress<PreloadState>)PreloadProgress)?.Report(new BlockHashDownloadState());
 
             if (peers.Any())
             {
@@ -519,6 +531,41 @@ namespace Libplanet.Headless.Hosting
             }
         }
 
+        private async Task CheckStaticPeersAsync(
+            IEnumerable<Peer> peers,
+            CancellationToken cancellationToken)
+        {
+            var peerArray = peers as Peer[] ?? peers.ToArray();
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
+                    Log.Warning("Checking static peers. {Peers}", peerArray);
+                    var peersToAdd = peerArray.Where(peer => !Swarm.Peers.Contains(peer)).ToArray();
+                    if (peersToAdd.Any())
+                    {
+                        Log.Warning("Some of peers are not in routing table. {Peers}", peersToAdd);
+                        await Swarm.AddPeersAsync(
+                            peersToAdd,
+                            TimeSpan.FromSeconds(5),
+                            cancellationToken);
+                    }
+                }
+                catch (OperationCanceledException e)
+                {
+                    Log.Warning(e, $"{nameof(CheckStaticPeersAsync)}() is cancelled.");
+                    throw;
+                }
+                catch (Exception e)
+                {
+                    var msg = "Unexpected exception occurred during " +
+                              $"{nameof(CheckStaticPeersAsync)}(): {{0}}";
+                    Log.Warning(e, msg, e);
+                }
+            }
+        }
+
         protected Block<T> LoadGenesisBlock(LibplanetNodeServiceProperties<T> properties)
         {
             if (!(properties.GenesisBlock is null))
@@ -527,10 +574,18 @@ namespace Libplanet.Headless.Hosting
             }
             else if (!string.IsNullOrEmpty(properties.GenesisBlockPath))
             {
-                var uri = new Uri(properties.GenesisBlockPath);
-                using var client = new WebClient();
-                var rawGenesisBlock = client.DownloadData(uri);
-                return Block<T>.Deserialize(rawGenesisBlock);
+                byte[] rawBlock;
+                if (File.Exists(Path.GetFullPath(properties.GenesisBlockPath)))
+                {
+                    rawBlock = File.ReadAllBytes(Path.GetFullPath(properties.GenesisBlockPath));
+                }
+                else
+                {
+                    var uri = new Uri(properties.GenesisBlockPath);
+                    using var client = new WebClient();
+                    rawBlock = client.DownloadData(uri);
+                }
+                return Block<T>.Deserialize(rawBlock);
             }
             else
             {
