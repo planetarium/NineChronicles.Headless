@@ -103,10 +103,11 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "A sender's transaction counter. You can get it through nextTxNonce().",
                         Name = "txNonce",
                     },
-                    new QueryArgument<NonNullGraphType<AddressType>>
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
                         Description = "A hex-encoded value for address of currency to be transferred. The default is the NCG's address.",
-                        DefaultValue = GoldCurrencyState.Address,
+                        // Convert address type to hex string for graphdocs
+                        DefaultValue = GoldCurrencyState.Address.ToHex(),
                         Name = "currencyAddress"
                     }
                 ),
@@ -129,7 +130,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     BlockChain<NCAction> blockChain = service.BlockChain;
                     var currency = new GoldCurrencyState(
-                        (Dictionary)blockChain.GetState(context.GetArgument<Address>("currencyAddress"))
+                        (Dictionary)blockChain.GetState(new Address(context.GetArgument<string>("currencyAddress")))
                     ).Currency;
                     FungibleAssetValue amount =
                         FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
