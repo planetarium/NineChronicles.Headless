@@ -10,6 +10,10 @@ namespace NineChronicles.Headless.GraphTypes
                 nameof(StakingStatus.CanReceive),
                 resolve: context => context.Source.CanReceive
             );
+            Field<NonNullGraphType<FungibleAssetValueType>>(
+                nameof(StakingStatus.FungibleAssetValue),
+                resolve: context => context.Source.FungibleAssetValue
+            );
         }
     }
 }

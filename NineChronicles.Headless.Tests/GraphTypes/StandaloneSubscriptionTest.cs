@@ -3,17 +3,20 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Subscription;
 using Libplanet;
+using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes;
+using NineChronicles.Headless.GraphTypes.States;
 using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
 using Xunit.Abstractions;
@@ -296,14 +299,18 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        public async Task SubscribeStakingCanReceive(bool canReceive)
+        [InlineData(false, 100, 0, "100")]
+        [InlineData(true, 0, 2, "0.02")]
+        public async Task SubscribeStakingCanReceive(bool canReceive, int major, int minor, string decimalString)
         {
             ExecutionResult result = await ExecuteQueryAsync(@"
                 subscription {
                     stakingStatus {
                         canReceive
+                        fungibleAssetValue {
+                            quantity
+                            currency
+                        }
                     }
                 }"
             );
@@ -312,7 +319,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             IObservable<ExecutionResult> stream = subscribeResult.Streams.Values.First();
             Assert.NotNull(stream);
 
-            StandaloneContextFx.StakingCanReceiveSubject.OnNext(new StakingStatus(canReceive));
+            Currency currency = new Currency("NCG", 2, minter: null);
+            FungibleAssetValue fungibleAssetValue = new FungibleAssetValue(currency, major, minor);
+            StandaloneContextFx.StakingStatusSubject.OnNext(new StakingStatus(canReceive, fungibleAssetValue));
             ExecutionResult rawEvents = await stream.Take(1);
             Dictionary<string, object> rawEvent = (Dictionary<string, object>)rawEvents.Data;
             Dictionary<string, object> statusSubject =
@@ -320,6 +329,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Dictionary<string, object> expected = new Dictionary<string, object>
             {
                 ["canReceive"] = canReceive,
+                ["fungibleAssetValue"] = new Dictionary<string, object>
+                {
+                    ["currency"] = "NCG",
+                    ["quantity"] = decimal.Parse(decimalString),
+                },
             };
             Assert.Equal(expected, statusSubject);
         }

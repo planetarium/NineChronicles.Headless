@@ -7,10 +7,11 @@ using GraphQL.Resolvers;
 using GraphQL.Subscription;
 using GraphQL.Types;
 using Lib9c.Renderer;
+using Libplanet.Assets;
 using Libplanet.Blocks;
 using Libplanet.Explorer.GraphTypes;
-using Libplanet.Net;
 using Libplanet.Headless;
+using Libplanet.Net;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
 
@@ -153,7 +154,7 @@ namespace NineChronicles.Headless.GraphTypes
                 Name = nameof(StakingStatus),
                 Type = typeof(NonNullGraphType<StakingStatusType>),
                 Resolver = new FuncFieldResolver<StakingStatus>(context => (context.Source as StakingStatus)!),
-                Subscriber = new EventStreamResolver<StakingStatus>(context => standaloneContext.StakingCanReceiveSubject.AsObservable()),
+                Subscriber = new EventStreamResolver<StakingStatus>(context => standaloneContext.StakingStatusSubject.AsObservable()),
             });
         }
 

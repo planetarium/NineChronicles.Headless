@@ -2,14 +2,14 @@ using System;
 using System.Linq;
 using System.Reactive.Subjects;
 using Bencodex.Types;
-using GraphQL.Types;
 using Libplanet;
+using Libplanet.Assets;
 using Libplanet.Blockchain;
-using Libplanet.Blocks;
 using Libplanet.KeyStore;
 using Libplanet.Net;
 using Libplanet.Headless;
 using Libplanet.Store;
+using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes;
@@ -32,7 +32,7 @@ namespace NineChronicles.Headless
         public ReplaySubject<Notification> NotificationSubject { get; } = new ReplaySubject<Notification>(1);
         public ReplaySubject<NodeException> NodeExceptionSubject { get; } = new ReplaySubject<NodeException>();
         public ReplaySubject<StakingState> StakingStateSubject { get; } = new ReplaySubject<StakingState>();
-        public ReplaySubject<StakingStatus> StakingCanReceiveSubject { get; } = new ReplaySubject<StakingStatus>();
+        public ReplaySubject<StakingStatus> StakingStatusSubject { get; } = new ReplaySubject<StakingStatus>();
         public NineChroniclesNodeService? NineChroniclesNodeService { get; private set; }
         public NodeStatusType NodeStatus => new NodeStatusType()
         {
@@ -72,6 +72,11 @@ namespace NineChronicles.Headless
 
             Address agentAddress = NineChroniclesNodeService.MinerPrivateKey.ToAddress();
             bool canReceive = false;
+            Currency currency =
+                new GoldCurrencyState(
+                    (Dictionary) NineChroniclesNodeService.BlockChain.GetState(Addresses.GoldCurrency)
+                ).Currency;
+            FungibleAssetValue balance = NineChroniclesNodeService.BlockChain.GetBalance(agentAddress, currency);
             if (NineChroniclesNodeService.BlockChain.GetState(agentAddress) is Dictionary agentDict)
             {
                 AgentState agentState = new AgentState(agentDict);
@@ -82,8 +87,8 @@ namespace NineChronicles.Headless
                     canReceive = stakingState.CanReceive(blockIndex);
                 }
             }
-            StakingStatus stakingStatus = new StakingStatus(canReceive);
-            StakingCanReceiveSubject.OnNext(stakingStatus);
+            StakingStatus stakingStatus = new StakingStatus(canReceive, balance);
+            StakingStatusSubject.OnNext(stakingStatus);
         }
 
         private void RenderAction(ActionBase.ActionEvaluation<ActionBase> eval)
