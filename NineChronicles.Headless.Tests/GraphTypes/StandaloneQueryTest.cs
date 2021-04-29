@@ -579,6 +579,27 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(transaction.Actions.First().PlainValue.Inspection, plainValue);
         }
 
+        [Fact]
+        public async Task MinerAddress()
+        {
+            var userPrivateKey = new PrivateKey();
+            var userAddress = userPrivateKey.ToAddress();
+            var service = MakeMineChroniclesNodeService(userPrivateKey);
+            StandaloneContextFx.SetNineChroniclesNodeService(service);
+            StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
+            const string query = @"query {
+                minerAddress
+            }";
+            var queryResult = await ExecuteQueryAsync(query);
+            Assert.Equal(
+                new Dictionary<string, object?>
+                {
+                    ["minerAddress"] = userAddress.ToString()
+                },
+                queryResult.Data
+            );
+        }
+
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)
         {
             var goldCurrency = new Currency("NCG", 2, minter: null);

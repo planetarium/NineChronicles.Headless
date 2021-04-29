@@ -60,7 +60,7 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "miner",
                         Description = "List only blocks mined by the given address.  " +
-                            "(List everything if omitted.)",
+                                      "(List everything if omitted.)",
                         DefaultValue = null,
                     }
                 ),
@@ -110,7 +110,7 @@ namespace NineChronicles.Headless.GraphTypes
                         IImmutableSet<TxId> stagedTransactionIds = context.Source.BlockChain.GetStagedTransactionIds();
 
                         return stagedTransactionIds.Where(txId =>
-                        context.Source.BlockChain.GetTransaction(txId).Signer.Equals(address));
+                            context.Source.BlockChain.GetTransaction(txId).Signer.Equals(address));
                     }
                 }
             );
