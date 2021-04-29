@@ -1,8 +1,11 @@
 using System;
+using System.Linq;
 using System.Reactive.Subjects;
 using Bencodex.Types;
+using GraphQL.Types;
 using Libplanet;
 using Libplanet.Blockchain;
+using Libplanet.Blocks;
 using Libplanet.KeyStore;
 using Libplanet.Net;
 using Libplanet.Headless;
@@ -29,6 +32,7 @@ namespace NineChronicles.Headless
         public ReplaySubject<Notification> NotificationSubject { get; } = new ReplaySubject<Notification>(1);
         public ReplaySubject<NodeException> NodeExceptionSubject { get; } = new ReplaySubject<NodeException>();
         public ReplaySubject<StakingState> StakingStateSubject { get; } = new ReplaySubject<StakingState>();
+        public ReplaySubject<StakingStatus> StakingCanReceiveSubject { get; } = new ReplaySubject<StakingStatus>();
         public NineChroniclesNodeService? NineChroniclesNodeService { get; private set; }
         public NodeStatusType NodeStatus => new NodeStatusType()
         {
@@ -44,7 +48,7 @@ namespace NineChronicles.Headless
             NineChroniclesNodeService = service;
             if (!(NineChroniclesNodeService is null))
             {
-                NineChroniclesNodeService.BlockRenderer.EveryBlock().Subscribe(pair => RenderBlock());
+                NineChroniclesNodeService.BlockRenderer.EveryBlock().Subscribe(pair => RenderBlock(pair.NewTip.Index));
                 NineChroniclesNodeService.ActionRenderer.EveryRender<ActionBase>().Subscribe(RenderAction);
                 NineChroniclesNodeService.ActionRenderer.EveryRender<Stake>().Subscribe(RenderStake);
                 NineChroniclesNodeService.ActionRenderer.EveryRender<CancelStaking>().Subscribe(RenderCancelStaking);
@@ -52,7 +56,7 @@ namespace NineChronicles.Headless
             }
         }
 
-        private void RenderBlock()
+        private void RenderBlock(long blockIndex)
         {
             if (NineChroniclesNodeService is null)
             {
@@ -63,7 +67,23 @@ namespace NineChronicles.Headless
             if (NineChroniclesNodeService.MinerPrivateKey is null)
             {
                 Log.Information("PrivateKey is not set. please call SetPrivateKey() first");
+                return;
             }
+
+            Address agentAddress = NineChroniclesNodeService.MinerPrivateKey.ToAddress();
+            bool canReceive = false;
+            if (NineChroniclesNodeService.BlockChain.GetState(agentAddress) is Dictionary agentDict)
+            {
+                AgentState agentState = new AgentState(agentDict);
+                Address stakingAddress = StakingState.DeriveAddress(agentAddress, agentState.StakingRound);
+                if (NineChroniclesNodeService.BlockChain.GetState(stakingAddress) is Dictionary stakingDict && agentState.avatarAddresses.Any())
+                {
+                    StakingState stakingState = new StakingState(stakingDict);
+                    canReceive = stakingState.CanReceive(blockIndex);
+                }
+            }
+            StakingStatus stakingStatus = new StakingStatus(canReceive);
+            StakingCanReceiveSubject.OnNext(stakingStatus);
         }
 
         private void RenderAction(ActionBase.ActionEvaluation<ActionBase> eval)

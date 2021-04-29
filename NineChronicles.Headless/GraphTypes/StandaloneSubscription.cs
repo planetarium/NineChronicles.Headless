@@ -148,6 +148,13 @@ namespace NineChronicles.Headless.GraphTypes
                 Resolver = new FuncFieldResolver<StakingState>(context => (context.Source as StakingState)!),
                 Subscriber = new EventStreamResolver<StakingState>(context => standaloneContext.StakingStateSubject.AsObservable()),
             });
+            AddField(new EventStreamFieldType
+            {
+                Name = nameof(StakingStatus),
+                Type = typeof(NonNullGraphType<StakingStatusType>),
+                Resolver = new FuncFieldResolver<StakingStatus>(context => (context.Source as StakingStatus)!),
+                Subscriber = new EventStreamResolver<StakingStatus>(context => standaloneContext.StakingCanReceiveSubject.AsObservable()),
+            });
         }
 
         public void RegisterTipChangedSubscription()

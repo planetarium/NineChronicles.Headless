@@ -13,6 +13,7 @@ using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless;
 using Nekoyume.Model.State;
+using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
 using Xunit.Abstractions;
@@ -204,7 +205,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 await stream.Take(1).Timeout(TimeSpan.FromMilliseconds(5000)).FirstAsync();
             });
 
-            const NodeExceptionType code = (NodeExceptionType)0x01;
+            const Libplanet.Headless.NodeExceptionType code = (Libplanet.Headless.NodeExceptionType) 0x01;
             const string message = "This is test message.";
             StandaloneContextFx.NodeExceptionSubject.OnNext(new NodeException(code, message));
             var rawEvents = await stream.Take(1);
@@ -292,6 +293,35 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }
             };
             Assert.Equal(expected, stakingSubject);
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task SubscribeStakingCanReceive(bool canReceive)
+        {
+            ExecutionResult result = await ExecuteQueryAsync(@"
+                subscription {
+                    stakingStatus {
+                        canReceive
+                    }
+                }"
+            );
+            Assert.IsType<SubscriptionExecutionResult>(result);
+            SubscriptionExecutionResult subscribeResult = (SubscriptionExecutionResult) result;
+            IObservable<ExecutionResult> stream = subscribeResult.Streams.Values.First();
+            Assert.NotNull(stream);
+
+            StandaloneContextFx.StakingCanReceiveSubject.OnNext(new StakingStatus(canReceive));
+            ExecutionResult rawEvents = await stream.Take(1);
+            Dictionary<string, object> rawEvent = (Dictionary<string, object>)rawEvents.Data;
+            Dictionary<string, object> statusSubject =
+                (Dictionary<string, object>)rawEvent["stakingStatus"];
+            Dictionary<string, object> expected = new Dictionary<string, object>
+            {
+                ["canReceive"] = canReceive,
+            };
+            Assert.Equal(expected, statusSubject);
         }
     }
 }
