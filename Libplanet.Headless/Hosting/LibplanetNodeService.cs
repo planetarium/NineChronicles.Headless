@@ -363,6 +363,14 @@ namespace Libplanet.Headless.Hosting
 
                         Log.Error(e, "{Message}", e.Message);
                     }
+                    catch (Exception e)
+                    {
+                        Log.Error(
+                            e,
+                            "An exception occurred during preload async: {Message}",
+                            e.Message
+                        );
+                    }
 
                     PreloadEnded.Set();
                     _preloadStatusHandlerAction(false);
