@@ -348,26 +348,29 @@ namespace Libplanet.Headless.Hosting
                     _preloadStatusHandlerAction(true);
                     try
                     {
-                        await Swarm.PreloadAsync(
-                            TimeSpan.FromSeconds(5),
-                            PreloadProgress,
-                            cancellationToken: cancellationToken
-                        );
-                    }
-                    catch (AggregateException e)
-                    {
-                        if (!_ignorePreloadFailure)
+                        try
                         {
-                            throw;
+                            await Swarm.PreloadAsync(
+                                TimeSpan.FromSeconds(5),
+                                PreloadProgress,
+                                cancellationToken: cancellationToken
+                            );
                         }
+                        catch (AggregateException e)
+                        {
+                            if (!_ignorePreloadFailure)
+                            {
+                                throw;
+                            }
 
-                        Log.Error(e, "{Message}", e.Message);
+                            Log.Error(e, "{Message}", e.Message);
+                        }
                     }
                     catch (Exception e)
                     {
                         Log.Error(
                             e,
-                            "An exception occurred during preload async: {Message}",
+                            $"An unexpected exception occurred during {nameof(Swarm.PreloadAsync)}: {{Message}}",
                             e.Message
                         );
                     }
