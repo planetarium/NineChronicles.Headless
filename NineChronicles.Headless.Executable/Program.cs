@@ -347,6 +347,11 @@ namespace NineChronicles.Headless.Executable
                     nineChroniclesNodeService.StartMining();
                 }
 
+                if (lightNode)
+                {
+                    throw new NotImplementedException();
+                }
+
                 IHostBuilder nineChroniclesNodeHostBuilder = Host.CreateDefaultBuilder();
                 nineChroniclesNodeHostBuilder =
                     nineChroniclesNodeService.Configure(nineChroniclesNodeHostBuilder);
