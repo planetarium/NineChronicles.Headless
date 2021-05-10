@@ -60,5 +60,7 @@ namespace Libplanet.Headless.Hosting
         public int DemandBuffer { get; set; } = 1150;
 
         public IEnumerable<Peer> StaticPeers { get; set; }
+
+        public bool LightNode { get; set; }
     }
 }

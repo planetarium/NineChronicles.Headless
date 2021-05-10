@@ -46,7 +46,8 @@ namespace NineChronicles.Headless.Properties
                 int messageTimeout = 60,
                 int tipTimeout = 60,
                 int demandBuffer = 1150,
-                string[]? staticPeerStrings = null)
+                string[]? staticPeerStrings = null,
+                bool lightNode = false)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
@@ -84,7 +85,8 @@ namespace NineChronicles.Headless.Properties
                 MessageTimeout = TimeSpan.FromSeconds(messageTimeout),
                 TipTimeout = TimeSpan.FromSeconds(tipTimeout),
                 DemandBuffer = demandBuffer,
-                StaticPeers = staticPeers
+                StaticPeers = staticPeers,
+                LightNode = lightNode
             };
         }
 
