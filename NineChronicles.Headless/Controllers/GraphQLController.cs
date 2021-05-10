@@ -19,7 +19,7 @@ using Nekoyume.Model.Item;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Requests;
 using Serilog;
-
+using Libplanet.Tx;
 
 namespace NineChronicles.Headless.Controllers
 {
@@ -38,6 +38,8 @@ namespace NineChronicles.Headless.Controllers
         public const string SetMiningEndpoint = "/set-mining";
 
         public const string CheckPeerEndpoint = "/check-peer";
+
+        public const string CheckTxId = "/check-tx";
 
         public GraphQLController(StandaloneContext standaloneContext, IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
         {
@@ -124,6 +126,32 @@ namespace NineChronicles.Headless.Controllers
                 // Unexpected Error.
                 Log.Warning(e, msg);
                 return StatusCode(StatusCodes.Status500InternalServerError, msg);
+            }
+        }
+
+        [HttpGet(CheckTxId)]
+        public IActionResult CheckTx(string txId)
+        {
+            var txIdByteArray = new byte[32];
+            var byteIndex = 0;
+
+            for(var index = 0; index < TxId.Size * 2; index += 2)
+            {
+                var digit = txId.Substring(index, 2);
+                txIdByteArray[byteIndex++] = 
+                    Convert.ToByte(digit, 16);
+            }
+            var txIdObject = new TxId(txIdByteArray);
+            if (StandaloneContext.Store is null)
+            {
+                return NotFound("Store is null.");
+            }
+            else
+            {
+                return Ok(
+                    $"{StandaloneContext.Store.ContainsTransaction(txIdObject)}" +
+                    $"/{string.Join(",", txIdObject.ByteArray)}"
+                    );
             }
         }
 
