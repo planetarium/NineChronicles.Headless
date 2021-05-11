@@ -135,6 +135,10 @@ namespace NineChronicles.Headless.Controllers
             var txIdByteArray = new byte[32];
             var byteIndex = 0;
 
+            if (StandaloneContext.NineChroniclesNodeService is null)
+            {
+                return new StatusCodeResult(StatusCodes.Status409Conflict);
+            }
             if (!StandaloneContext.NineChroniclesNodeService.LightNode)
             {
                 return Unauthorized();
@@ -148,7 +152,7 @@ namespace NineChronicles.Headless.Controllers
             var txIdObject = new TxId(txIdByteArray);
             if (StandaloneContext.Store is null)
             {
-                return NotFound("Store is null.");
+                return new StatusCodeResult(StatusCodes.Status409Conflict);
             }
             else
             {
