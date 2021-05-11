@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using Bencodex;
 using GraphQL;
 using GraphQL.Resolvers;
 using GraphQL.Subscription;
@@ -11,6 +12,7 @@ using Libplanet.Blocks;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Net;
 using Libplanet.Headless;
+using Nekoyume.Action;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -139,6 +141,20 @@ namespace NineChronicles.Headless.GraphTypes
                 Subscriber = new EventStreamResolver<NodeException>(context =>
                     StandaloneContext.NodeExceptionSubject.AsObservable()),
             });
+            FieldSubscribe<NonNullGraphType<ActionEvaluationType>>(
+                name: "actionEvaluations",
+                arguments: new QueryArguments(
+                    new QueryArgument<StringGraphType>
+                    {
+                        Name = "type",
+                    }),
+                resolve: context => context.Source as ActionBase.ActionEvaluation<ActionBase>?,
+                subscribe: context => standaloneContext.ActionEvaluationSubject?
+                    .Where(e =>
+                    {
+                        string? actionTypeName = context.GetArgument<string?>("type");
+                        return actionTypeName is null || e.Action.GetType().Name == actionTypeName;
+                    }).Select(x => (object) x));
         }
 
         public void RegisterTipChangedSubscription()

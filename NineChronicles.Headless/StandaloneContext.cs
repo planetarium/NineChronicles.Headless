@@ -4,6 +4,7 @@ using Libplanet.KeyStore;
 using Libplanet.Net;
 using Libplanet.Headless;
 using Libplanet.Store;
+using Nekoyume.Action;
 using NineChronicles.Headless.GraphTypes;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -22,6 +23,7 @@ namespace NineChronicles.Headless
             = new ReplaySubject<DifferentAppProtocolVersionEncounter>();
         public ReplaySubject<Notification> NotificationSubject { get; } = new ReplaySubject<Notification>(1);
         public ReplaySubject<NodeException> NodeExceptionSubject { get; } = new ReplaySubject<NodeException>();
+        public ISubject<ActionBase.ActionEvaluation<ActionBase>>? ActionEvaluationSubject { get; set; }
         public NineChroniclesNodeService? NineChroniclesNodeService { get; set; }
         public NodeStatusType NodeStatus => new NodeStatusType()
         {

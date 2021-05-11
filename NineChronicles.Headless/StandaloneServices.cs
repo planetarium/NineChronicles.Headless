@@ -1,6 +1,8 @@
 using System;
+using System.Reactive.Subjects;
 using Libplanet.Net;
 using Libplanet.Headless;
+using Nekoyume.Action;
 using NineChronicles.Headless.Properties;
 
 namespace NineChronicles.Headless
@@ -87,6 +89,7 @@ namespace NineChronicles.Headless
                     standaloneContext.PreloadEnded = true;
                     standaloneContext.NodeStatusSubject.OnNext(standaloneContext.NodeStatus);
                 });
+                standaloneContext.ActionEvaluationSubject = service.ActionRenderer.ActionRenderSubject;
             }
         }
     }

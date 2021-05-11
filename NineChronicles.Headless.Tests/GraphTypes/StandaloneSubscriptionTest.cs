@@ -3,11 +3,15 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
+using Bencodex;
+using GraphQL;
 using GraphQL.Subscription;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
@@ -15,6 +19,8 @@ using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless;
 using Libplanet.Headless.Hosting;
+using Nekoyume.Action;
+using Nekoyume.Model.Item;
 using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
 using Xunit.Abstractions;
@@ -216,5 +222,169 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal((int)code, nodeException["code"]);
             Assert.Equal(message, nodeException["message"]);
         }
+
+        [Theory]
+        [MemberData(nameof(SubscribeActionEvaluationsTestCases))]
+        public async Task SubscribeActionEvaluations(params ActionBase[] actions)
+        {
+            StandaloneContextFx.ActionEvaluationSubject = new ReplaySubject<ActionBase.ActionEvaluation<ActionBase>>();
+            var result = await ExecuteQueryAsync(@"
+                subscription {
+                    actionEvaluations {
+                        action
+                        blockIndex
+                        signer
+                    }
+                }
+            ");
+            var subscribeResult = (SubscriptionExecutionResult) result;
+            const long blockIndex = 1000;
+            foreach (ActionBase action in actions)
+            {
+                StandaloneContextFx.ActionEvaluationSubject.OnNext(new ActionBase.ActionEvaluation<ActionBase>
+                {
+                    Action = action,
+                    BlockIndex = blockIndex,
+                    Signer = default,
+                });
+            }
+
+            Assert.Single(subscribeResult.Streams);
+            var stream = subscribeResult.Streams.Values.First();
+            Assert.NotNull(stream);
+
+            var rawEvents = await stream.Take(actions.Length).ToArray();
+            Assert.NotNull(rawEvents);
+            Assert.Equal(actions.Length, rawEvents.Length);
+
+            var codec = new Codec();
+            foreach (var (rawEvent, action) in rawEvents.Zip(actions))
+            {
+                var actionEvaluation = rawEvent.Data.As<Dictionary<string, object>>()["actionEvaluations"];
+                string serialized = ByteUtil.Hex(codec.Encode(action.PlainValue));
+                Assert.Equal(new Dictionary<string, object>
+                {
+                    ["action"] = serialized,
+                    ["blockIndex"] = blockIndex,
+                    ["signer"] = default(Address).ToString(),
+                }, actionEvaluation);                
+            }
+        }
+        
+        [Theory]
+        [MemberData(nameof(SubscribeActionEvaluationsTestCases))]
+        public async Task SubscribeActionEvaluations_WithActionTypeFilter(params ActionBase[] actions)
+        {
+            StandaloneContextFx.ActionEvaluationSubject = new ReplaySubject<ActionBase.ActionEvaluation<ActionBase>>();
+            foreach (Type actionType in actions.Select(action => action.GetType()).ToImmutableHashSet())
+            {
+                ActionBase[] expectedFilteredActions = actions.Where(action => action.GetType() == actionType).ToArray(); 
+                var result = await ExecuteQueryAsync($@"
+                    subscription {{
+                        actionEvaluations(type: ""{actionType.Name}"") {{
+                            action
+                            blockIndex
+                            signer
+                        }}
+                    }}
+                ");
+
+                var subscribeResult = (SubscriptionExecutionResult) result;
+                const long blockIndex = 1000;
+                foreach (ActionBase action in actions)
+                {
+                    StandaloneContextFx.ActionEvaluationSubject.OnNext(new ActionBase.ActionEvaluation<ActionBase>
+                    {
+                        Action = action,
+                        BlockIndex = blockIndex,
+                        Signer = default,
+                    });
+                }
+
+                Assert.Single(subscribeResult.Streams);
+                var stream = subscribeResult.Streams.Values.First();
+                Assert.NotNull(stream);
+
+                var rawEvents = await stream.Take(expectedFilteredActions.Length).ToArray();
+                Assert.NotNull(rawEvents);
+                Assert.Equal(expectedFilteredActions.Length, rawEvents.Length);
+
+                var codec = new Codec();
+                foreach (var (rawEvent, action) in rawEvents.Zip(expectedFilteredActions))
+                {
+                    var actionEvaluation = rawEvent.Data.As<Dictionary<string, object>>()["actionEvaluations"];
+                    string serialized = ByteUtil.Hex(codec.Encode(action.PlainValue));
+                    Assert.Equal(new Dictionary<string, object>
+                    {
+                        ["action"] = serialized,
+                        ["blockIndex"] = blockIndex,
+                        ["signer"] = default(Address).ToString(),
+                    }, actionEvaluation);                
+                }   
+            }
+        }
+
+        public static IEnumerable<object[]> SubscribeActionEvaluationsTestCases => new[]
+        {
+            new ActionBase[]
+            {
+                new Buy
+                {
+                    purchaseInfos = ImmutableArray<PurchaseInfo>.Empty,
+                    buyerAvatarAddress = default,
+                    buyerMultipleResult = default,
+                    sellerMultipleResult = default,
+                },
+                new Sell
+                {
+                    price = new FungibleAssetValue(GoldCurrency, 1000, 10),
+                    itemId = Guid.NewGuid(),
+                    itemSubType = ItemSubType.Armor,
+                    sellerAvatarAddress = default,
+                },
+                new TransferAsset(
+                    new Address("c211814D17Ba60D40A1D768dF3E8dC0738F98417"),
+                    new Address("B9B3B11Af8a9338c3fB0160b30DB011296404963"),
+                    new FungibleAssetValue(GoldCurrency, 0, 0)),
+                new TransferAsset(
+                    new Address("787DBC4c56AbaB63c91B339aD4e77dAa42dBC802"),
+                    new Address("BEa8F1662a7980C6C18BF30888D695BA3c9C7Af5"),
+                    new FungibleAssetValue(GoldCurrency, 1000, 20)),
+            },
+            new ActionBase[]
+            {
+                new Buy
+                {
+                    purchaseInfos = ImmutableArray<PurchaseInfo>.Empty,
+                    buyerAvatarAddress = default,
+                    buyerMultipleResult = default,
+                    sellerMultipleResult = default,
+                },
+                new Buy
+                {
+                    purchaseInfos = ImmutableArray<PurchaseInfo>.Empty,
+                    buyerAvatarAddress = default,
+                    buyerMultipleResult = default,
+                    sellerMultipleResult = default,
+                },
+                new Sell
+                {
+                    price = new FungibleAssetValue(GoldCurrency, 1000, 10),
+                    itemId = Guid.NewGuid(),
+                    itemSubType = ItemSubType.Armor,
+                    sellerAvatarAddress = default,
+                },
+                new TransferAsset(
+                    new Address("c211814D17Ba60D40A1D768dF3E8dC0738F98417"),
+                    new Address("B9B3B11Af8a9338c3fB0160b30DB011296404963"),
+                    new FungibleAssetValue(GoldCurrency, 0, 0)),
+                new TransferAsset(
+                    new Address("787DBC4c56AbaB63c91B339aD4e77dAa42dBC802"),
+                    new Address("BEa8F1662a7980C6C18BF30888D695BA3c9C7Af5"),
+                    new FungibleAssetValue(GoldCurrency, 1000, 20)),
+            }
+        };
+
+        private static Currency GoldCurrency => new Currency("GLD", 2, ImmutableHashSet<Address>.Empty);
     }
 }
