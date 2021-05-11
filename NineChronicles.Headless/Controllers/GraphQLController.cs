@@ -135,6 +135,10 @@ namespace NineChronicles.Headless.Controllers
             var txIdByteArray = new byte[32];
             var byteIndex = 0;
 
+            if (!StandaloneContext.NineChroniclesNodeService.LightNode)
+            {
+                return Unauthorized();
+            }
             for(var index = 0; index < TxId.Size * 2; index += 2)
             {
                 var digit = txId.Substring(index, 2);
