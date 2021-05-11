@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using GraphQL;
 using GraphQL.Subscription;
 using Libplanet;
 using Libplanet.Action;
@@ -15,6 +16,8 @@ using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless;
 using Libplanet.Headless.Hosting;
+using Libplanet.Tx;
+using Nekoyume.Action;
 using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
 using Xunit.Abstractions;
@@ -30,26 +33,30 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task SubscribeTipChangedEvent()
         {
-            var miner = new Address();
+            Block<PolymorphicAction<ActionBase>> MakeBlock(long index) =>
+                new Block<PolymorphicAction<ActionBase>>(index, 0, 0, new Nonce(), default, null, DateTimeOffset.UtcNow,
+                    new Transaction<PolymorphicAction<ActionBase>>[0]);
+            var result = await ExecuteQueryAsync("subscription { tipChanged { index hash } }");
+            Assert.IsType<SubscriptionExecutionResult>(result);
+            var subscribeResult = (SubscriptionExecutionResult) result;
+            Assert.Null(subscribeResult.Errors);
 
             const int repeat = 10;
-            foreach (long index in Enumerable.Range(1, repeat))
+            var blocks = Enumerable.Range(1, repeat).Select(x => MakeBlock(x)).ToArray();
+            for (int i = 0; i < blocks.Length - 1; i++)
             {
-                await BlockChain.MineBlock(miner);
+                StandaloneContextFx.BlockSubject?.OnNext((blocks[i], blocks[i + 1]));
+            }
 
-                var result = await ExecuteQueryAsync("subscription { tipChanged { index hash } }");
-
-                Assert.IsType<SubscriptionExecutionResult>(result);
-                var subscribeResult = (SubscriptionExecutionResult) result;
-                Assert.Equal(index, BlockChain.Tip.Index);
-                var stream = subscribeResult.Streams.Values.FirstOrDefault();
-                var rawEvents = await stream.Take((int)index);
-                Assert.NotNull(rawEvents);
-
-                var events = (Dictionary<string, object>) rawEvents.Data;
-                var tipChangedEvent = (Dictionary<string, object>) events["tipChanged"];
-                Assert.Equal(index, tipChangedEvent["index"]);
-                Assert.Equal(BlockChain[index].Hash.ToByteArray(), ByteUtil.ParseHex((string) tipChangedEvent["hash"]));
+            var stream = subscribeResult.Streams.Values.First();
+            var executionResults = await stream.Take(repeat - 1).ToArray();
+            foreach (var (block, executionResult) in blocks.Skip(1).Zip(executionResults))
+            {
+                Assert.Equal(new Dictionary<string, object>
+                {
+                    ["index"] = block.Index,
+                    ["hash"] = block.Hash.ToString(),
+                }, executionResult.Data.As<Dictionary<string, object>>()["tipChanged"]);
             }
         }
 
