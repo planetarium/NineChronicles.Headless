@@ -13,19 +13,6 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneSubscription : ObjectGraphType
     {
-        class TipChanged : ObjectGraphType<TipChanged>
-        {
-            public long Index { get; set; }
-
-            public BlockHash Hash { get; set; }
-
-            public TipChanged()
-            {
-                Field<NonNullGraphType<LongGraphType>>(nameof(Index));
-                Field<ByteStringType>("hash", resolve: context => context.Source.Hash.ToByteArray());
-            }
-        }
-
         class PreloadStateType : ObjectGraphType<PreloadState>
         {
             private class PreloadStateExtra
@@ -90,12 +77,11 @@ namespace NineChronicles.Headless.GraphTypes
         public StandaloneSubscription(StandaloneContext standaloneContext)
         {
             StandaloneContext = standaloneContext;
-            AddField(new EventStreamFieldType {
-                Name = "tipChanged",
-                Type = typeof(TipChanged),
-                Resolver = new FuncFieldResolver<TipChanged>(ResolveTipChanged),
-                Subscriber = new EventStreamResolver<TipChanged>(SubscribeTipChanged),
-            });
+            FieldSubscribe<TipChangeEventType>(
+                "tipChanged",
+                resolve: context => context.Source as (long Index, BlockHash Hash)?,
+                subscribe: _ => StandaloneContext.BlockSubject?.Select(pair =>  (pair.NewTip.Index, pair.NewTip.Hash)).Select(x => (object)x)
+            );
             AddField(new EventStreamFieldType {
                 Name = "preloadProgress",
                 Type = typeof(PreloadStateType),
@@ -133,25 +119,6 @@ namespace NineChronicles.Headless.GraphTypes
                 Resolver = new FuncFieldResolver<NodeException>(context => (context.Source as NodeException)!),
                 Subscriber = new EventStreamResolver<NodeException>(context =>
                     StandaloneContext.NodeExceptionSubject.AsObservable()),
-            });
-        }
-
-        private TipChanged ResolveTipChanged(IResolveFieldContext context)
-        {
-            return context.Source as TipChanged ?? throw new InvalidOperationException();
-        }
-
-        private IObservable<TipChanged> SubscribeTipChanged(IResolveEventStreamContext context)
-        {
-            if (!(StandaloneContext.BlockSubject is { } blockSubject))
-            {
-                throw new InvalidOperationException();
-            }
-
-            return blockSubject.Select(pair => new TipChanged
-            {
-                Index = pair.NewTip.Index,
-                Hash = pair.NewTip.Hash,
             });
         }
     }
