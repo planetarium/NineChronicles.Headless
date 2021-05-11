@@ -1,12 +1,9 @@
 using System;
-using System.Linq;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using GraphQL;
 using GraphQL.Resolvers;
 using GraphQL.Subscription;
 using GraphQL.Types;
-using Lib9c.Renderer;
 using Libplanet.Blocks;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Net;
@@ -88,8 +85,6 @@ namespace NineChronicles.Headless.GraphTypes
             }
         }
 
-        private ISubject<TipChanged> _subject = new ReplaySubject<TipChanged>();
-
         private StandaloneContext StandaloneContext { get; }
 
         public StandaloneSubscription(StandaloneContext standaloneContext)
@@ -141,29 +136,6 @@ namespace NineChronicles.Headless.GraphTypes
             });
         }
 
-        public void RegisterTipChangedSubscription()
-        {
-            BlockRenderer blockRenderer = StandaloneContext?.NineChroniclesNodeService?.BlockRenderer ??
-                StandaloneContext?.BlockChain?.Renderers.OfType<BlockRenderer>().FirstOrDefault() ??
-                throw new InvalidOperationException(
-                    $"Failed to find {nameof(ActionRenderer)} instance; before calling " +
-                    $"{nameof(RegisterTipChangedSubscription)}(), {nameof(StandaloneContext)}." +
-                    $"{nameof(StandaloneContext.NineChroniclesNodeService)} has to be set, or " +
-                    $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)}." +
-                    $"{nameof(StandaloneContext.BlockChain.Renderers)} have to contain an " +
-                    $"{nameof(ActionRenderer)} instance."
-                );
-
-            blockRenderer.EveryBlock()
-                .Subscribe(pair =>
-                    _subject.OnNext(new TipChanged
-                    {
-                        Index = pair.NewTip.Index,
-                        Hash = pair.NewTip.Hash,
-                    })
-                );
-        }
-
         private TipChanged ResolveTipChanged(IResolveFieldContext context)
         {
             return context.Source as TipChanged ?? throw new InvalidOperationException();
@@ -171,7 +143,16 @@ namespace NineChronicles.Headless.GraphTypes
 
         private IObservable<TipChanged> SubscribeTipChanged(IResolveEventStreamContext context)
         {
-            return _subject.AsObservable();
+            if (!(StandaloneContext.BlockSubject is { } blockSubject))
+            {
+                throw new InvalidOperationException();
+            }
+
+            return blockSubject.Select(pair => new TipChanged
+            {
+                Index = pair.NewTip.Index,
+                Hash = pair.NewTip.Hash,
+            });
         }
     }
 }

@@ -6,6 +6,7 @@ using Libplanet.Headless;
 using Libplanet.Store;
 using NineChronicles.Headless.GraphTypes;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+using NCBlock = Libplanet.Blocks.Block<Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>>;
 
 namespace NineChronicles.Headless
 {
@@ -18,6 +19,7 @@ namespace NineChronicles.Headless
         public bool IsMining { get; set; }
         public ReplaySubject<NodeStatusType> NodeStatusSubject { get; } = new ReplaySubject<NodeStatusType>();
         public ReplaySubject<PreloadState> PreloadStateSubject { get; } = new ReplaySubject<PreloadState>();
+        public ISubject<(NCBlock OldTip, NCBlock NewTip)>? BlockSubject { get; set; }
         public ReplaySubject<DifferentAppProtocolVersionEncounter> DifferentAppProtocolVersionEncounterSubject { get; }
             = new ReplaySubject<DifferentAppProtocolVersionEncounter>();
         public ReplaySubject<Notification> NotificationSubject { get; } = new ReplaySubject<Notification>(1);

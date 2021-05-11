@@ -87,6 +87,7 @@ namespace NineChronicles.Headless
                     standaloneContext.PreloadEnded = true;
                     standaloneContext.NodeStatusSubject.OnNext(standaloneContext.NodeStatus);
                 });
+                standaloneContext.BlockSubject = service.BlockRenderer.BlockSubject;
             }
         }
     }

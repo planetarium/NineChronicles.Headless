@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 using GraphQL;
@@ -88,6 +89,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 BlockChain = blockChain,
                 KeyStore = keyStore,
+                BlockSubject = new ReplaySubject<(Block<NCAction> OldTip, Block<NCAction> NewTip)>(),
             };
 
             var configurationBuilder = new ConfigurationBuilder();
@@ -101,7 +103,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             services.AddSingleton<StateQuery>();
             ServiceProvider serviceProvider = services.BuildServiceProvider();
             Schema = new StandaloneSchema(serviceProvider);
-            Schema.Subscription.As<StandaloneSubscription>().RegisterTipChangedSubscription();
 
             DocumentExecutor = new DocumentExecuter();
         }
