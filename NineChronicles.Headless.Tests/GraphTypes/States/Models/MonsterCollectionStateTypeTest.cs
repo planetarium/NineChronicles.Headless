@@ -48,7 +48,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             {
                 ["address"] = state.address.ToString(),
                 ["level"] = 1L,
-                ["expiredBlockIndex"] = 160002L,
+                ["expiredBlockIndex"] = 201602L,
                 ["startedBlockIndex"] = 2L,
                 ["receivedBlockIndex"] = 4L,
                 ["rewardLevel"] = rewardLevel,
