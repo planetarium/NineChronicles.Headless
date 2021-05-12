@@ -575,15 +575,17 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             await BlockChain.MineBlock(sender);
             await BlockChain.MineBlock(recipient);
 
-            var currency = new GoldCurrencyState((Dictionary)BlockChain.GetState(Addresses.GoldCurrency)).Currency;
+            var currency = new GoldCurrencyState((Dictionary) BlockChain.GetState(Addresses.GoldCurrency)).Currency;
             var transferAsset = new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 10, 0));
-            var tx = BlockChain.MakeTransaction(minerPrivateKey, new PolymorphicAction<ActionBase>[] { transferAsset });
+            var tx = BlockChain.MakeTransaction(minerPrivateKey, new PolymorphicAction<ActionBase>[] {transferAsset});
             var block = await BlockChain.MineBlock(minerPrivateKey.ToAddress(), append: false);
             BlockChain.Append(block);
             Assert.NotNull(StandaloneContextFx.Store?.GetTxExecution(block.Hash, tx.Id));
 
             var blockHashHex = ByteUtil.Hex(block.Hash.ToByteArray());
-            var result = await ExecuteQueryAsync($"{{ transferNCGHistories(blockHash: \"{blockHashHex}\") {{ blockHash txId sender recipient amount }} }}");
+            var result =
+                await ExecuteQueryAsync(
+                    $"{{ transferNCGHistories(blockHash: \"{blockHashHex}\") {{ blockHash txId sender recipient amount }} }}");
             Assert.Null(result.Errors);
             Assert.Equal(new List<object>
             {
@@ -596,6 +598,27 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     ["amount"] = transferAsset.Amount.GetQuantityString(),
                 }
             }, result.Data.As<Dictionary<string, object>>()["transferNCGHistories"]);
+        }
+
+        [Fact]
+        public async Task MinerAddress()
+        {
+            var userPrivateKey = new PrivateKey();
+            var userAddress = userPrivateKey.ToAddress();
+            var service = MakeMineChroniclesNodeService(userPrivateKey);
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
+            const string query = @"query {
+                minerAddress
+            }";
+            var queryResult = await ExecuteQueryAsync(query);
+            Assert.Equal(
+                new Dictionary<string, object?>
+                {
+                    ["minerAddress"] = userAddress.ToString()
+                },
+                queryResult.Data
+            );
         }
 
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)

@@ -225,6 +225,20 @@ namespace NineChronicles.Headless.GraphTypes
                     return blockChain.GetTransaction(txId);
                 }
             );
+
+            Field<AddressType>(
+                name: "minerAddress",
+                description: "Address of current node.",
+                resolve: context =>
+                {
+                    if (standaloneContext.NineChroniclesNodeService?.MinerPrivateKey is null)
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.NineChroniclesNodeService)}.{nameof(StandaloneContext.NineChroniclesNodeService.MinerPrivateKey)} is null.");
+                    }
+
+                    return standaloneContext.NineChroniclesNodeService.MinerPrivateKey.ToAddress();
+                });
         }
     }
 }
