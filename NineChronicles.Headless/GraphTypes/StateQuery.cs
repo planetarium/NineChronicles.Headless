@@ -133,7 +133,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var stakingAddress = StakingState.DeriveAddress(agentAddress, (int) stakingRound);
                     if (context.Source.accountStateGetter(stakingAddress) is { } state)
                     {
-                        return (new StakingState((Dictionary) state), context.Source.accountStateGetter);
+                        return new StakingState((Dictionary) state);
                     }
 
                     return null;
