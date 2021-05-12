@@ -356,12 +356,23 @@ namespace Libplanet.Headless.Hosting
                     }
                     catch (AggregateException e)
                     {
+                        Log.Error(e, "{Message}", e.Message);
                         if (!_ignorePreloadFailure)
                         {
                             throw;
                         }
-
-                        Log.Error(e, "{Message}", e.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(
+                            e,
+                            $"An unexpected exception occurred during {nameof(Swarm.PreloadAsync)}: {{Message}}",
+                            e.Message
+                        );
+                        if (!_ignorePreloadFailure)
+                        {
+                            throw;
+                        }
                     }
 
                     PreloadEnded.Set();
