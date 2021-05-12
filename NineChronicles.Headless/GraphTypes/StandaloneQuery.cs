@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using Bencodex;
 using Bencodex.Types;
+using BTAI;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
@@ -13,6 +14,7 @@ using Libplanet.Blocks;
 using Libplanet.Explorer.GraphTypes;
 using Microsoft.Extensions.Configuration;
 using Libplanet.Tx;
+using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>; 
@@ -238,6 +240,48 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return standaloneContext.NineChroniclesNodeService.MinerPrivateKey.ToAddress();
+                });
+
+            Field<MonsterCollectionStatusType>(
+                name: nameof(MonsterCollectionStatus),
+                description: "Current miner's monster collection status.",
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    if (standaloneContext.NineChroniclesNodeService?.MinerPrivateKey is null)
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.NineChroniclesNodeService)}.{nameof(StandaloneContext.NineChroniclesNodeService.MinerPrivateKey)} is null.");
+                    }
+
+                    Address agentAddress = standaloneContext.NineChroniclesNodeService.MinerPrivateKey.ToAddress();
+                    if (blockChain.GetState(agentAddress) is Dictionary agentDict)
+                    {
+                        AgentState agentState = new AgentState(agentDict);
+                        Address deriveAddress =
+                            MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
+                        Currency currency = new GoldCurrencyState(
+                            (Dictionary) blockChain.GetState(Addresses.GoldCurrency)
+                            ).Currency;
+
+                        FungibleAssetValue balance = blockChain.GetBalance(agentAddress, currency);
+                        if (blockChain.GetState(deriveAddress) is Dictionary mcDict)
+                        {
+                            MonsterCollectionState monsterCollectionState = new MonsterCollectionState(mcDict);
+                            bool canReceive = monsterCollectionState.CanReceive(blockChain.Tip.Index);
+                            return new MonsterCollectionStatus(canReceive, balance);
+                        }
+                        throw new ExecutionError(
+                            $"{nameof(MonsterCollectionState)} Address: {deriveAddress} is null.");
+                    }
+
+                    throw new ExecutionError(
+                        $"{nameof(AgentState)} Address: {agentAddress} is null.");
                 });
         }
     }

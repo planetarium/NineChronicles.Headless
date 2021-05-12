@@ -621,6 +621,68 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             );
         }
 
+        [Fact]
+        public async Task MonsterCollectionStatus_AgentState_Null()
+        {
+            var userPrivateKey = new PrivateKey();
+            var userAddress = userPrivateKey.ToAddress();
+            var service = MakeMineChroniclesNodeService(userPrivateKey);
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
+            const string query = @"query {
+                monsterCollectionStatus {
+                    canReceive
+                    fungibleAssetValue {
+                        quantity
+                        currency
+                    }
+                }
+            }";
+            var queryResult = await ExecuteQueryAsync(query);
+            Assert.Single(queryResult.Errors);
+            Assert.Equal($"{nameof(AgentState)} Address: {userAddress} is null.", queryResult.Errors.First().Message);
+        }
+
+
+        [Fact]
+        public async Task MonsterCollectionStatus_MonsterCollectionState_Null()
+        {
+            var userPrivateKey = new PrivateKey();
+            var userAddress = userPrivateKey.ToAddress();
+            var service = MakeMineChroniclesNodeService(userPrivateKey);
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
+            var action = new CreateAvatar2
+            {
+                index = 0,
+                hair = 1,
+                lens = 2,
+                ear = 3,
+                tail = 4,
+                name = "action",
+            };
+            var blockChain = StandaloneContextFx.BlockChain;
+            var transaction = blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
+            blockChain.StageTransaction(transaction);
+            await blockChain.MineBlock(new Address());
+
+            const string query = @"query {
+                monsterCollectionStatus {
+                    canReceive
+                    fungibleAssetValue {
+                        quantity
+                        currency
+                    }
+                }
+            }";
+            var queryResult = await ExecuteQueryAsync(query);
+            Assert.Single(queryResult.Errors);
+            Assert.Equal(
+                $"{nameof(MonsterCollectionState)} Address: {MonsterCollectionState.DeriveAddress(userAddress, 0)} is null.",
+                queryResult.Errors.First().Message
+            );
+        }
+
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)
         {
             var goldCurrency = new Currency("NCG", 2, minter: null);
