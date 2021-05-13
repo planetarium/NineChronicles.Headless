@@ -19,8 +19,6 @@ namespace NineChronicles.Headless.Properties
         /// </summary>
         /// <seealso cref="LibplanetNodeServiceProperties{T}.SwarmPrivateKey"/>
         public PrivateKey? MinerPrivateKey { get; set; }
-        
-        public RpcNodeServiceProperties? Rpc { get; set; }
 
         public LibplanetNodeServiceProperties<NineChroniclesActionType>? Libplanet { get; set; }
         

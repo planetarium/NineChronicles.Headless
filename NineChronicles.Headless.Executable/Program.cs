@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using Amazon;
 using Amazon.CognitoIdentity;
 using Amazon.Runtime;
@@ -16,6 +9,7 @@ using Libplanet.Crypto;
 using Libplanet.Extensions.Cocona.Commands;
 using Libplanet.KeyStore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.Executable.Commands;
 using NineChronicles.Headless.Executable.IO;
@@ -24,6 +18,13 @@ using Org.BouncyCastle.Security;
 using Sentry;
 using Serilog;
 using Serilog.Formatting.Compact;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace NineChronicles.Headless.Executable
 {
@@ -279,7 +280,6 @@ namespace NineChronicles.Headless.Executable
                     );
                 }
 
-                RpcNodeServiceProperties? rpcProperties = null;
                 var properties = NineChroniclesNodeServiceProperties
                     .GenerateLibplanetNodeServiceProperties(
                         appProtocolVersionToken,
@@ -303,11 +303,9 @@ namespace NineChronicles.Headless.Executable
                         demandBuffer: demandBuffer,
                         staticPeerStrings: staticPeerStrings);
 
-
+                IHostBuilder ncHostBuilder = Host.CreateDefaultBuilder();
                 if (rpcServer)
                 {
-                    rpcProperties = NineChroniclesNodeServiceProperties
-                        .GenerateRpcNodeServiceProperties(rpcListenHost, rpcListenPort);
                     properties.Render = true;
                     properties.LogActionRenders = true;
                 }
@@ -323,7 +321,6 @@ namespace NineChronicles.Headless.Executable
                 var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
                 {
                     MinerPrivateKey = minerPrivateKey,
-                    Rpc = rpcProperties,
                     Libplanet = properties,
                     Dev = isDev,
                     StrictRender = strictRendering,
@@ -338,11 +335,20 @@ namespace NineChronicles.Headless.Executable
                         nineChroniclesProperties,
                         standaloneContext);
                 standaloneContext.NineChroniclesNodeService = nineChroniclesNodeService;
-                IHostBuilder nineChroniclesNodeHostBuilder = Host.CreateDefaultBuilder();
-                nineChroniclesNodeHostBuilder =
-                    nineChroniclesNodeService.Configure(nineChroniclesNodeHostBuilder);
+                ncHostBuilder.ConfigureServices(services =>
+                {
+                    services.AddSingleton(_ => standaloneContext);
+                });
+                ncHostBuilder = nineChroniclesNodeService.Configure(ncHostBuilder);
+                if (rpcServer)
+                {
+                    ncHostBuilder.UseNineChroniclesRPC(
+                        NineChroniclesNodeServiceProperties
+                        .GenerateRpcNodeServiceProperties(rpcListenHost, rpcListenPort)
+                    );
+                }
                 tasks.Add(
-                    nineChroniclesNodeHostBuilder.RunConsoleAsync(Context.CancellationToken));
+                    ncHostBuilder.RunConsoleAsync(Context.CancellationToken));
 
                 await Task.WhenAll(tasks);
             }

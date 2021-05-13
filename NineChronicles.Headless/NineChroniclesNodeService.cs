@@ -38,8 +38,6 @@ namespace NineChronicles.Headless
 
         private LibplanetNodeServiceProperties<NineChroniclesActionType> Properties { get; }
 
-        private RpcNodeServiceProperties? RpcProperties { get; }
-
         public BlockRenderer BlockRenderer { get; }
 
         public ActionRenderer ActionRenderer { get; }
@@ -76,7 +74,6 @@ namespace NineChronicles.Headless
         public NineChroniclesNodeService(
             PrivateKey? minerPrivateKey,
             LibplanetNodeServiceProperties<NineChroniclesActionType> properties,
-            RpcNodeServiceProperties? rpcNodeServiceProperties,
             Progress<PreloadState>? preloadProgress = null,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false,
@@ -90,7 +87,6 @@ namespace NineChronicles.Headless
         {
             MinerPrivateKey = minerPrivateKey;
             Properties = properties;
-            RpcProperties = rpcNodeServiceProperties;
 
             LogEventLevel logLevel = LogEventLevel.Debug;
             var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
@@ -304,7 +300,7 @@ namespace NineChronicles.Headless
                         new DifferentAppProtocolVersionEncounter(peer, peerVersion, localVersion)
                     );
 
-                    // FIXME: ÀÏ´ÜÀº ¹öÀüÀÌ ´Ù¸¥ ÇÇ¾î´Â ¸¶ÁÖÃÄµµ ½ß±ñ´Ù.
+                    // FIXME: ì¼ë‹¨ì€ ë²„ì „ì´ ë‹¤ë¥¸ í”¼ì–´ëŠ” ë§ˆì£¼ì³ë„ ìŒ©ê¹ë‹¤.
                     return false;
                 };
 
@@ -319,7 +315,6 @@ namespace NineChronicles.Headless
             var service = new NineChroniclesNodeService(
                 properties.MinerPrivateKey,
                 properties.Libplanet,
-                properties.Rpc,
                 preloadProgress: progress,
                 ignoreBootstrapFailure: properties.IgnoreBootstrapFailure,
                 ignorePreloadFailure: properties.IgnorePreloadFailure,
@@ -339,33 +334,11 @@ namespace NineChronicles.Headless
 
         public IHostBuilder Configure(IHostBuilder hostBuilder)
         {
-            RpcContext context = new RpcContext();
-            if (RpcProperties is RpcNodeServiceProperties rpcProperties)
-            {
-                hostBuilder = hostBuilder
-                    .UseMagicOnion(
-                        new ServerPort(rpcProperties.RpcListenHost, rpcProperties.RpcListenPort, ServerCredentials.Insecure)
-                    )
-                    .ConfigureServices((ctx, services) =>
-                    {
-                        services.AddHostedService(provider => new ActionEvaluationPublisher(
-                            BlockRenderer,
-                            ActionRenderer,
-                            ExceptionRenderer,
-                            NodeStatusRenderer,
-                            IPAddress.Loopback.ToString(),
-                            rpcProperties.RpcListenPort,
-                            context
-                        ));
-                    });
-            }
-
             return hostBuilder.ConfigureServices((ctx, services) =>
             {
                 services.AddHostedService(provider => this);
                 services.AddSingleton(provider => NodeService?.Swarm);
                 services.AddSingleton(provider => NodeService?.BlockChain);
-                services.AddSingleton(provider => context);
                 services.AddSingleton(provider => NodeService?.Properties);
             });
         }
