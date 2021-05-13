@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Bencodex.Types;
 using Grpc.Core;
 using Lib9c.Renderer;
-using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;
@@ -92,11 +91,11 @@ namespace NineChronicles.Headless
             LogEventLevel logLevel = LogEventLevel.Debug;
             var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
             // BlockPolicy shared through Lib9c.
-            IBlockPolicy<PolymorphicAction<ActionBase>>? blockPolicy = null;
+            IBlockPolicy<NineChroniclesActionType>? blockPolicy = null;
             // Policies for dev mode.
-            IBlockPolicy<PolymorphicAction<ActionBase>>? easyPolicy = null;
-            IBlockPolicy<PolymorphicAction<ActionBase>>? hardPolicy = null;
-            IStagePolicy<PolymorphicAction<ActionBase>> stagePolicy =
+            IBlockPolicy<NineChroniclesActionType>? easyPolicy = null;
+            IBlockPolicy<NineChroniclesActionType>? hardPolicy = null;
+            IStagePolicy<NineChroniclesActionType> stagePolicy =
                 txLifeTime == default
                     ? new VolatileStagePolicy<NineChroniclesActionType>()
                     : new VolatileStagePolicy<NineChroniclesActionType>(txLifeTime);
@@ -274,7 +273,7 @@ namespace NineChronicles.Headless
             }
         }
 
-        internal static IBlockPolicy<PolymorphicAction<ActionBase>> GetBlockPolicy(int minimumDifficulty, int maximumTransactions) =>
+        internal static IBlockPolicy<NineChroniclesActionType> GetBlockPolicy(int minimumDifficulty, int maximumTransactions) =>
             new BlockPolicySource(Log.Logger, LogEventLevel.Debug)
                 .GetPolicy(minimumDifficulty, maximumTransactions);
 

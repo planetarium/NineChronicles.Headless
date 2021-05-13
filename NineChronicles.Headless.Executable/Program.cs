@@ -271,6 +271,14 @@ namespace NineChronicles.Headless.Executable
                     );
                 }
 
+                if (!noMiner && minerPrivateKeyString is null)
+                {
+                    throw new CommandExitedException(
+                        "--miner-private-key must be present to turn on mining at libplanet node.",
+                        -1
+                    );
+                }
+
                 RpcNodeServiceProperties? rpcProperties = null;
                 var properties = NineChroniclesNodeServiceProperties
                     .GenerateLibplanetNodeServiceProperties(
@@ -333,14 +341,6 @@ namespace NineChronicles.Headless.Executable
 
                 if (!properties.NoMiner)
                 {
-                    if (minerPrivateKey is null)
-                    {
-                        throw new CommandExitedException(
-                            "--miner-private-key must be present to turn on mining at libplanet node.",
-                            -1
-                        );
-                    }
-                    
                     nineChroniclesNodeService.StartMining();
                 }
 
