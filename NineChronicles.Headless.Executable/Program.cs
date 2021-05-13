@@ -329,17 +329,11 @@ namespace NineChronicles.Headless.Executable
                     AuthorizedMiner = authorizedMiner,
                     TxLifeTime = TimeSpan.FromMinutes(txLifeTime),
                 };
-
-                NineChroniclesNodeService nineChroniclesNodeService =
-                    NineChroniclesNodeService.Create(
-                        nineChroniclesProperties,
-                        standaloneContext);
-                standaloneContext.NineChroniclesNodeService = nineChroniclesNodeService;
                 ncHostBuilder.ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => standaloneContext);
                 });
-                ncHostBuilder = nineChroniclesNodeService.Configure(ncHostBuilder);
+                ncHostBuilder.UseNineChroniclesNode(nineChroniclesProperties, standaloneContext);
                 if (rpcServer)
                 {
                     ncHostBuilder.UseNineChroniclesRPC(

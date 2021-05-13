@@ -1,34 +1,30 @@
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Security.Cryptography;
-using System.Threading;
-using System.Threading.Tasks;
 using Bencodex.Types;
-using Grpc.Core;
 using Lib9c.Renderer;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;
 using Libplanet.Crypto;
-using Libplanet.Net;
+using Libplanet.Headless;
 using Libplanet.Headless.Hosting;
+using Libplanet.Net;
 using Libplanet.Store;
-using MagicOnion.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Nekoyume.Action;
 using Nekoyume.BlockChain;
 using Nekoyume.Model.State;
-using NineChronicles.RPC.Shared.Exceptions;
 using NineChronicles.Headless.Properties;
+using NineChronicles.RPC.Shared.Exceptions;
 using Nito.AsyncEx;
 using Serilog;
 using Serilog.Events;
+using System;
+using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using StrictRenderer =
     Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer<Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>>;
-using Libplanet.Headless;
 
 namespace NineChronicles.Headless
 {
@@ -331,17 +327,6 @@ namespace NineChronicles.Headless
         internal static IBlockPolicy<NineChroniclesActionType> GetBlockPolicy(int minimumDifficulty, int maximumTransactions) =>
             new BlockPolicySource(Log.Logger, LogEventLevel.Debug)
                 .GetPolicy(minimumDifficulty, maximumTransactions);
-
-        public IHostBuilder Configure(IHostBuilder hostBuilder)
-        {
-            return hostBuilder.ConfigureServices((ctx, services) =>
-            {
-                services.AddHostedService(provider => this);
-                services.AddSingleton(provider => NodeService?.Swarm);
-                services.AddSingleton(provider => NodeService?.BlockChain);
-                services.AddSingleton(provider => NodeService?.Properties);
-            });
-        }
 
         public void StartMining() => NodeService?.StartMining(MinerPrivateKey);
 

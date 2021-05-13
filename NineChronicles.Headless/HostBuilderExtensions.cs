@@ -9,6 +9,25 @@ namespace NineChronicles.Headless
 {
     public static class HostBuilderExtensions
     {
+        public static IHostBuilder UseNineChroniclesNode(
+            this IHostBuilder builder,
+            NineChroniclesNodeServiceProperties properties,
+            StandaloneContext context
+        )
+        {
+            NineChroniclesNodeService service =
+                NineChroniclesNodeService.Create(properties, context);
+            context.NineChroniclesNodeService = service;
+            
+            return builder.ConfigureServices(services =>
+            {
+                services.AddHostedService(provider => service);
+                services.AddSingleton(provider => service.Swarm);
+                services.AddSingleton(provider => service.BlockChain);
+                services.AddSingleton(provider => properties.Libplanet);
+            });
+        }
+
         public static IHostBuilder UseNineChroniclesRPC(
             this IHostBuilder builder, 
             RpcNodeServiceProperties properties
