@@ -31,7 +31,7 @@ using StrictRenderer =
 
 namespace NineChronicles.Headless
 {
-    public class NineChroniclesNodeService
+    public class NineChroniclesNodeService : IHostedService, IDisposable
     {
         private LibplanetNodeService<NineChroniclesActionType> NodeService { get; set; }
 
@@ -302,14 +302,7 @@ namespace NineChronicles.Headless
 
             return hostBuilder.ConfigureServices((ctx, services) =>
             {
-                services.AddHostedService(provider =>
-                {
-                    provider.GetService<IHostApplicationLifetime>().ApplicationStopped.Register(() =>
-                    {
-                        NodeService?.Dispose();
-                    });
-                    return NodeService;
-                });
+                services.AddHostedService(provider => this);
                 services.AddSingleton(provider => NodeService?.Swarm);
                 services.AddSingleton(provider => NodeService?.BlockChain);
                 services.AddSingleton(provider => context);
@@ -322,5 +315,14 @@ namespace NineChronicles.Headless
         public void StopMining() => NodeService?.StopMining();
         
         public Task<bool> CheckPeer(string addr) => NodeService?.CheckPeer(addr) ?? throw new InvalidOperationException();
+
+        public Task StartAsync(CancellationToken cancellationToken) => NodeService.StartAsync(cancellationToken);
+
+        public Task StopAsync(CancellationToken cancellationToken) => NodeService.StopAsync(cancellationToken);
+
+        public void Dispose()
+        {
+            NodeService?.Dispose();
+        }
     }
 }
