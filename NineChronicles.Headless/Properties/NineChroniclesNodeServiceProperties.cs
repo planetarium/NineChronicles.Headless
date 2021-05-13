@@ -23,6 +23,22 @@ namespace NineChronicles.Headless.Properties
         public RpcNodeServiceProperties? Rpc { get; set; }
 
         public LibplanetNodeServiceProperties<NineChroniclesActionType>? Libplanet { get; set; }
+        
+        public bool Dev { get; set; }
+        
+        public bool StrictRender { get; set; }
+        
+        public int BlockInterval { get; set; }
+       
+        public int ReorgInterval { get; set; }
+        
+        public bool AuthorizedMiner { get; set; }
+        
+        public TimeSpan TxLifeTime { get; set; }
+
+        public bool IgnoreBootstrapFailure { get; set; } = true;
+
+        public bool IgnorePreloadFailure { get; set; } = true;
 
         public static LibplanetNodeServiceProperties<NineChroniclesActionType>
             GenerateLibplanetNodeServiceProperties(

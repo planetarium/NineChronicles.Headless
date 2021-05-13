@@ -324,19 +324,19 @@ namespace NineChronicles.Headless.Executable
                 {
                     MinerPrivateKey = minerPrivateKey,
                     Rpc = rpcProperties,
-                    Libplanet = properties
+                    Libplanet = properties,
+                    Dev = isDev,
+                    StrictRender = strictRendering,
+                    BlockInterval = blockInterval,
+                    ReorgInterval = reorgInterval,
+                    AuthorizedMiner = authorizedMiner,
+                    TxLifeTime = TimeSpan.FromMinutes(txLifeTime),
                 };
 
                 NineChroniclesNodeService nineChroniclesNodeService =
-                    StandaloneServices.CreateHeadless(
+                    NineChroniclesNodeService.Create(
                         nineChroniclesProperties,
-                        standaloneContext,
-                        strictRendering: strictRendering,
-                        isDev: isDev,
-                        blockInterval: blockInterval,
-                        reorgInterval: reorgInterval,
-                        authorizedMiner: authorizedMiner,
-                        txLifeTime: TimeSpan.FromMinutes(txLifeTime));
+                        standaloneContext);
                 standaloneContext.NineChroniclesNodeService = nineChroniclesNodeService;
                 IHostBuilder nineChroniclesNodeHostBuilder = Host.CreateDefaultBuilder();
                 nineChroniclesNodeHostBuilder =

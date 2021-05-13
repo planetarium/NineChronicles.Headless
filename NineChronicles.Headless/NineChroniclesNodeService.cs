@@ -28,6 +28,7 @@ using Serilog.Events;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using StrictRenderer =
     Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer<Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>>;
+using Libplanet.Headless;
 
 namespace NineChronicles.Headless
 {
@@ -274,6 +275,62 @@ namespace NineChronicles.Headless
                 throw new Exception(
                     "--authorized-miner was set but there are no AuthorizedMinerState.");
             }
+        }
+
+        public static NineChroniclesNodeService Create(
+            NineChroniclesNodeServiceProperties properties, 
+            StandaloneContext context
+        )
+        {
+            if (context is null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            Progress<PreloadState> progress = new Progress<PreloadState>(state =>
+            {
+                context.PreloadStateSubject.OnNext(state);
+            });
+
+            if (properties.Libplanet is null)
+            {
+                throw new InvalidOperationException($"{nameof(properties.Libplanet)} is null.");
+            }
+
+            properties.Libplanet.DifferentAppProtocolVersionEncountered =
+                (Peer peer, AppProtocolVersion peerVersion, AppProtocolVersion localVersion) =>
+                {
+                    context.DifferentAppProtocolVersionEncounterSubject.OnNext(
+                        new DifferentAppProtocolVersionEncounter(peer, peerVersion, localVersion)
+                    );
+
+                    // FIXME: 일단은 버전이 다른 피어는 마주쳐도 쌩깐다.
+                    return false;
+                };
+
+            properties.Libplanet.NodeExceptionOccurred =
+                (code, message) =>
+                {
+                    context.NodeExceptionSubject.OnNext(
+                        new NodeException(code, message)
+                    );
+                };
+
+            var service = new NineChroniclesNodeService(
+                properties.MinerPrivateKey,
+                properties.Libplanet,
+                properties.Rpc,
+                preloadProgress: progress,
+                ignoreBootstrapFailure: properties.IgnoreBootstrapFailure,
+                ignorePreloadFailure: properties.IgnorePreloadFailure,
+                strictRendering: properties.StrictRender,
+                isDev: properties.Dev,
+                blockInterval: properties.BlockInterval,
+                reorgInterval: properties.ReorgInterval,
+                authorizedMiner: properties.AuthorizedMiner,
+                txLifeTime: properties.TxLifeTime);
+            service.ConfigureContext(context);
+            return service;
         }
 
         internal static IBlockPolicy<NineChroniclesActionType> GetBlockPolicy(int minimumDifficulty, int maximumTransactions) =>
