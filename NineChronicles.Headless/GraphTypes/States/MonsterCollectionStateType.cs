@@ -1,7 +1,11 @@
+using System.Collections.Generic;
 using System.Linq;
+using Bencodex.Types;
+using GraphQL;
 using GraphQL.Types;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Model.State;
+using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States.Models.Table;
 
 namespace NineChronicles.Headless.GraphTypes.States
@@ -39,6 +43,39 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context =>
                 {
                     return context.Source.RewardLevelMap.Select(kv => kv.Value).ToList();
+                });
+            Field<ListGraphType<MonsterCollectionRewardInfoType>>(
+                "totalRewards",
+                arguments: new QueryArguments(new QueryArgument<LongGraphType> {
+                    Name = "rewardLevel",
+                    Description = "The level used to calculate total rewards, including lower level rewards."
+                }),
+                resolve: context =>
+                {
+                    long rewardLevel = context.GetArgument<long>("rewardLevel", context.Source.RewardLevel);
+                    var list = context.Source.RewardLevelMap
+                        .Where(kv => kv.Key <= rewardLevel)
+                        .Select(kv => kv.Value).ToList();
+                    var map = new Dictionary<int, int>();
+                    foreach (var ri in list.SelectMany(l => l))
+                    {
+                        if (map.ContainsKey(ri.ItemId))
+                        {
+                            map[ri.ItemId] += ri.Quantity;
+                        }
+                        else
+                        {
+                            map[ri.ItemId] = ri.Quantity;
+                        }
+                    }
+
+                    var result = map
+                        .Select(
+                            kv =>
+                                new MonsterCollectionRewardSheet.RewardInfo(kv.Key.ToString(), kv.Value.ToString())
+                        )
+                        .ToList();
+                    return result;
                 });
         }
     }

@@ -34,6 +34,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     itemId
                     quantity
                 }
+                totalRewards {
+                    itemId
+                    quantity
+                }
             }";
             MonsterCollectionState state = new MonsterCollectionState(default, 1, 2, Fixtures.TableSheetsFX.MonsterCollectionRewardSheet);
             var ri = new MonsterCollectionRewardSheet.RewardInfo("1", "1", "1");
@@ -102,7 +106,57 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                             ["quantity"] = 80,
                         },
                     },
-                }
+                },
+                ["totalRewards"] = new List<object>
+                {
+                    new Dictionary<string, object>
+                    {
+                        ["itemId"] = 400000,
+                        ["quantity"] = 80 * (int) rewardLevel,
+                    },
+                },
+            };
+            Assert.Equal(expected, queryResult.Data);
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(2)]
+        [InlineData(3)]
+        [InlineData(4)]
+        public async Task Query_With_RewardLevel(int rewardLevel)
+        {
+            string query = $@"{{
+                totalRewards(rewardLevel: {rewardLevel}) {{
+                    itemId
+                    quantity
+                }}
+            }}";
+            MonsterCollectionState state = new MonsterCollectionState(default, 1, 2, Fixtures.TableSheetsFX.MonsterCollectionRewardSheet);
+            var ri = new MonsterCollectionRewardSheet.RewardInfo("1", "1", "1");
+            var result = new MonsterCollectionResult(default, default, new List<MonsterCollectionRewardSheet.RewardInfo>
+            {
+                ri
+            });
+            state.UpdateRewardMap(rewardLevel, result, 4);
+
+            var queryResult = await ExecuteQueryAsync<MonsterCollectionStateType>(query, source: state);
+            Assert.Null(queryResult.Errors);
+            var totalRewards = new List<object>();
+            if (rewardLevel > 0)
+            {
+                totalRewards.Add(new Dictionary<string, object>
+                    {
+                        ["itemId"] = 400000,
+                        ["quantity"] = 80 * rewardLevel,
+                    }
+                );
+            }
+
+            var expected = new Dictionary<string, object>
+            {
+                ["totalRewards"] = totalRewards,
             };
             Assert.Equal(expected, queryResult.Data);
         }
