@@ -59,6 +59,19 @@ namespace NineChronicles.Headless
 
         public PrivateKey? MinerPrivateKey { get; set; }
 
+        static NineChroniclesNodeService()
+        {
+            try
+            {
+                Libplanet.Crypto.CryptoConfig.CryptoBackend = new Secp256K1CryptoBackend<SHA256>();
+                Log.Debug("Secp256K1CryptoBackend initialized.");
+            }
+            catch (Exception e)
+            {
+                Log.Error("Secp256K1CryptoBackend initialize failed. Use default backend. {e}", e);
+            }
+        }
+
         public NineChroniclesNodeService(
             PrivateKey? minerPrivateKey,
             LibplanetNodeServiceProperties<NineChroniclesActionType> properties,
@@ -77,16 +90,6 @@ namespace NineChronicles.Headless
             MinerPrivateKey = minerPrivateKey;
             Properties = properties;
             RpcProperties = rpcNodeServiceProperties;
-
-            try
-            {
-                Libplanet.Crypto.CryptoConfig.CryptoBackend = new Secp256K1CryptoBackend<SHA256>();
-                Log.Debug("Secp256K1CryptoBackend initialized.");
-            }
-            catch(Exception e)
-            {
-                Log.Error("Secp256K1CryptoBackend initialize failed. Use default backend. {e}", e);
-            }
 
             LogEventLevel logLevel = LogEventLevel.Debug;
             var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
