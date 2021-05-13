@@ -319,7 +319,15 @@ namespace NineChronicles.Headless
         
         public Task<bool> CheckPeer(string addr) => NodeService?.CheckPeer(addr) ?? throw new InvalidOperationException();
 
-        public Task StartAsync(CancellationToken cancellationToken) => NodeService.StartAsync(cancellationToken);
+        public Task StartAsync(CancellationToken cancellationToken) 
+        {
+            if (!Properties.NoMiner)
+            {
+                StartMining();
+            }
+
+            return NodeService.StartAsync(cancellationToken);
+        }
 
         public Task StopAsync(CancellationToken cancellationToken) => NodeService.StopAsync(cancellationToken);
 

@@ -338,12 +338,6 @@ namespace NineChronicles.Headless.Executable
                         authorizedMiner: authorizedMiner,
                         txLifeTime: TimeSpan.FromMinutes(txLifeTime));
                 standaloneContext.NineChroniclesNodeService = nineChroniclesNodeService;
-
-                if (!properties.NoMiner)
-                {
-                    nineChroniclesNodeService.StartMining();
-                }
-
                 IHostBuilder nineChroniclesNodeHostBuilder = Host.CreateDefaultBuilder();
                 nineChroniclesNodeHostBuilder =
                     nineChroniclesNodeService.Configure(nineChroniclesNodeHostBuilder);
