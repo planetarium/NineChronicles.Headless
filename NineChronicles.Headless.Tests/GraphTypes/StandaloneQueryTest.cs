@@ -171,7 +171,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var genesis = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock();
 
             var service = ServiceBuilder.CreateNineChroniclesNodeService(genesis);
-            StandaloneServices.ConfigureStandaloneContext(service, StandaloneContextFx);
+            service.ConfigureContext(StandaloneContextFx);
 
             var result = await ExecuteQueryAsync("query { nodeStatus { stagedTxIds } }");
             var expectedResult = new Dictionary<string, object>()

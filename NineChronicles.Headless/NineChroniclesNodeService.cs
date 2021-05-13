@@ -335,5 +335,21 @@ namespace NineChronicles.Headless
         {
             NodeService?.Dispose();
         }
+
+        internal void ConfigureContext(StandaloneContext standaloneContext)
+        {
+            standaloneContext.BlockChain = Swarm.BlockChain;
+            standaloneContext.Store = Store;
+            BootstrapEnded.WaitAsync().ContinueWith((task) =>
+            {
+                standaloneContext.BootstrapEnded = true;
+                standaloneContext.NodeStatusSubject.OnNext(standaloneContext.NodeStatus);
+            });
+            PreloadEnded.WaitAsync().ContinueWith((task) =>
+            {
+                standaloneContext.PreloadEnded = true;
+                standaloneContext.NodeStatusSubject.OnNext(standaloneContext.NodeStatus);
+            });
+        }
     }
 }

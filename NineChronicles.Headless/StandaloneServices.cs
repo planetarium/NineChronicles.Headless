@@ -67,27 +67,8 @@ namespace NineChronicles.Headless
                 reorgInterval: reorgInterval,
                 authorizedMiner: authorizedMiner,
                 txLifeTime: txLifeTime);
-            service.ConfigureStandaloneContext(standaloneContext);
+            service.ConfigureContext(standaloneContext);
             return service;
-        }
-
-        internal static void ConfigureStandaloneContext(this NineChroniclesNodeService service, StandaloneContext? standaloneContext)
-        {
-            if (!(standaloneContext is null))
-            {
-                standaloneContext.BlockChain = service.Swarm.BlockChain;
-                standaloneContext.Store = service.Store;
-                service.BootstrapEnded.WaitAsync().ContinueWith((task) =>
-                {
-                    standaloneContext.BootstrapEnded = true;
-                    standaloneContext.NodeStatusSubject.OnNext(standaloneContext.NodeStatus);
-                });
-                service.PreloadEnded.WaitAsync().ContinueWith((task) =>
-                {
-                    standaloneContext.PreloadEnded = true;
-                    standaloneContext.NodeStatusSubject.OnNext(standaloneContext.NodeStatus);
-                });
-            }
         }
     }
 }
