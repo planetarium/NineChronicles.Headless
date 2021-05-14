@@ -18,6 +18,7 @@ using Libplanet.KeyStore;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
 using Libplanet.Tx;
+using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
@@ -563,6 +564,35 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 .First()
                 .As<Dictionary<string, object>>()["inspection"];
             Assert.Equal(transaction.Actions.First().PlainValue.Inspection, plainValue);
+        }
+
+        [Fact]
+        public async Task TransferNCGHistories()
+        {
+            PrivateKey minerPrivateKey = new PrivateKey();
+            Address sender = minerPrivateKey.ToAddress(), recipient = new PrivateKey().ToAddress();
+
+            await BlockChain.MineBlock(sender);
+            await BlockChain.MineBlock(recipient);
+
+            var currency = new GoldCurrencyState((Dictionary)BlockChain.GetState(Addresses.GoldCurrency)).Currency;
+            var transferAsset = new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 10, 0));
+            var tx = BlockChain.MakeTransaction(minerPrivateKey, new PolymorphicAction<ActionBase>[] { transferAsset });
+            var block = await BlockChain.MineBlock(minerPrivateKey.ToAddress());
+            Assert.NotNull(StandaloneContextFx.Store?.GetTxExecution(block.Hash, tx.Id));
+
+            var blockHashHex = ByteUtil.Hex(block.Hash.ToByteArray());
+            var result = await ExecuteQueryAsync($"{{ transferNCGHistories(blockHash: \"{blockHashHex}\") {{ sender recipient amount }} }}");
+            Assert.Null(result.Errors);
+            Assert.Equal(new List<object>
+            {
+                new Dictionary<string, object>
+                {
+                    ["sender"] = transferAsset.Sender.ToString(),
+                    ["recipient"] = transferAsset.Recipient.ToString(),
+                    ["amount"] = transferAsset.Amount.RawValue,
+                }
+            }, result.Data.As<Dictionary<string, object>>()["transferNCGHistories"]);
         }
 
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)
