@@ -74,15 +74,7 @@ namespace NineChronicles.Headless.GraphTypes
             ).AuthorizeWithLocalPolicyIf(useSecretToken);
 
             Field<NonNullGraphType<NodeStatusType>>(
-                name: "nodeStatus",
-                resolve: context => new NodeStatusType
-                {
-                    BootstrapEnded = standaloneContext.BootstrapEnded,
-                    PreloadEnded = standaloneContext.PreloadEnded,
-                    IsMining = standaloneContext.IsMining,
-                    BlockChain = standaloneContext.BlockChain,
-                    Store = standaloneContext.Store,
-                }
+                name: "nodeStatus"
             );
 
             Field<NonNullGraphType<Libplanet.Explorer.Queries.ExplorerQuery<NCAction>>>(
