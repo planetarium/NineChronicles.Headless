@@ -13,7 +13,7 @@ namespace NineChronicles.Headless.Executable.Store
         {
         }
 
-        public IValue? GetState(string stateKey, BlockHash? blockHash = null, Guid? chainId = null) =>
+        public IValue? GetState(string stateKey, BlockHash? blockHash = null) =>
             null;
 
         public bool ContainsBlockStates(BlockHash blockHash) =>
