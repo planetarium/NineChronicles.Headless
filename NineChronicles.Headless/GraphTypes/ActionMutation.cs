@@ -2,24 +2,22 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
-using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
-using Libplanet.Crypto;
+using Libplanet.Explorer.GraphTypes;
+using Libplanet.Tx;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using Libplanet.Explorer.GraphTypes;
-using Libplanet.Tx;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    public class ActionMutation : ObjectGraphType<NineChroniclesNodeService>
+    public class ActionMutation : ObjectGraphType
     {
-        public ActionMutation()
+        public ActionMutation(NineChroniclesNodeService service)
         {
             Field<NonNullGraphType<TxIdType>>("createAvatar",
                 description: "Create new avatar.",
@@ -59,7 +57,6 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        NineChroniclesNodeService service = context.Source;
                         if (!(service.MinerPrivateKey is { } privateKey))
                         {
                             throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
@@ -86,8 +83,8 @@ namespace NineChronicles.Headless.GraphTypes
                             name = avatarName,
                         };
 
-                        var actions = new PolymorphicAction<ActionBase>[] { action };
-                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(privateKey, actions);
+                        var actions = new NineChroniclesActionType[] { action };
+                        Transaction<NineChroniclesActionType> tx = blockChain.MakeTransaction(privateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -147,7 +144,6 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        NineChroniclesNodeService service = context.Source;
                         BlockChain<NineChroniclesActionType>? blockChain = service.Swarm.BlockChain;
                         if (blockChain is null)
                         {
@@ -175,8 +171,8 @@ namespace NineChronicles.Headless.GraphTypes
                             foods = consumableIds,
                         };
 
-                        var actions = new PolymorphicAction<ActionBase>[] { action };
-                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(context.Source.MinerPrivateKey, actions);
+                        var actions = new NineChroniclesActionType[] { action };
+                        Transaction<NineChroniclesActionType> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -216,8 +212,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        NineChroniclesNodeService service = context.Source;
-                        BlockChain<NineChroniclesActionType>? blockChain = service.Swarm?.BlockChain;
+                        BlockChain<NineChroniclesActionType>? blockChain = service.BlockChain;
                         if (blockChain is null)
                         {
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
@@ -236,8 +231,8 @@ namespace NineChronicles.Headless.GraphTypes
                             SubRecipeId = subRecipeId
                         };
 
-                        var actions = new PolymorphicAction<ActionBase>[] { action };
-                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(context.Source.MinerPrivateKey, actions);
+                        var actions = new NineChroniclesActionType[] { action };
+                        Transaction<NineChroniclesActionType> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -277,7 +272,6 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        NineChroniclesNodeService service = context.Source;
                         if (!(service.MinerPrivateKey is { } privatekey))
                         {
                             throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
@@ -301,8 +295,8 @@ namespace NineChronicles.Headless.GraphTypes
                             materialId = materialId,
                         };
 
-                        var actions = new PolymorphicAction<ActionBase>[] { action };
-                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(privatekey, actions);
+                        var actions = new NineChroniclesActionType[] { action };
+                        Transaction<NineChroniclesActionType> tx = blockChain.MakeTransaction(privatekey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -341,7 +335,6 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        NineChroniclesNodeService service = context.Source;
                         if (!(service.MinerPrivateKey is { } privateKey))
                         {
                             throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
@@ -365,8 +358,8 @@ namespace NineChronicles.Headless.GraphTypes
                             productId = productId,
                         };
 
-                        var actions = new PolymorphicAction<ActionBase>[] { action };
-                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(privateKey, actions);
+                        var actions = new NineChroniclesActionType[] { action };
+                        Transaction<NineChroniclesActionType> tx = blockChain.MakeTransaction(privateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -399,7 +392,6 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        NineChroniclesNodeService service = context.Source;
                         if (!(service.MinerPrivateKey is { } privateKey))
                         {
                             throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
@@ -409,7 +401,6 @@ namespace NineChronicles.Headless.GraphTypes
                         {
                             throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
                         }
-
 
                         Address sellerAvatarAddress = context.GetArgument<Address>("sellerAvatarAddress");
                         Guid itemId = context.GetArgument<Guid>("itemId");
@@ -425,8 +416,8 @@ namespace NineChronicles.Headless.GraphTypes
                             price = price
                         };
 
-                        var actions = new PolymorphicAction<ActionBase>[] { action };
-                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(privateKey, actions);
+                        var actions = new NineChroniclesActionType[] { action };
+                        Transaction<NineChroniclesActionType> tx = blockChain.MakeTransaction(privateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -450,13 +441,12 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        NineChroniclesNodeService service = context.Source;
                         if (!(service.MinerPrivateKey is { } privateKey))
                         {
                             throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
                         }
 
-                        if (!(service.Swarm?.BlockChain is { } blockChain))
+                        if (!(service.BlockChain is { } blockChain))
                         {
                             throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
                         }
@@ -468,8 +458,8 @@ namespace NineChronicles.Headless.GraphTypes
                             avatarAddress = avatarAddress
                         };
 
-                        var actions = new PolymorphicAction<ActionBase>[] { action };
-                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(privateKey, actions);
+                        var actions = new NineChroniclesActionType[] { action };
+                        Transaction<NineChroniclesActionType> tx = blockChain.MakeTransaction(privateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -504,8 +494,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        NineChroniclesNodeService service = context.Source;
-                        BlockChain<NineChroniclesActionType>? blockChain = service.Swarm?.BlockChain;
+                        BlockChain<NineChroniclesActionType>? blockChain = service.BlockChain;
                         if (blockChain is null)
                         {
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
@@ -522,8 +511,8 @@ namespace NineChronicles.Headless.GraphTypes
                             slotIndex = slotIndex,
                         };
 
-                        var actions = new PolymorphicAction<ActionBase>[] { action };
-                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(context.Source.MinerPrivateKey, actions);
+                        var actions = new NineChroniclesActionType[] { action };
+                        Transaction<NineChroniclesActionType> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)

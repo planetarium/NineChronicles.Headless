@@ -74,7 +74,8 @@ namespace NineChronicles.Headless.GraphTypes
             ).AuthorizeWithLocalPolicyIf(useSecretToken);
 
             Field<NonNullGraphType<NodeStatusType>>(
-                name: "nodeStatus"
+                name: "nodeStatus",
+                resolve: _ => new NodeStatusType(standaloneContext)
             );
 
             Field<NonNullGraphType<Libplanet.Explorer.Queries.ExplorerQuery<NCAction>>>(

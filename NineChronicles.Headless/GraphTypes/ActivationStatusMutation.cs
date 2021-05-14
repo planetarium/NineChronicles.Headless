@@ -2,20 +2,16 @@ using System;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
-using Libplanet.Action;
-using Libplanet.Blockchain;
-using Libplanet.Crypto;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
-using Log = Serilog.Log;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    public class ActivationStatusMutation : ObjectGraphType<NineChroniclesNodeService>
+    public class ActivationStatusMutation : ObjectGraphType
     {
-        public ActivationStatusMutation()
+        public ActivationStatusMutation(NineChroniclesNodeService service)
         {
             Field<NonNullGraphType<BooleanGraphType>>("activateAccount",
                 arguments: new QueryArguments(
@@ -29,7 +25,6 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         string encodedActivationKey =
                             context.GetArgument<string>("encodedActivationKey");
-                        NineChroniclesNodeService service = context.Source;
                         // FIXME: Private key may not exists at this moment.
                         if (!(service.MinerPrivateKey is { } privateKey))
                         {
