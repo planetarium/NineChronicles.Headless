@@ -17,7 +17,6 @@ namespace NineChronicles.Headless
         {
             NineChroniclesNodeService service =
                 NineChroniclesNodeService.Create(properties, context);
-            context.NineChroniclesNodeService = service;
             
             return builder.ConfigureServices(services =>
             {
