@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using Amazon;
 using Amazon.CognitoIdentity;
 using Amazon.Runtime;
@@ -16,6 +9,7 @@ using Libplanet.Crypto;
 using Libplanet.Extensions.Cocona.Commands;
 using Libplanet.KeyStore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.Executable.Commands;
 using NineChronicles.Headless.Executable.IO;
@@ -24,6 +18,13 @@ using Org.BouncyCastle.Security;
 using Sentry;
 using Serilog;
 using Serilog.Formatting.Compact;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace NineChronicles.Headless.Executable
 {
@@ -271,7 +272,14 @@ namespace NineChronicles.Headless.Executable
                     );
                 }
 
-                RpcNodeServiceProperties? rpcProperties = null;
+                if (!noMiner && minerPrivateKeyString is null)
+                {
+                    throw new CommandExitedException(
+                        "--miner-private-key must be present to turn on mining at libplanet node.",
+                        -1
+                    );
+                }
+
                 var properties = NineChroniclesNodeServiceProperties
                     .GenerateLibplanetNodeServiceProperties(
                         appProtocolVersionToken,
@@ -295,11 +303,9 @@ namespace NineChronicles.Headless.Executable
                         demandBuffer: demandBuffer,
                         staticPeerStrings: staticPeerStrings);
 
-
+                IHostBuilder ncHostBuilder = Host.CreateDefaultBuilder();
                 if (rpcServer)
                 {
-                    rpcProperties = NineChroniclesNodeServiceProperties
-                        .GenerateRpcNodeServiceProperties(rpcListenHost, rpcListenPort);
                     properties.Render = true;
                     properties.LogActionRenders = true;
                 }
@@ -315,40 +321,28 @@ namespace NineChronicles.Headless.Executable
                 var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
                 {
                     MinerPrivateKey = minerPrivateKey,
-                    Rpc = rpcProperties,
-                    Libplanet = properties
+                    Libplanet = properties,
+                    Dev = isDev,
+                    StrictRender = strictRendering,
+                    BlockInterval = blockInterval,
+                    ReorgInterval = reorgInterval,
+                    AuthorizedMiner = authorizedMiner,
+                    TxLifeTime = TimeSpan.FromMinutes(txLifeTime),
                 };
-
-                NineChroniclesNodeService nineChroniclesNodeService =
-                    StandaloneServices.CreateHeadless(
-                        nineChroniclesProperties,
-                        standaloneContext,
-                        strictRendering: strictRendering,
-                        isDev: isDev,
-                        blockInterval: blockInterval,
-                        reorgInterval: reorgInterval,
-                        authorizedMiner: authorizedMiner,
-                        txLifeTime: TimeSpan.FromMinutes(txLifeTime));
-                standaloneContext.NineChroniclesNodeService = nineChroniclesNodeService;
-
-                if (!properties.NoMiner)
+                ncHostBuilder.ConfigureServices(services =>
                 {
-                    if (minerPrivateKey is null)
-                    {
-                        throw new CommandExitedException(
-                            "--miner-private-key must be present to turn on mining at libplanet node.",
-                            -1
-                        );
-                    }
-                    
-                    nineChroniclesNodeService.StartMining();
+                    services.AddSingleton(_ => standaloneContext);
+                });
+                ncHostBuilder.UseNineChroniclesNode(nineChroniclesProperties, standaloneContext);
+                if (rpcServer)
+                {
+                    ncHostBuilder.UseNineChroniclesRPC(
+                        NineChroniclesNodeServiceProperties
+                        .GenerateRpcNodeServiceProperties(rpcListenHost, rpcListenPort)
+                    );
                 }
-
-                IHostBuilder nineChroniclesNodeHostBuilder = Host.CreateDefaultBuilder();
-                nineChroniclesNodeHostBuilder =
-                    nineChroniclesNodeService.Configure(nineChroniclesNodeHostBuilder);
                 tasks.Add(
-                    nineChroniclesNodeHostBuilder.RunConsoleAsync(Context.CancellationToken));
+                    ncHostBuilder.RunConsoleAsync(Context.CancellationToken));
 
                 await Task.WhenAll(tasks);
             }
