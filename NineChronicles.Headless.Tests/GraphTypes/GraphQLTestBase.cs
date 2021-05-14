@@ -86,7 +86,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             services.AddSingleton(_ => ncService);
             ServiceProvider serviceProvider = services.BuildServiceProvider();
             Schema = new StandaloneSchema(serviceProvider);
-            Schema.Subscription.As<StandaloneSubscription>().RegisterTipChangedSubscription();
 
             DocumentExecutor = new DocumentExecuter();
         }
