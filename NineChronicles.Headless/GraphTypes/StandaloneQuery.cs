@@ -85,7 +85,7 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            Field<NonNullGraphType<Libplanet.Explorer.Queries.Query<NCAction>>>(
+            Field<NonNullGraphType<Libplanet.Explorer.Queries.ExplorerQuery<NCAction>>>(
                 name: "chainQuery",
                 resolve: context => new { }
             );
