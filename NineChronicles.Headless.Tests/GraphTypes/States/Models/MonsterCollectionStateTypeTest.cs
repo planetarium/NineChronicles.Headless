@@ -38,6 +38,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     itemId
                     quantity
                 }
+                claimableBlockIndex
             }";
             MonsterCollectionState state = new MonsterCollectionState(default, 1, 2, Fixtures.TableSheetsFX.MonsterCollectionRewardSheet);
             var ri = new MonsterCollectionRewardSheet.RewardInfo("1", "1", "1");
@@ -115,6 +116,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                         ["quantity"] = 80 * (int) rewardLevel,
                     },
                 },
+                ["claimableBlockIndex"] = 50404L,
             };
             Assert.Equal(expected, queryResult.Data);
         }

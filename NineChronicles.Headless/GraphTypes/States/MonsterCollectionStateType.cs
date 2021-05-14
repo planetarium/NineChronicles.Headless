@@ -1,6 +1,6 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet.Explorer.GraphTypes;
@@ -77,6 +77,10 @@ namespace NineChronicles.Headless.GraphTypes.States
                         .ToList();
                     return result;
                 });
+            Field<NonNullGraphType<LongGraphType>>(
+                "claimableBlockIndex",
+                resolve: context => Math.Max(context.Source.ReceivedBlockIndex, context.Source.StartedBlockIndex) +
+                                    MonsterCollectionState.RewardInterval);
         }
     }
 }
