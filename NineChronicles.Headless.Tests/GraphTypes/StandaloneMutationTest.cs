@@ -99,27 +99,25 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task ActivateAccount()
         {
-            var blockChain = StandaloneContextFx.BlockChain!;
-
             var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
             var privateKey = new PrivateKey();
             (ActivationKey activationKey, PendingActivationState pendingActivation) =
                 ActivationKey.Create(privateKey, nonce);
             PolymorphicAction<ActionBase> action = new CreatePendingActivation(pendingActivation);
-            blockChain.MakeTransaction(AdminPrivateKey, new[] { action });
-            await blockChain.MineBlock(AdminAddress);
+            BlockChain.MakeTransaction(AdminPrivateKey, new[] { action });
+            await BlockChain.MineBlock(AdminAddress);
 
             var encodedActivationKey = activationKey.Encode();
             var queryResult = await ExecuteQueryAsync(
                 $"mutation {{ activationStatus {{ activateAccount(encodedActivationKey: \"{encodedActivationKey}\") }} }}");
-            await blockChain.MineBlock(AdminAddress);
+            await BlockChain.MineBlock(AdminAddress);
 
             var result = (bool)queryResult.Data
                 .As<Dictionary<string, object>>()["activationStatus"]
                 .As<Dictionary<string, object>>()["activateAccount"];
             Assert.True(result);
 
-            var state = (Bencodex.Types.Dictionary)blockChain.GetState(
+            var state = (Bencodex.Types.Dictionary)BlockChain.GetState(
                 ActivatedAccountsState.Address);
             var activatedAccountsState = new ActivatedAccountsState(state);
             Address userAddress = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!.ToAddress();
@@ -130,28 +128,27 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task Transfer()
         {
             NineChroniclesNodeService service = StandaloneContextFx.NineChroniclesNodeService!;
-            BlockChain<PolymorphicAction<ActionBase>> blockChain = StandaloneContextFx.BlockChain!;
             Currency goldCurrency = new GoldCurrencyState(
-                (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
+                (Dictionary)BlockChain.GetState(GoldCurrencyState.Address)
             ).Currency;
 
             Address senderAddress = service.MinerPrivateKey!.ToAddress();
             var store = service.Store;
-            await blockChain.MineBlock(senderAddress);
-            await blockChain.MineBlock(senderAddress);
+            await BlockChain.MineBlock(senderAddress);
+            await BlockChain.MineBlock(senderAddress);
 
             // 10 + 10 (mining rewards)
             Assert.Equal(
                 20 * goldCurrency,
-                blockChain.GetBalance(senderAddress, goldCurrency)
+                BlockChain.GetBalance(senderAddress, goldCurrency)
             );
 
             Address recipient = new PrivateKey().ToAddress();
-            long txNonce = blockChain.GetNextTxNonce(senderAddress);
+            long txNonce = BlockChain.GetNextTxNonce(senderAddress);
             var query = $"mutation {{ transfer(recipient: \"{recipient}\", txNonce: {txNonce}, amount: \"17.5\") }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
 
-            var stagedTxIds = blockChain.GetStagedTransactionIds().ToImmutableList();
+            var stagedTxIds = BlockChain.GetStagedTransactionIds().ToImmutableList();
             Assert.Single(stagedTxIds);
 
             var expectedResult = new Dictionary<string, object>
@@ -161,18 +158,18 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Null(result.Errors);
             Assert.Equal(expectedResult, result.Data);
 
-            await blockChain.MineBlock(recipient);
+            await BlockChain.MineBlock(recipient);
 
             // 10 + 10 - 17.5(transfer)
             Assert.Equal(
                 FungibleAssetValue.Parse(goldCurrency, "2.5"),
-                blockChain.GetBalance(senderAddress, goldCurrency)
+                BlockChain.GetBalance(senderAddress, goldCurrency)
             );
 
             // 0 + 17.5(transfer) + 10(mining reward)
             Assert.Equal(
                 FungibleAssetValue.Parse(goldCurrency, "27.5"),
-                blockChain.GetBalance(recipient, goldCurrency)
+                BlockChain.GetBalance(recipient, goldCurrency)
             );
 
         }
@@ -181,28 +178,27 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task TransferGold()
         {
             NineChroniclesNodeService service = StandaloneContextFx.NineChroniclesNodeService!;
-            BlockChain<PolymorphicAction<ActionBase>> blockChain = StandaloneContextFx.BlockChain!;
             Currency goldCurrency = new GoldCurrencyState(
-                (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
+                (Dictionary)BlockChain.GetState(GoldCurrencyState.Address)
             ).Currency;
 
             Address senderAddress = service.MinerPrivateKey!.ToAddress();
 
             var store = service.Store;
-            await blockChain.MineBlock(senderAddress);
-            await blockChain.MineBlock(senderAddress);
+            await BlockChain.MineBlock(senderAddress);
+            await BlockChain.MineBlock(senderAddress);
 
             // 10 + 10 (mining rewards)
             Assert.Equal(
                 20 * goldCurrency,
-                blockChain.GetBalance(senderAddress, goldCurrency)
+                BlockChain.GetBalance(senderAddress, goldCurrency)
             );
 
             Address recipient = new PrivateKey().ToAddress();
             var query = $"mutation {{ transferGold(recipient: \"{recipient}\", amount: \"17.5\") }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
 
-            var stagedTxIds = blockChain.GetStagedTransactionIds().ToImmutableList();
+            var stagedTxIds = BlockChain.GetStagedTransactionIds().ToImmutableList();
             Assert.Single(stagedTxIds);
 
             var expectedResult = new Dictionary<string, object>
@@ -212,18 +208,18 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Null(result.Errors);
             Assert.Equal(expectedResult, result.Data);
 
-            await blockChain.MineBlock(recipient);
+            await BlockChain.MineBlock(recipient);
 
             // 10 + 10 - 17.5(transfer)
             Assert.Equal(
                 FungibleAssetValue.Parse(goldCurrency, "2.5"),
-                blockChain.GetBalance(senderAddress, goldCurrency)
+                BlockChain.GetBalance(senderAddress, goldCurrency)
             );
 
             // 0 + 17.5(transfer) + 10(mining reward)
             Assert.Equal(
                 FungibleAssetValue.Parse(goldCurrency, "27.5"),
-                blockChain.GetBalance(recipient, goldCurrency)
+                BlockChain.GetBalance(recipient, goldCurrency)
             );
         }
 
