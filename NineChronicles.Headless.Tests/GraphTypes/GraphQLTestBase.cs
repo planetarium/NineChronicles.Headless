@@ -79,11 +79,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var services = new ServiceCollection();
             services.AddSingleton(StandaloneContextFx);
             services.AddSingleton<IConfiguration>(configuration);
-            services.AddSingleton(_ => ServiceBuilder.CreateNineChroniclesNodeService(genesisBlock, new PrivateKey()));
             services.AddGraphTypes();
             services.AddLibplanetExplorer<NCAction>();
             services.AddSingleton<StateQuery>();
-            services.AddSingleton(_ => ncService);
+            services.AddSingleton(ncService);
             ServiceProvider serviceProvider = services.BuildServiceProvider();
             Schema = new StandaloneSchema(serviceProvider);
 
