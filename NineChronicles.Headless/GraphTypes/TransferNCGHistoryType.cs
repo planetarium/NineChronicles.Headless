@@ -7,6 +7,12 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public TransferNCGHistoryType()
         {
+            Field<NonNullGraphType<ByteStringType>>(
+                name: "blockHash",
+                resolve: context => context.Source.BlockHash.ToByteArray());
+            Field<NonNullGraphType<ByteStringType>>(
+                name: "txId",
+                resolve: context => context.Source.TxId.ToByteArray());
             Field<NonNullGraphType<AddressType>>(
                 name: "sender",
                 resolve: context => context.Source.Sender);

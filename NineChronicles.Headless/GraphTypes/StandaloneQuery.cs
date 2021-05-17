@@ -114,6 +114,8 @@ namespace NineChronicles.Headless.GraphTypes
                                 ? (rawTransferNcgHistories[1], rawTransferNcgHistories[0])
                                 : (rawTransferNcgHistories[0], rawTransferNcgHistories[1]);
                         return new TransferNCGHistory(
+                            txSuccess.BlockHash,
+                            txSuccess.TxId,
                             senderAddress,
                             recipientAddress,
                             amount);

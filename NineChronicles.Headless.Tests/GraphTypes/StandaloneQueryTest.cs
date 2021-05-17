@@ -582,12 +582,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.NotNull(StandaloneContextFx.Store?.GetTxExecution(block.Hash, tx.Id));
 
             var blockHashHex = ByteUtil.Hex(block.Hash.ToByteArray());
-            var result = await ExecuteQueryAsync($"{{ transferNCGHistories(blockHash: \"{blockHashHex}\") {{ sender recipient amount }} }}");
+            var result = await ExecuteQueryAsync($"{{ transferNCGHistories(blockHash: \"{blockHashHex}\") {{ blockHash txId sender recipient amount }} }}");
             Assert.Null(result.Errors);
             Assert.Equal(new List<object>
             {
                 new Dictionary<string, object>
                 {
+                    ["blockHash"] = block.Hash.ToString(),
+                    ["txId"] = tx.Id.ToString(),
                     ["sender"] = transferAsset.Sender.ToString(),
                     ["recipient"] = transferAsset.Recipient.ToString(),
                     ["amount"] = transferAsset.Amount.RawValue,
