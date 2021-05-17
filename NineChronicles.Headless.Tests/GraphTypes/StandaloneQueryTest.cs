@@ -578,7 +578,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var currency = new GoldCurrencyState((Dictionary)BlockChain.GetState(Addresses.GoldCurrency)).Currency;
             var transferAsset = new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 10, 0));
             var tx = BlockChain.MakeTransaction(minerPrivateKey, new PolymorphicAction<ActionBase>[] { transferAsset });
-            var block = await BlockChain.MineBlock(minerPrivateKey.ToAddress());
+            var block = await BlockChain.MineBlock(minerPrivateKey.ToAddress(), append: false);
+            BlockChain.Append(block);
             Assert.NotNull(StandaloneContextFx.Store?.GetTxExecution(block.Hash, tx.Id));
 
             var blockHashHex = ByteUtil.Hex(block.Hash.ToByteArray());
@@ -592,7 +593,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     ["txId"] = tx.Id.ToString(),
                     ["sender"] = transferAsset.Sender.ToString(),
                     ["recipient"] = transferAsset.Recipient.ToString(),
-                    ["amount"] = transferAsset.Amount.RawValue,
+                    ["amount"] = transferAsset.Amount.GetQuantityString(),
                 }
             }, result.Data.As<Dictionary<string, object>>()["transferNCGHistories"]);
         }
