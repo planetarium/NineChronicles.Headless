@@ -19,11 +19,7 @@ using Sentry;
 using Serilog;
 using Serilog.Formatting.Compact;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace NineChronicles.Headless.Executable
@@ -63,11 +59,11 @@ namespace NineChronicles.Headless.Executable
 
         [PrimaryCommand]
         public async Task Run(
-            bool noMiner = false,
             [Option("app-protocol-version", new[] { 'V' }, Description = "App protocol version token")]
-            string? appProtocolVersionToken = null,
+            string appProtocolVersionToken,
             [Option('G')]
-            string? genesisBlockPath = null,
+            string genesisBlockPath,
+            bool noMiner = false,
             [Option('H')]
             string? host = null,
             [Option('P')]
@@ -217,22 +213,6 @@ namespace NineChronicles.Headless.Executable
             }
 
             Log.Logger = loggerConf.CreateLogger();
-
-            if (appProtocolVersionToken is null)
-            {
-                throw new CommandExitedException(
-                    "--app-protocol-version must be present.",
-                    -1
-                );
-            }
-
-            if (genesisBlockPath is null)
-            {
-                throw new CommandExitedException(
-                    "--genesis-block-path must be present.",
-                    -1
-                );
-            }
 
             if (!noMiner && minerPrivateKeyString is null)
             {
