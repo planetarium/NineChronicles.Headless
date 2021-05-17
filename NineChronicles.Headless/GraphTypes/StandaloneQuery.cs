@@ -1,4 +1,6 @@
 #nullable enable
+using System;
+using System.Linq;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL;
@@ -67,6 +69,63 @@ namespace NineChronicles.Headless.GraphTypes
                     return new Codec().Encode(state);
                 }
             );
+
+            Field<NonNullGraphType<ListGraphType<NonNullGraphType<TransferNCGHistoryType>>>>(
+                "transferNCGHistories",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ByteStringType>>
+                    {
+                        Name = "blockHash"
+                    },
+                    new QueryArgument<AddressType>
+                    {
+                        Name = "recipient"
+                    }
+                ), resolve: context =>
+                {
+                    BlockHash blockHash = new BlockHash(context.GetArgument<byte[]>("blockHash"));
+
+                    if (!(standaloneContext.Store is { } store))
+                    {
+                        throw new InvalidOperationException();
+                    }
+
+                    if (!(store.GetBlock<NCAction>(blockHash) is { } block))
+                    {
+                        throw new ArgumentException("blockHash");
+                    }
+
+                    var recipient = context.GetArgument<Address?>("recipient");
+
+                    var txs = block.Transactions.Where(tx =>
+                        tx.Actions.Count == 1 &&
+                        tx.Actions.First().InnerAction is TransferAsset transferAsset &&
+                        (!recipient.HasValue || transferAsset.Recipient == recipient) &&
+                        transferAsset.Amount.Currency.Ticker == "NCG" &&
+                        store.GetTxExecution(blockHash, tx.Id) is TxSuccess);
+
+                    TransferNCGHistory ToTransferNCGHistory(TxSuccess txSuccess)
+                    {
+                        var rawTransferNcgHistories = txSuccess.FungibleAssetsDelta.Select(pair =>
+                                (pair.Key, pair.Value.Values.First(fav => fav.Currency.Ticker == "NCG")))
+                            .ToArray();
+                        var ((senderAddress, _), (recipientAddress, amount)) =
+                            rawTransferNcgHistories[0].Item2.RawValue > rawTransferNcgHistories[1].Item2.RawValue
+                                ? (rawTransferNcgHistories[1], rawTransferNcgHistories[0])
+                                : (rawTransferNcgHistories[0], rawTransferNcgHistories[1]);
+                        return new TransferNCGHistory(
+                            txSuccess.BlockHash,
+                            txSuccess.TxId,
+                            senderAddress,
+                            recipientAddress,
+                            amount);
+                    }
+
+                    var histories = txs.Select(tx =>
+                        ToTransferNCGHistory((TxSuccess) store.GetTxExecution(blockHash, tx.Id)));
+
+                    return histories;
+                });
 
             Field<KeyStoreType>(
                 name: "keyStore",
