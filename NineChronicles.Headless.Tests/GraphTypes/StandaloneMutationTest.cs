@@ -99,76 +99,56 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task ActivateAccount()
         {
-            var adminPrivateKey = new PrivateKey();
-            var adminAddress = adminPrivateKey.ToAddress();
-            var activateAccounts = new[] { adminAddress }.ToImmutableHashSet();
-
-            Block<PolymorphicAction<ActionBase>> genesis =
-                MakeGenesisBlock(adminAddress, new Currency("NCG", 2, minters: null), activateAccounts);
-            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
-            StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
-
-            var blockChain = StandaloneContextFx.BlockChain!;
-
             var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
             var privateKey = new PrivateKey();
             (ActivationKey activationKey, PendingActivationState pendingActivation) =
                 ActivationKey.Create(privateKey, nonce);
             PolymorphicAction<ActionBase> action = new CreatePendingActivation(pendingActivation);
-            blockChain.MakeTransaction(adminPrivateKey, new[] { action });
-            await blockChain.MineBlock(adminAddress);
+            BlockChain.MakeTransaction(AdminPrivateKey, new[] { action });
+            await BlockChain.MineBlock(AdminAddress);
 
             var encodedActivationKey = activationKey.Encode();
             var queryResult = await ExecuteQueryAsync(
                 $"mutation {{ activationStatus {{ activateAccount(encodedActivationKey: \"{encodedActivationKey}\") }} }}");
-            await blockChain.MineBlock(adminAddress);
+            await BlockChain.MineBlock(AdminAddress);
 
             var result = (bool)queryResult.Data
                 .As<Dictionary<string, object>>()["activationStatus"]
                 .As<Dictionary<string, object>>()["activateAccount"];
             Assert.True(result);
 
-            var state = (Bencodex.Types.Dictionary)blockChain.GetState(
+            var state = (Bencodex.Types.Dictionary)BlockChain.GetState(
                 ActivatedAccountsState.Address);
             var activatedAccountsState = new ActivatedAccountsState(state);
-            Address userAddress = service.MinerPrivateKey!.ToAddress();
+            Address userAddress = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!.ToAddress();
             Assert.True(activatedAccountsState.Accounts.Contains(userAddress));
         }
 
         [Fact]
         public async Task Transfer()
         {
-            var goldCurrency = new Currency("NCG", 2, minter: null);
-            Block<PolymorphicAction<ActionBase>> genesis =
-                MakeGenesisBlock(
-                    default,
-                    goldCurrency,
-                    ImmutableHashSet<Address>.Empty
-                );
-            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
-            StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.BlockChain;
+            NineChroniclesNodeService service = StandaloneContextFx.NineChroniclesNodeService!;
+            Currency goldCurrency = new GoldCurrencyState(
+                (Dictionary)BlockChain.GetState(GoldCurrencyState.Address)
+            ).Currency;
 
             Address senderAddress = service.MinerPrivateKey!.ToAddress();
-
-            var blockChain = StandaloneContextFx.BlockChain;
             var store = service.Store;
-            await blockChain.MineBlock(senderAddress);
-            await blockChain.MineBlock(senderAddress);
+            await BlockChain.MineBlock(senderAddress);
+            await BlockChain.MineBlock(senderAddress);
 
             // 10 + 10 (mining rewards)
             Assert.Equal(
                 20 * goldCurrency,
-                blockChain.GetBalance(senderAddress, goldCurrency)
+                BlockChain.GetBalance(senderAddress, goldCurrency)
             );
 
             Address recipient = new PrivateKey().ToAddress();
-            long txNonce = blockChain.GetNextTxNonce(senderAddress);
+            long txNonce = BlockChain.GetNextTxNonce(senderAddress);
             var query = $"mutation {{ transfer(recipient: \"{recipient}\", txNonce: {txNonce}, amount: \"17.5\") }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
 
-            var stagedTxIds = blockChain.GetStagedTransactionIds().ToImmutableList();
+            var stagedTxIds = BlockChain.GetStagedTransactionIds().ToImmutableList();
             Assert.Single(stagedTxIds);
 
             var expectedResult = new Dictionary<string, object>
@@ -178,18 +158,18 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Null(result.Errors);
             Assert.Equal(expectedResult, result.Data);
 
-            await blockChain.MineBlock(recipient);
+            await BlockChain.MineBlock(recipient);
 
             // 10 + 10 - 17.5(transfer)
             Assert.Equal(
                 FungibleAssetValue.Parse(goldCurrency, "2.5"),
-                blockChain.GetBalance(senderAddress, goldCurrency)
+                BlockChain.GetBalance(senderAddress, goldCurrency)
             );
 
             // 0 + 17.5(transfer) + 10(mining reward)
             Assert.Equal(
                 FungibleAssetValue.Parse(goldCurrency, "27.5"),
-                blockChain.GetBalance(recipient, goldCurrency)
+                BlockChain.GetBalance(recipient, goldCurrency)
             );
 
         }
@@ -197,35 +177,28 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task TransferGold()
         {
-            var goldCurrency = new Currency("NCG", 2, minter: null);
-            Block<PolymorphicAction<ActionBase>> genesis =
-                MakeGenesisBlock(
-                    default,
-                    goldCurrency,
-                    ImmutableHashSet<Address>.Empty
-                );
-            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
-            StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.BlockChain;
+            NineChroniclesNodeService service = StandaloneContextFx.NineChroniclesNodeService!;
+            Currency goldCurrency = new GoldCurrencyState(
+                (Dictionary)BlockChain.GetState(GoldCurrencyState.Address)
+            ).Currency;
 
             Address senderAddress = service.MinerPrivateKey!.ToAddress();
 
-            var blockChain = StandaloneContextFx.BlockChain;
             var store = service.Store;
-            await blockChain.MineBlock(senderAddress);
-            await blockChain.MineBlock(senderAddress);
+            await BlockChain.MineBlock(senderAddress);
+            await BlockChain.MineBlock(senderAddress);
 
             // 10 + 10 (mining rewards)
             Assert.Equal(
                 20 * goldCurrency,
-                blockChain.GetBalance(senderAddress, goldCurrency)
+                BlockChain.GetBalance(senderAddress, goldCurrency)
             );
 
             Address recipient = new PrivateKey().ToAddress();
             var query = $"mutation {{ transferGold(recipient: \"{recipient}\", amount: \"17.5\") }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
 
-            var stagedTxIds = blockChain.GetStagedTransactionIds().ToImmutableList();
+            var stagedTxIds = BlockChain.GetStagedTransactionIds().ToImmutableList();
             Assert.Single(stagedTxIds);
 
             var expectedResult = new Dictionary<string, object>
@@ -235,18 +208,18 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Null(result.Errors);
             Assert.Equal(expectedResult, result.Data);
 
-            await blockChain.MineBlock(recipient);
+            await BlockChain.MineBlock(recipient);
 
             // 10 + 10 - 17.5(transfer)
             Assert.Equal(
                 FungibleAssetValue.Parse(goldCurrency, "2.5"),
-                blockChain.GetBalance(senderAddress, goldCurrency)
+                BlockChain.GetBalance(senderAddress, goldCurrency)
             );
 
             // 0 + 17.5(transfer) + 10(mining reward)
             Assert.Equal(
                 FungibleAssetValue.Parse(goldCurrency, "27.5"),
-                blockChain.GetBalance(recipient, goldCurrency)
+                BlockChain.GetBalance(recipient, goldCurrency)
             );
         }
 
@@ -260,7 +233,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 ranking.RankingMap[RankingState.Derive(i)] = new HashSet<Address>().ToImmutableHashSet();
             }
-            var blockChain = GetContextFx(playerPrivateKey, ranking);
             var query = $@"mutation {{
                 action {{
                     createAvatar(avatarName: ""{name}"", avatarIndex: {index}, hairIndex: {hair}, lensIndex: {lens}, earIndex: {ear}, tailIndex: {tail})
@@ -269,9 +241,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             ExecutionResult result = await ExecuteQueryAsync(query);
             Assert.Null(result.Errors);
 
-            var txIds = blockChain.GetStagedTransactionIds();
+            var txIds = BlockChain.GetStagedTransactionIds();
             Assert.Single(txIds);
-            var tx = blockChain.GetTransaction(txIds.First());
+            var tx = BlockChain.GetTransaction(txIds.First());
             var expected = new Dictionary<string, object>
             {
                 ["action"] = new Dictionary<string, object>
@@ -332,7 +304,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 ranking.RankingMap[RankingState.Derive(i)] = new HashSet<Address>().ToImmutableHashSet();
             }
-            var blockChain = GetContextFx(playerPrivateKey, ranking);
             var queryArgs = $"avatarAddress: \"{avatarAddress}\", worldId: {worldId}, stageId: {stageId}, weeklyArenaAddress: \"{weeklyArenaAddress}\", rankingArenaAddress: \"{rankingArenaAddress}\"";
             if (costumeIds.Any())
             {
@@ -350,9 +321,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             ExecutionResult result = await ExecuteQueryAsync(query);
             Assert.Null(result.Errors);
 
-            var txIds = blockChain.GetStagedTransactionIds();
+            var txIds = BlockChain.GetStagedTransactionIds();
             Assert.Single(txIds);
-            var tx = blockChain.GetTransaction(txIds.First());
+            var tx = BlockChain.GetTransaction(txIds.First());
             var expected = new Dictionary<string, object>
             {
                 ["action"] = new Dictionary<string, object>
@@ -420,7 +391,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 ranking.RankingMap[RankingState.Derive(i)] = new HashSet<Address>().ToImmutableHashSet();
             }
-            var blockChain = GetContextFx(playerPrivateKey, ranking);
             var avatarAddress = new Address();
             var query = $@"mutation {{
                 action {{
@@ -430,9 +400,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             ExecutionResult result = await ExecuteQueryAsync(query);
             Assert.Null(result.Errors);
 
-            var txIds = blockChain.GetStagedTransactionIds();
+            var txIds = BlockChain.GetStagedTransactionIds();
             Assert.Single(txIds);
-            var tx = blockChain.GetTransaction(txIds.First());
+            var tx = BlockChain.GetTransaction(txIds.First());
             var expected = new Dictionary<string, object>
             {
                 ["action"] = new Dictionary<string, object>
@@ -453,7 +423,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var sellerAvatarAddress = new Address();
             var productId = Guid.NewGuid();
             var playerPrivateKey = new PrivateKey();
-            var blockChain = GetContextFx(playerPrivateKey, new RankingState());
             var buyerAvatarAddress = playerPrivateKey.PublicKey.ToAddress().Derive(string.Format(CreateAvatar2.DeriveFormat, 0));
             var query = $@"mutation {{
                 action {{
@@ -463,9 +432,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var result = await ExecuteQueryAsync(query);
             Assert.Null(result.Errors);
 
-            var txIds = blockChain.GetStagedTransactionIds();
+            var txIds = BlockChain.GetStagedTransactionIds();
             Assert.Single(txIds);
-            var tx = blockChain.GetTransaction(txIds.First());
+            var tx = BlockChain.GetTransaction(txIds.First());
             var expected = new Dictionary<string, object>
             {
                 ["action"] = new Dictionary<string, object>
@@ -487,7 +456,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task CombinationEquipment(Address avatarAddress, int recipeId, int slotIndex, int? subRecipeId)
         {
             var playerPrivateKey = new PrivateKey();
-            var blockChain = GetContextFx(playerPrivateKey, new RankingState());
             var queryArgs = $"avatarAddress: \"{avatarAddress}\", recipeId: {recipeId} slotIndex: {slotIndex}";
             if (!(subRecipeId is null))
             {
@@ -497,9 +465,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var result = await ExecuteQueryAsync(query);
             Assert.Null(result.Errors);
 
-            var txIds = blockChain.GetStagedTransactionIds();
+            var txIds = BlockChain.GetStagedTransactionIds();
             Assert.Single(txIds);
-            var tx = blockChain.GetTransaction(txIds.First());
+            var tx = BlockChain.GetTransaction(txIds.First());
             var expected = new Dictionary<string, object>
             {
                 ["action"] = new Dictionary<string, object>
@@ -546,7 +514,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task ItemEnhancement(Address avatarAddress, Guid itemId, Guid materialId, int slotIndex)
         {
             var playerPrivateKey = new PrivateKey();
-            var blockChain = GetContextFx(playerPrivateKey, new RankingState());
             var query = $@"mutation {{
                 action {{
                     itemEnhancement(avatarAddress: ""{avatarAddress}"", itemId: ""{itemId}"", materialId: ""{materialId}"", slotIndex: {slotIndex})
@@ -555,9 +522,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var result = await ExecuteQueryAsync(query);
             Assert.Null(result.Errors);
 
-            var txIds = blockChain.GetStagedTransactionIds();
+            var txIds = BlockChain.GetStagedTransactionIds();
             Assert.Single(txIds);
-            var tx = blockChain.GetTransaction(txIds.First());
+            var tx = BlockChain.GetTransaction(txIds.First());
             var expected = new Dictionary<string, object>
             {
                 ["action"] = new Dictionary<string, object>
@@ -597,7 +564,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task Sell(Address sellerAvatarAddress, Guid itemId, int price)
         {
             var playerPrivateKey = new PrivateKey();
-            var blockChain = GetContextFx(playerPrivateKey, new RankingState());
             var query = $@"mutation {{
                 action {{
                     sell(sellerAvatarAddress: ""{sellerAvatarAddress}"", itemId: ""{itemId}"", price: {price})
@@ -606,9 +572,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var result = await ExecuteQueryAsync(query);
             Assert.Null(result.Errors);
 
-            var txIds = blockChain.GetStagedTransactionIds();
+            var txIds = BlockChain.GetStagedTransactionIds();
             Assert.Single(txIds);
-            var tx = blockChain.GetTransaction(txIds.First());
+            var tx = BlockChain.GetTransaction(txIds.First());
             var expected = new Dictionary<string, object>
             {
                 ["action"] = new Dictionary<string, object>
@@ -622,7 +588,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(sellerAvatarAddress, action.sellerAvatarAddress);
             Assert.Equal(itemId, action.itemId);
             var currency = new GoldCurrencyState(
-                (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
+                (Dictionary)BlockChain.GetState(GoldCurrencyState.Address)
             ).Currency;
 
             Assert.Equal(price * currency, action.price);
@@ -649,7 +615,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task CombinationConsumable(Address avatarAddress, int recipeId, int slotIndex)
         {
             var playerPrivateKey = new PrivateKey();
-            var blockChain = GetContextFx(playerPrivateKey, new RankingState());
             var query = $@"mutation {{
                 action {{
                     combinationConsumable(avatarAddress: ""{avatarAddress}"", recipeId: {recipeId}, slotIndex: {slotIndex})
@@ -658,9 +623,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var result = await ExecuteQueryAsync(query);
             Assert.Null(result.Errors);
 
-            var txIds = blockChain.GetStagedTransactionIds();
+            var txIds = BlockChain.GetStagedTransactionIds();
             Assert.Single(txIds);
-            var tx = blockChain.GetTransaction(txIds.First());
+            var tx = BlockChain.GetTransaction(txIds.First());
             var expected = new Dictionary<string, object>
             {
                 ["action"] = new Dictionary<string, object>
@@ -737,7 +702,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 result.Data
             );
             Block<PolymorphicAction<ActionBase>> mined =
-                await StandaloneContextFx.BlockChain!.MineBlock(service.MinerPrivateKey!.ToAddress());
+                await BlockChain.MineBlock(service.MinerPrivateKey!.ToAddress());
             Assert.Contains(tx, mined.Transactions);
         }
 
@@ -766,16 +731,5 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ),
             }, blockAction: ServiceBuilder.BlockPolicy.BlockAction
         );
-
-        private BlockChain<PolymorphicAction<ActionBase>> GetContextFx(PrivateKey playerPrivateKey, RankingState ranking)
-        {
-            var goldCurrency = new Currency("NCG", 2, minter: null);
-            Block<PolymorphicAction<ActionBase>> genesis =
-                MakeGenesisBlock(default, goldCurrency, ImmutableHashSet<Address>.Empty, ranking);
-            var service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, playerPrivateKey);
-            StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
-            return StandaloneContextFx.BlockChain;
-        }
     }
 }

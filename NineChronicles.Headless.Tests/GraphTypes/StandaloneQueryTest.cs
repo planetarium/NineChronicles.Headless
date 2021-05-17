@@ -42,22 +42,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task GetState()
         {
-            var codec = new Codec();
-            var miner = new Address();
+            Address adminStateAddress = AdminState.Address;
+            var result = await ExecuteQueryAsync($"query {{ state(address: \"{adminStateAddress}\") }}");
+            var data = (Dictionary<string, object>)result.Data;
+            IValue rawVal = new Codec().Decode(ByteUtil.ParseHex((string)data["state"]));
+            AdminState adminState = new AdminState((Dictionary)rawVal);
 
-            const int repeat = 10;
-            foreach (long index in Enumerable.Range(1, repeat))
-            {
-                await BlockChain.MineBlock(miner);
-
-                var result = await ExecuteQueryAsync($"query {{ state(address: \"{miner.ToHex()}\") }}");
-
-                var data = (Dictionary<string, object>) result.Data;
-                var state = (Integer)codec.Decode(ByteUtil.ParseHex((string) data["state"]));
-
-                // TestRewardGold에서 miner에게 1 gold 씩 주므로 block index와 같을 것입니다.
-                Assert.Equal((Integer)index, state);
-            }
+            Assert.Equal(AdminAddress, adminState.AdminAddress);
         }
 
         [Theory]
@@ -166,12 +157,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task NodeStatusStagedTxIds()
         {
-            var apvPrivateKey = new PrivateKey();
-            var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var genesis = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock();
-
-            var service = ServiceBuilder.CreateNineChroniclesNodeService(genesis);
-            service.ConfigureContext(StandaloneContextFx);
+            var privateKey = new PrivateKey();
 
             var result = await ExecuteQueryAsync("query { nodeStatus { stagedTxIds } }");
             var expectedResult = new Dictionary<string, object>()
@@ -184,7 +170,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Null(result.Errors);
             Assert.Equal(expectedResult, result.Data);
 
-            var tx = StandaloneContextFx.BlockChain!.MakeTransaction(
+            var anonymousTx = StandaloneContextFx.BlockChain!.MakeTransaction(
                 new PrivateKey(), 
                 new PolymorphicAction<ActionBase>[] { }
             );
@@ -196,22 +182,22 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 {
                     ["stagedTxIds"] = new List<object>
                     {
-                        tx.Id.ToString(),
+                        anonymousTx.Id.ToString(),
                     }
                 },
             };
             Assert.Null(result.Errors);
             Assert.Equal(expectedResult, result.Data);
 
-            var apvTx = StandaloneContextFx.BlockChain.MakeTransaction(
-                apvPrivateKey,
+            var signerTx = StandaloneContextFx.BlockChain.MakeTransaction(
+                privateKey,
                 new PolymorphicAction<ActionBase>[] { }
             );
 
-            var apvAddress = apvPrivateKey.ToAddress();
+            var address = privateKey.ToAddress();
             var query = $@"query {{
                 nodeStatus {{
-                    stagedTxIds(address: ""{apvAddress}"")
+                    stagedTxIds(address: ""{address}"")
                 }}
             }}";
             result = await ExecuteQueryAsync(query);
@@ -221,7 +207,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 {
                     ["stagedTxIds"] = new List<object>
                     {
-                        apvTx.Id.ToString(),
+                        signerTx.Id.ToString(),
                     }
                 },
             };

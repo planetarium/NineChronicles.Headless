@@ -75,14 +75,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<NodeStatusType>>(
                 name: "nodeStatus",
-                resolve: context => new NodeStatusType
-                {
-                    BootstrapEnded = standaloneContext.BootstrapEnded,
-                    PreloadEnded = standaloneContext.PreloadEnded,
-                    IsMining = standaloneContext.IsMining,
-                    BlockChain = standaloneContext.BlockChain,
-                    Store = standaloneContext.Store,
-                }
+                resolve: _ => new NodeStatusType(standaloneContext)
             );
 
             Field<NonNullGraphType<Libplanet.Explorer.Queries.ExplorerQuery<NCAction>>>(

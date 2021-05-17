@@ -32,7 +32,7 @@ namespace NineChronicles.Headless
             GraphQlNodeServiceProperties = properties;
         }
 
-        public IHostBuilder Configure(IHostBuilder hostBuilder, StandaloneContext standaloneContext)
+        public IHostBuilder Configure(IHostBuilder hostBuilder)
         {
             var listenHost = GraphQlNodeServiceProperties.GraphQLListenHost;
             var listenPort = GraphQlNodeServiceProperties.GraphQLListenPort;
@@ -56,8 +56,6 @@ namespace NineChronicles.Headless
 
                         builder.AddInMemoryCollection(dictionary);
                     });
-                builder.ConfigureServices(
-                    services => services.AddSingleton(standaloneContext));
                 builder.UseUrls($"http://{listenHost}:{listenPort}/");
             });
         }

@@ -23,7 +23,7 @@ namespace NineChronicles.Headless
         public ReplaySubject<Notification> NotificationSubject { get; } = new ReplaySubject<Notification>(1);
         public ReplaySubject<NodeException> NodeExceptionSubject { get; } = new ReplaySubject<NodeException>();
         public NineChroniclesNodeService? NineChroniclesNodeService { get; set; }
-        public NodeStatusType NodeStatus => new NodeStatusType()
+        public NodeStatusType NodeStatus => new NodeStatusType(this)
         {
             BootstrapEnded = BootstrapEnded,
             PreloadEnded = PreloadEnded,

@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
-using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using StrictRenderer =
     Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer<Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>>;
 
@@ -30,9 +30,9 @@ namespace NineChronicles.Headless
 {
     public class NineChroniclesNodeService : IHostedService, IDisposable
     {
-        private LibplanetNodeService<NineChroniclesActionType> NodeService { get; set; }
+        private LibplanetNodeService<NCAction> NodeService { get; set; }
 
-        private LibplanetNodeServiceProperties<NineChroniclesActionType> Properties { get; }
+        private LibplanetNodeServiceProperties<NCAction> Properties { get; }
 
         public BlockRenderer BlockRenderer { get; }
 
@@ -46,9 +46,9 @@ namespace NineChronicles.Headless
 
         public AsyncManualResetEvent PreloadEnded => NodeService.PreloadEnded;
 
-        public Swarm<NineChroniclesActionType> Swarm => NodeService.Swarm;
+        public Swarm<NCAction> Swarm => NodeService.Swarm;
 
-        public BlockChain<NineChroniclesActionType> BlockChain => NodeService.BlockChain;
+        public BlockChain<NCAction> BlockChain => NodeService.BlockChain;
 
         public IStore Store => NodeService.Store;
 
@@ -69,7 +69,7 @@ namespace NineChronicles.Headless
 
         public NineChroniclesNodeService(
             PrivateKey? minerPrivateKey,
-            LibplanetNodeServiceProperties<NineChroniclesActionType> properties,
+            LibplanetNodeServiceProperties<NCAction> properties,
             Progress<PreloadState>? preloadProgress = null,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false,
@@ -87,14 +87,14 @@ namespace NineChronicles.Headless
             LogEventLevel logLevel = LogEventLevel.Debug;
             var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
             // BlockPolicy shared through Lib9c.
-            IBlockPolicy<NineChroniclesActionType>? blockPolicy = null;
+            IBlockPolicy<NCAction>? blockPolicy = null;
             // Policies for dev mode.
-            IBlockPolicy<NineChroniclesActionType>? easyPolicy = null;
-            IBlockPolicy<NineChroniclesActionType>? hardPolicy = null;
-            IStagePolicy<NineChroniclesActionType> stagePolicy =
+            IBlockPolicy<NCAction>? easyPolicy = null;
+            IBlockPolicy<NCAction>? hardPolicy = null;
+            IStagePolicy<NCAction> stagePolicy =
                 txLifeTime == default
-                    ? new VolatileStagePolicy<NineChroniclesActionType>()
-                    : new VolatileStagePolicy<NineChroniclesActionType>(txLifeTime);
+                    ? new VolatileStagePolicy<NCAction>()
+                    : new VolatileStagePolicy<NCAction>(txLifeTime);
             if (isDev)
             {
                 easyPolicy = new ReorgPolicy(new RewardGold(), 1);
@@ -109,7 +109,7 @@ namespace NineChronicles.Headless
             ActionRenderer = blockPolicySource.ActionRenderer;
             ExceptionRenderer = new ExceptionRenderer();
             NodeStatusRenderer = new NodeStatusRenderer();
-            var renderers = new List<IRenderer<NineChroniclesActionType>>();
+            var renderers = new List<IRenderer<NCAction>>();
             var strictRenderer = new StrictRenderer(onError: exc =>
                 ExceptionRenderer.RenderException(
                     RPCException.InvalidRenderException,
@@ -126,10 +126,10 @@ namespace NineChronicles.Headless
                 renderers.Add(blockPolicySource.BlockRenderer);
                 // The following "nullRenderer" does nothing.  It's just for filling
                 // the LoggedActionRenderer<T>() constructor's parameter:
-                IActionRenderer<NineChroniclesActionType> nullRenderer =
-                    new AnonymousActionRenderer<NineChroniclesActionType>();
+                IActionRenderer<NCAction> nullRenderer =
+                    new AnonymousActionRenderer<NCAction>();
                 renderers.Add(
-                    new LoggedActionRenderer<NineChroniclesActionType>(
+                    new LoggedActionRenderer<NCAction>(
                         nullRenderer,
                         Log.Logger,
                         logLevel
@@ -149,8 +149,8 @@ namespace NineChronicles.Headless
             }
 
             async Task minerLoopAction(
-                BlockChain<NineChroniclesActionType> chain,
-                Swarm<NineChroniclesActionType> swarm,
+                BlockChain<NCAction> chain,
+                Swarm<NCAction> swarm,
                 PrivateKey privateKey,
                 CancellationToken cancellationToken)
             {
@@ -184,8 +184,8 @@ namespace NineChronicles.Headless
             }
 
             async Task devMinerLoopAction(
-                Swarm<NineChroniclesActionType> mainSwarm,
-                Swarm<NineChroniclesActionType> subSwarm,
+                Swarm<NCAction> mainSwarm,
+                Swarm<NCAction> subSwarm,
                 PrivateKey privateKey,
                 CancellationToken cancellationToken)
             {
@@ -215,7 +215,7 @@ namespace NineChronicles.Headless
 
             if (isDev)
             {
-                NodeService = new DevLibplanetNodeService<NineChroniclesActionType>(
+                NodeService = new DevLibplanetNodeService<NCAction>(
                     Properties,
                     easyPolicy,
                     hardPolicy,
@@ -234,7 +234,7 @@ namespace NineChronicles.Headless
             }
             else
             {
-                NodeService = new LibplanetNodeService<NineChroniclesActionType>(
+                NodeService = new LibplanetNodeService<NCAction>(
                     Properties,
                     blockPolicy,
                     stagePolicy,
@@ -324,7 +324,7 @@ namespace NineChronicles.Headless
             return service;
         }
 
-        internal static IBlockPolicy<NineChroniclesActionType> GetBlockPolicy(int minimumDifficulty, int maximumTransactions) =>
+        internal static IBlockPolicy<NCAction> GetBlockPolicy(int minimumDifficulty, int maximumTransactions) =>
             new BlockPolicySource(Log.Logger, LogEventLevel.Debug)
                 .GetPolicy(minimumDifficulty, maximumTransactions);
 
@@ -353,6 +353,7 @@ namespace NineChronicles.Headless
 
         internal void ConfigureContext(StandaloneContext standaloneContext)
         {
+            standaloneContext.NineChroniclesNodeService = this;
             standaloneContext.BlockChain = Swarm.BlockChain;
             standaloneContext.Store = Store;
             BootstrapEnded.WaitAsync().ContinueWith((task) =>

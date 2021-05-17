@@ -19,11 +19,7 @@ using Sentry;
 using Serilog;
 using Serilog.Formatting.Compact;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace NineChronicles.Headless.Executable
@@ -63,11 +59,11 @@ namespace NineChronicles.Headless.Executable
 
         [PrimaryCommand]
         public async Task Run(
-            bool noMiner = false,
             [Option("app-protocol-version", new[] { 'V' }, Description = "App protocol version token")]
-            string? appProtocolVersionToken = null,
+            string appProtocolVersionToken,
             [Option('G')]
-            string? genesisBlockPath = null,
+            string genesisBlockPath,
+            bool noMiner = false,
             [Option('H')]
             string? host = null,
             [Option('P')]
@@ -218,10 +214,17 @@ namespace NineChronicles.Headless.Executable
 
             Log.Logger = loggerConf.CreateLogger();
 
-            var tasks = new List<Task>();
+            if (!noMiner && minerPrivateKeyString is null)
+            {
+                throw new CommandExitedException(
+                    "--miner-private-key must be present to turn on mining at libplanet node.",
+                    -1
+                );
+            }
+            
             try
             {
-                IHostBuilder graphQLHostBuilder = Host.CreateDefaultBuilder();
+                IHostBuilder hostBuilder = Host.CreateDefaultBuilder();
 
                 var standaloneContext = new StandaloneContext
                 {
@@ -248,36 +251,7 @@ namespace NineChronicles.Headless.Executable
                     };
 
                     var graphQLService = new GraphQLService(graphQLNodeServiceProperties);
-                    graphQLHostBuilder =
-                        graphQLService.Configure(graphQLHostBuilder, standaloneContext);
-                    tasks.Add(graphQLHostBuilder.RunConsoleAsync(Context.CancellationToken));
-
-                    await WaitForGraphQLService(graphQLNodeServiceProperties,
-                        Context.CancellationToken);
-                }
-
-                if (appProtocolVersionToken is null)
-                {
-                    throw new CommandExitedException(
-                        "--app-protocol-version must be present.",
-                        -1
-                    );
-                }
-
-                if (genesisBlockPath is null)
-                {
-                    throw new CommandExitedException(
-                        "--genesis-block-path must be present.",
-                        -1
-                    );
-                }
-
-                if (!noMiner && minerPrivateKeyString is null)
-                {
-                    throw new CommandExitedException(
-                        "--miner-private-key must be present to turn on mining at libplanet node.",
-                        -1
-                    );
+                    hostBuilder = graphQLService.Configure(hostBuilder);
                 }
 
                 var properties = NineChroniclesNodeServiceProperties
@@ -303,7 +277,6 @@ namespace NineChronicles.Headless.Executable
                         demandBuffer: demandBuffer,
                         staticPeerStrings: staticPeerStrings);
 
-                IHostBuilder ncHostBuilder = Host.CreateDefaultBuilder();
                 if (rpcServer)
                 {
                     properties.Render = true;
@@ -329,22 +302,20 @@ namespace NineChronicles.Headless.Executable
                     AuthorizedMiner = authorizedMiner,
                     TxLifeTime = TimeSpan.FromMinutes(txLifeTime),
                 };
-                ncHostBuilder.ConfigureServices(services =>
+                hostBuilder.ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => standaloneContext);
                 });
-                ncHostBuilder.UseNineChroniclesNode(nineChroniclesProperties, standaloneContext);
+                hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, standaloneContext);
                 if (rpcServer)
                 {
-                    ncHostBuilder.UseNineChroniclesRPC(
+                    hostBuilder.UseNineChroniclesRPC(
                         NineChroniclesNodeServiceProperties
                         .GenerateRpcNodeServiceProperties(rpcListenHost, rpcListenPort)
                     );
                 }
-                tasks.Add(
-                    ncHostBuilder.RunConsoleAsync(Context.CancellationToken));
 
-                await Task.WhenAll(tasks);
+                await hostBuilder.RunConsoleAsync(Context.CancellationToken);
             }
             catch (TaskCanceledException)
             {
@@ -367,28 +338,6 @@ namespace NineChronicles.Headless.Executable
                 throw;
             }
 #endif
-        }
-
-        private async Task WaitForGraphQLService(
-            GraphQLNodeServiceProperties properties,
-            CancellationToken cancellationToken)
-        {
-            using var httpClient = new HttpClient();
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                Log.Debug("Trying to check GraphQL server started...");
-                try
-                {
-                    await httpClient.GetAsync($"http://{IPAddress.Loopback}:{properties.GraphQLListenPort}/health-check", cancellationToken);
-                    break;
-                }
-                catch (HttpRequestException e)
-                {
-                    Log.Error(e, "An exception occurred during connecting to GraphQL server. {e}", e);
-                }
-
-                await Task.Delay(1000, cancellationToken);
-            }
         }
 
         private Guid? LoadAWSSinkGuid()

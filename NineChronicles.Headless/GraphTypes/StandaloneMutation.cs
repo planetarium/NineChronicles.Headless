@@ -1,19 +1,18 @@
 using Bencodex.Types;
 using GraphQL;
+using GraphQL.Server.Authorization.AspNetCore;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Crypto;
-using Libplanet.Store;
+using Libplanet.Explorer.GraphTypes;
 using Libplanet.Tx;
+using Microsoft.Extensions.Configuration;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Serilog;
 using System;
-using GraphQL.Server.Authorization.AspNetCore;
-using Libplanet.Explorer.GraphTypes;
-using Microsoft.Extensions.Configuration;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -22,6 +21,7 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public StandaloneMutation(
             StandaloneContext standaloneContext,
+            NineChroniclesNodeService nodeService,
             IConfiguration configuration
         )
         {
@@ -35,12 +35,12 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context => standaloneContext.KeyStore);
 
             Field<ActivationStatusMutation>(
-                name: "activationStatus",
-                resolve: context => standaloneContext.NineChroniclesNodeService);
+                name: "activationStatus", 
+                resolve: _ => new ActivationStatusMutation(nodeService));
 
             Field<ActionMutation>(
-                name: "action",
-                resolve: context => standaloneContext.NineChroniclesNodeService);
+                name: "action", 
+                resolve: _ => new ActionMutation(nodeService));
 
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "stageTx",
