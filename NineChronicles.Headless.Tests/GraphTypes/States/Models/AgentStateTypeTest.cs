@@ -22,17 +22,36 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             const string query = @"
             {
                 address
-                avatarAddresses
+                avatarStates {
+                    address
+                    name
+                }
                 gold
+                monsterCollectionRound
+                monsterCollectionLevel
             }";
             var goldCurrency = new Currency("NCG", 2, minter: null);
             var agentState = new AgentState(new Address());
-            
+            agentState.avatarAddresses[0] = Fixtures.AvatarAddress;
+
+            Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(agentState.address, 0);
+            MonsterCollectionState monsterCollectionState = new MonsterCollectionState(monsterCollectionAddress, 7, 0, Fixtures.TableSheetsFX.MonsterCollectionRewardSheet);
+
             IValue? GetStateMock(Address address)
             {
                 if (GoldCurrencyState.Address == address)
                 {
                     return new GoldCurrencyState(goldCurrency).Serialize();
+                }
+
+                if (monsterCollectionAddress == address)
+                {
+                    return monsterCollectionState.Serialize();
+                }
+
+                if (Fixtures.AvatarAddress == address)
+                {
+                    return Fixtures.AvatarStateFX.Serialize();
                 }
 
                 return null;
@@ -54,12 +73,21 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     agentState,
                     (AccountStateGetter)GetStateMock,
                     (AccountBalanceGetter)GetBalanceMock)
-                );
+            );
             var expected = new Dictionary<string, object>()
             {
                 ["address"] = agentState.address.ToString(),
-                ["avatarAddresses"] = new List<string>(),
-                ["gold"] = goldBalance.ToString()
+                ["avatarStates"] = new List<Dictionary<string, object>>
+                {
+                    new Dictionary<string, object>
+                    {
+                        ["address"] = Fixtures.AvatarAddress.ToString(),
+                        ["name"] = Fixtures.AvatarStateFX.name,
+                    },
+                },
+                ["gold"] = goldBalance.ToString(),
+                ["monsterCollectionRound"] = 0L,
+                ["monsterCollectionLevel"] = 7L,
             };
             Assert.Equal(expected, queryResult.Data);
         }

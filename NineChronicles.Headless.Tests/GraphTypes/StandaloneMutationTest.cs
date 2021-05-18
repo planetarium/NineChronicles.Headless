@@ -658,6 +658,138 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         };
 
         [Fact]
+        public async Task MonsterCollect()
+        {
+            const string query = @"mutation {
+                action {
+                    monsterCollect(level: 1)
+                }
+            }";
+
+            PolymorphicAction<ActionBase> createAvatar = new CreateAvatar2
+            {
+                index = 0,
+                hair = 0,
+                lens = 0,
+                ear = 0,
+                tail = 0,
+                name = "avatar",
+            };
+            var playerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
+            BlockChain.MakeTransaction(playerPrivateKey, new[] { createAvatar });
+            await BlockChain.MineBlock(playerPrivateKey.ToAddress());
+
+            Assert.NotNull(BlockChain.GetState(playerPrivateKey.ToAddress()));
+            var result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
+
+            var txIds = BlockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = BlockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["monsterCollect"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
+            Assert.Single(tx.Actions);
+            var action = (MonsterCollect) tx.Actions.First().InnerAction;
+            Assert.Equal(1, action.level);
+            Assert.Equal(0, action.collectionRound);
+        }
+
+        [Fact]
+        public async Task ClaimMonsterCollectionReward()
+        {
+            var playerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
+            var avatarAddress = playerPrivateKey.ToAddress();
+            string query = $@"mutation {{
+                action {{
+                    claimMonsterCollectionReward(avatarAddress: ""{avatarAddress}"")
+                }}
+            }}";
+
+            PolymorphicAction<ActionBase> createAvatar = new CreateAvatar2
+            {
+                index = 0,
+                hair = 0,
+                lens = 0,
+                ear = 0,
+                tail = 0,
+                name = "avatar",
+            };
+            BlockChain.MakeTransaction(playerPrivateKey, new[] { createAvatar });
+            await BlockChain.MineBlock(playerPrivateKey.ToAddress());
+
+            Assert.NotNull(BlockChain.GetState(playerPrivateKey.ToAddress()));
+
+            var result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
+
+            var txIds = BlockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = BlockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["claimMonsterCollectionReward"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
+            Assert.Single(tx.Actions);
+            var action = (ClaimMonsterCollectionReward) tx.Actions.First().InnerAction;
+            Assert.Equal(avatarAddress, action.avatarAddress);
+            Assert.Equal(0, action.collectionRound);
+        }
+        [Fact]
+        public async Task CancelMonsterCollect()
+        {
+            var playerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
+
+            const string query = @"mutation {
+                action {
+                    cancelMonsterCollect(level: 1)
+                }
+            }";
+
+            PolymorphicAction<ActionBase> createAvatar = new CreateAvatar2
+            {
+                index = 0,
+                hair = 0,
+                lens = 0,
+                ear = 0,
+                tail = 0,
+                name = "avatar",
+            };
+            BlockChain.MakeTransaction(playerPrivateKey, new[] { createAvatar });
+            await BlockChain.MineBlock(playerPrivateKey.ToAddress());
+
+            Assert.NotNull(BlockChain.GetState(playerPrivateKey.ToAddress()));
+
+            var result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
+
+            var txIds = BlockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = BlockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["cancelMonsterCollect"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, result.Data);
+            Assert.Single(tx.Actions);
+            var action = (CancelMonsterCollect) tx.Actions.First().InnerAction;
+            Assert.Equal(1, action.level);
+            Assert.Equal(0, action.collectRound);
+        }
+
+        [Fact]
         public async Task Tx()
         {
             Block<PolymorphicAction<ActionBase>> genesis =

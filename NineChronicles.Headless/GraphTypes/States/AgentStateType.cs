@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using System.Linq;
 using Bencodex.Types;
 using GraphQL.Types;
+using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
@@ -16,10 +18,22 @@ namespace NineChronicles.Headless.GraphTypes.States
                 nameof(AgentState.address),
                 description: "Address of agent.",
                 resolve: context => context.Source.agentState.address);
-            Field<ListGraphType<NonNullGraphType<AddressType>>>(
-                nameof(AgentState.avatarAddresses),
-                description: "Address list of avatar.",
-                resolve: context => context.Source.agentState.avatarAddresses.Select(a => a.Value));
+            Field<ListGraphType<NonNullGraphType<AvatarStateType>>>(
+                "avatarStates",
+                description: "List of avatar.",
+                resolve: context =>
+                {
+                    List<AvatarState> avatarStates = new List<AvatarState>();
+                    foreach (var kv in context.Source.agentState.avatarAddresses.OrderBy(a => a.Key))
+                    {
+                        if (context.Source.accountStateGetter(kv.Value) is { } state)
+                        {
+                            avatarStates.Add(new AvatarState((Dictionary)state));
+                        }
+                    }
+
+                    return avatarStates;
+                });
             Field<NonNullGraphType<StringGraphType>>(
                 "gold",
                 description: "Current NCG.",
@@ -34,6 +48,26 @@ namespace NineChronicles.Headless.GraphTypes.States
                         currency
                     ).GetQuantityString();
                 });
+            Field<NonNullGraphType<LongGraphType>>(
+                nameof(AgentState.MonsterCollectionRound),
+                description: "Monster collection round of agent.",
+                resolve: context => context.Source.agentState.MonsterCollectionRound
+            );
+            Field<NonNullGraphType<LongGraphType>>(
+                "monsterCollectionLevel",
+                description: "Current monster collection level.",
+                resolve: context =>
+                {
+                    Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(context.Source.agentState.address,
+                        context.Source.agentState.MonsterCollectionRound);
+                    if (context.Source.accountStateGetter(monsterCollectionAddress) is { } state)
+                    {
+                        return new MonsterCollectionState((Dictionary) state).Level;
+                    }
+
+                    return 0;
+                });
+
         }
     }
 }
