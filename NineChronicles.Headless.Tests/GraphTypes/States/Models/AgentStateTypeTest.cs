@@ -14,10 +14,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
     public class AgentStateTypeTest
     {
         [Theory]
-        [InlineData(0)]
-        [InlineData(10)]
-        [InlineData(7777)]
-        public async Task Query(int goldBalance)
+        [InlineData(0, "0.00")]
+        [InlineData(10, "10.00")]
+        [InlineData(7777, "7777.00")]
+        public async Task Query(int goldBalance, string decimalString)
         {
             const string query = @"
             {
@@ -85,7 +85,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                         ["name"] = Fixtures.AvatarStateFX.name,
                     },
                 },
-                ["gold"] = goldBalance.ToString(),
+                ["gold"] = decimalString,
                 ["monsterCollectionRound"] = 0L,
                 ["monsterCollectionLevel"] = 7L,
             };

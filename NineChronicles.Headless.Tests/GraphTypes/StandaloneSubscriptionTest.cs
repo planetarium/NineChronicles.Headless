@@ -299,8 +299,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Theory]
-        [InlineData(false, 100, 0, "100")]
+        [InlineData(false, 100, 0, "100.00")]
         [InlineData(true, 0, 2, "0.02")]
+        [InlineData(true, 10, 2, "10.02")]
         public async Task SubscribeMonsterCollectionStatus(bool canReceive, int major, int minor, string decimalString)
         {
             ExecutionResult result = await ExecuteQueryAsync(@"

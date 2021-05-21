@@ -46,7 +46,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                     return context.Source.accountBalanceGetter(
                         context.Source.agentState.address,
                         currency
-                    ).GetQuantityString();
+                    ).GetQuantityString(true);
                 });
             Field<NonNullGraphType<LongGraphType>>(
                 nameof(AgentState.MonsterCollectionRound),
