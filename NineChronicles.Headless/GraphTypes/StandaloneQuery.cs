@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Bencodex;
 using Bencodex.Types;
@@ -17,6 +18,7 @@ using Libplanet.Tx;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
+using Nekoyume.TableData;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>; 
 
 namespace NineChronicles.Headless.GraphTypes
@@ -274,7 +276,11 @@ namespace NineChronicles.Headless.GraphTypes
                         {
                             MonsterCollectionState monsterCollectionState = new MonsterCollectionState(mcDict);
                             bool canReceive = monsterCollectionState.CanReceive(blockChain.Tip.Index);
-                            return new MonsterCollectionStatus(canReceive, balance);
+                            var rewardLevel= monsterCollectionState.GetRewardLevel(blockChain.Tip.Index);
+                            var rewardInfos = rewardLevel > 0
+                                ? monsterCollectionState.RewardLevelMap[rewardLevel]
+                                : new List<MonsterCollectionRewardSheet.RewardInfo>();
+                            return new MonsterCollectionStatus(canReceive, balance, rewardInfos);
                         }
                         throw new ExecutionError(
                             $"{nameof(MonsterCollectionState)} Address: {deriveAddress} is null.");

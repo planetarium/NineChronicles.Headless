@@ -636,6 +636,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                         quantity
                         currency
                     }
+                    rewardInfos {
+                        itemId
+                        quantity
+                    }
                 }
             }";
             var queryResult = await ExecuteQueryAsync(query);
@@ -672,6 +676,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     fungibleAssetValue {
                         quantity
                         currency
+                    }
+                    rewardInfos {
+                        itemId
+                        quantity
                     }
                 }
             }";

@@ -1,4 +1,5 @@
 using GraphQL.Types;
+using NineChronicles.Headless.GraphTypes.States.Models.Table;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -13,6 +14,10 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<FungibleAssetValueType>>(
                 nameof(MonsterCollectionStatus.FungibleAssetValue),
                 resolve: context => context.Source.FungibleAssetValue
+            );
+            Field<ListGraphType<MonsterCollectionRewardInfoType>>(
+                nameof(MonsterCollectionStatus.RewardInfos),
+                resolve: context => context.Source.RewardInfos
             );
         }
     }
