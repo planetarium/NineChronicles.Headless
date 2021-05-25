@@ -553,6 +553,12 @@ namespace NineChronicles.Headless.GraphTypes
                         Address agentAddress = service.MinerPrivateKey.ToAddress();
                         AgentState agentState = new AgentState((Dictionary) service.BlockChain.GetState(agentAddress));
 
+                        Address collectionAddress =
+                            MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
+                        if (service.BlockChain.GetState(collectionAddress) is { })
+                        {
+                            throw new InvalidOperationException("MonsterCollectionState already exists.");
+                        }
                         var action = new MonsterCollect
                         {
                             level = level,
