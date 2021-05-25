@@ -11,6 +11,7 @@ using Nekoyume.Model.State;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Libplanet.Action;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -553,6 +554,12 @@ namespace NineChronicles.Headless.GraphTypes
                         Address agentAddress = service.MinerPrivateKey.ToAddress();
                         AgentState agentState = new AgentState((Dictionary) service.BlockChain.GetState(agentAddress));
 
+                        Address collectionAddress =
+                            MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
+                        if (service.BlockChain.GetState(collectionAddress) is { })
+                        {
+                            throw new InvalidOperationException("MonsterCollectionState is Already Exist.");
+                        }
                         var action = new MonsterCollect
                         {
                             level = level,
