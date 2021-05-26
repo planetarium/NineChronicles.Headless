@@ -1,44 +1,38 @@
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Security.Cryptography;
-using System.Threading;
-using System.Threading.Tasks;
 using Bencodex.Types;
-using Grpc.Core;
 using Lib9c.Renderer;
-using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;
 using Libplanet.Crypto;
-using Libplanet.Net;
+using Libplanet.Headless;
 using Libplanet.Headless.Hosting;
+using Libplanet.Net;
 using Libplanet.Store;
-using MagicOnion.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Nekoyume.Action;
 using Nekoyume.BlockChain;
 using Nekoyume.Model.State;
-using NineChronicles.RPC.Shared.Exceptions;
 using NineChronicles.Headless.Properties;
+using NineChronicles.RPC.Shared.Exceptions;
 using Nito.AsyncEx;
 using Serilog;
 using Serilog.Events;
-using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+using System;
+using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using StrictRenderer =
     Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer<Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>>;
 
 namespace NineChronicles.Headless
 {
-    public class NineChroniclesNodeService
+    public class NineChroniclesNodeService : IHostedService, IDisposable
     {
-        private LibplanetNodeService<NineChroniclesActionType> NodeService { get; set; }
+        private LibplanetNodeService<NCAction> NodeService { get; set; }
 
-        private LibplanetNodeServiceProperties<NineChroniclesActionType> Properties { get; }
-
-        private RpcNodeServiceProperties? RpcProperties { get; }
+        private LibplanetNodeServiceProperties<NCAction> Properties { get; }
 
         public BlockRenderer BlockRenderer { get; }
 
@@ -52,18 +46,30 @@ namespace NineChronicles.Headless
 
         public AsyncManualResetEvent PreloadEnded => NodeService.PreloadEnded;
 
-        public Swarm<NineChroniclesActionType> Swarm => NodeService.Swarm;
+        public Swarm<NCAction> Swarm => NodeService.Swarm;
 
-        public BlockChain<NineChroniclesActionType> BlockChain => NodeService.BlockChain;
+        public BlockChain<NCAction> BlockChain => NodeService.BlockChain;
 
         public IStore Store => NodeService.Store;
 
         public PrivateKey? MinerPrivateKey { get; set; }
 
+        static NineChroniclesNodeService()
+        {
+            try
+            {
+                Libplanet.Crypto.CryptoConfig.CryptoBackend = new Secp256K1CryptoBackend<SHA256>();
+                Log.Debug("Secp256K1CryptoBackend initialized.");
+            }
+            catch (Exception e)
+            {
+                Log.Error("Secp256K1CryptoBackend initialize failed. Use default backend. {e}", e);
+            }
+        }
+
         public NineChroniclesNodeService(
             PrivateKey? minerPrivateKey,
-            LibplanetNodeServiceProperties<NineChroniclesActionType> properties,
-            RpcNodeServiceProperties? rpcNodeServiceProperties,
+            LibplanetNodeServiceProperties<NCAction> properties,
             Progress<PreloadState>? preloadProgress = null,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false,
@@ -77,29 +83,18 @@ namespace NineChronicles.Headless
         {
             MinerPrivateKey = minerPrivateKey;
             Properties = properties;
-            RpcProperties = rpcNodeServiceProperties;
-
-            try
-            {
-                Libplanet.Crypto.CryptoConfig.CryptoBackend = new Secp256K1CryptoBackend<SHA256>();
-                Log.Debug("Secp256K1CryptoBackend initialized.");
-            }
-            catch(Exception e)
-            {
-                Log.Error("Secp256K1CryptoBackend initialize failed. Use default backend. {e}", e);
-            }
 
             LogEventLevel logLevel = LogEventLevel.Debug;
             var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
             // BlockPolicy shared through Lib9c.
-            IBlockPolicy<PolymorphicAction<ActionBase>>? blockPolicy = null;
+            IBlockPolicy<NCAction>? blockPolicy = null;
             // Policies for dev mode.
-            IBlockPolicy<PolymorphicAction<ActionBase>>? easyPolicy = null;
-            IBlockPolicy<PolymorphicAction<ActionBase>>? hardPolicy = null;
-            IStagePolicy<PolymorphicAction<ActionBase>> stagePolicy =
+            IBlockPolicy<NCAction>? easyPolicy = null;
+            IBlockPolicy<NCAction>? hardPolicy = null;
+            IStagePolicy<NCAction> stagePolicy =
                 txLifeTime == default
-                    ? new VolatileStagePolicy<NineChroniclesActionType>()
-                    : new VolatileStagePolicy<NineChroniclesActionType>(txLifeTime);
+                    ? new VolatileStagePolicy<NCAction>()
+                    : new VolatileStagePolicy<NCAction>(txLifeTime);
             if (isDev)
             {
                 easyPolicy = new ReorgPolicy(new RewardGold(), 1);
@@ -114,7 +109,7 @@ namespace NineChronicles.Headless
             ActionRenderer = blockPolicySource.ActionRenderer;
             ExceptionRenderer = new ExceptionRenderer();
             NodeStatusRenderer = new NodeStatusRenderer();
-            var renderers = new List<IRenderer<NineChroniclesActionType>>();
+            var renderers = new List<IRenderer<NCAction>>();
             var strictRenderer = new StrictRenderer(onError: exc =>
                 ExceptionRenderer.RenderException(
                     RPCException.InvalidRenderException,
@@ -131,10 +126,10 @@ namespace NineChronicles.Headless
                 renderers.Add(blockPolicySource.BlockRenderer);
                 // The following "nullRenderer" does nothing.  It's just for filling
                 // the LoggedActionRenderer<T>() constructor's parameter:
-                IActionRenderer<NineChroniclesActionType> nullRenderer =
-                    new AnonymousActionRenderer<NineChroniclesActionType>();
+                IActionRenderer<NCAction> nullRenderer =
+                    new AnonymousActionRenderer<NCAction>();
                 renderers.Add(
-                    new LoggedActionRenderer<NineChroniclesActionType>(
+                    new LoggedActionRenderer<NCAction>(
                         nullRenderer,
                         Log.Logger,
                         logLevel
@@ -154,8 +149,8 @@ namespace NineChronicles.Headless
             }
 
             async Task minerLoopAction(
-                BlockChain<NineChroniclesActionType> chain,
-                Swarm<NineChroniclesActionType> swarm,
+                BlockChain<NCAction> chain,
+                Swarm<NCAction> swarm,
                 PrivateKey privateKey,
                 CancellationToken cancellationToken)
             {
@@ -189,8 +184,8 @@ namespace NineChronicles.Headless
             }
 
             async Task devMinerLoopAction(
-                Swarm<NineChroniclesActionType> mainSwarm,
-                Swarm<NineChroniclesActionType> subSwarm,
+                Swarm<NCAction> mainSwarm,
+                Swarm<NCAction> subSwarm,
                 PrivateKey privateKey,
                 CancellationToken cancellationToken)
             {
@@ -220,7 +215,7 @@ namespace NineChronicles.Headless
 
             if (isDev)
             {
-                NodeService = new DevLibplanetNodeService<NineChroniclesActionType>(
+                NodeService = new DevLibplanetNodeService<NCAction>(
                     Properties,
                     easyPolicy,
                     hardPolicy,
@@ -239,7 +234,7 @@ namespace NineChronicles.Headless
             }
             else
             {
-                NodeService = new LibplanetNodeService<NineChroniclesActionType>(
+                NodeService = new LibplanetNodeService<NCAction>(
                     Properties,
                     blockPolicy,
                     stagePolicy,
@@ -274,54 +269,103 @@ namespace NineChronicles.Headless
             }
         }
 
-        internal static IBlockPolicy<PolymorphicAction<ActionBase>> GetBlockPolicy(int minimumDifficulty, int maximumTransactions) =>
-            new BlockPolicySource(Log.Logger, LogEventLevel.Debug)
-                .GetPolicy(minimumDifficulty, maximumTransactions);
-
-        public IHostBuilder Configure(IHostBuilder hostBuilder)
+        public static NineChroniclesNodeService Create(
+            NineChroniclesNodeServiceProperties properties, 
+            StandaloneContext context
+        )
         {
-            RpcContext context = new RpcContext();
-            if (RpcProperties is RpcNodeServiceProperties rpcProperties)
+            if (context is null)
             {
-                hostBuilder = hostBuilder
-                    .UseMagicOnion(
-                        new ServerPort(rpcProperties.RpcListenHost, rpcProperties.RpcListenPort, ServerCredentials.Insecure)
-                    )
-                    .ConfigureServices((ctx, services) =>
-                    {
-                        services.AddHostedService(provider => new ActionEvaluationPublisher(
-                            BlockRenderer,
-                            ActionRenderer,
-                            ExceptionRenderer,
-                            NodeStatusRenderer,
-                            IPAddress.Loopback.ToString(),
-                            rpcProperties.RpcListenPort,
-                            context
-                        ));
-                    });
+                throw new ArgumentNullException(nameof(context));
             }
 
-            return hostBuilder.ConfigureServices((ctx, services) =>
+            Progress<PreloadState> progress = new Progress<PreloadState>(state =>
             {
-                services.AddHostedService(provider =>
-                {
-                    provider.GetService<IHostApplicationLifetime>().ApplicationStopped.Register(() =>
-                    {
-                        NodeService?.Dispose();
-                    });
-                    return NodeService;
-                });
-                services.AddSingleton(provider => NodeService?.Swarm);
-                services.AddSingleton(provider => NodeService?.BlockChain);
-                services.AddSingleton(provider => context);
-                services.AddSingleton(provider => NodeService?.Properties);
+                context.PreloadStateSubject.OnNext(state);
             });
+
+            if (properties.Libplanet is null)
+            {
+                throw new InvalidOperationException($"{nameof(properties.Libplanet)} is null.");
+            }
+
+            properties.Libplanet.DifferentAppProtocolVersionEncountered =
+                (Peer peer, AppProtocolVersion peerVersion, AppProtocolVersion localVersion) =>
+                {
+                    context.DifferentAppProtocolVersionEncounterSubject.OnNext(
+                        new DifferentAppProtocolVersionEncounter(peer, peerVersion, localVersion)
+                    );
+
+                    // FIXME: 일단은 버전이 다른 피어는 마주쳐도 쌩깐다.
+                    return false;
+                };
+
+            properties.Libplanet.NodeExceptionOccurred =
+                (code, message) =>
+                {
+                    context.NodeExceptionSubject.OnNext(
+                        new NodeException(code, message)
+                    );
+                };
+
+            var service = new NineChroniclesNodeService(
+                properties.MinerPrivateKey,
+                properties.Libplanet,
+                preloadProgress: progress,
+                ignoreBootstrapFailure: properties.IgnoreBootstrapFailure,
+                ignorePreloadFailure: properties.IgnorePreloadFailure,
+                strictRendering: properties.StrictRender,
+                isDev: properties.Dev,
+                blockInterval: properties.BlockInterval,
+                reorgInterval: properties.ReorgInterval,
+                authorizedMiner: properties.AuthorizedMiner,
+                txLifeTime: properties.TxLifeTime);
+            service.ConfigureContext(context);
+            return service;
         }
+
+        internal static IBlockPolicy<NCAction> GetBlockPolicy(int minimumDifficulty, int maximumTransactions) =>
+            new BlockPolicySource(Log.Logger, LogEventLevel.Debug)
+                .GetPolicy(minimumDifficulty, maximumTransactions);
 
         public void StartMining() => NodeService?.StartMining(MinerPrivateKey);
 
         public void StopMining() => NodeService?.StopMining();
         
         public Task<bool> CheckPeer(string addr) => NodeService?.CheckPeer(addr) ?? throw new InvalidOperationException();
+
+        public Task StartAsync(CancellationToken cancellationToken) 
+        {
+            if (!Properties.NoMiner)
+            {
+                StartMining();
+            }
+
+            return NodeService.StartAsync(cancellationToken);
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken) => NodeService.StopAsync(cancellationToken);
+
+        public void Dispose()
+        {
+            NodeService?.Dispose();
+        }
+
+        internal void ConfigureContext(StandaloneContext standaloneContext)
+        {
+            standaloneContext.NineChroniclesNodeService = this;
+            standaloneContext.BlockChain = Swarm.BlockChain;
+            standaloneContext.Store = Store;
+            BootstrapEnded.WaitAsync().ContinueWith((task) =>
+            {
+                standaloneContext.BootstrapEnded = true;
+                standaloneContext.NodeStatusSubject.OnNext(standaloneContext.NodeStatus);
+            });
+            PreloadEnded.WaitAsync().ContinueWith((task) =>
+            {
+                standaloneContext.PreloadEnded = true;
+                standaloneContext.NodeStatusSubject.OnNext(standaloneContext.NodeStatus);
+            });
+        }
     }
 }

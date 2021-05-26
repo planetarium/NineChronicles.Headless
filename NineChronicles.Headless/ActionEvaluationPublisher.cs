@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -50,7 +51,8 @@ namespace NineChronicles.Headless
             _context = context;
         }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        => Task.Run(async () =>
         {
             await Task.Delay(1000, stoppingToken);
             _client = StreamingHubClient.Connect<IActionEvaluationHub, IActionEvaluationHubReceiver>(
@@ -182,7 +184,7 @@ namespace NineChronicles.Headless
                 },
                 stoppingToken
             );
-            
+
             _exceptionRenderer.EveryException().Subscribe(
                 async tuple =>
                 {
@@ -199,7 +201,7 @@ namespace NineChronicles.Headless
                 },
                 stoppingToken
             );
-            
+
             _nodeStatusRenderer.EveryChangedStatus().Subscribe(
                 async isPreloadStarted =>
                 {
@@ -222,7 +224,7 @@ namespace NineChronicles.Headless
                 },
                 stoppingToken
             );
-        }
+        });
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {

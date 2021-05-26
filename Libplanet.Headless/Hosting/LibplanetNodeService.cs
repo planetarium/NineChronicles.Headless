@@ -25,7 +25,7 @@ using Serilog.Events;
 
 namespace Libplanet.Headless.Hosting
 {
-    public class LibplanetNodeService<T> : IHostedService, IDisposable
+    public class LibplanetNodeService<T> : BackgroundService, IDisposable
         where T : IAction, new()
     {
         public readonly IStore Store;
@@ -170,39 +170,40 @@ namespace Libplanet.Headless.Hosting
             _ignorePreloadFailure = ignorePreloadFailure;
         }
 
-        public virtual async Task StartAsync(CancellationToken cancellationToken)
-        {
-            Log.Debug("Trying to delete {count} obsoleted chains...", _obsoletedChainIds.Count());
-            _ = Task.Run(() =>
-            {
-                foreach (Guid chainId in _obsoletedChainIds)
+        protected override Task ExecuteAsync(CancellationToken cancellationToken)
+            => Task.Run(async () =>
+            {   
+                Log.Debug("Trying to delete {count} obsoleted chains...", _obsoletedChainIds.Count());
+                _ = Task.Run(() =>
                 {
-                    Store.DeleteChainId(chainId);
-                    Log.Debug("Obsoleted chain[{chainId}] has been deleted.", chainId);
+                    foreach (Guid chainId in _obsoletedChainIds)
+                    {
+                        Store.DeleteChainId(chainId);
+                        Log.Debug("Obsoleted chain[{chainId}] has been deleted.", chainId);
+                    }
+                });
+                if (!cancellationToken.IsCancellationRequested && !_stopRequested)
+                {
+                    var tasks = new List<Task>
+                    {
+                        StartSwarm(true, cancellationToken),
+                        CheckMessage(Properties.MessageTimeout, cancellationToken),
+                        CheckTip(Properties.TipTimeout, cancellationToken)
+                    };
+                    if (Properties.Peers.Any())
+                    {
+                        tasks.Add(CheckDemand(Properties.DemandBuffer, cancellationToken));
+                        tasks.Add(CheckPeerTable(cancellationToken));
+                    }
+
+                    if (Properties.StaticPeers.Any())
+                    {
+                        tasks.Add(
+                            CheckStaticPeersAsync(Properties.StaticPeers, cancellationToken));
+                    }
+                    await await Task.WhenAny(tasks);
                 }
             });
-            if (!cancellationToken.IsCancellationRequested && !_stopRequested)
-            {
-                var tasks = new List<Task>
-                {
-                    StartSwarm(true, cancellationToken),
-                    CheckMessage(Properties.MessageTimeout, cancellationToken),
-                    CheckTip(Properties.TipTimeout, cancellationToken)
-                };
-                if (Properties.Peers.Any())
-                {
-                    tasks.Add(CheckDemand(Properties.DemandBuffer, cancellationToken));
-                    tasks.Add(CheckPeerTable(cancellationToken));
-                }
-
-                if (Properties.StaticPeers.Any())
-                {
-                    tasks.Add(
-                        CheckStaticPeersAsync(Properties.StaticPeers, cancellationToken));
-                }
-                await await Task.WhenAny(tasks);
-            }
-        }
 
         // 이 privateKey는 swarm에서 사용하는 privateKey와 다를 수 있습니다.
         public virtual void StartMining(PrivateKey privateKey)
@@ -248,7 +249,7 @@ namespace Libplanet.Headless.Hosting
             return !(boundPeer is null);
         }
 
-        public virtual Task StopAsync(CancellationToken cancellationToken)
+        public override Task StopAsync(CancellationToken cancellationToken)
         {
             _stopRequested = true;
             StopMining();
@@ -300,8 +301,7 @@ namespace Libplanet.Headless.Hosting
                 Log.Debug($"{message}. DefaultStore will be used.");
             }
 
-            store ??= new DefaultStore(
-                path, flush: false, compress: true, statesCacheSize: statesCacheSize);
+            store ??= new DefaultStore(path, flush: false);
 
             IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states")),
                 stateHashKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "state_hashes"));
@@ -605,7 +605,7 @@ namespace Libplanet.Headless.Hosting
             }
         }
 
-        public virtual void Dispose()
+        public override void Dispose()
         {
             Log.Debug($"Disposing {nameof(LibplanetNodeService<T>)}...");
 

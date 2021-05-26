@@ -18,6 +18,7 @@ using Libplanet.KeyStore;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
 using Libplanet.Tx;
+using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
@@ -42,22 +43,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task GetState()
         {
-            var codec = new Codec();
-            var miner = new Address();
+            Address adminStateAddress = AdminState.Address;
+            var result = await ExecuteQueryAsync($"query {{ state(address: \"{adminStateAddress}\") }}");
+            var data = (Dictionary<string, object>)result.Data;
+            IValue rawVal = new Codec().Decode(ByteUtil.ParseHex((string)data["state"]));
+            AdminState adminState = new AdminState((Dictionary)rawVal);
 
-            const int repeat = 10;
-            foreach (long index in Enumerable.Range(1, repeat))
-            {
-                await BlockChain.MineBlock(miner);
-
-                var result = await ExecuteQueryAsync($"query {{ state(address: \"{miner.ToHex()}\") }}");
-
-                var data = (Dictionary<string, object>) result.Data;
-                var state = (Integer)codec.Decode(ByteUtil.ParseHex((string) data["state"]));
-
-                // TestRewardGold에서 miner에게 1 gold 씩 주므로 block index와 같을 것입니다.
-                Assert.Equal((Integer)index, state);
-            }
+            Assert.Equal(AdminAddress, adminState.AdminAddress);
         }
 
         [Theory]
@@ -166,12 +158,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task NodeStatusStagedTxIds()
         {
-            var apvPrivateKey = new PrivateKey();
-            var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var genesis = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock();
-
-            var service = ServiceBuilder.CreateNineChroniclesNodeService(genesis);
-            StandaloneServices.ConfigureStandaloneContext(service, StandaloneContextFx);
+            var privateKey = new PrivateKey();
 
             var result = await ExecuteQueryAsync("query { nodeStatus { stagedTxIds } }");
             var expectedResult = new Dictionary<string, object>()
@@ -184,7 +171,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Null(result.Errors);
             Assert.Equal(expectedResult, result.Data);
 
-            var tx = StandaloneContextFx.BlockChain!.MakeTransaction(
+            var anonymousTx = StandaloneContextFx.BlockChain!.MakeTransaction(
                 new PrivateKey(), 
                 new PolymorphicAction<ActionBase>[] { }
             );
@@ -196,22 +183,22 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 {
                     ["stagedTxIds"] = new List<object>
                     {
-                        tx.Id.ToString(),
+                        anonymousTx.Id.ToString(),
                     }
                 },
             };
             Assert.Null(result.Errors);
             Assert.Equal(expectedResult, result.Data);
 
-            var apvTx = StandaloneContextFx.BlockChain.MakeTransaction(
-                apvPrivateKey,
+            var signerTx = StandaloneContextFx.BlockChain.MakeTransaction(
+                privateKey,
                 new PolymorphicAction<ActionBase>[] { }
             );
 
-            var apvAddress = apvPrivateKey.ToAddress();
+            var address = privateKey.ToAddress();
             var query = $@"query {{
                 nodeStatus {{
-                    stagedTxIds(address: ""{apvAddress}"")
+                    stagedTxIds(address: ""{address}"")
                 }}
             }}";
             result = await ExecuteQueryAsync(query);
@@ -221,7 +208,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 {
                     ["stagedTxIds"] = new List<object>
                     {
-                        apvTx.Id.ToString(),
+                        signerTx.Id.ToString(),
                     }
                 },
             };
@@ -577,6 +564,131 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 .First()
                 .As<Dictionary<string, object>>()["inspection"];
             Assert.Equal(transaction.Actions.First().PlainValue.Inspection, plainValue);
+        }
+
+        [Fact]
+        public async Task TransferNCGHistories()
+        {
+            PrivateKey minerPrivateKey = new PrivateKey();
+            Address sender = minerPrivateKey.ToAddress(), recipient = new PrivateKey().ToAddress();
+
+            await BlockChain.MineBlock(sender);
+            await BlockChain.MineBlock(recipient);
+
+            var currency = new GoldCurrencyState((Dictionary) BlockChain.GetState(Addresses.GoldCurrency)).Currency;
+            var transferAsset = new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 10, 0));
+            var tx = BlockChain.MakeTransaction(minerPrivateKey, new PolymorphicAction<ActionBase>[] {transferAsset});
+            var block = await BlockChain.MineBlock(minerPrivateKey.ToAddress(), append: false);
+            BlockChain.Append(block);
+            Assert.NotNull(StandaloneContextFx.Store?.GetTxExecution(block.Hash, tx.Id));
+
+            var blockHashHex = ByteUtil.Hex(block.Hash.ToByteArray());
+            var result =
+                await ExecuteQueryAsync(
+                    $"{{ transferNCGHistories(blockHash: \"{blockHashHex}\") {{ blockHash txId sender recipient amount }} }}");
+            Assert.Null(result.Errors);
+            Assert.Equal(new List<object>
+            {
+                new Dictionary<string, object>
+                {
+                    ["blockHash"] = block.Hash.ToString(),
+                    ["txId"] = tx.Id.ToString(),
+                    ["sender"] = transferAsset.Sender.ToString(),
+                    ["recipient"] = transferAsset.Recipient.ToString(),
+                    ["amount"] = transferAsset.Amount.GetQuantityString(),
+                }
+            }, result.Data.As<Dictionary<string, object>>()["transferNCGHistories"]);
+        }
+
+        [Fact]
+        public async Task MinerAddress()
+        {
+            var userPrivateKey = new PrivateKey();
+            var userAddress = userPrivateKey.ToAddress();
+            var service = MakeMineChroniclesNodeService(userPrivateKey);
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
+            const string query = @"query {
+                minerAddress
+            }";
+            var queryResult = await ExecuteQueryAsync(query);
+            Assert.Equal(
+                new Dictionary<string, object?>
+                {
+                    ["minerAddress"] = userAddress.ToString()
+                },
+                queryResult.Data
+            );
+        }
+
+        [Fact]
+        public async Task MonsterCollectionStatus_AgentState_Null()
+        {
+            var userPrivateKey = new PrivateKey();
+            var userAddress = userPrivateKey.ToAddress();
+            var service = MakeMineChroniclesNodeService(userPrivateKey);
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
+            const string query = @"query {
+                monsterCollectionStatus {
+                    canReceive
+                    fungibleAssetValue {
+                        quantity
+                        currency
+                    }
+                    rewardInfos {
+                        itemId
+                        quantity
+                    }
+                }
+            }";
+            var queryResult = await ExecuteQueryAsync(query);
+            Assert.Single(queryResult.Errors);
+            Assert.Equal($"{nameof(AgentState)} Address: {userAddress} is null.", queryResult.Errors.First().Message);
+        }
+
+
+        [Fact]
+        public async Task MonsterCollectionStatus_MonsterCollectionState_Null()
+        {
+            var userPrivateKey = new PrivateKey();
+            var userAddress = userPrivateKey.ToAddress();
+            var service = MakeMineChroniclesNodeService(userPrivateKey);
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
+            var action = new CreateAvatar2
+            {
+                index = 0,
+                hair = 1,
+                lens = 2,
+                ear = 3,
+                tail = 4,
+                name = "action",
+            };
+            var blockChain = StandaloneContextFx.BlockChain;
+            var transaction = blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
+            blockChain.StageTransaction(transaction);
+            await blockChain.MineBlock(new Address());
+
+            const string query = @"query {
+                monsterCollectionStatus {
+                    canReceive
+                    fungibleAssetValue {
+                        quantity
+                        currency
+                    }
+                    rewardInfos {
+                        itemId
+                        quantity
+                    }
+                }
+            }";
+            var queryResult = await ExecuteQueryAsync(query);
+            Assert.Single(queryResult.Errors);
+            Assert.Equal(
+                $"{nameof(MonsterCollectionState)} Address: {MonsterCollectionState.DeriveAddress(userAddress, 0)} is null.",
+                queryResult.Errors.First().Message
+            );
         }
 
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)
