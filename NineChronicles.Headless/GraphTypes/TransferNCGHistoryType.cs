@@ -22,6 +22,9 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<StringGraphType>>(
                 name: "amount",
                 resolve: context => context.Source.Amount.GetQuantityString());
+            Field<StringGraphType>(
+                name: "memo",
+                resolve: context => context.Source.Memo);
         }
     }
 }

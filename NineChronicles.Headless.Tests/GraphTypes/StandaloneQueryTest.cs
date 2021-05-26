@@ -566,8 +566,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(transaction.Actions.First().PlainValue.Inspection, plainValue);
         }
 
-        [Fact]
-        public async Task TransferNCGHistories()
+        [Theory]
+        [InlineData(null)]
+        [InlineData("memo")]
+        public async Task TransferNCGHistories(string? memo)
         {
             PrivateKey minerPrivateKey = new PrivateKey();
             Address sender = minerPrivateKey.ToAddress(), recipient = new PrivateKey().ToAddress();
@@ -576,7 +578,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             await BlockChain.MineBlock(recipient);
 
             var currency = new GoldCurrencyState((Dictionary) BlockChain.GetState(Addresses.GoldCurrency)).Currency;
-            var transferAsset = new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 10, 0));
+            var transferAsset = new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 10, 0), memo);
             var tx = BlockChain.MakeTransaction(minerPrivateKey, new PolymorphicAction<ActionBase>[] {transferAsset});
             var block = await BlockChain.MineBlock(minerPrivateKey.ToAddress(), append: false);
             BlockChain.Append(block);
@@ -585,17 +587,18 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockHashHex = ByteUtil.Hex(block.Hash.ToByteArray());
             var result =
                 await ExecuteQueryAsync(
-                    $"{{ transferNCGHistories(blockHash: \"{blockHashHex}\") {{ blockHash txId sender recipient amount }} }}");
+                    $"{{ transferNCGHistories(blockHash: \"{blockHashHex}\") {{ blockHash txId sender recipient amount memo }} }}");
             Assert.Null(result.Errors);
             Assert.Equal(new List<object>
             {
-                new Dictionary<string, object>
+                new Dictionary<string, object?>
                 {
                     ["blockHash"] = block.Hash.ToString(),
                     ["txId"] = tx.Id.ToString(),
                     ["sender"] = transferAsset.Sender.ToString(),
                     ["recipient"] = transferAsset.Recipient.ToString(),
                     ["amount"] = transferAsset.Amount.GetQuantityString(),
+                    ["memo"] = memo,
                 }
             }, result.Data.As<Dictionary<string, object>>()["transferNCGHistories"]);
         }
