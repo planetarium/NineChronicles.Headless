@@ -8,6 +8,7 @@ using Libplanet.Explorer.GraphTypes;
 using Libplanet.Headless;
 using Libplanet.Net;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -18,6 +19,7 @@ using Libplanet.Assets;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
+using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States;
 using Serilog;
 
@@ -210,6 +212,7 @@ namespace NineChronicles.Headless.GraphTypes
                     (Dictionary) StandaloneContext.NineChroniclesNodeService.BlockChain.GetState(Addresses.GoldCurrency)
                 ).Currency;
             FungibleAssetValue balance = StandaloneContext.NineChroniclesNodeService.BlockChain.GetBalance(agentAddress, currency);
+            var rewardInfos = new List<MonsterCollectionRewardSheet.RewardInfo>();
             if (StandaloneContext.NineChroniclesNodeService.BlockChain.GetState(agentAddress) is Dictionary agentDict)
             {
                 AgentState agentState = new AgentState(agentDict);
@@ -218,9 +221,14 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     MonsterCollectionState monsterCollectionState = new MonsterCollectionState(collectDict);
                     canReceive = monsterCollectionState.CanReceive(pair.NewTip.Index);
+                    var rewardLevel= monsterCollectionState.GetRewardLevel(pair.NewTip.Index);
+                    if (rewardLevel > 0)
+                    {
+                        rewardInfos = monsterCollectionState.RewardLevelMap[rewardLevel];
+                    }
                 }
             }
-            MonsterCollectionStatus monsterCollectionStatus = new MonsterCollectionStatus(canReceive, balance);
+            MonsterCollectionStatus monsterCollectionStatus = new MonsterCollectionStatus(canReceive, balance, rewardInfos);
             StandaloneContext.MonsterCollectionStatusSubject.OnNext(monsterCollectionStatus);
         }
 

@@ -10,8 +10,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
     public class FungibleAssetValueTypeTest
     {
         [Theory]
-        [InlineData(100, 0, "100")]
+        [InlineData(100, 0, "100.00")]
         [InlineData(0, 2, "0.02")]
+        [InlineData(20, 2, "20.02")]
         public async Task Query(int major, int minor, string decimalString)
         {
             const string query = @"

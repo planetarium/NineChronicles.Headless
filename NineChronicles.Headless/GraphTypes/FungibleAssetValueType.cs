@@ -12,7 +12,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context => context.Source.Currency.Ticker);
             Field<NonNullGraphType<DecimalGraphType>>(
                 name: "quantity",
-                resolve: context => context.Source.GetQuantityString());
+                resolve: context => context.Source.GetQuantityString(true));
         }
     }
 }
