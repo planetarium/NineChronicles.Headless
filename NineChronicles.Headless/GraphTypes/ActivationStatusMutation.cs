@@ -2,20 +2,16 @@ using System;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
-using Libplanet.Action;
-using Libplanet.Blockchain;
-using Libplanet.Crypto;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
-using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
-using Log = Serilog.Log;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    public class ActivationStatusMutation : ObjectGraphType<NineChroniclesNodeService>
+    public class ActivationStatusMutation : ObjectGraphType
     {
-        public ActivationStatusMutation()
+        public ActivationStatusMutation(NineChroniclesNodeService service)
         {
             Field<NonNullGraphType<BooleanGraphType>>("activateAccount",
                 arguments: new QueryArguments(
@@ -29,11 +25,18 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         string encodedActivationKey =
                             context.GetArgument<string>("encodedActivationKey");
-                        NineChroniclesNodeService service = context.Source;
                         // FIXME: Private key may not exists at this moment.
-                        PrivateKey privateKey = service.PrivateKey;
+                        if (!(service.MinerPrivateKey is { } privateKey))
+                        {
+                            throw new InvalidOperationException($"{nameof(privateKey)} is null.");
+                        }
+
                         ActivationKey activationKey = ActivationKey.Decode(encodedActivationKey);
-                        BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
+                        if (!(service.Swarm?.BlockChain is { } blockChain))
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
                         IValue state = blockChain.GetState(activationKey.PendingAddress);
 
                         if (!(state is Bencodex.Types.Dictionary asDict))
@@ -46,7 +49,7 @@ namespace NineChronicles.Headless.GraphTypes
                         ActivateAccount action = activationKey.CreateActivateAccount(
                             pendingActivationState.Nonce);
 
-                        var actions = new NineChroniclesActionType[] { action };
+                        var actions = new NCAction[] { action };
                         blockChain.MakeTransaction(privateKey, actions);
                     }
                     catch (ArgumentException ae)

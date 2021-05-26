@@ -1,38 +1,49 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using Amazon;
 using Amazon.CognitoIdentity;
 using Amazon.Runtime;
+using Amazon.S3;
 using Cocona;
+using Cocona.Lite;
 using Libplanet;
+using Libplanet.Crypto;
+using Libplanet.Extensions.Cocona.Commands;
 using Libplanet.KeyStore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NineChronicles.Headless.Executable.Commands;
+using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Properties;
 using Org.BouncyCastle.Security;
 using Sentry;
 using Serilog;
-using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+using Serilog.Formatting.Compact;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace NineChronicles.Headless.Executable
 {
+    [HasSubCommands(typeof(ValidationCommand), "validation")]
+    [HasSubCommands(typeof(ChainCommand), "chain")]
+    [HasSubCommands(typeof(NineChronicles.Headless.Executable.Commands.KeyCommand), "key")]
+    [HasSubCommands(typeof(ApvCommand), "apv")]
     public class Program : CoconaLiteConsoleAppBase
     {
         const string SentryDsn = "https://ceac97d4a7d34e7b95e4c445b9b5669e@o195672.ingest.sentry.io/5287621";
-
-        private const string LogTemplate =
-            "[{Timestamp:HH:mm:ss} {Level:u3}{SubLevel}] {Message:lj}{NewLine}{Exception}";
 
         static async Task Main(string[] args)
         {
 #if SENTRY || ! DEBUG
             using var _ = SentrySdk.Init(ConfigureSentryOptions);
 #endif
-            await CoconaLiteApp.RunAsync<Program>(args);
+            await CoconaLiteApp.Create()
+                .ConfigureServices(services =>
+                {
+                    services.AddSingleton<IConsole, StandardConsole>();
+                    services.AddSingleton<IKeyStore>(Web3KeyStore.DefaultKeyStore);
+                })
+                .RunAsync<Program>(args);
         }
 
         static void ConfigureSentryOptions(SentryOptions o)
@@ -46,30 +57,36 @@ namespace NineChronicles.Headless.Executable
 #endif
         }
 
-        [Command(Description = "Run headless application with options.")]
+        [PrimaryCommand]
         public async Task Run(
-            bool noMiner = false,
             [Option("app-protocol-version", new[] { 'V' }, Description = "App protocol version token")]
-            string appProtocolVersionToken = null,
+            string appProtocolVersionToken,
             [Option('G')]
-            string genesisBlockPath = null,
+            string genesisBlockPath,
+            bool noMiner = false,
             [Option('H')]
-            string host = null,
+            string? host = null,
             [Option('P')]
             ushort? port = null,
+            [Option("swarm-private-key",
+                Description = "The private key used for signing messages and to specify your node. " +
+                              "If you leave this null, a randomly generated value will be used.")]
+            string? swarmPrivateKeyString = null,
             [Option('D')]
             int minimumDifficulty = 5000000,
-            [Option("private-key")]
-            string privateKeyString = null,
-            string storeType = null,
-            string storePath = null,
+            [Option("miner-private-key",
+                Description = "The private key used for mining blocks. " +
+                              "Must not be null if you want to turn on mining with libplanet-node.")]
+            string? minerPrivateKeyString = null,
+            string? storeType = null,
+            string? storePath = null,
             [Option("ice-server", new [] { 'I', })]
-            string[] iceServerStrings = null,
+            string[]? iceServerStrings = null,
             [Option("peer")]
-            string[] peerStrings = null,
+            string[]? peerStrings = null,
             [Option("trusted-app-protocol-version-signer", new[] { 'T' },
                     Description = "Trustworthy signers who claim new app protocol versions")]
-            string[] trustedAppProtocolVersionSigners = null,
+            string[]? trustedAppProtocolVersionSigners = null,
             bool rpcServer = false,
             string rpcListenHost = "0.0.0.0",
             int? rpcListenPort = null,
@@ -82,9 +99,9 @@ namespace NineChronicles.Headless.Executable
             [Option("graphql-secret-token-path", Description = "The path to write GraphQL secret token. " +
                                                                "If you want to protect this headless application, " +
                                                                "you should use this option and take it into headers.")]
-            string graphQLSecretTokenPath = null,
-            [Option("libplanet-node")]
-            bool libplanetNode = false,
+            string? graphQLSecretTokenPath = null,
+            [Option(Description = "Run without CORS policy.")]
+            bool noCors = false,
             [Option("workers", Description = "Number of workers to use in Swarm")]
             int workers = 5,
             [Option(
@@ -116,20 +133,29 @@ namespace NineChronicles.Headless.Executable
             int reorgInterval = 0,
             [Option(Description = "Log action renders besides block renders.  --rpc-server implies this.")]
             bool logActionRenders = false,
-            [Option(Description = "The log minimum level during headless execution.  debug by default.")]
-            string logMinimumLevel = "debug",
             [Option(Description = "The Cognito identity for AWS CloudWatch logging.")]
-            string awsCognitoIdentity = null,
+            string? awsCognitoIdentity = null,
             [Option(Description = "The access key for AWS CloudWatch logging.")]
-            string awsAccessKey = null,
+            string? awsAccessKey = null,
             [Option(Description = "The secret key for AWS CloudWatch logging.")]
-            string awsSecretKey = null,
+            string? awsSecretKey = null,
             [Option(Description = "The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2).")]
-            string awsRegion = null,
+            string? awsRegion = null,
             [Option(Description = "Run as an authorized miner, which mines only blocks that should be authorized.")]
             bool authorizedMiner = false,
             [Option(Description = "The lifetime of each transaction, which uses minute as its unit.  60 (m) by default.")]
-            int txLifeTime = 60
+            int txLifeTime = 60,
+            [Option(Description = "The grace period for new messages, which uses second as its unit.  60 (s) by default.")]
+            int messageTimeout = 60,
+            [Option(Description = "The grace period for tip update, which uses second as its unit.  60 (s) by default.")]
+            int tipTimeout = 60,
+            [Option(Description =
+                "A number that determines how far behind the demand the tip of the chain " +
+                "will publish `NodeException` to GraphQL subscriptions.  1150 blocks by default.")]
+            int demandBuffer = 1150,
+            [Option("static-peer",
+                Description = "A list of peers that the node will continue to maintain.")]
+            string[]? staticPeerStrings = null
         )
         {
 #if SENTRY || ! DEBUG
@@ -138,9 +164,10 @@ namespace NineChronicles.Headless.Executable
 #endif
             
             // Setup logger.
+            var configurationBuilder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
+            var configuration = configurationBuilder.Build();
             var loggerConf = new LoggerConfiguration()
-                .WriteTo.Console(outputTemplate: LogTemplate)
-                .ConfigureMinimumLevel(logMinimumLevel);
+                .ReadFrom.Configuration(configuration);
 #if SENTRY || ! DEBUG
             loggerConf = loggerConf
                 .WriteTo.Sentry(o =>
@@ -161,7 +188,7 @@ namespace NineChronicles.Headless.Executable
 
             if (useBasicAwsCredentials ^ useCognitoCredentials  && !(awsRegion is null))
             {
-                var regionEndpoint = RegionEndpoint.GetBySystemName(awsRegion);
+                RegionEndpoint regionEndpoint = RegionEndpoint.GetBySystemName(awsRegion);
                 AWSCredentials credentials = useCognitoCredentials
                     ? (AWSCredentials)new CognitoAWSCredentials(awsCognitoIdentity, regionEndpoint)
                     : (AWSCredentials)new BasicAWSCredentials(awsAccessKey, awsSecretKey);
@@ -173,28 +200,31 @@ namespace NineChronicles.Headless.Executable
                     StoreAWSSinkGuid(guid.Value);   
                 }
 
-                var awsSink = new AWSSink(
-                    credentials,
-                    regionEndpoint,
-                    "9c-standalone-logs",
-                    guid.ToString());
-                loggerConf.WriteTo.Sink(awsSink);
+                loggerConf = loggerConf.WriteTo.AmazonS3(
+                    new AmazonS3Client(credentials, regionEndpoint),
+                    "log.json",
+                    "9c-headless-logs",
+                    formatter: new CompactJsonFormatter(),
+                    rollingInterval: Serilog.Sinks.AmazonS3.RollingInterval.Hour,
+                    batchingPeriod: TimeSpan.FromMinutes(10),
+                    batchSizeLimit: 10000,
+                    bucketPath: guid.ToString()
+                );
             }
 
             Log.Logger = loggerConf.CreateLogger();
 
-            if (!graphQLServer && !libplanetNode)
+            if (!noMiner && minerPrivateKeyString is null)
             {
                 throw new CommandExitedException(
-                    "Either --graphql-server or --libplanet-node must be present.",
+                    "--miner-private-key must be present to turn on mining at libplanet node.",
                     -1
                 );
             }
-
-            var tasks = new List<Task>();
+            
             try
             {
-                IHostBuilder graphQLHostBuilder = Host.CreateDefaultBuilder();
+                IHostBuilder hostBuilder = Host.CreateDefaultBuilder();
 
                 var standaloneContext = new StandaloneContext
                 {
@@ -203,7 +233,7 @@ namespace NineChronicles.Headless.Executable
 
                 if (graphQLServer)
                 {
-                    string secretToken = null;
+                    string? secretToken = null;
                     if (graphQLSecretTokenPath is { })
                     {
                         var buffer = new byte[40];
@@ -217,42 +247,21 @@ namespace NineChronicles.Headless.Executable
                         GraphQLListenHost = graphQLHost,
                         GraphQLListenPort = graphQLPort,
                         SecretToken = secretToken,
+                        NoCors = noCors,
                     };
 
                     var graphQLService = new GraphQLService(graphQLNodeServiceProperties);
-                    graphQLHostBuilder =
-                        graphQLService.Configure(graphQLHostBuilder, standaloneContext);
-                    tasks.Add(graphQLHostBuilder.RunConsoleAsync(Context.CancellationToken));
-
-                    await WaitForGraphQLService(graphQLNodeServiceProperties,
-                        Context.CancellationToken);
+                    hostBuilder = graphQLService.Configure(hostBuilder);
                 }
 
-                if (appProtocolVersionToken is null)
-                {
-                    throw new CommandExitedException(
-                        "--app-protocol-version must be present.",
-                        -1
-                    );
-                }
-
-                if (genesisBlockPath is null)
-                {
-                    throw new CommandExitedException(
-                        "--genesis-block-path must be present.",
-                        -1
-                    );
-                }
-
-                RpcNodeServiceProperties? rpcProperties = null;
                 var properties = NineChroniclesNodeServiceProperties
                     .GenerateLibplanetNodeServiceProperties(
                         appProtocolVersionToken,
                         genesisBlockPath,
                         host,
                         port,
+                        swarmPrivateKeyString,
                         minimumDifficulty,
-                        privateKeyString,
                         storeType,
                         storePath,
                         100,
@@ -262,13 +271,14 @@ namespace NineChronicles.Headless.Executable
                         noMiner,
                         workers: workers,
                         confirmations: confirmations,
-                        maximumTransactions: maximumTransactions);
-
+                        maximumTransactions: maximumTransactions,
+                        messageTimeout: messageTimeout,
+                        tipTimeout: tipTimeout,
+                        demandBuffer: demandBuffer,
+                        staticPeerStrings: staticPeerStrings);
 
                 if (rpcServer)
                 {
-                    rpcProperties = NineChroniclesNodeServiceProperties
-                        .GenerateRpcNodeServiceProperties(rpcListenHost, rpcListenPort);
                     properties.Render = true;
                     properties.LogActionRenders = true;
                 }
@@ -278,40 +288,34 @@ namespace NineChronicles.Headless.Executable
                     properties.LogActionRenders = true;
                 }
 
+                var minerPrivateKey = string.IsNullOrEmpty(minerPrivateKeyString)
+                    ? null
+                    : new PrivateKey(ByteUtil.ParseHex(minerPrivateKeyString));
                 var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
                 {
-                    Rpc = rpcProperties,
-                    Libplanet = properties
+                    MinerPrivateKey = minerPrivateKey,
+                    Libplanet = properties,
+                    Dev = isDev,
+                    StrictRender = strictRendering,
+                    BlockInterval = blockInterval,
+                    ReorgInterval = reorgInterval,
+                    AuthorizedMiner = authorizedMiner,
+                    TxLifeTime = TimeSpan.FromMinutes(txLifeTime),
                 };
-
-                NineChroniclesNodeService nineChroniclesNodeService =
-                    StandaloneServices.CreateHeadless(
-                        nineChroniclesProperties,
-                        standaloneContext,
-                        strictRendering: strictRendering,
-                        isDev: isDev,
-                        blockInterval: blockInterval,
-                        reorgInterval: reorgInterval,
-                        authorizedMiner: authorizedMiner,
-                        txLifeTime: TimeSpan.FromMinutes(txLifeTime));
-                standaloneContext.NineChroniclesNodeService = nineChroniclesNodeService;
-
-                if (libplanetNode)
+                hostBuilder.ConfigureServices(services =>
                 {
-                    if (!properties.NoMiner)
-                    {
-                        nineChroniclesNodeService.PrivateKey = properties.PrivateKey;
-                        nineChroniclesNodeService.StartMining();
-                    }
-
-                    IHostBuilder nineChroniclesNodeHostBuilder = Host.CreateDefaultBuilder();
-                    nineChroniclesNodeHostBuilder =
-                        nineChroniclesNodeService.Configure(nineChroniclesNodeHostBuilder);
-                    tasks.Add(
-                        nineChroniclesNodeHostBuilder.RunConsoleAsync(Context.CancellationToken));
+                    services.AddSingleton(_ => standaloneContext);
+                });
+                hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, standaloneContext);
+                if (rpcServer)
+                {
+                    hostBuilder.UseNineChroniclesRPC(
+                        NineChroniclesNodeServiceProperties
+                        .GenerateRpcNodeServiceProperties(rpcListenHost, rpcListenPort)
+                    );
                 }
 
-                await Task.WhenAll(tasks);
+                await hostBuilder.RunConsoleAsync(Context.CancellationToken);
             }
             catch (TaskCanceledException)
             {
@@ -334,28 +338,6 @@ namespace NineChronicles.Headless.Executable
                 throw;
             }
 #endif
-        }
-
-        private async Task WaitForGraphQLService(
-            GraphQLNodeServiceProperties properties,
-            CancellationToken cancellationToken)
-        {
-            using var httpClient = new HttpClient();
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                Log.Debug("Trying to check GraphQL server started...");
-                try
-                {
-                    await httpClient.GetAsync($"http://{IPAddress.Loopback}:{properties.GraphQLListenPort}/health-check", cancellationToken);
-                    break;
-                }
-                catch (HttpRequestException e)
-                {
-                    Log.Error(e, "An exception occurred during connecting to GraphQL server. {e}", e);
-                }
-
-                await Task.Delay(1000, cancellationToken);
-            }
         }
 
         private Guid? LoadAWSSinkGuid()

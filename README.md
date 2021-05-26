@@ -1,12 +1,29 @@
 # NineChronicles Headless
 
+## Table of Contents
+
+- [Run](#run)
+- [Docker Build](#docker-build)
+  * [Command Line Options](#command-line-options)
+  * [Format](#format)
+- [How to run NineChronicles Headless on AWS EC2 instance using Docker](#how-to-run-ninechronicles-headless-on-aws-ec2-instance-using-docker)
+  * [On Your AWS EC2 Instance](#on-your-aws-ec2-instance)
+  * [Building Your Own Docker Image from Your Local](#building-your-own-docker-image-from-your-local)
+- [Nine Chronicles GraphQL API Documentation](#nine-chronicles-graphql-api-documentation)
+
 ## Run
 
 ```
 $ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
-Usage: NineChronicles.Headless.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--minimum-difficulty <Int32>] [--private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--graphql-secret-token-path <String>] [--libplanet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-action-renders] [--log-minimum-level <String>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--tx-life-time <Int32>] [--help] [--version]
+Usage: NineChronicles.Headless.Executable [command]
+Usage: NineChronicles.Headless.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--swarm-private-key <String>] [--minimum-difficulty <Int32>] [--miner-private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--graphql-secret-token-path <String>] [--no-cors] [--libplanet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-action-renders] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--help] [--version]
 
-Run headless application with options.
+NineChronicles.Headless.Executable
+
+Commands:
+  validation
+  chain
+  key
 
 Options:
   --no-miner
@@ -14,8 +31,9 @@ Options:
   -G, --genesis-block-path <String>                         (Default: )
   -H, --host <String>                                       (Default: )
   -P, --port <Nullable`1>                                   (Default: )
+  --swarm-private-key <String>                             The private key used for signing messages and to specify your node. If you leave this null, a randomly generated value will be used. (Default: )
   -D, --minimum-difficulty <Int32>                          (Default: 5000000)
-  --private-key <String>                                    (Default: )
+  --miner-private-key <String>                             The private key used for mining blocks. Must not be null if you want to turn on mining with libplanet-node. (Default: )
   --store-type <String>                                     (Default: )
   --store-path <String>                                     (Default: )
   -I, --ice-server <String>...                              (Default: )
@@ -28,6 +46,7 @@ Options:
   --graphql-host <String>                                   (Default: 0.0.0.0)
   --graphql-port <Nullable`1>                               (Default: )
   --graphql-secret-token-path <String>                     The path to write GraphQL secret token. If you want to protect this headless application, you should use this option and take it into headers. (Default: )
+  --no-cors                                                Run without CORS policy.
   --libplanet-node
   --workers <Int32>                                        Number of workers to use in Swarm (Default: 5)
   --confirmations <Int32>                                  The number of required confirmations to recognize a block.  0 by default. (Default: 0)
@@ -37,13 +56,15 @@ Options:
   --dev.block-interval <Int32>                             The time interval between blocks. It's unit is milliseconds. Works only when dev mode is on.  10000 (ms) by default. (Default: 10000)
   --dev.reorg-interval <Int32>                             The size of reorg interval. Works only when dev mode is on.  0 by default. (Default: 0)
   --log-action-renders                                     Log action renders besides block renders.  --rpc-server implies this.
-  --log-minimum-level <String>                             The log minimum level during headless execution.  debug by default. (Default: debug)
   --aws-cognito-identity <String>                          The Cognito identity for AWS CloudWatch logging. (Default: )
   --aws-access-key <String>                                The access key for AWS CloudWatch logging. (Default: )
   --aws-secret-key <String>                                The secret key for AWS CloudWatch logging. (Default: )
   --aws-region <String>                                    The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2). (Default: )
   --authorized-miner                                       Run as an authorized miner, which mines only blocks that should be authorized.
   --tx-life-time <Int32>                                   The lifetime of each transaction, which uses minute as its unit.  60 (m) by default. (Default: 60)
+  --message-timeout <Int32>                                The grace period for new messages, which uses second as its unit.  60 (s) by default. (Default: 60)
+  --tip-timeout <Int32>                                    The grace period for tip update, which uses second as its unit.  60 (s) by default. (Default: 60)
+  --demand-buffer <Int32>                                  A number that determines how far behind the demand the tip of the chain will publish `NodeException` to GraphQL subscriptions.  1150 blocks by default. (Default: 1150)
   -h, --help                                               Show help message
   --version                                                Show version
 ```
@@ -61,7 +82,8 @@ $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 
 - `-H`, `--host`: Specifies the host name.
 - `-P`, `--port`: Specifies the port number.
-- `--private-key`: Specifies the private Key.
+- `--swarm-private-key`: Specifies the private Key used in swarm.
+- `--miner-private-key`: Specifies the private Key used in mining.
 - `--no-miner`: Disables mining.
 - `--store-path`: Specifies the path for storing data.
 - `-I`, `--ice-server`: Specifies the TURN server info used for NAT Traversal. If there are multiple servers, they can be added by typing: `--ice-server serverA --ice-server serverB ...`.
@@ -81,6 +103,9 @@ $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 -  `--dev`: Flag to turn on the dev mode.
 -  `--dev.block-interval`: Specifies the time interval between blocks by milliseconds in dev mode.
 -  `--dev.reorg-interval`: Specifies the size of reorg interval in dev mode.
+-  `--message-timeout`: Specifies the time limit that determines how old the latest message is received will publish `NodeException` to GraphQL subscriptions.
+-  `--tip-timeout`: Specifies the time limit that determines how old the blockchain's tip is updated will publish `NodeException` to GraphQL subscriptions.
+-  `--demand-buffer`: Specifies the number that determines how far behind the demand the tip of the chain will publish `NodeException` to GraphQL subscriptions.
 
 ### Format
 
@@ -97,7 +122,7 @@ Formatting for `PrivateKey` or `Peer` follows the format in [Nekoyume Project RE
 
 #### 1. Pull ninechronicles-headless Docker image to your AWS EC2 instance from the [official Docker Hub repository](https://hub.docker.com/repository/docker/planetariumhq/ninechronicles-headless).
 
-* If you would like to build your own Docker image from your local, refer to the [appendix](#appendix-building-your-own-docker-image-from-your-local)
+* If you would like to build your own Docker image from your local, refer to [this section](#building-your-own-docker-image-from-your-local).
 
 ```
 $ docker pull planetariumhq/ninechronicles-headless:latest
@@ -128,6 +153,7 @@ planetariumhq/ninechronicles-headless:latest \
 <a href = "#run" title="NineChronicles Headless options">[NineChronicles Headless Options]</a>
 </pre>
 #### Note)
+
 * If you want to use the same headless options as your Nine Chronicles game client, refer to **`config.json`** under **`%localappdata%\Programs\Nine Chronicles\resources\app`**. Inside **`config.json`**, refer to the following properties for your headless options:
   - `GeniesisBlockPath`
   - `MinimumDifficulty`
@@ -141,13 +167,13 @@ planetariumhq/ninechronicles-headless:latest \
   - `Confirmations`
   - `Workers`
 * If you are using an [Elastic IP](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html) on your AWS instance, you must include the IP as the `--host` option but do not need to include the `--ice-server` option.
-* For mining, make sure to include the `--private-key` option with your private key. Also, include `--libplanet-node` to run the default libplanet node. 
+* For mining, make sure to include the `--miner-private-key` option with your private key. Also, include `--libplanet-node` to run the default libplanet node.
 
 ![Docker Run](https://i.imgur.com/VlwFybj.png)
 
 - [Docker Volumes Usage](https://docs.docker.com/storage/volumes/)
 
-### Appendix) Building Your Own Docker Image from Your Local
+### Building Your Own Docker Image from Your Local
 
 #### Pre-requisites
 
@@ -175,3 +201,9 @@ Usage: docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<TAGNAME>]
 - [Docker Push Guide](https://docs.docker.com/engine/reference/commandline/push/)
 
 ![Docker Push](https://i.imgur.com/NWUW9LS.png)
+
+## Nine Chronicles GraphQL API Documentation
+
+Check out [Nine Chronicles GraphQL API Tutorial](https://www.notion.so/Getting-Started-with-Nine-Chronicles-GraphQL-API-a14388a910844a93ab8dc0a2fe269f06) to get you started with using GraphQL API with NineChronicles Headless.
+
+For more information on the GraphQL API, refer to the [NineChronicles Headless GraphQL Documentation](http://api.nine-chronicles.com/).

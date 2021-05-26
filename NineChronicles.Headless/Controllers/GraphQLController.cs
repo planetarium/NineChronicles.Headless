@@ -32,9 +32,6 @@ namespace NineChronicles.Headless.Controllers
         private ConcurrentDictionary<Address, long> NotificationRecords { get; }
             = new ConcurrentDictionary<Address, long>();
         private StandaloneContext StandaloneContext { get; }
-        private Address _address;
-
-        public const string RunStandaloneEndpoint = "/run-standalone";
 
         public const string SetPrivateKeyEndpoint = "/set-private-key";
 
@@ -47,56 +44,6 @@ namespace NineChronicles.Headless.Controllers
             _httpContextAccessor = httpContextAccessor;
             _configuration = configuration;
             StandaloneContext = standaloneContext;
-        }
-
-        [HttpPost(RunStandaloneEndpoint)]
-        public IActionResult RunStandalone()
-        {
-            if (!HasLocalPolicy())
-            {
-                return Unauthorized();
-            }
-
-            if (StandaloneContext.NineChroniclesNodeService is null)
-            {
-                // Waiting node service.
-                return new StatusCodeResult(StatusCodes.Status409Conflict);
-            }
-
-            try
-            {
-                IHostBuilder nineChroniclesNodeHostBuilder = Host.CreateDefaultBuilder();
-                nineChroniclesNodeHostBuilder =
-                    StandaloneContext.NineChroniclesNodeService.Configure(
-                        nineChroniclesNodeHostBuilder);
-                // FIXME: StandaloneContext has both service and blockchain, which is duplicated.
-                StandaloneContext.BlockChain =
-                    StandaloneContext.NineChroniclesNodeService.Swarm.BlockChain;
-                StandaloneContext.NineChroniclesNodeService.BlockRenderer.EveryBlock()
-                    .Subscribe(pair => NotifyRefillActionPoint(pair.NewTip.Index));
-                StandaloneContext.NineChroniclesNodeService.ActionRenderer.EveryRender<ActionBase>()
-                    .Subscribe(NotifyAction);
-                nineChroniclesNodeHostBuilder
-                    .RunConsoleAsync()
-                    .ContinueWith(task =>
-                    {
-                        if (task.IsFaulted)
-                        {
-                            Log.Error(
-                                task.Exception,
-                                "An unexpected error occurred while running NineChroniclesNodeService.",
-                                task.Exception);
-                        }
-                    });
-            }
-            catch (Exception e)
-            {
-                // Unexpected Error.
-                Log.Warning(e, "Failed to launch node service. {e}", e);
-                return new StatusCodeResult(StatusCodes.Status503ServiceUnavailable);
-            }
-
-            return Ok("Node service started.");
         }
 
         [HttpPost(SetPrivateKeyEndpoint)]
@@ -114,10 +61,9 @@ namespace NineChronicles.Headless.Controllers
             }
 
             var privateKey = new PrivateKey(ByteUtil.ParseHex(request.PrivateKeyString));
-            StandaloneContext.NineChroniclesNodeService.PrivateKey = privateKey;
-            _address = privateKey.PublicKey.ToAddress();
-            var msg = $"Private key set ({privateKey.PublicKey.ToAddress()}).";
-            Log.Debug(msg);
+            StandaloneContext.NineChroniclesNodeService.MinerPrivateKey = privateKey;
+            var msg = $"Private key set ({StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress()}).";
+            Log.Information("SetPrivateKey: {Msg}", msg);
             return Ok(msg);
         }
 
@@ -184,6 +130,11 @@ namespace NineChronicles.Headless.Controllers
         //TODO : This should be covered in test.
         private void NotifyRefillActionPoint(long newTipIndex)
         {
+            if (StandaloneContext.KeyStore is null)
+            {
+                throw new InvalidOperationException($"{nameof(StandaloneContext.KeyStore)} is null.");
+            }
+
             List<Tuple<Guid, ProtectedPrivateKey>> tuples =
                 StandaloneContext.KeyStore.List().ToList();
             if (!tuples.Any())
@@ -193,6 +144,10 @@ namespace NineChronicles.Headless.Controllers
 
             IEnumerable<Address> playerAddresses = tuples.Select(tuple => tuple.Item2.Address);
             var chain = StandaloneContext.BlockChain;
+            if (chain is null)
+            {
+                throw new InvalidOperationException($"{nameof(chain)} is null.");
+            }
 
             List<IValue> states = playerAddresses
                 .Select(addr => chain.GetState(addr))
@@ -249,34 +204,47 @@ namespace NineChronicles.Headless.Controllers
 
         private void NotifyAction(ActionBase.ActionEvaluation<ActionBase> eval)
         {
-            if (eval.OutputStates.UpdatedAddresses.Contains(_address))
+            if (StandaloneContext.NineChroniclesNodeService is null)
             {
-                if (eval.Signer == _address)
+                throw new InvalidOperationException(
+                    $"{nameof(StandaloneContext.NineChroniclesNodeService)} is null.");
+            }
+
+            if (StandaloneContext.NineChroniclesNodeService.MinerPrivateKey is null)
+            {
+                Log.Information("PrivateKey is not set. please call SetPrivateKey() first.");
+                return;
+            }
+            Address address = StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress();
+            if (eval.OutputStates.UpdatedAddresses.Contains(address) || eval.Signer == address)
+            {
+                if (eval.Signer == address)
                 {
                     var type = NotificationEnum.Refill;
                     var msg = string.Empty;
                     switch (eval.Action)
                     {
-                        case HackAndSlash3 has:
+                        case HackAndSlash4 has:
                             type = NotificationEnum.HAS;
                             msg = has.stageId.ToString(CultureInfo.InvariantCulture);
                             break;
-                        case CombinationConsumable2 _:
+                        case CombinationConsumable3 _:
                             type = NotificationEnum.CombinationConsumable;
                             break;
-                        case CombinationEquipment3 _:
+                        case CombinationEquipment4 _:
                             type = NotificationEnum.CombinationEquipment;
                             break;
-                        case Buy3 _:
+                        case Buy4 _:
                             type = NotificationEnum.Buyer;
                             break;
                     }
+                    Log.Information("NotifyAction: Type: {Type} MSG: {Msg}", type, msg);
                     var notification = new Notification(type, msg);
                     StandaloneContext.NotificationSubject.OnNext(notification);
                 }
                 else
                 {
-                    if (eval.Action is Buy3 buy && buy.sellerAgentAddress == _address)
+                    if (eval.Action is Buy4 buy && buy.sellerAgentAddress == address)
                     {
                         var notification = new Notification(NotificationEnum.Seller);
                         StandaloneContext.NotificationSubject.OnNext(notification);

@@ -1,3 +1,4 @@
+using System;
 using Libplanet.Action;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
@@ -21,10 +22,9 @@ namespace NineChronicles.Headless.Tests.Common
 
         public static NineChroniclesNodeService CreateNineChroniclesNodeService(
             Block<PolymorphicAction<ActionBase>> genesis,
-            PrivateKey privateKey = null
+            PrivateKey? privateKey = null
         )
         {
-            privateKey ??= new PrivateKey();
             var storePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
@@ -33,7 +33,7 @@ namespace NineChronicles.Headless.Tests.Common
                 GenesisBlock = genesis,
                 StorePath = storePath,
                 StoreStatesCacheSize = 2,
-                PrivateKey = privateKey,
+                SwarmPrivateKey = new PrivateKey(),
                 Port = null,
                 MinimumDifficulty = MinimumDifficulty,
                 NoMiner = true,
@@ -42,11 +42,12 @@ namespace NineChronicles.Headless.Tests.Common
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 MaximumTransactions = MaximumTransactions,
+                MessageTimeout = TimeSpan.FromMinutes(1),
+                TipTimeout = TimeSpan.FromMinutes(1),
+                DemandBuffer = 1150,
+                StaticPeers = ImmutableHashSet<Peer>.Empty,
             };
-            return new NineChroniclesNodeService(properties, null)
-            {
-                PrivateKey = privateKey
-            };
+            return new NineChroniclesNodeService(privateKey, properties, null);
         }
     }
 }

@@ -4,17 +4,40 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <VersionPrefix>1.0.0</VersionPrefix>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <CodeAnalysisRuleSet>..\NineChronicles.Headless.Common.ruleset</CodeAnalysisRuleSet>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="AWSSDK.CloudWatchLogs" Version="3.5.0.37" />
-    <PackageReference Include="AWSSDK.CognitoIdentity" Version="3.5.1.2" />
-    <PackageReference Include="Cocona.Lite" Version="1.3.*" />
+    <PackageReference Include="AWSSDK.CognitoIdentity" Version="3.7.0.5" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.0.6" />
+    <PackageReference Include="Cocona.Lite" Version="1.5.*" />
+    <PackageReference Include="HaemmerElectronics.SeppPenner.Serilog.Sinks.AmazonS3" Version="1.1.3" />
     <PackageReference Include="Sentry.Serilog" Version="2.1.*" />
+    <PackageReference Include="Serilog.Expressions" Version="1.1.1" />
+    <PackageReference Include="Serilog.Formatting.Compact" Version="1.1.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="3.1.0" />
+    <PackageReference Include="Serilog.Sinks.PeriodicBatching" Version="2.3.*" />
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.18.0.27296">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet.Extensions.Cocona\Libplanet.Extensions.Cocona.csproj" />
     <ProjectReference Include="..\NineChronicles.Headless\NineChronicles.Headless.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

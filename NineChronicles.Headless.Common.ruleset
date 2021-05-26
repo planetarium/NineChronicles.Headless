@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RuleSet
+    Name="Rules for all projects in NineChronicles.Headless"
+    Description="Code analysis rules for all projects in NineChroncles.Headless."
+    ToolsVersion="10.0">
+
+    <Rules
+        AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis"
+        RuleNamespace="Microsoft.Rules.Managed">
+
+        <Rule Id="SA0001" Action="None"/>
+        <Rule Id="SA1000" Action="None"/>
+        <Rule Id="SA1003" Action="None"/>
+        <Rule Id="SA1005" Action="None"/>
+        <Rule Id="SA1008" Action="None"/>
+        <Rule Id="SA1009" Action="None"/>
+        <Rule Id="SA1011" Action="None"/>
+        <Rule Id="SA1012" Action="None"/>
+        <Rule Id="SA1013" Action="None"/>
+        <Rule Id="SA1024" Action="None"/>
+        <Rule Id="SA1025" Action="None"/>
+        <Rule Id="SA1026" Action="None"/>
+        <Rule Id="SA1028" Action="None"/>
+        <Rule Id="SA1101" Action="None"/>
+        <Rule Id="SA1111" Action="None"/>
+        <Rule Id="SA1116" Action="None"/>
+        <Rule Id="SA1117" Action="None"/>
+        <Rule Id="SA1118" Action="None"/>
+        <Rule Id="SA1122" Action="None"/>
+        <Rule Id="SA1127" Action="None"/>
+        <Rule Id="SA1128" Action="None"/>
+        <Rule Id="SA1129" Action="None"/>
+        <Rule Id="SA1131" Action="None"/>
+        <Rule Id="SA1200" Action="None"/>
+        <Rule Id="SA1201" Action="None"/>
+        <Rule Id="SA1202" Action="None"/>
+        <Rule Id="SA1208" Action="None"/>
+        <Rule Id="SA1209" Action="None"/>
+        <Rule Id="SA1210" Action="None"/>
+        <Rule Id="SA1211" Action="None"/>
+        <Rule Id="SA1214" Action="None"/>
+        <Rule Id="SA1300" Action="None"/>
+        <Rule Id="SA1306" Action="None"/>
+        <Rule Id="SA1309" Action="None"/>
+        <Rule Id="SA1312" Action="None"/>
+        <Rule Id="SA1400" Action="None"/>
+        <Rule Id="SA1401" Action="None"/>
+        <Rule Id="SA1413" Action="None"/>
+        <Rule Id="SA1500" Action="None"/>
+        <Rule Id="SA1505" Action="None"/>
+        <Rule Id="SA1507" Action="None"/>
+        <Rule Id="SA1508" Action="None"/>
+        <Rule Id="SA1513" Action="None"/>
+        <Rule Id="SA1515" Action="None"/>
+        <Rule Id="SA1516" Action="None"/>
+        <Rule Id="SA1518" Action="None"/>
+        <Rule Id="SA1633" Action="None"/>
+        <Rule Id="SA1649" Action="None"/>
+    </Rules>
+
+    <Rules AnalyzerId="SonarAnalyzer" RuleNamespace="SonarAnalyzer">
+        <Rule Id="S101" Action="None"/>
+        <Rule Id="S112" Action="None"/>
+        <Rule Id="S125" Action="None"/>
+        <Rule Id="S927" Action="None"/>
+        <Rule Id="S1104" Action="None"/>
+        <Rule Id="S1134" Action="None"/>
+        <Rule Id="S1135" Action="None"/>
+        <Rule Id="S1186" Action="None"/>
+        <Rule Id="S1481" Action="None"/>
+        <Rule Id="S1854" Action="None"/>
+        <Rule Id="S2259" Action="None"/>
+        <Rule Id="S2344" Action="None"/>
+        <Rule Id="S2699" Action="None"/>
+        <Rule Id="S2743" Action="None"/>
+        <Rule Id="S2933" Action="None"/>
+        <Rule Id="S2971" Action="None"/>
+        <Rule Id="S3881" Action="None"/>
+        <Rule Id="S3925" Action="None"/>
+    </Rules>
+</RuleSet>

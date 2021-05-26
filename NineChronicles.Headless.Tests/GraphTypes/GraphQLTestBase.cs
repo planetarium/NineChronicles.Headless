@@ -1,28 +1,30 @@
+using GraphQL;
+using Libplanet;
+using Libplanet.Action;
+using Libplanet.Assets;
+using Libplanet.Blockchain;
+using Libplanet.Blockchain.Policies;
+using Libplanet.Blocks;
+using Libplanet.Crypto;
+using Libplanet.Headless.Hosting;
+using Libplanet.KeyStore;
+using Libplanet.Net;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Nekoyume.Action;
+using Nekoyume.Model.State;
+using Nekoyume.TableData;
+using NineChronicles.Headless.GraphTypes;
+using NineChronicles.Headless.Tests.Common;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using GraphQL;
-using Lib9c.Renderer;
-using Libplanet.Action;
-using Libplanet.Blockchain;
-using Libplanet.Blockchain.Policies;
-using Libplanet.Blockchain.Renderers;
-using Libplanet.Blocks;
-using Libplanet.Crypto;
-using Libplanet.KeyStore;
-using Libplanet.Net;
-using Libplanet.Headless.Hosting;
-using Libplanet.Store;
-using Microsoft.Extensions.Configuration;
-using Nekoyume.Action;
-using NineChronicles.Headless.GraphTypes;
-using Serilog;
 using Xunit.Abstractions;
-using RewardGold = NineChronicles.Headless.Tests.Common.Actions.RewardGold;
-using Libplanet.Store.Trie;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -36,49 +38,70 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             _output = output;
 
-            var store = new DefaultStore(null);
-            var stateStore = new TrieStateStore(
-                new DefaultKeyValueStore(null),
-                new DefaultKeyValueStore(null)
-            );
-            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(blockAction: new RewardGold());
+            var goldCurrency = new Currency("NCG", 2, minter: null);
 
-            var blockPolicy = new BlockPolicy<PolymorphicAction<ActionBase>>(blockAction: new RewardGold());
-            var blockChain = new BlockChain<PolymorphicAction<ActionBase>>(
-                blockPolicy,
-                new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
-                store,
-                stateStore,
-                genesisBlock,
-                renderers: new IRenderer<PolymorphicAction<ActionBase>>[] { new BlockRenderer(), new ActionRenderer() }
-            );
+            var fixturePath = Path.Combine("..", "..", "..", "..", "Lib9c", ".Lib9c.Tests", "Data", "TableCSV");
+            var sheets = TableSheetsImporter.ImportSheets(fixturePath);
+            var blockAction = new RewardGold();
+            var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
+                new NCAction[]
+                {
+                    new InitializeStates(
+                        rankingState: new RankingState(),
+                        shopState: new ShopState(),
+                        gameConfigState: new GameConfigState(sheets[nameof(GameConfigSheet)]),
+                        redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                            .Add("address", RedeemCodeState.Address.Serialize())
+                            .Add("map", Bencodex.Types.Dictionary.Empty)
+                        ),
+                        adminAddressState: new AdminState(AdminAddress, 10000),
+                        activatedAccountsState: new ActivatedAccountsState(),
+                        goldCurrencyState: new GoldCurrencyState(goldCurrency),
+                        goldDistributions: new GoldDistribution[]{ },
+                        tableSheets: sheets,
+                        pendingActivationStates: new PendingActivationState[]{ }
+                    ),
+                }, blockAction: blockAction);
 
+            var ncService = ServiceBuilder.CreateNineChroniclesNodeService(genesisBlock, new PrivateKey());
             var tempKeyStorePath = Path.Join(Path.GetTempPath(), Path.GetRandomFileName());
             var keyStore = new Web3KeyStore(tempKeyStorePath);
 
             StandaloneContextFx = new StandaloneContext
             {
-                BlockChain = blockChain,
                 KeyStore = keyStore,
             };
+            ncService.ConfigureContext(StandaloneContextFx);
 
             var configurationBuilder = new ConfigurationBuilder();
             var configuration = configurationBuilder.Build();
-            Schema = new StandaloneSchema(new TestServiceProvider(StandaloneContextFx, configuration));
-            Schema.Subscription.As<StandaloneSubscription>().RegisterTipChangedSubscription();
+
+            var services = new ServiceCollection();
+            services.AddSingleton(StandaloneContextFx);
+            services.AddSingleton<IConfiguration>(configuration);
+            services.AddGraphTypes();
+            services.AddLibplanetExplorer<NCAction>();
+            services.AddSingleton<StateQuery>();
+            services.AddSingleton(ncService);
+            ServiceProvider serviceProvider = services.BuildServiceProvider();
+            Schema = new StandaloneSchema(serviceProvider);
 
             DocumentExecutor = new DocumentExecuter();
         }
+
+        protected PrivateKey AdminPrivateKey { get; } = new PrivateKey();
+
+        protected Address AdminAddress => AdminPrivateKey.ToAddress();
 
         protected StandaloneSchema Schema { get; }
 
         protected StandaloneContext StandaloneContextFx { get; }
 
-        protected BlockChain<PolymorphicAction<ActionBase>> BlockChain =>
-            StandaloneContextFx.BlockChain;
+        protected BlockChain<NCAction> BlockChain =>
+            StandaloneContextFx.BlockChain!;
 
         protected IKeyStore KeyStore =>
-            StandaloneContextFx.KeyStore;
+            StandaloneContextFx.KeyStore!;
 
         protected IDocumentExecuter DocumentExecutor { get; }
 
@@ -98,9 +121,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             where T : IAction, new()
         {
             Task task = swarm.StartAsync(
-              millisecondsDialTimeout: 200,
-              millisecondsBroadcastTxInterval: 200,
-              cancellationToken: cancellationToken
+                millisecondsDialTimeout: 200,
+                millisecondsBroadcastTxInterval: 200,
+                cancellationToken: cancellationToken
             );
             await swarm.WaitForRunningAsync();
             return task;
@@ -110,8 +133,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Block<T> genesisBlock,
             AppProtocolVersion appProtocolVersion,
             PublicKey appProtocolVersionSigner,
-            Progress<PreloadState> preloadProgress = null,
-            IEnumerable<Peer> peers = null)
+            Progress<PreloadState>? preloadProgress = null,
+            IEnumerable<Peer>? peers = null,
+            IEnumerable<Peer>? staticPeers = null)
             where T : IAction, new()
         {
             var properties = new LibplanetNodeServiceProperties<T>
@@ -120,14 +144,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 AppProtocolVersion = appProtocolVersion,
                 GenesisBlock = genesisBlock,
                 StoreStatesCacheSize = 2,
-                PrivateKey = new PrivateKey(),
                 StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
+                SwarmPrivateKey = new PrivateKey(),
                 Port = null,
                 MinimumDifficulty = 1024,
                 NoMiner = true,
                 Render = false,
                 Peers = peers ?? ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = ImmutableHashSet<PublicKey>.Empty.Add(appProtocolVersionSigner),
+                StaticPeers = staticPeers ?? ImmutableHashSet<Peer>.Empty,
             };
 
             return new LibplanetNodeService<T>(
@@ -140,60 +165,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),
                 preloadStatusHandlerAction: isPreloadStart => { }
             );
-        }
-
-        private class TestServiceProvider : IServiceProvider
-        {
-            private StandaloneQuery Query;
-
-            private StandaloneMutation Mutation;
-
-            private StandaloneSubscription Subscription;
-
-            private StandaloneContext StandaloneContext;
-
-            public TestServiceProvider(StandaloneContext standaloneContext, IConfiguration configuration)
-            {
-                Query = new StandaloneQuery(standaloneContext, configuration);
-                Mutation = new StandaloneMutation(standaloneContext, configuration);
-                Subscription = new StandaloneSubscription(standaloneContext);
-                StandaloneContext = standaloneContext;
-            }
-
-            public object GetService(Type serviceType)
-            {
-                if (serviceType == typeof(StandaloneQuery))
-                {
-                    return Query;
-                }
-
-                if (serviceType == typeof(StandaloneMutation))
-                {
-                    return Mutation;
-                }
-
-                if (serviceType == typeof(StandaloneSubscription))
-                {
-                    return Subscription;
-                }
-
-                if (serviceType == typeof(ValidationQuery))
-                {
-                    return new ValidationQuery(StandaloneContext);
-                }
-
-                if (serviceType == typeof(ActivationStatusQuery))
-                {
-                    return new ActivationStatusQuery(StandaloneContext);
-                }
-
-                if (serviceType == typeof(PeerChainStateQuery))
-                {
-                    return new PeerChainStateQuery(StandaloneContext);
-                }
-
-                return Activator.CreateInstance(serviceType);
-            }
         }
     }
 }

@@ -3,6 +3,7 @@ using GraphQL.Types;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blocks;
+using Libplanet.Explorer.GraphTypes;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -10,7 +11,7 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public long Index { get; set; }
 
-        public HashDigest<SHA256> Hash { get; set; }
+        public BlockHash Hash { get; set; }
 
         public Address? Miner { get; set; }
 

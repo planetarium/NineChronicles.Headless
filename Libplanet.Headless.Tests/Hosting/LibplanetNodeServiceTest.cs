@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
@@ -26,7 +27,7 @@ namespace Libplanet.Headless.Tests.Hosting
                 {
                     AppProtocolVersion = new AppProtocolVersion(),
                     GenesisBlock = genesisBlock,
-                    PrivateKey = new PrivateKey(),
+                    SwarmPrivateKey = new PrivateKey(),
                     StoreStatesCacheSize = 2,
                     StorePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()),
                     Host = IPAddress.Loopback.ToString(),
@@ -52,7 +53,7 @@ namespace Libplanet.Headless.Tests.Hosting
                     new LibplanetNodeServiceProperties<DummyAction>()
                     {
                         AppProtocolVersion = new AppProtocolVersion(),
-                        PrivateKey = new PrivateKey(),
+                        SwarmPrivateKey = new PrivateKey(),
                         StoreStatesCacheSize = 2,
                         Host = IPAddress.Loopback.ToString(),
                     },
@@ -69,6 +70,8 @@ namespace Libplanet.Headless.Tests.Hosting
 
         private class BlockPolicy : IBlockPolicy<DummyAction>
         {
+            public IComparer<BlockPerception> CanonicalChainComparer { get; } = new TotalDifficultyComparer(TimeSpan.FromSeconds(3));
+
             public IAction BlockAction => null;
 
             public int MaxTransactionsPerBlock => int.MaxValue;

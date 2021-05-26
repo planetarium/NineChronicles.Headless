@@ -4,10 +4,12 @@ namespace NineChronicles.Headless.Properties
     {
         public bool GraphQLServer { get; set; }
 
-        public string GraphQLListenHost { get; set; }
+        public string? GraphQLListenHost { get; set; }
 
         public int? GraphQLListenPort { get; set; }
         
-        public string SecretToken { get; set; }
+        public string? SecretToken { get; set; }
+
+        public bool NoCors { get; set; }
     }
 }

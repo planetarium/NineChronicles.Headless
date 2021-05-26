@@ -2,16 +2,19 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
+using Bencodex.Types;
 using Grpc.Core;
 using Lib9c.Renderer;
 using MagicOnion.Client;
 using Microsoft.Extensions.Hosting;
 using Nekoyume.Action;
+using Nekoyume.Model.State;
 using Nekoyume.Shared.Hubs;
 using Serilog;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -26,7 +29,7 @@ namespace NineChronicles.Headless
         private readonly ActionRenderer _actionRenderer;
         private readonly ExceptionRenderer _exceptionRenderer;
         private readonly NodeStatusRenderer _nodeStatusRenderer;
-        private IActionEvaluationHub _client;
+        private IActionEvaluationHub? _client;
         private RpcContext _context;
 
         public ActionEvaluationPublisher(
@@ -48,41 +51,73 @@ namespace NineChronicles.Headless
             _context = context;
         }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        => Task.Run(async () =>
         {
             await Task.Delay(1000, stoppingToken);
             _client = StreamingHubClient.Connect<IActionEvaluationHub, IActionEvaluationHubReceiver>(
                 new Channel(_host, _port, ChannelCredentials.Insecure),
-                null
+                null!
             );
             await _client.JoinAsync();
 
             _blockRenderer.EveryBlock().Subscribe(
                 async pair =>
-                    await _client.BroadcastRenderBlockAsync(
-                        pair.OldTip.Header.Serialize(),
-                        pair.NewTip.Header.Serialize()
-                    ),
+                {
+                    try
+                    {
+                        await _client.BroadcastRenderBlockAsync(
+                            pair.OldTip.Header.Serialize(),
+                            pair.NewTip.Header.Serialize()
+                        );
+                    }
+                    catch (Exception e)
+                    {
+                        // FIXME add logger as property
+                        Log.Error(e, "Skip broadcasting blcok render due to the unexpected exception");
+                    }
+
+                },
                 stoppingToken
             );
 
             _blockRenderer.EveryReorg().Subscribe(
                 async ev =>
-                    await _client.ReportReorgAsync(
-                        ev.OldTip.Serialize(),
-                        ev.NewTip.Serialize(),
-                        ev.Branchpoint.Serialize()
-                    ),
+                {
+                    try
+                    {
+                        await _client.ReportReorgAsync(
+                            ev.OldTip.Serialize(),
+                            ev.NewTip.Serialize(),
+                            ev.Branchpoint.Serialize()
+                        );
+                    }
+                    catch (Exception e)
+                    {
+                        // FIXME add logger as property
+                        Log.Error(e, "Skip broadcasting reorg due to the unexpected exception");
+                    }
+                },
                 stoppingToken
             );
 
             _blockRenderer.EveryReorgEnd().Subscribe(
                 async ev =>
-                    await _client.ReportReorgEndAsync(
-                        ev.OldTip.Serialize(),
-                        ev.NewTip.Serialize(),
-                        ev.Branchpoint.Serialize()
-                    ),
+                {
+                    try
+                    {
+                        await _client.ReportReorgEndAsync(
+                            ev.OldTip.Serialize(),
+                            ev.NewTip.Serialize(),
+                            ev.Branchpoint.Serialize()
+                        );
+                    }
+                    catch (Exception e)
+                    {
+                        // FIXME add logger as property
+                        Log.Error(e, "Skip broadcasting reorg end due to the unexpected exception");
+                    }
+                },
                 stoppingToken
             );
 
@@ -97,6 +132,10 @@ namespace NineChronicles.Headless
 
                     try
                     {
+                        // FIXME Strip shop state from aev due to its size.
+                        //       we should remove this code after resizing it.
+                        ev.PreviousStates = ev.PreviousStates.SetState(ShopState.Address, new Null());
+                        ev.OutputStates = ev.OutputStates.SetState(ShopState.Address, new Null());
                         formatter.Serialize(df, ev);
                         await _client.BroadcastRenderAsync(c.ToArray());
                     }
@@ -125,6 +164,10 @@ namespace NineChronicles.Headless
 
                     try
                     {
+                        // FIXME Strip shop state from aev due to its size.
+                        //       we should remove this code after resizing it.
+                        ev.PreviousStates = ev.PreviousStates.SetState(ShopState.Address, new Null());
+                        ev.OutputStates = ev.OutputStates.SetState(ShopState.Address, new Null());
                         formatter.Serialize(df, ev);
                         await _client.BroadcastUnrenderAsync(c.ToArray());
                     }
@@ -141,35 +184,55 @@ namespace NineChronicles.Headless
                 },
                 stoppingToken
             );
-            
+
             _exceptionRenderer.EveryException().Subscribe(
                 async tuple =>
                 {
-                    var (code, message) = tuple;
-                    await _client.ReportExceptionAsync((int)code, message);
+                    try
+                    {
+                        (RPC.Shared.Exceptions.RPCException code, string message) = tuple;
+                        await _client.ReportExceptionAsync((int)code, message);
+                    }
+                    catch (Exception e)
+                    {
+                        // FIXME add logger as property
+                        Log.Error(e, "Skip broadcasting exception due to the unexpected exception");
+                    }
                 },
                 stoppingToken
             );
-            
+
             _nodeStatusRenderer.EveryChangedStatus().Subscribe(
                 async isPreloadStarted =>
                 {
-                    if (isPreloadStarted)
+                    try
                     {
-                        await _client.PreloadStartAsync();
+                        if (isPreloadStarted)
+                        {
+                            await _client.PreloadStartAsync();
+                        }
+                        else
+                        {
+                            await _client.PreloadEndAsync();
+                        }
                     }
-                    else
+                    catch (Exception e)
                     {
-                        await _client.PreloadEndAsync();
+                        // FIXME add logger as property
+                        Log.Error(e, "Skip broadcasting status change due to the unexpected exception");
                     }
                 },
                 stoppingToken
             );
-        }
+        });
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            await _client?.DisposeAsync();
+            if (!(_client is null))
+            {
+                await _client.DisposeAsync();
+            }
+
             await base.StopAsync(cancellationToken);
         }
 

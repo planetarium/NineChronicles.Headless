@@ -25,7 +25,7 @@ using Serilog.Events;
 
 namespace Libplanet.Headless.Hosting
 {
-    public class LibplanetNodeService<T> : IHostedService, IDisposable
+    public class LibplanetNodeService<T> : BackgroundService, IDisposable
         where T : IAction, new()
     {
         public readonly IStore Store;
@@ -68,6 +68,8 @@ namespace Libplanet.Headless.Hosting
 
         protected static readonly TimeSpan CheckPeerTableInterval = TimeSpan.FromSeconds(10);
 
+        private List<Guid> _obsoletedChainIds;
+
         public LibplanetNodeService(
             LibplanetNodeServiceProperties<T> properties,
             IBlockPolicy<T> blockPolicy,
@@ -105,16 +107,12 @@ namespace Libplanet.Headless.Hosting
             var chainIds = Store.ListChainIds().ToList();
             Log.Debug($"Number of chain ids: {chainIds.Count()}");
 
-            foreach (var chainId in chainIds)
-            {
-                Log.Debug($"chainId: {chainId}");
-            }
-
             if (Properties.Confirmations > 0)
             {
+                IComparer<BlockPerception> comparer = blockPolicy.CanonicalChainComparer;
                 renderers = renderers.Select(r => r is IActionRenderer<T> ar
-                    ? new DelayedActionRenderer<T>(ar, Store, Properties.Confirmations, 50)
-                    : new DelayedRenderer<T>(r, Store, Properties.Confirmations)
+                    ? new DelayedActionRenderer<T>(ar, comparer, Store, Properties.Confirmations, 50)
+                    : new DelayedRenderer<T>(r, comparer, Store, Properties.Confirmations)
                 );
 
                 // Log the outmost (before delayed) events as well as
@@ -135,10 +133,7 @@ namespace Libplanet.Headless.Hosting
                 renderers: renderers
             );
 
-            foreach (Guid chainId in chainIds.Where(chainId => chainId != BlockChain.Id))
-            {
-                Store.DeleteChainId(chainId);
-            }
+            _obsoletedChainIds = chainIds.Where(chainId => chainId != BlockChain.Id).ToList();
 
             _minerLoopAction = minerLoopAction;
             _exceptionHandlerAction = exceptionHandlerAction;
@@ -152,7 +147,7 @@ namespace Libplanet.Headless.Hosting
 
             Swarm = new Swarm<T>(
                 BlockChain,
-                Properties.PrivateKey,
+                Properties.SwarmPrivateKey,
                 Properties.AppProtocolVersion,
                 trustedAppProtocolVersionSigners: Properties.TrustedAppProtocolVersionSigners,
                 host: Properties.Host,
@@ -175,27 +170,40 @@ namespace Libplanet.Headless.Hosting
             _ignorePreloadFailure = ignorePreloadFailure;
         }
 
-        public virtual async Task StartAsync(CancellationToken cancellationToken)
-        {
-            bool preload = true;
-            while (!cancellationToken.IsCancellationRequested && !_stopRequested)
-            {
-                var tasks = new List<Task>
+        protected override Task ExecuteAsync(CancellationToken cancellationToken)
+            => Task.Run(async () =>
+            {   
+                Log.Debug("Trying to delete {count} obsoleted chains...", _obsoletedChainIds.Count());
+                _ = Task.Run(() =>
                 {
-                    StartSwarm(preload, cancellationToken),
-                    CheckMessage(cancellationToken),
-                    CheckTip(cancellationToken)
-                };
-                if (Properties.Peers.Any())
+                    foreach (Guid chainId in _obsoletedChainIds)
+                    {
+                        Store.DeleteChainId(chainId);
+                        Log.Debug("Obsoleted chain[{chainId}] has been deleted.", chainId);
+                    }
+                });
+                if (!cancellationToken.IsCancellationRequested && !_stopRequested)
                 {
-                    tasks.Add(CheckDemand(cancellationToken));
-                    tasks.Add(CheckPeerTable(cancellationToken));
+                    var tasks = new List<Task>
+                    {
+                        StartSwarm(true, cancellationToken),
+                        CheckMessage(Properties.MessageTimeout, cancellationToken),
+                        CheckTip(Properties.TipTimeout, cancellationToken)
+                    };
+                    if (Properties.Peers.Any())
+                    {
+                        tasks.Add(CheckDemand(Properties.DemandBuffer, cancellationToken));
+                        tasks.Add(CheckPeerTable(cancellationToken));
+                    }
+
+                    if (Properties.StaticPeers.Any())
+                    {
+                        tasks.Add(
+                            CheckStaticPeersAsync(Properties.StaticPeers, cancellationToken));
+                    }
+                    await await Task.WhenAny(tasks);
                 }
-                await await Task.WhenAny(tasks);
-                preload = false;
-                await Task.Delay(TimeSpan.FromSeconds(15), cancellationToken);
-            }
-        }
+            });
 
         // 이 privateKey는 swarm에서 사용하는 privateKey와 다를 수 있습니다.
         public virtual void StartMining(PrivateKey privateKey)
@@ -212,6 +220,13 @@ namespace Libplanet.Headless.Hosting
                 throw new InvalidOperationException(
                     $"An exception occurred during {nameof(StartMining)}(). " +
                     $"{nameof(Swarm)} is null.");
+            }
+
+            if (privateKey is null)
+            {
+                throw new InvalidOperationException(
+                    $"An exception occurred during {nameof(StartMining)}(). " +
+                    $"{nameof(privateKey)} is null.");
             }
 
             MiningCancellationTokenSource =
@@ -234,7 +249,7 @@ namespace Libplanet.Headless.Hosting
             return !(boundPeer is null);
         }
 
-        public virtual Task StopAsync(CancellationToken cancellationToken)
+        public override Task StopAsync(CancellationToken cancellationToken)
         {
             _stopRequested = true;
             StopMining();
@@ -261,6 +276,23 @@ namespace Libplanet.Headless.Hosting
                     Log.Error("RocksDB is not available. DefaultStore will be used. {0}", e);
                 }
             }
+            else if (type == "monorocksdb")
+            {
+                try
+                {
+                    store = new RocksDBStore.MonoRocksDBStore(
+                        path,
+                        maxTotalWalSize: 16 * 1024 * 1024,
+                        maxLogFileSize: 16 * 1024 * 1024,
+                        keepLogFileNum: 1
+                    );
+                    Log.Debug("MonoRocksDB is initialized.");
+                }
+                catch (TypeInitializationException e)
+                {
+                    Log.Error("MonoRocksDB is not available. DefaultStore will be used. {0}", e);
+                }
+            }
             else
             {
                 var message = type is null
@@ -269,8 +301,7 @@ namespace Libplanet.Headless.Hosting
                 Log.Debug($"{message}. DefaultStore will be used.");
             }
 
-            store ??= new DefaultStore(
-                path, flush: false, compress: true, statesCacheSize: statesCacheSize);
+            store ??= new DefaultStore(path, flush: false);
 
             IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states")),
                 stateHashKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "state_hashes"));
@@ -290,6 +321,9 @@ namespace Libplanet.Headless.Hosting
                     depth: depth,
                     cancellationToken: cancellationToken
                 );
+
+            // We assume the first phase of preloading is BlockHashDownloadState...
+            ((IProgress<PreloadState>)PreloadProgress)?.Report(new BlockHashDownloadState());
 
             if (peers.Any())
             {
@@ -322,12 +356,23 @@ namespace Libplanet.Headless.Hosting
                     }
                     catch (AggregateException e)
                     {
+                        Log.Error(e, "{Message}", e.Message);
                         if (!_ignorePreloadFailure)
                         {
                             throw;
                         }
-
-                        Log.Error(e, "{Message}", e.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(
+                            e,
+                            $"An unexpected exception occurred during {nameof(Swarm.PreloadAsync)}: {{Message}}",
+                            e.Message
+                        );
+                        if (!_ignorePreloadFailure)
+                        {
+                            throw;
+                        }
                     }
 
                     PreloadEnded.Set();
@@ -386,9 +431,8 @@ namespace Libplanet.Headless.Hosting
             }
         }
 
-        protected async Task CheckMessage(CancellationToken cancellationToken = default)
+        protected async Task CheckMessage(TimeSpan messageTimeout, CancellationToken cancellationToken = default)
         {
-            var messageTimeout = TimeSpan.FromMinutes(1);
             while (!cancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(BootstrapInterval, cancellationToken);
@@ -408,9 +452,8 @@ namespace Libplanet.Headless.Hosting
         }
 
         // FIXME: Can fixed by just restarting Swarm only (i.e. CheckMessage)
-        private async Task CheckTip(CancellationToken cancellationToken = default)
+        private async Task CheckTip(TimeSpan tipTimeout, CancellationToken cancellationToken = default)
         {
-            var tipTimeout = TimeSpan.FromMinutes(2);
             var lastTipChanged = DateTimeOffset.Now;
             var lastTip = BlockChain.Tip;
             while (!cancellationToken.IsCancellationRequested)
@@ -442,9 +485,8 @@ namespace Libplanet.Headless.Hosting
             }
         }
 
-        private async Task CheckDemand(CancellationToken cancellationToken = default)
+        private async Task CheckDemand(int demandBuffer, CancellationToken cancellationToken = default)
         {
-            const int buffer = 1150;
             while (!cancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
@@ -453,11 +495,11 @@ namespace Libplanet.Headless.Hosting
                     continue;
                 }
                 
-                if ((Swarm.BlockDemand?.Header.Index ?? 0) > (BlockChain.Tip?.Index ?? 0) + buffer)
+                if ((Swarm.BlockDemand?.Header.Index ?? 0) > (BlockChain.Tip?.Index ?? 0) + demandBuffer)
                 {
                     var message =
                         $"Chain's tip is too low. (demand: {Swarm.BlockDemand?.Header.Index}, " +
-                        $"actual: {BlockChain.Tip?.Index}, buffer: {buffer})";
+                        $"actual: {BlockChain.Tip?.Index}, buffer: {demandBuffer})";
                     Log.Error(message);
                     Properties.NodeExceptionOccurred(NodeExceptionType.DemandTooHigh, message);
                     _stopRequested = true;
@@ -500,6 +542,41 @@ namespace Libplanet.Headless.Hosting
             }
         }
 
+        private async Task CheckStaticPeersAsync(
+            IEnumerable<Peer> peers,
+            CancellationToken cancellationToken)
+        {
+            var peerArray = peers as Peer[] ?? peers.ToArray();
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
+                    Log.Warning("Checking static peers. {Peers}", peerArray);
+                    var peersToAdd = peerArray.Where(peer => !Swarm.Peers.Contains(peer)).ToArray();
+                    if (peersToAdd.Any())
+                    {
+                        Log.Warning("Some of peers are not in routing table. {Peers}", peersToAdd);
+                        await Swarm.AddPeersAsync(
+                            peersToAdd,
+                            TimeSpan.FromSeconds(5),
+                            cancellationToken);
+                    }
+                }
+                catch (OperationCanceledException e)
+                {
+                    Log.Warning(e, $"{nameof(CheckStaticPeersAsync)}() is cancelled.");
+                    throw;
+                }
+                catch (Exception e)
+                {
+                    var msg = "Unexpected exception occurred during " +
+                              $"{nameof(CheckStaticPeersAsync)}(): {{0}}";
+                    Log.Warning(e, msg, e);
+                }
+            }
+        }
+
         protected Block<T> LoadGenesisBlock(LibplanetNodeServiceProperties<T> properties)
         {
             if (!(properties.GenesisBlock is null))
@@ -508,10 +585,18 @@ namespace Libplanet.Headless.Hosting
             }
             else if (!string.IsNullOrEmpty(properties.GenesisBlockPath))
             {
-                var uri = new Uri(properties.GenesisBlockPath);
-                using var client = new WebClient();
-                var rawGenesisBlock = client.DownloadData(uri);
-                return Block<T>.Deserialize(rawGenesisBlock);
+                byte[] rawBlock;
+                if (File.Exists(Path.GetFullPath(properties.GenesisBlockPath)))
+                {
+                    rawBlock = File.ReadAllBytes(Path.GetFullPath(properties.GenesisBlockPath));
+                }
+                else
+                {
+                    var uri = new Uri(properties.GenesisBlockPath);
+                    using var client = new WebClient();
+                    rawBlock = client.DownloadData(uri);
+                }
+                return Block<T>.Deserialize(rawBlock);
             }
             else
             {
@@ -520,7 +605,7 @@ namespace Libplanet.Headless.Hosting
             }
         }
 
-        public virtual void Dispose()
+        public override void Dispose()
         {
             Log.Debug($"Disposing {nameof(LibplanetNodeService<T>)}...");
 

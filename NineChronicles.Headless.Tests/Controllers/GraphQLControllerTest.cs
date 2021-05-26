@@ -53,37 +53,6 @@ namespace NineChronicles.Headless.Tests.Controllers
             _controller = new GraphQLController(_standaloneContext, _httpContextAccessor, _configuration);
         }
 
-        [Fact]
-        public void RunStandaloneThrowsUnauthorizedIfSecretTokenUsed()
-        {
-            ConfigureSecretToken();
-            Assert.IsType<UnauthorizedResult>(_controller.RunStandalone());
-        }
-
-        [Fact]
-        public void RunStandaloneThrowsConflict()
-        {
-            _standaloneContext.NineChroniclesNodeService = null;
-            IActionResult result = _controller.RunStandalone();
-            Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status409Conflict, ((StatusCodeResult)result).StatusCode);
-        }
-        
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public void RunStandalone(bool useSecretToken)
-        {
-            if (useSecretToken)
-            {
-                ConfigureSecretToken();
-                ConfigureAdminClaim();
-            }
-
-            ConfigureNineChroniclesNodeService();
-            Assert.IsType<OkObjectResult>(_controller.RunStandalone());
-        }
-
         [Theory]
         [InlineData(true, true)]
         [InlineData(true, false)]
@@ -139,7 +108,7 @@ namespace NineChronicles.Headless.Tests.Controllers
                 PrivateKeyString = ByteUtil.Hex(privateKey.ByteArray),
             }));
 
-            Assert.Equal(_standaloneContext.NineChroniclesNodeService.PrivateKey, privateKey);
+            Assert.Equal(_standaloneContext.NineChroniclesNodeService!.MinerPrivateKey, privateKey);
         }
         
         [Fact]
@@ -176,13 +145,14 @@ namespace NineChronicles.Headless.Tests.Controllers
         private void ConfigureNineChroniclesNodeService()
         {
             _standaloneContext.NineChroniclesNodeService = new NineChroniclesNodeService(
+                new PrivateKey(),
                 new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
                 {
                     MinimumDifficulty = 500000,
-                    GenesisBlock = _standaloneContext.BlockChain.Genesis,
+                    GenesisBlock = _standaloneContext.BlockChain!.Genesis,
                     StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                     AppProtocolVersion = AppProtocolVersion.Sign(new PrivateKey(), 0),
-                    PrivateKey = new PrivateKey(),
+                    SwarmPrivateKey = new PrivateKey(),
                     Host = IPAddress.Loopback.ToString(),
                 },
                 null);

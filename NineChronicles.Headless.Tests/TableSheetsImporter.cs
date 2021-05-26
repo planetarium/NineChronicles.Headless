@@ -7,7 +7,7 @@ namespace NineChronicles.Headless.Tests
     public static class TableSheetsImporter
     {
         public static Dictionary<string, string> ImportSheets(
-            string dir = null)
+            string? dir = null)
         {
             var sheets = new Dictionary<string, string>();
             dir ??= Path.Combine("Data", "TableCSV");
