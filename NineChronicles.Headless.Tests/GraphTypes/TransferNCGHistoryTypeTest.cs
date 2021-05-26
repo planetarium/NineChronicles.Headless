@@ -14,8 +14,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 {
     public class TransferNCGHistoryTypeTest
     {
-        [Fact]
-        public async Task Query()
+        [Theory]
+        [InlineData(null)]
+        [InlineData("memo")]
+        public async Task Query(string? memo)
         {
             Random random = new Random();
             Address sender = new PrivateKey().ToAddress(),
@@ -30,7 +32,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             FungibleAssetValue amount = new FungibleAssetValue(currency, 10, 10);
             var result = await GraphQLTestUtils.ExecuteQueryAsync<TransferNCGHistoryType>(
                 "{ blockHash txId sender recipient amount }",
-                source: new TransferNCGHistory(blockHash, txId, sender, recipient, amount));
+                source: new TransferNCGHistory(blockHash, txId, sender, recipient, amount, memo));
             Assert.Equal(new Dictionary<string, object>
             {
                 ["blockHash"] = blockHash.ToString(),

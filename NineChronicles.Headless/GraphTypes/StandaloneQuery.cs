@@ -101,14 +101,14 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var recipient = context.GetArgument<Address?>("recipient");
 
-                    var txs = block.Transactions.Where(tx =>
+                    var filteredTransactions = block.Transactions.Where(tx =>
                         tx.Actions.Count == 1 &&
                         tx.Actions.First().InnerAction is TransferAsset transferAsset &&
                         (!recipient.HasValue || transferAsset.Recipient == recipient) &&
                         transferAsset.Amount.Currency.Ticker == "NCG" &&
                         store.GetTxExecution(blockHash, tx.Id) is TxSuccess);
 
-                    TransferNCGHistory ToTransferNCGHistory(TxSuccess txSuccess)
+                    TransferNCGHistory ToTransferNCGHistory(TxSuccess txSuccess, string memo)
                     {
                         var rawTransferNcgHistories = txSuccess.FungibleAssetsDelta.Select(pair =>
                                 (pair.Key, pair.Value.Values.First(fav => fav.Currency.Ticker == "NCG")))
@@ -122,11 +122,13 @@ namespace NineChronicles.Headless.GraphTypes
                             txSuccess.TxId,
                             senderAddress,
                             recipientAddress,
-                            amount);
+                            amount,
+                            memo);
                     }
 
-                    var histories = txs.Select(tx =>
-                        ToTransferNCGHistory((TxSuccess) store.GetTxExecution(blockHash, tx.Id)));
+                    var histories = filteredTransactions.Select(tx =>
+                        ToTransferNCGHistory((TxSuccess) store.GetTxExecution(blockHash, tx.Id),
+                            tx.Actions.Single().InnerAction.As<TransferAsset>().Memo));
 
                     return histories;
                 });

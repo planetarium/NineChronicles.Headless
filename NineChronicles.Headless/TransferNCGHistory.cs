@@ -16,19 +16,23 @@ namespace NineChronicles.Headless
         public Address Recipient { get; }
 
         public FungibleAssetValue Amount { get; }
+        
+        public string? Memo { get; }
 
         public TransferNCGHistory(
             BlockHash blockHash,
             TxId txId,
             Address sender,
             Address recipient,
-            FungibleAssetValue amount)
+            FungibleAssetValue amount,
+            string? memo)
         {
             BlockHash = blockHash;
             TxId = txId;
             Sender = sender;
             Recipient = recipient;
             Amount = amount;
+            Memo = memo;
         }
     }
 }
