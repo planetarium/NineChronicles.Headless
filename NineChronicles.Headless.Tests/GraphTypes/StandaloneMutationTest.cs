@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using Bencodex.Types;
 using Xunit;
 using Xunit.Abstractions;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -124,8 +125,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.True(activatedAccountsState.Accounts.Contains(userAddress));
         }
 
-        [Fact]
-        public async Task Transfer()
+        [Theory]
+        [InlineData(null, false)]
+        [InlineData("", false)]
+        [InlineData("memo", false)]
+        [InlineData("_________________________________________________________________________________", true)]
+        public async Task Transfer(string? memo, bool error)
         {
             NineChroniclesNodeService service = StandaloneContextFx.NineChroniclesNodeService!;
             Currency goldCurrency = new GoldCurrencyState(
@@ -145,33 +150,56 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             Address recipient = new PrivateKey().ToAddress();
             long txNonce = BlockChain.GetNextTxNonce(senderAddress);
-            var query = $"mutation {{ transfer(recipient: \"{recipient}\", txNonce: {txNonce}, amount: \"17.5\") }}";
+            
+            var args = $"recipient: \"{recipient}\", txNonce: {txNonce}, amount: \"17.5\"";
+            if (!(memo is null))
+            {
+                args += $"memo: \"{memo}\"";
+            }
+
+            var query = $"mutation {{ transfer({args}) }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
 
-            var stagedTxIds = BlockChain.GetStagedTransactionIds().ToImmutableList();
-            Assert.Single(stagedTxIds);
-
-            var expectedResult = new Dictionary<string, object>
+            if (error)
             {
-                ["transfer"] = stagedTxIds.Single().ToString(),
-            };
-            Assert.Null(result.Errors);
-            Assert.Equal(expectedResult, result.Data);
+                Assert.NotNull(result.Errors);
+            }
+            else
+            {
+                Assert.Null(result.Errors);
+                
+                var stagedTxIds = BlockChain.GetStagedTransactionIds().ToImmutableList();
+                Assert.Single(stagedTxIds);
+                string transferTxIdString = stagedTxIds.Single().ToString();
+                TxId transferTxId = new TxId(ByteUtil.ParseHex(transferTxIdString));
 
-            await BlockChain.MineBlock(recipient);
+                Transaction<NCAction>? tx = BlockChain.StagePolicy.Get(BlockChain, transferTxId, false);
+                Assert.NotNull(tx);
+                Assert.IsType<TransferAsset>(tx!.Actions.Single().InnerAction);
+                TransferAsset transferAsset = (TransferAsset) tx.Actions.Single().InnerAction;
+                Assert.Equal(memo, transferAsset.Memo);
 
-            // 10 + 10 - 17.5(transfer)
-            Assert.Equal(
-                FungibleAssetValue.Parse(goldCurrency, "2.5"),
-                BlockChain.GetBalance(senderAddress, goldCurrency)
-            );
+                var expectedResult = new Dictionary<string, object>
+                {
+                    ["transfer"] = transferTxIdString,
+                };
 
-            // 0 + 17.5(transfer) + 10(mining reward)
-            Assert.Equal(
-                FungibleAssetValue.Parse(goldCurrency, "27.5"),
-                BlockChain.GetBalance(recipient, goldCurrency)
-            );
+                Assert.Equal(expectedResult, result.Data);
 
+                await BlockChain.MineBlock(recipient);
+
+                // 10 + 10 - 17.5(transfer)
+                Assert.Equal(
+                    FungibleAssetValue.Parse(goldCurrency, "2.5"),
+                    BlockChain.GetBalance(senderAddress, goldCurrency)
+                );
+
+                // 0 + 17.5(transfer) + 10(mining reward)
+                Assert.Equal(
+                    FungibleAssetValue.Parse(goldCurrency, "27.5"),
+                    BlockChain.GetBalance(recipient, goldCurrency)
+                );
+            }
         }
 
         [Fact]
