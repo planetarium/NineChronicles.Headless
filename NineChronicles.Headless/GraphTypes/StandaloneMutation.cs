@@ -109,6 +109,11 @@ namespace NineChronicles.Headless.GraphTypes
                         // Convert address type to hex string for graphdocs
                         DefaultValue = GoldCurrencyState.Address.ToHex(),
                         Name = "currencyAddress"
+                    },
+                    new QueryArgument<StringGraphType>
+                    {
+                        Description = "A 80-max length string to note.",
+                        Name = "memo",
                     }
                 ),
                 resolve: context =>
@@ -136,6 +141,7 @@ namespace NineChronicles.Headless.GraphTypes
                         FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
 
                     Address recipient = context.GetArgument<Address>("recipient");
+                    string? memo = context.GetArgument<string?>("memo");
                     Transaction<NCAction> tx = Transaction<NCAction>.Create(
                         context.GetArgument<long>("txNonce"),
                         privateKey,
@@ -145,7 +151,8 @@ namespace NineChronicles.Headless.GraphTypes
                             new TransferAsset(
                                 privateKey.ToAddress(),
                                 recipient,
-                                amount
+                                amount,
+                                memo
                             ),
                         }
                     );
