@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -692,6 +693,47 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 $"{nameof(MonsterCollectionState)} Address: {MonsterCollectionState.DeriveAddress(userAddress, 0)} is null.",
                 queryResult.Errors.First().Message
             );
+        }
+
+        [Fact]
+        public async Task Avatar()
+        {
+            var userPrivateKey = new PrivateKey();
+            var userAddress = userPrivateKey.ToAddress();
+            var service = MakeMineChroniclesNodeService(userPrivateKey);
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
+            var action = new CreateAvatar2
+            {
+                index = 0,
+                hair = 1,
+                lens = 2,
+                ear = 3,
+                tail = 4,
+                name = "action",
+            };
+            var blockChain = StandaloneContextFx.BlockChain;
+            var transaction = blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
+            blockChain.StageTransaction(transaction);
+            await blockChain.MineBlock(new Address());
+
+            var avatarAddress = userAddress.Derive(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    CreateAvatar2.DeriveFormat,
+                    0
+                )
+            );
+
+            string query = $@"query {{
+                stateQuery {{
+                    avatar(avatarAddress: ""{avatarAddress}"") {{ 
+                        name
+                    }}
+                }}
+            }}";
+            var queryResult = await ExecuteQueryAsync(query);
+            Assert.Null(queryResult.Errors);
         }
 
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)
