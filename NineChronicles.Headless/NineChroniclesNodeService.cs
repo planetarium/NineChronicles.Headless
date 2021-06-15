@@ -18,6 +18,7 @@ using Nito.AsyncEx;
 using Serilog;
 using Serilog.Events;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading;
@@ -169,7 +170,9 @@ namespace NineChronicles.Headless
                         if (swarm.Running && (!authorizedMiner || isTargetBlock))
                         {
                             Log.Debug("Start mining.");
-                            await miner.MineBlockAsync(properties.MaximumTransactions, cancellationToken);
+
+                            int[] ids = new[] { 1, 2, 3, 4 };   //Number of threads
+                            await Task.WhenAll(ids.Select(i => miner.MineBlockAsync(properties.MaximumTransactions, cancellationToken)));
                         }
                         else
                         {
