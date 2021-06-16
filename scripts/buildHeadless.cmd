@@ -1,6 +1,6 @@
 @ECHO OFF
 
-set COMMIT="f800e708776fd299ddbe9c89d63c35688abefc38"
+set COMMIT="a0c68ddc17b06a1537813f24dfd7ba5e899928a9"
 
 ECHO "Building Nine Chronicles - HEADLESS..."
 dotnet publish NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj ^
