@@ -28,7 +28,7 @@ namespace NineChronicles.Headless.GraphTypes
                 }),
                 resolve: context =>
                 {
-                    var address = context.GetArgument<Address>("address");
+                    var address = context.GetArgument<Address>("avatarAddress");
                     if (!(context.Source.accountStateGetter(address) is { } state))
                     {
                         throw new InvalidOperationException($"The state {address} doesn't exists");
