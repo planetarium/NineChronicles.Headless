@@ -1,6 +1,6 @@
 @ECHO OFF
 
-set PACKAGENAME=NineChronicles.HEADLESS.v100050.4T
+set PACKAGENAME=NineChronicles.HEADLESS.v100050.T
 
 @REM 1. Create folder with package name
 @REM 2. Move out folder to sub-directory called app inside package folder
