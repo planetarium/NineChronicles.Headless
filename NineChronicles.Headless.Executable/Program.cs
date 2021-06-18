@@ -157,7 +157,9 @@ namespace NineChronicles.Headless.Executable
                 Description = "A list of peers that the node will continue to maintain.")]
             string[]? staticPeerStrings = null,
             [Option("miner-count", Description = "The number of miner task(thread).")]
-            int minerCount = 1
+            int minerCount = 1,
+            [Option(Description ="Run node without preloading.")]
+            bool skipPreload = false
         )
         {
 #if SENTRY || ! DEBUG
@@ -277,7 +279,9 @@ namespace NineChronicles.Headless.Executable
                         messageTimeout: messageTimeout,
                         tipTimeout: tipTimeout,
                         demandBuffer: demandBuffer,
-                        staticPeerStrings: staticPeerStrings);
+                        staticPeerStrings: staticPeerStrings,
+                        preload: !skipPreload
+                    );
 
                 if (rpcServer)
                 {
