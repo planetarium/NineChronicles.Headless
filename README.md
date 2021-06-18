@@ -65,7 +65,8 @@ Options:
   --tip-timeout <Int32>                                    The grace period for tip update, which uses second as its unit.  60 (s) by default. (Default: 60)
   --demand-buffer <Int32>                                  A number that determines how far behind the demand the tip of the chain will publish `NodeException` to GraphQL subscriptions.  1150 blocks by default. (Default: 1150)
   --static-peer <String>...                                A list of peers that the node will continue to maintain.
-  --miner-count <Int32>                                    The number of miner task(thread). (Default: 1)--skip-preload                                           Run node without preloading.
+  --miner-count <Int32>                                    The number of miner task(thread). (Default: 1)
+  --skip-preload                                                  Run node without preloading.
   --completion                                             Generate a shell completion code
   -h, --help                                               Show help message
   --version                                                Show version
