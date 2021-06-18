@@ -38,6 +38,9 @@ namespace NineChronicles.Headless.Properties
 
         public bool IgnorePreloadFailure { get; set; } = true;
 
+        public int MinerCount { get; set; }
+
+
         public static LibplanetNodeServiceProperties<NineChroniclesActionType>
             GenerateLibplanetNodeServiceProperties(
                 string? appProtocolVersionToken = null,
