@@ -16,7 +16,7 @@
 ```
 $ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
 Usage: NineChronicles.Headless.Executable [command]
-Usage: NineChronicles.Headless.Executable [--no-miner] [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <Nullable`1>] [--swarm-private-key <String>] [--minimum-difficulty <Int32>] [--miner-private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--graphql-secret-token-path <String>] [--no-cors] [--libplanet-node] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-action-renders] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--help] [--version]
+Usage: NineChronicles.Headless.Executable [--app-protocol-version <String>] [--genesis-block-path <String>] [--no-miner] [--host <String>] [--port <Nullable`1>] [--swarm-private-key <String>] [--minimum-difficulty <Int32>] [--miner-private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--graphql-secret-token-path <String>] [--no-cors] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-action-renders] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--static-peer <String>...] [--miner-count <Int32>] [--skip-preload] [--completion] [--help] [--version]
 
 NineChronicles.Headless.Executable
 
@@ -66,6 +66,7 @@ Options:
   --demand-buffer <Int32>                                  A number that determines how far behind the demand the tip of the chain will publish `NodeException` to GraphQL subscriptions.  1150 blocks by default. (Default: 1150)
   --static-peer <String>...                                A list of peers that the node will continue to maintain.
   --miner-count <Int32>                                    The number of miner task(thread). (Default: 1)
+  --skip-preload                                                  Run node without preloading.
   --completion                                             Generate a shell completion code
   -h, --help                                               Show help message
   --version                                                Show version
@@ -95,20 +96,21 @@ $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 - `--rpc-server`: Starts with RPC server mode. Must specify `--rpc-listen-port` to use this mode.
 - `--rpc-listen-host`: Host name for RPC server mode.
 - `--rpc-listen-port`: Port number for RPC server mode.
--  `--graphql-server`: Turn on graphQL controller.
--  `--graphql-host`: Host name for graphQL controller.
--  `--graphql-port`: Port number for graphQL controller.
--  `--libplanet-node`: Run with formal Libplanet node. One of this or `graphql-server` must be set.
--  `--workers`: Number of workers to use in Swarm.
--  `--confirmations`: Specifies the number of required confirmations to recognize a block.
--  `--max-transactions`: Specifies the number of maximum transactions can be included in a single block. Unlimited if the value is less then or equal to 0.
--  `--dev`: Flag to turn on the dev mode.
--  `--dev.block-interval`: Specifies the time interval between blocks by milliseconds in dev mode.
--  `--dev.reorg-interval`: Specifies the size of reorg interval in dev mode.
--  `--message-timeout`: Specifies the time limit that determines how old the latest message is received will publish `NodeException` to GraphQL subscriptions.
--  `--tip-timeout`: Specifies the time limit that determines how old the blockchain's tip is updated will publish `NodeException` to GraphQL subscriptions.
--  `--demand-buffer`: Specifies the number that determines how far behind the demand the tip of the chain will publish `NodeException` to GraphQL subscriptions.
--  `--miner-count`: Specifies the number of task(thread)s to use for mining.
+- `--graphql-server`: Turn on graphQL controller.
+- `--graphql-host`: Host name for graphQL controller.
+- `--graphql-port`: Port number for graphQL controller.
+- `--libplanet-node`: Run with formal Libplanet node. One of this or `graphql-server` must be set.
+- `--workers`: Number of workers to use in Swarm.
+- `--confirmations`: Specifies the number of required confirmations to recognize a block.
+- `--max-transactions`: Specifies the number of maximum transactions can be included in a single block. Unlimited if the value is less then or equal to 0.
+- `--dev`: Flag to turn on the dev mode.
+- `--dev.block-interval`: Specifies the time interval between blocks by milliseconds in dev mode.
+- `--dev.reorg-interval`: Specifies the size of reorg interval in dev mode.
+- `--message-timeout`: Specifies the time limit that determines how old the latest message is received will publish `NodeException` to GraphQL subscriptions.
+- `--tip-timeout`: Specifies the time limit that determines how old the blockchain's tip is updated will publish `NodeException` to GraphQL subscriptions.
+- `--demand-buffer`: Specifies the number that determines how far behind the demand the tip of the chain will publish `NodeException` to GraphQL subscriptions.
+- `--miner-count`: Specifies the number of task(thread)s to use for mining.
+- `--skip-preload`: Skipping preloading when starting.
 
 ### Format
 

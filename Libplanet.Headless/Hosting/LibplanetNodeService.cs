@@ -186,7 +186,7 @@ namespace Libplanet.Headless.Hosting
                 {
                     var tasks = new List<Task>
                     {
-                        StartSwarm(true, cancellationToken),
+                        StartSwarm(Properties.Preload, cancellationToken),
                         CheckMessage(Properties.MessageTimeout, cancellationToken),
                         CheckTip(Properties.TipTimeout, cancellationToken)
                     };

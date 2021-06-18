@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Net;
 using Libplanet;
 using Libplanet.Crypto;
 using Libplanet.Net;
@@ -14,8 +13,8 @@ namespace NineChronicles.Headless.Properties
     public class NineChroniclesNodeServiceProperties
     {
         /// <summary>
-        /// A private key that is used in mining and signing transactions, which is different
-        /// with the private key used in swarm to sign messages.
+        /// Gets or sets a private key that is used in mining and signing transactions, 
+        /// which is different with the private key used in swarm to sign messages.
         /// </summary>
         /// <seealso cref="LibplanetNodeServiceProperties{T}.SwarmPrivateKey"/>
         public PrivateKey? MinerPrivateKey { get; set; }
@@ -63,7 +62,8 @@ namespace NineChronicles.Headless.Properties
                 int messageTimeout = 60,
                 int tipTimeout = 60,
                 int demandBuffer = 1150,
-                string[]? staticPeerStrings = null)
+                string[]? staticPeerStrings = null,
+                bool preload = true)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
@@ -101,7 +101,8 @@ namespace NineChronicles.Headless.Properties
                 MessageTimeout = TimeSpan.FromSeconds(messageTimeout),
                 TipTimeout = TimeSpan.FromSeconds(tipTimeout),
                 DemandBuffer = demandBuffer,
-                StaticPeers = staticPeers
+                StaticPeers = staticPeers,
+                Preload = preload,
             };
         }
 
