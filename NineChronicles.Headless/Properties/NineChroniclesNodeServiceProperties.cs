@@ -14,8 +14,8 @@ namespace NineChronicles.Headless.Properties
     public class NineChroniclesNodeServiceProperties
     {
         /// <summary>
-        /// A private key that is used in mining and signing transactions, which is different
-        /// with the private key used in swarm to sign messages.
+        /// Gets or sets a private key that is used in mining and signing transactions, 
+        /// which is different with the private key used in swarm to sign messages.
         /// </summary>
         /// <seealso cref="LibplanetNodeServiceProperties{T}.SwarmPrivateKey"/>
         public PrivateKey? MinerPrivateKey { get; set; }
