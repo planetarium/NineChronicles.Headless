@@ -553,8 +553,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Address agentAddress = service.MinerPrivateKey.ToAddress();
                         AgentState agentState = new AgentState((Dictionary) service.BlockChain.GetState(agentAddress));
 
-                        Address collectionAddress =
-                            MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
+                        Address collectionAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
                         if (service.BlockChain.GetState(collectionAddress) is { })
                         {
                             throw new InvalidOperationException("MonsterCollectionState already exists.");
@@ -562,7 +561,6 @@ namespace NineChronicles.Headless.GraphTypes
                         var action = new MonsterCollect
                         {
                             level = level,
-                            collectionRound = agentState.MonsterCollectionRound,
                         };
 
                         var actions = new NCAction[] { action };
@@ -610,11 +608,10 @@ namespace NineChronicles.Headless.GraphTypes
                         var action = new ClaimMonsterCollectionReward
                         {
                             avatarAddress = avatarAddress,
-                            collectionRound = agentState.MonsterCollectionRound,
                         };
 
-                        var actions = new PolymorphicAction<ActionBase>[] { action };
-                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        var actions = new NCAction[] { action };
+                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)

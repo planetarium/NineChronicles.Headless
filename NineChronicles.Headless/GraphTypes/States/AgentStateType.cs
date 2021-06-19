@@ -58,8 +58,10 @@ namespace NineChronicles.Headless.GraphTypes.States
                 description: "Current monster collection level.",
                 resolve: context =>
                 {
-                    Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(context.Source.agentState.address,
-                        context.Source.agentState.MonsterCollectionRound);
+                    Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
+                        context.Source.agentState.address,
+                        context.Source.agentState.MonsterCollectionRound
+                    );
                     if (context.Source.accountStateGetter(monsterCollectionAddress) is { } state)
                     {
                         return new MonsterCollectionState((Dictionary) state).Level;

@@ -635,7 +635,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
             const string query = @"query {
                 monsterCollectionStatus {
-                    canReceive
                     fungibleAssetValue {
                         quantity
                         currency
@@ -676,7 +675,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             const string query = @"query {
                 monsterCollectionStatus {
-                    canReceive
                     fungibleAssetValue {
                         quantity
                         currency

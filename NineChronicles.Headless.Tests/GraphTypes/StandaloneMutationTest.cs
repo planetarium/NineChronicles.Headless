@@ -725,7 +725,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Single(tx.Actions);
             var action = (MonsterCollect) tx.Actions.First().InnerAction;
             Assert.Equal(1, action.level);
-            Assert.Equal(0, action.collectionRound);
         }
 
         [Fact]
@@ -770,7 +769,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Single(tx.Actions);
             var action = (ClaimMonsterCollectionReward) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
-            Assert.Equal(0, action.collectionRound);
         }
 
         // [Fact]
