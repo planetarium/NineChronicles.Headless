@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using Libplanet.Action;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
@@ -59,6 +60,6 @@ namespace Libplanet.Headless.Hosting
 
         public int DemandBuffer { get; set; } = 1150;
 
-        public IEnumerable<Peer> StaticPeers { get; set; }
+        public ImmutableHashSet<BoundPeer> StaticPeers { get; set; }
     }
 }

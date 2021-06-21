@@ -72,7 +72,7 @@ namespace NineChronicles.Headless.Properties
 
             var iceServers = iceServerStrings.Select(PropertyParser.ParseIceServer).ToImmutableArray();
             var peers = peerStrings.Select(PropertyParser.ParsePeer).ToImmutableArray();
-            var staticPeers = staticPeerStrings.Select(PropertyParser.ParsePeer).ToImmutableArray();
+            var staticPeers = staticPeerStrings.Select(PropertyParser.ParsePeer).ToImmutableHashSet();
 
             return new LibplanetNodeServiceProperties<NineChroniclesActionType>
             {
