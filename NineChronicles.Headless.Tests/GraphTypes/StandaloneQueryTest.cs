@@ -403,7 +403,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
-                StaticPeers = ImmutableHashSet<Peer>.Empty
+                StaticPeers = ImmutableHashSet<BoundPeer>.Empty
             };
 
             var service = new NineChroniclesNodeService(userPrivateKey, properties, null);
@@ -778,7 +778,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
-                StaticPeers = ImmutableHashSet<Peer>.Empty,
+                StaticPeers = ImmutableHashSet<BoundPeer>.Empty,
             };
 
             return new NineChroniclesNodeService(privateKey, properties, null);
