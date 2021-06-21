@@ -92,26 +92,6 @@ namespace Libplanet.Headless.Hosting
             );
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
-        {
-            bool preload = true;
-            while (!cancellationToken.IsCancellationRequested && !_stopRequested)
-            {
-                var tasks = new List<Task>
-                {
-                    StartSwarm(preload, cancellationToken),
-                    CheckMessage(Properties.MessageTimeout, cancellationToken),
-                };
-                if (Properties.Peers.Any()) 
-                {
-                    tasks.Add(CheckPeerTable(cancellationToken));
-                }
-                await await Task.WhenAny(tasks);
-                preload = false;
-                await Task.Delay(TimeSpan.FromSeconds(15), cancellationToken);
-            }
-        }
-
         public override void StartMining(PrivateKey privateKey)
         {
             if (BlockChain is null)
@@ -141,6 +121,27 @@ namespace Libplanet.Headless.Hosting
             StopMining();
             return Task.WhenAll(SubSwarm.StopAsync(cancellationToken), Swarm.StopAsync(cancellationToken));
         }
+
+        protected override Task ExecuteAsync(CancellationToken cancellationToken)
+            => Task.Run(async () =>
+            {
+                bool preload = true;
+                while (!cancellationToken.IsCancellationRequested && !_stopRequested)
+                {
+                    var tasks = new List<Task>
+                    {
+                        StartSwarm(preload, cancellationToken),
+                        CheckMessage(Properties.MessageTimeout, cancellationToken),
+                    };
+                    if (Properties.Peers.Any())
+                    {
+                        tasks.Add(CheckPeerTable(cancellationToken));
+                    }
+                    await await Task.WhenAny(tasks);
+                    preload = false;
+                    await Task.Delay(TimeSpan.FromSeconds(15), cancellationToken);
+                }
+            });
 
         private async Task StartSwarm(bool preload, CancellationToken cancellationToken)
         {
