@@ -37,7 +37,7 @@ namespace Libplanet.Headless.Hosting
         public readonly Swarm<T> Swarm;
 
         public readonly LibplanetNodeServiceProperties<T> Properties;
-        
+
         public AsyncManualResetEvent BootstrapEnded { get; }
 
         public AsyncManualResetEvent PreloadEnded { get; }
@@ -78,7 +78,7 @@ namespace Libplanet.Headless.Hosting
             Func<BlockChain<T>, Swarm<T>, PrivateKey, CancellationToken, Task> minerLoopAction,
             Progress<PreloadState> preloadProgress,
             Action<RPCException, string> exceptionHandlerAction,
-            Action<bool> preloadStatusHandlerAction, 
+            Action<bool> preloadStatusHandlerAction,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false
         )
@@ -159,6 +159,8 @@ namespace Libplanet.Headless.Hosting
                 {
                     MaxTimeout = TimeSpan.FromSeconds(10),
                     BlockHashRecvTimeout = TimeSpan.FromSeconds(10),
+                    BlockRecvTimeout = TimeSpan.FromSeconds(1),
+                    BranchpointThreshold = 50,
                     StaticPeers = Properties.StaticPeers,
                 }
             );
@@ -173,7 +175,7 @@ namespace Libplanet.Headless.Hosting
 
         protected override Task ExecuteAsync(CancellationToken cancellationToken)
             => Task.Run(async () =>
-            {   
+            {
                 Log.Debug("Trying to delete {count} obsoleted chains...", _obsoletedChainIds.Count());
                 _ = Task.Run(() =>
                 {
@@ -437,7 +439,7 @@ namespace Libplanet.Headless.Hosting
                 {
                     var message =
                         $"No messages have been received since {Swarm.LastMessageTimestamp}.";
-                        
+
                     Log.Error(message);
                     Properties.NodeExceptionOccurred(NodeExceptionType.MessageNotReceived, message);
                     _stopRequested = true;
@@ -460,13 +462,13 @@ namespace Libplanet.Headless.Hosting
                 {
                     continue;
                 }
-                
+
                 if (lastTip != BlockChain.Tip)
                 {
                     lastTip = BlockChain.Tip;
                     lastTipChanged = DateTimeOffset.Now;
                 }
-                
+
                 if (lastTipChanged + tipTimeout < DateTimeOffset.Now)
                 {
                     var message =
@@ -491,7 +493,7 @@ namespace Libplanet.Headless.Hosting
                 {
                     continue;
                 }
-                
+
                 if ((Swarm.BlockDemand?.Header.Index ?? 0) > (BlockChain.Tip?.Index ?? 0) + demandBuffer)
                 {
                     var message =

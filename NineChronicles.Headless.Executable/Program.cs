@@ -4,6 +4,7 @@ using Amazon.Runtime;
 using Amazon.S3;
 using Cocona;
 using Cocona.Lite;
+using Destructurama;
 using Libplanet;
 using Libplanet.Crypto;
 using Libplanet.Extensions.Cocona.Commands;
@@ -171,8 +172,9 @@ namespace NineChronicles.Headless.Executable
             var configurationBuilder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
             var configuration = configurationBuilder.Build();
             var loggerConf = new LoggerConfiguration()
-                .ReadFrom.Configuration(configuration);
-#if SENTRY || ! DEBUG
+                .ReadFrom.Configuration(configuration)
+                .Destructure.UsingAttributes();
+#if SENTRY || !DEBUG
             loggerConf = loggerConf
                 .WriteTo.Sentry(o =>
                 {
