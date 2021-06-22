@@ -69,6 +69,11 @@ namespace NineChronicles.Headless.GraphTypes
                         if (blockChain.Policy.DoesTransactionFollowsPolicy(tx, blockChain))
                         {
                             blockChain.StageTransaction(tx);
+
+                            if (service?.Swarm is { } swarm && swarm.Running)
+                            {
+                                swarm.BroadcastTxs(new[] { tx });
+                            }
                             return true;
                         }
                         else
