@@ -159,6 +159,8 @@ namespace Libplanet.Headless.Hosting
                 {
                     MaxTimeout = TimeSpan.FromSeconds(10),
                     BlockHashRecvTimeout = TimeSpan.FromSeconds(10),
+                    BlockDownloadTimeout = TimeSpan.FromSeconds(1),
+                    BranchpointThreshold = 50,
                 }
             );
 
