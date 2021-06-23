@@ -268,7 +268,7 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         AgentState agentState = new AgentState(agentDict);
                         Address deriveAddress =
-                            MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
+                            MonsterCollectionState.DeriveAddress(agentAddress, 0);
                         Currency currency = new GoldCurrencyState(
                             (Dictionary) blockChain.GetState(Addresses.GoldCurrency)
                             ).Currency;
@@ -277,7 +277,7 @@ namespace NineChronicles.Headless.GraphTypes
                         if (blockChain.GetState(deriveAddress) is Dictionary mcDict)
                         {
                             MonsterCollectionState monsterCollectionState = new MonsterCollectionState(mcDict);
-                            bool canReceive = monsterCollectionState.CanReceive(blockChain.Tip.Index);
+                            bool canReceive = monsterCollectionState.CanReceive(blockChain.Tip.Index) && monsterCollectionState.RewardLevel != 4;
                             var rewardLevel= monsterCollectionState.GetRewardLevel(blockChain.Tip.Index);
                             var rewardInfos = rewardLevel > 0
                                 ? monsterCollectionState.RewardLevelMap[rewardLevel]

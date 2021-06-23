@@ -216,11 +216,11 @@ namespace NineChronicles.Headless.GraphTypes
             if (StandaloneContext.NineChroniclesNodeService.BlockChain.GetState(agentAddress) is Dictionary agentDict)
             {
                 AgentState agentState = new AgentState(agentDict);
-                Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
+                Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, 0);
                 if (StandaloneContext.NineChroniclesNodeService.BlockChain.GetState(deriveAddress) is Dictionary collectDict && agentState.avatarAddresses.Any())
                 {
                     MonsterCollectionState monsterCollectionState = new MonsterCollectionState(collectDict);
-                    canReceive = monsterCollectionState.CanReceive(pair.NewTip.Index);
+                    canReceive = monsterCollectionState.CanReceive(pair.NewTip.Index) && monsterCollectionState.RewardLevel != 4;
                     var rewardLevel= monsterCollectionState.GetRewardLevel(pair.NewTip.Index);
                     if (rewardLevel > 0)
                     {
