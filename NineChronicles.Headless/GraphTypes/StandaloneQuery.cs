@@ -267,8 +267,7 @@ namespace NineChronicles.Headless.GraphTypes
                     if (blockChain.GetState(agentAddress) is Dictionary agentDict)
                     {
                         AgentState agentState = new AgentState(agentDict);
-                        Address deriveAddress =
-                            MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
+                        Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
                         Currency currency = new GoldCurrencyState(
                             (Dictionary) blockChain.GetState(Addresses.GoldCurrency)
                             ).Currency;
@@ -276,13 +275,15 @@ namespace NineChronicles.Headless.GraphTypes
                         FungibleAssetValue balance = blockChain.GetBalance(agentAddress, currency);
                         if (blockChain.GetState(deriveAddress) is Dictionary mcDict)
                         {
-                            MonsterCollectionState monsterCollectionState = new MonsterCollectionState(mcDict);
-                            bool canReceive = monsterCollectionState.CanReceive(blockChain.Tip.Index);
-                            var rewardLevel= monsterCollectionState.GetRewardLevel(blockChain.Tip.Index);
-                            var rewardInfos = rewardLevel > 0
-                                ? monsterCollectionState.RewardLevelMap[rewardLevel]
-                                : new List<MonsterCollectionRewardSheet.RewardInfo>();
-                            return new MonsterCollectionStatus(canReceive, balance, rewardInfos);
+                            var rewardSheet = new MonsterCollectionRewardSheet();
+                            var csv = blockChain.GetState(
+                                Addresses.GetSheetAddress<MonsterCollectionSheet>()
+                            ).ToDotnetString();
+                            rewardSheet.Set(csv);
+                            var monsterCollectionState = new MonsterCollectionState(mcDict);
+                            List<MonsterCollectionRewardSheet.RewardInfo> rewards =
+                                monsterCollectionState.CalculateRewards(rewardSheet, blockChain.Tip.Index);
+                            return new MonsterCollectionStatus(balance, rewards);
                         }
                         throw new ExecutionError(
                             $"{nameof(MonsterCollectionState)} Address: {deriveAddress} is null.");

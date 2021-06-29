@@ -232,11 +232,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                         startedBlockIndex
                         receivedBlockIndex
                         rewardLevel
-                        end
-                        rewardLevelMap {
-                            itemId
-                            quantity
-                        }
                     }
                 }"
             );
@@ -259,56 +254,19 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ["startedBlockIndex"] = 2L,
                 ["receivedBlockIndex"] = 0L,
                 ["rewardLevel"] = 0L,
-                ["end"] = false,
-                ["rewardLevelMap"] = new List<object>
-                {
-                    new List<object>
-                    {
-                        new Dictionary<string, object>
-                        {
-                            ["itemId"] = 400000,
-                            ["quantity"] = 80,
-                        },
-                    },
-                    new List<object>
-                    {
-                        new Dictionary<string, object>
-                        {
-                            ["itemId"] = 400000,
-                            ["quantity"] = 80,
-                        },
-                    },
-                    new List<object>
-                    {
-                        new Dictionary<string, object>
-                        {
-                            ["itemId"] = 400000,
-                            ["quantity"] = 80,
-                        },
-                    },
-                    new List<object>
-                    {
-                        new Dictionary<string, object>
-                        {
-                            ["itemId"] = 400000,
-                            ["quantity"] = 80,
-                        },
-                    },
-                }
             };
             Assert.Equal(expected, subject);
         }
 
         [Theory]
-        [InlineData(false, 100, 0, "100.00")]
-        [InlineData(true, 0, 2, "0.02")]
-        [InlineData(true, 10, 2, "10.02")]
-        public async Task SubscribeMonsterCollectionStatus(bool canReceive, int major, int minor, string decimalString)
+        [InlineData(100, 0, "100.00")]
+        [InlineData(0, 2, "0.02")]
+        [InlineData(10, 2, "10.02")]
+        public async Task SubscribeMonsterCollectionStatus(int major, int minor, string decimalString)
         {
             ExecutionResult result = await ExecuteQueryAsync(@"
                 subscription {
                     monsterCollectionStatus {
-                        canReceive
                         fungibleAssetValue {
                             quantity
                             currency
@@ -327,18 +285,21 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             Currency currency = new Currency("NCG", 2, minter: null);
             FungibleAssetValue fungibleAssetValue = new FungibleAssetValue(currency, major, minor);
-            StandaloneContextFx.MonsterCollectionStatusSubject.OnNext(new MonsterCollectionStatus(canReceive,
-                fungibleAssetValue, new List<MonsterCollectionRewardSheet.RewardInfo>
-                {
-                    new MonsterCollectionRewardSheet.RewardInfo("1", "1")
-                }));
+            StandaloneContextFx.MonsterCollectionStatusSubject.OnNext(
+                new MonsterCollectionStatus(
+                    fungibleAssetValue, 
+                    new List<MonsterCollectionRewardSheet.RewardInfo>
+                    {
+                        new MonsterCollectionRewardSheet.RewardInfo("1", "1")
+                    }
+                )
+            );
             ExecutionResult rawEvents = await stream.Take(1);
             Dictionary<string, object> rawEvent = (Dictionary<string, object>)rawEvents.Data;
             Dictionary<string, object> statusSubject =
                 (Dictionary<string, object>)rawEvent["monsterCollectionStatus"];
             Dictionary<string, object> expected = new Dictionary<string, object>
             {
-                ["canReceive"] = canReceive,
                 ["fungibleAssetValue"] = new Dictionary<string, object>
                 {
                     ["currency"] = "NCG",
