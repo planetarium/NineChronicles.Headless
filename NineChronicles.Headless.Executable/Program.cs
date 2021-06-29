@@ -192,6 +192,12 @@ namespace NineChronicles.Headless.Executable
                 throw new CommandExitedException(message, -1);
             }
 
+            // Clean-up previous temporary log files.
+            if (Directory.Exists("_logs"))
+            {
+                Directory.Delete("_logs", true);
+            }
+
             if (useBasicAwsCredentials ^ useCognitoCredentials  && !(awsRegion is null))
             {
                 RegionEndpoint regionEndpoint = RegionEndpoint.GetBySystemName(awsRegion);
@@ -208,7 +214,7 @@ namespace NineChronicles.Headless.Executable
 
                 loggerConf = loggerConf.WriteTo.AmazonS3(
                     new AmazonS3Client(credentials, regionEndpoint),
-                    "log.json",
+                    "_logs/log.json",
                     "9c-headless-logs",
                     formatter: new CompactJsonFormatter(),
                     rollingInterval: Serilog.Sinks.AmazonS3.RollingInterval.Hour,
