@@ -222,7 +222,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var rewardSheet = new MonsterCollectionRewardSheet();
                     var csv = blockChain.GetState(
-                        Addresses.GetSheetAddress<MonsterCollectionSheet>()
+                        Addresses.GetSheetAddress<MonsterCollectionRewardSheet>()
                     ).ToDotnetString();
                     rewardSheet.Set(csv);
                     var monsterCollectionState = new MonsterCollectionState(collectDict);
