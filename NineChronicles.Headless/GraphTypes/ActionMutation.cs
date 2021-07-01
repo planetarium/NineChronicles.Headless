@@ -74,7 +74,7 @@ namespace NineChronicles.Headless.GraphTypes
                         var lensIndex = context.GetArgument<int>("lensIndex");
                         var earIndex = context.GetArgument<int>("earIndex");
                         var tailIndex = context.GetArgument<int>("tailIndex");
-                        var action = new CreateAvatar2
+                        var action = new CreateAvatar
                         {
                             index = avatarIndex,
                             hair = hairIndex,
@@ -160,7 +160,7 @@ namespace NineChronicles.Headless.GraphTypes
                         List<Guid> equipmentIds = context.GetArgument<List<Guid>>("equipmentIds") ?? new List<Guid>();
                         List<Guid> consumableIds = context.GetArgument<List<Guid>>("consumableIds") ?? new List<Guid>();
 
-                        var action = new HackAndSlash4
+                        var action = new HackAndSlash
                         {
                             avatarAddress = avatarAddress,
                             worldId = worldId,
@@ -224,7 +224,7 @@ namespace NineChronicles.Headless.GraphTypes
                         int? subRecipeId = context.GetArgument<int?>("subRecipeId");
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
 
-                        var action = new CombinationEquipment4
+                        var action = new CombinationEquipment
                         {
                             AvatarAddress = avatarAddress,
                             RecipeId = recipeId,
@@ -288,7 +288,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
                         int slotIndex = context.GetArgument<int>("slotIndex");
 
-                        var action = new ItemEnhancement5
+                        var action = new ItemEnhancement
                         {
                             avatarAddress = avatarAddress,
                             slotIndex = slotIndex,
@@ -505,7 +505,7 @@ namespace NineChronicles.Headless.GraphTypes
                         int slotIndex = context.GetArgument<int>("slotIndex");
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
 
-                        var action = new CombinationConsumable3
+                        var action = new CombinationConsumable
                         {
                             AvatarAddress = avatarAddress,
                             recipeId = recipeId,

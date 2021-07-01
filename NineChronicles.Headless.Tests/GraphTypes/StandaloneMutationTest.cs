@@ -281,7 +281,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (CreateAvatar2) tx.Actions.First().InnerAction;
+            var action = (CreateAvatar) tx.Actions.First().InnerAction;
             Assert.Equal(name, action.name);
             Assert.Equal(index, action.index);
             Assert.Equal(hair, action.hair);
@@ -361,7 +361,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (HackAndSlash4) tx.Actions.First().InnerAction;
+            var action = (HackAndSlash) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(worldId, action.worldId);
             Assert.Equal(stageId, action.stageId);
@@ -505,7 +505,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (CombinationEquipment4) tx.Actions.First().InnerAction;
+            var action = (CombinationEquipment) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(recipeId, action.RecipeId);
             Assert.Equal(slotIndex, action.SlotIndex);
@@ -562,7 +562,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (ItemEnhancement5) tx.Actions.First().InnerAction;
+            var action = (ItemEnhancement) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(itemId, action.itemId);
             Assert.Equal(materialId, action.materialId);
@@ -663,7 +663,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (CombinationConsumable3) tx.Actions.First().InnerAction;
+            var action = (CombinationConsumable) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(recipeId, action.recipeId);
             Assert.Equal(slotIndex, action.slotIndex);
