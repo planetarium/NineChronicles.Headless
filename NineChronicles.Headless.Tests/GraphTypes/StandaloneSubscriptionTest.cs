@@ -259,10 +259,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Theory]
-        [InlineData(100, 0, "100.00")]
-        [InlineData(0, 2, "0.02")]
-        [InlineData(10, 2, "10.02")]
-        public async Task SubscribeMonsterCollectionStatus(int major, int minor, string decimalString)
+        [InlineData(100, 0, "100.00", true)]
+        [InlineData(0, 2, "0.02", false)]
+        [InlineData(10, 2, "10.02", true)]
+        public async Task SubscribeMonsterCollectionStatus(int major, int minor, string decimalString, bool lockup)
         {
             ExecutionResult result = await ExecuteQueryAsync(@"
                 subscription {
@@ -274,7 +274,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                         rewardInfos {
                             itemId
                             quantity
-                        }
+                        },
+                        lockup
                     }
                 }"
             );
@@ -291,7 +292,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     new List<MonsterCollectionRewardSheet.RewardInfo>
                     {
                         new MonsterCollectionRewardSheet.RewardInfo("1", "1")
-                    }
+                    },
+                    lockup
                 )
             );
             ExecutionResult rawEvents = await stream.Take(1);
@@ -313,6 +315,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                         ["itemId"] = 1,
                     }
                 },
+                ["lockup"] = lockup,
             };
             Assert.Equal(expected, statusSubject);
         }

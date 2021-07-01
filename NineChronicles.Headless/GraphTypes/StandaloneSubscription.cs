@@ -225,15 +225,21 @@ namespace NineChronicles.Headless.GraphTypes
                         Addresses.GetSheetAddress<MonsterCollectionRewardSheet>()
                     ).ToDotnetString();
                     rewardSheet.Set(csv);
+                    long tipIndex = blockChain.Tip.Index;
                     var monsterCollectionState = new MonsterCollectionState(collectDict);
                     rewards = monsterCollectionState.CalculateRewards(
                         rewardSheet,
-                        StandaloneContext.NineChroniclesNodeService.BlockChain.Tip.Index
+                        tipIndex
                     );
+
+                    var monsterCollectionStatus = new MonsterCollectionStatus(
+                        balance, 
+                        rewards,
+                        monsterCollectionState.IsLocked(tipIndex)
+                    );
+                    StandaloneContext.MonsterCollectionStatusSubject.OnNext(monsterCollectionStatus);
                 }
             }
-            var monsterCollectionStatus = new MonsterCollectionStatus(balance, rewards);
-            StandaloneContext.MonsterCollectionStatusSubject.OnNext(monsterCollectionStatus);
         }
 
         private void RenderAction(ActionBase.ActionEvaluation<ActionBase> eval)
