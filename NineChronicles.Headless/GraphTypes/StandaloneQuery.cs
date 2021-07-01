@@ -277,13 +277,18 @@ namespace NineChronicles.Headless.GraphTypes
                         {
                             var rewardSheet = new MonsterCollectionRewardSheet();
                             var csv = blockChain.GetState(
-                                Addresses.GetSheetAddress<MonsterCollectionSheet>()
+                                Addresses.GetSheetAddress<MonsterCollectionRewardSheet>()
                             ).ToDotnetString();
                             rewardSheet.Set(csv);
                             var monsterCollectionState = new MonsterCollectionState(mcDict);
+                            long tipIndex = blockChain.Tip.Index;
                             List<MonsterCollectionRewardSheet.RewardInfo> rewards =
-                                monsterCollectionState.CalculateRewards(rewardSheet, blockChain.Tip.Index);
-                            return new MonsterCollectionStatus(balance, rewards);
+                                monsterCollectionState.CalculateRewards(rewardSheet, tipIndex);
+                            return new MonsterCollectionStatus(
+                                balance, 
+                                rewards, 
+                                monsterCollectionState.IsLocked(tipIndex)
+                            );
                         }
                         throw new ExecutionError(
                             $"{nameof(MonsterCollectionState)} Address: {deriveAddress} is null.");
