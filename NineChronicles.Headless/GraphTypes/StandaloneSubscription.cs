@@ -272,14 +272,17 @@ namespace NineChronicles.Headless.GraphTypes
             }
 
             Address agentAddress = privateKey.ToAddress();
-            if (eval.Signer == agentAddress && eval.Exception is null)
+            if (eval.Signer == agentAddress && 
+                eval.Exception is null && 
+                service.BlockChain.GetState(agentAddress) is Dictionary rawAgent)
             {
-                var agentState = new AgentState((Dictionary)service.BlockChain.GetState(agentAddress));
+                var agentState = new AgentState(rawAgent);
                 Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
-                if (eval.OutputStates.GetState(deriveAddress) is { } state)
+                if (eval.OutputStates.GetState(deriveAddress) is Dictionary state)
                 {
-                    MonsterCollectionState monsterCollectionState = new MonsterCollectionState((Dictionary)state);
-                    StandaloneContext.MonsterCollectionStateSubject.OnNext(monsterCollectionState);
+                    StandaloneContext.MonsterCollectionStateSubject.OnNext(
+                        new MonsterCollectionState(state)
+                    );
                 }
             }
 
