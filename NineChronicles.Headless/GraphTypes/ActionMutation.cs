@@ -11,7 +11,12 @@ using Nekoyume.Model.State;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Lib9c.Model.Order;
 using Libplanet.Action;
+using Nekoyume.Model.Item;
+using NineChronicles.Headless.GraphTypes.States.Models;
+using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -305,6 +310,130 @@ namespace NineChronicles.Headless.GraphTypes
                         var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
                         Log.Error(msg, e);
+                        throw;
+                    }
+                });
+
+            Field<NonNullGraphType<TxIdType>>("buy",
+                description: "Buy registered shop item.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "buyerAvatarAddress",
+                        Description = "Avatar address."
+                    },
+                    new QueryArgument<NonNullGraphType<ListGraphType<GuidGraphType>>>
+                    {
+                        Name = "orderIds",
+                        Description = "Order Guid list from registered item."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        if (!(service.MinerPrivateKey is { } privateKey))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                        }
+
+                        if (!(service.Swarm?.BlockChain is { } blockChain))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
+                        }
+
+                        Address buyerAvatarAddress = context.GetArgument<Address>("buyerAvatarAddress");
+                        List<Guid> orderIds = context.GetArgument<List<Guid>>("orderIds");
+
+                        var purchaseInfos = new List<PurchaseInfo>();
+                        foreach (var orderId in orderIds)
+                        {
+                            var rawOrder = blockChain.GetState(Order.DeriveAddress(orderId));
+                            if (rawOrder is Dictionary dict)
+                            {
+                                var order = OrderFactory.Deserialize(dict);
+                                var purchaseInfo = new PurchaseInfo(orderId, order.TradableId, order.SellerAgentAddress,
+                                    order.SellerAvatarAddress, order.ItemSubType, order.Price);
+                                purchaseInfos.Add(purchaseInfo);
+                            }
+                            else
+                            {
+                                throw new OrderIdDoesNotExistException($"Can't find {orderId}");
+                            }
+                        }
+
+                        var action = new Buy
+                        {
+                            buyerAvatarAddress = buyerAvatarAddress,
+                            purchaseInfos = purchaseInfos,
+                        };
+
+                        var actions = new NCAction[] { action };
+                        Transaction<NCAction> tx = blockChain.MakeTransaction(privateKey, actions);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        Log.Error(msg, e);
+                        throw;
+                    }
+                });
+            Field<NonNullGraphType<TxIdType>>("sell",
+                description: "Register item to the shop.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "sellerAvatarAddress",
+                        Description = "Avatar address to register shop item."
+                    },
+                    new QueryArgument<NonNullGraphType<GuidGraphType>>
+                    {
+                        Name = "itemId",
+                        Description = "Item Guid to register on shop."
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "price",
+                        Description = "Item selling price."
+                    }),
+                resolve: context =>
+                {
+                    try
+                    {
+                        if (!(service.MinerPrivateKey is { } privateKey))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                        }
+
+                        if (!(service.Swarm?.BlockChain is { } blockChain))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
+                        }
+
+                        Address sellerAvatarAddress = context.GetArgument<Address>("sellerAvatarAddress");
+                        Guid itemId = context.GetArgument<Guid>("itemId");
+                        var currency = new GoldCurrencyState(
+                            (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
+                        ).Currency;
+                        FungibleAssetValue price = currency * context.GetArgument<int>("price");
+
+                        var action = new Sell3
+                        {
+                            sellerAvatarAddress = sellerAvatarAddress,
+                            itemId = itemId,
+                            price = price
+                        };
+
+                        var actions = new NCAction[] { action };
+                        Transaction<NCAction> tx = blockChain.MakeTransaction(privateKey, actions);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
                         throw;
                     }
                 });
