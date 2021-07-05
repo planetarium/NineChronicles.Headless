@@ -444,41 +444,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(avatarAddress, action.avatarAddress);
         }
 
-        [Fact]
-        public async Task Buy()
-        {
-            var sellerAgentAddress = new Address();
-            var sellerAvatarAddress = new Address();
-            var productId = Guid.NewGuid();
-            var playerPrivateKey = new PrivateKey();
-            var buyerAvatarAddress = playerPrivateKey.PublicKey.ToAddress().Derive(string.Format(CreateAvatar2.DeriveFormat, 0));
-            var query = $@"mutation {{
-                action {{
-                    buy(sellerAgentAddress: ""{sellerAgentAddress}"", sellerAvatarAddress: ""{sellerAvatarAddress}"", buyerAvatarAddress: ""{buyerAvatarAddress}"", productId: ""{productId}"")
-                }}
-            }}";
-            var result = await ExecuteQueryAsync(query);
-            Assert.Null(result.Errors);
-
-            var txIds = BlockChain.GetStagedTransactionIds();
-            Assert.Single(txIds);
-            var tx = BlockChain.GetTransaction(txIds.First());
-            var expected = new Dictionary<string, object>
-            {
-                ["action"] = new Dictionary<string, object>
-                {
-                    ["buy"] = tx.Id.ToString(),
-                }
-            };
-            Assert.Equal(expected, result.Data);
-            Assert.Single(tx.Actions);
-            var action = (Buy4) tx.Actions.First().InnerAction;
-            Assert.Equal(productId, action.productId);
-            Assert.Equal(sellerAgentAddress, action.sellerAgentAddress);
-            Assert.Equal(sellerAvatarAddress, action.sellerAvatarAddress);
-            Assert.Equal(buyerAvatarAddress, action.buyerAvatarAddress);
-        }
-
         [Theory]
         [MemberData(nameof(CombinationEquipmentMember))]
         public async Task CombinationEquipment(Address avatarAddress, int recipeId, int slotIndex, int? subRecipeId)
@@ -587,56 +552,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             },
         };
 
-        [Theory]
-        [MemberData(nameof(SellMember))]
-        public async Task Sell(Address sellerAvatarAddress, Guid itemId, int price)
-        {
-            var playerPrivateKey = new PrivateKey();
-            var query = $@"mutation {{
-                action {{
-                    sell(sellerAvatarAddress: ""{sellerAvatarAddress}"", itemId: ""{itemId}"", price: {price})
-                }}
-            }}";
-            var result = await ExecuteQueryAsync(query);
-            Assert.Null(result.Errors);
-
-            var txIds = BlockChain.GetStagedTransactionIds();
-            Assert.Single(txIds);
-            var tx = BlockChain.GetTransaction(txIds.First());
-            var expected = new Dictionary<string, object>
-            {
-                ["action"] = new Dictionary<string, object>
-                {
-                    ["sell"] = tx.Id.ToString(),
-                }
-            };
-            Assert.Equal(expected, result.Data);
-            Assert.Single(tx.Actions);
-            var action = (Sell3) tx.Actions.First().InnerAction;
-            Assert.Equal(sellerAvatarAddress, action.sellerAvatarAddress);
-            Assert.Equal(itemId, action.itemId);
-            var currency = new GoldCurrencyState(
-                (Dictionary)BlockChain.GetState(GoldCurrencyState.Address)
-            ).Currency;
-
-            Assert.Equal(price * currency, action.price);
-        }
-
-        public static IEnumerable<object?[]> SellMember => new List<object?[]>
-        {
-            new object?[]
-            {
-                new Address(),
-                Guid.NewGuid(),
-                0,
-            },
-            new object?[]
-            {
-                new Address(),
-                Guid.NewGuid(),
-                100,
-            },
-        };
 
         [Theory]
         [MemberData(nameof(CombinationConsumableMember))]
