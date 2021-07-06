@@ -19,7 +19,9 @@ using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>; 
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+using Libplanet.Blockchain.Renderers;
+using Libplanet.Headless;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -42,6 +44,12 @@ namespace NineChronicles.Headless.GraphTypes
                         byte[] bytes => new BlockHash(bytes),
                         null => null,
                     };
+
+                    if (standaloneContext.BlockChain is { } blockChain)
+                    {
+                        DelayedRenderer<NCAction>? delayedRenderer = blockChain.GetDelayedRenderer();
+                        blockHash = delayedRenderer?.Tip?.Hash;
+                    }
 
                     return (standaloneContext.BlockChain?.ToAccountStateGetter(blockHash),
                         standaloneContext.BlockChain?.ToAccountBalanceGetter(blockHash));
