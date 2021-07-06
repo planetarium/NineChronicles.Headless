@@ -6,7 +6,10 @@ using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
+using Nekoyume.Action;
+using Nekoyume.Model.Quest;
 using Nekoyume.Model.State;
+using static Lib9c.SerializeKeys;
 
 namespace NineChronicles.Headless.GraphTypes.States
 {
@@ -70,6 +73,46 @@ namespace NineChronicles.Headless.GraphTypes.States
                     return 0;
                 });
 
+            Field<NonNullGraphType<BooleanGraphType>>(
+                "hasTradedItem",
+                resolve: context =>
+                {
+                    foreach (var (_, avatarAddress) in context.Source.agentState.avatarAddresses.OrderBy(a => a.Key))
+                    {
+                        var questListAddress = avatarAddress.Derive(LegacyQuestListKey);
+                        if (context.Source.accountStateGetter(questListAddress) is { } rawQuestList)
+                        {
+                            var questList = new QuestList((Dictionary)rawQuestList);
+                            var traded = IsTradeQuestCompleted(questList);
+                            if (traded)
+                            {
+                                return true;
+                            }
+
+                            continue;
+                        }
+
+                        if (context.Source.accountStateGetter(avatarAddress) is { } state)
+                        {
+                            var avatarState = new AvatarState((Dictionary) state);
+                            var traded = IsTradeQuestCompleted(avatarState.questList);
+                            if (traded)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+
+                    return false;
+                }
+            );
+        }
+
+        private static bool IsTradeQuestCompleted(QuestList questList)
+        {
+            return questList
+                .OfType<TradeQuest>()
+                .Any(q => q.Complete);
         }
     }
 }

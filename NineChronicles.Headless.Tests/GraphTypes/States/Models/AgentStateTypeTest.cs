@@ -29,6 +29,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 gold
                 monsterCollectionRound
                 monsterCollectionLevel
+                hasTradedItem
             }";
             var goldCurrency = new Currency("NCG", 2, minter: null);
             var agentState = new AgentState(new Address());
@@ -88,6 +89,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 ["gold"] = decimalString,
                 ["monsterCollectionRound"] = 0L,
                 ["monsterCollectionLevel"] = 7L,
+                ["hasTradedItem"] = false,
             };
             Assert.Equal(expected, queryResult.Data);
         }
