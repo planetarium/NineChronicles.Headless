@@ -240,6 +240,16 @@
                 EquipmentType
             </a>
         </li>
+        <li  title="ExplorerQuery">
+            <a href="explorerquery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ExplorerQuery
+            </a>
+        </li>
+        <li  title="FungibleAssetValueType">
+            <a href="fungibleassetvaluetype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                FungibleAssetValueType
+            </a>
+        </li>
         <li  title="InventoryType">
             <a href="inventorytype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 InventoryType
@@ -273,6 +283,31 @@
         <li  title="MaterialType">
             <a href="materialtype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 MaterialType
+            </a>
+        </li>
+        <li  title="MonsterCollectionRewardInfoType">
+            <a href="monstercollectionrewardinfotype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                MonsterCollectionRewardInfoType
+            </a>
+        </li>
+        <li  title="MonsterCollectionRowType">
+            <a href="monstercollectionrowtype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                MonsterCollectionRowType
+            </a>
+        </li>
+        <li  title="MonsterCollectionSheetType">
+            <a href="monstercollectionsheettype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                MonsterCollectionSheetType
+            </a>
+        </li>
+        <li  title="MonsterCollectionStateType">
+            <a href="monstercollectionstatetype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                MonsterCollectionStateType
+            </a>
+        </li>
+        <li  title="MonsterCollectionStatusType">
+            <a href="monstercollectionstatustype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                MonsterCollectionStatusType
             </a>
         </li>
         <li  title="NodeExceptionType">
@@ -325,11 +360,6 @@
                 PublicKeyType
             </a>
         </li>
-        <li  title="Query">
-            <a href="query.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
-                Query
-            </a>
-        </li>
         <li  title="QuestListType">
             <a href="questlisttype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 QuestListType
@@ -355,9 +385,19 @@
                 ShopStateType
             </a>
         </li>
+        <li  title="SkillType">
+            <a href="skilltype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                SkillType
+            </a>
+        </li>
         <li  title="StateQuery">
             <a href="statequery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 StateQuery
+            </a>
+        </li>
+        <li  title="StatsMapType">
+            <a href="statsmaptype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                StatsMapType
             </a>
         </li>
         <li  title="TipChanged">
@@ -378,6 +418,11 @@
         <li  title="TransactionType_1">
             <a href="transactiontype_1.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 TransactionType_1
+            </a>
+        </li>
+        <li  title="TransferNCGHistoryType">
+            <a href="transferncghistorytype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                TransferNCGHistoryType
             </a>
         </li>
         <li  title="ValidationQuery">
@@ -478,7 +523,7 @@
             </a>
             GraphQL Schema definition
         </h2>
-        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">StandaloneQuery</span> {</li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>hash</strong>: </span></span></li><li><span class="tab"><span class="meta">stateQuery</span>(<span class="meta">hash</span>: <a class="support type" href="bytestring.doc.html">ByteString</a>): <a class="support type" href="statequery.doc.html">StateQuery</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>hash</strong>: </span></span></li><li><span class="tab"><span class="meta">state</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>!, <span class="meta">hash</span>: <a class="support type" href="bytestring.doc.html">ByteString</a>): <a class="support type" href="bytestring.doc.html">ByteString</a> </span></li><li></li><li><span class="tab"><span class="meta">keyStore</span>: <a class="support type" href="keystoretype.doc.html">KeyStoreType</a> </span></li><li></li><li><span class="tab"><span class="meta">nodeStatus</span>: <a class="support type" href="nodestatustype.doc.html">NodeStatusType</a>! </span></li><li></li><li><span class="tab"><span class="meta">chainQuery</span>: <a class="support type" href="query.doc.html">Query</a>! </span></li><li></li><li><span class="tab"><span class="meta">validation</span>: <a class="support type" href="validationquery.doc.html">ValidationQuery</a>! </span></li><li></li><li><span class="tab"><span class="meta">activationStatus</span>: <a class="support type" href="activationstatusquery.doc.html">ActivationStatusQuery</a>! </span></li><li></li><li><span class="tab"><span class="meta">peerChainState</span>: <a class="support type" href="peerchainstatequery.doc.html">PeerChainStateQuery</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>hash</strong>: </span></span></li><li><span class="tab"><span class="meta">goldBalance</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>!, <span class="meta">hash</span>: <a class="support type" href="bytestring.doc.html">ByteString</a>): <a class="support type" href="string.doc.html">String</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="meta">nextTxNonce</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>!): <a class="support type" href="long.doc.html">Long</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>txId</strong>: </span></span></li><li><span class="tab"><span class="meta">getTx</span>(<span class="meta">txId</span>: <a class="support type" href="txid.doc.html">TxId</a>!): <a class="support type" href="transactiontype_1.doc.html">TransactionType_1</a> </span></li><li>}</li></ul></code>
+        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">StandaloneQuery</span> {</li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>hash</strong>: </span></span></li><li><span class="tab"><span class="meta">stateQuery</span>(<span class="meta">hash</span>: <a class="support type" href="bytestring.doc.html">ByteString</a>): <a class="support type" href="statequery.doc.html">StateQuery</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>hash</strong>: </span></span></li><li><span class="tab"><span class="meta">state</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>!, <span class="meta">hash</span>: <a class="support type" href="bytestring.doc.html">ByteString</a>): <a class="support type" href="bytestring.doc.html">ByteString</a> </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>blockHash</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>recipient</strong>: </span></span></li><li><span class="tab"><span class="meta">transferNCGHistories</span>(</span></li><li><span class="tab"><span class="tab"><span class="meta">blockHash</span>: <a class="support type" href="bytestring.doc.html">ByteString</a>!,</span></span></li><li><span class="tab"><span class="tab"><span class="meta">recipient</span>: <a class="support type" href="address.doc.html">Address</a></span></span></li><li><span class="tab">): [<a class="support type" href="transferncghistorytype.doc.html">TransferNCGHistoryType</a>!]! </span></li><li></li><li><span class="tab"><span class="meta">keyStore</span>: <a class="support type" href="keystoretype.doc.html">KeyStoreType</a> </span></li><li></li><li><span class="tab"><span class="meta">nodeStatus</span>: <a class="support type" href="nodestatustype.doc.html">NodeStatusType</a>! </span></li><li></li><li><span class="tab"><span class="meta">chainQuery</span>: <a class="support type" href="explorerquery.doc.html">ExplorerQuery</a>! </span></li><li></li><li><span class="tab"><span class="meta">validation</span>: <a class="support type" href="validationquery.doc.html">ValidationQuery</a>! </span></li><li></li><li><span class="tab"><span class="meta">activationStatus</span>: <a class="support type" href="activationstatusquery.doc.html">ActivationStatusQuery</a>! </span></li><li></li><li><span class="tab"><span class="meta">peerChainState</span>: <a class="support type" href="peerchainstatequery.doc.html">PeerChainStateQuery</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>hash</strong>: </span></span></li><li><span class="tab"><span class="meta">goldBalance</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>!, <span class="meta">hash</span>: <a class="support type" href="bytestring.doc.html">ByteString</a>): <a class="support type" href="string.doc.html">String</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="meta">nextTxNonce</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>!): <a class="support type" href="long.doc.html">Long</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>txId</strong>: </span></span></li><li><span class="tab"><span class="meta">getTx</span>(<span class="meta">txId</span>: <a class="support type" href="txid.doc.html">TxId</a>!): <a class="support type" href="transactiontype_1.doc.html">TransactionType_1</a> </span></li><li></li><li><span class="tab"><span class="meta">minerAddress</span>: <a class="support type" href="address.doc.html">Address</a> </span></li><li></li><li><span class="tab"><span class="meta">monsterCollectionStatus</span>: <a class="support type" href="monstercollectionstatustype.doc.html">MonsterCollectionStatusType</a> </span></li><li>}</li></ul></code>
     </div>
 </section>
 <section>

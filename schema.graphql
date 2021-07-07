@@ -18,6 +18,8 @@ type ActionMutation {
   sell(sellerAvatarAddress: Address!, itemId: Guid!, price: Int!): TxId!
   dailyReward(avatarAddress: Address!): TxId!
   combinationConsumable(avatarAddress: Address!, recipeId: Int!, slotIndex: Int!): TxId!
+  monsterCollect(level: Int!): TxId!
+  claimMonsterCollectionReward(avatarAddress: Address!): TxId!
 }
 
 type ActivationStatusMutation {
@@ -32,8 +34,11 @@ scalar Address
 
 type AgentStateType {
   address: Address!
-  avatarAddresses: [Address!]
+  avatarStates: [AvatarStateType!]
   gold: String!
+  monsterCollectionRound: Long!
+  monsterCollectionLevel: Long!
+  hasTradedItem: Boolean!
 }
 
 type AppProtocolVersionType {
@@ -176,6 +181,21 @@ type EquipmentType {
   stat: DecimalStatType!
   equipped: Boolean!
   itemId: Guid!
+  level: Int!
+  skills: [SkillType]
+  buffSkills: [SkillType]
+  statsMap: StatsMapType!
+}
+
+type ExplorerQuery {
+  blockQuery: BlockQuery
+  transactionQuery: TransactionQuery
+  nodeState: NodeState!
+}
+
+type FungibleAssetValueType {
+  currency: String!
+  quantity: Decimal!
 }
 
 scalar Guid
@@ -258,6 +278,36 @@ type MaterialType {
   itemId: ByteString!
 }
 
+type MonsterCollectionRewardInfoType {
+  itemId: Int!
+  quantity: Int!
+}
+
+type MonsterCollectionRowType {
+  level: Int!
+  requiredGold: Int!
+  rewards: [MonsterCollectionRewardInfoType]!
+}
+
+type MonsterCollectionSheetType {
+  orderedList: [MonsterCollectionRowType]
+}
+
+type MonsterCollectionStateType {
+  address: Address!
+  level: Long!
+  expiredBlockIndex: Long!
+  startedBlockIndex: Long!
+  receivedBlockIndex: Long!
+  rewardLevel: Long!
+  claimableBlockIndex: Long!
+}
+
+type MonsterCollectionStatusType {
+  fungibleAssetValue: FungibleAssetValueType!
+  rewardInfos: [MonsterCollectionRewardInfoType]
+}
+
 type NodeExceptionType {
   code: Int!
   message: String!
@@ -321,12 +371,6 @@ type PublicKeyType {
   address: Address!
 }
 
-type Query {
-  blockQuery: BlockQuery
-  transactionQuery: TransactionQuery
-  nodeState: NodeState!
-}
-
 type QuestListType {
   completedQuestIds: [Int!]!
 }
@@ -362,27 +406,37 @@ type ShopStateType {
   products(id: Int, itemSubType: ItemSubType, maximumPrice: Int): [ShopItemType]!
 }
 
+type SkillType {
+  id: Int!
+  elementalType: ElementalType!
+  power: Int!
+  chance: Int!
+}
+
 type StandaloneMutation {
   keyStore: KeyStoreMutation
   activationStatus: ActivationStatusMutation
   action: ActionMutation
   stageTx(payload: String!): Boolean!
-  transfer(recipient: Address!, amount: String!, txNonce: Long!, currencyAddress: String! = "000000000000000000000000000000000000000A"): TxId
+  transfer(recipient: Address!, amount: String!, txNonce: Long!, currencyAddress: String! = "000000000000000000000000000000000000000A", memo: String): TxId
   transferGold(recipient: Address!, amount: String!): TxId
 }
 
 type StandaloneQuery {
   stateQuery(hash: ByteString): StateQuery!
   state(address: Address!, hash: ByteString): ByteString
+  transferNCGHistories(blockHash: ByteString!, recipient: Address): [TransferNCGHistoryType!]!
   keyStore: KeyStoreType
   nodeStatus: NodeStatusType!
-  chainQuery: Query!
+  chainQuery: ExplorerQuery!
   validation: ValidationQuery!
   activationStatus: ActivationStatusQuery!
   peerChainState: PeerChainStateQuery!
   goldBalance(address: Address!, hash: ByteString): String!
   nextTxNonce(address: Address!): Long!
   getTx(txId: TxId!): TransactionType_1
+  minerAddress: Address
+  monsterCollectionStatus: MonsterCollectionStatusType
 }
 
 type StandaloneSubscription {
@@ -392,6 +446,8 @@ type StandaloneSubscription {
   differentAppProtocolVersionEncounter: DifferentAppProtocolVersionEncounterType!
   notification: NotificationType!
   nodeException: NodeExceptionType!
+  monsterCollectionState: MonsterCollectionStateType!
+  monsterCollectionStatus: MonsterCollectionStatusType!
 }
 
 enum StatType {
@@ -405,11 +461,22 @@ enum StatType {
 }
 
 type StateQuery {
-  avatar(address: Address): AvatarStateType
+  avatar(avatarAddress: Address!): AvatarStateType
   rankingMap(index: Int!): RankingMapStateType
   shop: ShopStateType
   weeklyArena(index: Int!): WeeklyArenaStateType
   agent(address: Address!): AgentStateType
+  monsterCollectionState(agentAddress: Address!): MonsterCollectionStateType
+  monsterCollectionSheet: MonsterCollectionSheetType
+}
+
+type StatsMapType {
+  hP: Int!
+  aTK: Int!
+  dEF: Int!
+  cRI: Int!
+  hIT: Int!
+  sPD: Int!
 }
 
 type TipChanged {
@@ -444,6 +511,15 @@ type TransactionType_1 {
   timestamp: String!
   updatedAddresses: [Address]!
   actions: [Action]!
+}
+
+type TransferNCGHistoryType {
+  blockHash: ByteString!
+  txId: ByteString!
+  sender: Address!
+  recipient: Address!
+  amount: String!
+  memo: String
 }
 
 scalar TxId

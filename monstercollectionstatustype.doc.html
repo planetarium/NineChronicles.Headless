@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link type="text/css" rel="stylesheet" href="./styles/graphdoc.css" />
-    <title>Query</title>
+    <title>MonsterCollectionStatusType</title>
     <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700" rel="stylesheet"><link type="text/css" rel="stylesheet" href="./assets/code.css" /><link type="text/css" rel="stylesheet" href="./assets/require-by.css" />
 </head>
 <body class="slds-scrollable--y">
@@ -240,6 +240,16 @@
                 EquipmentType
             </a>
         </li>
+        <li  title="ExplorerQuery">
+            <a href="explorerquery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ExplorerQuery
+            </a>
+        </li>
+        <li  title="FungibleAssetValueType">
+            <a href="fungibleassetvaluetype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                FungibleAssetValueType
+            </a>
+        </li>
         <li  title="InventoryType">
             <a href="inventorytype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 InventoryType
@@ -273,6 +283,31 @@
         <li  title="MaterialType">
             <a href="materialtype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 MaterialType
+            </a>
+        </li>
+        <li  title="MonsterCollectionRewardInfoType">
+            <a href="monstercollectionrewardinfotype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                MonsterCollectionRewardInfoType
+            </a>
+        </li>
+        <li  title="MonsterCollectionRowType">
+            <a href="monstercollectionrowtype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                MonsterCollectionRowType
+            </a>
+        </li>
+        <li  title="MonsterCollectionSheetType">
+            <a href="monstercollectionsheettype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                MonsterCollectionSheetType
+            </a>
+        </li>
+        <li  title="MonsterCollectionStateType">
+            <a href="monstercollectionstatetype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                MonsterCollectionStateType
+            </a>
+        </li>
+        <li class="slds-is-active" title="MonsterCollectionStatusType">
+            <a href="monstercollectionstatustype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                MonsterCollectionStatusType
             </a>
         </li>
         <li  title="NodeExceptionType">
@@ -325,11 +360,6 @@
                 PublicKeyType
             </a>
         </li>
-        <li class="slds-is-active" title="Query">
-            <a href="query.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
-                Query
-            </a>
-        </li>
         <li  title="QuestListType">
             <a href="questlisttype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 QuestListType
@@ -355,9 +385,19 @@
                 ShopStateType
             </a>
         </li>
+        <li  title="SkillType">
+            <a href="skilltype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                SkillType
+            </a>
+        </li>
         <li  title="StateQuery">
             <a href="statequery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 StateQuery
+            </a>
+        </li>
+        <li  title="StatsMapType">
+            <a href="statsmaptype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                StatsMapType
             </a>
         </li>
         <li  title="TipChanged">
@@ -378,6 +418,11 @@
         <li  title="TransactionType_1">
             <a href="transactiontype_1.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 TransactionType_1
+            </a>
+        </li>
+        <li  title="TransferNCGHistoryType">
+            <a href="transferncghistorytype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                TransferNCGHistoryType
             </a>
         </li>
         <li  title="ValidationQuery">
@@ -466,7 +511,7 @@
     </div>
     <div class="container">
         <p class="slds-text-title--caps slds-text-color--weak">OBJECT</p>
-        <h1 class="slds-text-heading--large">Query</h1>
+        <h1 class="slds-text-heading--large">MonsterCollectionStatusType</h1>
         <div class="slds-text-body--regular"></div>
     </div>
 </section>
@@ -478,7 +523,7 @@
             </a>
             GraphQL Schema definition
         </h2>
-        <code class="highlight"><ul class="code" style="padding-left:28px"><li><span class="keyword operator ts">type</span> <span class="identifier">Query</span> {</li><li></li><li><span class="tab"><span class="meta">blockQuery</span>: <a class="support type" href="blockquery.doc.html">BlockQuery</a> </span></li><li></li><li><span class="tab"><span class="meta">transactionQuery</span>: <a class="support type" href="transactionquery.doc.html">TransactionQuery</a> </span></li><li></li><li><span class="tab"><span class="meta">nodeState</span>: <a class="support type" href="nodestate.doc.html">NodeState</a>! </span></li><li>}</li></ul></code>
+        <code class="highlight"><ul class="code" style="padding-left:28px"><li><span class="keyword operator ts">type</span> <span class="identifier">MonsterCollectionStatusType</span> {</li><li></li><li><span class="tab"><span class="meta">fungibleAssetValue</span>: <a class="support type" href="fungibleassetvaluetype.doc.html">FungibleAssetValueType</a>! </span></li><li></li><li><span class="tab"><span class="meta">rewardInfos</span>: [<a class="support type" href="monstercollectionrewardinfotype.doc.html">MonsterCollectionRewardInfoType</a>] </span></li><li>}</li></ul></code>
     </div>
 </section>
 <section>
@@ -489,7 +534,7 @@
             </a>
             Require by
         </h2>
-        <ul class="require-by"><li><a href="standalonequery.doc.html" title="StandaloneQuery - ">StandaloneQuery<em></em></a><li></ul>
+        <ul class="require-by"><li><a href="standalonequery.doc.html" title="StandaloneQuery - ">StandaloneQuery<em></em></a><li><li><a href="standalonesubscription.doc.html" title="StandaloneSubscription - ">StandaloneSubscription<em></em></a><li></ul>
     </div>
 </section>
 <footer>

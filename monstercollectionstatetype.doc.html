@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link type="text/css" rel="stylesheet" href="./styles/graphdoc.css" />
-    <title>KeyStoreType</title>
+    <title>MonsterCollectionStateType</title>
     <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700" rel="stylesheet"><link type="text/css" rel="stylesheet" href="./assets/code.css" /><link type="text/css" rel="stylesheet" href="./assets/require-by.css" />
 </head>
 <body class="slds-scrollable--y">
@@ -265,7 +265,7 @@
                 KeyStoreMutation
             </a>
         </li>
-        <li class="slds-is-active" title="KeyStoreType">
+        <li  title="KeyStoreType">
             <a href="keystoretype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 KeyStoreType
             </a>
@@ -300,7 +300,7 @@
                 MonsterCollectionSheetType
             </a>
         </li>
-        <li  title="MonsterCollectionStateType">
+        <li class="slds-is-active" title="MonsterCollectionStateType">
             <a href="monstercollectionstatetype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 MonsterCollectionStateType
             </a>
@@ -511,7 +511,7 @@
     </div>
     <div class="container">
         <p class="slds-text-title--caps slds-text-color--weak">OBJECT</p>
-        <h1 class="slds-text-heading--large">KeyStoreType</h1>
+        <h1 class="slds-text-heading--large">MonsterCollectionStateType</h1>
         <div class="slds-text-body--regular"></div>
     </div>
 </section>
@@ -523,7 +523,7 @@
             </a>
             GraphQL Schema definition
         </h2>
-        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">KeyStoreType</span> {</li><li></li><li><span class="tab"><span class="meta">protectedPrivateKeys</span>: [<a class="support type" href="protectedprivatekeytype.doc.html">ProtectedPrivateKeyType</a>!]! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>passphrase</strong>: </span></span></li><li><span class="tab"><span class="meta">decryptedPrivateKey</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>!, <span class="meta">passphrase</span>: <a class="support type" href="string.doc.html">String</a>!): <a class="support type" href="bytestring.doc.html">ByteString</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>hex</strong>: </span></span></li><li><span class="tab"><span class="meta">privateKey</span>(<span class="meta">hex</span>: <a class="support type" href="bytestring.doc.html">ByteString</a>!): <a class="support type" href="privatekeytype.doc.html">PrivateKeyType</a>! </span></li><li>}</li></ul></code>
+        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">MonsterCollectionStateType</span> {</li><li></li><li><span class="tab"><span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>! </span></li><li></li><li><span class="tab"><span class="meta">level</span>: <a class="support type" href="long.doc.html">Long</a>! </span></li><li></li><li><span class="tab"><span class="meta">expiredBlockIndex</span>: <a class="support type" href="long.doc.html">Long</a>! </span></li><li></li><li><span class="tab"><span class="meta">startedBlockIndex</span>: <a class="support type" href="long.doc.html">Long</a>! </span></li><li></li><li><span class="tab"><span class="meta">receivedBlockIndex</span>: <a class="support type" href="long.doc.html">Long</a>! </span></li><li></li><li><span class="tab"><span class="meta">rewardLevel</span>: <a class="support type" href="long.doc.html">Long</a>! </span></li><li></li><li><span class="tab"><span class="meta">claimableBlockIndex</span>: <a class="support type" href="long.doc.html">Long</a>! </span></li><li>}</li></ul></code>
     </div>
 </section>
 <section>
@@ -534,7 +534,7 @@
             </a>
             Require by
         </h2>
-        <ul class="require-by"><li><a href="standalonequery.doc.html" title="StandaloneQuery - ">StandaloneQuery<em></em></a><li></ul>
+        <ul class="require-by"><li><a href="standalonesubscription.doc.html" title="StandaloneSubscription - ">StandaloneSubscription<em></em></a><li><li><a href="statequery.doc.html" title="StateQuery - ">StateQuery<em></em></a><li></ul>
     </div>
 </section>
 <footer>
