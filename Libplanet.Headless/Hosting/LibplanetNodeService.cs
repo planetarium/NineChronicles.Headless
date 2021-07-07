@@ -162,6 +162,7 @@ namespace Libplanet.Headless.Hosting
                     BlockRecvTimeout = TimeSpan.FromSeconds(1),
                     BranchpointThreshold = 50,
                     StaticPeers = Properties.StaticPeers,
+                    MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
                 }
             );
 
