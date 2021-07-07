@@ -61,7 +61,7 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "createUnsignedTx",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>
-                    { Name = "plainValue", Description = "Plain value for Transaction." }
+                    { Name = "plainValue", Description = "The plain value for Transaction." }
                 ),
                 resolve: context =>
                 {
@@ -72,14 +72,13 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     string plainValue = context.GetArgument<string>("plainValue");
-//                    JObject.Parse(plainValue).
-                    var dictValue = JsonSerializer.Deserialize<Dictionary<string, object>>(plainValue);
-                    var value = dictValue.AsBencodex();
+                    var value = new Bencodex.Codec().Decode(System.Convert.FromBase64String(plainValue));
 #pragma warning disable 612
                     var action = new NCAction();
 #pragma warning restore 612
-                    action.LoadPlainValue(value); // Error
-                    
+                    action.LoadPlainValue(value);
+
+// nonce, signer, public key, genesis hash, timestamp
                     return action.ToString();
                 });
         }
