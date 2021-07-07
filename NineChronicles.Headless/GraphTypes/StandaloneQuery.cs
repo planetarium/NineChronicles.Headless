@@ -259,7 +259,7 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Current miner's monster collection status.",
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -272,20 +272,22 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     Address agentAddress = standaloneContext.NineChroniclesNodeService.MinerPrivateKey.ToAddress();
-                    if (blockChain.GetState(agentAddress) is Dictionary agentDict)
+                    BlockHash? offset = blockChain.GetDelayedRenderer()?.Tip?.Hash;
+                    if (blockChain.GetState(agentAddress, offset) is Dictionary agentDict)
                     {
                         AgentState agentState = new AgentState(agentDict);
                         Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
                         Currency currency = new GoldCurrencyState(
-                            (Dictionary) blockChain.GetState(Addresses.GoldCurrency)
+                            (Dictionary) blockChain.GetState(Addresses.GoldCurrency, offset)
                             ).Currency;
 
-                        FungibleAssetValue balance = blockChain.GetBalance(agentAddress, currency);
-                        if (blockChain.GetState(deriveAddress) is Dictionary mcDict)
+                        FungibleAssetValue balance = blockChain.GetBalance(agentAddress, currency, offset);
+                        if (blockChain.GetState(deriveAddress, offset) is Dictionary mcDict)
                         {
                             var rewardSheet = new MonsterCollectionRewardSheet();
                             var csv = blockChain.GetState(
-                                Addresses.GetSheetAddress<MonsterCollectionRewardSheet>()
+                                Addresses.GetSheetAddress<MonsterCollectionRewardSheet>(),
+                                offset
                             ).ToDotnetString();
                             rewardSheet.Set(csv);
                             var monsterCollectionState = new MonsterCollectionState(mcDict);
