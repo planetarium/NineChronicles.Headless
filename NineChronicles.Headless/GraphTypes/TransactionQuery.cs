@@ -1,3 +1,4 @@
+using System;
 using GraphQL;
 using GraphQL.Types;
 using NineChronicles.Headless;
@@ -80,6 +81,39 @@ namespace NineChronicles.Headless.GraphTypes
 
 // nonce, signer, public key, genesis hash, timestamp
                     return action.ToString();
+                });
+            
+            Field<NonNullGraphType<StringGraphType>>(
+                name: "attachSignature",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "unsignedTransaction",
+                        Description = "The base64-encoded unsigned transaction to attach the given signature."
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "signature",
+                        Description = "The base64-encoded signature of the given unsigned transaction."
+                    }
+                ),
+                resolve: context =>
+                {
+                    byte[] signature = Convert.FromBase64String(context.GetArgument<string>("signature"));
+                    Transaction<NCAction> unsignedTransaction =
+                        Transaction<NCAction>.Deserialize(
+                            Convert.FromBase64String(context.GetArgument<string>("unsignedTransaction")));
+                    Transaction<NCAction> signedTransaction = new Transaction<NCAction>(
+                        unsignedTransaction.Nonce,
+                        unsignedTransaction.Signer,
+                        unsignedTransaction.PublicKey,
+                        unsignedTransaction.GenesisHash,
+                        unsignedTransaction.UpdatedAddresses,
+                        unsignedTransaction.Timestamp,
+                        unsignedTransaction.Actions,
+                        signature);
+
+                    return Convert.ToBase64String(signedTransaction.Serialize(true));
                 });
         }
     }
