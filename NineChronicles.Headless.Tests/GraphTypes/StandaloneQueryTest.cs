@@ -539,12 +539,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
             var blockChain = StandaloneContextFx.BlockChain!;
-            var query = $"query {{ nextTxNonce(address: \"{userAddress}\") }}";
+            var query = $"query {{ transaction {{ nextTxNonce(address: \"{userAddress}\") }} }}";
             var queryResult = await ExecuteQueryAsync(query);
             Assert.Equal(
                 new Dictionary<string, object>
                 {
-                    ["nextTxNonce"] = 0L
+                    ["transaction"] = new Dictionary<string, object>
+                    {
+                        ["nextTxNonce"] = 0L   
+                    }
                 },
                 queryResult.Data
             );
@@ -554,7 +557,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(
                 new Dictionary<string, object>
                 {
-                    ["nextTxNonce"] = 1L
+                    ["transaction"] = new Dictionary<string, object>
+                    {
+                        ["nextTxNonce"] = 1L
+                    }
                 },
                 queryResult.Data
             );
@@ -571,15 +577,17 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var blockChain = StandaloneContextFx.BlockChain;
             var queryFormat = @"query {{
-                getTx(txId: ""{0}"") {{
-                    id
-                    nonce
-                    signer
-                    signature
-                    timestamp
-                    updatedAddresses
-                    actions {{
-                        inspection
+                transaction {{
+                    getTx(txId: ""{0}"") {{
+                        id
+                        nonce
+                        signer
+                        signature
+                        timestamp
+                        updatedAddresses
+                        actions {{
+                            inspection
+                        }}
                     }}
                 }}
             }}";
@@ -587,7 +595,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(
                 new Dictionary<string, object?>
                 {
-                    ["getTx"] = null
+                    ["transaction"] = new Dictionary<string, object?>
+                    {
+                        ["getTx"] = null
+                    }
                 },
                 queryResult.Data
             );
@@ -606,6 +617,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             await blockChain.MineBlock(new Address());
             queryResult = await ExecuteQueryAsync(string.Format(queryFormat, transaction.Id));
             var tx = queryResult.Data
+                .As<Dictionary<string, object>>()["transaction"]
                 .As<Dictionary<string, object>>()["getTx"]
                 .As<Dictionary<string, object>>();
 
