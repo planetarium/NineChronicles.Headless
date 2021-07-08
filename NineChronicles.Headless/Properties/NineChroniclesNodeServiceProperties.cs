@@ -63,7 +63,8 @@ namespace NineChronicles.Headless.Properties
                 int tipTimeout = 60,
                 int demandBuffer = 1150,
                 string[]? staticPeerStrings = null,
-                bool preload = true)
+                bool preload = true,
+                int minimumBroadcastTarget = 10)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
@@ -103,6 +104,7 @@ namespace NineChronicles.Headless.Properties
                 DemandBuffer = demandBuffer,
                 StaticPeers = staticPeers,
                 Preload = preload,
+                MinimumBroadcastTarget = minimumBroadcastTarget,
             };
         }
 

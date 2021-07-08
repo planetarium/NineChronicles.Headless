@@ -63,5 +63,7 @@ namespace Libplanet.Headless.Hosting
         public ImmutableHashSet<BoundPeer> StaticPeers { get; set; }
 
         public bool Preload { get; set; } = true;
+
+        public int MinimumBroadcastTarget { get; set; } = 10;
     }
 }

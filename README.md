@@ -16,7 +16,7 @@
 ```
 $ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
 Usage: NineChronicles.Headless.Executable [command]
-Usage: NineChronicles.Headless.Executable [--app-protocol-version <String>] [--genesis-block-path <String>] [--no-miner] [--host <String>] [--port <Nullable`1>] [--swarm-private-key <String>] [--minimum-difficulty <Int32>] [--miner-private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--graphql-secret-token-path <String>] [--no-cors] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-action-renders] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--static-peer <String>...] [--miner-count <Int32>] [--skip-preload] [--completion] [--help] [--version]
+Usage: NineChronicles.Headless.Executable [--app-protocol-version <String>] [--genesis-block-path <String>] [--no-miner] [--host <String>] [--port <Nullable`1>] [--swarm-private-key <String>] [--minimum-difficulty <Int32>] [--miner-private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--graphql-secret-token-path <String>] [--no-cors] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-action-renders] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--static-peer <String>...] [--miner-count <Int32>] [--skip-preload] [--minimum-broadcast-target <Int32>] [--completion] [--help] [--version]
 
 NineChronicles.Headless.Executable
 
@@ -66,7 +66,8 @@ Options:
   --demand-buffer <Int32>                                  A number that determines how far behind the demand the tip of the chain will publish `NodeException` to GraphQL subscriptions.  1150 blocks by default. (Default: 1150)
   --static-peer <String>...                                A list of peers that the node will continue to maintain.
   --miner-count <Int32>                                    The number of miner task(thread). (Default: 1)
-  --skip-preload                                                  Run node without preloading.
+  --skip-preload                                           Run node without preloading.
+  --minimum-broadcast-target <Int32>                       Minimum number of peers to broadcast message.  10 by default. (Default: 10)
   --completion                                             Generate a shell completion code
   -h, --help                                               Show help message
   --version                                                Show version
@@ -111,6 +112,7 @@ $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 - `--demand-buffer`: Specifies the number that determines how far behind the demand the tip of the chain will publish `NodeException` to GraphQL subscriptions.
 - `--miner-count`: Specifies the number of task(thread)s to use for mining.
 - `--skip-preload`: Skipping preloading when starting.
+- `--minimum-broadcast-target`: Minimum number of the peers to broadcast messages.
 
 ### Format
 
