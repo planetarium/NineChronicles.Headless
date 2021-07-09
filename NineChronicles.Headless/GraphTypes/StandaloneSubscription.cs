@@ -288,6 +288,10 @@ namespace NineChronicles.Headless.GraphTypes
                         new MonsterCollectionState(state)
                     );
                 }
+                else
+                {
+                    StandaloneContext.MonsterCollectionStateSubject.OnNext(null!);
+                }
             }
 
         }
