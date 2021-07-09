@@ -115,7 +115,8 @@ namespace NineChronicles.Headless.GraphTypes
                     byte[] signature = Convert.FromBase64String(context.GetArgument<string>("signature"));
                     Transaction<NCAction> unsignedTransaction =
                         Transaction<NCAction>.Deserialize(
-                            Convert.FromBase64String(context.GetArgument<string>("unsignedTransaction")));
+                            Convert.FromBase64String(context.GetArgument<string>("unsignedTransaction")), 
+                            false);
                     Transaction<NCAction> signedTransaction = new Transaction<NCAction>(
                         unsignedTransaction.Nonce,
                         unsignedTransaction.Signer,
