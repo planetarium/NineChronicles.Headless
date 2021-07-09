@@ -13,6 +13,7 @@ using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using System.Text.Json;
 using System.Linq;
 using System.Collections.Generic;
+using Libplanet.Crypto;
 using Newtonsoft.Json.Linq;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -62,7 +63,15 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "createUnsignedTx",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>
-                    { Name = "plainValue", Description = "The plain value for Transaction." }
+                    {
+                        Name = "publicKey",
+                        Description = "The base64-encoded public key for Transaction.",
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "plainValue",
+                        Description = "The plain value for Transaction.",
+                    }
                 ),
                 resolve: context =>
                 {
@@ -79,8 +88,12 @@ namespace NineChronicles.Headless.GraphTypes
 #pragma warning restore 612
                     action.LoadPlainValue(value);
 
-// nonce, signer, public key, genesis hash, timestamp
-                    return action.ToString();
+                    var publicKey = new PublicKey(Convert.FromBase64String(context.GetArgument<string>("publicKey")));
+                    Address signer = publicKey.ToAddress();
+                    long nonce = blockChain.GetNextTxNonce(signer);
+                    Transaction<NCAction> unsignedTransaction =
+                        Transaction<NCAction>.CreateUnsigned(nonce, publicKey, blockChain.Genesis.Hash, new[] { action });
+                    return Convert.ToBase64String(unsignedTransaction.Serialize(false));
                 });
             
             Field<NonNullGraphType<StringGraphType>>(
