@@ -184,6 +184,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 _blockChain.Genesis.Hash,
                 ImmutableArray<NCAction>.Empty);
             byte[] serializedUnsignedTx = unsignedTx.Serialize(false);
+            // ignore timestamp's millisecond over 6 digits.
+            unsignedTx = Transaction<NCAction>.Deserialize(serializedUnsignedTx, false);
             byte[] signature = privateKey.Sign(serializedUnsignedTx);
 
             var queryFormat = @"query {{
