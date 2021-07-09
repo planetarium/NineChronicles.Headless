@@ -70,7 +70,7 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
                         Name = "plainValue",
-                        Description = "The plain value for Transaction.",
+                        Description = "The base64-encoded plain value of action for Transaction.",
                     }
                 ),
                 resolve: context =>
@@ -81,12 +81,12 @@ namespace NineChronicles.Headless.GraphTypes
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
                     }
 
-                    string plainValue = context.GetArgument<string>("plainValue");
-                    var value = new Bencodex.Codec().Decode(System.Convert.FromBase64String(plainValue));
+                    string plainValueString = context.GetArgument<string>("plainValue");
+                    var plainValue = new Bencodex.Codec().Decode(System.Convert.FromBase64String(plainValueString));
 #pragma warning disable 612
                     var action = new NCAction();
 #pragma warning restore 612
-                    action.LoadPlainValue(value);
+                    action.LoadPlainValue(plainValue);
 
                     var publicKey = new PublicKey(Convert.FromBase64String(context.GetArgument<string>("publicKey")));
                     Address signer = publicKey.ToAddress();
