@@ -107,33 +107,20 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "agentAddress",
                         Description = "Address of agent."
-                    },
-                    new QueryArgument<IntGraphType>
-                    {
-                        Name = "monsterCollectionRound",
-                        Description = "Monster collection round of agent."
                     }
                 ),
                 resolve: context =>
                 {
                     var agentAddress = context.GetArgument<Address>("agentAddress");
-                    var monsterCollectionRound = context.GetArgument<int?>("monsterCollectionRound");
-                    if (monsterCollectionRound is null)
+                    if (!(context.Source.accountStateGetter(agentAddress) is Dictionary value))
                     {
-                        if (context.Source.accountStateGetter(agentAddress) is { } value)
-                        {
-                            AgentState agentState = new AgentState((Dictionary) value);
-                            monsterCollectionRound = agentState.MonsterCollectionRound;
-                        }
-                        else
-                        {
-                            monsterCollectionRound = 0;
-                        }
+                        return null;
                     }
-                    var deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, (int) monsterCollectionRound);
-                    if (context.Source.accountStateGetter(deriveAddress) is { } state)
+                    var agentState = new AgentState(value);
+                    var deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
+                    if (context.Source.accountStateGetter(deriveAddress) is Dictionary state)
                     {
-                        return new MonsterCollectionState((Dictionary) state);
+                        return new MonsterCollectionState(state);
                     }
 
                     return null;

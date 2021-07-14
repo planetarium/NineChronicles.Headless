@@ -156,7 +156,13 @@ namespace NineChronicles.Headless.Executable
             int demandBuffer = 1150,
             [Option("static-peer",
                 Description = "A list of peers that the node will continue to maintain.")]
-            string[]? staticPeerStrings = null
+            string[]? staticPeerStrings = null,
+            [Option("miner-count", Description = "The number of miner task(thread).")]
+            int minerCount = 1,
+            [Option(Description ="Run node without preloading.")]
+            bool skipPreload = false,
+            [Option(Description = "Minimum number of peers to broadcast message.  10 by default.")]
+            int minimumBroadcastTarget = 10
         )
         {
 #if SENTRY || ! DEBUG
@@ -283,7 +289,10 @@ namespace NineChronicles.Headless.Executable
                         messageTimeout: messageTimeout,
                         tipTimeout: tipTimeout,
                         demandBuffer: demandBuffer,
-                        staticPeerStrings: staticPeerStrings);
+                        staticPeerStrings: staticPeerStrings,
+                        preload: !skipPreload,
+                        minimumBroadcastTarget: minimumBroadcastTarget
+                    );
 
                 if (rpcServer)
                 {
@@ -309,6 +318,7 @@ namespace NineChronicles.Headless.Executable
                     ReorgInterval = reorgInterval,
                     AuthorizedMiner = authorizedMiner,
                     TxLifeTime = TimeSpan.FromMinutes(txLifeTime),
+                    MinerCount = minerCount,
                 };
                 hostBuilder.ConfigureServices(services =>
                 {

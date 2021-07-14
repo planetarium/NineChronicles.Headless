@@ -1,4 +1,4 @@
-# Read about the format of this file: <https://editorconfig.org/>
+# NOTE: Requires **VS2019 16.3** or later
 root = true
 
 [*]
@@ -7,3 +7,29 @@ insert_final_newline = true
 charset = utf-8
 indent_style = space
 indent_size = 4
+
+# Code files
+[*.{cs,vb}]
+
+# Allow field name to begin with an underscore.
+dotnet_diagnostic.SA1309.severity = none
+
+# Allow to call an instance member of the local class or a base class is not prefixed with 'this.'
+dotnet_diagnostic.SA1101.severity = none
+
+# Allow an expression not to declare parenthese.
+dotnet_diagnostic.SA1407.severity = none
+
+# Allow closing parenthesis to be placed in new line.
+dotnet_diagnostic.SA1009.severity = none
+dotnet_diagnostic.SA1111.severity = none
+
+# TODO: Copyright
+dotnet_diagnostic.SA1633.severity = suggestion
+
+# TODO: Documentation
+dotnet_diagnostic.SA1600.severity = suggestion
+dotnet_diagnostic.SA1601.severity = suggestion
+
+# Allow FIXME tag as position free
+dotnet_diagnostic.S1134.severity = none

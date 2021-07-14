@@ -18,6 +18,7 @@ using Nito.AsyncEx;
 using Serilog;
 using Serilog.Events;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading;
@@ -25,6 +26,7 @@ using System.Threading.Tasks;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using StrictRenderer =
     Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer<Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>>;
+using Libplanet.Blocks;
 
 namespace NineChronicles.Headless
 {
@@ -78,7 +80,8 @@ namespace NineChronicles.Headless
             bool isDev = false,
             int blockInterval = 10000,
             int reorgInterval = 0,
-            TimeSpan txLifeTime = default
+            TimeSpan txLifeTime = default,
+            int minerCount = 1
         )
         {
             MinerPrivateKey = minerPrivateKey;
@@ -169,7 +172,11 @@ namespace NineChronicles.Headless
                         if (swarm.Running && (!authorizedMiner || isTargetBlock))
                         {
                             Log.Debug("Start mining.");
-                            await miner.MineBlockAsync(properties.MaximumTransactions, cancellationToken);
+
+                            IEnumerable<Task<Block<NCAction>>> miners = Enumerable
+                                .Range(0, minerCount)
+                                .Select(_ => miner.MineBlockAsync(properties.MaximumTransactions, cancellationToken));
+                            await Task.WhenAll(miners);
                         }
                         else
                         {
@@ -319,7 +326,9 @@ namespace NineChronicles.Headless
                 blockInterval: properties.BlockInterval,
                 reorgInterval: properties.ReorgInterval,
                 authorizedMiner: properties.AuthorizedMiner,
-                txLifeTime: properties.TxLifeTime);
+                txLifeTime: properties.TxLifeTime,
+                minerCount: properties.MinerCount
+            );
             service.ConfigureContext(context);
             return service;
         }
