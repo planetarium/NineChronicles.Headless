@@ -23,7 +23,7 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.World
                     {
                         Name = "worldId",
                     }),
-                resolve: context => context.Source.IsStageCleared(context.GetArgument<int>("worldId")));
+                resolve: context => context.Source.IsWorldUnlocked(context.GetArgument<int>("worldId")));
             Field<NonNullGraphType<WorldType>>(
                 "world",
                 arguments: new QueryArguments(
