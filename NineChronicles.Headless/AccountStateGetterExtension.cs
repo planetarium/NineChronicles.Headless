@@ -20,7 +20,7 @@ namespace NineChronicles.Headless
                     LegacyQuestListKey,
                 };
 
-                bool backward = false;
+                bool v1 = false;
                 var serializedAvatar = dictionary;
 
                 foreach (var key in keys)
@@ -29,14 +29,14 @@ namespace NineChronicles.Headless
                     var serialized = accountStateGetter(keyAddress);
                     if (serialized is null)
                     {
-                        backward = true;
+                        v1 = true;
                         break;
                     }
 
                     serializedAvatar = serializedAvatar.SetItem(key, serialized);
                 }
 
-                if (backward)
+                if (v1)
                 {
                     return new AvatarState(dictionary);
                 }
@@ -44,7 +44,7 @@ namespace NineChronicles.Headless
                 return new AvatarState(serializedAvatar);
             }
 
-            throw new InvalidAddressException();
+            throw new InvalidAddressException($"Can't find {nameof(AvatarState)} from {avatarAddress}");
         }
     }
 }

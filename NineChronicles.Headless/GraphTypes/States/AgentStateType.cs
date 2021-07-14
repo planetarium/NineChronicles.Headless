@@ -30,14 +30,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                     List<AvatarState> avatarStates = new List<AvatarState>();
                     foreach (var kv in context.Source.agentState.avatarAddresses.OrderBy(a => a.Key))
                     {
-                        try
-                        {
-                            avatarStates.Add(context.Source.accountStateGetter.GetAvatarState(kv.Value));
-                        }
-                        catch (InvalidAddressException)
-                        {
-                            // pass
-                        }
+                        avatarStates.Add(context.Source.accountStateGetter.GetAvatarState(kv.Value));
                     }
 
                     return avatarStates;
