@@ -14,8 +14,6 @@ type ActionMutation {
   hackAndSlash(avatarAddress: Address!, worldId: Int!, stageId: Int!, weeklyArenaAddress: Address!, rankingArenaAddress: Address!, costumeIds: [Guid], equipmentIds: [Guid], consumableIds: [Guid]): TxId!
   combinationEquipment(avatarAddress: Address!, recipeId: Int!, slotIndex: Int!, subRecipeId: Int): TxId!
   itemEnhancement(avatarAddress: Address!, itemId: Guid!, materialId: Guid!, slotIndex: Int!): TxId!
-  buy(sellerAgentAddress: Address!, sellerAvatarAddress: Address!, buyerAvatarAddress: Address!, productId: Guid!): TxId!
-  sell(sellerAvatarAddress: Address!, itemId: Guid!, price: Int!): TxId!
   dailyReward(avatarAddress: Address!): TxId!
   combinationConsumable(avatarAddress: Address!, recipeId: Int!, slotIndex: Int!): TxId!
   monsterCollect(level: Int!): TxId!
@@ -306,6 +304,7 @@ type MonsterCollectionStateType {
 type MonsterCollectionStatusType {
   fungibleAssetValue: FungibleAssetValueType!
   rewardInfos: [MonsterCollectionRewardInfoType]
+  lockup: Boolean!
 }
 
 type NodeExceptionType {
