@@ -19,7 +19,9 @@ using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>; 
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+using Libplanet.Blockchain.Renderers;
+using Libplanet.Headless;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -42,6 +44,12 @@ namespace NineChronicles.Headless.GraphTypes
                         byte[] bytes => new BlockHash(bytes),
                         null => null,
                     };
+
+                    if (standaloneContext.BlockChain is { } blockChain)
+                    {
+                        DelayedRenderer<NCAction>? delayedRenderer = blockChain.GetDelayedRenderer();
+                        blockHash = delayedRenderer?.Tip?.Hash;
+                    }
 
                     return (standaloneContext.BlockChain?.ToAccountStateGetter(blockHash),
                         standaloneContext.BlockChain?.ToAccountBalanceGetter(blockHash));
@@ -251,7 +259,7 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Current miner's monster collection status.",
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -264,26 +272,33 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     Address agentAddress = standaloneContext.NineChroniclesNodeService.MinerPrivateKey.ToAddress();
-                    if (blockChain.GetState(agentAddress) is Dictionary agentDict)
+                    BlockHash? offset = blockChain.GetDelayedRenderer()?.Tip?.Hash;
+                    if (blockChain.GetState(agentAddress, offset) is Dictionary agentDict)
                     {
                         AgentState agentState = new AgentState(agentDict);
                         Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
                         Currency currency = new GoldCurrencyState(
-                            (Dictionary) blockChain.GetState(Addresses.GoldCurrency)
+                            (Dictionary) blockChain.GetState(Addresses.GoldCurrency, offset)
                             ).Currency;
 
-                        FungibleAssetValue balance = blockChain.GetBalance(agentAddress, currency);
-                        if (blockChain.GetState(deriveAddress) is Dictionary mcDict)
+                        FungibleAssetValue balance = blockChain.GetBalance(agentAddress, currency, offset);
+                        if (blockChain.GetState(deriveAddress, offset) is Dictionary mcDict)
                         {
                             var rewardSheet = new MonsterCollectionRewardSheet();
                             var csv = blockChain.GetState(
-                                Addresses.GetSheetAddress<MonsterCollectionSheet>()
+                                Addresses.GetSheetAddress<MonsterCollectionRewardSheet>(),
+                                offset
                             ).ToDotnetString();
                             rewardSheet.Set(csv);
                             var monsterCollectionState = new MonsterCollectionState(mcDict);
+                            long tipIndex = blockChain.Tip.Index;
                             List<MonsterCollectionRewardSheet.RewardInfo> rewards =
-                                monsterCollectionState.CalculateRewards(rewardSheet, blockChain.Tip.Index);
-                            return new MonsterCollectionStatus(balance, rewards);
+                                monsterCollectionState.CalculateRewards(rewardSheet, tipIndex);
+                            return new MonsterCollectionStatus(
+                                balance, 
+                                rewards, 
+                                monsterCollectionState.IsLocked(tipIndex)
+                            );
                         }
                         throw new ExecutionError(
                             $"{nameof(MonsterCollectionState)} Address: {deriveAddress} is null.");

@@ -74,7 +74,7 @@ namespace NineChronicles.Headless.GraphTypes
                         var lensIndex = context.GetArgument<int>("lensIndex");
                         var earIndex = context.GetArgument<int>("earIndex");
                         var tailIndex = context.GetArgument<int>("tailIndex");
-                        var action = new CreateAvatar2
+                        var action = new CreateAvatar
                         {
                             index = avatarIndex,
                             hair = hairIndex,
@@ -160,7 +160,7 @@ namespace NineChronicles.Headless.GraphTypes
                         List<Guid> equipmentIds = context.GetArgument<List<Guid>>("equipmentIds") ?? new List<Guid>();
                         List<Guid> consumableIds = context.GetArgument<List<Guid>>("consumableIds") ?? new List<Guid>();
 
-                        var action = new HackAndSlash4
+                        var action = new HackAndSlash
                         {
                             avatarAddress = avatarAddress,
                             worldId = worldId,
@@ -224,7 +224,7 @@ namespace NineChronicles.Headless.GraphTypes
                         int? subRecipeId = context.GetArgument<int?>("subRecipeId");
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
 
-                        var action = new CombinationEquipment4
+                        var action = new CombinationEquipment
                         {
                             AvatarAddress = avatarAddress,
                             RecipeId = recipeId,
@@ -288,7 +288,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
                         int slotIndex = context.GetArgument<int>("slotIndex");
 
-                        var action = new ItemEnhancement5
+                        var action = new ItemEnhancement
                         {
                             avatarAddress = avatarAddress,
                             slotIndex = slotIndex,
@@ -305,126 +305,6 @@ namespace NineChronicles.Headless.GraphTypes
                         var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
                         Log.Error(msg, e);
-                        throw;
-                    }
-                });
-
-            Field<NonNullGraphType<TxIdType>>("buy",
-                description: "Buy registered shop item.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "sellerAgentAddress",
-                        Description = "Agent address from registered ShopItem."
-                    },
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "sellerAvatarAddress",
-                        Description = "Avatar address from registered ShopItem."
-                    },
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "buyerAvatarAddress",
-                        Description = "Avatar address."
-                    },
-                    new QueryArgument<NonNullGraphType<GuidGraphType>>
-                    {
-                        Name = "productId",
-                        Description = "ShopItem product ID."
-                    }),
-                resolve: context =>
-                {
-                    try
-                    {
-                        if (!(service.MinerPrivateKey is { } privateKey))
-                        {
-                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
-                        }
-
-                        if (!(service.Swarm?.BlockChain is { } blockChain))
-                        {
-                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
-                        }
-
-                        Address buyerAvatarAddress = context.GetArgument<Address>("buyerAvatarAddress");
-                        Address sellerAgentAddress = context.GetArgument<Address>("sellerAgentAddress");
-                        Address sellerAvatarAddress = context.GetArgument<Address>("sellerAvatarAddress");
-                        Guid productId = context.GetArgument<Guid>("productId");
-
-                        var action = new Buy4
-                        {
-                            buyerAvatarAddress = buyerAvatarAddress,
-                            sellerAgentAddress = sellerAgentAddress,
-                            sellerAvatarAddress = sellerAvatarAddress,
-                            productId = productId,
-                        };
-
-                        var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(privateKey, actions);
-                        return tx.Id;
-                    }
-                    catch (Exception e)
-                    {
-                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
-                        context.Errors.Add(new ExecutionError(msg, e));
-                        Log.Error(msg, e);
-                        throw;
-                    }
-                });
-            Field<NonNullGraphType<TxIdType>>("sell",
-                description: "Register item to the shop.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "sellerAvatarAddress",
-                        Description = "Avatar address to register shop item."
-                    },
-                    new QueryArgument<NonNullGraphType<GuidGraphType>>
-                    {
-                        Name = "itemId",
-                        Description = "Item Guid to register on shop."
-                    },
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "price",
-                        Description = "Item selling price."
-                    }),
-                resolve: context =>
-                {
-                    try
-                    {
-                        if (!(service.MinerPrivateKey is { } privateKey))
-                        {
-                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
-                        }
-
-                        if (!(service.Swarm?.BlockChain is { } blockChain))
-                        {
-                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
-                        }
-
-                        Address sellerAvatarAddress = context.GetArgument<Address>("sellerAvatarAddress");
-                        Guid itemId = context.GetArgument<Guid>("itemId");
-                        var currency = new GoldCurrencyState(
-                            (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
-                        ).Currency;
-                        FungibleAssetValue price = currency * context.GetArgument<int>("price");
-
-                        var action = new Sell3
-                        {
-                            sellerAvatarAddress = sellerAvatarAddress,
-                            itemId = itemId,
-                            price = price
-                        };
-
-                        var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(privateKey, actions);
-                        return tx.Id;
-                    }
-                    catch (Exception e)
-                    {
-                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
-                        context.Errors.Add(new ExecutionError(msg, e));
                         throw;
                     }
                 });
@@ -505,7 +385,7 @@ namespace NineChronicles.Headless.GraphTypes
                         int slotIndex = context.GetArgument<int>("slotIndex");
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
 
-                        var action = new CombinationConsumable3
+                        var action = new CombinationConsumable
                         {
                             AvatarAddress = avatarAddress,
                             recipeId = recipeId,
@@ -550,21 +430,13 @@ namespace NineChronicles.Headless.GraphTypes
                         }
 
                         int level = context.GetArgument<int>("level");
-                        Address agentAddress = service.MinerPrivateKey.ToAddress();
-                        AgentState agentState = new AgentState((Dictionary) service.BlockChain.GetState(agentAddress));
-
-                        Address collectionAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
-                        if (service.BlockChain.GetState(collectionAddress) is { })
-                        {
-                            throw new InvalidOperationException("MonsterCollectionState already exists.");
-                        }
                         var action = new MonsterCollect
                         {
                             level = level,
                         };
 
                         var actions = new NCAction[] { action };
-                        Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -622,53 +494,6 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 }
             );
-
-            // Field<NonNullGraphType<TxIdType>>(nameof(CancelMonsterCollect),
-            //     description: "Downgrade monster collection level.",
-            //     arguments: new QueryArguments(
-            //         new QueryArgument<NonNullGraphType<IntGraphType>>
-            //         {
-            //             Name = "level",
-            //             Description = "The monster collection level.(1 ~ 6)"
-            //         }
-            //     ),
-            //     resolve: context =>
-            //     {
-            //         try
-            //         {
-            //             BlockChain<NCAction>? blockChain = service.BlockChain;
-            //             if (blockChain is null)
-            //             {
-            //                 throw new InvalidOperationException($"{nameof(blockChain)} is null.");
-            //             }
-            //
-            //             if (service.MinerPrivateKey is null)
-            //             {
-            //                 throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
-            //             }
-            //
-            //             int level = context.GetArgument<int>("level");
-            //             Address agentAddress = service.MinerPrivateKey.ToAddress();
-            //             AgentState agentState = new AgentState((Dictionary) service.BlockChain.GetState(agentAddress));
-            //
-            //             var action = new CancelMonsterCollect
-            //             {
-            //                 level = level,
-            //                 collectRound = agentState.MonsterCollectionRound,
-            //             };
-            //
-            //             var actions = new PolymorphicAction<ActionBase>[] { action };
-            //             Transaction<PolymorphicAction<ActionBase>> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
-            //             return tx.Id;
-            //         }
-            //         catch (Exception e)
-            //         {
-            //             var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
-            //             context.Errors.Add(new ExecutionError(msg, e));
-            //             throw;
-            //         }
-            //     }
-            // );
         }
     }
 }

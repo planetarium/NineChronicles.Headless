@@ -22,6 +22,8 @@ using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States;
 using Serilog;
+using Libplanet.Blockchain;
+using Libplanet.Blockchain.Renderers;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -204,36 +206,44 @@ namespace NineChronicles.Headless.GraphTypes
                 return;
             }
 
-            Libplanet.Blockchain.BlockChain<PolymorphicAction<ActionBase>> blockChain = 
-                StandaloneContext.NineChroniclesNodeService.BlockChain;
+            BlockChain<PolymorphicAction<ActionBase>> blockChain = StandaloneContext.NineChroniclesNodeService.BlockChain;
+            DelayedRenderer<PolymorphicAction<ActionBase>>? delayedRenderer = blockChain.GetDelayedRenderer();
+            BlockHash? offset = delayedRenderer?.Tip?.Hash;
             Address agentAddress = StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.ToAddress();
             Currency currency =
                 new GoldCurrencyState(
-                    (Dictionary) blockChain.GetState(Addresses.GoldCurrency)
+                    (Dictionary) blockChain.GetState(Addresses.GoldCurrency, offset)
                 ).Currency;
-            FungibleAssetValue balance = blockChain.GetBalance(agentAddress, currency);
+            FungibleAssetValue balance = blockChain.GetBalance(agentAddress, currency, offset);
             var rewards = new List<MonsterCollectionRewardSheet.RewardInfo>();
-            if (blockChain.GetState(agentAddress) is Dictionary agentDict)
+            if (blockChain.GetState(agentAddress, offset) is Dictionary agentDict)
             {
                 AgentState agentState = new AgentState(agentDict);
                 Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
-                if (blockChain.GetState(deriveAddress) is Dictionary collectDict && 
+                if (blockChain.GetState(deriveAddress, offset) is Dictionary collectDict && 
                     agentState.avatarAddresses.Any())
                 {
                     var rewardSheet = new MonsterCollectionRewardSheet();
                     var csv = blockChain.GetState(
-                        Addresses.GetSheetAddress<MonsterCollectionSheet>()
+                        Addresses.GetSheetAddress<MonsterCollectionRewardSheet>(),
+                        offset
                     ).ToDotnetString();
                     rewardSheet.Set(csv);
+                    long tipIndex = blockChain.Tip.Index;
                     var monsterCollectionState = new MonsterCollectionState(collectDict);
                     rewards = monsterCollectionState.CalculateRewards(
                         rewardSheet,
-                        StandaloneContext.NineChroniclesNodeService.BlockChain.Tip.Index
+                        tipIndex
                     );
+
+                    var monsterCollectionStatus = new MonsterCollectionStatus(
+                        balance, 
+                        rewards,
+                        monsterCollectionState.IsLocked(tipIndex)
+                    );
+                    StandaloneContext.MonsterCollectionStatusSubject.OnNext(monsterCollectionStatus);
                 }
             }
-            var monsterCollectionStatus = new MonsterCollectionStatus(balance, rewards);
-            StandaloneContext.MonsterCollectionStatusSubject.OnNext(monsterCollectionStatus);
         }
 
         private void RenderAction(ActionBase.ActionEvaluation<ActionBase> eval)
@@ -266,14 +276,21 @@ namespace NineChronicles.Headless.GraphTypes
             }
 
             Address agentAddress = privateKey.ToAddress();
-            if (eval.Signer == agentAddress && eval.Exception is null)
+            if (eval.Signer == agentAddress && 
+                eval.Exception is null && 
+                service.BlockChain.GetState(agentAddress) is Dictionary rawAgent)
             {
-                var agentState = new AgentState((Dictionary)service.BlockChain.GetState(agentAddress));
+                var agentState = new AgentState(rawAgent);
                 Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
-                if (eval.OutputStates.GetState(deriveAddress) is { } state)
+                if (eval.OutputStates.GetState(deriveAddress) is Dictionary state)
                 {
-                    MonsterCollectionState monsterCollectionState = new MonsterCollectionState((Dictionary)state);
-                    StandaloneContext.MonsterCollectionStateSubject.OnNext(monsterCollectionState);
+                    StandaloneContext.MonsterCollectionStateSubject.OnNext(
+                        new MonsterCollectionState(state)
+                    );
+                }
+                else
+                {
+                    StandaloneContext.MonsterCollectionStateSubject.OnNext(null!);
                 }
             }
 

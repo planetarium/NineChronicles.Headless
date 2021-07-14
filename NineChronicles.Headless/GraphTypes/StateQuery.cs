@@ -116,15 +116,15 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var agentAddress = context.GetArgument<Address>("agentAddress");
-                    if (!(context.Source.accountStateGetter(agentAddress) is { } value))
+                    if (!(context.Source.accountStateGetter(agentAddress) is Dictionary value))
                     {
                         return null;
                     }
-                    var agentState = new AgentState((Dictionary) value);
+                    var agentState = new AgentState(value);
                     var deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
-                    if (context.Source.accountStateGetter(deriveAddress) is { } state)
+                    if (context.Source.accountStateGetter(deriveAddress) is Dictionary state)
                     {
-                        return new MonsterCollectionState((Dictionary) state);
+                        return new MonsterCollectionState(state);
                     }
 
                     return null;

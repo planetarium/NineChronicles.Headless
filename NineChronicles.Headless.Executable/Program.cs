@@ -160,7 +160,9 @@ namespace NineChronicles.Headless.Executable
             [Option("miner-count", Description = "The number of miner task(thread).")]
             int minerCount = 1,
             [Option(Description ="Run node without preloading.")]
-            bool skipPreload = false
+            bool skipPreload = false,
+            [Option(Description = "Minimum number of peers to broadcast message.  10 by default.")]
+            int minimumBroadcastTarget = 10
         )
         {
 #if SENTRY || ! DEBUG
@@ -288,7 +290,8 @@ namespace NineChronicles.Headless.Executable
                         tipTimeout: tipTimeout,
                         demandBuffer: demandBuffer,
                         staticPeerStrings: staticPeerStrings,
-                        preload: !skipPreload
+                        preload: !skipPreload,
+                        minimumBroadcastTarget: minimumBroadcastTarget
                     );
 
                 if (rpcServer)
