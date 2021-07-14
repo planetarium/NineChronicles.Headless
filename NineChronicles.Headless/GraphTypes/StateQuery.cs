@@ -6,6 +6,7 @@ using Libplanet;
 using Libplanet.Action;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
+using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States;
@@ -29,11 +30,14 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var address = context.GetArgument<Address>("avatarAddress");
-                    if (!(context.Source.accountStateGetter(address) is { } state))
+                    try
+                    {
+                        return context.Source.accountStateGetter.GetAvatarState(address);
+                    }
+                    catch (InvalidAddressException)
                     {
                         throw new InvalidOperationException($"The state {address} doesn't exists");
                     }
-                    return new AvatarState((Dictionary)state);
                 });
             Field<RankingMapStateType>(
                 name: "rankingMap",
