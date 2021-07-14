@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Bencodex.Types;
@@ -29,10 +30,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                     List<AvatarState> avatarStates = new List<AvatarState>();
                     foreach (var kv in context.Source.agentState.avatarAddresses.OrderBy(a => a.Key))
                     {
-                        if (context.Source.accountStateGetter(kv.Value) is { } state)
-                        {
-                            avatarStates.Add(new AvatarState((Dictionary)state));
-                        }
+                        avatarStates.Add(context.Source.accountStateGetter.GetAvatarState(kv.Value));
                     }
 
                     return avatarStates;
