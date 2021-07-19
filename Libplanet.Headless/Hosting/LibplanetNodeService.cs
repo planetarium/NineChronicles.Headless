@@ -476,9 +476,30 @@ namespace Libplanet.Headless.Hosting
                         $"Chain's tip is stale. (index: {BlockChain.Tip?.Index}, " +
                         $"hash: {BlockChain.Tip?.Hash}, timeout: {tipTimeout})";
                     Log.Error(message);
-                    Properties.NodeExceptionOccurred(NodeExceptionType.TipNotChange, message);
-                    _stopRequested = true;
-                    break;
+
+                    // TODO: Use flag to determine behavior when the chain's tip is stale.
+                    try
+                    {
+                        Log.Error("Start preloading due to staled tip.");
+                        await Swarm.PreloadAsync(
+                            TimeSpan.FromSeconds(5),
+                            PreloadProgress,
+                            cancellationToken: cancellationToken
+                        );
+                        Log.Error(
+                            "Preloading successfully finished. " +
+                            "(index: {Index}, hash: {Hash})",
+                            BlockChain.Tip?.Index,
+                            BlockChain.Tip?.Hash);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(
+                            e,
+                            $"An unexpected exception occurred during {nameof(Swarm.PreloadAsync)}: {{Message}}",
+                            e.Message
+                        );
+                    }
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();
