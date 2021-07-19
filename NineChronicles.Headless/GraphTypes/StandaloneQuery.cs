@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Bencodex;
 using Bencodex.Types;
-using BTAI;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
@@ -22,6 +21,7 @@ using Nekoyume.TableData;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Libplanet.Blockchain.Renderers;
 using Libplanet.Headless;
+using Nekoyume.Model;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -307,6 +307,29 @@ namespace NineChronicles.Headless.GraphTypes
                     throw new ExecutionError(
                         $"{nameof(AgentState)} Address: {agentAddress} is null.");
                 });
+
+            Field<NonNullGraphType<BooleanGraphType>>(
+                name: "activated",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "invitationCode"
+                    }
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    string invitationCode = context.GetArgument<string>("invitationCode");
+                    ActivationKey activationKey = ActivationKey.Decode(invitationCode);
+
+                    return !(blockChain.GetState(activationKey.PendingAddress) is Dictionary);
+                }
+            );
         }
     }
 }
