@@ -436,6 +436,7 @@ type StandaloneQuery {
   getTx(txId: TxId!): TransactionType_1
   minerAddress: Address
   monsterCollectionStatus: MonsterCollectionStatusType
+  transaction: TransactionHeadlessQuery!
 }
 
 type StandaloneSubscription {
@@ -493,6 +494,13 @@ type Transaction {
   timestamp: DateTimeOffset!
   actions: [Action!]!
   blockRef: [Block!]
+}
+
+type TransactionHeadlessQuery {
+  nextTxNonce(address: Address!): Long!
+  getTx(txId: TxId!): TransactionType_1
+  createUnsignedTx(publicKey: String!, plainValue: String!): String!
+  attachSignature(unsignedTransaction: String!, signature: String!): String!
 }
 
 type TransactionQuery {
