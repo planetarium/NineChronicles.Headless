@@ -320,7 +320,7 @@ type NodeStatusType {
   bootstrapEnded: Boolean!
   preloadEnded: Boolean!
   tip: BlockHeader!
-  topmostBlocks(limit: Int!, miner: Address): [BlockHeader]!
+  topmostBlocks(limit: Int!, offset: Int = 0, miner: Address): [BlockHeader]!
   stagedTxIds(address: Address): [TxId]
   genesis: BlockHeader!
   isMining: Boolean!
