@@ -203,6 +203,47 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
+            Field<NonNullGraphType<LongGraphType>>(
+                name: "nextTxNonce",
+                deprecationReason: "The root query is not the best place for nextTxNonce so it was moved. " +
+                                   "Use transaction.nextTxNonce()",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "Target address to query" }
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    Address address = context.GetArgument<Address>("address");
+                    return blockChain.GetNextTxNonce(address);
+                }
+            );
+
+            Field<TransactionType<NCAction>>(
+                name: "getTx",
+                deprecationReason: "The root query is not the best place for getTx so it was moved. " +
+                                   "Use transaction.getTx()",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<TxIdType>>
+                        {Name = "txId", Description = "transaction id."}
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    var txId = context.GetArgument<TxId>("txId");
+                    return blockChain.GetTransaction(txId);
+                }
+            );
+
             Field<AddressType>(
                 name: "minerAddress",
                 description: "Address of current node.",
