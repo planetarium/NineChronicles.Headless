@@ -6,6 +6,7 @@ using Libplanet;
 using Libplanet.Action;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
+using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States;
@@ -29,11 +30,14 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var address = context.GetArgument<Address>("avatarAddress");
-                    if (!(context.Source.accountStateGetter(address) is { } state))
+                    try
+                    {
+                        return context.Source.accountStateGetter.GetAvatarState(address);
+                    }
+                    catch (InvalidAddressException)
                     {
                         throw new InvalidOperationException($"The state {address} doesn't exists");
                     }
-                    return new AvatarState((Dictionary)state);
                 });
             Field<RankingMapStateType>(
                 name: "rankingMap",
@@ -107,33 +111,20 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "agentAddress",
                         Description = "Address of agent."
-                    },
-                    new QueryArgument<IntGraphType>
-                    {
-                        Name = "monsterCollectionRound",
-                        Description = "Monster collection round of agent."
                     }
                 ),
                 resolve: context =>
                 {
                     var agentAddress = context.GetArgument<Address>("agentAddress");
-                    var monsterCollectionRound = context.GetArgument<int?>("monsterCollectionRound");
-                    if (monsterCollectionRound is null)
+                    if (!(context.Source.accountStateGetter(agentAddress) is Dictionary value))
                     {
-                        if (context.Source.accountStateGetter(agentAddress) is { } value)
-                        {
-                            AgentState agentState = new AgentState((Dictionary) value);
-                            monsterCollectionRound = agentState.MonsterCollectionRound;
-                        }
-                        else
-                        {
-                            monsterCollectionRound = 0;
-                        }
+                        return null;
                     }
-                    var deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, (int) monsterCollectionRound);
-                    if (context.Source.accountStateGetter(deriveAddress) is { } state)
+                    var agentState = new AgentState(value);
+                    var deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
+                    if (context.Source.accountStateGetter(deriveAddress) is Dictionary state)
                     {
-                        return new MonsterCollectionState((Dictionary) state);
+                        return new MonsterCollectionState(state);
                     }
 
                     return null;

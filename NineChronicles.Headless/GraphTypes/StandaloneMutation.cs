@@ -49,14 +49,14 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
                         Name = "payload",
-                        Description = "Hex-encoded bytes for new transaction."
+                        Description = "The base64-encoded bytes for new transaction."
                     }
                 ),
                 resolve: context =>
                 {
                     try
                     {
-                        byte[] bytes = ByteUtil.ParseHex(context.GetArgument<string>("payload"));
+                        byte[] bytes = Convert.FromBase64String(context.GetArgument<string>("payload"));
                         Transaction<NCAction> tx = Transaction<NCAction>.Deserialize(bytes);
                         NineChroniclesNodeService? service = standaloneContext.NineChroniclesNodeService;
                         BlockChain<NCAction>? blockChain = service?.Swarm.BlockChain;
@@ -69,6 +69,11 @@ namespace NineChronicles.Headless.GraphTypes
                         if (blockChain.Policy.DoesTransactionFollowsPolicy(tx, blockChain))
                         {
                             blockChain.StageTransaction(tx);
+
+                            if (service?.Swarm is { } swarm && swarm.Running)
+                            {
+                                swarm.BroadcastTxs(new[] { tx });
+                            }
                             return true;
                         }
                         else

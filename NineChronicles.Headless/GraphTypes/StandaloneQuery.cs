@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Bencodex;
 using Bencodex.Types;
-using BTAI;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
@@ -19,7 +18,10 @@ using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>; 
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+using Libplanet.Blockchain.Renderers;
+using Libplanet.Headless;
+using Nekoyume.Model;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -42,6 +44,12 @@ namespace NineChronicles.Headless.GraphTypes
                         byte[] bytes => new BlockHash(bytes),
                         null => null,
                     };
+
+                    if (standaloneContext.BlockChain is { } blockChain)
+                    {
+                        DelayedRenderer<NCAction>? delayedRenderer = blockChain.GetDelayedRenderer();
+                        blockHash = delayedRenderer?.Tip?.Hash;
+                    }
 
                     return (standaloneContext.BlockChain?.ToAccountStateGetter(blockHash),
                         standaloneContext.BlockChain?.ToAccountBalanceGetter(blockHash));
@@ -197,6 +205,8 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<LongGraphType>>(
                 name: "nextTxNonce",
+                deprecationReason: "The root query is not the best place for nextTxNonce so it was moved. " +
+                                   "Use transaction.nextTxNonce()",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "Target address to query" }
                 ),
@@ -215,6 +225,8 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<TransactionType<NCAction>>(
                 name: "getTx",
+                deprecationReason: "The root query is not the best place for getTx so it was moved. " +
+                                   "Use transaction.getTx()",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<TxIdType>>
                         {Name = "txId", Description = "transaction id."}
@@ -251,7 +263,7 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Current miner's monster collection status.",
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -264,25 +276,33 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     Address agentAddress = standaloneContext.NineChroniclesNodeService.MinerPrivateKey.ToAddress();
-                    if (blockChain.GetState(agentAddress) is Dictionary agentDict)
+                    BlockHash? offset = blockChain.GetDelayedRenderer()?.Tip?.Hash;
+                    if (blockChain.GetState(agentAddress, offset) is Dictionary agentDict)
                     {
                         AgentState agentState = new AgentState(agentDict);
-                        Address deriveAddress =
-                            MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
+                        Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
                         Currency currency = new GoldCurrencyState(
-                            (Dictionary) blockChain.GetState(Addresses.GoldCurrency)
+                            (Dictionary) blockChain.GetState(Addresses.GoldCurrency, offset)
                             ).Currency;
 
-                        FungibleAssetValue balance = blockChain.GetBalance(agentAddress, currency);
-                        if (blockChain.GetState(deriveAddress) is Dictionary mcDict)
+                        FungibleAssetValue balance = blockChain.GetBalance(agentAddress, currency, offset);
+                        if (blockChain.GetState(deriveAddress, offset) is Dictionary mcDict)
                         {
-                            MonsterCollectionState monsterCollectionState = new MonsterCollectionState(mcDict);
-                            bool canReceive = monsterCollectionState.CanReceive(blockChain.Tip.Index);
-                            var rewardLevel= monsterCollectionState.GetRewardLevel(blockChain.Tip.Index);
-                            var rewardInfos = rewardLevel > 0
-                                ? monsterCollectionState.RewardLevelMap[rewardLevel]
-                                : new List<MonsterCollectionRewardSheet.RewardInfo>();
-                            return new MonsterCollectionStatus(canReceive, balance, rewardInfos);
+                            var rewardSheet = new MonsterCollectionRewardSheet();
+                            var csv = blockChain.GetState(
+                                Addresses.GetSheetAddress<MonsterCollectionRewardSheet>(),
+                                offset
+                            ).ToDotnetString();
+                            rewardSheet.Set(csv);
+                            var monsterCollectionState = new MonsterCollectionState(mcDict);
+                            long tipIndex = blockChain.Tip.Index;
+                            List<MonsterCollectionRewardSheet.RewardInfo> rewards =
+                                monsterCollectionState.CalculateRewards(rewardSheet, tipIndex);
+                            return new MonsterCollectionStatus(
+                                balance, 
+                                rewards, 
+                                monsterCollectionState.IsLocked(tipIndex)
+                            );
                         }
                         throw new ExecutionError(
                             $"{nameof(MonsterCollectionState)} Address: {deriveAddress} is null.");
@@ -291,6 +311,35 @@ namespace NineChronicles.Headless.GraphTypes
                     throw new ExecutionError(
                         $"{nameof(AgentState)} Address: {agentAddress} is null.");
                 });
+
+            Field<NonNullGraphType<TransactionHeadlessQuery>>(
+                name: "transaction",
+                description: "Query for transaction.",
+                resolve: context => new TransactionHeadlessQuery(standaloneContext)
+            );
+
+            Field<NonNullGraphType<BooleanGraphType>>(
+                name: "activated",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "invitationCode"
+                    }
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    string invitationCode = context.GetArgument<string>("invitationCode");
+                    ActivationKey activationKey = ActivationKey.Decode(invitationCode);
+
+                    return !(blockChain.GetState(activationKey.PendingAddress) is Dictionary);
+                }
+            );
         }
     }
 }

@@ -19,30 +19,29 @@ using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Shared.Services;
 using Serilog;
-using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using NodeExceptionType = Libplanet.Headless.NodeExceptionType;
+using Libplanet.Headless;
 
 namespace NineChronicles.Headless
 {
     public class BlockChainService : ServiceBase<IBlockChainService>, IBlockChainService
     {
-        private BlockChain<NineChroniclesActionType> _blockChain;
-        private Swarm<NineChroniclesActionType> _swarm;
+        private BlockChain<NCAction> _blockChain;
+        private Swarm<NCAction> _swarm;
         private RpcContext _context;
         private Codec _codec;
-        private LibplanetNodeServiceProperties<NineChroniclesActionType> _libplanetNodeServiceProperties;
-        private DelayedRenderer<NineChroniclesActionType> _delayedRenderer;
+        private LibplanetNodeServiceProperties<NCAction> _libplanetNodeServiceProperties;
+        private DelayedRenderer<NCAction> _delayedRenderer;
         public BlockChainService(
-            BlockChain<NineChroniclesActionType> blockChain,
-            Swarm<NineChroniclesActionType> swarm,
+            BlockChain<NCAction> blockChain,
+            Swarm<NCAction> swarm,
             RpcContext context,
-            LibplanetNodeServiceProperties<NineChroniclesActionType> libplanetNodeServiceProperties
+            LibplanetNodeServiceProperties<NCAction> libplanetNodeServiceProperties
         )
         {
             _blockChain = blockChain;
-            _delayedRenderer = blockChain.Renderers
-                .OfType<DelayedRenderer<NineChroniclesActionType>>()
-                .FirstOrDefault();
+            _delayedRenderer = blockChain.GetDelayedRenderer();
             _swarm = swarm;
             _context = context;
             _codec = new Codec();

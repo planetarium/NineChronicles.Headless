@@ -22,6 +22,8 @@ using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States;
 using Serilog;
+using Libplanet.Blockchain;
+using Libplanet.Blockchain.Renderers;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -170,10 +172,9 @@ namespace NineChronicles.Headless.GraphTypes
 
             ActionRenderer actionRenderer = standaloneContext.NineChroniclesNodeService!.ActionRenderer;
             actionRenderer.EveryRender<ActionBase>().Subscribe(RenderAction);
-            actionRenderer.EveryRender<MonsterCollect>().Subscribe(RenderMonsterCollect);
-            actionRenderer.EveryRender<CancelMonsterCollect>().Subscribe(RenderCancelMonsterCollect);
-            actionRenderer.EveryRender<ClaimMonsterCollectionReward>().Subscribe(RenderClaimMonsterCollectionReward);
-
+            actionRenderer.EveryRender<MonsterCollect>().Subscribe(RenderMonsterCollectionStateSubject);
+            actionRenderer.EveryRender<CancelMonsterCollect>().Subscribe(RenderMonsterCollectionStateSubject);
+            actionRenderer.EveryRender<ClaimMonsterCollectionReward>().Subscribe(RenderMonsterCollectionStateSubject);
         }
 
         private TipChanged ResolveTipChanged(IResolveFieldContext context)
@@ -205,31 +206,44 @@ namespace NineChronicles.Headless.GraphTypes
                 return;
             }
 
+            BlockChain<PolymorphicAction<ActionBase>> blockChain = StandaloneContext.NineChroniclesNodeService.BlockChain;
+            DelayedRenderer<PolymorphicAction<ActionBase>>? delayedRenderer = blockChain.GetDelayedRenderer();
+            BlockHash? offset = delayedRenderer?.Tip?.Hash;
             Address agentAddress = StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.ToAddress();
-            bool canReceive = false;
             Currency currency =
                 new GoldCurrencyState(
-                    (Dictionary) StandaloneContext.NineChroniclesNodeService.BlockChain.GetState(Addresses.GoldCurrency)
+                    (Dictionary) blockChain.GetState(Addresses.GoldCurrency, offset)
                 ).Currency;
-            FungibleAssetValue balance = StandaloneContext.NineChroniclesNodeService.BlockChain.GetBalance(agentAddress, currency);
-            var rewardInfos = new List<MonsterCollectionRewardSheet.RewardInfo>();
-            if (StandaloneContext.NineChroniclesNodeService.BlockChain.GetState(agentAddress) is Dictionary agentDict)
+            FungibleAssetValue balance = blockChain.GetBalance(agentAddress, currency, offset);
+            var rewards = new List<MonsterCollectionRewardSheet.RewardInfo>();
+            if (blockChain.GetState(agentAddress, offset) is Dictionary agentDict)
             {
                 AgentState agentState = new AgentState(agentDict);
                 Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
-                if (StandaloneContext.NineChroniclesNodeService.BlockChain.GetState(deriveAddress) is Dictionary collectDict && agentState.avatarAddresses.Any())
+                if (blockChain.GetState(deriveAddress, offset) is Dictionary collectDict && 
+                    agentState.avatarAddresses.Any())
                 {
-                    MonsterCollectionState monsterCollectionState = new MonsterCollectionState(collectDict);
-                    canReceive = monsterCollectionState.CanReceive(pair.NewTip.Index);
-                    var rewardLevel= monsterCollectionState.GetRewardLevel(pair.NewTip.Index);
-                    if (rewardLevel > 0)
-                    {
-                        rewardInfos = monsterCollectionState.RewardLevelMap[rewardLevel];
-                    }
+                    var rewardSheet = new MonsterCollectionRewardSheet();
+                    var csv = blockChain.GetState(
+                        Addresses.GetSheetAddress<MonsterCollectionRewardSheet>(),
+                        offset
+                    ).ToDotnetString();
+                    rewardSheet.Set(csv);
+                    long tipIndex = blockChain.Tip.Index;
+                    var monsterCollectionState = new MonsterCollectionState(collectDict);
+                    rewards = monsterCollectionState.CalculateRewards(
+                        rewardSheet,
+                        tipIndex
+                    );
+
+                    var monsterCollectionStatus = new MonsterCollectionStatus(
+                        balance, 
+                        rewards,
+                        monsterCollectionState.IsLocked(tipIndex)
+                    );
+                    StandaloneContext.MonsterCollectionStatusSubject.OnNext(monsterCollectionStatus);
                 }
             }
-            MonsterCollectionStatus monsterCollectionStatus = new MonsterCollectionStatus(canReceive, balance, rewardInfos);
-            StandaloneContext.MonsterCollectionStatusSubject.OnNext(monsterCollectionStatus);
         }
 
         private void RenderAction(ActionBase.ActionEvaluation<ActionBase> eval)
@@ -246,82 +260,40 @@ namespace NineChronicles.Headless.GraphTypes
             }
         }
 
-        private void RenderMonsterCollect(ActionBase.ActionEvaluation<MonsterCollect> eval)
+        private void RenderMonsterCollectionStateSubject<T>(ActionBase.ActionEvaluation<T> eval)
+            where T : ActionBase
         {
-            if (StandaloneContext.NineChroniclesNodeService is null)
+            if (!(StandaloneContext.NineChroniclesNodeService is { } service))
             {
                 throw new InvalidOperationException(
                     $"{nameof(NineChroniclesNodeService)} is null.");
             }
 
-            if (StandaloneContext.NineChroniclesNodeService.MinerPrivateKey is null)
+            if (!(service.MinerPrivateKey is { } privateKey))
             {
                 Log.Information("PrivateKey is not set. please call SetPrivateKey() first");
                 return;
             }
 
-            Address agentAddress = StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.ToAddress();
-            if (eval.Signer == agentAddress && eval.Exception is null)
+            Address agentAddress = privateKey.ToAddress();
+            if (eval.Signer == agentAddress && 
+                eval.Exception is null && 
+                service.BlockChain.GetState(agentAddress) is Dictionary rawAgent)
             {
-                Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, eval.Action.collectionRound);
-                if (eval.OutputStates.GetState(deriveAddress) is { } state)
+                var agentState = new AgentState(rawAgent);
+                Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
+                if (eval.OutputStates.GetState(deriveAddress) is Dictionary state)
                 {
-                    MonsterCollectionState monsterCollectionState = new MonsterCollectionState((Dictionary) state);
-                    StandaloneContext.MonsterCollectionStateSubject.OnNext(monsterCollectionState);
+                    StandaloneContext.MonsterCollectionStateSubject.OnNext(
+                        new MonsterCollectionState(state)
+                    );
+                }
+                else
+                {
+                    StandaloneContext.MonsterCollectionStateSubject.OnNext(null!);
                 }
             }
-        }
 
-        private void RenderCancelMonsterCollect(ActionBase.ActionEvaluation<CancelMonsterCollect> eval)
-        {
-            if (StandaloneContext.NineChroniclesNodeService is null)
-            {
-                throw new InvalidOperationException(
-                    $"{nameof(NineChroniclesNodeService)} is null.");
-            }
-
-            if (StandaloneContext.NineChroniclesNodeService.MinerPrivateKey is null)
-            {
-                Log.Information("PrivateKey is not set. please call SetPrivateKey() first");
-                return;
-            }
-
-            Address agentAddress = StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.ToAddress();
-            if (eval.Signer == agentAddress && eval.Exception is null)
-            {
-                Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, eval.Action.collectRound);
-                if (eval.OutputStates.GetState(deriveAddress) is { } state)
-                {
-                    MonsterCollectionState monsterCollectionState = new MonsterCollectionState((Dictionary) state);
-                    StandaloneContext.MonsterCollectionStateSubject.OnNext(monsterCollectionState);
-                }
-            }
-        }
-
-        private void RenderClaimMonsterCollectionReward(ActionBase.ActionEvaluation<ClaimMonsterCollectionReward> eval)
-        {
-            if (StandaloneContext.NineChroniclesNodeService is null)
-            {
-                throw new InvalidOperationException(
-                    $"{nameof(NineChroniclesNodeService)} is null.");
-            }
-
-            if (StandaloneContext.NineChroniclesNodeService.MinerPrivateKey is null)
-            {
-                Log.Information("PrivateKey is not set. please call SetPrivateKey() first");
-                return;
-            }
-
-            Address agentAddress = StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.ToAddress();
-            if (eval.Signer == agentAddress && eval.Exception is null)
-            {
-                Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, eval.Action.collectionRound);
-                if (eval.OutputStates.GetState(deriveAddress) is { } state)
-                {
-                    MonsterCollectionState monsterCollectionState = new MonsterCollectionState((Dictionary) state);
-                    StandaloneContext.MonsterCollectionStateSubject.OnNext(monsterCollectionState);
-                }
-            }
         }
     }
 }

@@ -37,7 +37,7 @@ namespace Libplanet.Headless.Hosting
         public readonly Swarm<T> Swarm;
 
         public readonly LibplanetNodeServiceProperties<T> Properties;
-        
+
         public AsyncManualResetEvent BootstrapEnded { get; }
 
         public AsyncManualResetEvent PreloadEnded { get; }
@@ -78,7 +78,7 @@ namespace Libplanet.Headless.Hosting
             Func<BlockChain<T>, Swarm<T>, PrivateKey, CancellationToken, Task> minerLoopAction,
             Progress<PreloadState> preloadProgress,
             Action<RPCException, string> exceptionHandlerAction,
-            Action<bool> preloadStatusHandlerAction, 
+            Action<bool> preloadStatusHandlerAction,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false
         )
@@ -159,6 +159,10 @@ namespace Libplanet.Headless.Hosting
                 {
                     MaxTimeout = TimeSpan.FromSeconds(10),
                     BlockHashRecvTimeout = TimeSpan.FromSeconds(10),
+                    BlockRecvTimeout = TimeSpan.FromSeconds(1),
+                    BranchpointThreshold = 50,
+                    StaticPeers = Properties.StaticPeers,
+                    MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
                 }
             );
 
@@ -172,7 +176,7 @@ namespace Libplanet.Headless.Hosting
 
         protected override Task ExecuteAsync(CancellationToken cancellationToken)
             => Task.Run(async () =>
-            {   
+            {
                 Log.Debug("Trying to delete {count} obsoleted chains...", _obsoletedChainIds.Count());
                 _ = Task.Run(() =>
                 {
@@ -186,7 +190,7 @@ namespace Libplanet.Headless.Hosting
                 {
                     var tasks = new List<Task>
                     {
-                        StartSwarm(true, cancellationToken),
+                        StartSwarm(Properties.Preload, cancellationToken),
                         CheckMessage(Properties.MessageTimeout, cancellationToken),
                         CheckTip(Properties.TipTimeout, cancellationToken)
                     };
@@ -196,11 +200,6 @@ namespace Libplanet.Headless.Hosting
                         tasks.Add(CheckPeerTable(cancellationToken));
                     }
 
-                    if (Properties.StaticPeers.Any())
-                    {
-                        tasks.Add(
-                            CheckStaticPeersAsync(Properties.StaticPeers, cancellationToken));
-                    }
                     await await Task.WhenAny(tasks);
                 }
             });
@@ -441,7 +440,7 @@ namespace Libplanet.Headless.Hosting
                 {
                     var message =
                         $"No messages have been received since {Swarm.LastMessageTimestamp}.";
-                        
+
                     Log.Error(message);
                     Properties.NodeExceptionOccurred(NodeExceptionType.MessageNotReceived, message);
                     _stopRequested = true;
@@ -464,13 +463,13 @@ namespace Libplanet.Headless.Hosting
                 {
                     continue;
                 }
-                
+
                 if (lastTip != BlockChain.Tip)
                 {
                     lastTip = BlockChain.Tip;
                     lastTipChanged = DateTimeOffset.Now;
                 }
-                
+
                 if (lastTipChanged + tipTimeout < DateTimeOffset.Now)
                 {
                     var message =
@@ -495,7 +494,7 @@ namespace Libplanet.Headless.Hosting
                 {
                     continue;
                 }
-                
+
                 if ((Swarm.BlockDemand?.Header.Index ?? 0) > (BlockChain.Tip?.Index ?? 0) + demandBuffer)
                 {
                     var message =
@@ -540,41 +539,6 @@ namespace Libplanet.Headless.Hosting
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();
-            }
-        }
-
-        private async Task CheckStaticPeersAsync(
-            IEnumerable<Peer> peers,
-            CancellationToken cancellationToken)
-        {
-            var peerArray = peers as Peer[] ?? peers.ToArray();
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                try
-                {
-                    await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
-                    Log.Warning("Checking static peers. {Peers}", peerArray);
-                    var peersToAdd = peerArray.Where(peer => !Swarm.Peers.Contains(peer)).ToArray();
-                    if (peersToAdd.Any())
-                    {
-                        Log.Warning("Some of peers are not in routing table. {Peers}", peersToAdd);
-                        await Swarm.AddPeersAsync(
-                            peersToAdd,
-                            TimeSpan.FromSeconds(5),
-                            cancellationToken);
-                    }
-                }
-                catch (OperationCanceledException e)
-                {
-                    Log.Warning(e, $"{nameof(CheckStaticPeersAsync)}() is cancelled.");
-                    throw;
-                }
-                catch (Exception e)
-                {
-                    var msg = "Unexpected exception occurred during " +
-                              $"{nameof(CheckStaticPeersAsync)}(): {{0}}";
-                    Log.Warning(e, msg, e);
-                }
             }
         }
 

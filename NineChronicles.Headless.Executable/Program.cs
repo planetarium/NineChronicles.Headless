@@ -4,6 +4,7 @@ using Amazon.Runtime;
 using Amazon.S3;
 using Cocona;
 using Cocona.Lite;
+using Destructurama;
 using Libplanet;
 using Libplanet.Crypto;
 using Libplanet.Extensions.Cocona.Commands;
@@ -155,7 +156,13 @@ namespace NineChronicles.Headless.Executable
             int demandBuffer = 1150,
             [Option("static-peer",
                 Description = "A list of peers that the node will continue to maintain.")]
-            string[]? staticPeerStrings = null
+            string[]? staticPeerStrings = null,
+            [Option("miner-count", Description = "The number of miner task(thread).")]
+            int minerCount = 1,
+            [Option(Description ="Run node without preloading.")]
+            bool skipPreload = false,
+            [Option(Description = "Minimum number of peers to broadcast message.  10 by default.")]
+            int minimumBroadcastTarget = 10
         )
         {
 #if SENTRY || ! DEBUG
@@ -167,8 +174,9 @@ namespace NineChronicles.Headless.Executable
             var configurationBuilder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
             var configuration = configurationBuilder.Build();
             var loggerConf = new LoggerConfiguration()
-                .ReadFrom.Configuration(configuration);
-#if SENTRY || ! DEBUG
+                .ReadFrom.Configuration(configuration)
+                .Destructure.UsingAttributes();
+#if SENTRY || !DEBUG
             loggerConf = loggerConf
                 .WriteTo.Sentry(o =>
                 {
@@ -184,6 +192,12 @@ namespace NineChronicles.Headless.Executable
                     "(i.e., --aws-access-key, --aws-secret-key) and " +
                     "Cognito credential (i.e., --aws-cognito-identity).";
                 throw new CommandExitedException(message, -1);
+            }
+
+            // Clean-up previous temporary log files.
+            if (Directory.Exists("_logs"))
+            {
+                Directory.Delete("_logs", true);
             }
 
             if (useBasicAwsCredentials ^ useCognitoCredentials  && !(awsRegion is null))
@@ -202,7 +216,7 @@ namespace NineChronicles.Headless.Executable
 
                 loggerConf = loggerConf.WriteTo.AmazonS3(
                     new AmazonS3Client(credentials, regionEndpoint),
-                    "log.json",
+                    "_logs/log.json",
                     "9c-headless-logs",
                     formatter: new CompactJsonFormatter(),
                     rollingInterval: Serilog.Sinks.AmazonS3.RollingInterval.Hour,
@@ -275,7 +289,10 @@ namespace NineChronicles.Headless.Executable
                         messageTimeout: messageTimeout,
                         tipTimeout: tipTimeout,
                         demandBuffer: demandBuffer,
-                        staticPeerStrings: staticPeerStrings);
+                        staticPeerStrings: staticPeerStrings,
+                        preload: !skipPreload,
+                        minimumBroadcastTarget: minimumBroadcastTarget
+                    );
 
                 if (rpcServer)
                 {
@@ -301,6 +318,7 @@ namespace NineChronicles.Headless.Executable
                     ReorgInterval = reorgInterval,
                     AuthorizedMiner = authorizedMiner,
                     TxLifeTime = TimeSpan.FromMinutes(txLifeTime),
+                    MinerCount = minerCount,
                 };
                 hostBuilder.ConfigureServices(services =>
                 {

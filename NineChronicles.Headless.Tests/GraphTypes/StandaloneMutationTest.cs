@@ -281,7 +281,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (CreateAvatar2) tx.Actions.First().InnerAction;
+            var action = (CreateAvatar) tx.Actions.First().InnerAction;
             Assert.Equal(name, action.name);
             Assert.Equal(index, action.index);
             Assert.Equal(hair, action.hair);
@@ -361,7 +361,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (HackAndSlash4) tx.Actions.First().InnerAction;
+            var action = (HackAndSlash) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(worldId, action.worldId);
             Assert.Equal(stageId, action.stageId);
@@ -444,41 +444,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(avatarAddress, action.avatarAddress);
         }
 
-        [Fact]
-        public async Task Buy()
-        {
-            var sellerAgentAddress = new Address();
-            var sellerAvatarAddress = new Address();
-            var productId = Guid.NewGuid();
-            var playerPrivateKey = new PrivateKey();
-            var buyerAvatarAddress = playerPrivateKey.PublicKey.ToAddress().Derive(string.Format(CreateAvatar2.DeriveFormat, 0));
-            var query = $@"mutation {{
-                action {{
-                    buy(sellerAgentAddress: ""{sellerAgentAddress}"", sellerAvatarAddress: ""{sellerAvatarAddress}"", buyerAvatarAddress: ""{buyerAvatarAddress}"", productId: ""{productId}"")
-                }}
-            }}";
-            var result = await ExecuteQueryAsync(query);
-            Assert.Null(result.Errors);
-
-            var txIds = BlockChain.GetStagedTransactionIds();
-            Assert.Single(txIds);
-            var tx = BlockChain.GetTransaction(txIds.First());
-            var expected = new Dictionary<string, object>
-            {
-                ["action"] = new Dictionary<string, object>
-                {
-                    ["buy"] = tx.Id.ToString(),
-                }
-            };
-            Assert.Equal(expected, result.Data);
-            Assert.Single(tx.Actions);
-            var action = (Buy4) tx.Actions.First().InnerAction;
-            Assert.Equal(productId, action.productId);
-            Assert.Equal(sellerAgentAddress, action.sellerAgentAddress);
-            Assert.Equal(sellerAvatarAddress, action.sellerAvatarAddress);
-            Assert.Equal(buyerAvatarAddress, action.buyerAvatarAddress);
-        }
-
         [Theory]
         [MemberData(nameof(CombinationEquipmentMember))]
         public async Task CombinationEquipment(Address avatarAddress, int recipeId, int slotIndex, int? subRecipeId)
@@ -505,7 +470,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (CombinationEquipment4) tx.Actions.First().InnerAction;
+            var action = (CombinationEquipment) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(recipeId, action.RecipeId);
             Assert.Equal(slotIndex, action.SlotIndex);
@@ -562,7 +527,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (ItemEnhancement5) tx.Actions.First().InnerAction;
+            var action = (ItemEnhancement) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(itemId, action.itemId);
             Assert.Equal(materialId, action.materialId);
@@ -587,56 +552,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             },
         };
 
-        [Theory]
-        [MemberData(nameof(SellMember))]
-        public async Task Sell(Address sellerAvatarAddress, Guid itemId, int price)
-        {
-            var playerPrivateKey = new PrivateKey();
-            var query = $@"mutation {{
-                action {{
-                    sell(sellerAvatarAddress: ""{sellerAvatarAddress}"", itemId: ""{itemId}"", price: {price})
-                }}
-            }}";
-            var result = await ExecuteQueryAsync(query);
-            Assert.Null(result.Errors);
-
-            var txIds = BlockChain.GetStagedTransactionIds();
-            Assert.Single(txIds);
-            var tx = BlockChain.GetTransaction(txIds.First());
-            var expected = new Dictionary<string, object>
-            {
-                ["action"] = new Dictionary<string, object>
-                {
-                    ["sell"] = tx.Id.ToString(),
-                }
-            };
-            Assert.Equal(expected, result.Data);
-            Assert.Single(tx.Actions);
-            var action = (Sell3) tx.Actions.First().InnerAction;
-            Assert.Equal(sellerAvatarAddress, action.sellerAvatarAddress);
-            Assert.Equal(itemId, action.itemId);
-            var currency = new GoldCurrencyState(
-                (Dictionary)BlockChain.GetState(GoldCurrencyState.Address)
-            ).Currency;
-
-            Assert.Equal(price * currency, action.price);
-        }
-
-        public static IEnumerable<object?[]> SellMember => new List<object?[]>
-        {
-            new object?[]
-            {
-                new Address(),
-                Guid.NewGuid(),
-                0,
-            },
-            new object?[]
-            {
-                new Address(),
-                Guid.NewGuid(),
-                100,
-            },
-        };
 
         [Theory]
         [MemberData(nameof(CombinationConsumableMember))]
@@ -663,7 +578,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
-            var action = (CombinationConsumable3) tx.Actions.First().InnerAction;
+            var action = (CombinationConsumable) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(recipeId, action.recipeId);
             Assert.Equal(slotIndex, action.slotIndex);
@@ -725,7 +640,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Single(tx.Actions);
             var action = (MonsterCollect) tx.Actions.First().InnerAction;
             Assert.Equal(1, action.level);
-            Assert.Equal(0, action.collectionRound);
         }
 
         [Fact]
@@ -770,7 +684,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Single(tx.Actions);
             var action = (ClaimMonsterCollectionReward) tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
-            Assert.Equal(0, action.collectionRound);
         }
 
         // [Fact]
@@ -850,8 +763,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     genesis.Hash,
                     new PolymorphicAction<ActionBase>[] { }
                 );
-            string hexEncoded = ByteUtil.Hex(tx.Serialize(true));
-            query = $"mutation {{ stageTx(payload: \"{hexEncoded}\") }}";
+            string base64Encoded = Convert.ToBase64String(tx.Serialize(true));
+            query = $"mutation {{ stageTx(payload: \"{base64Encoded}\") }}";
             result = await ExecuteQueryAsync(query);
             Assert.Null(result.Errors);
             Assert.Equal(
