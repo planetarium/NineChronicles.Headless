@@ -1,12 +1,11 @@
 using Bencodex.Types;
-using System;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
-using Libplanet.Blockchain;
-using Libplanet.Crypto;
+using Nekoyume.Action;
+using Nekoyume.Model;
 using Nekoyume.Model.State;
-using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+using System;
 using Log = Serilog.Log;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -38,7 +37,16 @@ namespace NineChronicles.Headless.GraphTypes
                             throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
                         }
 
-                        Address address = privateKey.ToAddress();
+                        Address userAddress = privateKey.ToAddress();
+                        Address activatedAddress = userAddress.Derive(ActivationKey.DeriveKey);
+
+                        if (blockChain.GetState(activatedAddress) is Bencodex.Types.Boolean)
+                        {
+                            return true;
+                        }
+
+                        // Preserve previous check code due to migration period.
+                        // TODO: Remove this code after v100061+
                         IValue state = blockChain.GetState(ActivatedAccountsState.Address);
 
                         if (state is Bencodex.Types.Dictionary asDict)
@@ -46,7 +54,7 @@ namespace NineChronicles.Headless.GraphTypes
                             var activatedAccountsState = new ActivatedAccountsState(asDict);
                             var activatedAccounts = activatedAccountsState.Accounts;
                             return activatedAccounts.Count == 0
-                                   || activatedAccounts.Contains(address);
+                                   || activatedAccounts.Contains(userAddress);
                         }
 
                         return true;
