@@ -437,6 +437,7 @@ type StandaloneQuery {
   minerAddress: Address
   monsterCollectionStatus: MonsterCollectionStatusType
   transaction: TransactionHeadlessQuery!
+  activated(invitationCode: String!): Boolean!
 }
 
 type StandaloneSubscription {
