@@ -1,0 +1,52 @@
+on: 
+  push:
+    branches:
+      - ck-development
+
+name: Build headless
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dotnet-version: 
+          - 3.1.x
+        targetPlatform:
+          - Windows
+          - macOS
+          - Linux
+    steps:
+      - name: Set environment variables
+        run: |
+          targetPlatform=${{ matrix.targetPlatform }}
+          echo "COMMIT=${{ github.sha }}" >> $GITHUB_ENV
+
+          if [ "$targetPlatform" == "Windows" ]; then
+            echo "BUILD_TARGET=win-x64" >> $GITHUB_ENV
+          elif [ "$targetPlatform" == "macOS" ]; then
+            echo "BUILD_TARGET=osx-x64" >> $GITHUB_ENV
+          elif [ "$targetPlatform" == "Linux" ]; then
+            echo "BUILD_TARGET=linux-x64" >> $GITHUB_ENV
+          fi
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+          submodules: recursive
+      - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v1.7.2
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet publish NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj -c Release -r $BUILD_TARGET -o ${{ github.workspace }}/out --self-contained --version-suffix $COMMIT && ls -la && pwd
+      - name: Test
+        run: dotnet test --no-restore --verbosity normal
+      - name: Uploading build to artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: 9c-headless-${{ matrix.targetPlatform }}-${{ github.sha }}
+          path: ${{ github.workspace }}/out/**/*
+          retention-days: 1
