@@ -65,5 +65,7 @@ namespace Libplanet.Headless.Hosting
         public bool Preload { get; set; } = true;
 
         public int MinimumBroadcastTarget { get; set; } = 10;
+
+        public int BucketSize { get; set; } = 16;
     }
 }

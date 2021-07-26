@@ -162,7 +162,10 @@ namespace NineChronicles.Headless.Executable
             [Option(Description ="Run node without preloading.")]
             bool skipPreload = false,
             [Option(Description = "Minimum number of peers to broadcast message.  10 by default.")]
-            int minimumBroadcastTarget = 10
+            int minimumBroadcastTarget = 10,
+            [Option(Description =
+                "Number of the peers can be stored in each bucket.  16 by default.")]
+            int bucketSize = 16
         )
         {
 #if SENTRY || ! DEBUG
@@ -291,7 +294,8 @@ namespace NineChronicles.Headless.Executable
                         demandBuffer: demandBuffer,
                         staticPeerStrings: staticPeerStrings,
                         preload: !skipPreload,
-                        minimumBroadcastTarget: minimumBroadcastTarget
+                        minimumBroadcastTarget: minimumBroadcastTarget,
+                        bucketSize: bucketSize
                     );
 
                 if (rpcServer)
