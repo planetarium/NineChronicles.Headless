@@ -163,6 +163,7 @@ namespace Libplanet.Headless.Hosting
                     BranchpointThreshold = 50,
                     StaticPeers = Properties.StaticPeers,
                     MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
+                    BucketSize = Properties.BucketSize
                 }
             );
 
