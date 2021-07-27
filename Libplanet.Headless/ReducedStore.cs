@@ -149,5 +149,17 @@ namespace Libplanet.Headless
 
         public void UnstageTransactionIds(ISet<TxId> txids) =>
             InternalStore.UnstageTransactionIds(txids);
+
+        public void PutTxIdBlockHashIndex(TxId txId, BlockHash blockHash) =>
+            InternalStore.PutTxIdBlockHashIndex(txId, blockHash);
+
+        public BlockHash? GetFirstTxIdBlockHashIndex(TxId txId) =>
+            InternalStore.GetFirstTxIdBlockHashIndex(txId);
+
+        public IEnumerable<BlockHash> IterateTxIdBlockHashIndex(TxId txId) =>
+            InternalStore.IterateTxIdBlockHashIndex(txId);
+
+        public void DeleteTxIdBlockHashIndex(TxId txId, BlockHash blockHash) =>
+            InternalStore.DeleteTxIdBlockHashIndex(txId, blockHash);
     }
 }

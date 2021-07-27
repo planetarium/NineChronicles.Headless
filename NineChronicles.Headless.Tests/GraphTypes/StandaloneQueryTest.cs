@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
@@ -109,7 +110,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var genesisBlock = BlockChain<EmptyAction>.MakeGenesisBlock();
+            var genesisBlock = BlockChain<EmptyAction>.MakeGenesisBlock(
+                HashAlgorithmType.Of<SHA256>()
+            );
 
             // 에러로 인하여 NineChroniclesNodeService 를 사용할 수 없습니다. https://git.io/JfS0M
             // 따라서 LibplanetNodeService로 비슷한 환경을 맞춥니다.
@@ -422,6 +425,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+                    HashAlgorithmType.Of<SHA256>(),
                     new PolymorphicAction<ActionBase>[]
                     {
                         new InitializeStates(
@@ -703,6 +707,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>().MaximumTransactions).BlockAction;
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+                    HashAlgorithmType.Of<SHA256>(),
                     new PolymorphicAction<ActionBase>[]
                     {
                         new InitializeStates(

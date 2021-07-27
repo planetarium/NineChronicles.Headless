@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Cryptography;
 using Bencodex;
 using GraphQL;
 using Libplanet;
@@ -31,7 +32,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new VolatileStagePolicy<NCAction>(),
                 new DefaultStore(null),
                 new TrieStateStore(new DefaultKeyValueStore(null), new DefaultKeyValueStore(null)),
-                BlockChain<NCAction>.MakeGenesisBlock());
+                BlockChain<NCAction>.MakeGenesisBlock(HashAlgorithmType.Of<SHA256>()));
         }
 
         [Fact]
