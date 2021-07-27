@@ -67,5 +67,7 @@ namespace Libplanet.Headless.Hosting
         public int MinimumBroadcastTarget { get; set; } = 10;
 
         public int BucketSize { get; set; } = 16;
+
+        public string ChainTipStaleBehavior { get; set; } = "reboot";
     }
 }
