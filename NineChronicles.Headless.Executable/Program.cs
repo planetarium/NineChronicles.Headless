@@ -165,7 +165,11 @@ namespace NineChronicles.Headless.Executable
             int minimumBroadcastTarget = 10,
             [Option(Description =
                 "Number of the peers can be stored in each bucket.  16 by default.")]
-            int bucketSize = 16
+            int bucketSize = 16,
+            [Option(Description =
+                "Determines behavior when the chain's tip is stale. \"reboot\" and \"preload\" " +
+                "is available and \"reboot\" option is selected by default.")]
+            string chainTipStaleBehaviorType = "reboot"
         )
         {
 #if SENTRY || ! DEBUG
@@ -295,7 +299,8 @@ namespace NineChronicles.Headless.Executable
                         staticPeerStrings: staticPeerStrings,
                         preload: !skipPreload,
                         minimumBroadcastTarget: minimumBroadcastTarget,
-                        bucketSize: bucketSize
+                        bucketSize: bucketSize,
+                        chainTipStaleBehaviorType: chainTipStaleBehaviorType
                     );
 
                 if (rpcServer)
