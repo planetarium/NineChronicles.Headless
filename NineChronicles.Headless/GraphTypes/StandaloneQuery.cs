@@ -336,8 +336,19 @@ namespace NineChronicles.Headless.GraphTypes
 
                     string invitationCode = context.GetArgument<string>("invitationCode");
                     ActivationKey activationKey = ActivationKey.Decode(invitationCode);
+                    if (blockChain.GetState(activationKey.PendingAddress) is Dictionary dictionary)
+                    {
+                        var pending = new PendingActivationState(dictionary);
+                        ActivateAccount action = activationKey.CreateActivateAccount(pending.Nonce);
+                        if (pending.Verify(action))
+                        {
+                            return false;
+                        }
 
-                    return !(blockChain.GetState(activationKey.PendingAddress) is Dictionary);
+                        throw new ExecutionError($"invitationCode is invalid.");
+                    }
+
+                    return true;
                 }
             );
         }
