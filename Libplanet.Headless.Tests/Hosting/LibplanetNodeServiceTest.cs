@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex.Types;
+using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
@@ -21,7 +23,7 @@ namespace Libplanet.Headless.Tests.Hosting
         [Fact]
         public void Constructor()
         {
-            var genesisBlock = BlockChain<DummyAction>.MakeGenesisBlock();
+            var genesisBlock = BlockChain<DummyAction>.MakeGenesisBlock(HashAlgorithmType.Of<SHA256>());
             var service = new LibplanetNodeService<DummyAction>(
                 new LibplanetNodeServiceProperties<DummyAction>()
                 {
@@ -95,6 +97,9 @@ namespace Libplanet.Headless.Tests.Hosting
             {
                 return null;
             }
+
+            public HashAlgorithmType GetHashAlgorithm(long blockIndex) =>
+                HashAlgorithmType.Of<SHA256>();
         }
 
         private class DummyAction : IAction
