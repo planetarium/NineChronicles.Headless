@@ -64,7 +64,9 @@ namespace NineChronicles.Headless.Properties
                 int demandBuffer = 1150,
                 string[]? staticPeerStrings = null,
                 bool preload = true,
-                int minimumBroadcastTarget = 10)
+                int minimumBroadcastTarget = 10,
+                int bucketSize = 16,
+                string chainTipStaleBehaviorType = "reboot")
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
@@ -105,6 +107,8 @@ namespace NineChronicles.Headless.Properties
                 StaticPeers = staticPeers,
                 Preload = preload,
                 MinimumBroadcastTarget = minimumBroadcastTarget,
+                BucketSize = bucketSize,
+                ChainTipStaleBehavior = chainTipStaleBehaviorType,
             };
         }
 
