@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
@@ -109,7 +110,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var genesisBlock = BlockChain<EmptyAction>.MakeGenesisBlock();
+            var genesisBlock = BlockChain<EmptyAction>.MakeGenesisBlock(
+                HashAlgorithmType.Of<SHA256>()
+            );
 
             // 에러로 인하여 NineChroniclesNodeService 를 사용할 수 없습니다. https://git.io/JfS0M
             // 따라서 LibplanetNodeService로 비슷한 환경을 맞춥니다.
@@ -422,6 +425,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+                    HashAlgorithmType.Of<SHA256>(),
                     new PolymorphicAction<ActionBase>[]
                     {
                         new InitializeStates(
@@ -473,7 +477,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 .As<Dictionary<string, object>>()["activationStatus"]
                 .As<Dictionary<string, object>>()["activated"];
 
-            // ActivatedAccounts가 비어있을때는 true이고 하나라도 있을경우 false
+            // If we don't use activated accounts, bypass check (always true).
             Assert.Equal(!existsActivatedAccounts, result);
 
             var nonce = new byte[] {0x00, 0x01, 0x02, 0x03};
@@ -493,7 +497,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 .As<Dictionary<string, object>>()["activationStatus"]
                 .As<Dictionary<string, object>>()["activated"];
 
-            // ActivatedAccounts에 Address가 추가 되었기 때문에 true
             Assert.True(result);
         }
 
@@ -704,6 +707,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>().MaximumTransactions).BlockAction;
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+                    HashAlgorithmType.Of<SHA256>(),
                     new PolymorphicAction<ActionBase>[]
                     {
                         new InitializeStates(

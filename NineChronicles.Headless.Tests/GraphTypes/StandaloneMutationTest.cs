@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using Xunit;
@@ -104,7 +105,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var privateKey = new PrivateKey();
             (ActivationKey activationKey, PendingActivationState pendingActivation) =
                 ActivationKey.Create(privateKey, nonce);
-            PolymorphicAction<ActionBase> action = new CreatePendingActivation(pendingActivation);
+            NCAction action = new CreatePendingActivation(pendingActivation);
             BlockChain.MakeTransaction(AdminPrivateKey, new[] { action });
             await BlockChain.MineBlock(AdminAddress);
 
@@ -118,11 +119,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 .As<Dictionary<string, object>>()["activateAccount"];
             Assert.True(result);
 
-            var state = (Bencodex.Types.Dictionary)BlockChain.GetState(
-                ActivatedAccountsState.Address);
-            var activatedAccountsState = new ActivatedAccountsState(state);
             Address userAddress = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!.ToAddress();
-            Assert.True(activatedAccountsState.Accounts.Contains(userAddress));
+            IValue? state = BlockChain.GetState(
+                userAddress.Derive(ActivationKey.DeriveKey)
+            );
+            Assert.True((Bencodex.Types.Boolean)state);
         }
 
         [Theory]
@@ -785,6 +786,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             IImmutableSet<Address> activatedAccounts,
             RankingState? rankingState = null
         ) => BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+            HashAlgorithmType.Of<SHA256>(),
             new PolymorphicAction<ActionBase>[]
             {
                 new InitializeStates(

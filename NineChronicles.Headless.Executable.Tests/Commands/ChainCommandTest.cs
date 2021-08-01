@@ -1,6 +1,8 @@
 using System;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text.Json;
+using Libplanet;
 using Libplanet.Blockchain;
 using Libplanet.Blocks;
 using Libplanet.Store;
@@ -33,7 +35,9 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [InlineData(StoreType.MonoRocksDb)]
         public void Tip(StoreType storeType)
         {
-            Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock();
+            Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
+                HashAlgorithmType.Of<SHA256>()
+            );
             IStore store = storeType.CreateStore(_storePath);
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
