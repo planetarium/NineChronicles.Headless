@@ -452,3 +452,4 @@ modules.xml
 
 # Except NineChronicles.Standalone.sln
 !NineChronicles.Standalone.sln
+Build
