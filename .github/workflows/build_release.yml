@@ -6,7 +6,7 @@ on:
 name: Build headless 'rc'
 
 jobs:
-  build:
+  build_release:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     strategy:

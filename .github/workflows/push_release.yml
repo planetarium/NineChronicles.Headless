@@ -1,4 +1,7 @@
 on:  
+  push:
+    tags:
+      - '*' 
   workflow_dispatch:  # click the button on Github repo!
 
 name: Push headless 'rc' as release
@@ -11,28 +14,35 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Get tag
-        id: tag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+      - name: Get recent tag
+        id: recentTag
+        uses: jimschubert/query-tag-action@v1
+        with:
+          include: 'v*'
 
-      - name: Set environment variables
+      - name: Show Tag
+        id: display
         run: |
-          targetPlatform=${{ matrix.targetPlatform }}
-          echo "COMMIT=${{ github.sha }}" >> $GITHUB_ENV
-          echo "TAG=${{ steps.tag.outputs.tag }}" >> $GITHUB_ENV
-
-          if [ "$targetPlatform" == "Windows" ]; then
-            echo "BUILD_TARGET=win-x64" >> $GITHUB_ENV
-          elif [ "$targetPlatform" == "macOS" ]; then
-            echo "BUILD_TARGET=osx-x64" >> $GITHUB_ENV
-          elif [ "$targetPlatform" == "Linux" ]; then
-            echo "BUILD_TARGET=linux-x64" >> $GITHUB_ENV
-          fi
-          echo $TAG
+          echo 'Output from Find Tag: ${{steps.recentTag.outputs.tag}}'
 
       - name: Changelog
         uses: scottbrenner/generate-changelog-action@master
         id: Changelog
+
+      - name: Wait on build 'headless'
+        uses: tomchv/wait-my-workflow@v1.1.0
+        id: wait-build-headless
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: 'build-release'
+          ref: ${{ github.sha }}
+          intervalSeconds: 60
+          timeoutSeconds: 3600
+
+      # - name: Download artifacts - 'headless'
+      #   uses: actions/download-artifact@v2
+      #   with:
+      #     name: 9c-headless-Linux-${{steps.recentTag.outputs.tag}}
 
       - name: Download artifacts - 'headless'
         uses: dawidd6/action-download-artifact@v2
@@ -40,20 +50,19 @@ jobs:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: build_release.yml
           workflow_conclusion: success
-          name: 9c-headless-Linux-${{ env.TAG }}
-          path: ${{ github.workspace }}/9c-headless-Linux
+          name: 9c-headless-Linux-${{steps.recentTag.outputs.tag}}
+          path: ${{ github.workspace }}/9c-headless-Linux-${{steps.recentTag.outputs.tag}}
 
       - name: Compress files
         run: |
-          cd ${{ github.workspace }}/9c-headless-Linux
-          zip -R ${{ github.workspace }}/9c-headless-Linux.zip *
+          cd ${{ github.workspace }}/9c-headless-Linux-${{steps.recentTag.outputs.tag}}
+          zip -R ${{ github.workspace }}/9c-headless-Linux-${{steps.recentTag.outputs.tag}}.zip *
           cd ${{ github.workspace }}
           ls -la ${{ github.workspace }}
           echo "${{ steps.Changelog.outputs.changelog }}"
 
       - name: Release
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
         with:
           name: Release ${{ github.ref }}        
           tag_name: ${{ github.ref }}
@@ -63,4 +72,4 @@ jobs:
           prerelease: false
           fail_on_unmatched_files: true
           files: |
-            9c-headless-Linux.zip
+            9c-headless-Linux-${{steps.recentTag.outputs.tag}}.zip
