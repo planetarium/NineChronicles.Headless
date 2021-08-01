@@ -1,0 +1,66 @@
+on:  
+  workflow_dispatch:  # click the button on Github repo!
+
+name: Push headless 'rc' as release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Get tag
+        id: tag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+
+      - name: Set environment variables
+        run: |
+          targetPlatform=${{ matrix.targetPlatform }}
+          echo "COMMIT=${{ github.sha }}" >> $GITHUB_ENV
+          echo "TAG=${{ steps.tag.outputs.tag }}" >> $GITHUB_ENV
+
+          if [ "$targetPlatform" == "Windows" ]; then
+            echo "BUILD_TARGET=win-x64" >> $GITHUB_ENV
+          elif [ "$targetPlatform" == "macOS" ]; then
+            echo "BUILD_TARGET=osx-x64" >> $GITHUB_ENV
+          elif [ "$targetPlatform" == "Linux" ]; then
+            echo "BUILD_TARGET=linux-x64" >> $GITHUB_ENV
+          fi
+          echo $TAG
+
+      - name: Changelog
+        uses: scottbrenner/generate-changelog-action@master
+        id: Changelog
+
+      - name: Download artifacts - 'headless'
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          workflow: build_release.yml
+          workflow_conclusion: success
+          name: 9c-headless-Linux-${{ env.TAG }}
+          path: ${{ github.workspace }}/9c-headless-Linux
+
+      - name: Compress files
+        run: |
+          cd ${{ github.workspace }}/9c-headless-Linux
+          zip -R ${{ github.workspace }}/9c-headless-Linux.zip *
+          cd ${{ github.workspace }}
+          ls -la ${{ github.workspace }}
+          echo "${{ steps.Changelog.outputs.changelog }}"
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          name: Release ${{ github.ref }}        
+          tag_name: ${{ github.ref }}
+          body: |
+            ${{ steps.Changelog.outputs.changelog }}
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: true
+          files: |
+            9c-headless-Linux.zip
