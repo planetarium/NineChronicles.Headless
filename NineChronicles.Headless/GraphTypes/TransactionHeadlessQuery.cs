@@ -153,23 +153,16 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                     
                     TxId txId = context.GetArgument<TxId>("txId");
-                    BlockHash txExecutedBlockHash;
-                    try
+                    if (!(store.GetFirstTxIdBlockHashIndex(txId) is { } txExecutedBlockHash))
                     {
-                        txExecutedBlockHash = store
-                            .IterateTxIdBlockHashIndex(txId)
-                            .First(x => blockChain.ContainsBlock(x));
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        return store.IterateStagedTransactionIds().Contains(txId) 
-                            ? new TxResult(TxStatus.STAGING, null, null) 
+                        return store.IterateStagedTransactionIds().Contains(txId)
+                            ? new TxResult(TxStatus.STAGING, null, null)
                             : new TxResult(TxStatus.INVALID, null, null);
                     }
 
                     TxExecution execution = blockChain.GetTxExecution(txExecutedBlockHash, txId);
                     Block<PolymorphicAction<ActionBase>> txExecutedBlock = blockChain[txExecutedBlockHash];
-
+  
                     switch (execution)
                     {
                         case TxSuccess txSuccess:
