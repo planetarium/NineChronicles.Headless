@@ -502,6 +502,7 @@ type TransactionHeadlessQuery {
   getTx(txId: TxId!): TransactionType_1
   createUnsignedTx(publicKey: String!, plainValue: String!): String!
   attachSignature(unsignedTransaction: String!, signature: String!): String!
+  transactionResult(txId: TxId!): TxResultType!
 }
 
 type TransactionQuery {
@@ -531,6 +532,19 @@ type TransferNCGHistoryType {
 }
 
 scalar TxId
+
+type TxResultType {
+  txStatus: TxStatus!
+  blockIndex: Long
+  blockHash: String
+}
+
+enum TxStatus {
+  INVALID
+  STAGING
+  SUCCESS
+  FAILURE
+}
 
 type ValidationQuery {
   metadata(raw: String!): Boolean!

@@ -135,6 +135,11 @@
                 StatType
             </a>
         </li>
+        <li  title="TxStatus">
+            <a href="txstatus.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                TxStatus
+            </a>
+        </li>
         <li  title="__DirectiveLocation">
             <a href="directivelocation.spec.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 __DirectiveLocation
@@ -430,6 +435,11 @@
                 TransferNCGHistoryType
             </a>
         </li>
+        <li  title="TxResultType">
+            <a href="txresulttype.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                TxResultType
+            </a>
+        </li>
         <li  title="ValidationQuery">
             <a href="validationquery.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 ValidationQuery
@@ -528,7 +538,7 @@
             </a>
             GraphQL Schema definition
         </h2>
-        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">TransactionHeadlessQuery</span> {</li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="meta">nextTxNonce</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>!): <a class="support type" href="long.doc.html">Long</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>txId</strong>: </span></span></li><li><span class="tab"><span class="meta">getTx</span>(<span class="meta">txId</span>: <a class="support type" href="txid.doc.html">TxId</a>!): <a class="support type" href="transactiontype_1.doc.html">TransactionType_1</a> </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>publicKey</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>plainValue</strong>: </span></span></li><li><span class="tab"><span class="meta">createUnsignedTx</span>(<span class="meta">publicKey</span>: <a class="support type" href="string.doc.html">String</a>!, <span class="meta">plainValue</span>: <a class="support type" href="string.doc.html">String</a>!): <a class="support type" href="string.doc.html">String</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>unsignedTransaction</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>signature</strong>: </span></span></li><li><span class="tab"><span class="meta">attachSignature</span>(<span class="meta">unsignedTransaction</span>: <a class="support type" href="string.doc.html">String</a>!, <span class="meta">signature</span>: <a class="support type" href="string.doc.html">String</a>!): <a class="support type" href="string.doc.html">String</a>! </span></li><li>}</li></ul></code>
+        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">TransactionHeadlessQuery</span> {</li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>address</strong>: </span></span></li><li><span class="tab"><span class="meta">nextTxNonce</span>(<span class="meta">address</span>: <a class="support type" href="address.doc.html">Address</a>!): <a class="support type" href="long.doc.html">Long</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>txId</strong>: </span></span></li><li><span class="tab"><span class="meta">getTx</span>(<span class="meta">txId</span>: <a class="support type" href="txid.doc.html">TxId</a>!): <a class="support type" href="transactiontype_1.doc.html">TransactionType_1</a> </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>publicKey</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>plainValue</strong>: </span></span></li><li><span class="tab"><span class="meta">createUnsignedTx</span>(<span class="meta">publicKey</span>: <a class="support type" href="string.doc.html">String</a>!, <span class="meta">plainValue</span>: <a class="support type" href="string.doc.html">String</a>!): <a class="support type" href="string.doc.html">String</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>unsignedTransaction</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>signature</strong>: </span></span></li><li><span class="tab"><span class="meta">attachSignature</span>(<span class="meta">unsignedTransaction</span>: <a class="support type" href="string.doc.html">String</a>!, <span class="meta">signature</span>: <a class="support type" href="string.doc.html">String</a>!): <a class="support type" href="string.doc.html">String</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>txId</strong>: </span></span></li><li><span class="tab"><span class="meta">transactionResult</span>(<span class="meta">txId</span>: <a class="support type" href="txid.doc.html">TxId</a>!): <a class="support type" href="txresulttype.doc.html">TxResultType</a>! </span></li><li>}</li></ul></code>
     </div>
 </section>
 <section>
