@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Bencodex;
 using Bencodex.Types;
-using BTAI;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
@@ -206,6 +205,8 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<LongGraphType>>(
                 name: "nextTxNonce",
+                deprecationReason: "The root query is not the best place for nextTxNonce so it was moved. " +
+                                   "Use transaction.nextTxNonce()",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "Target address to query" }
                 ),
@@ -224,6 +225,8 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<TransactionType<NCAction>>(
                 name: "getTx",
+                deprecationReason: "The root query is not the best place for getTx so it was moved. " +
+                                   "Use transaction.getTx()",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<TxIdType>>
                         {Name = "txId", Description = "transaction id."}
@@ -308,6 +311,12 @@ namespace NineChronicles.Headless.GraphTypes
                     throw new ExecutionError(
                         $"{nameof(AgentState)} Address: {agentAddress} is null.");
                 });
+
+            Field<NonNullGraphType<TransactionHeadlessQuery>>(
+                name: "transaction",
+                description: "Query for transaction.",
+                resolve: context => new TransactionHeadlessQuery(standaloneContext)
+            );
 
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "activated",
