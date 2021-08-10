@@ -124,6 +124,29 @@ namespace Libplanet.Headless.Hosting
                 );
             }
 
+            if (Properties.NonblockRenderer)
+            {
+                renderers = renderers.Select(r =>
+                {
+                    if (r is IActionRenderer<T> ar)
+                    {
+                        return new NonblockActionRenderer<T>(
+                            ar,
+                            Properties.NonblockRendererQueue,
+                            NonblockActionRenderer<T>.FullMode.DropOldest
+                        );
+                    }
+                    else
+                    {
+                        return new NonblockRenderer<T>(
+                            r,
+                            Properties.NonblockRendererQueue,
+                            NonblockActionRenderer<T>.FullMode.DropOldest
+                        );
+                    }
+                });
+            }
+
             BlockChain = new BlockChain<T>(
                 policy: blockPolicy,
                 store: Store,
@@ -249,11 +272,18 @@ namespace Libplanet.Headless.Hosting
             return !(boundPeer is null);
         }
 
-        public override Task StopAsync(CancellationToken cancellationToken)
+        public override async Task StopAsync(CancellationToken cancellationToken)
         {
             _stopRequested = true;
             StopMining();
-            return Swarm.StopAsync(cancellationToken);
+            await Swarm.StopAsync(cancellationToken);
+            foreach (IRenderer<T> renderer in BlockChain.Renderers)
+            {
+                if (renderer is IDisposable disposableRenderer)
+                {
+                    disposableRenderer.Dispose();
+                }
+            }
         }
 
         protected (IStore, IStateStore) LoadStore(string path, string type, int statesCacheSize)

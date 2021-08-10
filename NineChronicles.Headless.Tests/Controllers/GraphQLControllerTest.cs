@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blockchain;
@@ -34,7 +35,9 @@ namespace NineChronicles.Headless.Tests.Controllers
             var stateStore = new TrieStateStore(
                 new DefaultKeyValueStore(null),
                 new DefaultKeyValueStore(null));
-            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock();
+            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+                HashAlgorithmType.Of<SHA256>()
+            );
             var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
                 new BlockPolicy<PolymorphicAction<ActionBase>>(),
                 new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
