@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
+using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
@@ -41,5 +43,8 @@ namespace NineChronicles.Headless
         public IComparer<BlockPerception> CanonicalChainComparer { get; } = new TotalDifficultyComparer(TimeSpan.FromSeconds(30));
 
         public IAction BlockAction { get; }
+
+        public HashAlgorithmType GetHashAlgorithm(long blockIndex) =>
+            HashAlgorithmType.Of<SHA256>();
     }
 }

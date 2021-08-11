@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Security.Cryptography;
+using Libplanet;
 using Libplanet.Blockchain;
 using Libplanet.Blocks;
 using Libplanet.Store;
@@ -25,7 +27,9 @@ namespace NineChronicles.Headless.Executable.Tests.Store
         public void GetGenesisBlock(StoreType storeType)
         {
             IStore store = storeType.CreateStore(_storePath);
-            Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock();
+            Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
+                HashAlgorithmType.Of<SHA256>()
+            );
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
             store.PutBlock(genesisBlock);
