@@ -164,12 +164,12 @@ namespace NineChronicles.Headless
                     try
                     {
                         long nextBlockIndex = chain.Tip.Index + 1;
-                        bool isTargetBlock = blockPolicy is BlockPolicy bp
+                        bool authBlock = blockPolicy is BlockPolicy bp
                                              // Copied from https://git.io/JLxNd
                                              && nextBlockIndex > 0
                                              && nextBlockIndex <= bp.AuthorizedMinersState?.ValidUntil
                                              && nextBlockIndex % bp.AuthorizedMinersState?.Interval == 0;
-                        if (swarm.Running && (!authorizedMiner || isTargetBlock))
+                        if (swarm.Running && ((authorizedMiner && authBlock) || (!authorizedMiner && !authBlock)))
                         {
                             Log.Debug("Start mining.");
 
