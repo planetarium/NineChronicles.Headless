@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit.Abstractions;
@@ -44,6 +45,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var sheets = TableSheetsImporter.ImportSheets(fixturePath);
             var blockAction = new RewardGold();
             var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
+                HashAlgorithmType.Of<SHA256>(),
                 new NCAction[]
                 {
                     new InitializeStates(

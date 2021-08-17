@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using Xunit;
@@ -763,8 +764,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     genesis.Hash,
                     new PolymorphicAction<ActionBase>[] { }
                 );
-            string hexEncoded = ByteUtil.Hex(tx.Serialize(true));
-            query = $"mutation {{ stageTx(payload: \"{hexEncoded}\") }}";
+            string base64Encoded = Convert.ToBase64String(tx.Serialize(true));
+            query = $"mutation {{ stageTx(payload: \"{base64Encoded}\") }}";
             result = await ExecuteQueryAsync(query);
             Assert.Null(result.Errors);
             Assert.Equal(
@@ -785,6 +786,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             IImmutableSet<Address> activatedAccounts,
             RankingState? rankingState = null
         ) => BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+            HashAlgorithmType.Of<SHA256>(),
             new PolymorphicAction<ActionBase>[]
             {
                 new InitializeStates(
