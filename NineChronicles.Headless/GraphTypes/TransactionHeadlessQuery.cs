@@ -13,7 +13,9 @@ using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using System.Text.Json;
 using System.Linq;
 using System.Collections.Generic;
+using Libplanet.Blocks;
 using Libplanet.Crypto;
+using Libplanet.Store;
 using Newtonsoft.Json.Linq;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -129,6 +131,49 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return Convert.ToBase64String(signedTransaction.Serialize(true));
                 });
+            
+            Field<NonNullGraphType<TxResultType>>(
+                name: "transactionResult",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<TxIdType>>
+                        {Name = "txId", Description = "transaction id."}
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    if (!(standaloneContext.Store is IStore store))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.Store)} was not set yet!");
+                    }
+                    
+                    TxId txId = context.GetArgument<TxId>("txId");
+                    if (!(store.GetFirstTxIdBlockHashIndex(txId) is { } txExecutedBlockHash))
+                    {
+                        return store.IterateStagedTransactionIds().Contains(txId)
+                            ? new TxResult(TxStatus.STAGING, null, null)
+                            : new TxResult(TxStatus.INVALID, null, null);
+                    }
+
+                    TxExecution execution = blockChain.GetTxExecution(txExecutedBlockHash, txId);
+                    Block<PolymorphicAction<ActionBase>> txExecutedBlock = blockChain[txExecutedBlockHash];
+  
+                    switch (execution)
+                    {
+                        case TxSuccess txSuccess:
+                            return new TxResult(TxStatus.SUCCESS, txExecutedBlock.Index, txExecutedBlock.Hash.ToString());
+                        case TxFailure txFailure:
+                            return new TxResult(TxStatus.FAILURE, txExecutedBlock.Index, txExecutedBlock.Hash.ToString());
+                        default:
+                            throw new NotImplementedException($"{nameof(execution)} is not expected concrete class.");
+                    }
+                }
+            );
         }
     }
 }
