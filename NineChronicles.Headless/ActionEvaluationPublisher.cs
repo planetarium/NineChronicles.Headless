@@ -253,5 +253,15 @@ namespace NineChronicles.Headless
                     }
                 );
         }
+
+        public async Task RemoveClient(Address clientAddress)
+        {
+            if (_clients.ContainsKey(clientAddress))
+            {
+                var client = _clients[clientAddress].hub;
+                await client.LeaveAsync();
+                _clients.Remove(clientAddress);
+            }
+        }
     }
 }

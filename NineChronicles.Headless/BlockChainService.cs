@@ -169,5 +169,12 @@ namespace NineChronicles.Headless
             _publisher.AddClient(address).Wait();
             return UnaryResult(true);
         }
+
+        public UnaryResult<bool> RemoveClient(byte[] addressByte)
+        {
+            var address = new Address(addressByte);
+            _publisher.RemoveClient(address).Wait();
+            return UnaryResult(true);
+        }
     }
 }
