@@ -163,7 +163,9 @@ namespace Libplanet.Headless.Hosting
                     BranchpointThreshold = 50,
                     StaticPeers = Properties.StaticPeers,
                     MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
-                    BucketSize = Properties.BucketSize
+                    BucketSize = Properties.BucketSize,
+                    PollInterval = Properties.PollInterval,
+                    MaximumPollPeers = Properties.MaximumPollPeers
                 }
             );
 
@@ -197,7 +199,6 @@ namespace Libplanet.Headless.Hosting
                     };
                     if (Properties.Peers.Any())
                     {
-                        tasks.Add(CheckDemand(Properties.DemandBuffer, cancellationToken));
                         tasks.Add(CheckPeerTable(cancellationToken));
                     }
 
@@ -520,31 +521,6 @@ namespace Libplanet.Headless.Hosting
                         default:
                             throw new ArgumentException(nameof(Properties.ChainTipStaleBehavior));
                     }
-                }
-
-                cancellationToken.ThrowIfCancellationRequested();
-            }
-        }
-
-        private async Task CheckDemand(int demandBuffer, CancellationToken cancellationToken = default)
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
-                if (!Swarm.Running)
-                {
-                    continue;
-                }
-
-                if ((Swarm.BlockDemand?.Header.Index ?? 0) > (BlockChain.Tip?.Index ?? 0) + demandBuffer)
-                {
-                    var message =
-                        $"Chain's tip is too low. (demand: {Swarm.BlockDemand?.Header.Index}, " +
-                        $"actual: {BlockChain.Tip?.Index}, buffer: {demandBuffer})";
-                    Log.Error(message);
-                    Properties.NodeExceptionOccurred(NodeExceptionType.DemandTooHigh, message);
-                    _stopRequested = true;
-                    break;
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();

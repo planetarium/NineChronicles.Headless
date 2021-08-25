@@ -69,5 +69,9 @@ namespace Libplanet.Headless.Hosting
         public int BucketSize { get; set; } = 16;
 
         public string ChainTipStaleBehavior { get; set; } = "reboot";
+
+        public TimeSpan PollInterval { get; set; } = TimeSpan.FromSeconds(15);
+
+        public int MaximumPollPeers { get; set; } = int.MaxValue;
     }
 }
