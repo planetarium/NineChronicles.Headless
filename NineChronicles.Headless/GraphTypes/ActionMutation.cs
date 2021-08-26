@@ -226,10 +226,10 @@ namespace NineChronicles.Headless.GraphTypes
 
                         var action = new CombinationEquipment
                         {
-                            AvatarAddress = avatarAddress,
-                            RecipeId = recipeId,
-                            SlotIndex = slotIndex,
-                            SubRecipeId = subRecipeId
+                            avatarAddress = avatarAddress,
+                            recipeId = recipeId,
+                            slotIndex = slotIndex,
+                            subRecipeId = subRecipeId
                         };
 
                         var actions = new NCAction[] { action };
@@ -387,7 +387,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                         var action = new CombinationConsumable
                         {
-                            AvatarAddress = avatarAddress,
+                            avatarAddress = avatarAddress,
                             recipeId = recipeId,
                             slotIndex = slotIndex,
                         };
