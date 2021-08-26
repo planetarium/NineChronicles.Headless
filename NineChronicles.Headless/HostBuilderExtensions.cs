@@ -41,7 +41,7 @@ namespace NineChronicles.Headless
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => context);
-                    services.AddHostedService(provider =>
+                    services.AddSingleton(provider =>
                     {
                         StandaloneContext? ctx = provider.GetRequiredService<StandaloneContext>();
                         return new ActionEvaluationPublisher(
