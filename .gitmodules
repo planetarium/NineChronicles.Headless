@@ -1,6 +1,6 @@
 [submodule "Lib9c"]
 	path = Lib9c
-	url = https://github.com/planetarium/lib9c.git
+	url = git@github.com:planetarium/lib9c.git
 [submodule "NineChronicles.RPC.Shared"]
 	path = NineChronicles.RPC.Shared
-	url = https://github.com/planetarium/NineChronicles.RPC.Shared.git
+	url = git@github.com:planetarium/NineChronicles.RPC.Shared.git
