@@ -202,10 +202,6 @@ namespace NineChronicles.Headless
 
                         try
                         {
-                            // FIXME Strip shop state from aev due to its size.
-                            //       we should remove this code after resizing it.
-                            ev.PreviousStates = ev.PreviousStates.SetState(ShopState.Address, new Null());
-                            ev.OutputStates = ev.OutputStates.SetState(ShopState.Address, new Null());
                             formatter.Serialize(df, ev);
                             await client.BroadcastRenderAsync(c.ToArray());
                         }
@@ -233,10 +229,6 @@ namespace NineChronicles.Headless
 
                         try
                         {
-                            // FIXME Strip shop state from aev due to its size.
-                            //       we should remove this code after resizing it.
-                            ev.PreviousStates = ev.PreviousStates.SetState(ShopState.Address, new Null());
-                            ev.OutputStates = ev.OutputStates.SetState(ShopState.Address, new Null());
                             formatter.Serialize(df, ev);
                             await client.BroadcastUnrenderAsync(c.ToArray());
                         }
