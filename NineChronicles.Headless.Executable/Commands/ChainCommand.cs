@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Text.Json;
 using Cocona;
@@ -24,13 +25,13 @@ namespace NineChronicles.Headless.Executable.Commands
         {
             _console = console;
         }
-        
+
         [PrimaryCommand]
         public void Help([FromService] ICoconaHelpMessageBuilder helpMessageBuilder)
         {
             _console.Out.WriteLine(helpMessageBuilder.BuildAndRenderForCurrentContext());
         }
-        
+
         [Command(Description = "Print the tip's header of the chain placed at given store path.")]
         public void Tip(
             [Argument("STORE-TYPE")]
@@ -55,6 +56,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 new NoOpStateStore(),
                 genesisBlock);
             _console.Out.WriteLine(JsonSerializer.Serialize(chain.Tip.Header));
+            (store as IDisposable)?.Dispose();
         }
     }
 }
