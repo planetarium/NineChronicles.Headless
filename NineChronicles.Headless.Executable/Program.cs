@@ -183,7 +183,11 @@ namespace NineChronicles.Headless.Executable
             [Option(Description =
                 "The number of maximum transactions can be included in stage per signer.")]
             int txQuotaPerSigner = 10,
-            bool rpcRemoteServer = false
+            bool rpcRemoteServer = false,
+            [Option(Description = "The interval between block polling.  15 seconds by default.")]
+            int pollInterval = 15,
+            [Option(Description = "The maximum number of peers to poll blocks.  int.MaxValue by default.")]
+            int maximumPollPeers = int.MaxValue
         )
         {
 #if SENTRY || ! DEBUG
@@ -316,7 +320,9 @@ namespace NineChronicles.Headless.Executable
                         preload: !skipPreload,
                         minimumBroadcastTarget: minimumBroadcastTarget,
                         bucketSize: bucketSize,
-                        chainTipStaleBehaviorType: chainTipStaleBehaviorType
+                        chainTipStaleBehaviorType: chainTipStaleBehaviorType,
+                        pollInterval: pollInterval,
+                        maximumPollPeers: maximumPollPeers
                     );
 
                 if (rpcServer)
