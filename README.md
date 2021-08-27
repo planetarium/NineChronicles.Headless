@@ -16,7 +16,7 @@
 ```
 $ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
 Usage: NineChronicles.Headless.Executable [command]
-Usage: NineChronicles.Headless.Executable [--app-protocol-version <String>] [--genesis-block-path <String>] [--no-miner] [--host <String>] [--port <Nullable`1>] [--swarm-private-key <String>] [--minimum-difficulty <Int32>] [--miner-private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--graphql-secret-token-path <String>] [--no-cors] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-action-renders] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--static-peer <String>...] [--miner-count <Int32>] [--skip-preload] [--minimum-broadcast-target <Int32>] [--bucket-size <Int32>] [--completion] [--help] [--version]
+Usage: NineChronicles.Headless.Executable [--app-protocol-version <String>] [--genesis-block-path <String>] [--no-miner] [--host <String>] [--port <Nullable`1>] [--swarm-private-key <String>] [--minimum-difficulty <Int32>] [--miner-private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--graphql-secret-token-path <String>] [--no-cors] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-action-renders] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--static-peer <String>...] [--miner-count <Int32>] [--skip-preload] [--minimum-broadcast-target <Int32>] [--bucket-size <Int32>] [--chain-tip-stale-behavior-type <String>] [--poll-interval <Int32>] [--maximum-poll-peers <Int32>] [--completion] [--help] [--version]
 
 NineChronicles.Headless.Executable
 
@@ -69,6 +69,9 @@ Options:
   --skip-preload                                           Run node without preloading.
   --minimum-broadcast-target <Int32>                       Minimum number of peers to broadcast message.  10 by default. (Default: 10)
   --bucket-size <Int32>                                    Number of the peers can be stored in each bucket.  16 by default. (Default: 16)
+  --chain-tip-stale-behavior-type <String>                 Determines behavior when the chain's tip is stale. "reboot" and "preload" is available and "reboot" option is selected by default. (Default: reboot)
+  --poll-interval <Int32>                                  The interval between block polling.  15 seconds by default. (Default: 15)
+  --maximum-poll-peers <Int32>                             The maximum number of peers to poll blocks.  int.MaxValue by default. (Default: 2147483647)
   --completion                                             Generate a shell completion code
   -h, --help                                               Show help message
   --version                                                Show version
@@ -115,6 +118,8 @@ $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 - `--skip-preload`: Skipping preloading when starting.
 - `--minimum-broadcast-target`: Minimum number of the peers to broadcast messages.
 - `--bucket-size`: Specifies the number of the peers can be stored in each bucket.
+- `--poll-interval`: Specifies the interval between block polling.
+- `--maximum-poll-peers`: Specifies the maximum number of peers to poll blocks.
 
 ### Format
 
