@@ -163,9 +163,7 @@ namespace Libplanet.Headless.Hosting
                     BranchpointThreshold = 50,
                     StaticPeers = Properties.StaticPeers,
                     MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
-                    BucketSize = Properties.BucketSize,
-                    PollInterval = Properties.PollInterval,
-                    MaximumPollPeers = Properties.MaximumPollPeers
+                    BucketSize = Properties.BucketSize
                 }
             );
 

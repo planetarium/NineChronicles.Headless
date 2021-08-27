@@ -169,11 +169,7 @@ namespace NineChronicles.Headless.Executable
             [Option(Description =
                 "Determines behavior when the chain's tip is stale. \"reboot\" and \"preload\" " +
                 "is available and \"reboot\" option is selected by default.")]
-            string chainTipStaleBehaviorType = "reboot",
-            [Option(Description = "The interval between block polling.  15 seconds by default.")]
-            int pollInterval = 15,
-            [Option(Description = "The maximum number of peers to poll blocks.  int.MaxValue by default.")]
-            int maximumPollPeers = int.MaxValue
+            string chainTipStaleBehaviorType = "reboot"
         )
         {
 #if SENTRY || ! DEBUG
@@ -304,9 +300,7 @@ namespace NineChronicles.Headless.Executable
                         preload: !skipPreload,
                         minimumBroadcastTarget: minimumBroadcastTarget,
                         bucketSize: bucketSize,
-                        chainTipStaleBehaviorType: chainTipStaleBehaviorType,
-                        pollInterval: pollInterval,
-                        maximumPollPeers: maximumPollPeers
+                        chainTipStaleBehaviorType: chainTipStaleBehaviorType
                     );
 
                 if (rpcServer)
