@@ -180,7 +180,7 @@ namespace NineChronicles.Headless
                                              && nextBlockIndex > 0
                                              && nextBlockIndex <= bp.AuthorizedMinersState?.ValidUntil
                                              && nextBlockIndex % bp.AuthorizedMinersState?.Interval == 0;
-                        if (swarm.Running && ((authorizedMiner && authBlock) || (!authorizedMiner && !authBlock)))
+                        if (swarm.Running)
                         {
                             Log.Debug("Start mining.");
 
