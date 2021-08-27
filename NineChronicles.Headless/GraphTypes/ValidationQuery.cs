@@ -48,13 +48,13 @@ namespace NineChronicles.Headless.GraphTypes
                             Log.Debug(msg);
                             throw new BlockChainInitializeException(msg);
                         }
-                        
+
                         Log.Debug("Time until blockchain online: {time}ms", timeSpent);
-                        
+
                         var remoteIndex = JsonDocument.Parse(raw).RootElement.GetProperty("Index").GetInt32();
                         Log.Debug("Remote: {index1}, Local: {index2}",
-                            remoteIndex, standaloneContext.BlockChain.Tip?.Index ?? -1);
-                        var ret = remoteIndex > (standaloneContext.BlockChain.Tip?.Index ?? -1);
+                            remoteIndex, standaloneContext.BlockChain.Tip.Index);
+                        var ret = remoteIndex > standaloneContext.BlockChain.Tip.Index;
                         return ret;
                     }
                     catch (JsonException je)

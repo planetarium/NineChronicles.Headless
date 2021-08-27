@@ -504,8 +504,8 @@ namespace Libplanet.Headless.Hosting
                 if (lastTipChanged + tipTimeout < DateTimeOffset.Now)
                 {
                     var message =
-                        $"Chain's tip is stale. (index: {BlockChain.Tip?.Index}, " +
-                        $"hash: {BlockChain.Tip?.Hash}, timeout: {tipTimeout})";
+                        $"Chain's tip is stale. (index: {BlockChain.Tip.Index}, " +
+                        $"hash: {BlockChain.Tip.Hash}, timeout: {tipTimeout})";
                     Log.Error(message);
 
                     // TODO: Use flag to determine behavior when the chain's tip is stale.
@@ -532,8 +532,8 @@ namespace Libplanet.Headless.Hosting
                                 Log.Error(
                                     "Preloading successfully finished. " +
                                     "(index: {Index}, hash: {Hash})",
-                                    BlockChain.Tip?.Index,
-                                    BlockChain.Tip?.Hash);
+                                    BlockChain.Tip.Index,
+                                    BlockChain.Tip.Hash);
                             }
                             catch (Exception e)
                             {
