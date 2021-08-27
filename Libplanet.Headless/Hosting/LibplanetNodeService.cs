@@ -475,8 +475,8 @@ namespace Libplanet.Headless.Hosting
                 if (lastTipChanged + tipTimeout < DateTimeOffset.Now)
                 {
                     var message =
-                        $"Chain's tip is stale. (index: {BlockChain.Tip?.Index}, " +
-                        $"hash: {BlockChain.Tip?.Hash}, timeout: {tipTimeout})";
+                        $"Chain's tip is stale. (index: {BlockChain.Tip.Index}, " +
+                        $"hash: {BlockChain.Tip.Hash}, timeout: {tipTimeout})";
                     Log.Error(message);
 
                     // TODO: Use flag to determine behavior when the chain's tip is stale.
@@ -503,8 +503,8 @@ namespace Libplanet.Headless.Hosting
                                 Log.Error(
                                     "Preloading successfully finished. " +
                                     "(index: {Index}, hash: {Hash})",
-                                    BlockChain.Tip?.Index,
-                                    BlockChain.Tip?.Hash);
+                                    BlockChain.Tip.Index,
+                                    BlockChain.Tip.Hash);
                             }
                             catch (Exception e)
                             {
@@ -536,11 +536,11 @@ namespace Libplanet.Headless.Hosting
                     continue;
                 }
 
-                if ((Swarm.BlockDemand?.Header.Index ?? 0) > (BlockChain.Tip?.Index ?? 0) + demandBuffer)
+                if ((Swarm.BlockDemand?.Header.Index ?? 0) > (BlockChain.Tip.Index + demandBuffer))
                 {
                     var message =
                         $"Chain's tip is too low. (demand: {Swarm.BlockDemand?.Header.Index}, " +
-                        $"actual: {BlockChain.Tip?.Index}, buffer: {demandBuffer})";
+                        $"actual: {BlockChain.Tip.Index}, buffer: {demandBuffer})";
                     Log.Error(message);
                     Properties.NodeExceptionOccurred(NodeExceptionType.DemandTooHigh, message);
                     _stopRequested = true;
