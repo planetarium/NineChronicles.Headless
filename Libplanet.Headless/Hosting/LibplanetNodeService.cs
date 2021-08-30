@@ -60,9 +60,9 @@ namespace Libplanet.Headless.Hosting
 
         private bool _stopRequested = false;
 
-        protected static readonly TimeSpan PingSeedTimeout = TimeSpan.FromSeconds(5);
+        protected static readonly TimeSpan PingSeedTimeout = TimeSpan.FromSeconds(25);
 
-        protected static readonly TimeSpan FindNeighborsTimeout = TimeSpan.FromSeconds(5);
+        protected static readonly TimeSpan FindNeighborsTimeout = TimeSpan.FromSeconds(25);
 
         protected static readonly TimeSpan BootstrapInterval = TimeSpan.FromMinutes(5);
 
@@ -180,9 +180,9 @@ namespace Libplanet.Headless.Hosting
                 differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered,
                 options: new SwarmOptions
                 {
-                    MaxTimeout = TimeSpan.FromSeconds(10),
-                    BlockHashRecvTimeout = TimeSpan.FromSeconds(10),
-                    BlockRecvTimeout = TimeSpan.FromSeconds(1),
+                    MaxTimeout = TimeSpan.FromSeconds(50),
+                    BlockHashRecvTimeout = TimeSpan.FromSeconds(50),
+                    BlockRecvTimeout = TimeSpan.FromSeconds(5),
                     BranchpointThreshold = 50,
                     StaticPeers = Properties.StaticPeers,
                     MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,

@@ -27,6 +27,7 @@ using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using StrictRenderer =
     Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer<Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>>;
 using Libplanet.Blocks;
+using Libplanet;
 
 namespace NineChronicles.Headless
 {
@@ -157,6 +158,16 @@ namespace NineChronicles.Headless
                 PrivateKey privateKey,
                 CancellationToken cancellationToken)
             {
+                if ((chain.Policy as BlockPolicy)?.PermissionedMiningPolicy is { } pmp &&
+                    !pmp.Miners.Contains(privateKey.ToAddress()))
+                {
+                    Log.Debug(
+                        "Permissioned mining enabled and this miner[{minerAddress}] has no permissions. End mining.",
+                        privateKey.ToAddress()
+                    );
+                    return;
+                }
+                
                 var miner = new Miner(chain, swarm, privateKey, authorizedMiner);
                 Log.Debug("Miner called.");
                 while (!cancellationToken.IsCancellationRequested)
@@ -169,7 +180,7 @@ namespace NineChronicles.Headless
                                              && nextBlockIndex > 0
                                              && nextBlockIndex <= bp.AuthorizedMinersState?.ValidUntil
                                              && nextBlockIndex % bp.AuthorizedMinersState?.Interval == 0;
-                        if (swarm.Running && ((authorizedMiner && authBlock) || (!authorizedMiner && !authBlock)))
+                        if (swarm.Running)
                         {
                             Log.Debug("Start mining.");
 
