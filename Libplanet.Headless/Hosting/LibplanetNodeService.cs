@@ -124,6 +124,29 @@ namespace Libplanet.Headless.Hosting
                 );
             }
 
+            if (Properties.NonblockRenderer)
+            {
+                renderers = renderers.Select(r =>
+                {
+                    if (r is IActionRenderer<T> ar)
+                    {
+                        return new NonblockActionRenderer<T>(
+                            ar,
+                            Properties.NonblockRendererQueue,
+                            NonblockActionRenderer<T>.FullMode.DropOldest
+                        );
+                    }
+                    else
+                    {
+                        return new NonblockRenderer<T>(
+                            r,
+                            Properties.NonblockRendererQueue,
+                            NonblockActionRenderer<T>.FullMode.DropOldest
+                        );
+                    }
+                });
+            }
+
             BlockChain = new BlockChain<T>(
                 policy: blockPolicy,
                 store: Store,
@@ -197,7 +220,6 @@ namespace Libplanet.Headless.Hosting
                     };
                     if (Properties.Peers.Any())
                     {
-                        tasks.Add(CheckDemand(Properties.DemandBuffer, cancellationToken));
                         tasks.Add(CheckPeerTable(cancellationToken));
                     }
 
@@ -249,11 +271,18 @@ namespace Libplanet.Headless.Hosting
             return !(boundPeer is null);
         }
 
-        public override Task StopAsync(CancellationToken cancellationToken)
+        public override async Task StopAsync(CancellationToken cancellationToken)
         {
             _stopRequested = true;
             StopMining();
-            return Swarm.StopAsync(cancellationToken);
+            await Swarm.StopAsync(cancellationToken);
+            foreach (IRenderer<T> renderer in BlockChain.Renderers)
+            {
+                if (renderer is IDisposable disposableRenderer)
+                {
+                    disposableRenderer.Dispose();
+                }
+            }
         }
 
         protected (IStore, IStateStore) LoadStore(string path, string type, int statesCacheSize)
@@ -475,8 +504,8 @@ namespace Libplanet.Headless.Hosting
                 if (lastTipChanged + tipTimeout < DateTimeOffset.Now)
                 {
                     var message =
-                        $"Chain's tip is stale. (index: {BlockChain.Tip?.Index}, " +
-                        $"hash: {BlockChain.Tip?.Hash}, timeout: {tipTimeout})";
+                        $"Chain's tip is stale. (index: {BlockChain.Tip.Index}, " +
+                        $"hash: {BlockChain.Tip.Hash}, timeout: {tipTimeout})";
                     Log.Error(message);
 
                     // TODO: Use flag to determine behavior when the chain's tip is stale.
@@ -503,8 +532,8 @@ namespace Libplanet.Headless.Hosting
                                 Log.Error(
                                     "Preloading successfully finished. " +
                                     "(index: {Index}, hash: {Hash})",
-                                    BlockChain.Tip?.Index,
-                                    BlockChain.Tip?.Hash);
+                                    BlockChain.Tip.Index,
+                                    BlockChain.Tip.Hash);
                             }
                             catch (Exception e)
                             {
@@ -520,31 +549,6 @@ namespace Libplanet.Headless.Hosting
                         default:
                             throw new ArgumentException(nameof(Properties.ChainTipStaleBehavior));
                     }
-                }
-
-                cancellationToken.ThrowIfCancellationRequested();
-            }
-        }
-
-        private async Task CheckDemand(int demandBuffer, CancellationToken cancellationToken = default)
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
-                if (!Swarm.Running)
-                {
-                    continue;
-                }
-
-                if ((Swarm.BlockDemand?.Header.Index ?? 0) > (BlockChain.Tip?.Index ?? 0) + demandBuffer)
-                {
-                    var message =
-                        $"Chain's tip is too low. (demand: {Swarm.BlockDemand?.Header.Index}, " +
-                        $"actual: {BlockChain.Tip?.Index}, buffer: {demandBuffer})";
-                    Log.Error(message);
-                    Properties.NodeExceptionOccurred(NodeExceptionType.DemandTooHigh, message);
-                    _stopRequested = true;
-                    break;
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();

@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -44,7 +45,9 @@ namespace NineChronicles.Headless.Tests.Middleware
 
             httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
             using var reader = new StreamReader(httpContext.Response.Body);
-            Assert.Equal("schema {\n  query: Fruit\n}\n\ntype Fruit {\n\n}\n", await reader.ReadToEndAsync());
+            Assert.Equal(
+                string.Format("schema {{{0}  query: Fruit{0}}}{0}{0}type Fruit {{{0}{0}}}{0}", Environment.NewLine),
+                await reader.ReadToEndAsync());
         }
     }
 }
