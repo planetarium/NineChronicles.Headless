@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
 using Libplanet;
@@ -33,11 +34,13 @@ namespace NineChronicles.Headless
         private Codec _codec;
         private LibplanetNodeServiceProperties<NCAction> _libplanetNodeServiceProperties;
         private DelayedRenderer<NCAction> _delayedRenderer;
+        private ActionEvaluationPublisher _publisher;
         public BlockChainService(
             BlockChain<NCAction> blockChain,
             Swarm<NCAction> swarm,
             RpcContext context,
-            LibplanetNodeServiceProperties<NCAction> libplanetNodeServiceProperties
+            LibplanetNodeServiceProperties<NCAction> libplanetNodeServiceProperties,
+            ActionEvaluationPublisher actionEvaluationPublisher
         )
         {
             _blockChain = blockChain;
@@ -46,6 +49,7 @@ namespace NineChronicles.Headless
             _context = context;
             _codec = new Codec();
             _libplanetNodeServiceProperties = libplanetNodeServiceProperties;
+            _publisher = actionEvaluationPublisher;
         }
 
         public UnaryResult<bool> PutTransaction(byte[] txBytes)
@@ -118,8 +122,9 @@ namespace NineChronicles.Headless
             return UnaryResult(nonce);
         }
 
-        public UnaryResult<bool> SetAddressesToSubscribe(IEnumerable<byte[]> addressesBytes)
+        public UnaryResult<bool> SetAddressesToSubscribe(byte[] addressBytes, IEnumerable<byte[]> addressesBytes)
         {
+            _publisher.UpdateSubscribeAddresses(addressBytes, addressesBytes);
             _context.AddressesToSubscribe =
                 addressesBytes.Select(ba => new Address(ba)).ToImmutableHashSet();
             Log.Debug(
@@ -155,6 +160,20 @@ namespace NineChronicles.Headless
                     break;
             }
 
+            return UnaryResult(true);
+        }
+
+        public UnaryResult<bool> AddClient(byte[] addressBytes)
+        {
+            var address = new Address(addressBytes);
+            _publisher.AddClient(address).Wait();
+            return UnaryResult(true);
+        }
+
+        public UnaryResult<bool> RemoveClient(byte[] addressBytes)
+        {
+            var address = new Address(addressBytes);
+            _publisher.RemoveClient(address).Wait();
             return UnaryResult(true);
         }
     }
