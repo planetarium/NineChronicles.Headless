@@ -94,7 +94,7 @@ namespace NineChronicles.Headless.GraphTypes
                             throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
                         }
 
-                        var userAddress = context.GetArgument<Address>("addressHex");
+                        var userAddress = context.GetArgument<Address>("address");
                         Address activatedAddress = userAddress.Derive(ActivationKey.DeriveKey);
                         return blockChain.GetState(activatedAddress) is Bencodex.Types.Boolean;
                     }
