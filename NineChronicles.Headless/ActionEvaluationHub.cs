@@ -8,68 +8,68 @@ namespace NineChronicles.Headless
 {
     public class ActionEvaluationHub : StreamingHubBase<IActionEvaluationHub, IActionEvaluationHubReceiver>, IActionEvaluationHub
     {
-        public IGroup AddressGroup;
+        private IGroup _addressGroup;
 
         public async Task JoinAsync(string addressHex)
         {
-            AddressGroup = await Group.AddAsync(addressHex);
+            _addressGroup = await Group.AddAsync(addressHex);
         }
 
         public async Task LeaveAsync()
         {
-            if (AddressGroup is null)
+            if (_addressGroup is null)
             {
                 throw new InvalidOperationException();
             }
 
-            await AddressGroup.RemoveAsync(Context);
+            await _addressGroup.RemoveAsync(Context);
         }
 
         public async Task BroadcastRenderAsync(byte[] outputStates)
         {
-            Broadcast(AddressGroup).OnRender(outputStates);
+            Broadcast(_addressGroup).OnRender(outputStates);
             await Task.CompletedTask;
         }
 
         public async Task BroadcastUnrenderAsync(byte[] outputStates)
         {
-            Broadcast(AddressGroup).OnUnrender(outputStates);
+            Broadcast(_addressGroup).OnUnrender(outputStates);
             await Task.CompletedTask;
         }
 
         public async Task BroadcastRenderBlockAsync(byte[] oldTip, byte[] newTip)
         {
-            Broadcast(AddressGroup).OnRenderBlock(oldTip, newTip);
+            Broadcast(_addressGroup).OnRenderBlock(oldTip, newTip);
             await Task.CompletedTask;
         }
         
         public async Task ReportReorgAsync(byte[] oldTip, byte[] newTip, byte[] branchpoint)
         {
-            Broadcast(AddressGroup).OnReorged(oldTip, newTip, branchpoint);
+            Broadcast(_addressGroup).OnReorged(oldTip, newTip, branchpoint);
             await Task.CompletedTask;
         }
         
         public async Task ReportReorgEndAsync(byte[] oldTip, byte[] newTip, byte[] branchpoint)
         {
-            Broadcast(AddressGroup).OnReorgEnd(oldTip, newTip, branchpoint);
+            Broadcast(_addressGroup).OnReorgEnd(oldTip, newTip, branchpoint);
             await Task.CompletedTask;
         }
 
         public async Task ReportExceptionAsync(int code, string message)
         {
-            Broadcast(AddressGroup).OnException(code, message);
+            Broadcast(_addressGroup).OnException(code, message);
             await Task.CompletedTask;
         }
 
         public async Task PreloadStartAsync()
         {
-            Broadcast(AddressGroup).OnPreloadStart();
+            Broadcast(_addressGroup).OnPreloadStart();
             await Task.CompletedTask;
         }
 
         public async Task PreloadEndAsync()
         {
-            Broadcast(AddressGroup).OnPreloadEnd();
+            Broadcast(_addressGroup).OnPreloadEnd();
             await Task.CompletedTask;
         }
     }

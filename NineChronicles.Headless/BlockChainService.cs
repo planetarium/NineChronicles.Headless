@@ -163,16 +163,16 @@ namespace NineChronicles.Headless
             return UnaryResult(true);
         }
 
-        public UnaryResult<bool> AddClient(byte[] addressByte)
+        public UnaryResult<bool> AddClient(byte[] addressBytes)
         {
-            var address = new Address(addressByte);
+            var address = new Address(addressBytes);
             _publisher.AddClient(address).Wait();
             return UnaryResult(true);
         }
 
-        public UnaryResult<bool> RemoveClient(byte[] addressByte)
+        public UnaryResult<bool> RemoveClient(byte[] addressBytes)
         {
-            var address = new Address(addressByte);
+            var address = new Address(addressBytes);
             _publisher.RemoveClient(address).Wait();
             return UnaryResult(true);
         }

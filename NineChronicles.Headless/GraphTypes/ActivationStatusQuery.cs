@@ -75,7 +75,7 @@ namespace NineChronicles.Headless.GraphTypes
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
-                        Name = "addressHex"
+                        Name = "address"
                     }
                 ),
                 resolve: context =>
