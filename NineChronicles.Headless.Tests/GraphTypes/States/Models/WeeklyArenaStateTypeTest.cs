@@ -20,16 +20,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 address
                 ended
                 orderedArenaInfos {
-                    agentAddress
                     avatarAddress
                     arenaRecord {
                         win
                         lose
                         draw
                     }
-                    level
-                    combatPoint
-                    armorId
                     active
                     dailyChallengeCount
                     score
