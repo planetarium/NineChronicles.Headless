@@ -39,6 +39,8 @@ namespace NineChronicles.Headless.Properties
 
         public int MinerCount { get; set; }
 
+        public int TxQuotaPerSigner { get; set; }
+
 
         public static LibplanetNodeServiceProperties<NineChroniclesActionType>
             GenerateLibplanetNodeServiceProperties(
