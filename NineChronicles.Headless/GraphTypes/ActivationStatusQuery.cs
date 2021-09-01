@@ -96,7 +96,25 @@ namespace NineChronicles.Headless.GraphTypes
 
                         var userAddress = context.GetArgument<Address>("address");
                         Address activatedAddress = userAddress.Derive(ActivationKey.DeriveKey);
-                        return blockChain.GetState(activatedAddress) is Bencodex.Types.Boolean;
+
+                        if (blockChain.GetState(activatedAddress) is Bencodex.Types.Boolean)
+                        {
+                            return true;
+                        }
+
+                        // backward for launcher E2E test.
+                        // TODO: Remove this code after launcher E2E test fixed.
+                        IValue state = blockChain.GetState(ActivatedAccountsState.Address);
+
+                        if (state is Bencodex.Types.Dictionary asDict)
+                        {
+                            var activatedAccountsState = new ActivatedAccountsState(asDict);
+                            var activatedAccounts = activatedAccountsState.Accounts;
+                            return activatedAccounts.Count == 0
+                                   || activatedAccounts.Contains(userAddress);
+                        }
+
+                        return true;
                     }
                     catch (Exception e)
                     {
