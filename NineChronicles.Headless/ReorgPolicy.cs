@@ -14,7 +14,7 @@ namespace NineChronicles.Headless
     public class ReorgPolicy : IBlockPolicy<PolymorphicAction<ActionBase>>
     {
         private readonly long _difficulty;
-        
+
         public ReorgPolicy(IAction blockAction, long difficulty)
         {
             BlockAction = blockAction;
@@ -40,7 +40,7 @@ namespace NineChronicles.Headless
             return blocks.Tip is null ? 0 : _difficulty;
         }
 
-        public IComparer<BlockPerception> CanonicalChainComparer { get; } = new TotalDifficultyComparer(TimeSpan.FromSeconds(30));
+        public IComparer<IBlockExcerpt> CanonicalChainComparer { get; } = new TotalDifficultyComparer();
 
         public IAction BlockAction { get; }
 
