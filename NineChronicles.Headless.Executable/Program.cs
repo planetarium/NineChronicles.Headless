@@ -172,7 +172,8 @@ namespace NineChronicles.Headless.Executable
             string chainTipStaleBehaviorType = "reboot",
             [Option(Description =
                 "The number of maximum transactions can be included in stage per signer.")]
-            int txQuotaPerSigner = 10
+            int txQuotaPerSigner = 10,
+            bool rpcRemoteServer = false
         )
         {
 #if SENTRY || ! DEBUG
@@ -342,7 +343,7 @@ namespace NineChronicles.Headless.Executable
                 {
                     hostBuilder.UseNineChroniclesRPC(
                         NineChroniclesNodeServiceProperties
-                        .GenerateRpcNodeServiceProperties(rpcListenHost, rpcListenPort)
+                        .GenerateRpcNodeServiceProperties(rpcListenHost, rpcListenPort, rpcRemoteServer)
                     );
                 }
 
