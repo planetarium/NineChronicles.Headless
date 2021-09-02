@@ -33,7 +33,10 @@ namespace NineChronicles.Headless
             RpcNodeServiceProperties properties
         )
         {
-            var context = new RpcContext();
+            var context = new RpcContext
+            {
+                RpcRemoteSever = properties.RpcRemoteServer
+            };
             return builder
                 .UseMagicOnion(
                     new ServerPort(properties.RpcListenHost, properties.RpcListenPort, ServerCredentials.Insecure)

@@ -116,7 +116,8 @@ namespace NineChronicles.Headless.Properties
 
         public static RpcNodeServiceProperties GenerateRpcNodeServiceProperties(
             string rpcListenHost = "0.0.0.0",
-            int? rpcListenPort = null)
+            int? rpcListenPort = null,
+            bool rpcRemoteServer = false)
         {
 
             if (string.IsNullOrEmpty(rpcListenHost))
@@ -134,7 +135,8 @@ namespace NineChronicles.Headless.Properties
             return new RpcNodeServiceProperties
             {
                 RpcListenHost = rpcListenHost,
-                RpcListenPort = rpcPortValue
+                RpcListenPort = rpcPortValue,
+                RpcRemoteServer = rpcRemoteServer
             };
         }
     }
