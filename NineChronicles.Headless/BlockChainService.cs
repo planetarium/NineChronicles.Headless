@@ -124,9 +124,15 @@ namespace NineChronicles.Headless
 
         public UnaryResult<bool> SetAddressesToSubscribe(byte[] addressBytes, IEnumerable<byte[]> addressesBytes)
         {
-            _publisher.UpdateSubscribeAddresses(addressBytes, addressesBytes);
-            _context.AddressesToSubscribe =
-                addressesBytes.Select(ba => new Address(ba)).ToImmutableHashSet();
+            if (_context.RpcRemoteSever)
+            {
+                _publisher.UpdateSubscribeAddresses(addressBytes, addressesBytes);
+            }
+            else
+            {
+                _context.AddressesToSubscribe =
+                    addressesBytes.Select(ba => new Address(ba)).ToImmutableHashSet();
+            }
             Log.Debug(
                 "Subscribed addresses: {addresses}",
                 string.Join(", ", _context.AddressesToSubscribe));
