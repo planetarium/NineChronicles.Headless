@@ -351,6 +351,34 @@ namespace NineChronicles.Headless.GraphTypes
                     return true;
                 }
             );
+
+            Field<NonNullGraphType<StringGraphType>>(
+                name: "activationKeyNonce",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "invitationCode"
+                    }
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is { } blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    string invitationCode = context.GetArgument<string>("invitationCode");
+                    ActivationKey activationKey = ActivationKey.Decode(invitationCode);
+                    if (blockChain.GetState(activationKey.PendingAddress) is Dictionary dictionary)
+                    {
+                        var pending = new PendingActivationState(dictionary);
+                        return ByteUtil.Hex(pending.Nonce);
+                    }
+
+                    throw new ExecutionError($"invitationCode is invalid.");
+                }
+            );
         }
     }
 }
