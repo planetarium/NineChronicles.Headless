@@ -47,7 +47,9 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
             _command.Tip(storeType, _storePath);
 
-            Assert.Equal(JsonSerializer.Serialize(genesisBlock.Header) + "\n",_console.Out.ToString());
+            Assert.Equal(
+                JsonSerializer.Serialize(genesisBlock.Header) + Environment.NewLine,
+                _console.Out.ToString());
         }
 
         public void Dispose()

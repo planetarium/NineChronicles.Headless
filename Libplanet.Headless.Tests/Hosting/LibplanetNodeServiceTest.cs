@@ -72,7 +72,7 @@ namespace Libplanet.Headless.Tests.Hosting
 
         private class BlockPolicy : IBlockPolicy<DummyAction>
         {
-            public IComparer<BlockPerception> CanonicalChainComparer { get; } = new TotalDifficultyComparer(TimeSpan.FromSeconds(3));
+            public IComparer<IBlockExcerpt> CanonicalChainComparer { get; } = new TotalDifficultyComparer();
 
             public IAction BlockAction => null;
 
