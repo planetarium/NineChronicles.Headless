@@ -717,8 +717,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 pendingActivationStates.Add(pendingActivation);
             }
-
-
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
                     HashAlgorithmType.Of<SHA256>(),

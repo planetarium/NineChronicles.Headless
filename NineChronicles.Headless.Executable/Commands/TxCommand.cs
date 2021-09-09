@@ -32,7 +32,7 @@ namespace NineChronicles.Headless.Executable.Commands
             [Argument("PRIVATE-KEY", Description = "A hex-encoded private key for signing.")] string privateKey,
             [Argument("NONCE", Description = "A nonce for new transaction.")] long nonce,
             [Argument("GENESIS-HASH", Description = "A hex-encoded genesis block hash.")] string genesisHash,
-            [Option("action", new[] { 'a' }, Description = "Hex-encoded actions or a path of the file contained it.")] string[] actions,
+            [Option("action", new[] { 'a' }, Description = "A hex-encoded actions or a path of the file contained it.")] string[] actions,
             [Argument("TIMESTAMP", Description = "A datetime for new transaction.")] string? timestamp = null,
             [Option("bytes", new[] { 'b' }, Description = "Print raw bytes instead of hexadecimal.  No trailing LF appended.")] bool bytes = false
         )
@@ -51,7 +51,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 var action = type switch
                 {
                     nameof(ActivateAccount) => new ActivateAccount(),
-                    _ => throw new CommandExitedException($"Can't determine given action type: {type}", 128),
+                    _ => throw new CommandExitedException($"Unsupported action type was passed '{type}'", 128),
                 };
                 action.LoadPlainValue(plainValue);
 

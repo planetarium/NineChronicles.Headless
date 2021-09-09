@@ -22,9 +22,9 @@ namespace NineChronicles.Headless.Executable.Commands
 
         [Command(Description = "Create ActivateAccount action.")]
         public int ActivateAccount(
-            [Argument("INVITATION-CODE", Description = "A hex-encoded invitation code.")] string invitationCode,
+            [Argument("INVITATION-CODE", Description = "An invitation code.")] string invitationCode,
             [Argument("NONCE", Description = "A hex-encoded nonce for activation.")] string nonceEncoded,
-            [Argument("path", Description = "A file path of hex encoded action.")] string filePath
+            [Argument("PATH", Description = "A file path of hex encoded action.")] string filePath
         )
         {
             try
