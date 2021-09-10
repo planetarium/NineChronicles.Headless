@@ -20,6 +20,9 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex.Types;
+using NineChronicles.Headless.Executable.Commands;
+using NineChronicles.Headless.Executable.IO;
+using NineChronicles.Headless.Executable.Tests.IO;
 using Xunit;
 using Xunit.Abstractions;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -123,6 +126,38 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             IValue? state = BlockChain.GetState(
                 userAddress.Derive(ActivationKey.DeriveKey)
             );
+            Assert.True((Bencodex.Types.Boolean)state);
+        }
+
+        [Fact]
+        public async Task ActivateAccountByTx()
+        {
+            var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
+            var privateKey = new PrivateKey();
+            (ActivationKey activationKey, PendingActivationState pendingActivation) =
+                ActivationKey.Create(privateKey, nonce);
+            NCAction action = new CreatePendingActivation(pendingActivation);
+            BlockChain.MakeTransaction(AdminPrivateKey, new[] { action });
+            await BlockChain.MineBlock(AdminAddress);
+            var encodedActivationKey = activationKey.Encode();
+            var actionCommand = new ActionCommand(new StandardConsole());
+            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+            actionCommand.ActivateAccount(encodedActivationKey, ByteUtil.Hex(nonce), filePath);
+            var console = new StringIOConsole();
+            var txCommand = new TxCommand(console);
+            txCommand.Sign(ByteUtil.Hex(privateKey.ByteArray), BlockChain.GetNextTxNonce(privateKey.ToAddress()), ByteUtil.Hex(BlockChain.Genesis.Hash.ByteArray), new []{ filePath });
+            var output = console.Out.ToString();
+            output = output.Trim();
+            var queryResult = await ExecuteQueryAsync(
+                $"mutation {{ activationStatus {{ activateAccountByTx(hexEncodedTx: \"{output}\", broadcast: false) }} }}");
+            await BlockChain.MineBlock(AdminAddress);
+
+            var result = (bool)queryResult.Data
+                .As<Dictionary<string, object>>()["activationStatus"]
+                .As<Dictionary<string, object>>()["activateAccountByTx"];
+            Assert.True(result);
+
+            IValue? state = BlockChain.GetState(privateKey.ToAddress().Derive(ActivationKey.DeriveKey));
             Assert.True((Bencodex.Types.Boolean)state);
         }
 

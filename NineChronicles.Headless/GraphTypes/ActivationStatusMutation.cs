@@ -2,6 +2,8 @@ using System;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
+using Libplanet;
+using Libplanet.Tx;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
@@ -66,6 +68,45 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return true;
                 });
+
+            Field<NonNullGraphType<BooleanGraphType>>("activateAccountByTx",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "hexEncodedTx",
+                    },
+                    new QueryArgument<NonNullGraphType<BooleanGraphType>>
+                    {
+                        Name = "broadcast",
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        string hexEncodedTx =
+                            context.GetArgument<string>("hexEncodedTx");
+                        bool broadcast = context.GetArgument<bool>("broadcast", true);
+                        if (!(service.Swarm?.BlockChain is { } blockChain))
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+                        Transaction<NCAction> tx = Transaction<NCAction>.Deserialize(ByteUtil.ParseHex(hexEncodedTx));
+                        tx.Validate();
+                        blockChain.StageTransaction(tx);
+                        // Avoid broadcast tx in test case.
+                        if (broadcast)
+                        {
+                            service.Swarm.BroadcastTxs(new[] {tx});
+                        }
+                        return true;
+                    }
+                    catch (InvalidTxException)
+                    {
+                        return false;
+                    }
+                });
+
         }
     }
 }
