@@ -764,10 +764,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
-            var blockChain = StandaloneContextFx.BlockChain!;
-
-            await blockChain.MineBlock(adminAddress);
-
             var query = $"query {{ activationKeyNonce(invitationCode: \"{activationKey.Encode()}\") }}";
             var queryResult = await ExecuteQueryAsync(query);
             if (exist)
