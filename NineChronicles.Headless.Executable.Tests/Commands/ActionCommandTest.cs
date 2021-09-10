@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Net;
 using Bencodex;
@@ -30,27 +31,36 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             _command = new ActionCommand(_console);
         }
 
-        [Fact]
-        public void ActivateAccount()
+        [Theory]
+        [InlineData(true, -1)]
+        [InlineData(false, 0)]
+        public void ActivateAccount(bool invalid, int expectedCode)
         {
             var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
             var privateKey = new PrivateKey();
-            (ActivationKey activationKey, PendingActivationState _) =
-                ActivationKey.Create(privateKey, nonce);
+            (ActivationKey activationKey, PendingActivationState _) = ActivationKey.Create(privateKey, nonce);
+            string invitationCode =  invalid ? "invalid_code" : activationKey.Encode();
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
-            var resultCode = _command.ActivateAccount(activationKey.Encode(), ByteUtil.Hex(nonce), filePath);
-            Assert.Equal(0, resultCode);
+            var resultCode = _command.ActivateAccount(invitationCode, ByteUtil.Hex(nonce), filePath);
+            Assert.Equal(expectedCode, resultCode);
 
-            var rawAction = ByteUtil.ParseHex(File.ReadAllText(filePath));
-            var decoded = (List)_codec.Decode(rawAction);
-            string type = (Text)decoded[0];
-            Assert.Equal(nameof(Nekoyume.Action.ActivateAccount), type);
+            if (resultCode == 0)
+            {
+                var rawAction = ByteUtil.ParseHex(File.ReadAllText(filePath));
+                var decoded = (List)_codec.Decode(rawAction);
+                string type = (Text)decoded[0];
+                Assert.Equal(nameof(Nekoyume.Action.ActivateAccount), type);
 
-            Dictionary plainValue = (Dictionary)decoded[1];
-            var action = new ActivateAccount();
-            action.LoadPlainValue(plainValue);
-            Assert.Equal(activationKey.PrivateKey.Sign(nonce), action.Signature);
-            Assert.Equal(activationKey.PendingAddress, action.PendingAddress);
+                Dictionary plainValue = (Dictionary)decoded[1];
+                var action = new ActivateAccount();
+                action.LoadPlainValue(plainValue);
+                Assert.Equal(activationKey.PrivateKey.Sign(nonce), action.Signature);
+                Assert.Equal(activationKey.PendingAddress, action.PendingAddress);
+            }
+            else
+            {
+                Assert.True(_console.Error.ToString().Contains("hexWithSlash seems invalid. [invalid_code]"));
+            }
         }
     }
 }
