@@ -43,13 +43,15 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             store.SetCanonicalChainId(chainId);
             store.PutBlock(genesisBlock);
             store.AppendIndex(chainId, genesisBlock.Hash);
-            (store as IDisposable)?.Dispose();
+            store.Dispose();
+
+            // FIXME For an unknown reason, BlockHeader.TimeStamp precision issue occurred and the store we should open it again.
+            store = storeType.CreateStore(_storePath);
+            genesisBlock = store.GetBlock<NCAction>(genesisBlock.Hash);
+            store.Dispose();
 
             _command.Tip(storeType, _storePath);
-
-            Assert.Equal(
-                JsonSerializer.Serialize(genesisBlock.Header) + Environment.NewLine,
-                _console.Out.ToString());
+            Assert.Equal(JsonSerializer.Serialize(genesisBlock.Header), _console.Out.ToString().Trim());
         }
 
         public void Dispose()
