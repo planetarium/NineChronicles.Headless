@@ -16,16 +16,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
         {
             const string query = @"
             {
-                agentAddress
                 avatarAddress
                 arenaRecord {
                     win
                     lose
                     draw
                 }
-                level
-                combatPoint
-                armorId
                 active
                 dailyChallengeCount
                 score
@@ -37,7 +33,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             Assert.Equal(
                 new Dictionary<string, object>
                 {
-                    ["agentAddress"] = "0xfc2a412ea59122B114B672a5518Bc113955Dd2FE",
                     ["avatarAddress"] = "0x983c3Fbfe8243a0e36D55C6C1aE26A7c8Bb6CBd4",
                     ["arenaRecord"] = new Dictionary<string, object>
                     {
@@ -45,9 +40,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                         ["lose"] = 0,
                         ["draw"] = 0,
                     },
-                    ["level"] = 1,
-                    ["combatPoint"] = 1142,
-                    ["armorId"] = 10200000,
                     ["active"] = active,
                     ["dailyChallengeCount"] = 5,
                     ["score"] = 1000,

@@ -1,8 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net;
 using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -11,6 +12,7 @@ using System.Threading.Tasks;
 using Bencodex.Types;
 using Grpc.Core;
 using Lib9c.Renderer;
+using Libplanet;
 using MagicOnion.Client;
 using Microsoft.Extensions.Hosting;
 using Nekoyume.Action;
@@ -29,7 +31,10 @@ namespace NineChronicles.Headless
         private readonly ActionRenderer _actionRenderer;
         private readonly ExceptionRenderer _exceptionRenderer;
         private readonly NodeStatusRenderer _nodeStatusRenderer;
-        private IActionEvaluationHub? _client;
+
+        private readonly Dictionary<Address, (IActionEvaluationHub hub, ImmutableHashSet<Address> addresses)> _clients =
+            new Dictionary<Address, (IActionEvaluationHub hub, ImmutableHashSet<Address> addresses)>();
+
         private RpcContext _context;
 
         public ActionEvaluationPublisher(
@@ -52,21 +57,28 @@ namespace NineChronicles.Headless
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
-        => Task.Run(async () =>
         {
-            await Task.Delay(1000, stoppingToken);
-            _client = StreamingHubClient.Connect<IActionEvaluationHub, IActionEvaluationHubReceiver>(
+            return Task.CompletedTask;
+        }
+
+        public async Task AddClient(Address clientAddress)
+        {
+            var client = StreamingHubClient.Connect<IActionEvaluationHub, IActionEvaluationHubReceiver>(
                 new Channel(_host, _port, ChannelCredentials.Insecure),
                 null!
             );
-            await _client.JoinAsync();
+            await client.JoinAsync(clientAddress.ToHex());
+            if (!_clients.ContainsKey(clientAddress))
+            {
+                _clients[clientAddress] = (client, ImmutableHashSet<Address>.Empty);
+            }
 
             _blockRenderer.EveryBlock().Subscribe(
                 async pair =>
                 {
                     try
                     {
-                        await _client.BroadcastRenderBlockAsync(
+                        await client.BroadcastRenderBlockAsync(
                             pair.OldTip.Header.Serialize(),
                             pair.NewTip.Header.Serialize()
                         );
@@ -76,9 +88,7 @@ namespace NineChronicles.Headless
                         // FIXME add logger as property
                         Log.Error(e, "Skip broadcasting blcok render due to the unexpected exception");
                     }
-
-                },
-                stoppingToken
+                }
             );
 
             _blockRenderer.EveryReorg().Subscribe(
@@ -86,7 +96,7 @@ namespace NineChronicles.Headless
                 {
                     try
                     {
-                        await _client.ReportReorgAsync(
+                        await client.ReportReorgAsync(
                             ev.OldTip.Serialize(),
                             ev.NewTip.Serialize(),
                             ev.Branchpoint.Serialize()
@@ -97,8 +107,7 @@ namespace NineChronicles.Headless
                         // FIXME add logger as property
                         Log.Error(e, "Skip broadcasting reorg due to the unexpected exception");
                     }
-                },
-                stoppingToken
+                }
             );
 
             _blockRenderer.EveryReorgEnd().Subscribe(
@@ -106,7 +115,7 @@ namespace NineChronicles.Headless
                 {
                     try
                     {
-                        await _client.ReportReorgEndAsync(
+                        await client.ReportReorgEndAsync(
                             ev.OldTip.Serialize(),
                             ev.NewTip.Serialize(),
                             ev.Branchpoint.Serialize()
@@ -117,10 +126,8 @@ namespace NineChronicles.Headless
                         // FIXME add logger as property
                         Log.Error(e, "Skip broadcasting reorg end due to the unexpected exception");
                     }
-                },
-                stoppingToken
+                }
             );
-
             _actionRenderer.EveryRender<ActionBase>()
                 .Where(ContainsAddressToBroadcast)
                 .Subscribe(
@@ -137,7 +144,7 @@ namespace NineChronicles.Headless
                         ev.PreviousStates = ev.PreviousStates.SetState(ShopState.Address, new Null());
                         ev.OutputStates = ev.OutputStates.SetState(ShopState.Address, new Null());
                         formatter.Serialize(df, ev);
-                        await _client.BroadcastRenderAsync(c.ToArray());
+                        await client.BroadcastRenderAsync(c.ToArray());
                     }
                     catch (SerializationException se)
                     {
@@ -149,9 +156,8 @@ namespace NineChronicles.Headless
                         // FIXME add logger as property
                         Log.Error(e, "Skip broadcasting render due to the unexpected exception");
                     }
-                },
-                stoppingToken
-            );
+                }
+                );
 
             _actionRenderer.EveryUnrender<ActionBase>()
                 .Where(ContainsAddressToBroadcast)
@@ -169,7 +175,7 @@ namespace NineChronicles.Headless
                         ev.PreviousStates = ev.PreviousStates.SetState(ShopState.Address, new Null());
                         ev.OutputStates = ev.OutputStates.SetState(ShopState.Address, new Null());
                         formatter.Serialize(df, ev);
-                        await _client.BroadcastUnrenderAsync(c.ToArray());
+                        await client.BroadcastUnrenderAsync(c.ToArray());
                     }
                     catch (SerializationException se)
                     {
@@ -181,25 +187,22 @@ namespace NineChronicles.Headless
                         // FIXME add logger as property
                         Log.Error(e, "Skip broadcasting unrender due to the unexpected exception");
                     }
-                },
-                stoppingToken
-            );
-
+                }
+                );
             _exceptionRenderer.EveryException().Subscribe(
                 async tuple =>
                 {
                     try
                     {
                         (RPC.Shared.Exceptions.RPCException code, string message) = tuple;
-                        await _client.ReportExceptionAsync((int)code, message);
+                        await client.ReportExceptionAsync((int)code, message);
                     }
                     catch (Exception e)
                     {
                         // FIXME add logger as property
                         Log.Error(e, "Skip broadcasting exception due to the unexpected exception");
                     }
-                },
-                stoppingToken
+                }
             );
 
             _nodeStatusRenderer.EveryChangedStatus().Subscribe(
@@ -209,11 +212,11 @@ namespace NineChronicles.Headless
                     {
                         if (isPreloadStarted)
                         {
-                            await _client.PreloadStartAsync();
+                            await client.PreloadStartAsync();
                         }
                         else
                         {
-                            await _client.PreloadEndAsync();
+                            await client.PreloadEndAsync();
                         }
                     }
                     catch (Exception e)
@@ -221,18 +224,16 @@ namespace NineChronicles.Headless
                         // FIXME add logger as property
                         Log.Error(e, "Skip broadcasting status change due to the unexpected exception");
                     }
-                },
-                stoppingToken
+                }
             );
-        });
+        }
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            if (!(_client is null))
+            foreach (var (client, _) in _clients.Values)
             {
-                await _client.DisposeAsync();
+                await client.DisposeAsync();
             }
-
             await base.StopAsync(cancellationToken);
         }
 
@@ -242,6 +243,86 @@ namespace NineChronicles.Headless
                 ev.OutputStates.UpdatedAddresses.Union(ev.OutputStates.UpdatedFungibleAssets.Keys);
             return _context.AddressesToSubscribe.Any(address =>
                 ev.Signer.Equals(address) || updatedAddresses.Contains(address));
+        }
+
+        private bool ContainsAddressToBroadcastRemoteClient(ActionBase.ActionEvaluation<ActionBase> ev,
+            ImmutableHashSet<Address> immutableHashSet)
+        {
+            var updatedAddresses =
+                ev.OutputStates.UpdatedAddresses.Union(ev.OutputStates.UpdatedFungibleAssets.Keys);
+            return immutableHashSet.Any(address =>
+                ev.Signer.Equals(address) || updatedAddresses.Contains(address));
+        }
+
+        public void UpdateSubscribeAddresses(byte[] addressBytes, IEnumerable<byte[]> addressesBytes)
+        {
+            // FIXME fix duplicate action renderer call.
+            var address = new Address(addressBytes);
+            var client = _clients[address].hub;
+            var addresses = addressesBytes.Select(a => new Address(a)).ToImmutableHashSet();
+            _actionRenderer.EveryRender<ActionBase>()
+                .Where(ev => ContainsAddressToBroadcastRemoteClient(ev, addresses))
+                .Subscribe(
+                    async ev =>
+                    {
+                        var formatter = new BinaryFormatter();
+                        using var c = new MemoryStream();
+                        using var df = new DeflateStream(c, System.IO.Compression.CompressionLevel.Fastest);
+
+                        try
+                        {
+                            formatter.Serialize(df, ev);
+                            await client.BroadcastRenderAsync(c.ToArray());
+                        }
+                        catch (SerializationException se)
+                        {
+                            // FIXME add logger as property
+                            Log.Error(se, "Skip broadcasting render since the given action isn't serializable.");
+                        }
+                        catch (Exception e)
+                        {
+                            // FIXME add logger as property
+                            Log.Error(e, "Skip broadcasting render due to the unexpected exception");
+                        }
+                    }
+                );
+
+            _actionRenderer.EveryUnrender<ActionBase>()
+                .Where(ev => ContainsAddressToBroadcastRemoteClient(ev, addresses))
+                .Subscribe(
+                    async ev =>
+                    {
+                        var formatter = new BinaryFormatter();
+                        using var c = new MemoryStream();
+                        using var df = new DeflateStream(c, System.IO.Compression.CompressionLevel.Fastest);
+
+                        try
+                        {
+                            formatter.Serialize(df, ev);
+                            await client.BroadcastUnrenderAsync(c.ToArray());
+                        }
+                        catch (SerializationException se)
+                        {
+                            // FIXME add logger as property
+                            Log.Error(se, "Skip broadcasting unrender since the given action isn't serializable.");
+                        }
+                        catch (Exception e)
+                        {
+                            // FIXME add logger as property
+                            Log.Error(e, "Skip broadcasting unrender due to the unexpected exception");
+                        }
+                    }
+                );
+        }
+
+        public async Task RemoveClient(Address clientAddress)
+        {
+            if (_clients.ContainsKey(clientAddress))
+            {
+                var client = _clients[clientAddress].hub;
+                await client.LeaveAsync();
+                _clients.Remove(clientAddress);
+            }
         }
     }
 }

@@ -169,7 +169,11 @@ namespace NineChronicles.Headless.Executable
             [Option(Description =
                 "Determines behavior when the chain's tip is stale. \"reboot\" and \"preload\" " +
                 "is available and \"reboot\" option is selected by default.")]
-            string chainTipStaleBehaviorType = "reboot"
+            string chainTipStaleBehaviorType = "reboot",
+            [Option(Description =
+                "The number of maximum transactions can be included in stage per signer.")]
+            int txQuotaPerSigner = 10,
+            bool rpcRemoteServer = false
         )
         {
 #if SENTRY || ! DEBUG
@@ -328,6 +332,7 @@ namespace NineChronicles.Headless.Executable
                     AuthorizedMiner = authorizedMiner,
                     TxLifeTime = TimeSpan.FromMinutes(txLifeTime),
                     MinerCount = minerCount,
+                    TxQuotaPerSigner = txQuotaPerSigner
                 };
                 hostBuilder.ConfigureServices(services =>
                 {
@@ -338,7 +343,7 @@ namespace NineChronicles.Headless.Executable
                 {
                     hostBuilder.UseNineChroniclesRPC(
                         NineChroniclesNodeServiceProperties
-                        .GenerateRpcNodeServiceProperties(rpcListenHost, rpcListenPort)
+                        .GenerateRpcNodeServiceProperties(rpcListenHost, rpcListenPort, rpcRemoteServer)
                     );
                 }
 

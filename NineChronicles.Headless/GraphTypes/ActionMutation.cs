@@ -115,16 +115,6 @@ namespace NineChronicles.Headless.GraphTypes
                         Name = "stageId",
                         Description = "Stage ID."
                     },
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "weeklyArenaAddress",
-                        Description = "Address of this WeeklyArenaState"
-                    },
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "rankingArenaAddress",
-                        Description = "Address of RankingMapState containing the avatar address."
-                    },
                     new QueryArgument<ListGraphType<GuidGraphType>>
                     {
                         Name = "costumeIds",
@@ -151,8 +141,6 @@ namespace NineChronicles.Headless.GraphTypes
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
                         }
 
-                        Address weeklyArenaAddress = context.GetArgument<Address>("weeklyArenaAddress");
-                        Address rankingArenaAddress = context.GetArgument<Address>("rankingArenaAddress");
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
                         int worldId = context.GetArgument<int>("worldId");
                         int stageId = context.GetArgument<int>("stageId");
@@ -165,8 +153,6 @@ namespace NineChronicles.Headless.GraphTypes
                             avatarAddress = avatarAddress,
                             worldId = worldId,
                             stageId = stageId,
-                            WeeklyArenaAddress = weeklyArenaAddress,
-                            RankingMapAddress = rankingArenaAddress,
                             costumes = costumeIds,
                             equipments = equipmentIds,
                             foods = consumableIds,
