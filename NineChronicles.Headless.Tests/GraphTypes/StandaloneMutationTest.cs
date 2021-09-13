@@ -472,10 +472,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
             var action = (CombinationEquipment) tx.Actions.First().InnerAction;
-            Assert.Equal(avatarAddress, action.AvatarAddress);
-            Assert.Equal(recipeId, action.RecipeId);
-            Assert.Equal(slotIndex, action.SlotIndex);
-            Assert.Equal(subRecipeId, action.SubRecipeId);
+            Assert.Equal(avatarAddress, action.avatarAddress);
+            Assert.Equal(recipeId, action.recipeId);
+            Assert.Equal(slotIndex, action.slotIndex);
+            Assert.Equal(subRecipeId, action.subRecipeId);
         }
 
         public static IEnumerable<object?[]> CombinationEquipmentMember => new List<object?[]>
@@ -580,7 +580,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
             var action = (CombinationConsumable) tx.Actions.First().InnerAction;
-            Assert.Equal(avatarAddress, action.AvatarAddress);
+            Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(recipeId, action.recipeId);
             Assert.Equal(slotIndex, action.slotIndex);
         }

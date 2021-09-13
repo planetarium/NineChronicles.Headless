@@ -22,5 +22,9 @@ namespace NineChronicles.Headless.Executable.Store
         public void ForkStates<T>(Guid sourceChainId, Guid destinationChainId, Block<T> branchpoint) where T : IAction, new()
         {
         }
+
+        public void Dispose()
+        {
+        }
     }
 }

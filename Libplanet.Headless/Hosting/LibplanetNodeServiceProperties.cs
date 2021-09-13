@@ -50,6 +50,10 @@ namespace Libplanet.Headless.Hosting
 
         public int Confirmations { get; set; } = 0;
 
+        public bool NonblockRenderer { get; set; } = false;
+
+        public int NonblockRendererQueue { get; set; } = 512;
+
         public System.Action<NodeExceptionType, string> NodeExceptionOccurred { get; set; }
 
         public int MaximumTransactions { get; set; } = 100;

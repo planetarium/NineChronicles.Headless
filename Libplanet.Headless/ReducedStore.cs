@@ -161,5 +161,7 @@ namespace Libplanet.Headless
 
         public void DeleteTxIdBlockHashIndex(TxId txId, BlockHash blockHash) =>
             InternalStore.DeleteTxIdBlockHashIndex(txId, blockHash);
+
+        public void Dispose() => InternalStore.Dispose();
     }
 }

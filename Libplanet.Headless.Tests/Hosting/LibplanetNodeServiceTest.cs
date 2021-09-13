@@ -72,11 +72,12 @@ namespace Libplanet.Headless.Tests.Hosting
 
         private class BlockPolicy : IBlockPolicy<DummyAction>
         {
-            public IComparer<BlockPerception> CanonicalChainComparer { get; } = new TotalDifficultyComparer(TimeSpan.FromSeconds(3));
+            public IComparer<IBlockExcerpt> CanonicalChainComparer { get; } = new TotalDifficultyComparer();
 
             public IAction BlockAction => null;
+            public int GetMinTransactionsPerBlock(long index) => 0;
 
-            public int MaxTransactionsPerBlock => int.MaxValue;
+            public int GetMaxTransactionsPerBlock(long index) => int.MaxValue;
 
             public int GetMaxBlockBytes(long index) => int.MaxValue;
 
@@ -100,6 +101,8 @@ namespace Libplanet.Headless.Tests.Hosting
 
             public HashAlgorithmType GetHashAlgorithm(long blockIndex) =>
                 HashAlgorithmType.Of<SHA256>();
+
+            public int GetMaxTransactionsPerSignerPerBlock(long index) => GetMaxTransactionsPerBlock(index);
         }
 
         private class DummyAction : IAction
