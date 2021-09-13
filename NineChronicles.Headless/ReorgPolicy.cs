@@ -21,9 +21,11 @@ namespace NineChronicles.Headless
             _difficulty = difficulty;
         }
 
-        public int MaxTransactionsPerBlock => int.MaxValue;
-
         public int GetMaxBlockBytes(long index) => int.MaxValue;
+
+        public int GetMinTransactionsPerBlock(long index) => 0;
+
+        public int GetMaxTransactionsPerBlock(long index) => int.MaxValue;
 
         public bool DoesTransactionFollowsPolicy(
             Transaction<PolymorphicAction<ActionBase>> transaction,
@@ -46,5 +48,10 @@ namespace NineChronicles.Headless
 
         public HashAlgorithmType GetHashAlgorithm(long blockIndex) =>
             HashAlgorithmType.Of<SHA256>();
+
+        public int GetMaxTransactionsPerSignerPerBlock(long index)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

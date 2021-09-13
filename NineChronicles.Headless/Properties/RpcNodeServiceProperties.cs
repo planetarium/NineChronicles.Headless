@@ -5,5 +5,7 @@ namespace NineChronicles.Headless.Properties
         public string RpcListenHost { get; set; }
 
         public int RpcListenPort { get; set; }
+
+        public bool RpcRemoteServer { get; set; }
     }
 }

@@ -82,7 +82,8 @@ namespace NineChronicles.Headless
             int blockInterval = 10000,
             int reorgInterval = 0,
             TimeSpan txLifeTime = default,
-            int minerCount = 1
+            int minerCount = 1,
+            int txQuotaPerSigner = 10
         )
         {
             MinerPrivateKey = minerPrivateKey;
@@ -95,10 +96,7 @@ namespace NineChronicles.Headless
             // Policies for dev mode.
             IBlockPolicy<NCAction>? easyPolicy = null;
             IBlockPolicy<NCAction>? hardPolicy = null;
-            IStagePolicy<NCAction> stagePolicy =
-                txLifeTime == default
-                    ? new VolatileStagePolicy<NCAction>()
-                    : new VolatileStagePolicy<NCAction>(txLifeTime);
+            IStagePolicy<NCAction> stagePolicy = new StagePolicy(txLifeTime, txQuotaPerSigner);
             if (isDev)
             {
                 easyPolicy = new ReorgPolicy(new RewardGold(), 1);
@@ -338,7 +336,8 @@ namespace NineChronicles.Headless
                 reorgInterval: properties.ReorgInterval,
                 authorizedMiner: properties.AuthorizedMiner,
                 txLifeTime: properties.TxLifeTime,
-                minerCount: properties.MinerCount
+                minerCount: properties.MinerCount,
+                txQuotaPerSigner: properties.TxQuotaPerSigner
             );
             service.ConfigureContext(context);
             return service;

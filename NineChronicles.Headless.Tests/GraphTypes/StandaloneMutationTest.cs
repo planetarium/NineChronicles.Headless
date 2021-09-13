@@ -324,8 +324,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         [Theory]
         [MemberData(nameof(HackAndSlashMember))]
-        public async Task HackAndSlash(Address avatarAddress, int worldId, int stageId, Address weeklyArenaAddress,
-            Address rankingArenaAddress, List<Guid> costumeIds, List<Guid> equipmentIds, List<Guid> consumableIds)
+        public async Task HackAndSlash(
+            Address avatarAddress, 
+            int worldId, 
+            int stageId,
+            List<Guid> costumeIds, 
+            List<Guid> equipmentIds, 
+            List<Guid> consumableIds
+        )
         {
             var playerPrivateKey = new PrivateKey();
             var ranking = new RankingState();
@@ -333,7 +339,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 ranking.RankingMap[RankingState.Derive(i)] = new HashSet<Address>().ToImmutableHashSet();
             }
-            var queryArgs = $"avatarAddress: \"{avatarAddress}\", worldId: {worldId}, stageId: {stageId}, weeklyArenaAddress: \"{weeklyArenaAddress}\", rankingArenaAddress: \"{rankingArenaAddress}\"";
+            var queryArgs = $"avatarAddress: \"{avatarAddress}\", worldId: {worldId}, stageId: {stageId}";
             if (costumeIds.Any())
             {
                 queryArgs += $", costumeIds: [{string.Join(",", costumeIds.Select(r => string.Format($"\"{r}\"")))}]";
@@ -366,8 +372,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(worldId, action.worldId);
             Assert.Equal(stageId, action.stageId);
-            Assert.Equal(weeklyArenaAddress, action.WeeklyArenaAddress);
-            Assert.Equal(rankingArenaAddress, action.RankingMapAddress);
             Assert.Equal(costumeIds, action.costumes);
             Assert.Equal(equipmentIds, action.equipments);
             Assert.Equal(consumableIds, action.foods);
@@ -380,8 +384,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new Address(),
                 1,
                 2,
-                new Address(),
-                new Address(),
                 new List<Guid>(),
                 new List<Guid>(),
                 new List<Guid>(),
@@ -391,8 +393,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new Address(),
                 2,
                 3,
-                new Address(),
-                new Address(),
                 new List<Guid>
                 {
                     Guid.NewGuid(),

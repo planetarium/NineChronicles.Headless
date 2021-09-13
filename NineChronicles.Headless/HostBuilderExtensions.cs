@@ -33,7 +33,10 @@ namespace NineChronicles.Headless
             RpcNodeServiceProperties properties
         )
         {
-            var context = new RpcContext();
+            var context = new RpcContext
+            {
+                RpcRemoteSever = properties.RpcRemoteServer
+            };
             return builder
                 .UseMagicOnion(
                     new ServerPort(properties.RpcListenHost, properties.RpcListenPort, ServerCredentials.Insecure)
@@ -41,7 +44,7 @@ namespace NineChronicles.Headless
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => context);
-                    services.AddHostedService(provider =>
+                    services.AddSingleton(provider =>
                     {
                         StandaloneContext? ctx = provider.GetRequiredService<StandaloneContext>();
                         return new ActionEvaluationPublisher(
