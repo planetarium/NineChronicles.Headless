@@ -20,6 +20,9 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex.Types;
+using NineChronicles.Headless.Executable.Commands;
+using NineChronicles.Headless.Executable.IO;
+using NineChronicles.Headless.Executable.Tests.IO;
 using Xunit;
 using Xunit.Abstractions;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -783,6 +786,38 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Block<PolymorphicAction<ActionBase>> mined =
                 await BlockChain.MineBlock(service.MinerPrivateKey);
             Assert.Contains(tx, mined.Transactions);
+        }
+
+        [Fact]
+        public async Task Tx_ActivateAccount()
+        {
+            var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
+            var privateKey = new PrivateKey();
+            (ActivationKey activationKey, PendingActivationState pendingActivation) =
+                ActivationKey.Create(privateKey, nonce);
+            NCAction action = new CreatePendingActivation(pendingActivation);
+            BlockChain.MakeTransaction(AdminPrivateKey, new[] { action });
+            await BlockChain.MineBlock(AdminAddress);
+            var encodedActivationKey = activationKey.Encode();
+            var actionCommand = new ActionCommand(new StandardConsole());
+            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+            actionCommand.ActivateAccount(encodedActivationKey, ByteUtil.Hex(nonce), filePath);
+            var console = new StringIOConsole();
+            var txCommand = new TxCommand(console);
+            var timeStamp = DateTimeOffset.UtcNow;
+            txCommand.Sign(ByteUtil.Hex(privateKey.ByteArray), BlockChain.GetNextTxNonce(privateKey.ToAddress()), ByteUtil.Hex(BlockChain.Genesis.Hash.ByteArray), timeStamp.ToString(), new []{ filePath });
+            var output = console.Out.ToString();
+            output = output.Trim();
+            var queryResult = await ExecuteQueryAsync(
+                $"mutation {{ stageTx(payload: \"{output}\") }}");
+            await BlockChain.MineBlock(AdminAddress);
+
+            var result = (bool)queryResult.Data
+                .As<Dictionary<string, object>>()["stageTx"];
+            Assert.True(result);
+
+            IValue? state = BlockChain.GetState(privateKey.ToAddress().Derive(ActivationKey.DeriveKey));
+            Assert.True((Bencodex.Types.Boolean)state);
         }
 
         private Block<PolymorphicAction<ActionBase>> MakeGenesisBlock(
