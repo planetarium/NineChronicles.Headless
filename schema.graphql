@@ -48,7 +48,9 @@ type AppProtocolVersionType {
 }
 
 type ArenaInfoType {
+  agentAddress: Address!
   avatarAddress: Address!
+  avatarName: String!
   arenaRecord: ArenaRecordType!
   active: Boolean!
   dailyChallengeCount: Int!
