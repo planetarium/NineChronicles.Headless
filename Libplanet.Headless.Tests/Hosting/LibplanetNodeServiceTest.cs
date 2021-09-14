@@ -75,18 +75,17 @@ namespace Libplanet.Headless.Tests.Hosting
             public IComparer<IBlockExcerpt> CanonicalChainComparer { get; } = new TotalDifficultyComparer();
 
             public IAction BlockAction => null;
-            public int GetMinTransactionsPerBlock(long index) => 0;
 
-            public int GetMaxTransactionsPerBlock(long index) => int.MaxValue;
-
-            public int GetMaxBlockBytes(long index) => int.MaxValue;
-
-            public bool DoesTransactionFollowsPolicy(
-                Transaction<DummyAction> transaction,
-                BlockChain<DummyAction> blockChain
-            )
+            public TxPolicyViolationException ValidateNextBlockTx(
+                BlockChain<DummyAction> blockChain, Transaction<DummyAction> transaction)
             {
-                return true;
+                return null;
+            }
+
+            public BlockPolicyViolationException ValidateNextBlock(
+                BlockChain<DummyAction> blockChain, Block<DummyAction> nextBlock)
+            {
+                return null;
             }
 
             public long GetNextBlockDifficulty(BlockChain<DummyAction> blocks)
@@ -94,13 +93,14 @@ namespace Libplanet.Headless.Tests.Hosting
                 return 0;
             }
 
-            public InvalidBlockException ValidateNextBlock(BlockChain<DummyAction> blocks, Block<DummyAction> nextBlock)
-            {
-                return null;
-            }
-
             public HashAlgorithmType GetHashAlgorithm(long blockIndex) =>
                 HashAlgorithmType.Of<SHA256>();
+
+            public int GetMaxBlockBytes(long index) => int.MaxValue;
+
+            public int GetMinTransactionsPerBlock(long index) => 0;
+
+            public int GetMaxTransactionsPerBlock(long index) => int.MaxValue;
 
             public int GetMaxTransactionsPerSignerPerBlock(long index) => GetMaxTransactionsPerBlock(index);
         }
