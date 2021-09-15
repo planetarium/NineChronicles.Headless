@@ -115,6 +115,11 @@ namespace NineChronicles.Headless.GraphTypes
                         Name = "stageId",
                         Description = "Stage ID."
                     },
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "rankingMapAddress",
+                        Description = "Address of RankingMapState containing the avatar address."
+                    },
                     new QueryArgument<ListGraphType<GuidGraphType>>
                     {
                         Name = "costumeIds",
@@ -144,6 +149,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
                         int worldId = context.GetArgument<int>("worldId");
                         int stageId = context.GetArgument<int>("stageId");
+                        Address rankingMapAddress = context.GetArgument<Address>("rankingMapAddress");
                         List<Guid> costumeIds = context.GetArgument<List<Guid>>("costumeIds") ?? new List<Guid>();
                         List<Guid> equipmentIds = context.GetArgument<List<Guid>>("equipmentIds") ?? new List<Guid>();
                         List<Guid> consumableIds = context.GetArgument<List<Guid>>("consumableIds") ?? new List<Guid>();
@@ -153,6 +159,7 @@ namespace NineChronicles.Headless.GraphTypes
                             avatarAddress = avatarAddress,
                             worldId = worldId,
                             stageId = stageId,
+                            rankingMapAddress = rankingMapAddress,
                             costumes = costumeIds,
                             equipments = equipmentIds,
                             foods = consumableIds,
