@@ -29,6 +29,12 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y libc6-dev
 COPY --from=build-env /app/out .
 
+# Install native deps & utilities for production
+RUN apt-get update \
+    && apt-get install -y --allow-unauthenticated \
+        libc6-dev jq \
+     && rm -rf /var/lib/apt/lists/*
+
 VOLUME /data
 
 ENTRYPOINT ["dotnet", "NineChronicles.Headless.Executable.dll"]
