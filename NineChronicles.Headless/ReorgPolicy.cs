@@ -15,24 +15,24 @@ namespace NineChronicles.Headless
     {
         private readonly long _difficulty;
 
+        public IAction BlockAction { get; }
+
         public ReorgPolicy(IAction blockAction, long difficulty)
         {
             BlockAction = blockAction;
             _difficulty = difficulty;
         }
 
-        public int GetMaxBlockBytes(long index) => int.MaxValue;
+        public TxPolicyViolationException? ValidateNextBlockTx(
+            BlockChain<PolymorphicAction<ActionBase>> blockChain,
+            Transaction<PolymorphicAction<ActionBase>> transaction)
+        {
+            return null;
+        }
 
-        public int GetMinTransactionsPerBlock(long index) => 0;
-
-        public int GetMaxTransactionsPerBlock(long index) => int.MaxValue;
-
-        public bool DoesTransactionFollowsPolicy(
-            Transaction<PolymorphicAction<ActionBase>> transaction,
-            BlockChain<PolymorphicAction<ActionBase>> blockChain
-        ) => true;
-
-        public InvalidBlockException? ValidateNextBlock(BlockChain<PolymorphicAction<ActionBase>> blocks, Block<PolymorphicAction<ActionBase>> nextBlock)
+        public BlockPolicyViolationException? ValidateNextBlock(
+            BlockChain<PolymorphicAction<ActionBase>> blockChain,
+            Block<PolymorphicAction<ActionBase>> nextBlock)
         {
             return null;
         }
@@ -44,10 +44,14 @@ namespace NineChronicles.Headless
 
         public IComparer<IBlockExcerpt> CanonicalChainComparer { get; } = new TotalDifficultyComparer();
 
-        public IAction BlockAction { get; }
-
         public HashAlgorithmType GetHashAlgorithm(long blockIndex) =>
             HashAlgorithmType.Of<SHA256>();
+
+        public int GetMaxBlockBytes(long index) => int.MaxValue;
+
+        public int GetMinTransactionsPerBlock(long index) => 0;
+
+        public int GetMaxTransactionsPerBlock(long index) => int.MaxValue;
 
         public int GetMaxTransactionsPerSignerPerBlock(long index)
         {
