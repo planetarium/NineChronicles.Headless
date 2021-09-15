@@ -134,99 +134,33 @@ namespace NineChronicles.Headless.Executable.Commands
                     txCount++;
                     foreach (var action in tx.Actions)
                     {
-                        if (action.InnerAction is HackAndSlash hackandslashAction)
+                        switch (action.InnerAction)
                         {
-                            hackandslashCount++;
-                        }
-
-                        if (action.InnerAction is HackAndSlash7 hackandslashAction7)
-                        {
-                            hackandslashCount++;
-                        }
-
-                        if (action.InnerAction is HackAndSlash6 hackandslashAction6)
-                        {
-                            hackandslashCount++;
-                        }
-
-                        if (action.InnerAction is HackAndSlash5 hackandslashAction5)
-                        {
-                            hackandslashCount++;
-                        }
-
-                        if (action.InnerAction is HackAndSlash4 hackandslashAction4)
-                        {
-                            hackandslashCount++;
-                        }
-
-                        if (action.InnerAction is HackAndSlash3 hackandslashAction3)
-                        {
-                            hackandslashCount++;
-                        }
-
-                        if (action.InnerAction is HackAndSlash2 hackandslashAction2)
-                        {
-                            hackandslashCount++;
-                        }
-
-                        if (action.InnerAction is HackAndSlash0 hackandslashAction0)
-                        {
-                            hackandslashCount++;
-                        }
-
-                        if (action.InnerAction is MimisbrunnrBattle mimisbrunnrAction)
-                        {
-                            mimisbrunnrCount++;
-                        }
-
-                        if (action.InnerAction is MimisbrunnrBattle4 mimisbrunnrAction4)
-                        {
-                            mimisbrunnrCount++;
-                        }
-
-                        if (action.InnerAction is MimisbrunnrBattle3 mimisbrunnrAction3)
-                        {
-                            mimisbrunnrCount++;
-                        }
-
-                        if (action.InnerAction is MimisbrunnrBattle2 mimisbrunnrAction2)
-                        {
-                            mimisbrunnrCount++;
-                        }
-
-                        if (action.InnerAction is MimisbrunnrBattle0 mimisbrunnrAction0)
-                        {
-                            mimisbrunnrCount++;
-                        }
-
-                        if (action.InnerAction is RankingBattle rankingbattleAction)
-                        {
-                            rankingbattleCount++;
-                        }
-
-                        if (action.InnerAction is RankingBattle5 rankingbattleAction5)
-                        {
-                            rankingbattleCount++;
-                        }
-
-                        if (action.InnerAction is RankingBattle4 rankingbattleAction4)
-                        {
-                            rankingbattleCount++;
-                        }
-
-                        if (action.InnerAction is RankingBattle3 rankingbattleAction3)
-                        {
-                            rankingbattleCount++;
-                        }
-
-                        if (action.InnerAction is RankingBattle2 rankingbattleAction2)
-                        {
-                            rankingbattleCount++;
-                        }
-
-                        if (action.InnerAction is RankingBattle0 rankingbattleAction0)
-                        {
-                            rankingbattleCount++;
+                            case HackAndSlash _:
+                            case HackAndSlash0 _:
+                            case HackAndSlash1 _:
+                            case HackAndSlash2 _:
+                            case HackAndSlash3 _:
+                            case HackAndSlash4 _:
+                            case HackAndSlash5 _:
+                            case HackAndSlash6 _:
+                                hackandslashCount++;
+                                break;
+                            caee MimisbrunnrBattle  _:
+                            caee MimisbrunnrBattle0  _:
+                            caee MimisbrunnrBattle2  _:
+                            caee MimisbrunnrBattle3  _:
+                            caee MimisbrunnrBattle4  _:
+                                mimisbrunnrCount++;
+                                break;
+                            case RankingBattle _:
+                            case RankingBattle0 _:
+                            case RankingBattle2 _:
+                            case RankingBattle3 _:
+                            case RankingBattle4 _:
+                            case RankingBattle5 _:
+                                rankingbattleCount++;
+                                break;
                         }
                     }
                 }
