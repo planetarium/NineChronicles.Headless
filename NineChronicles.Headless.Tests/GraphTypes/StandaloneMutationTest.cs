@@ -328,6 +328,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Address avatarAddress, 
             int worldId, 
             int stageId,
+            Address rankingMapAddress,
             List<Guid> costumeIds, 
             List<Guid> equipmentIds, 
             List<Guid> consumableIds
@@ -339,7 +340,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 ranking.RankingMap[RankingState.Derive(i)] = new HashSet<Address>().ToImmutableHashSet();
             }
-            var queryArgs = $"avatarAddress: \"{avatarAddress}\", worldId: {worldId}, stageId: {stageId}";
+            var queryArgs = $"avatarAddress: \"{avatarAddress}\", worldId: {worldId}, stageId: {stageId}, rankingMapAddress: \"{rankingMapAddress}\"";
             if (costumeIds.Any())
             {
                 queryArgs += $", costumeIds: [{string.Join(",", costumeIds.Select(r => string.Format($"\"{r}\"")))}]";
@@ -384,6 +385,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new Address(),
                 1,
                 2,
+                new Address(),
                 new List<Guid>(),
                 new List<Guid>(),
                 new List<Guid>(),
@@ -393,6 +395,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new Address(),
                 2,
                 3,
+                new Address(),
                 new List<Guid>
                 {
                     Guid.NewGuid(),
