@@ -9,7 +9,7 @@ using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
 using Libplanet.Store;
 using Nekoyume.Action;
-using Nekoyume.BlockChain;
+using Nekoyume.BlockChain.Policy;
 using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Executable.Store;
 using Serilog.Core;
