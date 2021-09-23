@@ -155,7 +155,7 @@ namespace NineChronicles.Headless.GraphTypes
                     TxId txId = context.GetArgument<TxId>("txId");
                     if (!(store.GetFirstTxIdBlockHashIndex(txId) is { } txExecutedBlockHash))
                     {
-                        return store.IterateStagedTransactionIds().Contains(txId)
+                        return blockChain.GetStagedTransactionIds().Contains(txId)
                             ? new TxResult(TxStatus.STAGING, null, null)
                             : new TxResult(TxStatus.INVALID, null, null);
                     }
