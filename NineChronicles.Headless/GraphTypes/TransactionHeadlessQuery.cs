@@ -160,17 +160,23 @@ namespace NineChronicles.Headless.GraphTypes
                             : new TxResult(TxStatus.INVALID, null, null);
                     }
 
-                    TxExecution execution = blockChain.GetTxExecution(txExecutedBlockHash, txId);
-                    Block<PolymorphicAction<ActionBase>> txExecutedBlock = blockChain[txExecutedBlockHash];
-  
-                    switch (execution)
+                    try
                     {
-                        case TxSuccess txSuccess:
-                            return new TxResult(TxStatus.SUCCESS, txExecutedBlock.Index, txExecutedBlock.Hash.ToString());
-                        case TxFailure txFailure:
-                            return new TxResult(TxStatus.FAILURE, txExecutedBlock.Index, txExecutedBlock.Hash.ToString());
-                        default:
-                            throw new NotImplementedException($"{nameof(execution)} is not expected concrete class.");
+                        TxExecution execution = blockChain.GetTxExecution(txExecutedBlockHash, txId);
+                        Block<PolymorphicAction<ActionBase>> txExecutedBlock = blockChain[txExecutedBlockHash];
+                        return execution switch
+                        {
+                            TxSuccess txSuccess => new TxResult(TxStatus.SUCCESS, txExecutedBlock.Index,
+                                txExecutedBlock.Hash.ToString()),
+                            TxFailure txFailure => new TxResult(TxStatus.FAILURE, txExecutedBlock.Index,
+                                txExecutedBlock.Hash.ToString()),
+                            _ => throw new NotImplementedException(
+                                $"{nameof(execution)} is not expected concrete class.")
+                        };
+                    }
+                    catch(Exception)
+                    {
+                        return new TxResult(TxStatus.INVALID, null, null);
                     }
                 }
             );
