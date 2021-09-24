@@ -39,6 +39,8 @@ namespace NineChronicles.Headless.Controllers
 
         public const string CheckPeerEndpoint = "/check-peer";
 
+        public const string RemoveSubscribeEndPoint = "/remove-subscribe";
+
         public GraphQLController(StandaloneContext standaloneContext, IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
         {
             _httpContextAccessor = httpContextAccessor;
@@ -100,7 +102,7 @@ namespace NineChronicles.Headless.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> CheckPeer([FromBody] CheckPeerRequest request)
+        public async Task<IActionResult> CheckPeer([FromBody] AddressRequest request)
         {
             if (StandaloneContext.NineChroniclesNodeService is null)
             {
@@ -125,6 +127,19 @@ namespace NineChronicles.Headless.Controllers
                 Log.Warning(e, msg);
                 return StatusCode(StatusCodes.Status500InternalServerError, msg);
             }
+        }
+
+        [HttpPost(RemoveSubscribeEndPoint)]
+        public IActionResult RemoveSubscribe([FromBody] AddressRequest request)
+        {
+            if (!HasLocalPolicy())
+            {
+                return Unauthorized();
+            }
+
+            var address = new Address(request.AddressString);
+            StandaloneContext.AgentAddresses.TryRemove(address, out _);
+            return Ok(200);
         }
 
         //TODO : This should be covered in test.
