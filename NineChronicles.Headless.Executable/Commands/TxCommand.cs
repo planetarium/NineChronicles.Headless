@@ -47,10 +47,12 @@ namespace NineChronicles.Headless.Executable.Commands
                 string type = (Text)decoded[0];
                 Dictionary plainValue = (Dictionary)decoded[1];
 
-                var action = type switch
+                ActionBase action = type switch
                 {
                     nameof(ActivateAccount) => new ActivateAccount(),
-                    _ => throw new CommandExitedException($"Unsupported action type was passed '{type}'", 128),
+                    nameof(MonsterCollect) => new MonsterCollect(),
+                    nameof(ClaimMonsterCollectionReward) => new ClaimMonsterCollectionReward(),
+                    _ => throw new CommandExitedException($"Unsupported action type was passed '{type}'", 128)
                 };
                 action.LoadPlainValue(plainValue);
 
