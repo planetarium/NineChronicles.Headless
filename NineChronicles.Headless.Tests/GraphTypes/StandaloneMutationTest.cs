@@ -789,6 +789,48 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Fact]
+        public async Task Tx_TxId()
+        {
+            Block<PolymorphicAction<ActionBase>> genesis =
+                MakeGenesisBlock(
+                    default,
+                    new Currency("NCG", 2, minters: null),
+                    ImmutableHashSet<Address>.Empty
+                );
+            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
+
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
+
+            // Error: empty payload
+            var query = $"mutation {{ stageTxTxId(payload: \"\") }}";
+            ExecutionResult result = await ExecuteQueryAsync(query);
+            Assert.NotNull(result.Errors);
+            Assert.Null(result.Data);
+            Transaction<PolymorphicAction<ActionBase>> tx =
+                Transaction<PolymorphicAction<ActionBase>>.Create(
+                    0,
+                    service.MinerPrivateKey,
+                    genesis.Hash,
+                    new PolymorphicAction<ActionBase>[] { }
+                );
+            string base64Encoded = Convert.ToBase64String(tx.Serialize(true));
+            query = $"mutation {{ stageTxTxId(payload: \"{base64Encoded}\") }}";
+            result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
+            Assert.Equal(
+                new Dictionary<string, object>
+                {
+                    ["stageTxReturnTxId"] = tx.Id.ToHex(),
+                },
+                result.Data
+            );
+            Block<PolymorphicAction<ActionBase>> mined =
+                await BlockChain.MineBlock(service.MinerPrivateKey!.ToAddress());
+            Assert.Contains(tx, mined.Transactions);
+        }
+
+        [Fact]
         public async Task Tx_ActivateAccount()
         {
             var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
