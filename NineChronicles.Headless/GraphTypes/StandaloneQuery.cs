@@ -260,7 +260,15 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<MonsterCollectionStatusType>(
                 name: nameof(MonsterCollectionStatus),
-                description: "Current miner's monster collection status.",
+                arguments: new QueryArguments(
+                    new QueryArgument<AddressType>
+                    {
+                        Name = "address",
+                        Description = "agent address.",
+                        DefaultValue = null
+                    }
+                ),
+                description: "Get monster collection status by address.",
                 resolve: context =>
                 {
                     if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
@@ -269,13 +277,24 @@ namespace NineChronicles.Headless.GraphTypes
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
                     }
 
-                    if (standaloneContext.NineChroniclesNodeService?.MinerPrivateKey is null)
+                    Address? address = context.GetArgument<Address?>("address");
+                    Address agentAddress;
+                    if (address is null)
                     {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.NineChroniclesNodeService)}.{nameof(StandaloneContext.NineChroniclesNodeService.MinerPrivateKey)} is null.");
+                        if (standaloneContext.NineChroniclesNodeService?.MinerPrivateKey is null)
+                        {
+                            throw new ExecutionError(
+                                $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.NineChroniclesNodeService)}.{nameof(StandaloneContext.NineChroniclesNodeService.MinerPrivateKey)} is null.");
+                        }
+
+                        agentAddress = standaloneContext.NineChroniclesNodeService!.MinerPrivateKey!.ToAddress();
+                    }
+                    else
+                    {
+                        agentAddress = (Address)address;
                     }
 
-                    Address agentAddress = standaloneContext.NineChroniclesNodeService.MinerPrivateKey.ToAddress();
+
                     BlockHash? offset = blockChain.GetDelayedRenderer()?.Tip?.Hash;
                     if (blockChain.GetState(agentAddress, offset) is Dictionary agentDict)
                     {
