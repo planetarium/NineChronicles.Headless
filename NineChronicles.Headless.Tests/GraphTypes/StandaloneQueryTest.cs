@@ -604,7 +604,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 StandaloneContextFx.NineChroniclesNodeService.MinerPrivateKey = null;
             }
-            Assert.Equal(miner, StandaloneContextFx.NineChroniclesNodeService.MinerPrivateKey!.Equals(userPrivateKey));
+            else
+            {
+                Assert.Equal(userPrivateKey, StandaloneContextFx.NineChroniclesNodeService.MinerPrivateKey!);
+            }
             string queryArgs = miner ? "" : $@"(address: ""{userAddress}"")";
             string query = $@"query {{
                 monsterCollectionStatus{queryArgs} {{
