@@ -54,7 +54,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
         [Command(Description = "Create MonsterCollect action.")]
         public int MonsterCollect(
-            [Range(1, 7)] int level,
+            [Range(0, 7)] int level,
             [Argument("PATH", Description = "A file path of base64 encoded action.")] string filePath
         )
         {
