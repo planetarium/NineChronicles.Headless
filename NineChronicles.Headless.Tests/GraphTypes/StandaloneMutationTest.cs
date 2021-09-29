@@ -328,6 +328,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Address avatarAddress, 
             int worldId, 
             int stageId,
+            Address rankingMapAddress,
             List<Guid> costumeIds, 
             List<Guid> equipmentIds, 
             List<Guid> consumableIds
@@ -339,7 +340,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 ranking.RankingMap[RankingState.Derive(i)] = new HashSet<Address>().ToImmutableHashSet();
             }
-            var queryArgs = $"avatarAddress: \"{avatarAddress}\", worldId: {worldId}, stageId: {stageId}";
+            var queryArgs = $"avatarAddress: \"{avatarAddress}\", worldId: {worldId}, stageId: {stageId}, rankingMapAddress: \"{rankingMapAddress}\"";
             if (costumeIds.Any())
             {
                 queryArgs += $", costumeIds: [{string.Join(",", costumeIds.Select(r => string.Format($"\"{r}\"")))}]";
@@ -384,6 +385,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new Address(),
                 1,
                 2,
+                new Address(),
                 new List<Guid>(),
                 new List<Guid>(),
                 new List<Guid>(),
@@ -393,6 +395,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new Address(),
                 2,
                 3,
+                new Address(),
                 new List<Guid>
                 {
                     Guid.NewGuid(),
@@ -472,10 +475,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
             var action = (CombinationEquipment) tx.Actions.First().InnerAction;
-            Assert.Equal(avatarAddress, action.AvatarAddress);
-            Assert.Equal(recipeId, action.RecipeId);
-            Assert.Equal(slotIndex, action.SlotIndex);
-            Assert.Equal(subRecipeId, action.SubRecipeId);
+            Assert.Equal(avatarAddress, action.avatarAddress);
+            Assert.Equal(recipeId, action.recipeId);
+            Assert.Equal(slotIndex, action.slotIndex);
+            Assert.Equal(subRecipeId, action.subRecipeId);
         }
 
         public static IEnumerable<object?[]> CombinationEquipmentMember => new List<object?[]>
@@ -580,7 +583,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(expected, result.Data);
             Assert.Single(tx.Actions);
             var action = (CombinationConsumable) tx.Actions.First().InnerAction;
-            Assert.Equal(avatarAddress, action.AvatarAddress);
+            Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(recipeId, action.recipeId);
             Assert.Equal(slotIndex, action.slotIndex);
         }
