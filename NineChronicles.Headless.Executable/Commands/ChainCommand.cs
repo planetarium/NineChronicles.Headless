@@ -143,6 +143,7 @@ namespace NineChronicles.Headless.Executable.Commands
                             case HackAndSlash4 _:
                             case HackAndSlash5 _:
                             case HackAndSlash6 _:
+                            case HackAndSlash7 _:
                                 hackandslashCount++;
                                 break;
                             case MimisbrunnrBattle  _:
@@ -158,6 +159,7 @@ namespace NineChronicles.Headless.Executable.Commands
                             case RankingBattle3 _:
                             case RankingBattle4 _:
                             case RankingBattle5 _:
+                            case RankingBattle6 _:
                                 rankingbattleCount++;
                                 break;
                         }
