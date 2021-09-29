@@ -58,7 +58,7 @@ namespace Libplanet.Headless.Hosting
             
             Log.Debug("Initializing node service.");
 
-            var genesisBlock = LoadGenesisBlock(properties);
+            var genesisBlock = LoadGenesisBlock(properties, hardPolicy.GetHashAlgorithm);
 
             var iceServers = properties.IceServers;
 

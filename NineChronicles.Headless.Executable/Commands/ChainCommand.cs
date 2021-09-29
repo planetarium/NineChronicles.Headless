@@ -1,14 +1,15 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using Cocona;
 using Cocona.Help;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
+using Libplanet.Extensions.Cocona;
 using Libplanet.Store;
+using Libplanet.Store.Trie;
 using Nekoyume.Action;
 using Nekoyume.BlockChain.Policy;
 using NineChronicles.Headless.Executable.IO;
@@ -49,14 +50,15 @@ namespace NineChronicles.Headless.Executable.Commands
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<PolymorphicAction<ActionBase>>();
             IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy(minimumDifficulty, maximumTransactions);
             IStore store = storeType.CreateStore(storePath);
-            Block<NCAction> genesisBlock = store.GetGenesisBlock<NCAction>();
+            var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
+            Block<NCAction> genesisBlock = store.GetGenesisBlock<NCAction>(blockPolicy.GetHashAlgorithm);
             BlockChain<NCAction> chain = new BlockChain<NCAction>(
                 blockPolicy,
                 stagePolicy,
                 store,
-                new NoOpStateStore(),
+                stateStore,
                 genesisBlock);
-            _console.Out.WriteLine(JsonSerializer.Serialize(chain.Tip.Header));
+            _console.Out.WriteLine(Utils.SerializeHumanReadable(chain.Tip.Header));
             (store as IDisposable)?.Dispose();
         }
 
@@ -85,7 +87,8 @@ namespace NineChronicles.Headless.Executable.Commands
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<PolymorphicAction<ActionBase>>();
             IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy(minimumDifficulty, maximumTransactions);
             IStore store = storeType.CreateStore(storePath);
-            Block<NCAction> genesisBlock = store.GetGenesisBlock<NCAction>();
+            var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
+            Block<NCAction> genesisBlock = store.GetGenesisBlock<NCAction>(blockPolicy.GetHashAlgorithm);
             if (!(store.GetCanonicalChainId() is { } chainId))
             {
                 throw new CommandExitedException($"There is no canonical chain: {storePath}", -1);
@@ -100,7 +103,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 blockPolicy,
                 stagePolicy,
                 store,
-                new NoOpStateStore(),
+                stateStore,
                 genesisBlock);
 
             long height = chain.Tip.Index;
@@ -120,9 +123,11 @@ namespace NineChronicles.Headless.Executable.Commands
             foreach (var item in
                 store.IterateIndexes(chain.Id, offset + 1 ?? 1, limit).Select((value, i) => new { i, value }))
             {
-                var block = store.GetBlock<NCAction>(item.value);
-
-                var previousBlock = store.GetBlock<NCAction>(block.PreviousHash ?? block.Hash);
+                var block = store.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
+                var previousBlock = store.GetBlock<NCAction>(
+                    blockPolicy.GetHashAlgorithm,
+                    block.PreviousHash ?? block.Hash
+                );
 
                 var miningTime = block.Timestamp - previousBlock.Timestamp;
                 var txCount = 0;

@@ -8,7 +8,6 @@ using Bencodex;
 using GraphQL;
 using Libplanet;
 using Libplanet.Action;
-using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
@@ -31,7 +30,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public TransactionHeadlessQueryTest()
         {
             _store = new DefaultStore(null);
-            _stateStore = new TrieStateStore(new DefaultKeyValueStore(null), new DefaultKeyValueStore(null));
+            _stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             _blockChain = new BlockChain<NCAction>(
                 new BlockPolicy<NCAction>(),
                 new VolatileStagePolicy<NCAction>(),
