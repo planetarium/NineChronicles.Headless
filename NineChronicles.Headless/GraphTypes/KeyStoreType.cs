@@ -37,7 +37,7 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         var protectedPrivateKey = protectedPrivateKeys.Where(key => key.Address.Equals(address)).First();
                         var privateKey = protectedPrivateKey.Unprotect(passphrase);
-                        return privateKey.ByteArray;
+                        return privateKey.ToByteArray();
                     }
                     catch (InvalidOperationException)
                     {

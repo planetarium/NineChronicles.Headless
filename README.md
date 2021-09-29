@@ -16,7 +16,7 @@
 ```
 $ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
 Usage: NineChronicles.Headless.Executable [command]
-Usage: NineChronicles.Headless.Executable [--app-protocol-version <String>] [--genesis-block-path <String>] [--no-miner] [--host <String>] [--port <Nullable`1>] [--swarm-private-key <String>] [--minimum-difficulty <Int32>] [--miner-private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--graphql-secret-token-path <String>] [--no-cors] [--workers <Int32>] [--confirmations <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-action-renders] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--static-peer <String>...] [--miner-count <Int32>] [--skip-preload] [--minimum-broadcast-target <Int32>] [--bucket-size <Int32>] [--chain-tip-stale-behavior-type <String>] [--tx-quota-per-signer <Int32>] [--completion] [--help] [--version]
+Usage: NineChronicles.Headless.Executable [--app-protocol-version <String>] [--genesis-block-path <String>] [--no-miner] [--host <String>] [--port <Nullable`1>] [--swarm-private-key <String>] [--minimum-difficulty <Int32>] [--miner-private-key <String>] [--store-type <String>] [--store-path <String>] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Nullable`1>] [--graphql-server] [--graphql-host <String>] [--graphql-port <Nullable`1>] [--graphql-secret-token-path <String>] [--no-cors] [--workers <Int32>] [--confirmations <Int32>] [--nonblock-renderer] [--nonblock-renderer-queue <Int32>] [--max-transactions <Int32>] [--strict-rendering] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--log-action-renders] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--authorized-miner] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--static-peer <String>...] [--miner-count <Int32>] [--skip-preload] [--minimum-broadcast-target <Int32>] [--bucket-size <Int32>] [--chain-tip-stale-behavior-type <String>] [--tx-quota-per-signer <Int32>] [--completion] [--help] [--version]
 
 NineChronicles.Headless.Executable
 
@@ -50,6 +50,8 @@ Options:
   --no-cors                                                Run without CORS policy.
   --workers <Int32>                                        Number of workers to use in Swarm (Default: 5)
   --confirmations <Int32>                                  The number of required confirmations to recognize a block.  0 by default. (Default: 0)
+  --nonblock-renderer                                      Uses non-blocking renderer, which prevents the blockchain & swarm from waiting slow rendering.  Turned off by default.
+  --nonblock-renderer-queue <Int32>                        The size of the queue used by the non-blocking renderer.   512 by default.  Ignored if --nonblock-renderer is turned off. (Default: 512)
   --max-transactions <Int32>                               The number of maximum transactions can be included in a single block. Unlimited if the value is less then or equal to 0.  100 by default. (Default: 100)
   --strict-rendering                                       Flag to turn on validating action renderer.
   --dev                                                    Flag to turn on the dev mode.  false by default.
@@ -107,6 +109,8 @@ $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 - `--libplanet-node`: Run with formal Libplanet node. One of this or `graphql-server` must be set.
 - `--workers`: Number of workers to use in Swarm.
 - `--confirmations`: Specifies the number of required confirmations to recognize a block.
+- `--nonblock-renderer`: Uses non-blocking renderer, which prevents the blockchain & swarm from waiting slow rendering.  Turned off by default.
+- `--nonblock-renderer-queue`: The size of the queue used by the non-blocking renderer.   512 by default.  Ignored if `--nonblock-renderer` is turned off.
 - `--max-transactions`: Specifies the number of maximum transactions can be included in a single block. Unlimited if the value is less then or equal to 0.
 - `--dev`: Flag to turn on the dev mode.
 - `--dev.block-interval`: Specifies the time interval between blocks by milliseconds in dev mode.
@@ -178,6 +182,8 @@ planetariumhq/ninechronicles-headless:latest \
   - `NoTrustedStateValidators`
   - `NoMiner`
   - `Confirmations`
+  - `NonblockRenderer`
+  - `NonblockRendererQueue`
   - `Workers`
 * If you are using an [Elastic IP](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html) on your AWS instance, you must include the IP as the `--host` option but do not need to include the `--ice-server` option.
 * For mining, make sure to include the `--miner-private-key` option with your private key. Also, include `--libplanet-node` to run the default libplanet node.
