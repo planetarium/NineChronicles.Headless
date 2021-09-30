@@ -277,5 +277,10 @@ namespace NineChronicles.Headless
                 _clients.Remove(clientAddress);
             }
         }
+
+        public List<Address> GetClients()
+        {
+            return _clients.Keys.ToList();
+        }
     }
 }
