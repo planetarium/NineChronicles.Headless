@@ -12,20 +12,22 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
 {
     public class InventoryTypeTest
     {
-        [Fact]
-        public async Task Query()
+        [Theory]
+        [InlineData(100000)]
+        [InlineData(301000)]
+        public async Task Query(int inventoryItemId)
         {
-            const string query = @"
-            {
-                items(inventoryItemId: 700000)
-                {
+            string query = $@"
+            {{
+                items(inventoryItemId: {inventoryItemId})
+                {{
                     count
                     id
                     itemType
-                }
-            }";
+                }}
+            }}";
             
-            var row = Fixtures.TableSheetsFX.MaterialItemSheet.Values.Single(r => r.Id == 700000);
+            var row = Fixtures.TableSheetsFX.MaterialItemSheet.Values.Single(r => r.Id == inventoryItemId);
             var item = ItemFactory.CreateMaterial(row);
             Inventory inventory = Fixtures.AvatarStateFX.inventory;
             inventory.AddFungibleItem(item);
