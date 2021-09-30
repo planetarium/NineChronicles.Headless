@@ -27,7 +27,7 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneQuery : ObjectGraphType
     {
-        public StandaloneQuery(StandaloneContext standaloneContext, IConfiguration configuration)
+        public StandaloneQuery(StandaloneContext standaloneContext, IConfiguration configuration, ActionEvaluationPublisher publisher)
         {
             bool useSecretToken = configuration[GraphQLService.SecretTokenKey] is { };
 
@@ -381,6 +381,12 @@ namespace NineChronicles.Headless.GraphTypes
 
                     throw new ExecutionError($"invitationCode is invalid.");
                 }
+            );
+
+            Field<NonNullGraphType<RpcInformationQuery>>(
+                name: "rpcInformation",
+                description: "Query for rpc mode information.",
+                resolve: context => new RpcInformationQuery(publisher)
             );
         }
     }
