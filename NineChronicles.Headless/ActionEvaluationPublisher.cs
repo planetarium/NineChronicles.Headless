@@ -9,12 +9,10 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
-using Bencodex;
 using Bencodex.Types;
 using Grpc.Core;
 using Lib9c.Renderer;
 using Libplanet;
-using Libplanet.Blocks;
 using MagicOnion.Client;
 using Microsoft.Extensions.Hosting;
 using Nekoyume.Action;
@@ -27,7 +25,6 @@ namespace NineChronicles.Headless
 {
     public class ActionEvaluationPublisher : BackgroundService
     {
-        private static readonly Codec Codec = new Codec();
         private readonly string _host;
         private readonly int _port;
         private readonly BlockRenderer _blockRenderer;
@@ -82,8 +79,8 @@ namespace NineChronicles.Headless
                     try
                     {
                         await client.BroadcastRenderBlockAsync(
-                            Codec.Encode(pair.OldTip.MarshalBlock()),
-                            Codec.Encode(pair.NewTip.MarshalBlock())
+                            pair.OldTip.Header.Serialize(),
+                            pair.NewTip.Header.Serialize()
                         );
                     }
                     catch (Exception e)
@@ -100,9 +97,9 @@ namespace NineChronicles.Headless
                     try
                     {
                         await client.ReportReorgAsync(
-                            Codec.Encode(ev.OldTip.MarshalBlock()),
-                            Codec.Encode(ev.NewTip.MarshalBlock()),
-                            Codec.Encode(ev.Branchpoint.MarshalBlock())
+                            ev.OldTip.Serialize(),
+                            ev.NewTip.Serialize(),
+                            ev.Branchpoint.Serialize()
                         );
                     }
                     catch (Exception e)
@@ -119,9 +116,9 @@ namespace NineChronicles.Headless
                     try
                     {
                         await client.ReportReorgEndAsync(
-                            Codec.Encode(ev.OldTip.MarshalBlock()),
-                            Codec.Encode(ev.NewTip.MarshalBlock()),
-                            Codec.Encode(ev.Branchpoint.MarshalBlock())
+                            ev.OldTip.Serialize(),
+                            ev.NewTip.Serialize(),
+                            ev.Branchpoint.Serialize()
                         );
                     }
                     catch (Exception e)

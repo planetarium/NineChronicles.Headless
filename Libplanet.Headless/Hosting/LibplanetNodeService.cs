@@ -6,8 +6,6 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Bencodex;
-using Bencodex.Types;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
@@ -30,8 +28,6 @@ namespace Libplanet.Headless.Hosting
     public class LibplanetNodeService<T> : BackgroundService, IDisposable
         where T : IAction, new()
     {
-        private static readonly Codec Codec = new Codec();
-
         public readonly IStore Store;
 
         public readonly IStateStore StateStore;
@@ -94,7 +90,7 @@ namespace Libplanet.Headless.Hosting
 
             Properties = properties;
 
-            var genesisBlock = LoadGenesisBlock(properties, blockPolicy.GetHashAlgorithm);
+            var genesisBlock = LoadGenesisBlock(properties);
 
             var iceServers = Properties.IceServers;
 
@@ -113,12 +109,10 @@ namespace Libplanet.Headless.Hosting
 
             if (Properties.Confirmations > 0)
             {
-                HashAlgorithmGetter getHashAlgo = blockPolicy.GetHashAlgorithm;
                 IComparer<IBlockExcerpt> comparer = blockPolicy.CanonicalChainComparer;
-                int confirms = Properties.Confirmations;
                 renderers = renderers.Select(r => r is IActionRenderer<T> ar
-                    ? new DelayedActionRenderer<T>(ar, comparer, Store, getHashAlgo, confirms, 50)
-                    : new DelayedRenderer<T>(r, comparer, Store, getHashAlgo, confirms)
+                    ? new DelayedActionRenderer<T>(ar, comparer, Store, Properties.Confirmations, 50)
+                    : new DelayedRenderer<T>(r, comparer, Store, Properties.Confirmations)
                 );
 
                 // Log the outmost (before delayed) events as well as
@@ -339,8 +333,9 @@ namespace Libplanet.Headless.Hosting
             store ??= new DefaultStore(path, flush: false);
             store = new ReducedStore(store);
 
-            IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states"));
-            IStateStore stateStore = new TrieStateStore(stateKeyValueStore);
+            IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states")),
+                stateHashKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "state_hashes"));
+            IStateStore stateStore = new TrieStateStore(stateKeyValueStore, stateHashKeyValueStore);
             return (store, stateStore);
         }
 
@@ -592,10 +587,7 @@ namespace Libplanet.Headless.Hosting
             }
         }
 
-        protected Block<T> LoadGenesisBlock(
-            LibplanetNodeServiceProperties<T> properties,
-            HashAlgorithmGetter hashAlgorithmGetter
-        )
+        protected Block<T> LoadGenesisBlock(LibplanetNodeServiceProperties<T> properties)
         {
             if (!(properties.GenesisBlock is null))
             {
@@ -614,8 +606,7 @@ namespace Libplanet.Headless.Hosting
                     using var client = new WebClient();
                     rawBlock = client.DownloadData(uri);
                 }
-                var blockDict = (Bencodex.Types.Dictionary)Codec.Decode(rawBlock);
-                return BlockMarshaler.UnmarshalBlock<T>(hashAlgorithmGetter, blockDict);
+                return Block<T>.Deserialize(rawBlock);
             }
             else
             {

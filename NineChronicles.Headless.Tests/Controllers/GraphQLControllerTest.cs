@@ -32,7 +32,9 @@ namespace NineChronicles.Headless.Tests.Controllers
         public GraphQLControllerTest()
         {
             var store = new DefaultStore(null);
-            var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
+            var stateStore = new TrieStateStore(
+                new DefaultKeyValueStore(null),
+                new DefaultKeyValueStore(null));
             var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
                 HashAlgorithmType.Of<SHA256>()
             );
