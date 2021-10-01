@@ -819,7 +819,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(
                 new Dictionary<string, object>
                 {
-                    ["stageTxReturnTxId"] = tx.Id.ToHex(),
+                    ["stageTxTxId"] = tx.Id.ToHex(),
                 },
                 result.Data
             );
