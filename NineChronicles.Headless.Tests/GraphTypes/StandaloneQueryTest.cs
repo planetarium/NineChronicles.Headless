@@ -643,7 +643,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 StandaloneContextFx.NineChroniclesNodeService.MinerPrivateKey = null;
             }
-            Assert.Equal(miner, StandaloneContextFx.NineChroniclesNodeService.MinerPrivateKey!.Equals(userPrivateKey));
             var action = new CreateAvatar2
             {
                 index = 0,

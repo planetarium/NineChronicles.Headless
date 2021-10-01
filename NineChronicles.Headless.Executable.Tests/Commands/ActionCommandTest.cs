@@ -99,8 +99,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             }
             else
             {
-                Assert.True(_console.Error.ToString()
-                    .Contains("System.FormatException: Could not find any recognizable digits."));
+                Assert.Contains("System.FormatException: Could not find any recognizable digits.", _console.Error.ToString());
             }
         }
     }
