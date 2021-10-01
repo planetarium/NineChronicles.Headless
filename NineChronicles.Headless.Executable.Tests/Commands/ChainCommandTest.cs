@@ -3,18 +3,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
-using Libplanet.Extensions.Cocona;
 using Libplanet.Crypto;
 using Libplanet.Store;
-using Libplanet.Store.Trie;
 using Nekoyume.Action;
-using Nekoyume.BlockChain.Policy;
+using Nekoyume.BlockChain;
 using NineChronicles.Headless.Executable.Commands;
 using NineChronicles.Headless.Executable.Store;
 using NineChronicles.Headless.Executable.Tests.IO;
@@ -47,8 +46,9 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [InlineData(StoreType.MonoRocksDb)]
         public void Tip(StoreType storeType)
         {
-            HashAlgorithmType hashAlgo = HashAlgorithmType.Of<SHA256>();
-            Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(hashAlgo);
+            Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
+                HashAlgorithmType.Of<SHA256>()
+            );
             IStore store = storeType.CreateStore(_storePath);
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
@@ -58,14 +58,11 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
             // FIXME For an unknown reason, BlockHeader.TimeStamp precision issue occurred and the store we should open it again.
             store = storeType.CreateStore(_storePath);
-            genesisBlock = store.GetBlock<NCAction>(_ => hashAlgo, genesisBlock.Hash);
+            genesisBlock = store.GetBlock<NCAction>(genesisBlock.Hash);
             store.Dispose();
 
             _command.Tip(storeType, _storePath);
-            Assert.Equal(
-                Utils.SerializeHumanReadable(genesisBlock.Header),
-                _console.Out.ToString().Trim()
-            );
+            Assert.Equal(JsonSerializer.Serialize(genesisBlock.Header), _console.Out.ToString().Trim());
         }
 
         [Theory]
@@ -82,7 +79,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             store.SetCanonicalChainId(chainId);
             store.PutBlock(genesisBlock);
             store.AppendIndex(chainId, genesisBlock.Hash);
-            var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
 
             const int minimumDifficulty = 5000000, maximumTransactions = 100;
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<PolymorphicAction<ActionBase>>();
@@ -91,7 +87,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 blockPolicy,
                 stagePolicy,
                 store,
-                stateStore,
+                new NoOpStateStore(),
                 genesisBlock);
 
             var action = new HackAndSlash
