@@ -26,7 +26,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         public void PrivateKey(string privateKeyHex, int exitCode, string errorOutput)
         {
             Assert.Equal(exitCode, _command.PrivateKey(privateKeyHex));
-            Assert.Equal(exitCode == 0 ? errorOutput : errorOutput + Environment.NewLine, _console.Error.ToString());
+            Assert.Equal(errorOutput, _console.Error.ToString().TrimEnd());
         }
 
         [Theory]
@@ -39,7 +39,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         public void PublicKey(string publicKeyHex, int exitCode, string errorOutput)
         {
             Assert.Equal(exitCode, _command.PublicKey(publicKeyHex));
-            Assert.Equal(exitCode == 0 ? errorOutput : errorOutput + Environment.NewLine, _console.Error.ToString());
+            Assert.Equal(errorOutput, _console.Error.ToString().TrimEnd());
         }
     }
 }
