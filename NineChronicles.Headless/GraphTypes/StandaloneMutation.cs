@@ -115,7 +115,7 @@ namespace NineChronicles.Headless.GraphTypes
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
                         }
 
-                        if (blockChain.Policy.DoesTransactionFollowsPolicy(tx, blockChain))
+                        if (blockChain.Policy.ValidateNextBlockTx(blockChain, tx) is null)
                         {
                             blockChain.StageTransaction(tx);
 
