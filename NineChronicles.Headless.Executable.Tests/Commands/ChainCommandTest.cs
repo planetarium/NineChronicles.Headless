@@ -13,7 +13,7 @@ using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Store;
 using Nekoyume.Action;
-using Nekoyume.BlockChain;
+using Nekoyume.BlockChain.Policy;
 using NineChronicles.Headless.Executable.Commands;
 using NineChronicles.Headless.Executable.Store;
 using NineChronicles.Headless.Executable.Tests.IO;
