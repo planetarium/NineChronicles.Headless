@@ -63,9 +63,9 @@ namespace Libplanet.Headless
         public void ForkTxNonces(Guid sourceChainId, Guid destinationChainId) =>
             InternalStore.ForkTxNonces(sourceChainId, destinationChainId);
 
-        public Block<T> GetBlock<T>(BlockHash blockHash)
+        public Block<T> GetBlock<T>(HashAlgorithmGetter hashAlgorithmGetter, BlockHash blockHash)
             where T : IAction, new() =>
-            InternalStore.GetBlock<T>(blockHash);
+            InternalStore.GetBlock<T>(hashAlgorithmGetter, blockHash);
 
         public BlockDigest? GetBlockDigest(BlockHash blockHash) =>
             InternalStore.GetBlockDigest(blockHash);
