@@ -196,11 +196,18 @@ type FungibleAssetValueType {
 
 scalar Guid
 
+type InventoryItemType {
+  count: Int!
+  id: Int!
+  itemType: ItemType!
+}
+
 type InventoryType {
   consumables: [ConsumableType!]!
   materials: [MaterialType!]!
   equipments: [EquipmentType!]!
   costumes: [CostumeType!]!
+  items(inventoryItemId: Int!): [InventoryItemType!]!
 }
 
 enum ItemSubType {
