@@ -14,7 +14,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
     {
         [Theory]
         [InlineData(100000)]
-        [InlineData(301000)]
+        [InlineData(700000)]
         public async Task Query(int inventoryItemId)
         {
             string query = $@"
