@@ -9,6 +9,7 @@ using Bencodex.Types;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
+using Libplanet.Blocks;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Renderers;
 using Libplanet.Net;
@@ -28,6 +29,7 @@ namespace NineChronicles.Headless
 {
     public class BlockChainService : ServiceBase<IBlockChainService>, IBlockChainService
     {
+        private static readonly Codec Codec = new Codec();
         private BlockChain<NCAction> _blockChain;
         private Swarm<NCAction> _swarm;
         private RpcContext _context;
@@ -111,7 +113,9 @@ namespace NineChronicles.Headless
 
         public UnaryResult<byte[]> GetTip()
         {
-            return UnaryResult(_blockChain.Tip?.Header.Serialize());
+            Bencodex.Types.Dictionary headerDict = _blockChain.Tip.MarshalBlockHeader();
+            byte[] headerBytes = Codec.Encode(headerDict);
+            return UnaryResult(headerBytes);
         }
 
         public UnaryResult<long> GetNextTxNonce(byte[] addressBytes)

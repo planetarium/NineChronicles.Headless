@@ -24,14 +24,18 @@ namespace NineChronicles.Headless.Tests.GraphTypes
     public class TransactionHeadlessQueryTest
     {
         private readonly BlockChain<NCAction> _blockChain;
+        private readonly IStore _store;
+        private readonly IStateStore _stateStore;
 
         public TransactionHeadlessQueryTest()
         {
+            _store = new DefaultStore(null);
+            _stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             _blockChain = new BlockChain<NCAction>(
                 new BlockPolicy<NCAction>(),
                 new VolatileStagePolicy<NCAction>(),
-                new DefaultStore(null),
-                new TrieStateStore(new DefaultKeyValueStore(null), new DefaultKeyValueStore(null)),
+                _store,
+                _stateStore,
                 BlockChain<NCAction>.MakeGenesisBlock(HashAlgorithmType.Of<SHA256>()));
         }
 
@@ -229,11 +233,86 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.NotNull(result.Errors);
         }
 
+        [Fact]
+        public async Task TransactionResultIsStaging()
+        {
+            var privateKey = new PrivateKey();
+            Transaction<NCAction> tx = Transaction<NCAction>.Create(
+                0,
+                privateKey, 
+                _blockChain.Genesis.Hash, 
+                ImmutableArray<NCAction>.Empty);
+            _blockChain.StageTransaction(tx);
+            var queryFormat = @"query {{
+                transactionResult(txId: ""{0}"") {{
+                    blockHash
+                    txStatus
+                }}
+            }}";
+            var result = await ExecuteAsync(string.Format(
+                queryFormat,
+                tx.Id.ToString()));
+            Assert.NotNull(result.Data);
+            var transactionResult = result.Data
+                .As<Dictionary<string, object>>()["transactionResult"];
+            var txStatus = (string) transactionResult.As<Dictionary<string, object>>()["txStatus"];
+            Assert.Equal("STAGING", txStatus);
+        }
+        
+        [Fact]
+        public async Task TransactionResultIsInvalid()
+        {
+            var privateKey = new PrivateKey();
+            Transaction<NCAction> tx = Transaction<NCAction>.Create(
+                0,
+                privateKey, 
+                _blockChain.Genesis.Hash, 
+                ImmutableArray<NCAction>.Empty);
+            var queryFormat = @"query {{
+                transactionResult(txId: ""{0}"") {{
+                    blockHash
+                    txStatus
+                }}
+            }}";
+            var result = await ExecuteAsync(string.Format(
+                queryFormat,
+                tx.Id.ToString()));
+            Assert.NotNull(result.Data);
+            var transactionResult = result.Data
+                .As<Dictionary<string, object>>()["transactionResult"];
+            var txStatus = (string) transactionResult.As<Dictionary<string, object>>()["txStatus"];
+            Assert.Equal("INVALID", txStatus);
+        }
+        
+        [Fact]
+        public async Task TransactionResultIsSuccess()
+        {
+            var privateKey = new PrivateKey();
+            var action = new DumbTransferAction(new Address(), new Address());
+            Transaction<NCAction> tx = _blockChain.MakeTransaction(privateKey, new NCAction[]{action});
+            await _blockChain.MineBlock(new Address());
+            var queryFormat = @"query {{
+                transactionResult(txId: ""{0}"") {{
+                    blockHash
+                    txStatus
+                }}
+            }}";
+            var result = await ExecuteAsync(string.Format(
+                queryFormat,
+                tx.Id.ToString()));
+            Assert.NotNull(result.Data);
+            var transactionResult = result.Data
+                .As<Dictionary<string, object>>()["transactionResult"];
+            var txStatus = (string) transactionResult.As<Dictionary<string, object>>()["txStatus"];
+            Assert.Equal("SUCCESS", txStatus);
+        }
+        
         private Task<ExecutionResult> ExecuteAsync(string query)
         {
             return GraphQLTestUtils.ExecuteQueryAsync<TransactionHeadlessQuery>(query, standaloneContext: new StandaloneContext
             {
                 BlockChain = _blockChain,
+                Store = _store
             });
         }  
     }     
