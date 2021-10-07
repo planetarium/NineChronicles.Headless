@@ -27,7 +27,7 @@ namespace NineChronicles.Headless.GraphTypes
         {
             if (configuration[GraphQLService.SecretTokenKey] is { })
             {
-                this.AuthorizeWith(GraphQLService.LocalPolicyKey);   
+                this.AuthorizeWith(GraphQLService.LocalPolicyKey);
             }
 
             Field<KeyStoreMutation>(
@@ -35,11 +35,11 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context => standaloneContext.KeyStore);
 
             Field<ActivationStatusMutation>(
-                name: "activationStatus", 
+                name: "activationStatus",
                 resolve: _ => new ActivationStatusMutation(nodeService));
 
             Field<ActionMutation>(
-                name: "action", 
+                name: "action",
                 resolve: _ => new ActionMutation(nodeService));
 
             Field<NonNullGraphType<BooleanGraphType>>(
@@ -66,7 +66,7 @@ namespace NineChronicles.Headless.GraphTypes
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
                         }
 
-                        if (blockChain.Policy.DoesTransactionFollowsPolicy(tx, blockChain))
+                        if (blockChain.Policy.ValidateNextBlockTx(blockChain, tx) is null)
                         {
                             blockChain.StageTransaction(tx);
 
@@ -185,7 +185,7 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         throw new InvalidOperationException($"{nameof(NineChroniclesNodeService)} is null.");
                     }
-    
+
                     PrivateKey? privateKey = service.MinerPrivateKey;
                     if (privateKey is null)
                     {

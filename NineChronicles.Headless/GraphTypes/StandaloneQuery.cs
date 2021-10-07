@@ -102,14 +102,17 @@ namespace NineChronicles.Headless.GraphTypes
                         throw new InvalidOperationException();
                     }
 
-                    if (!(store.GetBlock<NCAction>(blockHash) is { } block))
+                    if (!(store.GetBlockDigest(blockHash) is { } digest))
                     {
                         throw new ArgumentException("blockHash");
                     }
 
                     var recipient = context.GetArgument<Address?>("recipient");
 
-                    var filteredTransactions = block.Transactions.Where(tx =>
+                    IEnumerable<Transaction<NCAction>> txs = digest.TxIds
+                        .Select(b => new TxId(b.ToBuilder().ToArray()))
+                        .Select(store.GetTransaction<NCAction>);
+                    var filteredTransactions = txs.Where(tx =>
                         tx.Actions.Count == 1 &&
                         tx.Actions.First().InnerAction is TransferAsset transferAsset &&
                         (!recipient.HasValue || transferAsset.Recipient == recipient) &&

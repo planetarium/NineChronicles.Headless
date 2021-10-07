@@ -9,8 +9,14 @@ namespace NineChronicles.Headless.GraphTypes.States
         public ArenaInfoType()
         {
             Field<NonNullGraphType<AddressType>>(
+                nameof(ArenaInfo.AgentAddress),
+                resolve: context => context.Source.AgentAddress);
+            Field<NonNullGraphType<AddressType>>(
                 nameof(ArenaInfo.AvatarAddress),
                 resolve: context => context.Source.AvatarAddress);
+            Field<NonNullGraphType<StringGraphType>>(
+                nameof(ArenaInfo.AvatarName),
+                resolve: context => context.Source.AvatarName);
             Field<NonNullGraphType<ArenaRecordType>>(
                 nameof(ArenaInfo.ArenaRecord),
                 resolve: context => context.Source.ArenaRecord);

@@ -114,6 +114,16 @@ namespace NineChronicles.Headless.Executable
             )]
             int confirmations = 0,
             [Option(
+                "nonblock-renderer",
+                Description = "Uses non-blocking renderer, which prevents the blockchain & " +
+                    "swarm from waiting slow rendering.  Turned off by default.")]
+            bool nonblockRenderer = false,
+            [Option(
+                "nonblock-renderer-queue",
+                Description = "The size of the queue used by the non-blocking renderer.   " +
+                    "512 by default.  Ignored if --nonblock-renderer is turned off.")]
+            int nonblockRendererQueue = 512,
+            [Option(
                 "max-transactions",
                 Description =
                     "The number of maximum transactions can be included in a single block. " +
@@ -298,6 +308,8 @@ namespace NineChronicles.Headless.Executable
                         noMiner,
                         workers: workers,
                         confirmations: confirmations,
+                        nonblockRenderer: nonblockRenderer,
+                        nonblockRendererQueue: nonblockRendererQueue,
                         maximumTransactions: maximumTransactions,
                         messageTimeout: messageTimeout,
                         tipTimeout: tipTimeout,

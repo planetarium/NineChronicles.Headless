@@ -12,7 +12,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<ByteStringType>>(
                 name: "hex",
                 description: "A representation of private-key with hexadecimal format.",
-                resolve: context => context.Source.ByteArray);
+                resolve: context => context.Source.ToByteArray());
 
             Field<NonNullGraphType<PublicKeyType>>(
                 name: nameof(PrivateKey.PublicKey),
