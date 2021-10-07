@@ -59,7 +59,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             }
             else
             {
-                Assert.True(_console.Error.ToString().Contains("hexWithSlash seems invalid. [invalid_code]"));
+                Assert.Contains("hexWithSlash seems invalid. [invalid_code]", _console.Error.ToString());
             }
         }
     }
