@@ -797,7 +797,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ActivationKey.Create(privateKey, nonce);
             NCAction action = new CreatePendingActivation(pendingActivation);
             BlockChain.MakeTransaction(AdminPrivateKey, new[] { action });
-            await BlockChain.MineBlock(AdminAddress);
+            await BlockChain.MineBlock(AdminPrivateKey);
             var encodedActivationKey = activationKey.Encode();
             var actionCommand = new ActionCommand(new StandardConsole());
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
@@ -810,7 +810,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             output = output.Trim();
             var queryResult = await ExecuteQueryAsync(
                 $"mutation {{ stageTx(payload: \"{output}\") }}");
-            await BlockChain.MineBlock(AdminAddress);
+            await BlockChain.MineBlock(AdminPrivateKey);
 
             var result = (bool)queryResult.Data
                 .As<Dictionary<string, object>>()["stageTx"];
