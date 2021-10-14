@@ -99,9 +99,11 @@ type Block {
   totalDifficulty: BigInt!
   nonce: ByteString!
   miner: Address!
+  publicKey: PublicKey
   previousBlock: Block
   timestamp: DateTimeOffset!
-  stateRootHash: ByteString
+  stateRootHash: ByteString!
+  signature: ByteString
   transactions: [Transaction!]!
 }
 
@@ -369,6 +371,8 @@ type PrivateKeyType {
 type ProtectedPrivateKeyType {
   address: Address!
 }
+
+scalar PublicKey
 
 type PublicKeyType {
   hex(compress: Boolean): ByteString!
