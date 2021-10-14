@@ -452,3 +452,9 @@ modules.xml
 
 # Except NineChronicles.Standalone.sln
 !NineChronicles.Standalone.sln
+
+# Mac desktop service store files
+.DS_Store
+
+# Downloaded NineChronicles Snapshot Files
+9c-main-snapshot*/
