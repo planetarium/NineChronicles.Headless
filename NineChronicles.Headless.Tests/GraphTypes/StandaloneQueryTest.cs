@@ -232,7 +232,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockChain = StandaloneContextFx.BlockChain;
             for (int i = 0; i < 10; i++)
             {
-                await blockChain!.MineBlock(userAddress);
+                await blockChain!.MineBlock(userPrivateKey);
             }
 
             var queryWithoutOffset = @"query {
@@ -281,13 +281,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [InlineData(false)]
         public async Task ValidateMetadata(bool valid)
         {
-            var minerAddress = new PrivateKey().ToAddress();
+            var minerKey = new PrivateKey();
+            var minerAddress = minerKey.ToAddress();
             var lowMetadata = "{\\\"Index\\\":1}";
             var highMetadata = "{\\\"Index\\\":13340}";
 
             for (int i = 0; i < 10; i++)
             {
-                await BlockChain.MineBlock(minerAddress);
+                await BlockChain.MineBlock(minerKey);
             }
             var query = $@"query {{
                 validation {{
@@ -486,11 +487,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ActivationKey.Create(privateKey, nonce);
             PolymorphicAction<ActionBase> action = new CreatePendingActivation(pendingActivation);
             blockChain.MakeTransaction(adminPrivateKey, new[] {action});
-            await blockChain.MineBlock(adminAddress);
+            await blockChain.MineBlock(adminPrivateKey);
 
             action = activationKey.CreateActivateAccount(nonce);
             blockChain.MakeTransaction(userPrivateKey, new[] { action });
-            await blockChain.MineBlock(adminAddress);
+            await blockChain.MineBlock(adminPrivateKey);
 
             queryResult = await ExecuteQueryAsync( "query { activationStatus { activated } }");
             result = (bool)queryResult.Data
@@ -520,7 +521,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 queryResult.Data
             );
            
-            await blockChain!.MineBlock(userAddress);
+            await blockChain!.MineBlock(userPrivateKey);
 
             queryResult = await ExecuteQueryAsync(query);
             Assert.Equal(
@@ -538,15 +539,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task TransferNCGHistories(string? memo)
         {
             PrivateKey minerPrivateKey = new PrivateKey();
-            Address sender = minerPrivateKey.ToAddress(), recipient = new PrivateKey().ToAddress();
+            PrivateKey senderKey = minerPrivateKey, recipientKey = new PrivateKey();
+            Address sender = senderKey.ToAddress(), recipient = recipientKey.ToAddress();
 
-            await BlockChain.MineBlock(sender);
-            await BlockChain.MineBlock(recipient);
+            await BlockChain.MineBlock(senderKey);
+            await BlockChain.MineBlock(recipientKey);
 
             var currency = new GoldCurrencyState((Dictionary) BlockChain.GetState(Addresses.GoldCurrency)).Currency;
             var transferAsset = new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 10, 0), memo);
             var tx = BlockChain.MakeTransaction(minerPrivateKey, new PolymorphicAction<ActionBase>[] {transferAsset});
-            var block = await BlockChain.MineBlock(minerPrivateKey.ToAddress(), append: false);
+            var block = await BlockChain.MineBlock(minerPrivateKey, append: false);
             BlockChain.Append(block);
             Assert.NotNull(StandaloneContextFx.Store?.GetTxExecution(block.Hash, tx.Id));
 
@@ -636,7 +638,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockChain = StandaloneContextFx.BlockChain;
             var transaction = blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
             blockChain.StageTransaction(transaction);
-            await blockChain.MineBlock(new Address());
+            await blockChain.MineBlock(new PrivateKey());
 
             const string query = @"query {
                 monsterCollectionStatus {
@@ -678,7 +680,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockChain = StandaloneContextFx.BlockChain;
             var transaction = blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
             blockChain.StageTransaction(transaction);
-            await blockChain.MineBlock(new Address());
+            await blockChain.MineBlock(new PrivateKey());
 
             var avatarAddress = userAddress.Derive(
                 string.Format(
