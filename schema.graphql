@@ -400,6 +400,11 @@ type RankingMapStateType {
   rankingInfos: [RankingInfoType!]!
 }
 
+type RpcInformationQuery {
+  totalCount: Int!
+  clients: [Address]!
+}
+
 type ShopItemType {
   sellerAgentAddress: Address!
   sellerAvatarAddress: Address!
@@ -447,6 +452,8 @@ type StandaloneQuery {
   monsterCollectionStatus: MonsterCollectionStatusType
   transaction: TransactionHeadlessQuery!
   activated(invitationCode: String!): Boolean!
+  activationKeyNonce(invitationCode: String!): String!
+  rpcInformation: RpcInformationQuery!
 }
 
 type StandaloneSubscription {
