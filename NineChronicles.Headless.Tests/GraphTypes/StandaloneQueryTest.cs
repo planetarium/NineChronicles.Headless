@@ -701,6 +701,85 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Null(queryResult.Errors);
         }
 
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task ActivationKeyNonce(bool exist)
+        {
+            var adminPrivateKey = new PrivateKey();
+            var adminAddress = adminPrivateKey.ToAddress();
+            var activatedAccounts = ImmutableHashSet<Address>.Empty;
+            var nonce = new byte[] {0x00, 0x01, 0x02, 0x03};
+            var privateKey = new PrivateKey();
+            (ActivationKey activationKey, PendingActivationState pendingActivation) =
+                ActivationKey.Create(privateKey, nonce);
+            var pendingActivationStates = new List<PendingActivationState>();
+
+            if (exist)
+            {
+                pendingActivationStates.Add(pendingActivation);
+            }
+            Block<PolymorphicAction<ActionBase>> genesis =
+                BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+                    HashAlgorithmType.Of<SHA256>(),
+                    new PolymorphicAction<ActionBase>[]
+                    {
+                        new InitializeStates(
+                            rankingState: new RankingState(),
+                            shopState: new ShopState(),
+                            gameConfigState: new GameConfigState(),
+                            redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                                .Add("address", RedeemCodeState.Address.Serialize())
+                                .Add("map", Bencodex.Types.Dictionary.Empty)
+                            ),
+                            adminAddressState: new AdminState(adminAddress, 1500000),
+                            activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
+                            goldCurrencyState: new GoldCurrencyState(new Currency("NCG", 2, minter: null)),
+                            goldDistributions: new GoldDistribution[0],
+                            tableSheets: _sheets,
+                            pendingActivationStates: pendingActivationStates.ToArray()
+                        ),
+                    }
+                );
+
+            var apvPrivateKey = new PrivateKey();
+            var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
+            var userPrivateKey = new PrivateKey();
+            var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+            {
+                Host = System.Net.IPAddress.Loopback.ToString(),
+                AppProtocolVersion = apv,
+                GenesisBlock = genesis,
+                StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
+                StoreStatesCacheSize = 2,
+                SwarmPrivateKey = new PrivateKey(),
+                Port = null,
+                MinimumDifficulty = 4096,
+                NoMiner = true,
+                Render = false,
+                Peers = ImmutableHashSet<Peer>.Empty,
+                TrustedAppProtocolVersionSigners = null,
+                StaticPeers = ImmutableHashSet<BoundPeer>.Empty
+            };
+
+            var service = new NineChroniclesNodeService(userPrivateKey, properties, null);
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
+
+            var query = $"query {{ activationKeyNonce(invitationCode: \"{activationKey.Encode()}\") }}";
+            var queryResult = await ExecuteQueryAsync(query);
+            if (exist)
+            {
+                var result = (string)queryResult.Data
+                    .As<Dictionary<string, object>>()["activationKeyNonce"];
+                Assert.Equal(nonce, ByteUtil.ParseHex(result));
+            }
+            else
+            {
+                Assert.Single(queryResult.Errors);
+            }
+        }
+
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)
         {
             var goldCurrency = new Currency("NCG", 2, minter: null);
