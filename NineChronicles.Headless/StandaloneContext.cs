@@ -1,4 +1,6 @@
+using System.Collections.Concurrent;
 using System.Reactive.Subjects;
+using Libplanet;
 using Libplanet.Blockchain;
 using Libplanet.KeyStore;
 using Libplanet.Net;
@@ -26,6 +28,12 @@ namespace NineChronicles.Headless
         public ReplaySubject<MonsterCollectionState> MonsterCollectionStateSubject { get; } = new ReplaySubject<MonsterCollectionState>();
         public ReplaySubject<MonsterCollectionStatus> MonsterCollectionStatusSubject { get; } = new ReplaySubject<MonsterCollectionStatus>();
         public NineChroniclesNodeService? NineChroniclesNodeService { get; set; }
+
+        public ConcurrentDictionary<Address,
+                (ReplaySubject<MonsterCollectionStatus> statusSubject, ReplaySubject<MonsterCollectionState> stateSubject)>
+            AgentAddresses { get; } = new ConcurrentDictionary<Address,
+                (ReplaySubject<MonsterCollectionStatus>, ReplaySubject<MonsterCollectionState>)>();
+
         public NodeStatusType NodeStatus => new NodeStatusType(this)
         {
             BootstrapEnded = BootstrapEnded,

@@ -592,40 +592,57 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             );
         }
 
-        [Fact]
-        public async Task MonsterCollectionStatus_AgentState_Null()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task MonsterCollectionStatus_AgentState_Null(bool miner)
         {
             var userPrivateKey = new PrivateKey();
             var userAddress = userPrivateKey.ToAddress();
             var service = MakeMineChroniclesNodeService(userPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
-            const string query = @"query {
-                monsterCollectionStatus {
-                    fungibleAssetValue {
+            if (!miner)
+            {
+                StandaloneContextFx.NineChroniclesNodeService.MinerPrivateKey = null;
+            }
+            else
+            {
+                Assert.Equal(userPrivateKey, StandaloneContextFx.NineChroniclesNodeService.MinerPrivateKey!);
+            }
+            string queryArgs = miner ? "" : $@"(address: ""{userAddress}"")";
+            string query = $@"query {{
+                monsterCollectionStatus{queryArgs} {{
+                    fungibleAssetValue {{
                         quantity
                         currency
-                    }
-                    rewardInfos {
+                    }}
+                    rewardInfos {{
                         itemId
                         quantity
-                    }
-                }
-            }";
+                    }}
+                }}
+            }}";
             var queryResult = await ExecuteQueryAsync(query);
             Assert.Single(queryResult.Errors);
             Assert.Equal($"{nameof(AgentState)} Address: {userAddress} is null.", queryResult.Errors.First().Message);
         }
 
 
-        [Fact]
-        public async Task MonsterCollectionStatus_MonsterCollectionState_Null()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task MonsterCollectionStatus_MonsterCollectionState_Null(bool miner)
         {
             var userPrivateKey = new PrivateKey();
             var userAddress = userPrivateKey.ToAddress();
             var service = MakeMineChroniclesNodeService(userPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
+            if (!miner)
+            {
+                StandaloneContextFx.NineChroniclesNodeService.MinerPrivateKey = null;
+            }
             var action = new CreateAvatar2
             {
                 index = 0,
@@ -640,18 +657,19 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             blockChain.StageTransaction(transaction);
             await blockChain.MineBlock(new PrivateKey());
 
-            const string query = @"query {
-                monsterCollectionStatus {
-                    fungibleAssetValue {
+            string queryArgs = miner ? "" : $@"(address: ""{userAddress}"")";
+            string query = $@"query {{
+                monsterCollectionStatus{queryArgs} {{
+                    fungibleAssetValue {{
                         quantity
                         currency
-                    }
-                    rewardInfos {
+                    }}
+                    rewardInfos {{
                         itemId
                         quantity
-                    }
-                }
-            }";
+                    }}
+                }}
+            }}";
             var queryResult = await ExecuteQueryAsync(query);
             Assert.Single(queryResult.Errors);
             Assert.Equal(
