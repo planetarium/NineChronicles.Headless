@@ -92,7 +92,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             // TODO deprecate stageTx and use this.
             Field<NonNullGraphType<TxIdType>>(
-                name: "stageTxTxId",
+                name: "stageTxV2",
                 description: "Add a new transaction to staging and return TxId",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>

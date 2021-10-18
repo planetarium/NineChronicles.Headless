@@ -789,7 +789,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Fact]
-        public async Task Tx_TxId()
+        public async Task Tx_V2()
         {
             Block<PolymorphicAction<ActionBase>> genesis =
                 MakeGenesisBlock(
@@ -803,7 +803,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
             // Error: empty payload
-            var query = $"mutation {{ stageTxTxId(payload: \"\") }}";
+            var query = $"mutation {{ stageTxV2(payload: \"\") }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
             Assert.NotNull(result.Errors);
             Assert.Null(result.Data);
@@ -815,13 +815,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     new PolymorphicAction<ActionBase>[] { }
                 );
             string base64Encoded = Convert.ToBase64String(tx.Serialize(true));
-            query = $"mutation {{ stageTxTxId(payload: \"{base64Encoded}\") }}";
+            query = $"mutation {{ stageTxV2(payload: \"{base64Encoded}\") }}";
             result = await ExecuteQueryAsync(query);
             Assert.Null(result.Errors);
             Assert.Equal(
                 new Dictionary<string, object>
                 {
-                    ["stageTxTxId"] = tx.Id.ToHex(),
+                    ["stageTxV2"] = tx.Id.ToHex(),
                 },
                 result.Data
             );
