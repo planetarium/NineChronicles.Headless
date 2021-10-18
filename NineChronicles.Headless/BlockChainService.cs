@@ -113,7 +113,7 @@ namespace NineChronicles.Headless
 
         public UnaryResult<byte[]> GetTip()
         {
-            Bencodex.Types.Dictionary headerDict = _blockChain.Tip.MarshalBlockHeader();
+            Bencodex.Types.Dictionary headerDict = _blockChain.Tip.MarshalBlock();
             byte[] headerBytes = Codec.Encode(headerDict);
             return UnaryResult(headerBytes);
         }

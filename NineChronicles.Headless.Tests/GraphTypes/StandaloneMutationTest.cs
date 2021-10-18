@@ -110,12 +110,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ActivationKey.Create(privateKey, nonce);
             NCAction action = new CreatePendingActivation(pendingActivation);
             BlockChain.MakeTransaction(AdminPrivateKey, new[] { action });
-            await BlockChain.MineBlock(AdminAddress);
+            await BlockChain.MineBlock(AdminPrivateKey);
 
             var encodedActivationKey = activationKey.Encode();
             var queryResult = await ExecuteQueryAsync(
                 $"mutation {{ activationStatus {{ activateAccount(encodedActivationKey: \"{encodedActivationKey}\") }} }}");
-            await BlockChain.MineBlock(AdminAddress);
+            await BlockChain.MineBlock(AdminPrivateKey);
 
             var result = (bool)queryResult.Data
                 .As<Dictionary<string, object>>()["activationStatus"]
@@ -143,8 +143,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             Address senderAddress = service.MinerPrivateKey!.ToAddress();
             var store = service.Store;
-            await BlockChain.MineBlock(senderAddress);
-            await BlockChain.MineBlock(senderAddress);
+            await BlockChain.MineBlock(service.MinerPrivateKey);
+            await BlockChain.MineBlock(service.MinerPrivateKey);
 
             // 10 + 10 (mining rewards)
             Assert.Equal(
@@ -152,7 +152,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 BlockChain.GetBalance(senderAddress, goldCurrency)
             );
 
-            Address recipient = new PrivateKey().ToAddress();
+            var recipientKey = new PrivateKey();
+            Address recipient = recipientKey.ToAddress();
             long txNonce = BlockChain.GetNextTxNonce(senderAddress);
             
             var args = $"recipient: \"{recipient}\", txNonce: {txNonce}, amount: \"17.5\"";
@@ -190,7 +191,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
                 Assert.Equal(expectedResult, result.Data);
 
-                await BlockChain.MineBlock(recipient);
+                await BlockChain.MineBlock(recipientKey);
 
                 // 10 + 10 - 17.5(transfer)
                 Assert.Equal(
@@ -217,8 +218,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Address senderAddress = service.MinerPrivateKey!.ToAddress();
 
             var store = service.Store;
-            await BlockChain.MineBlock(senderAddress);
-            await BlockChain.MineBlock(senderAddress);
+            await BlockChain.MineBlock(service.MinerPrivateKey);
+            await BlockChain.MineBlock(service.MinerPrivateKey);
 
             // 10 + 10 (mining rewards)
             Assert.Equal(
@@ -226,7 +227,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 BlockChain.GetBalance(senderAddress, goldCurrency)
             );
 
-            Address recipient = new PrivateKey().ToAddress();
+            var recipientKey = new PrivateKey();
+            Address recipient = recipientKey.ToAddress();
             var query = $"mutation {{ transferGold(recipient: \"{recipient}\", amount: \"17.5\") }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
 
@@ -240,7 +242,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Null(result.Errors);
             Assert.Equal(expectedResult, result.Data);
 
-            await BlockChain.MineBlock(recipient);
+            await BlockChain.MineBlock(recipientKey);
 
             // 10 + 10 - 17.5(transfer)
             Assert.Equal(
@@ -627,7 +629,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             var playerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
             BlockChain.MakeTransaction(playerPrivateKey, new[] { createAvatar });
-            await BlockChain.MineBlock(playerPrivateKey.ToAddress());
+            await BlockChain.MineBlock(playerPrivateKey);
 
             Assert.NotNull(BlockChain.GetState(playerPrivateKey.ToAddress()));
             var result = await ExecuteQueryAsync(query);
@@ -670,7 +672,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 name = "avatar",
             };
             BlockChain.MakeTransaction(playerPrivateKey, new[] { createAvatar });
-            await BlockChain.MineBlock(playerPrivateKey.ToAddress());
+            await BlockChain.MineBlock(playerPrivateKey);
 
             Assert.NotNull(BlockChain.GetState(playerPrivateKey.ToAddress()));
 
@@ -782,7 +784,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 result.Data
             );
             Block<PolymorphicAction<ActionBase>> mined =
-                await BlockChain.MineBlock(service.MinerPrivateKey!.ToAddress());
+                await BlockChain.MineBlock(service.MinerPrivateKey);
             Assert.Contains(tx, mined.Transactions);
         }
 
@@ -795,7 +797,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ActivationKey.Create(privateKey, nonce);
             NCAction action = new CreatePendingActivation(pendingActivation);
             BlockChain.MakeTransaction(AdminPrivateKey, new[] { action });
-            await BlockChain.MineBlock(AdminAddress);
+            await BlockChain.MineBlock(AdminPrivateKey);
             var encodedActivationKey = activationKey.Encode();
             var actionCommand = new ActionCommand(new StandardConsole());
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
@@ -808,7 +810,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             output = output.Trim();
             var queryResult = await ExecuteQueryAsync(
                 $"mutation {{ stageTx(payload: \"{output}\") }}");
-            await BlockChain.MineBlock(AdminAddress);
+            await BlockChain.MineBlock(AdminPrivateKey);
 
             var result = (bool)queryResult.Data
                 .As<Dictionary<string, object>>()["stageTx"];
