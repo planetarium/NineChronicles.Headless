@@ -106,9 +106,8 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             };
 
             var minerKey = new PrivateKey();
-            var miner = minerKey.ToAddress();
             chain.MakeTransaction(minerKey, new PolymorphicAction<ActionBase>[] { action });
-            await chain.MineBlock(miner, DateTimeOffset.Now);
+            await chain.MineBlock(minerKey, DateTimeOffset.Now);
             store.Dispose();
 
             _command.Inspect(storeType, _storePath2);

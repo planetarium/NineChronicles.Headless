@@ -34,7 +34,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task SubscribeTipChangedEvent()
         {
-            var miner = new Address();
+            var miner = new PrivateKey();
 
             const int repeat = 10;
             foreach (long index in Enumerable.Range(1, repeat))
@@ -85,7 +85,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }),
                 new [] { seedNode.Swarm.AsPeer });
 
-            var miner = new PrivateKey().ToAddress();
+            var miner = new PrivateKey();
             await seedNode.BlockChain.MineBlock(miner);
             var result = await ExecuteQueryAsync("subscription { preloadProgress { currentPhase totalPhase extra { type currentCount totalCount } } }");
             Assert.IsType<SubscriptionExecutionResult>(result);
