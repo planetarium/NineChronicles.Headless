@@ -381,6 +381,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(costumeIds, action.costumes);
             Assert.Equal(equipmentIds, action.equipments);
             Assert.Equal(consumableIds, action.foods);
+            Assert.Equal(1, action.playCount);
         }
 
         public static IEnumerable<object?[]> HackAndSlashMember => new List<object?[]>
