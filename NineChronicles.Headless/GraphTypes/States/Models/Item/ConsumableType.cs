@@ -10,6 +10,10 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
         {
             Field<NonNullGraphType<GuidGraphType>>(nameof(Consumable.ItemId));
             Field<NonNullGraphType<StatTypeEnumType>>(nameof(Consumable.MainStat));
+
+            Interface<ItemBaseInterfaceType>();
+            
+            IsTypeOf = obj => obj is Consumable;
         }
     }
 }

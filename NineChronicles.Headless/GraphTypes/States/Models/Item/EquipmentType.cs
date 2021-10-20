@@ -16,6 +16,10 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
             Field<ListGraphType<SkillType>>(nameof(Equipment.Skills));
             Field<ListGraphType<SkillType>>(nameof(Equipment.BuffSkills));
             Field<NonNullGraphType<StatsMapType>>(nameof(Equipment.StatsMap));
+
+            Interface<ItemBaseInterfaceType>();
+            
+            IsTypeOf = obj => obj is Equipment;
         }
     }
 }

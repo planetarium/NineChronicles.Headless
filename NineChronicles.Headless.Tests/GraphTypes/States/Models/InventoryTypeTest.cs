@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GraphQL;
+using GraphQL.Utilities;
 using Nekoyume.Model.Item;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
 using Xunit;
@@ -24,6 +26,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     count
                     id
                     itemType
+                    item {{
+                        id
+                        grade
+                        itemType
+                        itemSubType
+                        elementalType
+                    }}
                 }}
             }}";
             
@@ -34,7 +43,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             
             ExecutionResult queryResult = await ExecuteQueryAsync<InventoryType>(query, source: inventory);
             Assert.Null(queryResult.Errors);
-            Assert.Equal(new Dictionary<string, object>
+            var expected = new Dictionary<string, object>
             {
                 ["items"] = new List<object>
                 {
@@ -43,9 +52,18 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                         ["count"] = 1,
                         ["id"] = row.Id,
                         ["itemType"] = row.ItemType.ToString().ToUpper(),
-                    },  
+                        ["item"] = new Dictionary<string, object>
+                        {
+                            ["id"] = row.Id,
+                            ["grade"] = row.Grade,
+                            ["itemType"] = StringUtils.ToConstantCase(Enum.GetName(row.ItemType.GetType(), row.ItemType)),
+                            ["itemSubType"] = StringUtils.ToConstantCase(Enum.GetName(row.ItemSubType.GetType(), row.ItemSubType)),
+                            ["elementalType"] = StringUtils.ToConstantCase(Enum.GetName(row.ElementalType.GetType(), row.ElementalType)),
+                        },
+                    },
                 },
-            }, queryResult.Data.As<Dictionary<string, object>>());
+            };
+            Assert.Equal(expected, queryResult.Data.As<Dictionary<string, object>>());
         }
     }
 }

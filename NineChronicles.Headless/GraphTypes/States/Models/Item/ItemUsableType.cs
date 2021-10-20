@@ -11,6 +11,10 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
                 nameof(ItemUsable.ItemId),
                 description: "Guid of item."
             );
+
+            Interface<ItemBaseInterfaceType>();
+
+            IsTypeOf = obj => obj is ItemUsable;
         }
     }
 }

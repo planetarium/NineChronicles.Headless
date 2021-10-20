@@ -11,6 +11,10 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
             Field<NonNullGraphType<ByteStringType>>(
                 nameof(Material.ItemId),
                 resolve: context => context.Source.ItemId.ToByteArray());
+
+            Interface<ItemBaseInterfaceType>();
+
+            IsTypeOf = obj => obj is Material;
         }
     }
 }

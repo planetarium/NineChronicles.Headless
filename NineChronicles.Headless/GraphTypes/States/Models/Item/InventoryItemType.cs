@@ -20,6 +20,10 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
                 "itemType",
                 description: "An ItemType of item",
                 resolve: context => context.Source.item.ItemType);
+            Field<NonNullGraphType<ItemBaseInterfaceType>>(
+                "item",
+                description: "The item",
+                resolve: context => context.Source.item);
         }
     }
 }
