@@ -134,7 +134,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         [Fact(Timeout = 15000)]
         public async Task SubscribeDifferentAppProtocolVersionEncounter()
-        {   
+        {
             var result = await ExecuteQueryAsync(@"
                 subscription {
                     differentAppProtocolVersionEncounter {
@@ -194,7 +194,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         [Fact(Timeout = 15000)]
         public async Task SubscribeNodeException()
-        {   
+        {
             var result = await ExecuteQueryAsync(@"
                 subscription {
                     nodeException {
@@ -291,7 +291,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             FungibleAssetValue fungibleAssetValue = new FungibleAssetValue(currency, major, minor);
             StandaloneContextFx.MonsterCollectionStatusSubject.OnNext(
                 new MonsterCollectionStatus(
-                    fungibleAssetValue, 
+                    fungibleAssetValue,
                     new List<MonsterCollectionRewardSheet.RewardInfo>
                     {
                         new MonsterCollectionRewardSheet.RewardInfo("1", "1")
@@ -303,6 +303,112 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Dictionary<string, object> rawEvent = (Dictionary<string, object>)rawEvents.Data;
             Dictionary<string, object> statusSubject =
                 (Dictionary<string, object>)rawEvent["monsterCollectionStatus"];
+            Dictionary<string, object> expected = new Dictionary<string, object>
+            {
+                ["fungibleAssetValue"] = new Dictionary<string, object>
+                {
+                    ["currency"] = "NCG",
+                    ["quantity"] = decimal.Parse(decimalString),
+                },
+                ["rewardInfos"] = new List<object>
+                {
+                    new Dictionary<string, object>
+                    {
+                        ["quantity"] = 1,
+                        ["itemId"] = 1,
+                    }
+                },
+                ["lockup"] = lockup,
+            };
+            Assert.Equal(expected, statusSubject);
+        }
+
+        [Fact]
+        public async Task SubscribeMonsterCollectionStateByAgent()
+        {
+            var address = new Address();
+            Assert.Empty(StandaloneContextFx.AgentAddresses);
+            ExecutionResult result = await ExecuteQueryAsync($@"
+                subscription {{
+                    monsterCollectionStateByAgent(address: ""{address}"") {{
+                        address
+                        level
+                        expiredBlockIndex
+                        startedBlockIndex
+                        receivedBlockIndex
+                        rewardLevel
+                    }}
+                }}"
+            );
+            Assert.IsType<SubscriptionExecutionResult>(result);
+            SubscriptionExecutionResult subscribeResult = (SubscriptionExecutionResult) result;
+            IObservable<ExecutionResult> stream = subscribeResult.Streams.Values.First();
+            Assert.NotNull(stream);
+            Assert.NotEmpty(StandaloneContextFx.AgentAddresses);
+
+            MonsterCollectionState monsterCollectionState = new MonsterCollectionState(default, 1, 2, Fixtures.TableSheetsFX.MonsterCollectionRewardSheet);
+            StandaloneContextFx.AgentAddresses[address].stateSubject.OnNext(monsterCollectionState);
+            ExecutionResult rawEvents = await stream.Take(1);
+            Dictionary<string, object> rawEvent = (Dictionary<string, object>)rawEvents.Data;
+            Dictionary<string, object> subject =
+                (Dictionary<string, object>)rawEvent["monsterCollectionStateByAgent"];
+            Dictionary<string, object> expected = new Dictionary<string, object>
+            {
+                ["address"] = monsterCollectionState.address.ToString(),
+                ["level"] = 1L,
+                ["expiredBlockIndex"] = 201602L,
+                ["startedBlockIndex"] = 2L,
+                ["receivedBlockIndex"] = 0L,
+                ["rewardLevel"] = 0L,
+            };
+            Assert.Equal(expected, subject);
+        }
+        
+        [Theory]
+        [InlineData(100, 0, "100.00", true)]
+        [InlineData(0, 2, "0.02", false)]
+        [InlineData(10, 2, "10.02", true)]
+        public async Task SubscribeMonsterCollectionStatusByAgent(int major, int minor, string decimalString, bool lockup)
+        {
+            var address = new Address();
+            Assert.Empty(StandaloneContextFx.AgentAddresses);
+            ExecutionResult result = await ExecuteQueryAsync($@"
+                subscription {{
+                    monsterCollectionStatusByAgent(address: ""{address}"") {{
+                        fungibleAssetValue {{
+                            quantity
+                            currency
+                        }}
+                        rewardInfos {{
+                            itemId
+                            quantity
+                        }},
+                        lockup
+                    }}
+                }}"
+            );
+            Assert.IsType<SubscriptionExecutionResult>(result);
+            SubscriptionExecutionResult subscribeResult = (SubscriptionExecutionResult) result;
+            IObservable<ExecutionResult> stream = subscribeResult.Streams.Values.First();
+            Assert.NotNull(stream);
+            Assert.NotEmpty(StandaloneContextFx.AgentAddresses);
+
+            Currency currency = new Currency("NCG", 2, minter: null);
+            FungibleAssetValue fungibleAssetValue = new FungibleAssetValue(currency, major, minor);
+            StandaloneContextFx.AgentAddresses[address].statusSubject.OnNext(
+                new MonsterCollectionStatus(
+                    fungibleAssetValue,
+                    new List<MonsterCollectionRewardSheet.RewardInfo>
+                    {
+                        new MonsterCollectionRewardSheet.RewardInfo("1", "1")
+                    },
+                    lockup
+                )
+            );
+            ExecutionResult rawEvents = await stream.Take(1);
+            Dictionary<string, object> rawEvent = (Dictionary<string, object>)rawEvents.Data;
+            Dictionary<string, object> statusSubject =
+                (Dictionary<string, object>)rawEvent["monsterCollectionStatusByAgent"];
             Dictionary<string, object> expected = new Dictionary<string, object>
             {
                 ["fungibleAssetValue"] = new Dictionary<string, object>

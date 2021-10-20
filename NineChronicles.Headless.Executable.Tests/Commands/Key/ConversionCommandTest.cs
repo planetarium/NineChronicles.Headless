@@ -24,7 +24,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         public void PrivateKey(string privateKeyHex, bool address, bool publicKey, string expectedOutput)
         {
             _command.PrivateKey(privateKeyHex, publicKey, address);
-            Assert.Equal(expectedOutput + Environment.NewLine, _console.Out.ToString());
+            Assert.Equal(expectedOutput, _console.Out.ToString().TrimEnd());
         }
 
         [Fact]

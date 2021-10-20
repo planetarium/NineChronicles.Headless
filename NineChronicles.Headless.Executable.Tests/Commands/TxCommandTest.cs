@@ -19,37 +19,62 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
     {
         private readonly StringIOConsole _console;
         private readonly TxCommand _command;
-        private readonly Codec _codec = new Codec();
+        private readonly PrivateKey _privateKey;
+        private readonly BlockHash _blockHash;
 
         public TxCommandTest()
         {
             _console = new StringIOConsole();
             _command = new TxCommand(_console);
+            _privateKey = new PrivateKey();
+            _blockHash = BlockHash.FromHashDigest(default);
         }
 
         [Theory]
         [InlineData(1)]
         [InlineData(2)]
-        public void Sign(int txNonce)
+        public void Sign_ActivateAccount(int txNonce)
         {
             var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
-            var privateKey = new PrivateKey();
             (ActivationKey activationKey, PendingActivationState _) =
-                ActivationKey.Create(privateKey, nonce);
+                ActivationKey.Create(_privateKey, nonce);
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
             var actionCommand = new ActionCommand(_console);
             actionCommand.ActivateAccount(activationKey.Encode(), ByteUtil.Hex(nonce), filePath);
-            var blockHash = BlockHash.FromHashDigest(default);
-            var hashHex = ByteUtil.Hex(blockHash.ByteArray);
+            Assert_Tx(txNonce, filePath);
+        }
+
+        [Fact]
+        public void Sign_MonsterCollect()
+        {
+            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+            var actionCommand = new ActionCommand(_console);
+            actionCommand.MonsterCollect(1, filePath);
+            Assert_Tx(1, filePath);
+        }
+
+        [Fact]
+        public void Sign_ClaimMonsterCollectionReward()
+        {
+            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+            var actionCommand = new ActionCommand(_console);
+            var avatarAddress = new Address();
+            actionCommand.ClaimMonsterCollectionReward(avatarAddress.ToHex(), filePath);
+            Assert_Tx(1, filePath);
+        }
+
+        private void Assert_Tx(long txNonce, string filePath)
+        {
             var timeStamp = default(DateTimeOffset);
-            _command.Sign(ByteUtil.Hex(privateKey.ByteArray), txNonce, hashHex, timeStamp.ToString(),
+            var hashHex = ByteUtil.Hex(_blockHash.ByteArray);
+            _command.Sign(ByteUtil.Hex(_privateKey.ByteArray), txNonce, hashHex, timeStamp.ToString(),
                 new[] { filePath });
             var output = _console.Out.ToString();
             var rawTx = Convert.FromBase64String(output!);
             var tx = Transaction<NCAction>.Deserialize(rawTx);
             Assert.Equal(txNonce, tx.Nonce);
-            Assert.Equal(blockHash, tx.GenesisHash);
-            Assert.Equal(privateKey.ToAddress(), tx.Signer);
+            Assert.Equal(_blockHash, tx.GenesisHash);
+            Assert.Equal(_privateKey.ToAddress(), tx.Signer);
             Assert.Equal(timeStamp, tx.Timestamp);
         }
     }

@@ -381,6 +381,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(costumeIds, action.costumes);
             Assert.Equal(equipmentIds, action.equipments);
             Assert.Equal(consumableIds, action.foods);
+            Assert.Equal(1, action.playCount);
         }
 
         public static IEnumerable<object?[]> HackAndSlashMember => new List<object?[]>
@@ -785,6 +786,48 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             );
             Block<PolymorphicAction<ActionBase>> mined =
                 await BlockChain.MineBlock(service.MinerPrivateKey);
+            Assert.Contains(tx, mined.Transactions);
+        }
+
+        [Fact]
+        public async Task Tx_V2()
+        {
+            Block<PolymorphicAction<ActionBase>> genesis =
+                MakeGenesisBlock(
+                    default,
+                    new Currency("NCG", 2, minters: null),
+                    ImmutableHashSet<Address>.Empty
+                );
+            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
+
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
+
+            // Error: empty payload
+            var query = $"mutation {{ stageTxV2(payload: \"\") }}";
+            ExecutionResult result = await ExecuteQueryAsync(query);
+            Assert.NotNull(result.Errors);
+            Assert.Null(result.Data);
+            Transaction<PolymorphicAction<ActionBase>> tx =
+                Transaction<PolymorphicAction<ActionBase>>.Create(
+                    0,
+                    service.MinerPrivateKey,
+                    genesis.Hash,
+                    new PolymorphicAction<ActionBase>[] { }
+                );
+            string base64Encoded = Convert.ToBase64String(tx.Serialize(true));
+            query = $"mutation {{ stageTxV2(payload: \"{base64Encoded}\") }}";
+            result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
+            Assert.Equal(
+                new Dictionary<string, object>
+                {
+                    ["stageTxV2"] = tx.Id.ToHex(),
+                },
+                result.Data
+            );
+            Block<PolymorphicAction<ActionBase>> mined =
+                await BlockChain.MineBlock(service.MinerPrivateKey!);
             Assert.Contains(tx, mined.Transactions);
         }
 
