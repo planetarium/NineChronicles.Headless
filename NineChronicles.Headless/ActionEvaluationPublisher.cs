@@ -57,6 +57,8 @@ namespace NineChronicles.Headless
             _host = host;
             _port = port;
             _context = context;
+
+            ActionEvaluationHub.OnClientDisconnected += RemoveClient;
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -284,6 +286,19 @@ namespace NineChronicles.Headless
         public List<Address> GetClients()
         {
             return _clients.Keys.ToList();
+        }
+
+        private async void RemoveClient(string clientAddressHex)
+        {
+            try
+            {
+                var clientAddress = new Address(ByteUtil.ParseHex(clientAddressHex));
+                await RemoveClient(clientAddress);
+            }
+            catch (Exception)
+            {
+                // pass
+            }
         }
     }
 }
