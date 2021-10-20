@@ -34,6 +34,18 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             
             ExecutionResult queryResult = await ExecuteQueryAsync<InventoryType>(query, source: inventory);
             Assert.Null(queryResult.Errors);
+            Assert.Equal(new Dictionary<string, object>
+            {
+                ["items"] = new List<object>
+                {
+                    new Dictionary<string, object>
+                    {
+                        ["count"] = 1,
+                        ["id"] = row.Id,
+                        ["itemType"] = row.ItemType.ToString().ToUpper(),
+                    },  
+                },
+            }, queryResult.Data.As<Dictionary<string, object>>());
         }
     }
 }
