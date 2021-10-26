@@ -54,47 +54,6 @@ namespace NineChronicles.Headless.Executable.Commands
             }
         }
 
-        [Command(Description = "Create Transfer Asset action.")]
-        public int TransferAsset(
-            [Argument("SENDER-ADDRESS", Description = "A hex-encoded sender address.")] string senderAddress,
-            [Argument("RECIPIENT-ADDRESS", Description = "A hex-encoded recipient address.")] string recipientAddress,
-            [Argument("AMOUNT", Description = "The amount of asset to transfer.")]  string amount,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")] string filePath,
-            [Argument("MEMO", Description = "A memo of asset transfer")] string? memo = null
-        )
-        {
-            try
-            {
-                var currency = new Currency("NCG", 2, minter: null);
-                FungibleAssetValue amountFungibleAssetValue =
-                    FungibleAssetValue.Parse(currency, amount);
-                Address sender = new Address(ByteUtil.ParseHex(senderAddress));
-                Address recipient = new Address(ByteUtil.ParseHex(recipientAddress));
-                Nekoyume.Action.TransferAsset action = new TransferAsset(
-                    sender,
-                    recipient,
-                    amountFungibleAssetValue,
-                    memo);
-
-                var encoded = new List(
-                    new[]
-                    {
-                        (Text) nameof(Nekoyume.Action.TransferAsset),
-                        action.PlainValue
-                    }
-                );
-
-                byte[] raw = Codec.Encode(encoded);
-                File.WriteAllText(filePath, Convert.ToBase64String(raw));
-                return 0;
-            }
-            catch (Exception e)
-            {
-                _console.Error.WriteLine(e);
-                return -1;
-            }
-        }
-
         [Command(Description = "Create MonsterCollect action.")]
         public int MonsterCollect(
             [Range(0, 7)] int level,
@@ -144,6 +103,47 @@ namespace NineChronicles.Headless.Executable.Commands
                     new[]
                     {
                         (Text) nameof(Nekoyume.Action.ClaimMonsterCollectionReward),
+                        action.PlainValue
+                    }
+                );
+
+                byte[] raw = Codec.Encode(encoded);
+                File.WriteAllText(filePath, Convert.ToBase64String(raw));
+                return 0;
+            }
+            catch (Exception e)
+            {
+                _console.Error.WriteLine(e);
+                return -1;
+            }
+        }
+
+        [Command(Description = "Create TransferAsset action.")]
+        public int TransferAsset(
+            [Argument("SENDER-ADDRESS", Description = "A hex-encoded sender address.")] string senderAddress,
+            [Argument("RECIPIENT-ADDRESS", Description = "A hex-encoded recipient address.")] string recipientAddress,
+            [Argument("AMOUNT", Description = "The amount of asset to transfer.")]  string amount,
+            [Argument("PATH", Description = "A file path of base64 encoded action.")] string filePath,
+            [Argument("MEMO", Description = "A memo of asset transfer")] string? memo = null
+        )
+        {
+            try
+            {
+                var currency = new Currency("NCG", 2, minter: null);
+                FungibleAssetValue amountFungibleAssetValue =
+                    FungibleAssetValue.Parse(currency, amount);
+                Address sender = new Address(ByteUtil.ParseHex(senderAddress));
+                Address recipient = new Address(ByteUtil.ParseHex(recipientAddress));
+                Nekoyume.Action.TransferAsset action = new TransferAsset(
+                    sender,
+                    recipient,
+                    amountFungibleAssetValue,
+                    memo);
+
+                var encoded = new List(
+                    new[]
+                    {
+                        (Text) nameof(Nekoyume.Action.TransferAsset),
                         action.PlainValue
                     }
                 );

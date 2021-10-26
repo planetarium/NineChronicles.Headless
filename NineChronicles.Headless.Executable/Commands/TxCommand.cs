@@ -50,9 +50,9 @@ namespace NineChronicles.Headless.Executable.Commands
                 ActionBase action = type switch
                 {
                     nameof(ActivateAccount) => new ActivateAccount(),
-                    nameof(TransferAsset) => new TransferAsset(),
                     nameof(MonsterCollect) => new MonsterCollect(),
                     nameof(ClaimMonsterCollectionReward) => new ClaimMonsterCollectionReward(),
+                    nameof(TransferAsset) => new TransferAsset(),
                     _ => throw new CommandExitedException($"Unsupported action type was passed '{type}'", 128)
                 };
                 action.LoadPlainValue(plainValue);

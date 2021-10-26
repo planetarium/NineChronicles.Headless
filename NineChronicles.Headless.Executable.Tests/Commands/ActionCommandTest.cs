@@ -71,6 +71,50 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             }
         }
 
+        [Fact]
+        public void MonsterCollect()
+        {
+            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+            var resultCode = _command.MonsterCollect(1, filePath);
+            Assert.Equal(0, resultCode);
+            var rawAction = Convert.FromBase64String(File.ReadAllText(filePath));
+            var decoded = (List)_codec.Decode(rawAction);
+            string type = (Text)decoded[0];
+            Assert.Equal(nameof(Nekoyume.Action.MonsterCollect), type);
+
+            Dictionary plainValue = (Dictionary)decoded[1];
+            var action = new MonsterCollect();
+            action.LoadPlainValue(plainValue);
+            Assert.Equal(1, action.level);
+        }
+
+        [Theory]
+        [InlineData("0xab1dce17dCE1Db1424BB833Af6cC087cd4F5CB6d", -1)]
+        [InlineData("ab1dce17dCE1Db1424BB833Af6cC087cd4F5CB6d", 0)]
+        public void ClaimMonsterCollectReward(string addressString, int expectedCode)
+        {
+            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+            var resultCode = _command.ClaimMonsterCollectionReward(addressString, filePath);
+            Assert.Equal(expectedCode, resultCode);
+
+            if (resultCode == 0)
+            {
+                var rawAction = Convert.FromBase64String(File.ReadAllText(filePath));
+                var decoded = (List)_codec.Decode(rawAction);
+                string type = (Text)decoded[0];
+                Assert.Equal(nameof(Nekoyume.Action.ClaimMonsterCollectionReward), type);
+
+                Dictionary plainValue = (Dictionary)decoded[1];
+                var action = new ClaimMonsterCollectionReward();
+                action.LoadPlainValue(plainValue);
+                Assert.Equal(new Address(addressString), action.avatarAddress);
+            }
+            else
+            {
+                Assert.Contains("System.FormatException: Could not find any recognizable digits.", _console.Error.ToString());
+            }
+        }
+
         [Theory]
         [InlineData(10, 0, "transfer asset test1.")]
         [InlineData(100, 0, "transfer asset test2.")]
@@ -128,50 +172,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 Assert.Equal(amountFungibleAssetValue, action.Amount);
                 Assert.Equal(senderPrivateKey.ToAddress(), action.Sender);
                 Assert.Equal(recipientPrivateKey.ToAddress(), action.Recipient);
-            }
-            else
-            {
-                Assert.Contains("System.FormatException: Could not find any recognizable digits.", _console.Error.ToString());
-            }
-        }
-
-        [Fact]
-        public void MonsterCollect()
-        {
-            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
-            var resultCode = _command.MonsterCollect(1, filePath);
-            Assert.Equal(0, resultCode);
-            var rawAction = Convert.FromBase64String(File.ReadAllText(filePath));
-            var decoded = (List)_codec.Decode(rawAction);
-            string type = (Text)decoded[0];
-            Assert.Equal(nameof(Nekoyume.Action.MonsterCollect), type);
-
-            Dictionary plainValue = (Dictionary)decoded[1];
-            var action = new MonsterCollect();
-            action.LoadPlainValue(plainValue);
-            Assert.Equal(1, action.level);
-        }
-
-        [Theory]
-        [InlineData("0xab1dce17dCE1Db1424BB833Af6cC087cd4F5CB6d", -1)]
-        [InlineData("ab1dce17dCE1Db1424BB833Af6cC087cd4F5CB6d", 0)]
-        public void ClaimMonsterCollectReward(string addressString, int expectedCode)
-        {
-            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
-            var resultCode = _command.ClaimMonsterCollectionReward(addressString, filePath);
-            Assert.Equal(expectedCode, resultCode);
-
-            if (resultCode == 0)
-            {
-                var rawAction = Convert.FromBase64String(File.ReadAllText(filePath));
-                var decoded = (List)_codec.Decode(rawAction);
-                string type = (Text)decoded[0];
-                Assert.Equal(nameof(Nekoyume.Action.ClaimMonsterCollectionReward), type);
-
-                Dictionary plainValue = (Dictionary)decoded[1];
-                var action = new ClaimMonsterCollectionReward();
-                action.LoadPlainValue(plainValue);
-                Assert.Equal(new Address(addressString), action.avatarAddress);
             }
             else
             {

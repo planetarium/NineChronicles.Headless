@@ -44,22 +44,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             Assert_Tx(txNonce, filePath);
         }
 
-        [Theory]
-        [InlineData(1)]
-        [InlineData(10)]
-        [InlineData(100)]
-        public void Sign_TransferAsset(int amount)
-        {
-            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
-            var actionCommand = new ActionCommand(_console);
-            actionCommand.TransferAsset(
-                _privateKey.ToAddress().ToHex(),
-                new PrivateKey().ToAddress().ToHex(),
-                Convert.ToString(amount),
-                filePath);
-            Assert_Tx(1, filePath);
-        }
-
         [Fact]
         public void Sign_MonsterCollect()
         {
@@ -76,6 +60,22 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var actionCommand = new ActionCommand(_console);
             var avatarAddress = new Address();
             actionCommand.ClaimMonsterCollectionReward(avatarAddress.ToHex(), filePath);
+            Assert_Tx(1, filePath);
+        }
+
+        [Theory]
+        [InlineData(1)]
+        [InlineData(10)]
+        [InlineData(100)]
+        public void Sign_TransferAsset(int amount)
+        {
+            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+            var actionCommand = new ActionCommand(_console);
+            actionCommand.TransferAsset(
+                _privateKey.ToAddress().ToHex(),
+                new PrivateKey().ToAddress().ToHex(),
+                Convert.ToString(amount),
+                filePath);
             Assert_Tx(1, filePath);
         }
 
