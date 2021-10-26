@@ -123,12 +123,14 @@ namespace NineChronicles.Headless.Executable.Commands
             [Argument("SENDER-ADDRESS", Description = "A hex-encoded sender address.")] string senderAddress,
             [Argument("RECIPIENT-ADDRESS", Description = "A hex-encoded recipient address.")] string recipientAddress,
             [Argument("AMOUNT", Description = "The amount of asset to transfer.")]  string amount,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")] string filePath,
+            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null,
             [Argument("MEMO", Description = "A memo of asset transfer")] string? memo = null
         )
         {
             try
             {
+                filePath ??= Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+
                 // Minter for 9c-mainnet
                 var currency = new Currency("NCG", 2, minter: new Address("47d082a115c63e7b58b1532d20e631538eafadde"));
                 FungibleAssetValue amountFungibleAssetValue =
@@ -151,6 +153,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 byte[] raw = Codec.Encode(encoded);
                 File.WriteAllText(filePath, Convert.ToBase64String(raw));
+                Console.WriteLine(Convert.ToBase64String(raw));
                 return 0;
             }
             catch (Exception e)
