@@ -153,7 +153,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 byte[] raw = Codec.Encode(encoded);
                 File.WriteAllText(filePath, Convert.ToBase64String(raw));
-                Console.WriteLine(Convert.ToBase64String(raw));
+                Console.Write(Convert.ToBase64String(raw));
                 return 0;
             }
             catch (Exception e)
