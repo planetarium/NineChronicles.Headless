@@ -129,7 +129,8 @@ namespace NineChronicles.Headless.Executable.Commands
         {
             try
             {
-                var currency = new Currency("NCG", 2, minter: null);
+                // Minter for 9c-mainnet
+                var currency = new Currency("NCG", 2, minter: new Address("47d082a115c63e7b58b1532d20e631538eafadde"));
                 FungibleAssetValue amountFungibleAssetValue =
                     FungibleAssetValue.Parse(currency, amount);
                 Address sender = new Address(ByteUtil.ParseHex(senderAddress));

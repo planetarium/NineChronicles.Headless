@@ -129,14 +129,11 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 var decoded = (List)_codec.Decode(rawAction);
                 string type = (Text)decoded[0];
                 Assert.Equal(nameof(Nekoyume.Action.TransferAsset), type);
-                var currency = new Currency("NCG", 2, minter: null);
-                FungibleAssetValue amountFungibleAssetValue =
-                    FungibleAssetValue.Parse(currency, Convert.ToString(amount));
                 Dictionary plainValue = (Dictionary)decoded[1];
                 var action = new TransferAsset();
                 action.LoadPlainValue(plainValue);
                 Assert.Equal(memo, action.Memo);
-                Assert.Equal(amountFungibleAssetValue, action.Amount);
+                Assert.Equal(amount, action.Amount.MajorUnit);
                 Assert.Equal(senderPrivateKey.ToAddress(), action.Sender);
                 Assert.Equal(recipientPrivateKey.ToAddress(), action.Recipient);
             }
