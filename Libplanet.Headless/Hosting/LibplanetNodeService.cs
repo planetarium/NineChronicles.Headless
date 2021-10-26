@@ -7,7 +7,6 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
-using Bencodex.Types;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
@@ -170,6 +169,17 @@ namespace Libplanet.Headless.Hosting
                 shuffledIceServers = iceServers.OrderBy(x => rand.Next());
             }
 
+            SwarmOptions.TransportType transportType = SwarmOptions.TransportType.TcpTransport;
+            switch (Properties.TransportType)
+            {
+                case "netmq":
+                    transportType = SwarmOptions.TransportType.NetMQTransport;
+                    break;
+                case "tcp":
+                    transportType = SwarmOptions.TransportType.TcpTransport;
+                    break;
+            }
+
             Swarm = new Swarm<T>(
                 BlockChain,
                 Properties.SwarmPrivateKey,
@@ -190,7 +200,8 @@ namespace Libplanet.Headless.Hosting
                     MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
                     BucketSize = Properties.BucketSize,
                     PollInterval = Properties.PollInterval,
-                    MaximumPollPeers = Properties.MaximumPollPeers
+                    MaximumPollPeers = Properties.MaximumPollPeers,
+                    Type = transportType,
                 }
             );
 
