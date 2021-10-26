@@ -52,6 +52,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     nameof(ActivateAccount) => new ActivateAccount(),
                     nameof(MonsterCollect) => new MonsterCollect(),
                     nameof(ClaimMonsterCollectionReward) => new ClaimMonsterCollectionReward(),
+                    nameof(TransferAsset) => new TransferAsset(),
                     _ => throw new CommandExitedException($"Unsupported action type was passed '{type}'", 128)
                 };
                 action.LoadPlainValue(plainValue);

@@ -5,9 +5,11 @@ using Bencodex;
 using Bencodex.Types;
 using Cocona;
 using Libplanet;
+using Libplanet.Assets;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using NineChronicles.Headless.Executable.IO;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
@@ -85,7 +87,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
         [Command(Description = "Create ClaimMonsterCollectionReward action.")]
         public int ClaimMonsterCollectionReward(
-            [Argument("AVATAR-Address", Description = "A hex-encoded avatar address.")] string encodedAddress,
+            [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")] string encodedAddress,
             [Argument("PATH", Description = "A file path of base64 encoded action.")] string filePath
         )
         {
@@ -107,6 +109,51 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 byte[] raw = Codec.Encode(encoded);
                 File.WriteAllText(filePath, Convert.ToBase64String(raw));
+                return 0;
+            }
+            catch (Exception e)
+            {
+                _console.Error.WriteLine(e);
+                return -1;
+            }
+        }
+
+        [Command(Description = "Create TransferAsset action.")]
+        public int TransferAsset(
+            [Argument("SENDER-ADDRESS", Description = "A hex-encoded sender address.")] string senderAddress,
+            [Argument("RECIPIENT-ADDRESS", Description = "A hex-encoded recipient address.")] string recipientAddress,
+            [Argument("AMOUNT", Description = "The amount of asset to transfer.")]  string amount,
+            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null,
+            [Argument("MEMO", Description = "A memo of asset transfer")] string? memo = null
+        )
+        {
+            try
+            {
+                filePath ??= Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+
+                // Minter for 9c-mainnet
+                var currency = new Currency("NCG", 2, minter: new Address("47d082a115c63e7b58b1532d20e631538eafadde"));
+                FungibleAssetValue amountFungibleAssetValue =
+                    FungibleAssetValue.Parse(currency, amount);
+                Address sender = new Address(ByteUtil.ParseHex(senderAddress));
+                Address recipient = new Address(ByteUtil.ParseHex(recipientAddress));
+                Nekoyume.Action.TransferAsset action = new TransferAsset(
+                    sender,
+                    recipient,
+                    amountFungibleAssetValue,
+                    memo);
+
+                var encoded = new List(
+                    new[]
+                    {
+                        (Text) nameof(Nekoyume.Action.TransferAsset),
+                        action.PlainValue
+                    }
+                );
+
+                byte[] raw = Codec.Encode(encoded);
+                File.WriteAllText(filePath, Convert.ToBase64String(raw));
+                Console.Write(Convert.ToBase64String(raw));
                 return 0;
             }
             catch (Exception e)
