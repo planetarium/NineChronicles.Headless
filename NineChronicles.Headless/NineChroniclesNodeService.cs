@@ -105,7 +105,10 @@ namespace NineChronicles.Headless
             }
             else
             {
+                // FIXME: Arguments should be removed properly.
+#pragma warning disable CS0618
                 blockPolicy = blockPolicySource.GetPolicy(properties.MinimumDifficulty, properties.MaximumTransactions);
+#pragma warning restore CS0618
             }
 
             BlockRenderer = blockPolicySource.BlockRenderer;
@@ -171,12 +174,11 @@ namespace NineChronicles.Headless
 
                             if (chain.Policy is BlockPolicy bp)
                             {
-                                if (bp.IsAllowedToMine(chain, privateKey.ToAddress(), chain.Count))
+                                if (bp.IsAllowedToMine(privateKey.ToAddress(), chain.Count))
                                 {
                                     IEnumerable<Task<Block<NCAction>>> miners = Enumerable
                                         .Range(0, minerCount)
-                                        .Select(_ => miner.MineBlockAsync(
-                                            properties.MaximumTransactions, cancellationToken));
+                                        .Select(_ => miner.MineBlockAsync(cancellationToken));
                                     await Task.WhenAll(miners);
                                 }
                                 else
@@ -342,9 +344,12 @@ namespace NineChronicles.Headless
             return service;
         }
 
+        // FIXME: Arguments should be removed properly.
+#pragma warning disable CS0618
         internal static IBlockPolicy<NCAction> GetBlockPolicy(int minimumDifficulty, int maximumTransactions) =>
             new BlockPolicySource(Log.Logger, LogEventLevel.Debug)
                 .GetPolicy(minimumDifficulty, maximumTransactions);
+#pragma warning restore CS0618
 
         public void StartMining() => NodeService?.StartMining(MinerPrivateKey);
 

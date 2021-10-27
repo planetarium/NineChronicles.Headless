@@ -46,9 +46,8 @@ namespace NineChronicles.Headless.Executable.Commands
                 throw new CommandExitedException($"The given STORE-PATH, {storePath} seems not existed.", -1);
             }
 
-            const int minimumDifficulty = 5000000, maximumTransactions = 100;
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<PolymorphicAction<ActionBase>>();
-            IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy(minimumDifficulty, maximumTransactions);
+            IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
             IStore store = storeType.CreateStore(storePath);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             Block<NCAction> genesisBlock = store.GetGenesisBlock<NCAction>(blockPolicy.GetHashAlgorithm);
@@ -83,9 +82,8 @@ namespace NineChronicles.Headless.Executable.Commands
                 throw new CommandExitedException($"The given STORE-PATH, {storePath} seems not existed.", -1);
             }
 
-            const int minimumDifficulty = 5000000, maximumTransactions = 100;
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<PolymorphicAction<ActionBase>>();
-            IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy(minimumDifficulty, maximumTransactions);
+            IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
             IStore store = storeType.CreateStore(storePath);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             Block<NCAction> genesisBlock = store.GetGenesisBlock<NCAction>(blockPolicy.GetHashAlgorithm);
