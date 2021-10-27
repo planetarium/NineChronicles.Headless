@@ -79,6 +79,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var configuration = configurationBuilder.Build();
 
             var services = new ServiceCollection();
+            var publisher = new ActionEvaluationPublisher(
+                ncService.BlockRenderer,
+                ncService.ActionRenderer,
+                ncService.ExceptionRenderer,
+                ncService.NodeStatusRenderer,
+                "",
+                0,
+                new RpcContext()
+            );
+            services.AddSingleton(publisher);
             services.AddSingleton(StandaloneContextFx);
             services.AddSingleton<IConfiguration>(configuration);
             services.AddGraphTypes();

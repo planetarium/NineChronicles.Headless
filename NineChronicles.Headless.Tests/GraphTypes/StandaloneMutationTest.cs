@@ -20,6 +20,9 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex.Types;
+using NineChronicles.Headless.Executable.Commands;
+using NineChronicles.Headless.Executable.IO;
+using NineChronicles.Headless.Executable.Tests.IO;
 using Xunit;
 using Xunit.Abstractions;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -378,6 +381,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(costumeIds, action.costumes);
             Assert.Equal(equipmentIds, action.equipments);
             Assert.Equal(consumableIds, action.foods);
+            Assert.Equal(1, action.playCount);
         }
 
         public static IEnumerable<object?[]> HackAndSlashMember => new List<object?[]>
@@ -783,6 +787,80 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Block<PolymorphicAction<ActionBase>> mined =
                 await BlockChain.MineBlock(service.MinerPrivateKey);
             Assert.Contains(tx, mined.Transactions);
+        }
+
+        [Fact]
+        public async Task Tx_V2()
+        {
+            Block<PolymorphicAction<ActionBase>> genesis =
+                MakeGenesisBlock(
+                    default,
+                    new Currency("NCG", 2, minters: null),
+                    ImmutableHashSet<Address>.Empty
+                );
+            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
+
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
+
+            // Error: empty payload
+            var query = $"mutation {{ stageTxV2(payload: \"\") }}";
+            ExecutionResult result = await ExecuteQueryAsync(query);
+            Assert.NotNull(result.Errors);
+            Assert.Null(result.Data);
+            Transaction<PolymorphicAction<ActionBase>> tx =
+                Transaction<PolymorphicAction<ActionBase>>.Create(
+                    0,
+                    service.MinerPrivateKey,
+                    genesis.Hash,
+                    new PolymorphicAction<ActionBase>[] { }
+                );
+            string base64Encoded = Convert.ToBase64String(tx.Serialize(true));
+            query = $"mutation {{ stageTxV2(payload: \"{base64Encoded}\") }}";
+            result = await ExecuteQueryAsync(query);
+            Assert.Null(result.Errors);
+            Assert.Equal(
+                new Dictionary<string, object>
+                {
+                    ["stageTxV2"] = tx.Id.ToHex(),
+                },
+                result.Data
+            );
+            Block<PolymorphicAction<ActionBase>> mined =
+                await BlockChain.MineBlock(service.MinerPrivateKey!);
+            Assert.Contains(tx, mined.Transactions);
+        }
+
+        [Fact]
+        public async Task Tx_ActivateAccount()
+        {
+            var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
+            var privateKey = new PrivateKey();
+            (ActivationKey activationKey, PendingActivationState pendingActivation) =
+                ActivationKey.Create(privateKey, nonce);
+            NCAction action = new CreatePendingActivation(pendingActivation);
+            BlockChain.MakeTransaction(AdminPrivateKey, new[] { action });
+            await BlockChain.MineBlock(AdminPrivateKey);
+            var encodedActivationKey = activationKey.Encode();
+            var actionCommand = new ActionCommand(new StandardConsole());
+            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+            actionCommand.ActivateAccount(encodedActivationKey, ByteUtil.Hex(nonce), filePath);
+            var console = new StringIOConsole();
+            var txCommand = new TxCommand(console);
+            var timeStamp = DateTimeOffset.UtcNow;
+            txCommand.Sign(ByteUtil.Hex(privateKey.ByteArray), BlockChain.GetNextTxNonce(privateKey.ToAddress()), ByteUtil.Hex(BlockChain.Genesis.Hash.ByteArray), timeStamp.ToString(), new []{ filePath });
+            var output = console.Out.ToString();
+            output = output.Trim();
+            var queryResult = await ExecuteQueryAsync(
+                $"mutation {{ stageTx(payload: \"{output}\") }}");
+            await BlockChain.MineBlock(AdminPrivateKey);
+
+            var result = (bool)queryResult.Data
+                .As<Dictionary<string, object>>()["stageTx"];
+            Assert.True(result);
+
+            IValue? state = BlockChain.GetState(privateKey.ToAddress().Derive(ActivationKey.DeriveKey));
+            Assert.True((Bencodex.Types.Boolean)state);
         }
 
         private Block<PolymorphicAction<ActionBase>> MakeGenesisBlock(

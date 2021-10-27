@@ -9,6 +9,8 @@ namespace NineChronicles.Headless
     public class ActionEvaluationHub : StreamingHubBase<IActionEvaluationHub, IActionEvaluationHubReceiver>, IActionEvaluationHub
     {
         private IGroup _addressGroup;
+        public static event Action<string> OnClientDisconnected;
+
 
         public async Task JoinAsync(string addressHex)
         {
@@ -71,6 +73,12 @@ namespace NineChronicles.Headless
         {
             Broadcast(_addressGroup).OnPreloadEnd();
             await Task.CompletedTask;
+        }
+
+        protected override ValueTask OnDisconnected()
+        {
+            OnClientDisconnected?.Invoke(_addressGroup.GroupName);
+            return base.OnDisconnected();
         }
     }
 }

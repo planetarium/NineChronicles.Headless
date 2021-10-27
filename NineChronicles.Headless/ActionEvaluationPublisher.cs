@@ -57,6 +57,8 @@ namespace NineChronicles.Headless
             _host = host;
             _port = port;
             _context = context;
+
+            ActionEvaluationHub.OnClientDisconnected += RemoveClient;
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -132,7 +134,7 @@ namespace NineChronicles.Headless
                 }
             );
             _actionRenderer.EveryRender<ActionBase>()
-                .Where(ContainsAddressToBroadcast)
+                .Where(ev => ContainsAddressToBroadcast(ev, clientAddress))
                 .Subscribe(
                 async ev =>
                 {
@@ -163,7 +165,7 @@ namespace NineChronicles.Headless
                 );
 
             _actionRenderer.EveryUnrender<ActionBase>()
-                .Where(ContainsAddressToBroadcast)
+                .Where(ev => ContainsAddressToBroadcast(ev, clientAddress))
                 .Subscribe(
                 async ev =>
                 {
@@ -248,74 +250,27 @@ namespace NineChronicles.Headless
                 ev.Signer.Equals(address) || updatedAddresses.Contains(address));
         }
 
+        private bool ContainsAddressToBroadcast(ActionBase.ActionEvaluation<ActionBase> ev, Address clientAddress)
+        {
+            return _context.RpcRemoteSever
+                ? ContainsAddressToBroadcastRemoteClient(ev, clientAddress)
+                : ContainsAddressToBroadcast(ev);
+        }
+
         private bool ContainsAddressToBroadcastRemoteClient(ActionBase.ActionEvaluation<ActionBase> ev,
-            ImmutableHashSet<Address> immutableHashSet)
+            Address clientAddress)
         {
             var updatedAddresses =
                 ev.OutputStates.UpdatedAddresses.Union(ev.OutputStates.UpdatedFungibleAssets.Keys);
-            return immutableHashSet.Any(address =>
+            return _clients[clientAddress].addresses.Any(address =>
                 ev.Signer.Equals(address) || updatedAddresses.Contains(address));
         }
 
         public void UpdateSubscribeAddresses(byte[] addressBytes, IEnumerable<byte[]> addressesBytes)
         {
-            // FIXME fix duplicate action renderer call.
             var address = new Address(addressBytes);
-            var client = _clients[address].hub;
             var addresses = addressesBytes.Select(a => new Address(a)).ToImmutableHashSet();
-            _actionRenderer.EveryRender<ActionBase>()
-                .Where(ev => ContainsAddressToBroadcastRemoteClient(ev, addresses))
-                .Subscribe(
-                    async ev =>
-                    {
-                        var formatter = new BinaryFormatter();
-                        using var c = new MemoryStream();
-                        using var df = new DeflateStream(c, System.IO.Compression.CompressionLevel.Fastest);
-
-                        try
-                        {
-                            formatter.Serialize(df, ev);
-                            await client.BroadcastRenderAsync(c.ToArray());
-                        }
-                        catch (SerializationException se)
-                        {
-                            // FIXME add logger as property
-                            Log.Error(se, "Skip broadcasting render since the given action isn't serializable.");
-                        }
-                        catch (Exception e)
-                        {
-                            // FIXME add logger as property
-                            Log.Error(e, "Skip broadcasting render due to the unexpected exception");
-                        }
-                    }
-                );
-
-            _actionRenderer.EveryUnrender<ActionBase>()
-                .Where(ev => ContainsAddressToBroadcastRemoteClient(ev, addresses))
-                .Subscribe(
-                    async ev =>
-                    {
-                        var formatter = new BinaryFormatter();
-                        using var c = new MemoryStream();
-                        using var df = new DeflateStream(c, System.IO.Compression.CompressionLevel.Fastest);
-
-                        try
-                        {
-                            formatter.Serialize(df, ev);
-                            await client.BroadcastUnrenderAsync(c.ToArray());
-                        }
-                        catch (SerializationException se)
-                        {
-                            // FIXME add logger as property
-                            Log.Error(se, "Skip broadcasting unrender since the given action isn't serializable.");
-                        }
-                        catch (Exception e)
-                        {
-                            // FIXME add logger as property
-                            Log.Error(e, "Skip broadcasting unrender due to the unexpected exception");
-                        }
-                    }
-                );
+            _clients[address] = (_clients[address].hub, addresses);
         }
 
         public async Task RemoveClient(Address clientAddress)
@@ -325,6 +280,24 @@ namespace NineChronicles.Headless
                 var client = _clients[clientAddress].hub;
                 await client.LeaveAsync();
                 _clients.Remove(clientAddress);
+            }
+        }
+
+        public List<Address> GetClients()
+        {
+            return _clients.Keys.ToList();
+        }
+
+        private async void RemoveClient(string clientAddressHex)
+        {
+            try
+            {
+                var clientAddress = new Address(ByteUtil.ParseHex(clientAddressHex));
+                await RemoveClient(clientAddress);
+            }
+            catch (Exception)
+            {
+                // pass
             }
         }
     }

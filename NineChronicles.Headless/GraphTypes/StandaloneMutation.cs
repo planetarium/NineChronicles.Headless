@@ -90,6 +90,54 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
+            // TODO deprecate stageTx and use this.
+            Field<NonNullGraphType<TxIdType>>(
+                name: "stageTxV2",
+                description: "Add a new transaction to staging and return TxId",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "payload",
+                        Description = "The base64-encoded bytes for new transaction."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        byte[] bytes = Convert.FromBase64String(context.GetArgument<string>("payload"));
+                        Transaction<NCAction> tx = Transaction<NCAction>.Deserialize(bytes);
+                        NineChroniclesNodeService? service = standaloneContext.NineChroniclesNodeService;
+                        BlockChain<NCAction>? blockChain = service?.Swarm.BlockChain;
+
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        if (blockChain.Policy.ValidateNextBlockTx(blockChain, tx) is null)
+                        {
+                            blockChain.StageTransaction(tx);
+
+                            if (service?.Swarm is { } swarm && swarm.Running)
+                            {
+                                swarm.BroadcastTxs(new[] { tx });
+                            }
+
+                            return tx.Id;
+                        }
+
+                        context.Errors.Add(new ExecutionError("The given transaction is invalid."));
+                    }
+                    catch (Exception e)
+                    {
+                        context.Errors.Add(new ExecutionError("An unexpected exception occurred.", e));
+                    }
+
+                    return null;
+                }
+            );
+
             Field<TxIdType>(
                 name: "transfer",
                 arguments: new QueryArguments(

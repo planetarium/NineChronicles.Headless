@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Reactive.Subjects;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using Libplanet;
@@ -15,7 +17,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Nekoyume.Action;
+using Nekoyume.Model.State;
 using NineChronicles.Headless.Controllers;
+using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Requests;
 using Xunit;
 using IPAddress = System.Net.IPAddress;
@@ -50,7 +54,7 @@ namespace NineChronicles.Headless.Tests.Controllers
             _configuration = new ConfigurationBuilder().AddInMemoryCollection().Build();
             _httpContextAccessor = new HttpContextAccessor();
             _httpContextAccessor.HttpContext = new DefaultHttpContext();
-            
+            ConfigureNineChroniclesNodeService();
             _controller = new GraphQLController(_standaloneContext, _httpContextAccessor, _configuration);
         }
 
@@ -126,6 +130,24 @@ namespace NineChronicles.Headless.Tests.Controllers
         {
             ConfigureSecretToken();
             Assert.IsType<UnauthorizedResult>(_controller.SetPrivateKey(new SetPrivateKeyRequest()));
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void RemoveSubscribe(bool exist)
+        {
+            var address = new PrivateKey().ToAddress();
+            if (exist)
+            {
+                _standaloneContext.AgentAddresses[address] = (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>());
+            }
+            Assert.Equal(exist, _standaloneContext.AgentAddresses.Any());
+            _controller.RemoveSubscribe(new AddressRequest
+            {
+                AddressString = address.ToHex()
+            });
+            Assert.Empty(_standaloneContext.AgentAddresses);
         }
 
         private string CreateSecretToken() => Guid.NewGuid().ToString();
