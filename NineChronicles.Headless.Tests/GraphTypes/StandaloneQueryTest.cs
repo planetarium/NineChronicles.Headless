@@ -719,10 +719,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Null(queryResult.Errors);
         }
 
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public async Task ActivationKeyNonce(bool exist)
+        [Fact]
+        public async Task ActivationKeyNonce()
         {
             var adminPrivateKey = new PrivateKey();
             var adminAddress = adminPrivateKey.ToAddress();
@@ -731,12 +729,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var privateKey = new PrivateKey();
             (ActivationKey activationKey, PendingActivationState pendingActivation) =
                 ActivationKey.Create(privateKey, nonce);
-            var pendingActivationStates = new List<PendingActivationState>();
-
-            if (exist)
+            var pendingActivationStates = new List<PendingActivationState>
             {
-                pendingActivationStates.Add(pendingActivation);
-            }
+                pendingActivation,
+            };
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
                     HashAlgorithmType.Of<SHA256>(),
@@ -786,18 +782,75 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var query = $"query {{ activationKeyNonce(invitationCode: \"{activationKey.Encode()}\") }}";
             var queryResult = await ExecuteQueryAsync(query);
-            if (exist)
-            {
-                var result = (string)queryResult.Data
-                    .As<Dictionary<string, object>>()["activationKeyNonce"];
-                Assert.Equal(nonce, ByteUtil.ParseHex(result));
-            }
-            else
-            {
-                Assert.Single(queryResult.Errors);
-            }
+            var result = (string)queryResult.Data
+                .As<Dictionary<string, object>>()["activationKeyNonce"];
+            Assert.Equal(nonce, ByteUtil.ParseHex(result));
         }
 
+        [Theory]
+        [InlineData("1", "invitationCode format is invalid.")]
+        [InlineData("9330b3287bd2bbc38770c69ae7cd380350c60a1dff9ec41254f3048d5b3eb01c", "invitationCode format is invalid.")]
+        [InlineData("9330b3287bd2bbc38770c69ae7cd380350c60a1dff9ec41254f3048d5b3eb01c/44C889Af1e1e90213Cff5d69C9086c34ecCb60B0", "invitationCode is invalid.")]
+        public async Task ActivationKeyNonce_Throw_ExecutionError(string code, string msg)
+        {
+            var adminPrivateKey = new PrivateKey();
+            var adminAddress = adminPrivateKey.ToAddress();
+            var activatedAccounts = ImmutableHashSet<Address>.Empty;
+            var pendingActivationStates = new List<PendingActivationState>();
+
+            Block<PolymorphicAction<ActionBase>> genesis =
+                BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+                    HashAlgorithmType.Of<SHA256>(),
+                    new PolymorphicAction<ActionBase>[]
+                    {
+                        new InitializeStates(
+                            rankingState: new RankingState(),
+                            shopState: new ShopState(),
+                            gameConfigState: new GameConfigState(),
+                            redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                                .Add("address", RedeemCodeState.Address.Serialize())
+                                .Add("map", Bencodex.Types.Dictionary.Empty)
+                            ),
+                            adminAddressState: new AdminState(adminAddress, 1500000),
+                            activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
+                            goldCurrencyState: new GoldCurrencyState(new Currency("NCG", 2, minter: null)),
+                            goldDistributions: new GoldDistribution[0],
+                            tableSheets: _sheets,
+                            pendingActivationStates: pendingActivationStates.ToArray()
+                        ),
+                    }
+                );
+
+            var apvPrivateKey = new PrivateKey();
+            var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
+            var userPrivateKey = new PrivateKey();
+            var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+            {
+                Host = System.Net.IPAddress.Loopback.ToString(),
+                AppProtocolVersion = apv,
+                GenesisBlock = genesis,
+                StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
+                StoreStatesCacheSize = 2,
+                SwarmPrivateKey = new PrivateKey(),
+                Port = null,
+                MinimumDifficulty = 4096,
+                NoMiner = true,
+                Render = false,
+                Peers = ImmutableHashSet<Peer>.Empty,
+                TrustedAppProtocolVersionSigners = null,
+                StaticPeers = ImmutableHashSet<BoundPeer>.Empty
+            };
+
+            var service = new NineChroniclesNodeService(userPrivateKey, properties, null);
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
+
+            var query = $"query {{ activationKeyNonce(invitationCode: \"{code}\") }}";
+            var queryResult = await ExecuteQueryAsync(query);
+            Assert.Single(queryResult.Errors);
+            Assert.Equal(msg, queryResult.Errors.First().Message);
+
+        }
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)
         {
             var goldCurrency = new Currency("NCG", 2, minter: null);
