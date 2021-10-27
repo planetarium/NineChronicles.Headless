@@ -104,9 +104,6 @@ namespace Libplanet.Headless
         ) =>
             InternalStore.IterateIndexes(chainId, offset, limit);
 
-        public IEnumerable<TxId> IterateStagedTransactionIds() =>
-            InternalStore.IterateStagedTransactionIds();
-
         public IEnumerable<TxId> IterateTransactionIds() =>
             InternalStore.IterateTransactionIds();
 
@@ -143,12 +140,6 @@ namespace Libplanet.Headless
 
         public void SetCanonicalChainId(Guid chainId) =>
             InternalStore.SetCanonicalChainId(chainId);
-
-        public void StageTransactionIds(IImmutableSet<TxId> txids) =>
-            InternalStore.StageTransactionIds(txids);
-
-        public void UnstageTransactionIds(ISet<TxId> txids) =>
-            InternalStore.UnstageTransactionIds(txids);
 
         public void PutTxIdBlockHashIndex(TxId txId, BlockHash blockHash) =>
             InternalStore.PutTxIdBlockHashIndex(txId, blockHash);
