@@ -395,6 +395,7 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         string invitationCode = context.GetArgument<string>("invitationCode");
+                        invitationCode = invitationCode.TrimEnd();
                         activationKey = ActivationKey.Decode(invitationCode);
                     }
                     catch (Exception)

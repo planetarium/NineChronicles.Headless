@@ -719,8 +719,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Null(queryResult.Errors);
         }
 
-        [Fact]
-        public async Task ActivationKeyNonce()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task ActivationKeyNonce(bool trim)
         {
             var adminPrivateKey = new PrivateKey();
             var adminAddress = adminPrivateKey.ToAddress();
@@ -780,7 +782,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
-            var query = $"query {{ activationKeyNonce(invitationCode: \"{activationKey.Encode()}\") }}";
+            var code = activationKey.Encode();
+            if (trim)
+            {
+                code += " ";
+            }
+            var query = $"query {{ activationKeyNonce(invitationCode: \"{code}\") }}";
             var queryResult = await ExecuteQueryAsync(query);
             var result = (string)queryResult.Data
                 .As<Dictionary<string, object>>()["activationKeyNonce"];
