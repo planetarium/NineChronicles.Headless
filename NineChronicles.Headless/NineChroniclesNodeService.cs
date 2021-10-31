@@ -1,4 +1,3 @@
-using Bencodex.Types;
 using Lib9c.Renderer;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
@@ -226,7 +225,7 @@ namespace NineChronicles.Headless
                         if (mainSwarm.Running)
                         {
                             Log.Debug("Start mining.");
-                            await miner.MineBlockAsync(properties.MaximumTransactions, cancellationToken);
+                            await miner.MineBlockAsync(cancellationToken);
                             await Task.Delay(blockInterval, cancellationToken);
                         }
                         else
