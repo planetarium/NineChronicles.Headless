@@ -22,6 +22,7 @@ using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Libplanet.Blockchain.Renderers;
 using Libplanet.Headless;
 using Nekoyume.Model;
+using Serilog;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -390,15 +391,24 @@ namespace NineChronicles.Headless.GraphTypes
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
                     }
 
-                    string invitationCode = context.GetArgument<string>("invitationCode");
-                    ActivationKey activationKey = ActivationKey.Decode(invitationCode);
+                    ActivationKey activationKey;
+                    try
+                    {
+                        string invitationCode = context.GetArgument<string>("invitationCode");
+                        invitationCode = invitationCode.TrimEnd();
+                        activationKey = ActivationKey.Decode(invitationCode);
+                    }
+                    catch (Exception)
+                    {
+                        throw new ExecutionError("invitationCode format is invalid.");
+                    }
                     if (blockChain.GetState(activationKey.PendingAddress) is Dictionary dictionary)
                     {
                         var pending = new PendingActivationState(dictionary);
                         return ByteUtil.Hex(pending.Nonce);
                     }
 
-                    throw new ExecutionError($"invitationCode is invalid.");
+                    throw new ExecutionError("invitationCode is invalid.");
                 }
             );
 
