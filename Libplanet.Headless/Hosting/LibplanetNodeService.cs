@@ -105,6 +105,7 @@ namespace Libplanet.Headless.Hosting
 
             var chainIds = Store.ListChainIds().ToList();
             Log.Debug($"Number of chain ids: {chainIds.Count()}");
+            Log.Debug($"Canonical chain id: {Store.GetCanonicalChainId().ToString()}");
 
             if (Properties.Confirmations > 0)
             {
