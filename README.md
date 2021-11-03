@@ -55,6 +55,7 @@ Options:
   --nonblock-renderer-queue <Int32>                        The size of the queue used by the non-blocking renderer.   512 by default.  Ignored if --nonblock-renderer is turned off. (Default: 512)
   --max-transactions <Int32>                               The number of maximum transactions can be included in a single block. Unlimited if the value is less then or equal to 0.  100 by default. (Default: 100)
   --strict-rendering                                       Flag to turn on validating action renderer.
+  --network-type <NetworkType>                             Network type. (Default: Main) (Allowed values: Main, Internal, Test)
   --dev                                                    Flag to turn on the dev mode.  false by default.
   --dev.block-interval <Int32>                             The time interval between blocks. It's unit is milliseconds. Works only when dev mode is on.  10000 (ms) by default. (Default: 10000)
   --dev.reorg-interval <Int32>                             The size of reorg interval. Works only when dev mode is on.  0 by default. (Default: 0)
@@ -115,6 +116,7 @@ $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 - `--nonblock-renderer`: Uses non-blocking renderer, which prevents the blockchain & swarm from waiting slow rendering.  Turned off by default.
 - `--nonblock-renderer-queue`: The size of the queue used by the non-blocking renderer.   512 by default.  Ignored if `--nonblock-renderer` is turned off.
 - `--max-transactions`: Specifies the number of maximum transactions can be included in a single block. Unlimited if the value is less then or equal to 0.
+- `--network-type`: Choose one of `Main`, `Internal`, `Test`.  `Main` by defualt.
 - `--dev`: Flag to turn on the dev mode.
 - `--dev.block-interval`: Specifies the time interval between blocks by milliseconds in dev mode.
 - `--dev.reorg-interval`: Specifies the size of reorg interval in dev mode.

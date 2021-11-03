@@ -20,6 +20,7 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.Controllers;
 using NineChronicles.Headless.GraphTypes;
+using NineChronicles.Headless.Properties;
 using NineChronicles.Headless.Requests;
 using Xunit;
 using IPAddress = System.Net.IPAddress;
@@ -177,8 +178,8 @@ namespace NineChronicles.Headless.Tests.Controllers
                     SwarmPrivateKey = new PrivateKey(),
                     Host = IPAddress.Loopback.ToString(),
                 },
-                NineChroniclesNodeService.GetBlockPolicy(),
-                null);
+                NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test),
+                NetworkType.Test);
         }
     }
 }

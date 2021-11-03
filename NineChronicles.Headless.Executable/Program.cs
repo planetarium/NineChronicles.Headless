@@ -132,6 +132,8 @@ namespace NineChronicles.Headless.Executable
             int maximumTransactions = 100,
             [Option("strict-rendering", Description = "Flag to turn on validating action renderer.")]
             bool strictRendering = false,
+            [Option("network-type", Description = "Network type.")]
+            NetworkType networkType = NetworkType.Main,
             [Option("dev", Description = "Flag to turn on the dev mode.  false by default.")]
             bool isDev = false,
             [Option(
@@ -343,6 +345,7 @@ namespace NineChronicles.Headless.Executable
                 {
                     MinerPrivateKey = minerPrivateKey,
                     Libplanet = properties,
+                    NetworkType = networkType,
                     Dev = isDev,
                     StrictRender = strictRendering,
                     BlockInterval = blockInterval,
