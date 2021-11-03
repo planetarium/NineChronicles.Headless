@@ -85,9 +85,8 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             store.AppendIndex(chainId, genesisBlock.Hash);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
 
-            const int minimumDifficulty = 5000000, maximumTransactions = 100;
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<PolymorphicAction<ActionBase>>();
-            IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy(minimumDifficulty, maximumTransactions);
+            IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
             BlockChain<NCAction> chain = new BlockChain<NCAction>(
                 blockPolicy,
                 stagePolicy,

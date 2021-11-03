@@ -18,7 +18,7 @@ namespace NineChronicles.Headless.Tests.Common
         public const int MaximumTransactions = 100;
 
         public static IBlockPolicy<PolymorphicAction<ActionBase>> BlockPolicy =>
-            NineChroniclesNodeService.GetBlockPolicy(MinimumDifficulty, MaximumTransactions);
+            NineChroniclesNodeService.GetTestBlockPolicy();
 
         public static NineChroniclesNodeService CreateNineChroniclesNodeService(
             Block<PolymorphicAction<ActionBase>> genesis,
@@ -35,19 +35,17 @@ namespace NineChronicles.Headless.Tests.Common
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
                 Port = null,
-                MinimumDifficulty = MinimumDifficulty,
                 NoMiner = true,
                 Render = false,
                 LogActionRenders = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
-                MaximumTransactions = MaximumTransactions,
                 MessageTimeout = TimeSpan.FromMinutes(1),
                 TipTimeout = TimeSpan.FromMinutes(1),
                 DemandBuffer = 1150,
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty,
             };
-            return new NineChroniclesNodeService(privateKey, properties, null);
+            return new NineChroniclesNodeService(privateKey, properties, BlockPolicy, null);
         }
     }
 }
