@@ -459,7 +459,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
                 Port = null,
-                MinimumDifficulty = 4096,
                 NoMiner = true,
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
@@ -771,7 +770,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
                 Port = null,
-                MinimumDifficulty = 4096,
                 NoMiner = true,
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
@@ -832,6 +830,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
+
             var userPrivateKey = new PrivateKey();
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
@@ -842,15 +841,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
                 Port = null,
-                MinimumDifficulty = 4096,
                 NoMiner = true,
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty
             };
-
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
+
             var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, null);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
@@ -864,7 +862,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)
         {
             var goldCurrency = new Currency("NCG", 2, minter: null);
-            int minimumDifficulty = 4096;
+
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
@@ -888,7 +886,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                         ),
                     }, blockAction: blockPolicy.BlockAction
                 );
-
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
@@ -898,7 +895,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
                 Port = null,
-                MinimumDifficulty = minimumDifficulty,
                 NoMiner = true,
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,

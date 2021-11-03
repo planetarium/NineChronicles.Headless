@@ -1,19 +1,15 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex.Types;
-using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
-using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
-using Libplanet.Tx;
 using Xunit;
 
 namespace Libplanet.Headless.Tests.Hosting
@@ -34,7 +30,7 @@ namespace Libplanet.Headless.Tests.Hosting
                     StorePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()),
                     Host = IPAddress.Loopback.ToString(),
                 },
-                blockPolicy: new BlockPolicy(),
+                blockPolicy: new BlockPolicy<DummyAction>(),
                 stagePolicy: new VolatileStagePolicy<DummyAction>(),
                 renderers: null,
                 minerLoopAction: (chain, swarm, pk, ct) => Task.CompletedTask,
@@ -59,7 +55,7 @@ namespace Libplanet.Headless.Tests.Hosting
                         StoreStatesCacheSize = 2,
                         Host = IPAddress.Loopback.ToString(),
                     },
-                    blockPolicy: new BlockPolicy(),
+                    blockPolicy: new BlockPolicy<DummyAction>(),
                     stagePolicy: new VolatileStagePolicy<DummyAction>(),
                     renderers: null,
                     minerLoopAction: (chain, swarm, pk, ct) => Task.CompletedTask,
@@ -68,41 +64,6 @@ namespace Libplanet.Headless.Tests.Hosting
                     preloadStatusHandlerAction: isPreloadStart => { }
                 );
             });
-        }
-
-        private class BlockPolicy : IBlockPolicy<DummyAction>
-        {
-            public IComparer<IBlockExcerpt> CanonicalChainComparer { get; } = new TotalDifficultyComparer();
-
-            public IAction BlockAction => null;
-
-            public TxPolicyViolationException ValidateNextBlockTx(
-                BlockChain<DummyAction> blockChain, Transaction<DummyAction> transaction)
-            {
-                return null;
-            }
-
-            public BlockPolicyViolationException ValidateNextBlock(
-                BlockChain<DummyAction> blockChain, Block<DummyAction> nextBlock)
-            {
-                return null;
-            }
-
-            public long GetNextBlockDifficulty(BlockChain<DummyAction> blocks)
-            {
-                return 0;
-            }
-
-            public HashAlgorithmType GetHashAlgorithm(long blockIndex) =>
-                HashAlgorithmType.Of<SHA256>();
-
-            public int GetMaxBlockBytes(long index) => int.MaxValue;
-
-            public int GetMinTransactionsPerBlock(long index) => 0;
-
-            public int GetMaxTransactionsPerBlock(long index) => int.MaxValue;
-
-            public int GetMaxTransactionsPerSignerPerBlock(long index) => GetMaxTransactionsPerBlock(index);
         }
 
         private class DummyAction : IAction

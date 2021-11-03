@@ -35,15 +35,11 @@ namespace NineChronicles.Headless.Tests.Common
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
                 Port = null,
-                // FIXME: Should be removed.
-                MinimumDifficulty = MinimumDifficulty,
                 NoMiner = true,
                 Render = false,
                 LogActionRenders = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
-                // FIXME: Should be removed.
-                MaximumTransactions = MaximumTransactions,
                 MessageTimeout = TimeSpan.FromMinutes(1),
                 TipTimeout = TimeSpan.FromMinutes(1),
                 DemandBuffer = 1150,

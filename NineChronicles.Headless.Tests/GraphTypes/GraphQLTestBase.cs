@@ -159,7 +159,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                 SwarmPrivateKey = new PrivateKey(),
                 Port = null,
-                MinimumDifficulty = 1024,
                 NoMiner = true,
                 Render = false,
                 Peers = peers ?? ImmutableHashSet<Peer>.Empty,
