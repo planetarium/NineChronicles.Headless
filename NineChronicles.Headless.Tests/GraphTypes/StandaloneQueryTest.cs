@@ -176,7 +176,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(expectedResult, result.Data);
 
             var anonymousTx = StandaloneContextFx.BlockChain!.MakeTransaction(
-                new PrivateKey(), 
+                new PrivateKey(),
                 new PolymorphicAction<ActionBase>[] { }
             );
 
@@ -466,8 +466,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 TrustedAppProtocolVersionSigners = null,
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty
             };
+            var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
 
-            var service = new NineChroniclesNodeService(userPrivateKey, properties, null);
+            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, null);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
@@ -520,7 +521,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 },
                 queryResult.Data
             );
-           
+
             await blockChain!.MineBlock(userPrivateKey);
 
             queryResult = await ExecuteQueryAsync(query);
@@ -710,7 +711,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             string query = $@"query {{
                 stateQuery {{
-                    avatar(avatarAddress: ""{avatarAddress}"") {{ 
+                    avatar(avatarAddress: ""{avatarAddress}"") {{
                         name
                     }}
                 }}
@@ -778,7 +779,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty
             };
 
-            var service = new NineChroniclesNodeService(userPrivateKey, properties, null);
+            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy();
+            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, null);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
@@ -848,7 +850,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty
             };
 
-            var service = new NineChroniclesNodeService(userPrivateKey, properties, null);
+            var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
+            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, null);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
@@ -862,8 +865,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             var goldCurrency = new Currency("NCG", 2, minter: null);
             int minimumDifficulty = 4096;
-            var blockAction = NineChroniclesNodeService.GetBlockPolicy(minimumDifficulty,
-                new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>().MaximumTransactions).BlockAction;
+            var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
                     HashAlgorithmType.Of<SHA256>(),
@@ -884,7 +886,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             tableSheets: _sheets,
                             pendingActivationStates: new PendingActivationState[]{ }
                         ),
-                    }, blockAction: blockAction
+                    }, blockAction: blockPolicy.BlockAction
                 );
 
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
@@ -904,7 +906,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty,
             };
 
-            return new NineChroniclesNodeService(privateKey, properties, null);
+            return new NineChroniclesNodeService(privateKey, properties, blockPolicy, null);
         }
 
         private (ProtectedPrivateKey, string) CreateProtectedPrivateKey()

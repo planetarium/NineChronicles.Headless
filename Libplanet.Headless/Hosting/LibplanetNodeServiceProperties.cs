@@ -38,6 +38,7 @@ namespace Libplanet.Headless.Hosting
 
         public ISet<PublicKey> TrustedAppProtocolVersionSigners { get; set; }
 
+        // FIXME: Should be removed.
         public int MinimumDifficulty { get; set; }
 
         public DifferentAppProtocolVersionEncountered DifferentAppProtocolVersionEncountered { get; set; }
@@ -56,6 +57,7 @@ namespace Libplanet.Headless.Hosting
 
         public System.Action<NodeExceptionType, string> NodeExceptionOccurred { get; set; }
 
+        // FIXME: Should be removed.
         public int MaximumTransactions { get; set; } = 100;
 
         public TimeSpan MessageTimeout { get; set; } = TimeSpan.FromSeconds(60);
