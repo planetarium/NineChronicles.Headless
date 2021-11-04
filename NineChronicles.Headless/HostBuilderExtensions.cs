@@ -17,7 +17,10 @@ namespace NineChronicles.Headless
         {
             NineChroniclesNodeService service =
                 NineChroniclesNodeService.Create(properties, context);
-            
+            var rpcContext = new RpcContext
+            {
+                RpcRemoteSever = false
+            };
             return builder.ConfigureServices(services =>
             {
                 services.AddHostedService(provider => service);
@@ -25,6 +28,18 @@ namespace NineChronicles.Headless
                 services.AddSingleton(provider => service.Swarm);
                 services.AddSingleton(provider => service.BlockChain);
                 services.AddSingleton(provider => properties.Libplanet);
+                services.AddSingleton(provider =>
+                {
+                    return new ActionEvaluationPublisher(
+                        context.NineChroniclesNodeService!.BlockRenderer,
+                        context.NineChroniclesNodeService!.ActionRenderer,
+                        context.NineChroniclesNodeService!.ExceptionRenderer,
+                        context.NineChroniclesNodeService!.NodeStatusRenderer,
+                        IPAddress.Loopback.ToString(),
+                        0,
+                        rpcContext
+                    );
+                });
             });
         }
 

@@ -8,7 +8,6 @@ using Bencodex;
 using GraphQL;
 using Libplanet;
 using Libplanet.Action;
-using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
@@ -31,7 +30,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public TransactionHeadlessQueryTest()
         {
             _store = new DefaultStore(null);
-            _stateStore = new TrieStateStore(new DefaultKeyValueStore(null), new DefaultKeyValueStore(null));
+            _stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             _blockChain = new BlockChain<NCAction>(
                 new BlockPolicy<NCAction>(),
                 new VolatileStagePolicy<NCAction>(),
@@ -103,7 +102,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             var transaction = _blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
             _blockChain.StageTransaction(transaction);
-            await _blockChain.MineBlock(new Address());
+            await _blockChain.MineBlock(new PrivateKey());
             queryResult = await ExecuteAsync(string.Format(queryFormat, transaction.Id));
             var tx = queryResult.Data
                 .As<Dictionary<string, object>>()["getTx"]
@@ -291,7 +290,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var privateKey = new PrivateKey();
             var action = new DumbTransferAction(new Address(), new Address());
             Transaction<NCAction> tx = _blockChain.MakeTransaction(privateKey, new NCAction[]{action});
-            await _blockChain.MineBlock(new Address());
+            await _blockChain.MineBlock(new PrivateKey());
             var queryFormat = @"query {{
                 transactionResult(txId: ""{0}"") {{
                     blockHash

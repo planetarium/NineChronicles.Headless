@@ -22,12 +22,13 @@ using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Libplanet.Blockchain.Renderers;
 using Libplanet.Headless;
 using Nekoyume.Model;
+using Serilog;
 
 namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneQuery : ObjectGraphType
     {
-        public StandaloneQuery(StandaloneContext standaloneContext, IConfiguration configuration)
+        public StandaloneQuery(StandaloneContext standaloneContext, IConfiguration configuration, ActionEvaluationPublisher publisher)
         {
             bool useSecretToken = configuration[GraphQLService.SecretTokenKey] is { };
 
@@ -102,14 +103,17 @@ namespace NineChronicles.Headless.GraphTypes
                         throw new InvalidOperationException();
                     }
 
-                    if (!(store.GetBlock<NCAction>(blockHash) is { } block))
+                    if (!(store.GetBlockDigest(blockHash) is { } digest))
                     {
                         throw new ArgumentException("blockHash");
                     }
 
                     var recipient = context.GetArgument<Address?>("recipient");
 
-                    var filteredTransactions = block.Transactions.Where(tx =>
+                    IEnumerable<Transaction<NCAction>> txs = digest.TxIds
+                        .Select(b => new TxId(b.ToBuilder().ToArray()))
+                        .Select(store.GetTransaction<NCAction>);
+                    var filteredTransactions = txs.Where(tx =>
                         tx.Actions.Count == 1 &&
                         tx.Actions.First().InnerAction is TransferAsset transferAsset &&
                         (!recipient.HasValue || transferAsset.Recipient == recipient) &&
@@ -260,7 +264,15 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<MonsterCollectionStatusType>(
                 name: nameof(MonsterCollectionStatus),
-                description: "Current miner's monster collection status.",
+                arguments: new QueryArguments(
+                    new QueryArgument<AddressType>
+                    {
+                        Name = "address",
+                        Description = "agent address.",
+                        DefaultValue = null
+                    }
+                ),
+                description: "Get monster collection status by address.",
                 resolve: context =>
                 {
                     if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
@@ -269,13 +281,24 @@ namespace NineChronicles.Headless.GraphTypes
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
                     }
 
-                    if (standaloneContext.NineChroniclesNodeService?.MinerPrivateKey is null)
+                    Address? address = context.GetArgument<Address?>("address");
+                    Address agentAddress;
+                    if (address is null)
                     {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.NineChroniclesNodeService)}.{nameof(StandaloneContext.NineChroniclesNodeService.MinerPrivateKey)} is null.");
+                        if (standaloneContext.NineChroniclesNodeService?.MinerPrivateKey is null)
+                        {
+                            throw new ExecutionError(
+                                $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.NineChroniclesNodeService)}.{nameof(StandaloneContext.NineChroniclesNodeService.MinerPrivateKey)} is null.");
+                        }
+
+                        agentAddress = standaloneContext.NineChroniclesNodeService!.MinerPrivateKey!.ToAddress();
+                    }
+                    else
+                    {
+                        agentAddress = (Address)address;
                     }
 
-                    Address agentAddress = standaloneContext.NineChroniclesNodeService.MinerPrivateKey.ToAddress();
+
                     BlockHash? offset = blockChain.GetDelayedRenderer()?.Tip?.Hash;
                     if (blockChain.GetState(agentAddress, offset) is Dictionary agentDict)
                     {
@@ -350,6 +373,49 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return true;
                 }
+            );
+
+            Field<NonNullGraphType<StringGraphType>>(
+                name: "activationKeyNonce",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "invitationCode"
+                    }
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is { } blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    ActivationKey activationKey;
+                    try
+                    {
+                        string invitationCode = context.GetArgument<string>("invitationCode");
+                        invitationCode = invitationCode.TrimEnd();
+                        activationKey = ActivationKey.Decode(invitationCode);
+                    }
+                    catch (Exception)
+                    {
+                        throw new ExecutionError("invitationCode format is invalid.");
+                    }
+                    if (blockChain.GetState(activationKey.PendingAddress) is Dictionary dictionary)
+                    {
+                        var pending = new PendingActivationState(dictionary);
+                        return ByteUtil.Hex(pending.Nonce);
+                    }
+
+                    throw new ExecutionError("invitationCode is invalid.");
+                }
+            );
+
+            Field<NonNullGraphType<RpcInformationQuery>>(
+                name: "rpcInformation",
+                description: "Query for rpc mode information.",
+                resolve: context => new RpcInformationQuery(publisher)
             );
         }
     }

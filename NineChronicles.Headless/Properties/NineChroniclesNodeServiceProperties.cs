@@ -13,24 +13,24 @@ namespace NineChronicles.Headless.Properties
     public class NineChroniclesNodeServiceProperties
     {
         /// <summary>
-        /// Gets or sets a private key that is used in mining and signing transactions, 
+        /// Gets or sets a private key that is used in mining and signing transactions,
         /// which is different with the private key used in swarm to sign messages.
         /// </summary>
         /// <seealso cref="LibplanetNodeServiceProperties{T}.SwarmPrivateKey"/>
         public PrivateKey? MinerPrivateKey { get; set; }
 
         public LibplanetNodeServiceProperties<NineChroniclesActionType>? Libplanet { get; set; }
-        
+
         public bool Dev { get; set; }
-        
+
         public bool StrictRender { get; set; }
-        
+
         public int BlockInterval { get; set; }
-       
+
         public int ReorgInterval { get; set; }
-        
+
         public bool AuthorizedMiner { get; set; }
-        
+
         public TimeSpan TxLifeTime { get; set; }
 
         public bool IgnoreBootstrapFailure { get; set; } = true;
@@ -49,7 +49,6 @@ namespace NineChronicles.Headless.Properties
                 string? swarmHost = null,
                 ushort? swarmPort = null,
                 string? swarmPrivateKeyString = null,
-                int minimumDifficulty = 5000000,
                 string? storeType = null,
                 string? storePath = null,
                 int storeStateCacheSize = 100,
@@ -62,7 +61,6 @@ namespace NineChronicles.Headless.Properties
                 int confirmations = 0,
                 bool nonblockRenderer = false,
                 int nonblockRendererQueue = 512,
-                int maximumTransactions = 100,
                 int messageTimeout = 60,
                 int tipTimeout = 60,
                 int demandBuffer = 1150,
@@ -70,7 +68,9 @@ namespace NineChronicles.Headless.Properties
                 bool preload = true,
                 int minimumBroadcastTarget = 10,
                 int bucketSize = 16,
-                string chainTipStaleBehaviorType = "reboot")
+                string chainTipStaleBehaviorType = "reboot",
+                int pollInterval = 15,
+                int maximumPollPeers = int.MaxValue)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
@@ -100,13 +100,11 @@ namespace NineChronicles.Headless.Properties
                 StoreType = storeType,
                 StorePath = storePath,
                 StoreStatesCacheSize = storeStateCacheSize,
-                MinimumDifficulty = minimumDifficulty,
                 Render = render,
                 Workers = workers,
                 Confirmations = Math.Max(confirmations, 0),
                 NonblockRenderer = nonblockRenderer,
                 NonblockRendererQueue = Math.Max(nonblockRendererQueue, 1),
-                MaximumTransactions = maximumTransactions,
                 MessageTimeout = TimeSpan.FromSeconds(messageTimeout),
                 TipTimeout = TimeSpan.FromSeconds(tipTimeout),
                 DemandBuffer = demandBuffer,
@@ -115,6 +113,8 @@ namespace NineChronicles.Headless.Properties
                 MinimumBroadcastTarget = minimumBroadcastTarget,
                 BucketSize = bucketSize,
                 ChainTipStaleBehavior = chainTipStaleBehaviorType,
+                PollInterval = TimeSpan.FromSeconds(pollInterval),
+                MaximumPollPeers = maximumPollPeers
             };
         }
 

@@ -1,4 +1,3 @@
-using Bencodex.Types;
 using Lib9c.Renderer;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
@@ -11,6 +10,7 @@ using Libplanet.Store;
 using Microsoft.Extensions.Hosting;
 using Nekoyume.Action;
 using Nekoyume.BlockChain;
+using Nekoyume.BlockChain.Policy;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.Properties;
 using NineChronicles.RPC.Shared.Exceptions;
@@ -73,6 +73,7 @@ namespace NineChronicles.Headless
         public NineChroniclesNodeService(
             PrivateKey? minerPrivateKey,
             LibplanetNodeServiceProperties<NCAction> properties,
+            IBlockPolicy<NCAction> blockPolicy,
             Progress<PreloadState>? preloadProgress = null,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false,
@@ -91,8 +92,6 @@ namespace NineChronicles.Headless
 
             LogEventLevel logLevel = LogEventLevel.Debug;
             var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
-            // BlockPolicy shared through Lib9c.
-            IBlockPolicy<NCAction>? blockPolicy = null;
             // Policies for dev mode.
             IBlockPolicy<NCAction>? easyPolicy = null;
             IBlockPolicy<NCAction>? hardPolicy = null;
@@ -101,10 +100,6 @@ namespace NineChronicles.Headless
             {
                 easyPolicy = new ReorgPolicy(new RewardGold(), 1);
                 hardPolicy = new ReorgPolicy(new RewardGold(), 2);
-            }
-            else
-            {
-                blockPolicy = blockPolicySource.GetPolicy(properties.MinimumDifficulty, properties.MaximumTransactions);
             }
 
             BlockRenderer = blockPolicySource.BlockRenderer;
@@ -156,16 +151,6 @@ namespace NineChronicles.Headless
                 PrivateKey privateKey,
                 CancellationToken cancellationToken)
             {
-                if ((chain.Policy as BlockPolicy)?.PermissionedMiningPolicy is { } pmp &&
-                    !pmp.Miners.Contains(privateKey.ToAddress()))
-                {
-                    Log.Debug(
-                        "Permissioned mining enabled and this miner[{minerAddress}] has no permissions. End mining.",
-                        privateKey.ToAddress()
-                    );
-                    return;
-                }
-                
                 var miner = new Miner(chain, swarm, privateKey, authorizedMiner);
                 Log.Debug("Miner called.");
                 while (!cancellationToken.IsCancellationRequested)
@@ -173,19 +158,37 @@ namespace NineChronicles.Headless
                     try
                     {
                         long nextBlockIndex = chain.Tip.Index + 1;
-                        bool authBlock = blockPolicy is BlockPolicy bp
-                                             // Copied from https://git.io/JLxNd
-                                             && nextBlockIndex > 0
-                                             && nextBlockIndex <= bp.AuthorizedMinersState?.ValidUntil
-                                             && nextBlockIndex % bp.AuthorizedMinersState?.Interval == 0;
+
                         if (swarm.Running)
                         {
                             Log.Debug("Start mining.");
 
-                            IEnumerable<Task<Block<NCAction>>> miners = Enumerable
-                                .Range(0, minerCount)
-                                .Select(_ => miner.MineBlockAsync(properties.MaximumTransactions, cancellationToken));
-                            await Task.WhenAll(miners);
+                            if (chain.Policy is BlockPolicy bp)
+                            {
+                                if (bp.IsAllowedToMine(privateKey.ToAddress(), chain.Count))
+                                {
+                                    IEnumerable<Task<Block<NCAction>>> miners = Enumerable
+                                        .Range(0, minerCount)
+                                        .Select(_ => miner.MineBlockAsync(cancellationToken));
+                                    await Task.WhenAll(miners);
+                                }
+                                else
+                                {
+                                    Log.Debug(
+                                        "Miner {MinerAddress} is not allowed to mine a block with index {Index} " +
+                                        "under current policy.",
+                                        privateKey.ToAddress(),
+                                        chain.Count);
+                                    await Task.Delay(1000, cancellationToken);
+                                }
+                            }
+                            else
+                            {
+                                Log.Error(
+                                    "No suitable policy was found for chain {ChainId}.",
+                                    chain.Id);
+                                await Task.Delay(1000, cancellationToken);
+                            }
                         }
                         else
                         {
@@ -214,7 +217,7 @@ namespace NineChronicles.Headless
                         if (mainSwarm.Running)
                         {
                             Log.Debug("Start mining.");
-                            await miner.MineBlockAsync(properties.MaximumTransactions, cancellationToken);
+                            await miner.MineBlockAsync(cancellationToken);
                             await Task.Delay(blockInterval, cancellationToken);
                         }
                         else
@@ -272,21 +275,10 @@ namespace NineChronicles.Headless
             }
 
             strictRenderer.BlockChain = NodeService.BlockChain ?? throw new Exception("BlockChain is null.");
-            if (NodeService.BlockChain?.GetState(AuthorizedMinersState.Address) is Dictionary ams &&
-                blockPolicy is BlockPolicy bp)
-            {
-                bp.AuthorizedMinersState = new AuthorizedMinersState(ams);
-            }
-
-            if (authorizedMiner && blockPolicy is BlockPolicy {AuthorizedMinersState: null})
-            {
-                throw new Exception(
-                    "--authorized-miner was set but there are no AuthorizedMinerState.");
-            }
         }
 
         public static NineChroniclesNodeService Create(
-            NineChroniclesNodeServiceProperties properties, 
+            NineChroniclesNodeServiceProperties properties,
             StandaloneContext context
         )
         {
@@ -324,9 +316,11 @@ namespace NineChronicles.Headless
                     );
                 };
 
+            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy();
             var service = new NineChroniclesNodeService(
                 properties.MinerPrivateKey,
                 properties.Libplanet,
+                blockPolicy,
                 preloadProgress: progress,
                 ignoreBootstrapFailure: properties.IgnoreBootstrapFailure,
                 ignorePreloadFailure: properties.IgnorePreloadFailure,
@@ -343,17 +337,19 @@ namespace NineChronicles.Headless
             return service;
         }
 
-        internal static IBlockPolicy<NCAction> GetBlockPolicy(int minimumDifficulty, int maximumTransactions) =>
-            new BlockPolicySource(Log.Logger, LogEventLevel.Debug)
-                .GetPolicy(minimumDifficulty, maximumTransactions);
+        internal static IBlockPolicy<NCAction> GetBlockPolicy() =>
+            new BlockPolicySource(Log.Logger, LogEventLevel.Debug).GetPolicy();
+
+        internal static IBlockPolicy<NCAction> GetTestBlockPolicy() =>
+            new BlockPolicySource(Log.Logger, LogEventLevel.Debug).GetTestPolicy();
 
         public void StartMining() => NodeService?.StartMining(MinerPrivateKey);
 
         public void StopMining() => NodeService?.StopMining();
-        
+
         public Task<bool> CheckPeer(string addr) => NodeService?.CheckPeer(addr) ?? throw new InvalidOperationException();
 
-        public Task StartAsync(CancellationToken cancellationToken) 
+        public Task StartAsync(CancellationToken cancellationToken)
         {
             if (!Properties.NoMiner)
             {

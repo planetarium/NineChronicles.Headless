@@ -1,6 +1,6 @@
 ﻿namespace NineChronicles.Headless.Requests
 {
-  public struct CheckPeerRequest
+  public struct AddressRequest
   {
     public string AddressString { get; set; }
   }

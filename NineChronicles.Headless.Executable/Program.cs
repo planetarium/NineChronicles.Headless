@@ -29,6 +29,8 @@ namespace NineChronicles.Headless.Executable
     [HasSubCommands(typeof(ChainCommand), "chain")]
     [HasSubCommands(typeof(NineChronicles.Headless.Executable.Commands.KeyCommand), "key")]
     [HasSubCommands(typeof(ApvCommand), "apv")]
+    [HasSubCommands(typeof(ActionCommand), "action")]
+    [HasSubCommands(typeof(TxCommand), "tx")]
     public class Program : CoconaLiteConsoleAppBase
     {
         const string SentryDsn = "https://ceac97d4a7d34e7b95e4c445b9b5669e@o195672.ingest.sentry.io/5287621";
@@ -183,14 +185,18 @@ namespace NineChronicles.Headless.Executable
             [Option(Description =
                 "The number of maximum transactions can be included in stage per signer.")]
             int txQuotaPerSigner = 10,
-            bool rpcRemoteServer = false
+            bool rpcRemoteServer = false,
+            [Option(Description = "The interval between block polling.  15 seconds by default.")]
+            int pollInterval = 15,
+            [Option(Description = "The maximum number of peers to poll blocks.  int.MaxValue by default.")]
+            int maximumPollPeers = int.MaxValue
         )
         {
 #if SENTRY || ! DEBUG
             try
             {
 #endif
-            
+
             // Setup logger.
             var configurationBuilder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
             var configuration = configurationBuilder.Build();
@@ -232,7 +238,7 @@ namespace NineChronicles.Headless.Executable
                 if (guid is null)
                 {
                     guid = Guid.NewGuid();
-                    StoreAWSSinkGuid(guid.Value);   
+                    StoreAWSSinkGuid(guid.Value);
                 }
 
                 loggerConf = loggerConf.WriteTo.AmazonS3(
@@ -256,7 +262,7 @@ namespace NineChronicles.Headless.Executable
                     -1
                 );
             }
-            
+
             try
             {
                 IHostBuilder hostBuilder = Host.CreateDefaultBuilder();
@@ -296,7 +302,6 @@ namespace NineChronicles.Headless.Executable
                         host,
                         port,
                         swarmPrivateKeyString,
-                        minimumDifficulty,
                         storeType,
                         storePath,
                         100,
@@ -308,7 +313,6 @@ namespace NineChronicles.Headless.Executable
                         confirmations: confirmations,
                         nonblockRenderer: nonblockRenderer,
                         nonblockRendererQueue: nonblockRendererQueue,
-                        maximumTransactions: maximumTransactions,
                         messageTimeout: messageTimeout,
                         tipTimeout: tipTimeout,
                         demandBuffer: demandBuffer,
@@ -316,7 +320,9 @@ namespace NineChronicles.Headless.Executable
                         preload: !skipPreload,
                         minimumBroadcastTarget: minimumBroadcastTarget,
                         bucketSize: bucketSize,
-                        chainTipStaleBehaviorType: chainTipStaleBehaviorType
+                        chainTipStaleBehaviorType: chainTipStaleBehaviorType,
+                        pollInterval: pollInterval,
+                        maximumPollPeers: maximumPollPeers
                     );
 
                 if (rpcServer)

@@ -38,8 +38,6 @@ namespace Libplanet.Headless.Hosting
 
         public ISet<PublicKey> TrustedAppProtocolVersionSigners { get; set; }
 
-        public int MinimumDifficulty { get; set; }
-
         public DifferentAppProtocolVersionEncountered DifferentAppProtocolVersionEncountered { get; set; }
 
         public bool Render { get; set; }
@@ -56,8 +54,6 @@ namespace Libplanet.Headless.Hosting
 
         public System.Action<NodeExceptionType, string> NodeExceptionOccurred { get; set; }
 
-        public int MaximumTransactions { get; set; } = 100;
-
         public TimeSpan MessageTimeout { get; set; } = TimeSpan.FromSeconds(60);
 
         public TimeSpan TipTimeout { get; set; } = TimeSpan.FromSeconds(60);
@@ -73,5 +69,9 @@ namespace Libplanet.Headless.Hosting
         public int BucketSize { get; set; } = 16;
 
         public string ChainTipStaleBehavior { get; set; } = "reboot";
+
+        public TimeSpan PollInterval { get; set; } = TimeSpan.FromSeconds(15);
+
+        public int MaximumPollPeers { get; set; } = int.MaxValue;
     }
 }

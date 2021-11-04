@@ -79,6 +79,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var configuration = configurationBuilder.Build();
 
             var services = new ServiceCollection();
+            var publisher = new ActionEvaluationPublisher(
+                ncService.BlockRenderer,
+                ncService.ActionRenderer,
+                ncService.ExceptionRenderer,
+                ncService.NodeStatusRenderer,
+                "",
+                0,
+                new RpcContext()
+            );
+            services.AddSingleton(publisher);
             services.AddSingleton(StandaloneContextFx);
             services.AddSingleton<IConfiguration>(configuration);
             services.AddGraphTypes();
@@ -149,7 +159,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                 SwarmPrivateKey = new PrivateKey(),
                 Port = null,
-                MinimumDifficulty = 1024,
                 NoMiner = true,
                 Render = false,
                 Peers = peers ?? ImmutableHashSet<Peer>.Empty,
