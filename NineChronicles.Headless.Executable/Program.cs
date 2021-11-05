@@ -132,6 +132,8 @@ namespace NineChronicles.Headless.Executable
             int maximumTransactions = 100,
             [Option("strict-rendering", Description = "Flag to turn on validating action renderer.")]
             bool strictRendering = false,
+            [Option("network-type", Description = "Network type.")]
+            NetworkType networkType = NetworkType.Main,
             [Option("dev", Description = "Flag to turn on the dev mode.  false by default.")]
             bool isDev = false,
             [Option(
@@ -196,7 +198,7 @@ namespace NineChronicles.Headless.Executable
             try
             {
 #endif
-            
+
             // Setup logger.
             var configurationBuilder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
             var configuration = configurationBuilder.Build();
@@ -238,7 +240,7 @@ namespace NineChronicles.Headless.Executable
                 if (guid is null)
                 {
                     guid = Guid.NewGuid();
-                    StoreAWSSinkGuid(guid.Value);   
+                    StoreAWSSinkGuid(guid.Value);
                 }
 
                 loggerConf = loggerConf.WriteTo.AmazonS3(
@@ -262,7 +264,7 @@ namespace NineChronicles.Headless.Executable
                     -1
                 );
             }
-            
+
             try
             {
                 IHostBuilder hostBuilder = Host.CreateDefaultBuilder();
@@ -302,7 +304,6 @@ namespace NineChronicles.Headless.Executable
                         host,
                         port,
                         swarmPrivateKeyString,
-                        minimumDifficulty,
                         storeType,
                         storePath,
                         100,
@@ -314,7 +315,6 @@ namespace NineChronicles.Headless.Executable
                         confirmations: confirmations,
                         nonblockRenderer: nonblockRenderer,
                         nonblockRendererQueue: nonblockRendererQueue,
-                        maximumTransactions: maximumTransactions,
                         messageTimeout: messageTimeout,
                         tipTimeout: tipTimeout,
                         demandBuffer: demandBuffer,
@@ -345,6 +345,7 @@ namespace NineChronicles.Headless.Executable
                 {
                     MinerPrivateKey = minerPrivateKey,
                     Libplanet = properties,
+                    NetworkType = networkType,
                     Dev = isDev,
                     StrictRender = strictRendering,
                     BlockInterval = blockInterval,

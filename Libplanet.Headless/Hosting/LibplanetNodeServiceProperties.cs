@@ -38,8 +38,6 @@ namespace Libplanet.Headless.Hosting
 
         public ISet<PublicKey> TrustedAppProtocolVersionSigners { get; set; }
 
-        public int MinimumDifficulty { get; set; }
-
         public DifferentAppProtocolVersionEncountered DifferentAppProtocolVersionEncountered { get; set; }
 
         public bool Render { get; set; }
@@ -55,8 +53,6 @@ namespace Libplanet.Headless.Hosting
         public int NonblockRendererQueue { get; set; } = 512;
 
         public System.Action<NodeExceptionType, string> NodeExceptionOccurred { get; set; }
-
-        public int MaximumTransactions { get; set; } = 100;
 
         public TimeSpan MessageTimeout { get; set; } = TimeSpan.FromSeconds(60);
 

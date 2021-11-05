@@ -25,6 +25,7 @@ using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
+using NineChronicles.Headless.Properties;
 using NineChronicles.Headless.Tests.Common;
 using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
@@ -176,7 +177,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(expectedResult, result.Data);
 
             var anonymousTx = StandaloneContextFx.BlockChain!.MakeTransaction(
-                new PrivateKey(), 
+                new PrivateKey(),
                 new PolymorphicAction<ActionBase>[] { }
             );
 
@@ -459,15 +460,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
                 Port = null,
-                MinimumDifficulty = 4096,
                 NoMiner = true,
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty
             };
+            var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
 
-            var service = new NineChroniclesNodeService(userPrivateKey, properties, null);
+            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Test);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
@@ -520,7 +521,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 },
                 queryResult.Data
             );
-           
+
             await blockChain!.MineBlock(userPrivateKey);
 
             queryResult = await ExecuteQueryAsync(query);
@@ -710,7 +711,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             string query = $@"query {{
                 stateQuery {{
-                    avatar(avatarAddress: ""{avatarAddress}"") {{ 
+                    avatar(avatarAddress: ""{avatarAddress}"") {{
                         name
                     }}
                 }}
@@ -722,7 +723,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        public async Task ActivationKeyNonce(bool exist)
+        public async Task ActivationKeyNonce(bool trim)
         {
             var adminPrivateKey = new PrivateKey();
             var adminAddress = adminPrivateKey.ToAddress();
@@ -731,12 +732,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var privateKey = new PrivateKey();
             (ActivationKey activationKey, PendingActivationState pendingActivation) =
                 ActivationKey.Create(privateKey, nonce);
-            var pendingActivationStates = new List<PendingActivationState>();
-
-            if (exist)
+            var pendingActivationStates = new List<PendingActivationState>
             {
-                pendingActivationStates.Add(pendingActivation);
-            }
+                pendingActivation,
+            };
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
                     HashAlgorithmType.Of<SHA256>(),
@@ -772,7 +771,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
                 Port = null,
-                MinimumDifficulty = 4096,
                 NoMiner = true,
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
@@ -780,30 +778,93 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty
             };
 
-            var service = new NineChroniclesNodeService(userPrivateKey, properties, null);
+            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test);
+            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Test);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
-            var query = $"query {{ activationKeyNonce(invitationCode: \"{activationKey.Encode()}\") }}";
+            var code = activationKey.Encode();
+            if (trim)
+            {
+                code += " ";
+            }
+            var query = $"query {{ activationKeyNonce(invitationCode: \"{code}\") }}";
             var queryResult = await ExecuteQueryAsync(query);
-            if (exist)
-            {
-                var result = (string)queryResult.Data
-                    .As<Dictionary<string, object>>()["activationKeyNonce"];
-                Assert.Equal(nonce, ByteUtil.ParseHex(result));
-            }
-            else
-            {
-                Assert.Single(queryResult.Errors);
-            }
+            var result = (string)queryResult.Data
+                .As<Dictionary<string, object>>()["activationKeyNonce"];
+            Assert.Equal(nonce, ByteUtil.ParseHex(result));
         }
 
+        [Theory]
+        [InlineData("1", "invitationCode format is invalid.")]
+        [InlineData("9330b3287bd2bbc38770c69ae7cd380350c60a1dff9ec41254f3048d5b3eb01c", "invitationCode format is invalid.")]
+        [InlineData("9330b3287bd2bbc38770c69ae7cd380350c60a1dff9ec41254f3048d5b3eb01c/44C889Af1e1e90213Cff5d69C9086c34ecCb60B0", "invitationCode is invalid.")]
+        public async Task ActivationKeyNonce_Throw_ExecutionError(string code, string msg)
+        {
+            var adminPrivateKey = new PrivateKey();
+            var adminAddress = adminPrivateKey.ToAddress();
+            var activatedAccounts = ImmutableHashSet<Address>.Empty;
+            var pendingActivationStates = new List<PendingActivationState>();
+
+            Block<PolymorphicAction<ActionBase>> genesis =
+                BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+                    HashAlgorithmType.Of<SHA256>(),
+                    new PolymorphicAction<ActionBase>[]
+                    {
+                        new InitializeStates(
+                            rankingState: new RankingState(),
+                            shopState: new ShopState(),
+                            gameConfigState: new GameConfigState(),
+                            redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                                .Add("address", RedeemCodeState.Address.Serialize())
+                                .Add("map", Bencodex.Types.Dictionary.Empty)
+                            ),
+                            adminAddressState: new AdminState(adminAddress, 1500000),
+                            activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
+                            goldCurrencyState: new GoldCurrencyState(new Currency("NCG", 2, minter: null)),
+                            goldDistributions: new GoldDistribution[0],
+                            tableSheets: _sheets,
+                            pendingActivationStates: pendingActivationStates.ToArray()
+                        ),
+                    }
+                );
+
+            var apvPrivateKey = new PrivateKey();
+            var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
+
+            var userPrivateKey = new PrivateKey();
+            var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+            {
+                Host = System.Net.IPAddress.Loopback.ToString(),
+                AppProtocolVersion = apv,
+                GenesisBlock = genesis,
+                StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
+                StoreStatesCacheSize = 2,
+                SwarmPrivateKey = new PrivateKey(),
+                Port = null,
+                NoMiner = true,
+                Render = false,
+                Peers = ImmutableHashSet<Peer>.Empty,
+                TrustedAppProtocolVersionSigners = null,
+                StaticPeers = ImmutableHashSet<BoundPeer>.Empty
+            };
+            var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
+
+            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Test);
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
+
+            var query = $"query {{ activationKeyNonce(invitationCode: \"{code}\") }}";
+            var queryResult = await ExecuteQueryAsync(query);
+            Assert.Single(queryResult.Errors);
+            Assert.Equal(msg, queryResult.Errors.First().Message);
+
+        }
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)
         {
             var goldCurrency = new Currency("NCG", 2, minter: null);
-            int minimumDifficulty = 4096;
-            var blockAction = NineChroniclesNodeService.GetBlockPolicy(minimumDifficulty,
-                new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>().MaximumTransactions).BlockAction;
+
+            var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
                     HashAlgorithmType.Of<SHA256>(),
@@ -824,9 +885,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             tableSheets: _sheets,
                             pendingActivationStates: new PendingActivationState[]{ }
                         ),
-                    }, blockAction: blockAction
+                    }, blockAction: blockPolicy.BlockAction
                 );
-
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
@@ -836,7 +896,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
                 Port = null,
-                MinimumDifficulty = minimumDifficulty,
                 NoMiner = true,
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
@@ -844,7 +903,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty,
             };
 
-            return new NineChroniclesNodeService(privateKey, properties, null);
+            return new NineChroniclesNodeService(privateKey, properties, blockPolicy, NetworkType.Test);
         }
 
         private (ProtectedPrivateKey, string) CreateProtectedPrivateKey()

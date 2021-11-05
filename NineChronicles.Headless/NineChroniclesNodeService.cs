@@ -1,4 +1,3 @@
-using Bencodex.Types;
 using Lib9c.Renderer;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
@@ -74,6 +73,8 @@ namespace NineChronicles.Headless
         public NineChroniclesNodeService(
             PrivateKey? minerPrivateKey,
             LibplanetNodeServiceProperties<NCAction> properties,
+            IBlockPolicy<NCAction> blockPolicy,
+            NetworkType networkType,
             Progress<PreloadState>? preloadProgress = null,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false,
@@ -92,8 +93,6 @@ namespace NineChronicles.Headless
 
             LogEventLevel logLevel = LogEventLevel.Debug;
             var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
-            // BlockPolicy shared through Lib9c.
-            IBlockPolicy<NCAction>? blockPolicy = null;
             // Policies for dev mode.
             IBlockPolicy<NCAction>? easyPolicy = null;
             IBlockPolicy<NCAction>? hardPolicy = null;
@@ -102,13 +101,6 @@ namespace NineChronicles.Headless
             {
                 easyPolicy = new ReorgPolicy(new RewardGold(), 1);
                 hardPolicy = new ReorgPolicy(new RewardGold(), 2);
-            }
-            else
-            {
-                // FIXME: Arguments should be removed properly.
-#pragma warning disable CS0618
-                blockPolicy = blockPolicySource.GetPolicy(properties.MinimumDifficulty, properties.MaximumTransactions);
-#pragma warning restore CS0618
             }
 
             BlockRenderer = blockPolicySource.BlockRenderer;
@@ -226,7 +218,7 @@ namespace NineChronicles.Headless
                         if (mainSwarm.Running)
                         {
                             Log.Debug("Start mining.");
-                            await miner.MineBlockAsync(properties.MaximumTransactions, cancellationToken);
+                            await miner.MineBlockAsync(cancellationToken);
                             await Task.Delay(blockInterval, cancellationToken);
                         }
                         else
@@ -325,9 +317,12 @@ namespace NineChronicles.Headless
                     );
                 };
 
+            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(properties.NetworkType);
             var service = new NineChroniclesNodeService(
                 properties.MinerPrivateKey,
                 properties.Libplanet,
+                blockPolicy,
+                properties.NetworkType,
                 preloadProgress: progress,
                 ignoreBootstrapFailure: properties.IgnoreBootstrapFailure,
                 ignorePreloadFailure: properties.IgnorePreloadFailure,
@@ -344,12 +339,20 @@ namespace NineChronicles.Headless
             return service;
         }
 
-        // FIXME: Arguments should be removed properly.
-#pragma warning disable CS0618
-        internal static IBlockPolicy<NCAction> GetBlockPolicy(int minimumDifficulty, int maximumTransactions) =>
-            new BlockPolicySource(Log.Logger, LogEventLevel.Debug)
-                .GetPolicy(minimumDifficulty, maximumTransactions);
-#pragma warning restore CS0618
+        internal static IBlockPolicy<NCAction> GetBlockPolicy(NetworkType networkType)
+        {
+            var source = new BlockPolicySource(Log.Logger, LogEventLevel.Debug);
+            return networkType switch
+            {
+                NetworkType.Main => source.GetPolicy(),
+                NetworkType.Internal => source.GetInternalPolicy(),
+                NetworkType.Test => source.GetTestPolicy(),
+                _ => throw new ArgumentOutOfRangeException(nameof(networkType), networkType, null),
+            };
+        }
+
+        internal static IBlockPolicy<NCAction> GetTestBlockPolicy() =>
+            new BlockPolicySource(Log.Logger, LogEventLevel.Debug).GetTestPolicy();
 
         public void StartMining() => NodeService?.StartMining(MinerPrivateKey);
 

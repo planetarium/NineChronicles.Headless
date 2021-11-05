@@ -20,6 +20,7 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.Controllers;
 using NineChronicles.Headless.GraphTypes;
+using NineChronicles.Headless.Properties;
 using NineChronicles.Headless.Requests;
 using Xunit;
 using IPAddress = System.Net.IPAddress;
@@ -78,7 +79,7 @@ namespace NineChronicles.Headless.Tests.Controllers
             }));
             Assert.Equal(mine, _standaloneContext.IsMining);
         }
-        
+
         [Fact]
         public void SetMiningThrowsConflict()
         {
@@ -87,7 +88,7 @@ namespace NineChronicles.Headless.Tests.Controllers
             Assert.IsType<StatusCodeResult>(result);
             Assert.Equal(StatusCodes.Status409Conflict, ((StatusCodeResult)result).StatusCode);
         }
-        
+
         [Fact]
         public void SetMiningThrowsUnauthorizedIfSecretTokenUsed()
         {
@@ -115,7 +116,7 @@ namespace NineChronicles.Headless.Tests.Controllers
 
             Assert.Equal(_standaloneContext.NineChroniclesNodeService!.MinerPrivateKey, privateKey);
         }
-        
+
         [Fact]
         public void SetPrivateKeyThrowsConflict()
         {
@@ -124,7 +125,7 @@ namespace NineChronicles.Headless.Tests.Controllers
             Assert.IsType<StatusCodeResult>(result);
             Assert.Equal(StatusCodes.Status409Conflict, ((StatusCodeResult)result).StatusCode);
         }
-        
+
         [Fact]
         public void SetPrivateKeyThrowsUnauthorizedIfSecretTokenUsed()
         {
@@ -161,7 +162,7 @@ namespace NineChronicles.Headless.Tests.Controllers
         {
             _httpContextAccessor.HttpContext.User.AddIdentity(new ClaimsIdentity(new[]
             {
-                new Claim("role", "Admin"), 
+                new Claim("role", "Admin"),
             }));
         }
 
@@ -171,14 +172,14 @@ namespace NineChronicles.Headless.Tests.Controllers
                 new PrivateKey(),
                 new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
                 {
-                    MinimumDifficulty = 500000,
                     GenesisBlock = _standaloneContext.BlockChain!.Genesis,
                     StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                     AppProtocolVersion = AppProtocolVersion.Sign(new PrivateKey(), 0),
                     SwarmPrivateKey = new PrivateKey(),
                     Host = IPAddress.Loopback.ToString(),
                 },
-                null);
+                NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test),
+                NetworkType.Test);
         }
     }
 }
