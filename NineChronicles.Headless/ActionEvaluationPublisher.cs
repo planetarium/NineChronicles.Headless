@@ -78,7 +78,7 @@ namespace NineChronicles.Headless
                 _clients[clientAddress] = (client, ImmutableHashSet<Address>.Empty);
             }
 
-            _blockRenderer.EveryBlock().Subscribe(
+            _blockRenderer.BlockSubject.Subscribe(
                 async pair =>
                 {
                     try
@@ -96,7 +96,7 @@ namespace NineChronicles.Headless
                 }
             );
 
-            _blockRenderer.EveryReorg().Subscribe(
+            _blockRenderer.ReorgSubject.Subscribe(
                 async ev =>
                 {
                     try
@@ -115,7 +115,7 @@ namespace NineChronicles.Headless
                 }
             );
 
-            _blockRenderer.EveryReorgEnd().Subscribe(
+            _blockRenderer.ReorgEndSubject.Subscribe(
                 async ev =>
                 {
                     try

@@ -197,7 +197,7 @@ namespace NineChronicles.Headless.GraphTypes
             });
 
             BlockRenderer blockRenderer = standaloneContext.NineChroniclesNodeService!.BlockRenderer;
-            blockRenderer.EveryBlock().Subscribe(RenderBlock);
+            blockRenderer.BlockSubject.Subscribe(RenderBlock);
 
             ActionRenderer actionRenderer = standaloneContext.NineChroniclesNodeService!.ActionRenderer;
             actionRenderer.EveryRender<ActionBase>().Subscribe(RenderAction);
