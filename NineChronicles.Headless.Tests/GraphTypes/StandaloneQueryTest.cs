@@ -25,6 +25,7 @@ using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
+using NineChronicles.Headless.Properties;
 using NineChronicles.Headless.Tests.Common;
 using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
@@ -467,7 +468,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
 
-            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, null);
+            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Test);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
@@ -777,8 +778,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty
             };
 
-            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy();
-            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, null);
+            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test);
+            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Test);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
@@ -849,7 +850,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
 
-            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, null);
+            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Test);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
@@ -902,7 +903,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty,
             };
 
-            return new NineChroniclesNodeService(privateKey, properties, blockPolicy, null);
+            return new NineChroniclesNodeService(privateKey, properties, blockPolicy, NetworkType.Test);
         }
 
         private (ProtectedPrivateKey, string) CreateProtectedPrivateKey()

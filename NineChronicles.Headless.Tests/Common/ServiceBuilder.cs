@@ -8,6 +8,7 @@ using Nekoyume.Action;
 using System.Collections.Immutable;
 using System.IO;
 using Libplanet.Blockchain.Policies;
+using NineChronicles.Headless.Properties;
 
 namespace NineChronicles.Headless.Tests.Common
 {
@@ -45,7 +46,7 @@ namespace NineChronicles.Headless.Tests.Common
                 DemandBuffer = 1150,
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty,
             };
-            return new NineChroniclesNodeService(privateKey, properties, BlockPolicy, null);
+            return new NineChroniclesNodeService(privateKey, properties, BlockPolicy, NetworkType.Test);
         }
     }
 }

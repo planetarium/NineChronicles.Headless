@@ -105,6 +105,7 @@ namespace Libplanet.Headless.Hosting
 
             var chainIds = Store.ListChainIds().ToList();
             Log.Debug($"Number of chain ids: {chainIds.Count()}");
+            Log.Debug($"Canonical chain id: {Store.GetCanonicalChainId().ToString()}");
 
             if (Properties.Confirmations > 0)
             {
@@ -312,12 +313,14 @@ namespace Libplanet.Headless.Hosting
             {
                 try
                 {
-                    store = new RocksDBStore.MonoRocksDBStore(
+#pragma warning disable CS0618  // Type or member is obsolete
+                    store = new MonoRocksDBStore(
                         path,
                         maxTotalWalSize: 16 * 1024 * 1024,
                         maxLogFileSize: 16 * 1024 * 1024,
                         keepLogFileNum: 1
                     );
+#pragma warning restore CS0618  // Type or member is obsolete
                     Log.Debug("MonoRocksDB is initialized.");
                 }
                 catch (TypeInitializationException e)

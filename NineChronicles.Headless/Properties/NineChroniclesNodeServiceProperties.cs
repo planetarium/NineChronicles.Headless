@@ -21,6 +21,9 @@ namespace NineChronicles.Headless.Properties
 
         public LibplanetNodeServiceProperties<NineChroniclesActionType>? Libplanet { get; set; }
 
+        public NetworkType NetworkType { get; set; } = NetworkType.Main;
+
+        // FIXME: Replaced by NetworkType.Dev (not exist yet).
         public bool Dev { get; set; }
 
         public bool StrictRender { get; set; }

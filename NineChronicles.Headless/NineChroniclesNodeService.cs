@@ -74,6 +74,7 @@ namespace NineChronicles.Headless
             PrivateKey? minerPrivateKey,
             LibplanetNodeServiceProperties<NCAction> properties,
             IBlockPolicy<NCAction> blockPolicy,
+            NetworkType networkType,
             Progress<PreloadState>? preloadProgress = null,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false,
@@ -316,11 +317,12 @@ namespace NineChronicles.Headless
                     );
                 };
 
-            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy();
+            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(properties.NetworkType);
             var service = new NineChroniclesNodeService(
                 properties.MinerPrivateKey,
                 properties.Libplanet,
                 blockPolicy,
+                properties.NetworkType,
                 preloadProgress: progress,
                 ignoreBootstrapFailure: properties.IgnoreBootstrapFailure,
                 ignorePreloadFailure: properties.IgnorePreloadFailure,
@@ -337,8 +339,17 @@ namespace NineChronicles.Headless
             return service;
         }
 
-        internal static IBlockPolicy<NCAction> GetBlockPolicy() =>
-            new BlockPolicySource(Log.Logger, LogEventLevel.Debug).GetPolicy();
+        internal static IBlockPolicy<NCAction> GetBlockPolicy(NetworkType networkType)
+        {
+            var source = new BlockPolicySource(Log.Logger, LogEventLevel.Debug);
+            return networkType switch
+            {
+                NetworkType.Main => source.GetPolicy(),
+                NetworkType.Internal => source.GetInternalPolicy(),
+                NetworkType.Test => source.GetTestPolicy(),
+                _ => throw new ArgumentOutOfRangeException(nameof(networkType), networkType, null),
+            };
+        }
 
         internal static IBlockPolicy<NCAction> GetTestBlockPolicy() =>
             new BlockPolicySource(Log.Logger, LogEventLevel.Debug).GetTestPolicy();
