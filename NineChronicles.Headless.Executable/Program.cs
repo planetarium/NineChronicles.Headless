@@ -75,8 +75,6 @@ namespace NineChronicles.Headless.Executable
                 Description = "The private key used for signing messages and to specify your node. " +
                               "If you leave this null, a randomly generated value will be used.")]
             string? swarmPrivateKeyString = null,
-            [Option('D')]
-            int minimumDifficulty = 5000000,
             [Option("miner-private-key",
                 Description = "The private key used for mining blocks. " +
                               "Must not be null if you want to turn on mining with libplanet-node.")]
@@ -123,13 +121,6 @@ namespace NineChronicles.Headless.Executable
                 Description = "The size of the queue used by the non-blocking renderer.   " +
                     "512 by default.  Ignored if --nonblock-renderer is turned off.")]
             int nonblockRendererQueue = 512,
-            [Option(
-                "max-transactions",
-                Description =
-                    "The number of maximum transactions can be included in a single block. " +
-                    "Unlimited if the value is less then or equal to 0.  100 by default."
-            )]
-            int maximumTransactions = 100,
             [Option("strict-rendering", Description = "Flag to turn on validating action renderer.")]
             bool strictRendering = false,
             [Option("network-type", Description = "Network type.")]
