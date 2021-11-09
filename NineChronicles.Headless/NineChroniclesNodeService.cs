@@ -79,7 +79,6 @@ namespace NineChronicles.Headless
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false,
             bool strictRendering = false,
-            bool authorizedMiner = false,
             bool isDev = false,
             int blockInterval = 10000,
             int reorgInterval = 0,
@@ -152,7 +151,7 @@ namespace NineChronicles.Headless
                 PrivateKey privateKey,
                 CancellationToken cancellationToken)
             {
-                var miner = new Miner(chain, swarm, privateKey, authorizedMiner);
+                var miner = new Miner(chain, swarm, privateKey);
                 Log.Debug("Miner called.");
                 while (!cancellationToken.IsCancellationRequested)
                 {
@@ -330,7 +329,6 @@ namespace NineChronicles.Headless
                 isDev: properties.Dev,
                 blockInterval: properties.BlockInterval,
                 reorgInterval: properties.ReorgInterval,
-                authorizedMiner: properties.AuthorizedMiner,
                 txLifeTime: properties.TxLifeTime,
                 minerCount: properties.MinerCount,
                 txQuotaPerSigner: properties.TxQuotaPerSigner

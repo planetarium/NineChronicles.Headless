@@ -147,8 +147,6 @@ namespace NineChronicles.Headless.Executable
             string? awsSecretKey = null,
             [Option(Description = "The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2).")]
             string? awsRegion = null,
-            [Option(Description = "Run as an authorized miner, which mines only blocks that should be authorized.")]
-            bool authorizedMiner = false,
             [Option(Description = "The lifetime of each transaction, which uses minute as its unit.  60 (m) by default.")]
             int txLifeTime = 60,
             [Option(Description = "The grace period for new messages, which uses second as its unit.  60 (s) by default.")]
@@ -341,7 +339,6 @@ namespace NineChronicles.Headless.Executable
                     StrictRender = strictRendering,
                     BlockInterval = blockInterval,
                     ReorgInterval = reorgInterval,
-                    AuthorizedMiner = authorizedMiner,
                     TxLifeTime = TimeSpan.FromMinutes(txLifeTime),
                     MinerCount = minerCount,
                     TxQuotaPerSigner = txQuotaPerSigner
