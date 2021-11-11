@@ -17,9 +17,6 @@ namespace NineChronicles.Headless.Executable.Tests.Store
         }
 
         [Theory]
-#pragma warning disable CS0618  // Type or member is obsolete
-        [InlineData(StoreType.MonoRocksDb, typeof(MonoRocksDBStore))]
-#pragma warning restore CS0618  // Type or member is obsolete
         [InlineData(StoreType.RocksDb, typeof(RocksDBStore))]
         [InlineData(StoreType.Default, typeof(DefaultStore))]
         public void ToStoreConstructor(StoreType storeType, Type expectedType)
