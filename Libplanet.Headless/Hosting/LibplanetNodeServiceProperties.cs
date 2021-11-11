@@ -73,5 +73,7 @@ namespace Libplanet.Headless.Hosting
         public TimeSpan PollInterval { get; set; } = TimeSpan.FromSeconds(15);
 
         public int MaximumPollPeers { get; set; } = int.MaxValue;
+
+        public string TransportType { get; set; } = "tcp";
     }
 }
