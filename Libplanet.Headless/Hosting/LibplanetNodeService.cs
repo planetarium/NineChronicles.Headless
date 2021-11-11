@@ -309,25 +309,6 @@ namespace Libplanet.Headless.Hosting
                     Log.Error("RocksDB is not available. DefaultStore will be used. {0}", e);
                 }
             }
-            else if (type == "monorocksdb")
-            {
-                try
-                {
-#pragma warning disable CS0618  // Type or member is obsolete
-                    store = new MonoRocksDBStore(
-                        path,
-                        maxTotalWalSize: 16 * 1024 * 1024,
-                        maxLogFileSize: 16 * 1024 * 1024,
-                        keepLogFileNum: 1
-                    );
-#pragma warning restore CS0618  // Type or member is obsolete
-                    Log.Debug("MonoRocksDB is initialized.");
-                }
-                catch (TypeInitializationException e)
-                {
-                    Log.Error("MonoRocksDB is not available. DefaultStore will be used. {0}", e);
-                }
-            }
             else
             {
                 var message = type is null

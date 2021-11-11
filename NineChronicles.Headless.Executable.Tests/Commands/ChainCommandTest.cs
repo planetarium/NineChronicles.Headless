@@ -45,7 +45,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [Theory]
         [InlineData(StoreType.Default)]
         [InlineData(StoreType.RocksDb)]
-        [InlineData(StoreType.MonoRocksDb)]
         public void Tip(StoreType storeType)
         {
             HashAlgorithmType hashAlgo = HashAlgorithmType.Of<SHA256>();
@@ -72,7 +71,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [Theory]
         [InlineData(StoreType.Default)]
         [InlineData(StoreType.RocksDb)]
-        [InlineData(StoreType.MonoRocksDb)]
         public async Task Inspect(StoreType storeType)
         {
             Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
