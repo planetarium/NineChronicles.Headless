@@ -118,6 +118,8 @@ namespace NineChronicles.Headless.Executable.Commands
                                    "HAS #," +
                                    "RankingBattle #," +
                                    "Mimisbrunnr #");
+
+            var typeOfActionTypeAttribute = typeof(ActionTypeAttribute);
             foreach (var item in
                 store.IterateIndexes(chain.Id, offset + 1 ?? 1, limit).Select((value, i) => new { i, value }))
             {
@@ -129,40 +131,34 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 var miningTime = block.Timestamp - previousBlock.Timestamp;
                 var txCount = 0;
-                var hackandslashCount = 0;
-                var rankingbattleCount = 0;
-                var mimisbrunnrCount = 0;
+                var hackAndSlashCount = 0;
+                var rankingBattleCount = 0;
+                var mimisbrunnrBattleCount = 0;
                 foreach (var tx in block.Transactions)
                 {
                     txCount++;
                     foreach (var action in tx.Actions)
                     {
-                        switch (action.InnerAction)
+                        var actionTypeAttribute =
+                            Attribute.GetCustomAttribute(action.InnerAction.GetType(), typeOfActionTypeAttribute)
+                                as ActionTypeAttribute;
+                        if (actionTypeAttribute is null)
                         {
-                            case HackAndSlash _:
-                            case HackAndSlash0 _:
-                            case HackAndSlash2 _:
-                            case HackAndSlash3 _:
-                            case HackAndSlash4 _:
-                            case HackAndSlash5 _:
-                            case HackAndSlash6 _:
-                                hackandslashCount++;
-                                break;
-                            case MimisbrunnrBattle  _:
-                            case MimisbrunnrBattle0  _:
-                            case MimisbrunnrBattle2  _:
-                            case MimisbrunnrBattle3  _:
-                            case MimisbrunnrBattle4  _:
-                                mimisbrunnrCount++;
-                                break;
-                            case RankingBattle _:
-                            case RankingBattle0 _:
-                            case RankingBattle2 _:
-                            case RankingBattle3 _:
-                            case RankingBattle4 _:
-                            case RankingBattle5 _:
-                                rankingbattleCount++;
-                                break;
+                            continue;
+                        }
+
+                        var typeIdentifier = actionTypeAttribute.TypeIdentifier;
+                        if (typeIdentifier.StartsWith("hack_and_slash"))
+                        {
+                            hackAndSlashCount++;
+                        }
+                        else if (typeIdentifier.StartsWith("ranking_battle"))
+                        {
+                            rankingBattleCount++;
+                        }
+                        else if (typeIdentifier.StartsWith("mimisbrunnr_battle"))
+                        {
+                            mimisbrunnrBattleCount++;   
                         }
                     }
                 }
@@ -170,9 +166,9 @@ namespace NineChronicles.Headless.Executable.Commands
                 _console.Out.WriteLine($"{block.Index}," +
                                        $"{miningTime:s\\.ff}," +
                                        $"{txCount}," +
-                                       $"{hackandslashCount}," +
-                                       $"{rankingbattleCount}," +
-                                       $"{mimisbrunnrCount}");
+                                       $"{hackAndSlashCount}," +
+                                       $"{rankingBattleCount}," +
+                                       $"{mimisbrunnrBattleCount}");
             }
 
             (store as IDisposable)?.Dispose();
