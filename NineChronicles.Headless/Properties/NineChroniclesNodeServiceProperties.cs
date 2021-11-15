@@ -71,7 +71,8 @@ namespace NineChronicles.Headless.Properties
                 int bucketSize = 16,
                 string chainTipStaleBehaviorType = "reboot",
                 int pollInterval = 15,
-                int maximumPollPeers = int.MaxValue)
+                int maximumPollPeers = int.MaxValue,
+                string transportType = "tcp")
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
@@ -115,7 +116,8 @@ namespace NineChronicles.Headless.Properties
                 BucketSize = bucketSize,
                 ChainTipStaleBehavior = chainTipStaleBehaviorType,
                 PollInterval = TimeSpan.FromSeconds(pollInterval),
-                MaximumPollPeers = maximumPollPeers
+                MaximumPollPeers = maximumPollPeers,
+                TransportType = transportType
             };
         }
 

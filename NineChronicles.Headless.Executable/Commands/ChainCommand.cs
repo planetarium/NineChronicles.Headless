@@ -65,7 +65,7 @@ namespace NineChronicles.Headless.Executable.Commands
                                "mimisbrunnr) of a given chain in csv format.")]
         public void Inspect(
             [Argument("STORE-TYPE",
-                Description = "Store type of RocksDb (rocksdb or monorocksdb).")]
+                Description = "Store type of RocksDb.")]
             StoreType storeType,
             [Argument("STORE-PATH",
                 Description = "Store path to inspect.")]
@@ -158,7 +158,7 @@ namespace NineChronicles.Headless.Executable.Commands
                         }
                         else if (typeIdentifier.StartsWith("mimisbrunnr_battle"))
                         {
-                            mimisbrunnrBattleCount++;   
+                            mimisbrunnrBattleCount++;
                         }
                     }
                 }

@@ -180,7 +180,11 @@ namespace NineChronicles.Headless.Executable
             [Option(Description = "The interval between block polling.  15 seconds by default.")]
             int pollInterval = 15,
             [Option(Description = "The maximum number of peers to poll blocks.  int.MaxValue by default.")]
-            int maximumPollPeers = int.MaxValue
+            int maximumPollPeers = int.MaxValue,
+            [Option(Description =
+                "Determines the type of transport.  \"netmq\" and \"tcp\" " +
+                "is available and \"tcp\" option is selected by default.")]
+            string transportType = "tcp"
         )
         {
 #if SENTRY || ! DEBUG
@@ -313,7 +317,8 @@ namespace NineChronicles.Headless.Executable
                         bucketSize: bucketSize,
                         chainTipStaleBehaviorType: chainTipStaleBehaviorType,
                         pollInterval: pollInterval,
-                        maximumPollPeers: maximumPollPeers
+                        maximumPollPeers: maximumPollPeers,
+                        transportType: transportType
                     );
 
                 if (rpcServer)
