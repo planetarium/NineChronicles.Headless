@@ -32,8 +32,6 @@ namespace NineChronicles.Headless.Properties
 
         public int ReorgInterval { get; set; }
 
-        public bool AuthorizedMiner { get; set; }
-
         public TimeSpan TxLifeTime { get; set; }
 
         public bool IgnoreBootstrapFailure { get; set; } = true;
