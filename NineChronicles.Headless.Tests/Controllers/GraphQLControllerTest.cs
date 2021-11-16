@@ -160,7 +160,7 @@ namespace NineChronicles.Headless.Tests.Controllers
 
         private void ConfigureAdminClaim()
         {
-            _httpContextAccessor.HttpContext!.User.AddIdentity(new ClaimsIdentity(new[]
+            _httpContextAccessor.HttpContext.User.AddIdentity(new ClaimsIdentity(new[]
             {
                 new Claim("role", "Admin"),
             }));
