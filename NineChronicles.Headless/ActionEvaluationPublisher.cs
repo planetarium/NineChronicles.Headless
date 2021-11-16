@@ -148,20 +148,19 @@ namespace NineChronicles.Headless
                         //       we should remove this code after resizing it.
                         ev.PreviousStates = ev.PreviousStates.SetState(ShopState.Address, new Null());
                         ev.OutputStates = ev.OutputStates.SetState(ShopState.Address, new Null());
-#pragma warning disable SYSLIB0011, CS0618 // FIXME
                         formatter.Serialize(df, ev);
-#pragma warning restore SYSLIB0011, CS0618
+                        Log.Information("[{ClientAddress}] #{BlockIndex} Broadcasting render since the given action {Action}", clientAddress, ev.BlockIndex, ev.Action.GetType());
                         await client.BroadcastRenderAsync(c.ToArray());
                     }
                     catch (SerializationException se)
                     {
                         // FIXME add logger as property
-                        Log.Error(se, "Skip broadcasting render since the given action isn't serializable.");
+                        Log.Error(se, "[{ClientAddress}] Skip broadcasting render since the given action isn't serializable", clientAddress);
                     }
                     catch (Exception e)
                     {
                         // FIXME add logger as property
-                        Log.Error(e, "Skip broadcasting render due to the unexpected exception");
+                        Log.Error(e, "[{ClientAddress}] Skip broadcasting render due to the unexpected exception", clientAddress);
                     }
                 }
                 );
