@@ -133,6 +133,19 @@ namespace NineChronicles.Headless.Tests.Controllers
             Assert.IsType<UnauthorizedResult>(_controller.SetPrivateKey(new SetPrivateKeyRequest()));
         }
 
+        [Fact]
+        public void SetPrivateKeyThrowsBadRequest()
+        {
+            ConfigureNineChroniclesNodeService();
+            var privateKey = new PrivateKey();
+            IActionResult result = _controller.SetPrivateKey(new SetPrivateKeyRequest
+            {
+                PrivateKeyString = "test",
+            });
+            Assert.IsType<StatusCodeResult>(result);
+            Assert.Equal(StatusCodes.Status400BadRequest, ((StatusCodeResult)result).StatusCode);
+        }
+
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
