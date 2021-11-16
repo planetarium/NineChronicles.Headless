@@ -41,7 +41,7 @@ namespace NineChronicles.Headless.Tests
             object? source = null)
             where TObjectGraphType : IObjectGraphType
         {
-            var graphType = (IObjectGraphType)serviceProvider.GetService(typeof(TObjectGraphType))!;
+            var graphType = (IObjectGraphType)serviceProvider.GetService(typeof(TObjectGraphType));
             var documentExecutor = new DocumentExecuter();
             return documentExecutor.ExecuteAsync(new ExecutionOptions
             {
