@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
@@ -603,8 +604,9 @@ namespace Libplanet.Headless.Hosting
                 else
                 {
                     var uri = new Uri(properties.GenesisBlockPath);
-                    using var client = new WebClient();
-                    rawBlock = client.DownloadData(uri);
+                    using var client = new HttpClient();
+                    // FIXME We should process more asynchronously without .Result.
+                    rawBlock = client.GetAsync(uri).Result.Content.ReadAsByteArrayAsync().Result;
                 }
                 var blockDict = (Bencodex.Types.Dictionary)Codec.Decode(rawBlock);
                 return BlockMarshaler.UnmarshalBlock<T>(hashAlgorithmGetter, blockDict);

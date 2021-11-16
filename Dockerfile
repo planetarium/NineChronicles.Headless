@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-env
 WORKDIR /app
 ARG COMMIT
 
@@ -24,7 +24,7 @@ RUN dotnet publish NineChronicles.Headless.Executable/NineChronicles.Headless.Ex
     --version-suffix $COMMIT
 
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
+FROM mcr.microsoft.com/dotnet/aspnet:6.0
 WORKDIR /app
 RUN apt-get update && apt-get install -y libc6-dev
 COPY --from=build-env /app/out .
@@ -32,8 +32,8 @@ COPY --from=build-env /app/out .
 # Install native deps & utilities for production
 RUN apt-get update \
     && apt-get install -y --allow-unauthenticated \
-        libc6-dev jq \
-     && rm -rf /var/lib/apt/lists/*
+    libc6-dev jq \
+    && rm -rf /var/lib/apt/lists/*
 
 VOLUME /data
 
