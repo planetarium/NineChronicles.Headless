@@ -62,11 +62,19 @@ namespace NineChronicles.Headless.Controllers
                 return new StatusCodeResult(StatusCodes.Status409Conflict);
             }
 
-            var privateKey = new PrivateKey(ByteUtil.ParseHex(request.PrivateKeyString));
-            StandaloneContext.NineChroniclesNodeService.MinerPrivateKey = privateKey;
-            var msg = $"Private key set ({StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress()}).";
-            Log.Information("SetPrivateKey: {Msg}", msg);
-            return Ok(msg);
+            try
+            {
+                var privateKey = new PrivateKey(ByteUtil.ParseHex(request.PrivateKeyString));
+                StandaloneContext.NineChroniclesNodeService.MinerPrivateKey = privateKey;
+                var msg =
+                    $"Private key set ({StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress()}).";
+                Log.Information("SetPrivateKey: {Msg}", msg);
+                return Ok(msg);
+            }
+            catch
+            {
+                return new StatusCodeResult(StatusCodes.Status400BadRequest);
+            }
         }
 
         [HttpPost(SetMiningEndpoint)]
