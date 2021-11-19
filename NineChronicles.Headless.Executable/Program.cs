@@ -151,8 +151,8 @@ namespace NineChronicles.Headless.Executable
             string? awsSecretKey = null,
             [Option(Description = "The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2).")]
             string? awsRegion = null,
-            [Option(Description = "The lifetime of each transaction, which uses minute as its unit.  60 (m) by default.")]
-            int txLifeTime = 60,
+            [Option(Description = "The lifetime of each transaction, which uses minute as its unit.  180 (m) by default.")]
+            int txLifeTime = 180,
             [Option(Description = "The grace period for new messages, which uses second as its unit.  60 (s) by default.")]
             int messageTimeout = 60,
             [Option(Description = "The grace period for tip update, which uses second as its unit.  60 (s) by default.")]
