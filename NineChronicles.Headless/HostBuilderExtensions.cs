@@ -4,6 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.Properties;
 using System.Net;
+using Lib9c.Formatters;
+using MessagePack;
+using MessagePack.Resolvers;
 
 namespace NineChronicles.Headless
 {
@@ -72,6 +75,12 @@ namespace NineChronicles.Headless
                             context
                         );
                     });
+                    var resolver = MessagePack.Resolvers.CompositeResolver.Create(
+                        NineChroniclesResolver.Instance,
+                        StandardResolver.Instance
+                    );
+                    var options = MessagePackSerializerOptions.Standard.WithResolver(resolver);
+                    MessagePackSerializer.DefaultOptions = options;
                 });
         }
     }
