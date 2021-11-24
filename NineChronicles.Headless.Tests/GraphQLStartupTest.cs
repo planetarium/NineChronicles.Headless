@@ -33,7 +33,7 @@ namespace NineChronicles.Headless.Tests
             ServiceProvider serviceProvider = services.BuildServiceProvider();
 
             var options = serviceProvider.GetService<IOptions<CorsOptions>>();
-            Assert.Equal(noCors, !(options.Value.GetPolicy(GraphQLService.NoCorsPolicyName) is null));
+            Assert.Equal(noCors, !(options!.Value.GetPolicy(GraphQLService.NoCorsPolicyName) is null));
         }
     }
 }

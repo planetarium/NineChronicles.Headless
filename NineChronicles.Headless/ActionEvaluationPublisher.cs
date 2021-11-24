@@ -148,7 +148,9 @@ namespace NineChronicles.Headless
                         //       we should remove this code after resizing it.
                         ev.PreviousStates = ev.PreviousStates.SetState(ShopState.Address, new Null());
                         ev.OutputStates = ev.OutputStates.SetState(ShopState.Address, new Null());
+#pragma warning disable SYSLIB0011, CS0618 // FIXME
                         formatter.Serialize(df, ev);
+#pragma warning restore SYSLIB0011, CS0618
                         await client.BroadcastRenderAsync(c.ToArray());
                     }
                     catch (SerializationException se)
@@ -179,7 +181,9 @@ namespace NineChronicles.Headless
                         //       we should remove this code after resizing it.
                         ev.PreviousStates = ev.PreviousStates.SetState(ShopState.Address, new Null());
                         ev.OutputStates = ev.OutputStates.SetState(ShopState.Address, new Null());
+#pragma warning disable SYSLIB0011, CS0618 // FIXME
                         formatter.Serialize(df, ev);
+#pragma warning restore SYSLIB0011, CS0618
                         await client.BroadcastUnrenderAsync(c.ToArray());
                     }
                     catch (SerializationException se)

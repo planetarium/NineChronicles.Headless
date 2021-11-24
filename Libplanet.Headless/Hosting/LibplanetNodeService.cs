@@ -4,10 +4,10 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
-using Bencodex.Types;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
@@ -170,6 +170,17 @@ namespace Libplanet.Headless.Hosting
                 shuffledIceServers = iceServers.OrderBy(x => rand.Next());
             }
 
+            SwarmOptions.TransportType transportType = SwarmOptions.TransportType.TcpTransport;
+            switch (Properties.TransportType)
+            {
+                case "netmq":
+                    transportType = SwarmOptions.TransportType.NetMQTransport;
+                    break;
+                case "tcp":
+                    transportType = SwarmOptions.TransportType.TcpTransport;
+                    break;
+            }
+
             Swarm = new Swarm<T>(
                 BlockChain,
                 Properties.SwarmPrivateKey,
@@ -190,7 +201,8 @@ namespace Libplanet.Headless.Hosting
                     MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
                     BucketSize = Properties.BucketSize,
                     PollInterval = Properties.PollInterval,
-                    MaximumPollPeers = Properties.MaximumPollPeers
+                    MaximumPollPeers = Properties.MaximumPollPeers,
+                    Type = transportType,
                 }
             );
 
@@ -307,25 +319,6 @@ namespace Libplanet.Headless.Hosting
                 catch (TypeInitializationException e)
                 {
                     Log.Error("RocksDB is not available. DefaultStore will be used. {0}", e);
-                }
-            }
-            else if (type == "monorocksdb")
-            {
-                try
-                {
-#pragma warning disable CS0618  // Type or member is obsolete
-                    store = new MonoRocksDBStore(
-                        path,
-                        maxTotalWalSize: 16 * 1024 * 1024,
-                        maxLogFileSize: 16 * 1024 * 1024,
-                        keepLogFileNum: 1
-                    );
-#pragma warning restore CS0618  // Type or member is obsolete
-                    Log.Debug("MonoRocksDB is initialized.");
-                }
-                catch (TypeInitializationException e)
-                {
-                    Log.Error("MonoRocksDB is not available. DefaultStore will be used. {0}", e);
                 }
             }
             else
@@ -611,8 +604,9 @@ namespace Libplanet.Headless.Hosting
                 else
                 {
                     var uri = new Uri(properties.GenesisBlockPath);
-                    using var client = new WebClient();
-                    rawBlock = client.DownloadData(uri);
+                    using var client = new HttpClient();
+                    // FIXME We should process more asynchronously without .Result.
+                    rawBlock = client.GetAsync(uri).Result.Content.ReadAsByteArrayAsync().Result;
                 }
                 var blockDict = (Bencodex.Types.Dictionary)Codec.Decode(rawBlock);
                 return BlockMarshaler.UnmarshalBlock<T>(hashAlgorithmGetter, blockDict);

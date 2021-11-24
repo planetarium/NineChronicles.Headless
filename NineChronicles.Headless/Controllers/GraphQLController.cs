@@ -62,11 +62,23 @@ namespace NineChronicles.Headless.Controllers
                 return new StatusCodeResult(StatusCodes.Status409Conflict);
             }
 
-            var privateKey = new PrivateKey(ByteUtil.ParseHex(request.PrivateKeyString));
-            StandaloneContext.NineChroniclesNodeService.MinerPrivateKey = privateKey;
-            var msg = $"Private key set ({StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress()}).";
-            Log.Information("SetPrivateKey: {Msg}", msg);
-            return Ok(msg);
+            try
+            {
+                // For users with private keys less than 32 bytes in length, increase this accordingly.
+                var destArray = new byte[32];
+                var srcArray = ByteUtil.ParseHex(request.PrivateKeyString);
+                Array.Copy(srcArray, 0, destArray, destArray.Length - srcArray.Length, srcArray.Length);
+                var privateKey = new PrivateKey(destArray);
+                StandaloneContext.NineChroniclesNodeService.MinerPrivateKey = privateKey;
+                var msg =
+                    $"Private key set ({StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress()}).";
+                Log.Information("SetPrivateKey: {Msg}", msg);
+                return Ok(msg);
+            }
+            catch
+            {
+                return new StatusCodeResult(StatusCodes.Status400BadRequest);
+            }
         }
 
         [HttpPost(SetMiningEndpoint)]
@@ -270,6 +282,6 @@ namespace NineChronicles.Headless.Controllers
 
         // FIXME: remove this method with DI.
         private bool HasLocalPolicy() => !(_configuration[GraphQLService.SecretTokenKey] is { }) ||
-                                         _httpContextAccessor.HttpContext.User.HasClaim("role", "Admin");
+                                         _httpContextAccessor.HttpContext!.User.HasClaim("role", "Admin");
     }
 }
