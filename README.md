@@ -80,6 +80,7 @@ Options:
   --completion                                             Generate a shell completion code
   -h, --help                                               Show help message
   --version                                                Show version
+```
 
 ## Docker Build
 
