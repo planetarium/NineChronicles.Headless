@@ -167,7 +167,7 @@ namespace NineChronicles.Headless
                             {
                                 extra[nameof(Buy.errors)] = new List(
                                     buy.errors
-                                    .Select(tuple => new List(new []
+                                    .Select(tuple => new List(new[]
                                     {
                                         tuple.orderId.Serialize(),
                                         tuple.errorCode.Serialize()
