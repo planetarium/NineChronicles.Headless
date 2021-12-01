@@ -119,7 +119,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 .As<List<object>>()
                 .First()
                 .As<Dictionary<string, object>>()["inspection"];
-            Assert.Equal(transaction.Actions.First().PlainValue.Inspection, plainValue);
+            Assert.Equal(transaction.Actions.First().PlainValue.Inspect(true), plainValue);
         }
         
         [Fact]
