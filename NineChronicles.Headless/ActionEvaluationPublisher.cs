@@ -177,17 +177,18 @@ namespace NineChronicles.Headless
                             }
                         }
                         var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputStates, ev.Exception, ev.PreviousStates, ev.RandomSeed, extra);
+                        Log.Information("[{ClientAddress}] #{BlockIndex} Broadcasting render since the given action {Action}", clientAddress, ev.BlockIndex, ev.Action.GetType());
                         await client.BroadcastRenderAsync(MessagePackSerializer.Serialize(eval));
                     }
                     catch (SerializationException se)
                     {
                         // FIXME add logger as property
-                        Log.Error(se, "Skip broadcasting render since the given action isn't serializable.");
+                        Log.Error(se, "[{ClientAddress}] Skip broadcasting render since the given action isn't serializable", clientAddress);
                     }
                     catch (Exception e)
                     {
                         // FIXME add logger as property
-                        Log.Error(e, "Skip broadcasting render due to the unexpected exception");
+                        Log.Error(e, "[{ClientAddress}] Skip broadcasting render due to the unexpected exception", clientAddress);
                     }
                 }
                 );
