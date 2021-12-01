@@ -9,9 +9,9 @@ namespace NineChronicles.Headless.Tests
         public static Dictionary<string, string> ImportSheets(
             string? dir = null)
         {
+            var path = Path.Combine("..", "..", "..", "..", "Lib9c", "Lib9c", "TableCSV");
+            var files = Directory.GetFiles(path, "*.csv", SearchOption.AllDirectories);
             var sheets = new Dictionary<string, string>();
-            dir ??= Path.Combine("Data", "TableCSV");
-            var files = Directory.GetFiles(dir, "*.csv", SearchOption.AllDirectories);
             foreach (var filePath in files)
             {
                 var fileName = Path.GetFileName(filePath);
