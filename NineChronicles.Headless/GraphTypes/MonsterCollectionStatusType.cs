@@ -15,6 +15,10 @@ namespace NineChronicles.Headless.GraphTypes
                 nameof(MonsterCollectionStatus.RewardInfos),
                 resolve: context => context.Source.RewardInfos
             );
+            Field<NonNullGraphType<LongGraphType>>(
+                nameof(MonsterCollectionStatus.TipIndex),
+                resolve: context => context.Source.TipIndex
+            );
             Field<NonNullGraphType<BooleanGraphType>>(
                 nameof(MonsterCollectionStatus.Lockup),
                 resolve: context => context.Source.Lockup

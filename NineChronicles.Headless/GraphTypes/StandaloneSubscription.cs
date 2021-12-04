@@ -281,6 +281,7 @@ namespace NineChronicles.Headless.GraphTypes
                         var monsterCollectionStatus = new MonsterCollectionStatus(
                             agentBalance,
                             rewards,
+                            tipIndex,
                             monsterCollectionState.IsLocked(tipIndex)
                         );
                         subjects.statusSubject.OnNext(monsterCollectionStatus);
@@ -315,6 +316,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var monsterCollectionStatus = new MonsterCollectionStatus(
                         balance, 
                         rewards,
+                        tipIndex,
                         monsterCollectionState.IsLocked(tipIndex)
                     );
                     StandaloneContext.MonsterCollectionStatusSubject.OnNext(monsterCollectionStatus);
