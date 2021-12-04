@@ -323,7 +323,8 @@ namespace NineChronicles.Headless.GraphTypes
                                 monsterCollectionState.CalculateRewards(rewardSheet, tipIndex);
                             return new MonsterCollectionStatus(
                                 balance, 
-                                rewards, 
+                                rewards,
+                                tipIndex,
                                 monsterCollectionState.IsLocked(tipIndex)
                             );
                         }

@@ -262,10 +262,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Theory]
-        [InlineData(100, 0, "100.00", true)]
-        [InlineData(0, 2, "0.02", false)]
-        [InlineData(10, 2, "10.02", true)]
-        public async Task SubscribeMonsterCollectionStatus(int major, int minor, string decimalString, bool lockup)
+        [InlineData(100, 0, "100.00", 1, true)]
+        [InlineData(0, 2, "0.02", 2, false)]
+        [InlineData(10, 2, "10.02", 3, true)]
+        public async Task SubscribeMonsterCollectionStatus(int major, int minor, string decimalString, long tipIndex, bool lockup)
         {
             ExecutionResult result = await ExecuteQueryAsync(@"
                 subscription {
@@ -278,6 +278,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             itemId
                             quantity
                         },
+                        tipIndex
                         lockup
                     }
                 }"
@@ -296,6 +297,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     {
                         new MonsterCollectionRewardSheet.RewardInfo("1", "1")
                     },
+                    tipIndex,
                     lockup
                 )
             );
@@ -318,6 +320,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                         ["itemId"] = 1,
                     }
                 },
+                ["tipIndex"] = tipIndex,
                 ["lockup"] = lockup,
             };
             Assert.Equal(expected, statusSubject);
@@ -365,10 +368,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
         
         [Theory]
-        [InlineData(100, 0, "100.00", true)]
-        [InlineData(0, 2, "0.02", false)]
-        [InlineData(10, 2, "10.02", true)]
-        public async Task SubscribeMonsterCollectionStatusByAgent(int major, int minor, string decimalString, bool lockup)
+        [InlineData(100, 0, "100.00", 10, true)]
+        [InlineData(0, 2, "0.02", 100, false)]
+        [InlineData(10, 2, "10.02", 1000, true)]
+        public async Task SubscribeMonsterCollectionStatusByAgent(int major, int minor, string decimalString, long tipIndex, bool lockup)
         {
             var address = new Address();
             Assert.Empty(StandaloneContextFx.AgentAddresses);
@@ -383,6 +386,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             itemId
                             quantity
                         }},
+                        tipIndex
                         lockup
                     }}
                 }}"
@@ -402,6 +406,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     {
                         new MonsterCollectionRewardSheet.RewardInfo("1", "1")
                     },
+                    tipIndex,
                     lockup
                 )
             );
@@ -424,6 +429,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                         ["itemId"] = 1,
                     }
                 },
+                ["tipIndex"] = tipIndex,
                 ["lockup"] = lockup,
             };
             Assert.Equal(expected, statusSubject);
