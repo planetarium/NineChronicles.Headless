@@ -12,14 +12,16 @@ namespace NineChronicles.Headless.GraphTypes
 
         public bool Lockup { get; }
 
-        public MonsterCollectionStatus(
-            FungibleAssetValue fungibleAssetValue, 
+        public long TipIndex { get; }
+
+        public MonsterCollectionStatus(FungibleAssetValue fungibleAssetValue,
             List<MonsterCollectionRewardSheet.RewardInfo> rewardInfos,
-            bool lockup
-        )
+            long tipIndex,
+            bool lockup)
         {
             FungibleAssetValue = fungibleAssetValue;
             RewardInfos = rewardInfos;
+            TipIndex = tipIndex;
             Lockup = lockup;
         }
     }
