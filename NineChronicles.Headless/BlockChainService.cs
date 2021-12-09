@@ -1,8 +1,10 @@
 #nullable disable
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
@@ -91,6 +93,20 @@ namespace NineChronicles.Headless
             // FIXME: Null과 null 구분해서 반환해야 할 듯
             byte[] encoded = _codec.Encode(state ?? new Null());
             return UnaryResult(encoded);
+        }
+
+        public UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStates(IEnumerable<byte[]> addressBytesList)
+        {
+            var accountStateGetter = _blockChain.ToAccountStateGetter(_delayedRenderer?.Tip?.Hash);
+            var result = new ConcurrentDictionary<byte[], byte[]>();
+            Parallel.ForEach(addressBytesList, addressBytes =>
+            {
+                var avatarAddress = new Address(addressBytes);
+                var avatarState = accountStateGetter.GetAvatarState(avatarAddress);
+                result[addressBytes] = _codec.Encode(avatarState.Serialize());
+            });
+
+            return UnaryResult(result.ToDictionary(kv => kv.Key, kv => kv.Value));
         }
 
         public UnaryResult<byte[]> GetBalance(byte[] addressBytes, byte[] currencyBytes)
