@@ -109,6 +109,23 @@ namespace NineChronicles.Headless
             return UnaryResult(result.ToDictionary(kv => kv.Key, kv => kv.Value));
         }
 
+        public UnaryResult<Dictionary<byte[], byte[]>> GetStateBulk(IEnumerable<byte[]> addressBytesList)
+        {
+            BlockHash? hash = _delayedRenderer?.Tip?.Hash;
+            var result = new ConcurrentDictionary<byte[], byte[]>();
+            Parallel.ForEach(addressBytesList, addressBytes =>
+            {
+                var address = new Address(addressBytes);
+                if (_blockChain.GetState(address, hash) is { } value)
+                {
+                    result[addressBytes] = _codec.Encode(value);
+
+                }
+            });
+
+            return UnaryResult(result.ToDictionary(kv => kv.Key, kv => kv.Value));
+        }
+
         public UnaryResult<byte[]> GetBalance(byte[] addressBytes, byte[] currencyBytes)
         {
             var address = new Address(addressBytes);
