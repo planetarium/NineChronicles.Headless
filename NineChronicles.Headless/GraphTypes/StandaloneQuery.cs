@@ -43,14 +43,8 @@ namespace NineChronicles.Headless.GraphTypes
                     BlockHash? blockHash = context.GetArgument<byte[]>("hash") switch
                     {
                         byte[] bytes => new BlockHash(bytes),
-                        null => null,
+                        null => standaloneContext.BlockChain?.GetDelayedRenderer()?.Tip?.Hash,
                     };
-
-                    if (standaloneContext.BlockChain is { } blockChain)
-                    {
-                        DelayedRenderer<NCAction>? delayedRenderer = blockChain.GetDelayedRenderer();
-                        blockHash = delayedRenderer?.Tip?.Hash;
-                    }
 
                     return (standaloneContext.BlockChain?.ToAccountStateGetter(blockHash),
                         standaloneContext.BlockChain?.ToAccountBalanceGetter(blockHash));
