@@ -296,15 +296,26 @@ namespace NineChronicles.Headless
         {
             var updatedAddresses =
                 ev.OutputStates.UpdatedAddresses.Union(ev.OutputStates.UpdatedFungibleAssets.Keys);
-            return _clients[clientAddress].addresses.Any(address =>
-                ev.Signer.Equals(address) || updatedAddresses.Contains(address));
+            if (_clients.ContainsKey(clientAddress))
+            {
+                return _clients[clientAddress].addresses.Any(address =>
+                    ev.Signer.Equals(address) || updatedAddresses.Contains(address));
+            }
+            return false;
         }
 
         public void UpdateSubscribeAddresses(byte[] addressBytes, IEnumerable<byte[]> addressesBytes)
         {
             var address = new Address(addressBytes);
             var addresses = addressesBytes.Select(a => new Address(a)).ToImmutableHashSet();
-            _clients[address] = (_clients[address].hub, addresses);
+            if (_clients.ContainsKey(address))
+            {
+                _clients[address] = (_clients[address].hub, addresses);
+            }
+            else
+            {
+                Log.Error("[{ClientAddress}] target address does not contain in clients", address);
+            }
         }
 
         public async Task RemoveClient(Address clientAddress)
