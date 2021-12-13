@@ -119,7 +119,6 @@ namespace NineChronicles.Headless
                 if (_blockChain.GetState(address, hash) is { } value)
                 {
                     result[addressBytes] = _codec.Encode(value);
-
                 }
             });
 
