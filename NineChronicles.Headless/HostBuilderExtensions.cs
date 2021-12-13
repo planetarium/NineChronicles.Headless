@@ -1,12 +1,13 @@
-using Grpc.Core;
-using MagicOnion.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.Properties;
 using System.Net;
 using Lib9c.Formatters;
+using MagicOnion.Server;
 using MessagePack;
 using MessagePack.Resolvers;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 namespace NineChronicles.Headless
 {
@@ -55,13 +56,13 @@ namespace NineChronicles.Headless
             {
                 RpcRemoteSever = properties.RpcRemoteServer
             };
+
             return builder
-                .UseMagicOnion(
-                    new ServerPort(properties.RpcListenHost, properties.RpcListenPort, ServerCredentials.Insecure)
-                )
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => context);
+                    services.AddGrpc();
+                    services.AddMagicOnion();
                     services.AddSingleton(provider =>
                     {
                         StandaloneContext? ctx = provider.GetRequiredService<StandaloneContext>();
@@ -81,6 +82,16 @@ namespace NineChronicles.Headless
                     );
                     var options = MessagePackSerializerOptions.Standard.WithResolver(resolver);
                     MessagePackSerializer.DefaultOptions = options;
+                })
+                .ConfigureWebHostDefaults(hostBuilder =>
+                {
+                    hostBuilder.ConfigureKestrel(options =>
+                    {
+                        options.ListenAnyIP(properties.RpcListenPort, listenOptions =>
+                        {
+                            listenOptions.Protocols = HttpProtocols.Http2;
+                        });
+                    });
                 });
         }
     }
