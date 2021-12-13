@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
 using Grpc.Core;
-using Grpc.Net.Client;
 using Lib9c.Renderer;
 using Libplanet;
 using Libplanet.Action;
@@ -71,14 +70,8 @@ namespace NineChronicles.Headless
 
         public async Task AddClient(Address clientAddress)
         {
-            var options = new GrpcChannelOptions
-            {
-                Credentials = ChannelCredentials.Insecure
-            };
-
-            var channel = GrpcChannel.ForAddress($"http://{_host}:{_port}", options);
-            var client = await StreamingHubClient.ConnectAsync<IActionEvaluationHub, IActionEvaluationHubReceiver>(
-                channel,
+            var client = StreamingHubClient.Connect<IActionEvaluationHub, IActionEvaluationHubReceiver>(
+                new Channel(_host, _port, ChannelCredentials.Insecure),
                 null!
             );
             await client.JoinAsync(clientAddress.ToHex());
@@ -303,26 +296,15 @@ namespace NineChronicles.Headless
         {
             var updatedAddresses =
                 ev.OutputStates.UpdatedAddresses.Union(ev.OutputStates.UpdatedFungibleAssets.Keys);
-            if (_clients.ContainsKey(clientAddress))
-            {
-                return _clients[clientAddress].addresses.Any(address =>
-                    ev.Signer.Equals(address) || updatedAddresses.Contains(address));
-            }
-            return false;
+            return _clients[clientAddress].addresses.Any(address =>
+                ev.Signer.Equals(address) || updatedAddresses.Contains(address));
         }
 
         public void UpdateSubscribeAddresses(byte[] addressBytes, IEnumerable<byte[]> addressesBytes)
         {
             var address = new Address(addressBytes);
             var addresses = addressesBytes.Select(a => new Address(a)).ToImmutableHashSet();
-            if (_clients.ContainsKey(address))
-            {
-                _clients[address] = (_clients[address].hub, addresses);
-            }
-            else
-            {
-                Log.Error("[{ClientAddress}] target address does not contain in clients", address);
-            }
+            _clients[address] = (_clients[address].hub, addresses);
         }
 
         public async Task RemoveClient(Address clientAddress)
