@@ -136,10 +136,10 @@ namespace NineChronicles.Headless
             {
                 _context.AddressesToSubscribe =
                     addressesBytes.Select(ba => new Address(ba)).ToImmutableHashSet();
+                Log.Debug(
+                    "Subscribed addresses: {addresses}",
+                    string.Join(", ", _context.AddressesToSubscribe));
             }
-            Log.Debug(
-                "Subscribed addresses: {addresses}",
-                string.Join(", ", _context.AddressesToSubscribe));
             return UnaryResult(true);
         }
 
