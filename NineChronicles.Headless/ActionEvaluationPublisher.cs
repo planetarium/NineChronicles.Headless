@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
 using Grpc.Core;
+using Grpc.Net.Client;
 using Lib9c.Renderer;
 using Libplanet;
 using Libplanet.Action;
@@ -70,8 +71,14 @@ namespace NineChronicles.Headless
 
         public async Task AddClient(Address clientAddress)
         {
-            var client = StreamingHubClient.Connect<IActionEvaluationHub, IActionEvaluationHubReceiver>(
-                new Channel(_host, _port, ChannelCredentials.Insecure),
+            var options = new GrpcChannelOptions
+            {
+                Credentials = ChannelCredentials.Insecure
+            };
+
+            var channel = GrpcChannel.ForAddress($"http://{_host}:{_port}", options);
+            var client = await StreamingHubClient.ConnectAsync<IActionEvaluationHub, IActionEvaluationHubReceiver>(
+                channel,
                 null!
             );
             await client.JoinAsync(clientAddress.ToHex());
