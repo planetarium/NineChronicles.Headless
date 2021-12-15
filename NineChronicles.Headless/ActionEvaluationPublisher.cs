@@ -77,6 +77,12 @@ namespace NineChronicles.Headless
             await client.JoinAsync(clientAddress.ToHex());
             if (!_clients.ContainsKey(clientAddress))
             {
+                if (clientAddress == default)
+                {
+                    Log.Warning("[{ClientAddress}] AddClient set default address", clientAddress);
+                }
+
+                Log.Information("[{ClientAddress}] AddClient", clientAddress);
                 _clients[clientAddress] = (client, ImmutableHashSet<Address>.Empty);
             }
 
@@ -307,9 +313,14 @@ namespace NineChronicles.Headless
         public void UpdateSubscribeAddresses(byte[] addressBytes, IEnumerable<byte[]> addressesBytes)
         {
             var address = new Address(addressBytes);
+            if (address == default)
+            {
+                Log.Warning("[{ClientAddress}] UpdateSubscribeAddresses set default address", address);
+            }
             var addresses = addressesBytes.Select(a => new Address(a)).ToImmutableHashSet();
             if (_clients.ContainsKey(address))
             {
+                Log.Information("[{ClientAddress}] UpdateSubscribeAddresses", address);
                 _clients[address] = (_clients[address].hub, addresses);
             }
             else
@@ -322,6 +333,7 @@ namespace NineChronicles.Headless
         {
             if (_clients.ContainsKey(clientAddress))
             {
+                Log.Information("[{ClientAddress}] RemoveClient", clientAddress);
                 var client = _clients[clientAddress].hub;
                 await client.LeaveAsync();
                 _clients.Remove(clientAddress);
@@ -338,6 +350,7 @@ namespace NineChronicles.Headless
             try
             {
                 var clientAddress = new Address(ByteUtil.ParseHex(clientAddressHex));
+                Log.Information("[{ClientAddress}] Client Disconnected. RemoveClient", clientAddress);
                 await RemoveClient(clientAddress);
             }
             catch (Exception)
