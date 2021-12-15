@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -37,8 +38,8 @@ namespace NineChronicles.Headless
         private readonly ExceptionRenderer _exceptionRenderer;
         private readonly NodeStatusRenderer _nodeStatusRenderer;
 
-        private readonly Dictionary<Address, (IActionEvaluationHub hub, ImmutableHashSet<Address> addresses)> _clients =
-            new Dictionary<Address, (IActionEvaluationHub hub, ImmutableHashSet<Address> addresses)>();
+        private readonly ConcurrentDictionary<Address, (IActionEvaluationHub hub, ImmutableHashSet<Address> addresses)> _clients =
+            new ConcurrentDictionary<Address, (IActionEvaluationHub hub, ImmutableHashSet<Address> addresses)>();
 
         private RpcContext _context;
 
@@ -75,7 +76,7 @@ namespace NineChronicles.Headless
                 null!
             );
             await client.JoinAsync(clientAddress.ToHex());
-            if (!_clients.ContainsKey(clientAddress))
+            if (_clients.TryAdd(clientAddress, (client, ImmutableHashSet<Address>.Empty)))
             {
                 if (clientAddress == default)
                 {
@@ -83,7 +84,6 @@ namespace NineChronicles.Headless
                 }
 
                 Log.Information("[{ClientAddress}] AddClient", clientAddress);
-                _clients[clientAddress] = (client, ImmutableHashSet<Address>.Empty);
             }
 
             _blockRenderer.BlockSubject.Subscribe(
@@ -302,9 +302,9 @@ namespace NineChronicles.Headless
         {
             var updatedAddresses =
                 ev.OutputStates.UpdatedAddresses.Union(ev.OutputStates.UpdatedFungibleAssets.Keys);
-            if (_clients.ContainsKey(clientAddress))
+            if (_clients.TryGetValue(clientAddress, out var tuple))
             {
-                return _clients[clientAddress].addresses.Any(address =>
+                return tuple.addresses.Any(address =>
                     ev.Signer.Equals(address) || updatedAddresses.Contains(address));
             }
             return false;
@@ -318,10 +318,9 @@ namespace NineChronicles.Headless
                 Log.Warning("[{ClientAddress}] UpdateSubscribeAddresses set default address", address);
             }
             var addresses = addressesBytes.Select(a => new Address(a)).ToImmutableHashSet();
-            if (_clients.ContainsKey(address))
+            if (_clients.TryGetValue(address, out var tuple) && _clients.TryUpdate(address, (tuple.hub, addresses), tuple))
             {
-                Log.Information("[{ClientAddress}] UpdateSubscribeAddresses", address);
-                _clients[address] = (_clients[address].hub, addresses);
+                Log.Information("[{ClientAddress}] UpdateSubscribeAddresses: {Addresses}", address, string.Join(", ", addresses));
             }
             else
             {
@@ -331,12 +330,12 @@ namespace NineChronicles.Headless
 
         public async Task RemoveClient(Address clientAddress)
         {
-            if (_clients.ContainsKey(clientAddress))
+            if (_clients.TryGetValue(clientAddress, out var tuple))
             {
                 Log.Information("[{ClientAddress}] RemoveClient", clientAddress);
-                var client = _clients[clientAddress].hub;
+                var client = tuple.hub;
                 await client.LeaveAsync();
-                _clients.Remove(clientAddress);
+                _clients.TryRemove(clientAddress, out _);
             }
         }
 
