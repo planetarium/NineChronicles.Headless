@@ -288,40 +288,6 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 }
             }
-
-            if (StandaloneContext.NineChroniclesNodeService.MinerPrivateKey is null)
-            {
-                Log.Information("PrivateKey is not set. please call SetPrivateKey() first");
-                return;
-            }
-
-            // legacy
-            Address agentAddress = StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.ToAddress();
-            FungibleAssetValue balance = blockChain.GetBalance(agentAddress, currency, offset);
-            if (blockChain.GetState(agentAddress, offset) is Dictionary agentDict)
-            {
-                AgentState agentState = new AgentState(agentDict);
-                Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
-                if (blockChain.GetState(deriveAddress, offset) is Dictionary collectDict && 
-                    agentState.avatarAddresses.Any())
-                {
-                    rewardSheet.Set(csv);
-                    long tipIndex = blockChain.Tip.Index;
-                    var monsterCollectionState = new MonsterCollectionState(collectDict);
-                    var rewards = monsterCollectionState.CalculateRewards(
-                        rewardSheet,
-                        tipIndex
-                    );
-
-                    var monsterCollectionStatus = new MonsterCollectionStatus(
-                        balance, 
-                        rewards,
-                        tipIndex,
-                        monsterCollectionState.IsLocked(tipIndex)
-                    );
-                    StandaloneContext.MonsterCollectionStatusSubject.OnNext(monsterCollectionStatus);
-                }
-            }
         }
 
         private void RenderAction(ActionBase.ActionEvaluation<ActionBase> eval)
@@ -366,33 +332,6 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 }
             }
-
-            // legacy
-            if (!(service.MinerPrivateKey is { } privateKey))
-            {
-                Log.Information("PrivateKey is not set. please call SetPrivateKey() first");
-                return;
-            }
-
-            Address agentAddress = privateKey.ToAddress();
-            if (eval.Signer == agentAddress && 
-                eval.Exception is null && 
-                service.BlockChain.GetState(agentAddress) is Dictionary rawAgent)
-            {
-                var agentState = new AgentState(rawAgent);
-                Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
-                if (eval.OutputStates.GetState(deriveAddress) is Dictionary state)
-                {
-                    StandaloneContext.MonsterCollectionStateSubject.OnNext(
-                        new MonsterCollectionState(state)
-                    );
-                }
-                else
-                {
-                    StandaloneContext.MonsterCollectionStateSubject.OnNext(null!);
-                }
-            }
-
         }
     }
 }
