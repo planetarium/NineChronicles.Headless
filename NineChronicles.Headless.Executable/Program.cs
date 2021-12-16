@@ -286,6 +286,7 @@ namespace NineChronicles.Headless.Executable
                         GraphQLListenPort = graphQLPort,
                         SecretToken = secretToken,
                         NoCors = noCors,
+                        UseMagicOnion = rpcServer,
                     };
 
                     var graphQLService = new GraphQLService(graphQLNodeServiceProperties);
