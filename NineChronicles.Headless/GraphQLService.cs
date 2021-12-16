@@ -26,6 +26,8 @@ namespace NineChronicles.Headless
 
         public const string NoCorsKey = "noCors";
 
+        public const string UseMagicOnionKey = "useMagicOnion";
+
         private GraphQLNodeServiceProperties GraphQlNodeServiceProperties { get; }
 
         public GraphQLService(GraphQLNodeServiceProperties properties)
@@ -53,6 +55,11 @@ namespace NineChronicles.Headless
                         if (GraphQlNodeServiceProperties.NoCors)
                         {
                             dictionary[NoCorsKey] = string.Empty;
+                        }
+
+                        if (GraphQlNodeServiceProperties.UseMagicOnion)
+                        {
+                            dictionary[UseMagicOnionKey] = string.Empty;
                         }
 
                         builder.AddInMemoryCollection(dictionary);
@@ -141,7 +148,10 @@ namespace NineChronicles.Headless
                 app.UseEndpoints(endpoints =>
                 {
                     endpoints.MapControllers();
-                    endpoints.MapMagicOnionService();
+                    if (!(Configuration[UseMagicOnionKey] is null))
+                    {
+                        endpoints.MapMagicOnionService();
+                    }
                     endpoints.MapHealthChecks("/health-check");
                 });
 
