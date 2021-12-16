@@ -434,5 +434,33 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, statusSubject);
         }
+
+        [Theory]
+        [InlineData(100, 0, "100.00")]
+        [InlineData(0, 2, "0.02")]
+        [InlineData(10, 2, "10.02")]
+        public async Task SubscribeBalanceByAgent(int major, int minor, string decimalString)
+        {
+            var address = new Address();
+            Assert.Empty(StandaloneContextFx.AgentAddresses);
+            ExecutionResult result = await ExecuteQueryAsync($@"
+                subscription {{
+                    balanceByAgent(address: ""{address}"")
+                }}"
+            );
+            Assert.IsType<SubscriptionExecutionResult>(result);
+            SubscriptionExecutionResult subscribeResult = (SubscriptionExecutionResult) result;
+            IObservable<ExecutionResult> stream = subscribeResult.Streams.Values.First();
+            Assert.NotNull(stream);
+            Assert.NotEmpty(StandaloneContextFx.AgentAddresses);
+
+            Currency currency = new Currency("NCG", 2, minter: null);
+            FungibleAssetValue fungibleAssetValue = new FungibleAssetValue(currency, major, minor);
+            StandaloneContextFx.AgentAddresses[address].balanceSubject.OnNext(fungibleAssetValue.GetQuantityString(true));
+            ExecutionResult rawEvents = await stream.Take(1);
+            Dictionary<string, object> rawEvent = (Dictionary<string, object>)rawEvents.Data;
+            string statusSubject = (string)rawEvent["balanceByAgent"];
+            Assert.Equal(decimalString, statusSubject);
+        }
     }
 }

@@ -195,6 +195,20 @@ namespace NineChronicles.Headless.GraphTypes
                 Resolver = new FuncFieldResolver<MonsterCollectionState>(context => (context.Source as MonsterCollectionState)!),
                 Subscriber = new EventStreamResolver<MonsterCollectionState>(SubscribeMonsterCollectionState),
             });
+            AddField(new EventStreamFieldType
+            {
+                Name = "BalanceByAgent",
+                Arguments = new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Description = "A hex-encoded address of agent.",
+                        Name = "address",
+                    }
+                ),
+                Type = typeof(NonNullGraphType<StringGraphType>),
+                Resolver = new FuncFieldResolver<string>(context => (string)context.Source),
+                Subscriber = new EventStreamResolver<string>(SubscribeBalance),
+            });
 
             BlockRenderer blockRenderer = standaloneContext.NineChroniclesNodeService!.BlockRenderer;
             blockRenderer.BlockSubject.Subscribe(RenderBlock);
@@ -210,7 +224,9 @@ namespace NineChronicles.Headless.GraphTypes
         {
             var address = context.GetArgument<Address>("address");
 
-            StandaloneContext.AgentAddresses.TryAdd(address, (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>()));
+            StandaloneContext.AgentAddresses.TryAdd(address,
+                (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(),
+                    new ReplaySubject<string>()));
             StandaloneContext.AgentAddresses.TryGetValue(address, out var subjects);
             return subjects.stateSubject.AsObservable();
         }
@@ -219,9 +235,22 @@ namespace NineChronicles.Headless.GraphTypes
         {
             var address = context.GetArgument<Address>("address");
 
-            StandaloneContext.AgentAddresses.TryAdd(address, (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>()));
+            StandaloneContext.AgentAddresses.TryAdd(address,
+                (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(),
+                    new ReplaySubject<string>()));
             StandaloneContext.AgentAddresses.TryGetValue(address, out var subjects);
             return subjects.statusSubject.AsObservable();
+        }
+
+        private IObservable<string> SubscribeBalance(IResolveEventStreamContext context)
+        {
+            var address = context.GetArgument<Address>("address");
+
+            StandaloneContext.AgentAddresses.TryAdd(address,
+                (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(),
+                    new ReplaySubject<string>()));
+            StandaloneContext.AgentAddresses.TryGetValue(address, out var subjects);
+            return subjects.balanceSubject.AsObservable();
         }
 
         private TipChanged ResolveTipChanged(IResolveFieldContext context)
@@ -263,6 +292,7 @@ namespace NineChronicles.Headless.GraphTypes
             foreach (var (address, subjects) in StandaloneContext.AgentAddresses)
             {
                 FungibleAssetValue agentBalance = blockChain.GetBalance(address, currency, offset);
+                subjects.balanceSubject.OnNext(agentBalance.GetQuantityString(true));
                 if (blockChain.GetState(address, offset) is Dictionary rawAgent)
                 {
                     AgentState agentState = new AgentState(rawAgent);
