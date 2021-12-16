@@ -155,7 +155,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var recipientKey = new PrivateKey();
             Address recipient = recipientKey.ToAddress();
             long txNonce = BlockChain.GetNextTxNonce(senderAddress);
-            
+
             var args = $"recipient: \"{recipient}\", txNonce: {txNonce}, amount: \"17.5\"";
             if (!(memo is null))
             {
@@ -172,13 +172,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             else
             {
                 Assert.Null(result.Errors);
-                
+
                 var stagedTxIds = BlockChain.GetStagedTransactionIds().ToImmutableList();
                 Assert.Single(stagedTxIds);
                 string transferTxIdString = stagedTxIds.Single().ToString();
                 TxId transferTxId = new TxId(ByteUtil.ParseHex(transferTxIdString));
 
-                Transaction<NCAction>? tx = BlockChain.StagePolicy.Get(BlockChain, transferTxId, false);
+                Transaction<NCAction>? tx = BlockChain.StagePolicy.Get(
+                    blockChain: BlockChain,
+                    id: transferTxId,
+                    filtered: true);
                 Assert.NotNull(tx);
                 Assert.IsType<TransferAsset>(tx!.Actions.Single().InnerAction);
                 TransferAsset transferAsset = (TransferAsset) tx.Actions.Single().InnerAction;
@@ -330,12 +333,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Theory]
         [MemberData(nameof(HackAndSlashMember))]
         public async Task HackAndSlash(
-            Address avatarAddress, 
-            int worldId, 
+            Address avatarAddress,
+            int worldId,
             int stageId,
             Address rankingMapAddress,
-            List<Guid> costumeIds, 
-            List<Guid> equipmentIds, 
+            List<Guid> costumeIds,
+            List<Guid> equipmentIds,
             List<Guid> consumableIds
         )
         {
@@ -781,7 +784,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new Dictionary<string, object>
                 {
                     ["stageTx"] = true,
-                }, 
+                },
                 result.Data
             );
             Block<PolymorphicAction<ActionBase>> mined =
