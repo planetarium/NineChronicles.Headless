@@ -521,7 +521,7 @@ type Transaction {
 type TransactionHeadlessQuery {
   nextTxNonce(address: Address!): Long!
   getTx(txId: TxId!): TransactionType_1
-  createUnsignedTx(publicKey: String!, plainValue: String!): String!
+  createUnsignedTx(publicKey: String!, plainValue: String!, nonce: Long): String!
   attachSignature(unsignedTransaction: String!, signature: String!): String!
   transactionResult(txId: TxId!): TxResultType!
 }
