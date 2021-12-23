@@ -1,8 +1,10 @@
 #nullable disable
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
@@ -93,6 +95,36 @@ namespace NineChronicles.Headless
             return UnaryResult(encoded);
         }
 
+        public UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStates(IEnumerable<byte[]> addressBytesList)
+        {
+            var accountStateGetter = _blockChain.ToAccountStateGetter(_delayedRenderer?.Tip?.Hash);
+            var result = new ConcurrentDictionary<byte[], byte[]>();
+            Parallel.ForEach(addressBytesList, addressBytes =>
+            {
+                var avatarAddress = new Address(addressBytes);
+                var avatarState = accountStateGetter.GetAvatarState(avatarAddress);
+                result[addressBytes] = _codec.Encode(avatarState.Serialize());
+            });
+
+            return UnaryResult(result.ToDictionary(kv => kv.Key, kv => kv.Value));
+        }
+
+        public UnaryResult<Dictionary<byte[], byte[]>> GetStateBulk(IEnumerable<byte[]> addressBytesList)
+        {
+            BlockHash? hash = _delayedRenderer?.Tip?.Hash;
+            var result = new ConcurrentDictionary<byte[], byte[]>();
+            Parallel.ForEach(addressBytesList, addressBytes =>
+            {
+                var address = new Address(addressBytes);
+                if (_blockChain.GetState(address, hash) is { } value)
+                {
+                    result[addressBytes] = _codec.Encode(value);
+                }
+            });
+
+            return UnaryResult(result.ToDictionary(kv => kv.Key, kv => kv.Value));
+        }
+
         public UnaryResult<byte[]> GetBalance(byte[] addressBytes, byte[] currencyBytes)
         {
             var address = new Address(addressBytes);
@@ -136,10 +168,10 @@ namespace NineChronicles.Headless
             {
                 _context.AddressesToSubscribe =
                     addressesBytes.Select(ba => new Address(ba)).ToImmutableHashSet();
+                Log.Debug(
+                    "Subscribed addresses: {addresses}",
+                    string.Join(", ", _context.AddressesToSubscribe));
             }
-            Log.Debug(
-                "Subscribed addresses: {addresses}",
-                string.Join(", ", _context.AddressesToSubscribe));
             return UnaryResult(true);
         }
 

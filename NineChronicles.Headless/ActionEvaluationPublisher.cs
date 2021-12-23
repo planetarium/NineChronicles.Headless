@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -12,6 +13,7 @@ using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
 using Grpc.Core;
+using Grpc.Net.Client;
 using Lib9c.Renderer;
 using Libplanet;
 using Libplanet.Action;
@@ -37,8 +39,8 @@ namespace NineChronicles.Headless
         private readonly ExceptionRenderer _exceptionRenderer;
         private readonly NodeStatusRenderer _nodeStatusRenderer;
 
-        private readonly Dictionary<Address, (IActionEvaluationHub hub, ImmutableHashSet<Address> addresses)> _clients =
-            new Dictionary<Address, (IActionEvaluationHub hub, ImmutableHashSet<Address> addresses)>();
+        private readonly ConcurrentDictionary<Address, (IActionEvaluationHub hub, ImmutableHashSet<Address> addresses)> _clients =
+            new ConcurrentDictionary<Address, (IActionEvaluationHub hub, ImmutableHashSet<Address> addresses)>();
 
         private RpcContext _context;
 
@@ -70,14 +72,25 @@ namespace NineChronicles.Headless
 
         public async Task AddClient(Address clientAddress)
         {
-            var client = StreamingHubClient.Connect<IActionEvaluationHub, IActionEvaluationHubReceiver>(
-                new Channel(_host, _port, ChannelCredentials.Insecure),
+            var options = new GrpcChannelOptions
+            {
+                Credentials = ChannelCredentials.Insecure
+            };
+
+            var channel = GrpcChannel.ForAddress($"http://{_host}:{_port}", options);
+            var client = await StreamingHubClient.ConnectAsync<IActionEvaluationHub, IActionEvaluationHubReceiver>(
+                channel,
                 null!
             );
             await client.JoinAsync(clientAddress.ToHex());
-            if (!_clients.ContainsKey(clientAddress))
+            if (_clients.TryAdd(clientAddress, (client, ImmutableHashSet<Address>.Empty)))
             {
-                _clients[clientAddress] = (client, ImmutableHashSet<Address>.Empty);
+                if (clientAddress == default)
+                {
+                    Log.Warning("[{ClientAddress}] AddClient set default address", clientAddress);
+                }
+
+                Log.Information("[{ClientAddress}] AddClient", clientAddress);
             }
 
             _blockRenderer.BlockSubject.Subscribe(
@@ -296,9 +309,9 @@ namespace NineChronicles.Headless
         {
             var updatedAddresses =
                 ev.OutputStates.UpdatedAddresses.Union(ev.OutputStates.UpdatedFungibleAssets.Keys);
-            if (_clients.ContainsKey(clientAddress))
+            if (_clients.TryGetValue(clientAddress, out var tuple))
             {
-                return _clients[clientAddress].addresses.Any(address =>
+                return tuple.addresses.Any(address =>
                     ev.Signer.Equals(address) || updatedAddresses.Contains(address));
             }
             return false;
@@ -307,10 +320,14 @@ namespace NineChronicles.Headless
         public void UpdateSubscribeAddresses(byte[] addressBytes, IEnumerable<byte[]> addressesBytes)
         {
             var address = new Address(addressBytes);
-            var addresses = addressesBytes.Select(a => new Address(a)).ToImmutableHashSet();
-            if (_clients.ContainsKey(address))
+            if (address == default)
             {
-                _clients[address] = (_clients[address].hub, addresses);
+                Log.Warning("[{ClientAddress}] UpdateSubscribeAddresses set default address", address);
+            }
+            var addresses = addressesBytes.Select(a => new Address(a)).ToImmutableHashSet();
+            if (_clients.TryGetValue(address, out var tuple) && _clients.TryUpdate(address, (tuple.hub, addresses), tuple))
+            {
+                Log.Information("[{ClientAddress}] UpdateSubscribeAddresses: {Addresses}", address, string.Join(", ", addresses));
             }
             else
             {
@@ -320,11 +337,12 @@ namespace NineChronicles.Headless
 
         public async Task RemoveClient(Address clientAddress)
         {
-            if (_clients.ContainsKey(clientAddress))
+            if (_clients.TryGetValue(clientAddress, out var tuple))
             {
-                var client = _clients[clientAddress].hub;
+                Log.Information("[{ClientAddress}] RemoveClient", clientAddress);
+                var client = tuple.hub;
                 await client.LeaveAsync();
-                _clients.Remove(clientAddress);
+                _clients.TryRemove(clientAddress, out _);
             }
         }
 
@@ -338,6 +356,7 @@ namespace NineChronicles.Headless
             try
             {
                 var clientAddress = new Address(ByteUtil.ParseHex(clientAddressHex));
+                Log.Information("[{ClientAddress}] Client Disconnected. RemoveClient", clientAddress);
                 await RemoveClient(clientAddress);
             }
             catch (Exception)

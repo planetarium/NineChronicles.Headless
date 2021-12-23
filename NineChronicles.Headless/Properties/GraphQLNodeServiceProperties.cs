@@ -11,5 +11,7 @@ namespace NineChronicles.Headless.Properties
         public string? SecretToken { get; set; }
 
         public bool NoCors { get; set; }
+
+        public bool UseMagicOnion { get; set; }
     }
 }
