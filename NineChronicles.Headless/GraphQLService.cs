@@ -4,7 +4,6 @@ using GraphQL.Server;
 using GraphQL.Utilities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -63,14 +62,8 @@ namespace NineChronicles.Headless
                         }
 
                         builder.AddInMemoryCollection(dictionary);
-                    })
-                    .ConfigureKestrel(options =>
-                    {
-                        options.ListenAnyIP((int)listenPort!, listenOptions =>
-                        {
-                            listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
-                        });
                     });
+                builder.UseUrls($"http://{listenHost}:{listenPort}/");
             });
         }
 
@@ -148,10 +141,6 @@ namespace NineChronicles.Headless
                 app.UseEndpoints(endpoints =>
                 {
                     endpoints.MapControllers();
-                    if (!(Configuration[UseMagicOnionKey] is null))
-                    {
-                        endpoints.MapMagicOnionService();
-                    }
                     endpoints.MapHealthChecks("/health-check");
                 });
 
