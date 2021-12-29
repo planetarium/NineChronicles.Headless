@@ -431,7 +431,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     new PolymorphicAction<ActionBase>[]
                     {
                         new InitializeStates(
-                            rankingState: new RankingState(),
+                            rankingState: new RankingState0(),
                             shopState: new ShopState(),
                             gameConfigState: new GameConfigState(),
                             redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
@@ -742,7 +742,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     new PolymorphicAction<ActionBase>[]
                     {
                         new InitializeStates(
-                            rankingState: new RankingState(),
+                            rankingState: new RankingState0(),
                             shopState: new ShopState(),
                             gameConfigState: new GameConfigState(),
                             redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
@@ -812,7 +812,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     new PolymorphicAction<ActionBase>[]
                     {
                         new InitializeStates(
-                            rankingState: new RankingState(),
+                            rankingState: new RankingState0(),
                             shopState: new ShopState(),
                             gameConfigState: new GameConfigState(),
                             redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
@@ -871,7 +871,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     new PolymorphicAction<ActionBase>[]
                     {
                         new InitializeStates(
-                            rankingState: new RankingState(),
+                            rankingState: new RankingState0(),
                             shopState: new ShopState(),
                             gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
                             redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
