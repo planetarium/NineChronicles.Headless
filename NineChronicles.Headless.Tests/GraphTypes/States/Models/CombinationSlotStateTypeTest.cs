@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using GraphQL.Execution;
 using Libplanet;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
@@ -24,6 +25,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             Address address = default;
             CombinationSlotState combinationSlotState = new CombinationSlotState(address, 1);
             var queryResult = await ExecuteQueryAsync<CombinationSlotStateType>(query, source: combinationSlotState);
+            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
             var expected = new Dictionary<string, object>()
             {
                 ["address"] = address.ToString(),
@@ -31,7 +33,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 ["unlockStage"] = 1,
                 ["startBlockIndex"] = 0,
             };
-            Assert.Equal(expected, queryResult.Data);
+            Assert.Equal(expected, data);
         }
     }
 }

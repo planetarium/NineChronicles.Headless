@@ -10,7 +10,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<StringGraphType>>(
                 nameof(FungibleAssetValue.Currency),
                 resolve: context => context.Source.Currency.Ticker);
-            Field<NonNullGraphType<DecimalGraphType>>(
+            Field<NonNullGraphType<StringGraphType>>(
                 name: "quantity",
                 resolve: context => context.Source.GetQuantityString(true));
         }

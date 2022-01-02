@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using GraphQL.Execution;
 using Nekoyume.Model;
 using NineChronicles.Headless.GraphTypes.States.Models;
 using Xunit;
@@ -23,7 +24,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             var result = await ExecuteQueryAsync<CollectionMapType>(
                 "{ count pairs }",
                 source: collectionMap);
-            var resultData = (Dictionary<string, object>)result.Data;
+            var resultData = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
             Assert.Equal(pairs.Length, resultData["count"]);
             Assert.Equal(pairs, resultData["pairs"]);
         }

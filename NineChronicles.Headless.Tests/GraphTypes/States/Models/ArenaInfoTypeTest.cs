@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using GraphQL.Execution;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
 using Xunit;
@@ -29,6 +30,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
 
             var arenaInfo = new ArenaInfo(Fixtures.AvatarStateFX, Fixtures.TableSheetsFX.CharacterSheet, active);
             var queryResult = await ExecuteQueryAsync<ArenaInfoType>(query, source: arenaInfo);
+            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
 
             Assert.Equal(
                 new Dictionary<string, object>
@@ -44,7 +46,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     ["dailyChallengeCount"] = 5,
                     ["score"] = 1000,
                 },
-                queryResult.Data
+                data
             );
         }
     }

@@ -21,6 +21,17 @@ namespace NineChronicles.Headless.Tests.Middleware
             _middleware = new GraphQLSchemaMiddleware<Schema>(context => Task.CompletedTask, GraphQlSchemaMiddlewareEndpoint);
         }
 
+        public class Fruit : ObjectGraphType
+        {
+            public Fruit()
+            {
+                Field<NonNullGraphType<StringGraphType>>(
+                    name: "fruit",
+                    resolve: _ => "fruit"
+                );
+            }
+        }
+
         [Fact]
         public async Task InvokeAsync()
         {
@@ -37,16 +48,16 @@ namespace NineChronicles.Headless.Tests.Middleware
             };
             await _middleware.InvokeAsync(httpContext, new Schema
             {
-                Query = new ObjectGraphType
+                Query = new Fruit()
                 {
-                    Name = "Fruit",
+                    Name = "Fruit"
                 }
             });
 
             httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
             using var reader = new StreamReader(httpContext.Response.Body);
             Assert.Equal(
-                string.Format("schema {{{0}  query: Fruit{0}}}{0}{0}type Fruit {{{0}{0}}}{0}", Environment.NewLine),
+                string.Format("schema {{{0}  query: Fruit{0}}}{0}{0}type Fruit {{{0}  fruit: String!{0}}}{0}", Environment.NewLine),
                 await reader.ReadToEndAsync());
         }
     }
