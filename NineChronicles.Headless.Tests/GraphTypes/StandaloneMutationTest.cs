@@ -870,13 +870,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Address adminAddress,
             Currency curreny,
             IImmutableSet<Address> activatedAccounts,
-            RankingState? rankingState = null
+            RankingState0? rankingState = null
         ) => BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
             HashAlgorithmType.Of<SHA256>(),
             new PolymorphicAction<ActionBase>[]
             {
                 new InitializeStates(
-                    rankingState: rankingState ?? new RankingState(),
+                    rankingState: rankingState ?? new RankingState0(),
                     shopState: new ShopState(),
                     gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
                     redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
