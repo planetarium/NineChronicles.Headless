@@ -195,6 +195,20 @@ namespace NineChronicles.Headless.GraphTypes
                 Resolver = new FuncFieldResolver<MonsterCollectionState>(context => (context.Source as MonsterCollectionState)!),
                 Subscriber = new EventStreamResolver<MonsterCollectionState>(SubscribeMonsterCollectionState),
             });
+            AddField(new EventStreamFieldType
+            {
+                Name = "BalanceByAgent",
+                Arguments = new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Description = "A hex-encoded address of agent.",
+                        Name = "address",
+                    }
+                ),
+                Type = typeof(NonNullGraphType<StringGraphType>),
+                Resolver = new FuncFieldResolver<string>(context => (string)context.Source),
+                Subscriber = new EventStreamResolver<string>(SubscribeBalance),
+            });
 
             BlockRenderer blockRenderer = standaloneContext.NineChroniclesNodeService!.BlockRenderer;
             blockRenderer.BlockSubject.Subscribe(RenderBlock);
@@ -210,7 +224,9 @@ namespace NineChronicles.Headless.GraphTypes
         {
             var address = context.GetArgument<Address>("address");
 
-            StandaloneContext.AgentAddresses.TryAdd(address, (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>()));
+            StandaloneContext.AgentAddresses.TryAdd(address,
+                (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(),
+                    new ReplaySubject<string>()));
             StandaloneContext.AgentAddresses.TryGetValue(address, out var subjects);
             return subjects.stateSubject.AsObservable();
         }
@@ -219,9 +235,22 @@ namespace NineChronicles.Headless.GraphTypes
         {
             var address = context.GetArgument<Address>("address");
 
-            StandaloneContext.AgentAddresses.TryAdd(address, (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>()));
+            StandaloneContext.AgentAddresses.TryAdd(address,
+                (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(),
+                    new ReplaySubject<string>()));
             StandaloneContext.AgentAddresses.TryGetValue(address, out var subjects);
             return subjects.statusSubject.AsObservable();
+        }
+
+        private IObservable<string> SubscribeBalance(IResolveEventStreamContext context)
+        {
+            var address = context.GetArgument<Address>("address");
+
+            StandaloneContext.AgentAddresses.TryAdd(address,
+                (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(),
+                    new ReplaySubject<string>()));
+            StandaloneContext.AgentAddresses.TryGetValue(address, out var subjects);
+            return subjects.balanceSubject.AsObservable();
         }
 
         private TipChanged ResolveTipChanged(IResolveFieldContext context)
@@ -263,6 +292,7 @@ namespace NineChronicles.Headless.GraphTypes
             foreach (var (address, subjects) in StandaloneContext.AgentAddresses)
             {
                 FungibleAssetValue agentBalance = blockChain.GetBalance(address, currency, offset);
+                subjects.balanceSubject.OnNext(agentBalance.GetQuantityString(true));
                 if (blockChain.GetState(address, offset) is Dictionary rawAgent)
                 {
                     AgentState agentState = new AgentState(rawAgent);
@@ -286,40 +316,6 @@ namespace NineChronicles.Headless.GraphTypes
                         );
                         subjects.statusSubject.OnNext(monsterCollectionStatus);
                     }
-                }
-            }
-
-            if (StandaloneContext.NineChroniclesNodeService.MinerPrivateKey is null)
-            {
-                Log.Information("PrivateKey is not set. please call SetPrivateKey() first");
-                return;
-            }
-
-            // legacy
-            Address agentAddress = StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.ToAddress();
-            FungibleAssetValue balance = blockChain.GetBalance(agentAddress, currency, offset);
-            if (blockChain.GetState(agentAddress, offset) is Dictionary agentDict)
-            {
-                AgentState agentState = new AgentState(agentDict);
-                Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
-                if (blockChain.GetState(deriveAddress, offset) is Dictionary collectDict && 
-                    agentState.avatarAddresses.Any())
-                {
-                    rewardSheet.Set(csv);
-                    long tipIndex = blockChain.Tip.Index;
-                    var monsterCollectionState = new MonsterCollectionState(collectDict);
-                    var rewards = monsterCollectionState.CalculateRewards(
-                        rewardSheet,
-                        tipIndex
-                    );
-
-                    var monsterCollectionStatus = new MonsterCollectionStatus(
-                        balance, 
-                        rewards,
-                        tipIndex,
-                        monsterCollectionState.IsLocked(tipIndex)
-                    );
-                    StandaloneContext.MonsterCollectionStatusSubject.OnNext(monsterCollectionStatus);
                 }
             }
         }
@@ -366,33 +362,6 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 }
             }
-
-            // legacy
-            if (!(service.MinerPrivateKey is { } privateKey))
-            {
-                Log.Information("PrivateKey is not set. please call SetPrivateKey() first");
-                return;
-            }
-
-            Address agentAddress = privateKey.ToAddress();
-            if (eval.Signer == agentAddress && 
-                eval.Exception is null && 
-                service.BlockChain.GetState(agentAddress) is Dictionary rawAgent)
-            {
-                var agentState = new AgentState(rawAgent);
-                Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
-                if (eval.OutputStates.GetState(deriveAddress) is Dictionary state)
-                {
-                    StandaloneContext.MonsterCollectionStateSubject.OnNext(
-                        new MonsterCollectionState(state)
-                    );
-                }
-                else
-                {
-                    StandaloneContext.MonsterCollectionStateSubject.OnNext(null!);
-                }
-            }
-
         }
     }
 }
