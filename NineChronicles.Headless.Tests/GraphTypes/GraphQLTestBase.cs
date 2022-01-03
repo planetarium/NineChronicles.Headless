@@ -49,7 +49,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new NCAction[]
                 {
                     new InitializeStates(
-                        rankingState: new RankingState(),
+                        rankingState: new RankingState0(),
                         shopState: new ShopState(),
                         gameConfigState: new GameConfigState(sheets[nameof(GameConfigSheet)]),
                         redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
