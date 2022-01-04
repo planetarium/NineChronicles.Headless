@@ -7,7 +7,6 @@ on:
       - rc-*
       - 9c-main
       - development
-      - v100097-gql
 
 jobs:
   build_and_push:
