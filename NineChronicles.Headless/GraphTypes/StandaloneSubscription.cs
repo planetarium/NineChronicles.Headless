@@ -206,7 +206,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 ),
                 Type = typeof(NonNullGraphType<StringGraphType>),
-                Resolver = new FuncFieldResolver<string>(context => (string)context.Source),
+                Resolver = new FuncFieldResolver<string>(context => (string)context.Source!),
                 Subscriber = new EventStreamResolver<string>(SubscribeBalance),
             });
 
