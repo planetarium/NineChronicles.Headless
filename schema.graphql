@@ -193,7 +193,7 @@ type ExplorerQuery {
 
 type FungibleAssetValueType {
   currency: String!
-  quantity: Decimal!
+  quantity: String!
 }
 
 scalar Guid
