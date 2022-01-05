@@ -149,7 +149,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var queryResult = await ExecuteAsync(string.Format(
                 queryFormat,
                 Convert.ToBase64String(publicKey.Format(false)),
-                Convert.ToBase64String(codec.Encode(action.PlainValue))));
+                Convert.ToBase64String(codec.Encode(action.PlainValue)),
+                expectedNonce.ToString()));
             var base64EncodedUnsignedTx = (string)(
                 (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!)["createUnsignedTx"];
             Transaction<NCAction> unsignedTx =

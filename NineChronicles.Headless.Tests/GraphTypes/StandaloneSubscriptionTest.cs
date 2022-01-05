@@ -469,14 +469,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             var address = new Address();
             Assert.Empty(StandaloneContextFx.AgentAddresses);
-            ExecutionResult result = await ExecuteQueryAsync($@"
+            ExecutionResult result = await ExecuteSubscriptionQueryAsync($@"
                 subscription {{
                     balanceByAgent(address: ""{address}"")
                 }}"
             );
             Assert.IsType<SubscriptionExecutionResult>(result);
             SubscriptionExecutionResult subscribeResult = (SubscriptionExecutionResult) result;
-            IObservable<ExecutionResult> stream = subscribeResult.Streams.Values.First();
+            IObservable<ExecutionResult> stream = subscribeResult.Streams!.Values.First();
             Assert.NotNull(stream);
             Assert.NotEmpty(StandaloneContextFx.AgentAddresses);
 
@@ -484,9 +484,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             FungibleAssetValue fungibleAssetValue = new FungibleAssetValue(currency, major, minor);
             StandaloneContextFx.AgentAddresses[address].balanceSubject.OnNext(fungibleAssetValue.GetQuantityString(true));
             ExecutionResult rawEvents = await stream.Take(1);
-            Dictionary<string, object> rawEvent = (Dictionary<string, object>)rawEvents.Data;
-            string statusSubject = (string)rawEvent["balanceByAgent"];
-            Assert.Equal(decimalString, statusSubject);
+            var data = ((RootExecutionNode) rawEvents.Data.GetValue()).SubFields![0].Result!;
+            Assert.Equal(decimalString, data);
         }
     }
 }
