@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using GraphQL.Execution;
 using Libplanet.Assets;
 using NineChronicles.Headless.GraphTypes;
 using Xunit;
@@ -23,11 +24,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             var goldCurrency = new Currency("NCG", 2, minter: null);
             var fav = new FungibleAssetValue(goldCurrency, major, minor);
             var queryResult = await ExecuteQueryAsync<FungibleAssetValueType>(query, source: fav);
+            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
             Assert.Equal(new Dictionary<string, object>
             {
                 ["currency"] = "NCG",
-                ["quantity"] = decimal.Parse(decimalString),
-            }, queryResult.Data);
+                ["quantity"] = decimalString,
+            }, data);
         }
     }
 }

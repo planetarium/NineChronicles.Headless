@@ -23,7 +23,7 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
             Field<NonNullGraphType<StringGraphType>>(
                 nameof(ShopItem.Price),
                 description: "Item price.",
-                resolve: context => context.Source.Price
+                resolve: context => context.Source.Price.ToString()
             );
             Field<ItemUsableType>(
                 nameof(ShopItem.ItemUsable),

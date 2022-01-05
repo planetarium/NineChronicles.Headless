@@ -2,6 +2,7 @@ using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using GraphQL.Execution;
 using Xunit;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 
@@ -27,6 +28,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 Fixtures.TableSheetsFX.MonsterCollectionRewardSheet
             );
             var queryResult = await ExecuteQueryAsync<MonsterCollectionStateType>(query, source: state);
+            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
             var expected = new Dictionary<string, object>
             {
                 ["address"] = state.address.ToString(),
@@ -36,7 +38,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 ["receivedBlockIndex"] = 0L,
                 ["claimableBlockIndex"] = 50400L + 2L,
             };
-            Assert.Equal(expected, queryResult.Data);
+            Assert.Equal(expected, data);
         }
     }
 }

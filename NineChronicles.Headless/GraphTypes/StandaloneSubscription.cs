@@ -133,7 +133,7 @@ namespace NineChronicles.Headless.GraphTypes
                 Name = "differentAppProtocolVersionEncounter",
                 Type = typeof(NonNullGraphType<DifferentAppProtocolVersionEncounterType>),
                 Resolver = new FuncFieldResolver<DifferentAppProtocolVersionEncounter>(context =>
-                    (DifferentAppProtocolVersionEncounter)context.Source),
+                    (DifferentAppProtocolVersionEncounter)context.Source!),
                 Subscriber = new EventStreamResolver<DifferentAppProtocolVersionEncounter>(context =>
                     StandaloneContext.DifferentAppProtocolVersionEncounterSubject.AsObservable()),
             });
@@ -206,7 +206,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 ),
                 Type = typeof(NonNullGraphType<StringGraphType>),
-                Resolver = new FuncFieldResolver<string>(context => (string)context.Source),
+                Resolver = new FuncFieldResolver<string>(context => (string)context.Source!),
                 Subscriber = new EventStreamResolver<string>(SubscribeBalance),
             });
 

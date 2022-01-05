@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL;
+using GraphQL.Execution;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States;
@@ -31,7 +32,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 query,
                 source: result
             );
-            Dictionary<string, object> data = queryResult.Data.As<Dictionary<string, object>>();
+            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
             var expected = new Dictionary<string, object>
             {
                 ["avatarAddress"] = result.avatarAddress.ToString(),

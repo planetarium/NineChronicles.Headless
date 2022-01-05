@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Bencodex.Types;
+using GraphQL.Execution;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
@@ -75,6 +76,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     (AccountStateGetter)GetStateMock,
                     (AccountBalanceGetter)GetBalanceMock)
             );
+            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
             var expected = new Dictionary<string, object>()
             {
                 ["address"] = agentState.address.ToString(),
@@ -91,7 +93,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 ["monsterCollectionLevel"] = 7L,
                 ["hasTradedItem"] = false,
             };
-            Assert.Equal(expected, queryResult.Data);
+            Assert.Equal(expected, data);
         }
     }
 }

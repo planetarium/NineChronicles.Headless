@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GraphQL.Execution;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States.Models.Table;
 using Xunit;
@@ -29,6 +30,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 query,
                 source: (row, Fixtures.TableSheetsFX.MonsterCollectionRewardSheet)
             );
+            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
             var expected = new Dictionary<string, object>
             {
                 ["level"] = row.Level,
@@ -42,7 +44,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     }
                 }
             };
-            Assert.Equal(expected, queryResult.Data);
+            Assert.Equal(expected, data);
         }
 
     }
