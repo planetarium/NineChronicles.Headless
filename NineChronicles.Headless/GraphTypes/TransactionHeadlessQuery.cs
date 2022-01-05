@@ -73,6 +73,11 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "plainValue",
                         Description = "The base64-encoded plain value of action for Transaction.",
+                    },
+                    new QueryArgument<LongGraphType>
+                    {
+                        Name = "nonce",
+                        Description = "The nonce for Transaction.",
                     }
                 ),
                 resolve: context =>
@@ -92,7 +97,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var publicKey = new PublicKey(Convert.FromBase64String(context.GetArgument<string>("publicKey")));
                     Address signer = publicKey.ToAddress();
-                    long nonce = blockChain.GetNextTxNonce(signer);
+                    long nonce = context.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
                     Transaction<NCAction> unsignedTransaction =
                         Transaction<NCAction>.CreateUnsigned(nonce, publicKey, blockChain.Genesis.Hash, new[] { action });
                     return Convert.ToBase64String(unsignedTransaction.Serialize(false));

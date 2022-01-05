@@ -122,13 +122,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(transaction.Actions.First().PlainValue.Inspect(true), plainValue);
         }
         
-        [Fact]
-        public async Task CreateUnsignedTx()
+        [Theory]
+        [InlineData(null)]
+        [InlineData(0)]
+        [InlineData(100)]
+        public async Task CreateUnsignedTx(long? nonce)
         {
             var privateKey = new PrivateKey();
             PublicKey publicKey = privateKey.PublicKey;
             Address signer = publicKey.ToAddress();
-            long nonce = _blockChain.GetNextTxNonce(signer);
+            long expectedNonce = nonce ?? _blockChain.GetNextTxNonce(signer);
             NCAction action = new CreateAvatar2
             {
                 index = 0,
@@ -141,12 +144,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var codec = new Codec();
             var queryFormat = @"query {{
-                createUnsignedTx(publicKey: ""{0}"", plainValue: ""{1}"")
+                createUnsignedTx(publicKey: ""{0}"", plainValue: ""{1}"", nonce: {2})
             }}";
             var queryResult = await ExecuteAsync(string.Format(
                 queryFormat,
                 Convert.ToBase64String(publicKey.Format(false)),
-                Convert.ToBase64String(codec.Encode(action.PlainValue))));
+                Convert.ToBase64String(codec.Encode(action.PlainValue)),
+                nonce?.ToString() ?? "null"));
             var base64EncodedUnsignedTx = (string)queryResult.Data
                 .As<Dictionary<string, object>>()["createUnsignedTx"];
             Transaction<NCAction> unsignedTx =
@@ -154,7 +158,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Empty(unsignedTx.Signature);
             Assert.Equal(publicKey, unsignedTx.PublicKey);
             Assert.Equal(signer, unsignedTx.Signer);
-            Assert.Equal(nonce, unsignedTx.Nonce);
+            Assert.Equal(expectedNonce, unsignedTx.Nonce);
             Assert.Contains(signer, unsignedTx.UpdatedAddresses);
         }
         
