@@ -109,8 +109,6 @@ namespace NineChronicles.Headless.GraphTypes.States
         private static bool IsTradeQuestCompleted(QuestList questList)
         {
             return questList
-                .EnumerateLazyQuestStates()
-                .Select(l => l.State)
                 .OfType<TradeQuest>()
                 .Any(q => q.Complete);
         }
