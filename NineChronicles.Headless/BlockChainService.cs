@@ -125,6 +125,15 @@ namespace NineChronicles.Headless
             return UnaryResult(result.ToDictionary(kv => kv.Key, kv => kv.Value));
         }
 
+        public UnaryResult<byte[]> GetStateWithHash(byte[] addressBytes, byte[] blockHashBytes)
+        {
+            var hash = new BlockHash(blockHashBytes);
+            var address = new Address(addressBytes);
+            IValue state = _blockChain.GetState(address, hash);
+            byte[] encoded = _codec.Encode(state ?? new Null());
+            return UnaryResult(encoded);
+        }
+
         public UnaryResult<byte[]> GetBalance(byte[] addressBytes, byte[] currencyBytes)
         {
             var address = new Address(addressBytes);

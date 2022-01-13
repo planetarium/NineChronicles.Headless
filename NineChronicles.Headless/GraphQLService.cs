@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using GraphQL.Server;
 using GraphQL.Utilities;
+using Grpc.Core;
+using Grpc.Net.Client;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -66,6 +68,10 @@ namespace NineChronicles.Headless
                     })
                     .ConfigureKestrel(options =>
                     {
+                        options.ListenAnyIP(5000, listenOptions =>
+                        {
+                            listenOptions.Protocols = HttpProtocols.Http1;
+                        });
                         options.ListenAnyIP((int)listenPort!, listenOptions =>
                         {
                             listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
@@ -100,6 +106,7 @@ namespace NineChronicles.Headless
                 services.AddHealthChecks();
 
                 services.AddControllers();
+                services.AddControllersWithViews();
                 services.AddGraphQL(
                         (options, provider) =>
                         {
@@ -150,6 +157,13 @@ namespace NineChronicles.Headless
                     endpoints.MapControllers();
                     if (!(Configuration[UseMagicOnionKey] is null))
                     {
+                        var options = new GrpcChannelOptions
+                        {
+                            Credentials = ChannelCredentials.Insecure
+                        };
+                        var channel = GrpcChannel.ForAddress("http://localhost:31238", options);
+                        endpoints.MapMagicOnionHttpGateway("_", app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>().MethodHandlers, channel);
+                        endpoints.MapMagicOnionSwagger("swagger", app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>().MethodHandlers, "/_/");
                         endpoints.MapMagicOnionService();
                     }
                     endpoints.MapHealthChecks("/health-check");
