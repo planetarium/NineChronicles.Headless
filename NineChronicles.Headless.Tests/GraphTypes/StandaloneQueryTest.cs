@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
@@ -10,6 +11,8 @@ using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL;
+using GraphQL.Execution;
+using GraphQL.NewtonsoftJson;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
@@ -48,8 +51,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             Address adminStateAddress = AdminState.Address;
             var result = await ExecuteQueryAsync($"query {{ state(address: \"{adminStateAddress}\") }}");
-            var data = (Dictionary<string, object>)result.Data;
-            IValue rawVal = new Codec().Decode(ByteUtil.ParseHex((string)data["state"]));
+            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            IValue rawVal = new Codec().Decode(ByteUtil.ParseHex((string)data!["state"]));
             AdminState adminState = new AdminState((Dictionary)rawVal);
 
             Assert.Equal(AdminAddress, adminState.AdminAddress);
@@ -71,13 +74,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var result = await ExecuteQueryAsync("query { keyStore { protectedPrivateKeys { address } } }");
 
-            var data = (Dictionary<string, object>) result.Data;
+            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
             var keyStoreResult = (Dictionary<string, object>) data["keyStore"];
-            var protectedPrivateKeyAddresses =
-                keyStoreResult["protectedPrivateKeys"].As<List<object>>()
-                    .Cast<Dictionary<string, object>>()
-                    .Select(x => x["address"].As<string>())
-                    .ToImmutableList();
+            var protectedPrivateKeyAddresses = ((IList)keyStoreResult["protectedPrivateKeys"])
+                .Cast<Dictionary<string, object>>()
+                .Select(x => x["address"] as string)
+                .ToImmutableList();
 
             foreach (var protectedPrivateKey in generatedProtectedPrivateKeys)
             {
@@ -97,7 +99,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var result = await ExecuteQueryAsync($"query {{ keyStore {{ decryptedPrivateKey(address: \"{privateKey.ToAddress()}\", passphrase: \"{passphrase}\") }} }}");
 
-            var data = (Dictionary<string, object>) result.Data;
+            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
             var keyStoreResult = (Dictionary<string, object>) data["keyStore"];
             var decryptedPrivateKeyResult = (string) keyStoreResult["decryptedPrivateKey"];
 
@@ -136,7 +138,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             async Task<Dictionary<string, bool>> QueryNodeStatus()
             {
                 var result = await ExecuteQueryAsync("query { nodeStatus { bootstrapEnded preloadEnded } }");
-                var data = (Dictionary<string, object>) result.Data;
+                var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
                 var nodeStatusData = (Dictionary<string, object>) data["nodeStatus"];
                 return nodeStatusData.ToDictionary(pair => pair.Key, pair => (bool)pair.Value);
             }
@@ -166,6 +168,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var privateKey = new PrivateKey();
 
             var result = await ExecuteQueryAsync("query { nodeStatus { stagedTxIds } }");
+            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
             var expectedResult = new Dictionary<string, object>()
             {
                 ["nodeStatus"] = new Dictionary<string, object>()
@@ -174,7 +177,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 },
             };
             Assert.Null(result.Errors);
-            Assert.Equal(expectedResult, result.Data);
+            Assert.Equal(expectedResult, data);
 
             var anonymousTx = StandaloneContextFx.BlockChain!.MakeTransaction(
                 new PrivateKey(),
@@ -182,6 +185,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             );
 
             result = await ExecuteQueryAsync("query { nodeStatus { stagedTxIds } }");
+            data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
             expectedResult = new Dictionary<string, object>()
             {
                 ["nodeStatus"] = new Dictionary<string, object>()
@@ -193,7 +197,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 },
             };
             Assert.Null(result.Errors);
-            Assert.Equal(expectedResult, result.Data);
+            Assert.Equal(expectedResult, data);
 
             var signerTx = StandaloneContextFx.BlockChain.MakeTransaction(
                 privateKey,
@@ -207,6 +211,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }}
             }}";
             result = await ExecuteQueryAsync(query);
+            data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
             expectedResult = new Dictionary<string, object>()
             {
                 ["nodeStatus"] = new Dictionary<string, object>()
@@ -218,7 +223,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 },
             };
             Assert.Null(result.Errors);
-            Assert.Equal(expectedResult, result.Data);
+            Assert.Equal(expectedResult, data);
         }
 
         [Fact]
@@ -253,8 +258,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }";
 
             var queryResult = await ExecuteQueryAsync(queryWithoutOffset);
-            var actualResult = queryResult.Data.As<Dictionary<string, object>>()["nodeStatus"]
-                .As<Dictionary<string, object>>()["topmostBlocks"];
+            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var actualResult = ((Dictionary<string, object>)data["nodeStatus"])["topmostBlocks"];
             var expectedResult = new List<object>
             {
                 new Dictionary<string, object?>
@@ -265,8 +270,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(expectedResult, actualResult);
 
             queryResult = await ExecuteQueryAsync(queryWithOffset);
-            actualResult = queryResult.Data.As<Dictionary<string, object>>()["nodeStatus"]
-                .As<Dictionary<string, object>>()["topmostBlocks"];
+            data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            actualResult = ((Dictionary<string, object>)data["nodeStatus"])["topmostBlocks"];
             expectedResult = new List<object>
             {
                 new Dictionary<string, object?>
@@ -298,11 +303,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }}";
 
             var result = await ExecuteQueryAsync(query);
+            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
 
             var validationResult =
-                result.Data
-                    .As<Dictionary<string, object>>()["validation"]
-                    .As<Dictionary<string, object>>()["metadata"];
+                ((Dictionary<string, object>)data["validation"])["metadata"];
             Assert.IsType<bool>(validationResult);
             Assert.Equal(valid, validationResult);
         }
@@ -324,10 +328,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }}";
 
             var result = await ExecuteQueryAsync(query);
+            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
             var validationResult =
-                result.Data
-                    .As<Dictionary<string, object>>()["validation"]
-                    .As<Dictionary<string, object>>()["privateKey"];
+                ((Dictionary<string, object>)data["validation"])["privateKey"];
             Assert.IsType<bool>(validationResult);
             Assert.Equal(valid, validationResult);
         }
@@ -371,11 +374,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }}";
 
             var result = await ExecuteQueryAsync(query);
+            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
 
             var validationResult =
-                result.Data
-                    .As<Dictionary<string, object>>()["validation"]
-                    .As<Dictionary<string, object>>()["publicKey"];
+                ((Dictionary<string, object>)data["validation"])["publicKey"];
             Assert.IsType<bool>(validationResult);
             Assert.Equal(valid, validationResult);
         }
@@ -402,11 +404,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             ";
 
             var result = await ExecuteQueryAsync(query);
-            var privateKeyResult = result.Data.As<Dictionary<string, object>>()["keyStore"]
-                .As<Dictionary<string, object>>()["privateKey"]
-                .As<Dictionary<string, object>>();
+            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var privateKeyResult = (Dictionary<string, object>)
+                ((Dictionary<string, object>)data["keyStore"])["privateKey"];
             Assert.Equal(privateKeyHex, privateKeyResult["hex"]);
-            var publicKeyResult = privateKeyResult["publicKey"].As<Dictionary<string, object>>();
+            var publicKeyResult = (Dictionary<string, object>)privateKeyResult["publicKey"];
             Assert.Equal(ByteUtil.Hex(privateKey.PublicKey.Format(compress)), publicKeyResult["hex"]);
             Assert.Equal(privateKey.ToAddress().ToString(), publicKeyResult["address"]);
         }
@@ -475,9 +477,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockChain = StandaloneContextFx.BlockChain!;
 
             var queryResult = await ExecuteQueryAsync( "query { activationStatus { activated } }");
-            var result = (bool)queryResult.Data
-                .As<Dictionary<string, object>>()["activationStatus"]
-                .As<Dictionary<string, object>>()["activated"];
+            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var result = (bool)
+                ((Dictionary<string, object>)data["activationStatus"])["activated"];
 
             // If we don't use activated accounts, bypass check (always true).
             Assert.Equal(!existsActivatedAccounts, result);
@@ -495,9 +497,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             await blockChain.MineBlock(adminPrivateKey);
 
             queryResult = await ExecuteQueryAsync( "query { activationStatus { activated } }");
-            result = (bool)queryResult.Data
-                .As<Dictionary<string, object>>()["activationStatus"]
-                .As<Dictionary<string, object>>()["activated"];
+            data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            result = (bool)
+                ((Dictionary<string, object>)data["activationStatus"])["activated"];
 
             Assert.True(result);
         }
@@ -514,23 +516,25 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockChain = StandaloneContextFx.BlockChain;
             var query = $"query {{ goldBalance(address: \"{userAddress}\") }}";
             var queryResult = await ExecuteQueryAsync(query);
+            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
             Assert.Equal(
                 new Dictionary<string, object>
                 {
                     ["goldBalance"] = "0"
                 },
-                queryResult.Data
+                data
             );
 
             await blockChain!.MineBlock(userPrivateKey);
 
             queryResult = await ExecuteQueryAsync(query);
+            data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
             Assert.Equal(
                 new Dictionary<string, object>
                 {
                     ["goldBalance"] = "10"
                 },
-                queryResult.Data
+                data
             );
         }
 
@@ -557,6 +561,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var result =
                 await ExecuteQueryAsync(
                     $"{{ transferNCGHistories(blockHash: \"{blockHashHex}\") {{ blockHash txId sender recipient amount memo }} }}");
+            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
             Assert.Null(result.Errors);
             Assert.Equal(new List<object>
             {
@@ -569,7 +574,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     ["amount"] = transferAsset.Amount.GetQuantityString(),
                     ["memo"] = memo,
                 }
-            }, result.Data.As<Dictionary<string, object>>()["transferNCGHistories"]);
+            }, data["transferNCGHistories"]);
         }
 
         [Fact]
@@ -584,12 +589,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 minerAddress
             }";
             var queryResult = await ExecuteQueryAsync(query);
+            var data = (Dictionary<string, object?>)((ExecutionNode) queryResult.Data!).ToValue()!;
             Assert.Equal(
                 new Dictionary<string, object?>
                 {
                     ["minerAddress"] = userAddress.ToString()
                 },
-                queryResult.Data
+                data
             );
         }
 
@@ -790,8 +796,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }
             var query = $"query {{ activationKeyNonce(invitationCode: \"{code}\") }}";
             var queryResult = await ExecuteQueryAsync(query);
-            var result = (string)queryResult.Data
-                .As<Dictionary<string, object>>()["activationKeyNonce"];
+            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var result = (string)data["activationKeyNonce"];
             Assert.Equal(nonce, ByteUtil.ParseHex(result));
         }
 

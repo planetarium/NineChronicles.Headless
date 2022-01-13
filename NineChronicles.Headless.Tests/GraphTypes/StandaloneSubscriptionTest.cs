@@ -8,13 +8,17 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using GraphQL;
+using GraphQL.Execution;
+using GraphQL.NewtonsoftJson;
 using GraphQL.Subscription;
 using Libplanet;
+using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless;
+using Libplanet.Tx;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
@@ -41,16 +45,17 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 await BlockChain.MineBlock(miner);
 
-                var result = await ExecuteQueryAsync("subscription { tipChanged { index hash } }");
-
+                var result = await ExecuteSubscriptionQueryAsync("subscription { tipChanged { index hash } }");
+                
+                // var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
                 Assert.IsType<SubscriptionExecutionResult>(result);
                 var subscribeResult = (SubscriptionExecutionResult) result;
                 Assert.Equal(index, BlockChain.Tip.Index);
-                var stream = subscribeResult.Streams.Values.FirstOrDefault();
+                var stream = subscribeResult.Streams!.Values.FirstOrDefault();
                 var rawEvents = await stream.Take((int)index);
                 Assert.NotNull(rawEvents);
 
-                var events = (Dictionary<string, object>) rawEvents.Data;
+                var events = (Dictionary<string, object>)((ExecutionNode) rawEvents.Data!).ToValue()!;
                 var tipChangedEvent = (Dictionary<string, object>) events["tipChanged"];
                 Assert.Equal(index, tipChangedEvent["index"]);
                 Assert.Equal(BlockChain[index].Hash.ToByteArray(), ByteUtil.ParseHex((string) tipChangedEvent["hash"]));
@@ -87,7 +92,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var miner = new PrivateKey();
             await seedNode.BlockChain.MineBlock(miner);
-            var result = await ExecuteQueryAsync("subscription { preloadProgress { currentPhase totalPhase extra { type currentCount totalCount } } }");
+            var result = await ExecuteSubscriptionQueryAsync("subscription { preloadProgress { currentPhase totalPhase extra { type currentCount totalCount } } }");
             Assert.IsType<SubscriptionExecutionResult>(result);
 
             _ = service.StartAsync(cts.Token);
@@ -95,7 +100,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             await service.PreloadEnded.WaitAsync(cts.Token);
 
             var subscribeResult = (SubscriptionExecutionResult) result;
-            var stream = subscribeResult.Streams.Values.FirstOrDefault();
+            var stream = subscribeResult.Streams!.Values.FirstOrDefault();
 
             // BlockHashDownloadState  : 2
             // BlockDownloadState      : 1
@@ -115,7 +120,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             foreach (var index in Enumerable.Range(1, preloadStatesCount))
             {
                 var rawEvents = await stream.Take(index);
-                var preloadProgress = (Dictionary<string, object>)((Dictionary<string, object>)rawEvents.Data)["preloadProgress"];
+                var events = (Dictionary<string, object>)((ExecutionNode) rawEvents.Data!).ToValue()!;
+                var preloadProgress = (Dictionary<string, object>)events["preloadProgress"];
                 var preloadProgressExtra = (Dictionary<string, object>)preloadProgress["extra"];
 
                 preloadProgressRecords.Add((
@@ -135,7 +141,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact(Timeout = 15000)]
         public async Task SubscribeDifferentAppProtocolVersionEncounter()
         {
-            var result = await ExecuteQueryAsync(@"
+            var result = await ExecuteSubscriptionQueryAsync(@"
                 subscription {
                     differentAppProtocolVersionEncounter {
                         peer
@@ -155,7 +161,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }
             ");
             var subscribeResult = (SubscriptionExecutionResult) result;
-            var stream = subscribeResult.Streams.Values.FirstOrDefault();
+            var stream = subscribeResult.Streams!.Values.FirstOrDefault();
             Assert.NotNull(stream);
 
             await Assert.ThrowsAsync<TimeoutException>(async () =>
@@ -171,7 +177,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new DifferentAppProtocolVersionEncounter(peer, apv1, apv2)
             );
             var rawEvents = await stream.Take(1);
-            var rawEvent = (Dictionary<string, object>)rawEvents.Data;
+            var rawEvent = (Dictionary<string, object>)((ExecutionNode) rawEvents.Data!).ToValue()!;
             var differentAppProtocolVersionEncounter =
                 (Dictionary<string, object>)rawEvent["differentAppProtocolVersionEncounter"];
             Assert.Equal(
@@ -195,7 +201,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact(Timeout = 15000)]
         public async Task SubscribeNodeException()
         {
-            var result = await ExecuteQueryAsync(@"
+            var result = await ExecuteSubscriptionQueryAsync(@"
                 subscription {
                     nodeException {
                         code
@@ -204,7 +210,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }
             ");
             var subscribeResult = (SubscriptionExecutionResult) result;
-            var stream = subscribeResult.Streams.Values.FirstOrDefault();
+            var stream = subscribeResult.Streams!.Values.FirstOrDefault();
             Assert.NotNull(stream);
 
             await Assert.ThrowsAsync<TimeoutException>(async () =>
@@ -216,7 +222,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             const string message = "This is test message.";
             StandaloneContextFx.NodeExceptionSubject.OnNext(new NodeException(code, message));
             var rawEvents = await stream.Take(1);
-            var rawEvent = (Dictionary<string, object>)rawEvents.Data;
+            var rawEvent = (Dictionary<string, object>)((ExecutionNode) rawEvents.Data!).ToValue()!;
             var nodeException =
                 (Dictionary<string, object>)rawEvent["nodeException"];
             Assert.Equal((int)code, nodeException["code"]);
@@ -226,7 +232,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task SubscribeMonsterCollectionState()
         {
-            ExecutionResult result = await ExecuteQueryAsync(@"
+            ExecutionResult result = await ExecuteSubscriptionQueryAsync(@"
                 subscription {
                     monsterCollectionState {
                         address
@@ -240,13 +246,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             );
             Assert.IsType<SubscriptionExecutionResult>(result);
             SubscriptionExecutionResult subscribeResult = (SubscriptionExecutionResult) result;
-            IObservable<ExecutionResult> stream = subscribeResult.Streams.Values.First();
+            IObservable<ExecutionResult> stream = subscribeResult.Streams!.Values.First();
             Assert.NotNull(stream);
 
             MonsterCollectionState monsterCollectionState = new MonsterCollectionState(default, 1, 2, Fixtures.TableSheetsFX.MonsterCollectionRewardSheet);
             StandaloneContextFx.MonsterCollectionStateSubject.OnNext(monsterCollectionState);
             ExecutionResult rawEvents = await stream.Take(1);
-            Dictionary<string, object> rawEvent = (Dictionary<string, object>)rawEvents.Data;
+            var rawEvent = (Dictionary<string, object>)((ExecutionNode) rawEvents.Data!).ToValue()!;
             Dictionary<string, object> subject =
                 (Dictionary<string, object>)rawEvent["monsterCollectionState"];
             Dictionary<string, object> expected = new Dictionary<string, object>
@@ -267,7 +273,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [InlineData(10, 2, "10.02", 3, true)]
         public async Task SubscribeMonsterCollectionStatus(int major, int minor, string decimalString, long tipIndex, bool lockup)
         {
-            ExecutionResult result = await ExecuteQueryAsync(@"
+            ExecutionResult result = await ExecuteSubscriptionQueryAsync(@"
                 subscription {
                     monsterCollectionStatus {
                         fungibleAssetValue {
@@ -285,7 +291,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             );
             Assert.IsType<SubscriptionExecutionResult>(result);
             SubscriptionExecutionResult subscribeResult = (SubscriptionExecutionResult) result;
-            IObservable<ExecutionResult> stream = subscribeResult.Streams.Values.First();
+            IObservable<ExecutionResult> stream = subscribeResult.Streams!.Values.First();
             Assert.NotNull(stream);
 
             Currency currency = new Currency("NCG", 2, minter: null);
@@ -302,9 +308,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 )
             );
             ExecutionResult rawEvents = await stream.Take(1);
-            Dictionary<string, object> rawEvent = (Dictionary<string, object>)rawEvents.Data;
-            Dictionary<string, object> statusSubject =
-                (Dictionary<string, object>)rawEvent["monsterCollectionStatus"];
+            var data = (MonsterCollectionStatus)((RootExecutionNode) rawEvents.Data.GetValue()).SubFields![0].Result!;
             Dictionary<string, object> expected = new Dictionary<string, object>
             {
                 ["fungibleAssetValue"] = new Dictionary<string, object>
@@ -323,7 +327,19 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ["tipIndex"] = tipIndex,
                 ["lockup"] = lockup,
             };
-            Assert.Equal(expected, statusSubject);
+            Assert.Equal(((Dictionary<string, object>)
+                expected["fungibleAssetValue"])["currency"], data.FungibleAssetValue.Currency.Ticker);
+            Assert.Equal(((Dictionary<string, object>)
+                expected["fungibleAssetValue"])["quantity"],
+                (decimal)data.FungibleAssetValue.MajorUnit +
+                (decimal)data.FungibleAssetValue.MinorUnit/
+                ((decimal)Math.Pow(10, Convert.ToInt32(data.FungibleAssetValue.Currency.DecimalPlaces.ToString()))));
+            Assert.Equal(((Dictionary<string, object>)
+                ((List<object>)expected["rewardInfos"])[0])["quantity"], data.RewardInfos[0].Quantity);
+            Assert.Equal(((Dictionary<string, object>)
+                ((List<object>)expected["rewardInfos"])[0])["itemId"], data.RewardInfos[0].ItemId);
+            Assert.Equal(expected["tipIndex"], data.TipIndex);
+            Assert.Equal(expected["lockup"], data.Lockup);
         }
 
         [Fact]
@@ -331,7 +347,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             var address = new Address();
             Assert.Empty(StandaloneContextFx.AgentAddresses);
-            ExecutionResult result = await ExecuteQueryAsync($@"
+            ExecutionResult result = await ExecuteSubscriptionQueryAsync($@"
                 subscription {{
                     monsterCollectionStateByAgent(address: ""{address}"") {{
                         address
@@ -345,14 +361,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             );
             Assert.IsType<SubscriptionExecutionResult>(result);
             SubscriptionExecutionResult subscribeResult = (SubscriptionExecutionResult) result;
-            IObservable<ExecutionResult> stream = subscribeResult.Streams.Values.First();
+            IObservable<ExecutionResult> stream = subscribeResult.Streams!.Values.First();
             Assert.NotNull(stream);
             Assert.NotEmpty(StandaloneContextFx.AgentAddresses);
 
             MonsterCollectionState monsterCollectionState = new MonsterCollectionState(default, 1, 2, Fixtures.TableSheetsFX.MonsterCollectionRewardSheet);
             StandaloneContextFx.AgentAddresses[address].stateSubject.OnNext(monsterCollectionState);
             ExecutionResult rawEvents = await stream.Take(1);
-            Dictionary<string, object> rawEvent = (Dictionary<string, object>)rawEvents.Data;
+            var rawEvent = (Dictionary<string, object>)((ExecutionNode) rawEvents.Data!).ToValue()!;
             Dictionary<string, object> subject =
                 (Dictionary<string, object>)rawEvent["monsterCollectionStateByAgent"];
             Dictionary<string, object> expected = new Dictionary<string, object>
@@ -375,7 +391,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             var address = new Address();
             Assert.Empty(StandaloneContextFx.AgentAddresses);
-            ExecutionResult result = await ExecuteQueryAsync($@"
+            ExecutionResult result = await ExecuteSubscriptionQueryAsync($@"
                 subscription {{
                     monsterCollectionStatusByAgent(address: ""{address}"") {{
                         fungibleAssetValue {{
@@ -393,7 +409,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             );
             Assert.IsType<SubscriptionExecutionResult>(result);
             SubscriptionExecutionResult subscribeResult = (SubscriptionExecutionResult) result;
-            IObservable<ExecutionResult> stream = subscribeResult.Streams.Values.First();
+            IObservable<ExecutionResult> stream = subscribeResult.Streams!.Values.First();
             Assert.NotNull(stream);
             Assert.NotEmpty(StandaloneContextFx.AgentAddresses);
 
@@ -411,9 +427,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 )
             );
             ExecutionResult rawEvents = await stream.Take(1);
-            Dictionary<string, object> rawEvent = (Dictionary<string, object>)rawEvents.Data;
-            Dictionary<string, object> statusSubject =
-                (Dictionary<string, object>)rawEvent["monsterCollectionStatusByAgent"];
+            var data = (MonsterCollectionStatus)((RootExecutionNode) rawEvents.Data.GetValue()).SubFields![0].Result!;
             Dictionary<string, object> expected = new Dictionary<string, object>
             {
                 ["fungibleAssetValue"] = new Dictionary<string, object>
@@ -432,7 +446,19 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ["tipIndex"] = tipIndex,
                 ["lockup"] = lockup,
             };
-            Assert.Equal(expected, statusSubject);
+            Assert.Equal(((Dictionary<string, object>)
+                expected["fungibleAssetValue"])["currency"], data.FungibleAssetValue.Currency.Ticker);
+            Assert.Equal(((Dictionary<string, object>)
+                    expected["fungibleAssetValue"])["quantity"],
+                (decimal)data.FungibleAssetValue.MajorUnit +
+                (decimal)data.FungibleAssetValue.MinorUnit/
+                ((decimal)Math.Pow(10, Convert.ToInt32(data.FungibleAssetValue.Currency.DecimalPlaces.ToString()))));
+            Assert.Equal(((Dictionary<string, object>)
+                ((List<object>)expected["rewardInfos"])[0])["quantity"], data.RewardInfos[0].Quantity);
+            Assert.Equal(((Dictionary<string, object>)
+                ((List<object>)expected["rewardInfos"])[0])["itemId"], data.RewardInfos[0].ItemId);
+            Assert.Equal(expected["tipIndex"], data.TipIndex);
+            Assert.Equal(expected["lockup"], data.Lockup);
         }
 
         [Theory]
@@ -443,14 +469,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             var address = new Address();
             Assert.Empty(StandaloneContextFx.AgentAddresses);
-            ExecutionResult result = await ExecuteQueryAsync($@"
+            ExecutionResult result = await ExecuteSubscriptionQueryAsync($@"
                 subscription {{
                     balanceByAgent(address: ""{address}"")
                 }}"
             );
             Assert.IsType<SubscriptionExecutionResult>(result);
             SubscriptionExecutionResult subscribeResult = (SubscriptionExecutionResult) result;
-            IObservable<ExecutionResult> stream = subscribeResult.Streams.Values.First();
+            IObservable<ExecutionResult> stream = subscribeResult.Streams!.Values.First();
             Assert.NotNull(stream);
             Assert.NotEmpty(StandaloneContextFx.AgentAddresses);
 
@@ -458,9 +484,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             FungibleAssetValue fungibleAssetValue = new FungibleAssetValue(currency, major, minor);
             StandaloneContextFx.AgentAddresses[address].balanceSubject.OnNext(fungibleAssetValue.GetQuantityString(true));
             ExecutionResult rawEvents = await stream.Take(1);
-            Dictionary<string, object> rawEvent = (Dictionary<string, object>)rawEvents.Data;
-            string statusSubject = (string)rawEvent["balanceByAgent"];
-            Assert.Equal(decimalString, statusSubject);
+            var data = ((RootExecutionNode) rawEvents.Data.GetValue()).SubFields![0].Result!;
+            Assert.Equal(decimalString, data);
         }
     }
 }

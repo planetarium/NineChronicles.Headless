@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL;
+using GraphQL.Execution;
 using NineChronicles.Headless.GraphTypes.States.Models.Table;
 using Xunit;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
@@ -27,7 +28,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 query,
                 source: (Fixtures.TableSheetsFX.MonsterCollectionSheet, Fixtures.TableSheetsFX.MonsterCollectionRewardSheet)
             );
-            Dictionary<string, object> data = queryResult.Data.As<Dictionary<string, object>>();
+            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
             Assert.NotEmpty(data);
             Assert.Null(queryResult.Errors);
         }

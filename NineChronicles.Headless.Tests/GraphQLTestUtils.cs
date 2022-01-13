@@ -50,7 +50,7 @@ namespace NineChronicles.Headless.Tests
                 {
                     Query = graphType,
                 },
-                UserContext = userContext,
+                UserContext = userContext!,
                 Root = source,
             });
         }

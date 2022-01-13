@@ -134,7 +134,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var histories = filteredTransactions.Select(tx =>
                         ToTransferNCGHistory((TxSuccess) store.GetTxExecution(blockHash, tx.Id),
-                            tx.Actions.Single().InnerAction.As<TransferAsset>().Memo));
+                            ((TransferAsset)tx.Actions.Single().InnerAction).Memo));
 
                     return histories;
                 });
