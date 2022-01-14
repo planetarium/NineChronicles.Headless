@@ -95,34 +95,40 @@ namespace NineChronicles.Headless
             return UnaryResult(encoded);
         }
 
-        public UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStates(IEnumerable<byte[]> addressBytesList)
+        public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStates(IEnumerable<byte[]> addressBytesList)
         {
             var accountStateGetter = _blockChain.ToAccountStateGetter(_delayedRenderer?.Tip?.Hash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
-            Parallel.ForEach(addressBytesList, addressBytes =>
-            {
-                var avatarAddress = new Address(addressBytes);
-                var avatarState = accountStateGetter.GetAvatarState(avatarAddress);
-                result[addressBytes] = _codec.Encode(avatarState.Serialize());
-            });
+            var taskList = addressBytesList
+                .Select(addressBytes => Task.Run(() =>
+                {
+                    var avatarAddress = new Address(addressBytes);
+                    var avatarState = accountStateGetter.GetAvatarState(avatarAddress);
+                    result.TryAdd(addressBytes, _codec.Encode(avatarState.Serialize()));
+                }))
+                .ToList();
 
-            return UnaryResult(result.ToDictionary(kv => kv.Key, kv => kv.Value));
+            await Task.WhenAll(taskList);
+            return result.ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
-        public UnaryResult<Dictionary<byte[], byte[]>> GetStateBulk(IEnumerable<byte[]> addressBytesList)
+        public async UnaryResult<Dictionary<byte[], byte[]>> GetStateBulk(IEnumerable<byte[]> addressBytesList)
         {
             BlockHash? hash = _delayedRenderer?.Tip?.Hash;
             var result = new ConcurrentDictionary<byte[], byte[]>();
-            Parallel.ForEach(addressBytesList, addressBytes =>
-            {
-                var address = new Address(addressBytes);
-                if (_blockChain.GetState(address, hash) is { } value)
+            var taskList = addressBytesList
+                .Select(addressBytes => Task.Run(() =>
                 {
-                    result[addressBytes] = _codec.Encode(value);
-                }
-            });
+                    var address = new Address(addressBytes);
+                    if (_blockChain.GetState(address, hash) is { } value)
+                    {
+                        result.TryAdd(addressBytes, _codec.Encode(value));
+                    }
+                }))
+                .ToList();
 
-            return UnaryResult(result.ToDictionary(kv => kv.Key, kv => kv.Value));
+            await Task.WhenAll(taskList);
+            return result.ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
         public UnaryResult<byte[]> GetBalance(byte[] addressBytes, byte[] currencyBytes)
