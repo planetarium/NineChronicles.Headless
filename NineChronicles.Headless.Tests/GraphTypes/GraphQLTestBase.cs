@@ -116,6 +116,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             StandaloneContextFx.KeyStore!;
 
         protected IDocumentExecuter DocumentExecutor { get; }
+        
+        protected SubscriptionDocumentExecuter SubscriptionDocumentExecuter { get; } = new SubscriptionDocumentExecuter();
 
         protected Task<ExecutionResult> ExecuteQueryAsync(string query)
         {
@@ -125,7 +127,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Schema = Schema,
             });
         }
-
+        protected Task<ExecutionResult> ExecuteSubscriptionQueryAsync(string query)
+        {
+            return SubscriptionDocumentExecuter.ExecuteAsync(new ExecutionOptions
+            {
+                Query = query,
+                Schema = Schema,
+            });
+        }
         protected async Task<Task> StartAsync<T>(
             Swarm<T> swarm,
             CancellationToken cancellationToken = default

@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
@@ -154,7 +155,7 @@ namespace NineChronicles.Headless.Tests.Controllers
             var address = new PrivateKey().ToAddress();
             if (exist)
             {
-                _standaloneContext.AgentAddresses[address] = (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>());
+                _standaloneContext.AgentAddresses[address] = (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(), new ReplaySubject<string>());
             }
             Assert.Equal(exist, _standaloneContext.AgentAddresses.Any());
             _controller.RemoveSubscribe(new AddressRequest

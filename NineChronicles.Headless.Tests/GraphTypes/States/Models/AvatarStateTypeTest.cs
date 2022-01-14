@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using GraphQL.Execution;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
 using Xunit;
@@ -19,7 +20,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 agentAddress
             }";
             var queryResult = await ExecuteQueryAsync<AvatarStateType>(query, source: avatarState);
-            Assert.Equal(expected, queryResult.Data);
+            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            Assert.Equal(expected, data);
         }
 
         public static IEnumerable<object[]> Members => new List<object[]>

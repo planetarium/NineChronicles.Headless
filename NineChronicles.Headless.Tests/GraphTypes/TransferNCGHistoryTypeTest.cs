@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using GraphQL.Execution;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Blocks;
@@ -33,6 +34,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var result = await GraphQLTestUtils.ExecuteQueryAsync<TransferNCGHistoryType>(
                 "{ blockHash txId sender recipient amount }",
                 source: new TransferNCGHistory(blockHash, txId, sender, recipient, amount, memo));
+            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
             Assert.Equal(new Dictionary<string, object>
             {
                 ["blockHash"] = blockHash.ToString(),
@@ -40,7 +42,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ["sender"] = sender.ToString(),
                 ["recipient"] = recipient.ToString(),
                 ["amount"] = amount.GetQuantityString(),
-            }, result.Data);
+            }, data);
         }
     }
 }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using GraphQL.Execution;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
 using Xunit;
@@ -38,6 +39,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 weeklyArenaState.End();
             }
             var queryResult = await ExecuteQueryAsync<WeeklyArenaStateType>(query, source: weeklyArenaState);
+            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
 
             Assert.Equal(
                 new Dictionary<string, object>
@@ -46,7 +48,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     ["ended"] = ended,
                     ["orderedArenaInfos"] = new List<object>(),
                 },
-                queryResult.Data
+                data
             );
         }
     }

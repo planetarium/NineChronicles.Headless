@@ -1,7 +1,9 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GraphQL;
+using GraphQL.Execution;
 using Nekoyume;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
@@ -35,13 +37,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             }";
             var shopState = new ShopState();
             var queryResult = await ExecuteQueryAsync<ShopStateType>(query, source: shopState);
+            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
             Assert.Equal(
                 new Dictionary<string, object>
                 {
                     ["address"] = Addresses.Shop.ToString(),
                     ["products"] = new List<object>()
                 },
-                queryResult.Data
+                data
             );
         }
 
@@ -77,8 +80,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 }}
             }}";
             var queryResult = await ExecuteQueryAsync<ShopStateType>(query, source: Fixtures.ShopStateFX());
-            var products = queryResult.Data.As<Dictionary<string, object>>()["products"].As<List<object>>();
-            Assert.Equal(expected, products.Count);
+            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var products = (IList)data["products"];
+            Assert.Equal(expected, products.Count!);
         }
 
         [Theory]

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GraphQL.Execution;
+using GraphQL.NewtonsoftJson;
 using Nekoyume.Model.Item;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
 using Xunit;
@@ -60,7 +62,27 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             };
 
             var queryResult = await ExecuteQueryAsync<ShopItemType>(query, source: shopItem);
-            Assert.Equal(expected, queryResult.Data);
+            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var expectedItemUsable = (Dictionary<string, object>)expected["itemUsable"];
+            var dataItemUsable = (Dictionary<string, object>)data["itemUsable"];
+            var expectedCostume = (Dictionary<string, object>)expected["costume"];
+            var dataCostume = (Dictionary<string, object>)data["costume"];
+            Assert.Equal(expected["sellerAgentAddress"], data["sellerAgentAddress"]);
+            Assert.Equal(expected["sellerAvatarAddress"], data["sellerAvatarAddress"]);
+            Assert.Equal(expected["price"], data["price"]);
+            if (itemUsableDict != null)
+            {
+                Assert.Equal(expectedItemUsable["itemId"].ToString(), dataItemUsable["itemId"].ToString());
+                Assert.Equal(expectedItemUsable["itemType"].ToString(), dataItemUsable["itemType"].ToString());
+                Assert.Equal(expectedItemUsable["itemSubType"].ToString(), dataItemUsable["itemSubType"].ToString());
+            }
+
+            if (costumeDict != null)
+            {
+                Assert.Equal(expectedCostume["itemId"].ToString(), dataCostume["itemId"].ToString());
+                Assert.Equal(expectedCostume["itemType"].ToString(), dataCostume["itemType"].ToString());
+                Assert.Equal(expectedCostume["itemSubType"].ToString(), dataCostume["itemSubType"].ToString());
+            }
         }
 
         public static IEnumerable<object?[]> Members => new List<object?[]>
