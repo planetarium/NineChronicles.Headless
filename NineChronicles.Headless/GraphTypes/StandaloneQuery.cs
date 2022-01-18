@@ -22,6 +22,7 @@ using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Libplanet.Blockchain.Renderers;
 using Libplanet.Headless;
 using Nekoyume.Model;
+using NineChronicles.Headless.GraphTypes.States;
 using Serilog;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -46,8 +47,15 @@ namespace NineChronicles.Headless.GraphTypes
                         null => standaloneContext.BlockChain?.GetDelayedRenderer()?.Tip?.Hash,
                     };
 
-                    return (standaloneContext.BlockChain?.ToAccountStateGetter(blockHash),
-                        standaloneContext.BlockChain?.ToAccountBalanceGetter(blockHash));
+                    if (!(standaloneContext.BlockChain is { } chain))
+                    {
+                        return null;
+                    }
+
+                    return new StateContext(
+                        chain.ToAccountStateGetter(blockHash),
+                        chain.ToAccountBalanceGetter(blockHash)
+                    );
                 }
             );
 
@@ -316,7 +324,7 @@ namespace NineChronicles.Headless.GraphTypes
                             List<MonsterCollectionRewardSheet.RewardInfo> rewards =
                                 monsterCollectionState.CalculateRewards(rewardSheet, tipIndex);
                             return new MonsterCollectionStatus(
-                                balance, 
+                                balance,
                                 rewards,
                                 tipIndex,
                                 monsterCollectionState.IsLocked(tipIndex)

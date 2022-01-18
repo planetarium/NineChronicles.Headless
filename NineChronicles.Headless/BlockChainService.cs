@@ -114,23 +114,18 @@ namespace NineChronicles.Headless
             return result.ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
-        public async UnaryResult<Dictionary<byte[], byte[]>> GetStateBulk(IEnumerable<byte[]> addressBytesList, byte[] blockHashBytes)
+        public UnaryResult<Dictionary<byte[], byte[]>> GetStateBulk(IEnumerable<byte[]> addressBytesList, byte[] blockHashBytes)
         {
             var hash = new BlockHash(blockHashBytes);
-            var result = new ConcurrentDictionary<byte[], byte[]>();
-            var taskList = addressBytesList
-                .Select(addressBytes => Task.Run(() =>
-                {
-                    var address = new Address(addressBytes);
-                    if (_blockChain.GetState(address, hash) is { } value)
-                    {
-                        result.TryAdd(addressBytes, _codec.Encode(value));
-                    }
-                }))
-                .ToList();
+            var result = new Dictionary<byte[], byte[]>();
+            Address[] addresses = addressBytesList.Select(b => new Address(b)).ToArray();
+            IReadOnlyList<IValue> values = _blockChain.GetStates(addresses);
+            for (int i = 0; i < addresses.Length; i++)
+            {
+                result.TryAdd(addresses[i].ToByteArray(), _codec.Encode(values[i]));
+            }
 
-            await Task.WhenAll(taskList);
-            return result.ToDictionary(kv => kv.Key, kv => kv.Value);
+            return new UnaryResult<Dictionary<byte[], byte[]>>(result);
         }
 
         public UnaryResult<byte[]> GetBalance(byte[] addressBytes, byte[] currencyBytes, byte[] blockHashBytes)
@@ -142,7 +137,7 @@ namespace NineChronicles.Headless
             FungibleAssetValue balance = _blockChain.GetBalance(address, currency, hash);
             byte[] encoded = _codec.Encode(
               new Bencodex.Types.List(
-                new IValue[] 
+                new IValue[]
                 {
                   balance.Currency.Serialize(),
                   (Integer) balance.RawValue,
