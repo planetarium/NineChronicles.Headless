@@ -33,7 +33,7 @@ namespace NineChronicles.Headless.Tests
                 userContext,
                 source);
         }
-        
+
         public static Task<ExecutionResult> ExecuteQueryAsync<TObjectGraphType>(
             IServiceProvider serviceProvider,
             string query,
@@ -41,7 +41,7 @@ namespace NineChronicles.Headless.Tests
             object? source = null)
             where TObjectGraphType : IObjectGraphType
         {
-            var graphType = (IObjectGraphType)serviceProvider.GetService(typeof(TObjectGraphType));
+            var graphType = (IObjectGraphType)serviceProvider.GetService(typeof(TObjectGraphType))!;
             var documentExecutor = new DocumentExecuter();
             return documentExecutor.ExecuteAsync(new ExecutionOptions
             {
