@@ -86,18 +86,20 @@ namespace NineChronicles.Headless
             }
         }
 
-        public UnaryResult<byte[]> GetState(byte[] addressBytes)
+        public UnaryResult<byte[]> GetState(byte[] addressBytes, byte[] blockHashBytes)
         {
             var address = new Address(addressBytes);
-            IValue state = _blockChain.GetState(address, _delayedRenderer?.Tip?.Hash);
+            var hash = new BlockHash(blockHashBytes);
+            IValue state = _blockChain.GetState(address, hash);
             // FIXME: Null과 null 구분해서 반환해야 할 듯
             byte[] encoded = _codec.Encode(state ?? new Null());
             return UnaryResult(encoded);
         }
 
-        public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStates(IEnumerable<byte[]> addressBytesList)
+        public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStates(IEnumerable<byte[]> addressBytesList, byte[] blockHashBytes)
         {
-            var accountStateGetter = _blockChain.ToAccountStateGetter(_delayedRenderer?.Tip?.Hash);
+            var hash = new BlockHash(blockHashBytes);
+            var accountStateGetter = _blockChain.ToAccountStateGetter(hash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
             var taskList = addressBytesList
                 .Select(addressBytes => Task.Run(() =>
@@ -112,9 +114,9 @@ namespace NineChronicles.Headless
             return result.ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
-        public async UnaryResult<Dictionary<byte[], byte[]>> GetStateBulk(IEnumerable<byte[]> addressBytesList)
+        public async UnaryResult<Dictionary<byte[], byte[]>> GetStateBulk(IEnumerable<byte[]> addressBytesList, byte[] blockHashBytes)
         {
-            BlockHash? hash = _delayedRenderer?.Tip?.Hash;
+            var hash = new BlockHash(blockHashBytes);
             var result = new ConcurrentDictionary<byte[], byte[]>();
             var taskList = addressBytesList
                 .Select(addressBytes => Task.Run(() =>
@@ -131,12 +133,13 @@ namespace NineChronicles.Headless
             return result.ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
-        public UnaryResult<byte[]> GetBalance(byte[] addressBytes, byte[] currencyBytes)
+        public UnaryResult<byte[]> GetBalance(byte[] addressBytes, byte[] currencyBytes, byte[] blockHashBytes)
         {
             var address = new Address(addressBytes);
             var serializedCurrency = (Bencodex.Types.Dictionary)_codec.Decode(currencyBytes);
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
-            FungibleAssetValue balance = _blockChain.GetBalance(address, currency);
+            var hash = new BlockHash(blockHashBytes);
+            FungibleAssetValue balance = _blockChain.GetBalance(address, currency, hash);
             byte[] encoded = _codec.Encode(
               new Bencodex.Types.List(
                 new IValue[] 
