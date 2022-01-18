@@ -115,11 +115,6 @@ namespace NineChronicles.Headless.GraphTypes
                         Name = "stageId",
                         Description = "Stage ID."
                     },
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "rankingMapAddress",
-                        Description = "Address of RankingMapState containing the avatar address."
-                    },
                     new QueryArgument<ListGraphType<GuidGraphType>>
                     {
                         Name = "costumeIds",
@@ -159,7 +154,6 @@ namespace NineChronicles.Headless.GraphTypes
                             avatarAddress = avatarAddress,
                             worldId = worldId,
                             stageId = stageId,
-                            rankingMapAddress = rankingMapAddress,
                             costumes = costumeIds,
                             equipments = equipmentIds,
                             foods = consumableIds,

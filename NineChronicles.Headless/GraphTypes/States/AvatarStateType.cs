@@ -33,10 +33,6 @@ namespace NineChronicles.Headless.GraphTypes.States
                 nameof(AvatarState.agentAddress),
                 description: "Address of agent.",
                 resolve: context => context.Source.agentAddress);
-            Field<NonNullGraphType<AddressType>>(
-                nameof(AvatarState.RankingMapAddress),
-                description: "Address of the RankingMapState where this avatar information is recorded.",
-                resolve: context => context.Source.RankingMapAddress);
             Field<NonNullGraphType<LongGraphType>>(
                 nameof(AvatarState.updatedAt),
                 description: "Block index at the latest executed action.",
@@ -58,7 +54,6 @@ namespace NineChronicles.Headless.GraphTypes.States
                 nameof(AvatarState.actionPoint),
                 description: "Current ActionPoint.",
                 resolve: context => context.Source.actionPoint);
-
             Field<NonNullGraphType<IntGraphType>>(
                 nameof(AvatarState.ear),
                 description: "Index of ear color.",
