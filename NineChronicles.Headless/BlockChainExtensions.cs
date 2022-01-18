@@ -8,8 +8,8 @@ namespace NineChronicles.Headless
     {
         public static AccountStateGetter ToAccountStateGetter<T>(this BlockChain<T> chain, BlockHash? blockHash = null)
             where T : IAction, new() =>
-            address => chain.GetState(address, blockHash ?? chain.Tip.Hash);
-        
+            addresses => chain.GetStates(addresses, blockHash ?? chain.Tip.Hash);
+
         public static AccountBalanceGetter ToAccountBalanceGetter<T>(this BlockChain<T> chain, BlockHash? blockHash = null)
             where T : IAction, new() =>
             (address, currency) => chain.GetBalance(address, currency, blockHash ?? chain.Tip.Hash);

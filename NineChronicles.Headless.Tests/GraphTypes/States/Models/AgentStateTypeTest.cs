@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using GraphQL.Execution;
@@ -59,22 +60,22 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 return null;
             }
 
+            IReadOnlyList<IValue?> GetStatesMock(IReadOnlyList<Address> addresses) =>
+                addresses.Select(GetStateMock).ToArray();
+
             FungibleAssetValue GetBalanceMock(Address address, Currency currency)
             {
                 if (address == agentState.address)
                 {
-                    return new FungibleAssetValue(currency, goldBalance, 0);   
+                    return new FungibleAssetValue(currency, goldBalance, 0);
                 }
 
                 return FungibleAssetValue.FromRawValue(currency, 0);
             }
-            
+
             var queryResult = await ExecuteQueryAsync<AgentStateType>(
                 query,
-                source: (
-                    agentState,
-                    (AccountStateGetter)GetStateMock,
-                    (AccountBalanceGetter)GetBalanceMock)
+                source: new AgentStateType.AgentStateContext(agentState, GetStatesMock, GetBalanceMock)
             );
             var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
             var expected = new Dictionary<string, object>()

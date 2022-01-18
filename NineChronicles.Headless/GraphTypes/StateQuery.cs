@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
@@ -14,7 +15,7 @@ using NineChronicles.Headless.GraphTypes.States.Models.Table;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    public class StateQuery : ObjectGraphType<(AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter)>
+    public class StateQuery : ObjectGraphType<StateContext>
     {
         public StateQuery()
         {
@@ -32,7 +33,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var address = context.GetArgument<Address>("avatarAddress");
                     try
                     {
-                        return context.Source.accountStateGetter.GetAvatarState(address);
+                        return context.Source.AccountStateGetter.GetAvatarState(address);
                     }
                     catch (InvalidAddressException)
                     {
@@ -51,7 +52,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var index = context.GetArgument<int>("index");
-                    if (context.Source.accountStateGetter(RankingState.Derive(index)) is { } state)
+                    if (context.Source.GetState(RankingState.Derive(index)) is { } state)
                     {
                         return new RankingMapState((Dictionary) state);
                     }
@@ -61,7 +62,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<ShopStateType>(
                 name: "shop",
                 description: "State for shop.",
-                resolve: context => context.Source.accountStateGetter(Addresses.Shop) is { } state
+                resolve: context => context.Source.GetState(Addresses.Shop) is { } state
                     ? new ShopState((Dictionary) state)
                     : null);
             Field<WeeklyArenaStateType>(
@@ -76,7 +77,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var index = context.GetArgument<int>("index");
-                    if (context.Source.accountStateGetter(WeeklyArenaState.DeriveAddress(index)) is { } state)
+                    if (context.Source.GetState(WeeklyArenaState.DeriveAddress(index)) is { } state)
                     {
                         return new WeeklyArenaState((Dictionary) state);
                     }
@@ -94,9 +95,13 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var address = context.GetArgument<Address>("address");
-                    if (context.Source.accountStateGetter(address) is { } state)
+                    if (context.Source.GetState(address) is Dictionary state)
                     {
-                        return (new AgentState((Dictionary) state), context.Source.accountStateGetter, context.Source.accountBalanceGetter);
+                        return new AgentStateType.AgentStateContext(
+                            new AgentState(state),
+                            context.Source.AccountStateGetter,
+                            context.Source.AccountBalanceGetter
+                        );
                     }
 
                     return null;
@@ -116,13 +121,13 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var agentAddress = context.GetArgument<Address>("agentAddress");
-                    if (!(context.Source.accountStateGetter(agentAddress) is Dictionary value))
+                    if (!(context.Source.GetState(agentAddress) is Dictionary value))
                     {
                         return null;
                     }
                     var agentState = new AgentState(value);
                     var deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
-                    if (context.Source.accountStateGetter(deriveAddress) is Dictionary state)
+                    if (context.Source.GetState(deriveAddress) is Dictionary state)
                     {
                         return new MonsterCollectionState(state);
                     }
@@ -137,13 +142,18 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var sheetAddress = Addresses.GetSheetAddress<MonsterCollectionSheet>();
                     var rewardSheetAddress = Addresses.GetSheetAddress<MonsterCollectionRewardSheet>();
-                    if (context.Source.accountStateGetter(sheetAddress) is { } ss &&
-                        context.Source.accountStateGetter(rewardSheetAddress) is { } srs)
+                    IReadOnlyList<IValue?> values = context.Source.GetStates(new[]
+                    {
+                        sheetAddress,
+                        rewardSheetAddress,
+                    });
+                    if (values[0] is Text ss &&
+                        values[1] is Text srs)
                     {
                         var monsterCollectionSheet = new MonsterCollectionSheet();
-                        monsterCollectionSheet.Set((Text) ss);
+                        monsterCollectionSheet.Set(ss);
                         var monsterCollectionRewardSheet = new MonsterCollectionRewardSheet();
-                        monsterCollectionRewardSheet.Set((Text) srs);
+                        monsterCollectionRewardSheet.Set(srs);
                         return (monsterCollectionSheet, monsterCollectionRewardSheet);
                     }
 
