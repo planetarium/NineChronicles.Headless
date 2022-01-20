@@ -15,6 +15,8 @@
     ],
     "forwardPorts": [
         31234,
+        23142,
+        23061
     ],
     "postCreateCommand": "dotnet restore",
     "remoteUser": "vscode"
