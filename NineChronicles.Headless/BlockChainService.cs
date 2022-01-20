@@ -119,10 +119,10 @@ namespace NineChronicles.Headless
             var hash = new BlockHash(blockHashBytes);
             var result = new Dictionary<byte[], byte[]>();
             Address[] addresses = addressBytesList.Select(b => new Address(b)).ToArray();
-            IReadOnlyList<IValue> values = _blockChain.GetStates(addresses);
+            IReadOnlyList<IValue> values = _blockChain.GetStates(addresses, hash);
             for (int i = 0; i < addresses.Length; i++)
             {
-                result.TryAdd(addresses[i].ToByteArray(), _codec.Encode(values[i]));
+                result.TryAdd(addresses[i].ToByteArray(), _codec.Encode(values[i] ?? new Null()));
             }
 
             return new UnaryResult<Dictionary<byte[], byte[]>>(result);
