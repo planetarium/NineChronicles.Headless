@@ -631,8 +631,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }}
             }}";
             var queryResult = await ExecuteQueryAsync(query);
-            Assert.Single(queryResult.Errors);
-            Assert.Equal($"{nameof(AgentState)} Address: {userAddress} is null.", queryResult.Errors.First().Message);
+            Assert.NotNull(queryResult.Errors);
+            Assert.Single(queryResult.Errors!);
+            Assert.Equal($"{nameof(AgentState)} Address: {userAddress} is null.", queryResult.Errors!.First().Message);
         }
 
 
@@ -678,10 +679,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }}
             }}";
             var queryResult = await ExecuteQueryAsync(query);
-            Assert.Single(queryResult.Errors);
+            Assert.NotNull(queryResult.Errors);
+            Assert.Single(queryResult.Errors!);
             Assert.Equal(
                 $"{nameof(MonsterCollectionState)} Address: {MonsterCollectionState.DeriveAddress(userAddress, 0)} is null.",
-                queryResult.Errors.First().Message
+                queryResult.Errors!.First().Message
             );
         }
 
@@ -862,8 +864,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var query = $"query {{ activationKeyNonce(invitationCode: \"{code}\") }}";
             var queryResult = await ExecuteQueryAsync(query);
-            Assert.Single(queryResult.Errors);
-            Assert.Equal(msg, queryResult.Errors.First().Message);
+            Assert.NotNull(queryResult.Errors);
+            Assert.Single(queryResult.Errors!);
+            Assert.Equal(msg, queryResult.Errors!.First().Message);
 
         }
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)

@@ -8,7 +8,13 @@
     <CodeAnalysisRuleSet>..\NineChronicles.Headless.Common.ruleset</CodeAnalysisRuleSet>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-  
+
+  <PropertyGroup Condition="
+    '$([System.Runtime.InteropServices.RuntimeInformation]::
+      OSArchitecture.ToString())' == 'Arm64' ">
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="AWSSDK.CognitoIdentity" Version="3.7.0.5" />
     <PackageReference Include="AWSSDK.S3" Version="3.7.0.6" />
@@ -31,12 +37,12 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet.Extensions.Cocona\Libplanet.Extensions.Cocona.csproj" />
     <ProjectReference Include="..\NineChronicles.Headless\NineChronicles.Headless.csproj" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

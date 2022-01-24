@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lib9c\Lib9c\Lib9c.csproj" />
+    <ProjectReference Include="..\Lib9c\Lib9c.DevExtensions\Lib9c.DevExtensions.csproj" />
     <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet.Explorer\Libplanet.Explorer.csproj" />
     <ProjectReference Include="..\Libplanet.Headless\Libplanet.Headless.csproj" />
     <ProjectReference Include="..\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared.csproj" />
@@ -23,7 +24,7 @@
     <PackageReference Include="MagicOnion.Abstractions" Version="4.3.1" />
     <PackageReference Include="MagicOnion.Server" Version="4.3.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0-dev-00839" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
     <PackageReference Include="GraphQL" Version="4.7.1" />
     <PackageReference Include="SonarAnalyzer.CSharp" Version="8.18.0.27296">
       <PrivateAssets>all</PrivateAssets>

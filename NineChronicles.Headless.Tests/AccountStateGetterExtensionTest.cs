@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Bencodex.Types;
 using Libplanet;
 using Libplanet.Action;
@@ -45,7 +47,10 @@ namespace NineChronicles.Headless.Tests
                 return null;
             }
 
-            var getter = (AccountStateGetter) GetStateMock;
+            IReadOnlyList<IValue?> GetStatesMock(IReadOnlyList<Address> addresses) =>
+                addresses.Select(GetStateMock).ToArray();
+
+            var getter = (AccountStateGetter) GetStatesMock;
 
             if (exc)
             {

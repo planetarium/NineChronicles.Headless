@@ -86,54 +86,58 @@ namespace NineChronicles.Headless
             }
         }
 
-        public UnaryResult<byte[]> GetState(byte[] addressBytes)
+        public UnaryResult<byte[]> GetState(byte[] addressBytes, byte[] blockHashBytes)
         {
             var address = new Address(addressBytes);
-            IValue state = _blockChain.GetState(address, _delayedRenderer?.Tip?.Hash);
+            var hash = new BlockHash(blockHashBytes);
+            IValue state = _blockChain.GetState(address, hash);
             // FIXME: Null과 null 구분해서 반환해야 할 듯
             byte[] encoded = _codec.Encode(state ?? new Null());
             return UnaryResult(encoded);
         }
 
-        public UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStates(IEnumerable<byte[]> addressBytesList)
+        public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStates(IEnumerable<byte[]> addressBytesList, byte[] blockHashBytes)
         {
-            var accountStateGetter = _blockChain.ToAccountStateGetter(_delayedRenderer?.Tip?.Hash);
+            var hash = new BlockHash(blockHashBytes);
+            var accountStateGetter = _blockChain.ToAccountStateGetter(hash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
-            Parallel.ForEach(addressBytesList, addressBytes =>
-            {
-                var avatarAddress = new Address(addressBytes);
-                var avatarState = accountStateGetter.GetAvatarState(avatarAddress);
-                result[addressBytes] = _codec.Encode(avatarState.Serialize());
-            });
-
-            return UnaryResult(result.ToDictionary(kv => kv.Key, kv => kv.Value));
-        }
-
-        public UnaryResult<Dictionary<byte[], byte[]>> GetStateBulk(IEnumerable<byte[]> addressBytesList)
-        {
-            BlockHash? hash = _delayedRenderer?.Tip?.Hash;
-            var result = new ConcurrentDictionary<byte[], byte[]>();
-            Parallel.ForEach(addressBytesList, addressBytes =>
-            {
-                var address = new Address(addressBytes);
-                if (_blockChain.GetState(address, hash) is { } value)
+            var taskList = addressBytesList
+                .Select(addressBytes => Task.Run(() =>
                 {
-                    result[addressBytes] = _codec.Encode(value);
-                }
-            });
+                    var avatarAddress = new Address(addressBytes);
+                    var avatarState = accountStateGetter.GetAvatarState(avatarAddress);
+                    result.TryAdd(addressBytes, _codec.Encode(avatarState.Serialize()));
+                }))
+                .ToList();
 
-            return UnaryResult(result.ToDictionary(kv => kv.Key, kv => kv.Value));
+            await Task.WhenAll(taskList);
+            return result.ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
-        public UnaryResult<byte[]> GetBalance(byte[] addressBytes, byte[] currencyBytes)
+        public UnaryResult<Dictionary<byte[], byte[]>> GetStateBulk(IEnumerable<byte[]> addressBytesList, byte[] blockHashBytes)
+        {
+            var hash = new BlockHash(blockHashBytes);
+            var result = new Dictionary<byte[], byte[]>();
+            Address[] addresses = addressBytesList.Select(b => new Address(b)).ToArray();
+            IReadOnlyList<IValue> values = _blockChain.GetStates(addresses, hash);
+            for (int i = 0; i < addresses.Length; i++)
+            {
+                result.TryAdd(addresses[i].ToByteArray(), _codec.Encode(values[i] ?? new Null()));
+            }
+
+            return new UnaryResult<Dictionary<byte[], byte[]>>(result);
+        }
+
+        public UnaryResult<byte[]> GetBalance(byte[] addressBytes, byte[] currencyBytes, byte[] blockHashBytes)
         {
             var address = new Address(addressBytes);
             var serializedCurrency = (Bencodex.Types.Dictionary)_codec.Decode(currencyBytes);
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
-            FungibleAssetValue balance = _blockChain.GetBalance(address, currency);
+            var hash = new BlockHash(blockHashBytes);
+            FungibleAssetValue balance = _blockChain.GetBalance(address, currency, hash);
             byte[] encoded = _codec.Encode(
               new Bencodex.Types.List(
-                new IValue[] 
+                new IValue[]
                 {
                   balance.Currency.Serialize(),
                   (Integer) balance.RawValue,
