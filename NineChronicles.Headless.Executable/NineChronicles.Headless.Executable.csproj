@@ -9,12 +9,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <PropertyGroup Condition="
-    '$([System.Runtime.InteropServices.RuntimeInformation]::
-      OSArchitecture.ToString())' == 'Arm64' ">
-    <TargetFramework>net6.0</TargetFramework>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="AWSSDK.CognitoIdentity" Version="3.7.0.5" />
     <PackageReference Include="AWSSDK.S3" Version="3.7.0.6" />
