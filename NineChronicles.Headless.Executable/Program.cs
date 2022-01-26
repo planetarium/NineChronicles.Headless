@@ -180,9 +180,6 @@ namespace NineChronicles.Headless.Executable
                 "The number of maximum transactions can be included in stage per signer.")]
             int txQuotaPerSigner = 10,
             bool rpcRemoteServer = false,
-            bool rpcHttpServer = false,
-            string rpcHttpListenHost = "localhost",
-            int rpcHttpListenPort = 5000,
             [Option(Description = "The interval between block polling.  15 seconds by default.")]
             int pollInterval = 15,
             [Option(Description = "The maximum number of peers to poll blocks.  int.MaxValue by default.")]
@@ -364,8 +361,7 @@ namespace NineChronicles.Headless.Executable
                 {
                     hostBuilder.UseNineChroniclesRPC(
                         NineChroniclesNodeServiceProperties
-                        .GenerateRpcNodeServiceProperties(
-                            rpcListenHost, rpcListenPort, rpcRemoteServer, rpcHttpServer, rpcHttpListenHost, rpcHttpListenPort)
+                        .GenerateRpcNodeServiceProperties(rpcListenHost, rpcListenPort, rpcRemoteServer)
                     );
                 }
 

@@ -2,13 +2,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.Properties;
 using System.Net;
-using Grpc.Core;
-using Grpc.Net.Client;
 using Lib9c.Formatters;
 using MagicOnion.Server;
 using MessagePack;
 using MessagePack.Resolvers;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 
@@ -90,45 +87,11 @@ namespace NineChronicles.Headless
                 {
                     hostBuilder.ConfigureKestrel(options =>
                     {
-                        if (properties.HttpOptions is { } httpOptions)
-                        {
-                            options.ListenAnyIP(httpOptions.Port, listenOptions =>
-                            {
-                                listenOptions.Protocols = HttpProtocols.Http1;
-                            });   
-                        }
-
                         options.ListenAnyIP(properties.RpcListenPort, listenOptions =>
                         {
                             listenOptions.Protocols = HttpProtocols.Http2;
                         });
                     });
-
-                    if (properties.HttpOptions is { })
-                    {
-                        hostBuilder.Configure(app =>
-                        {
-                            app.UseRouting();
-
-                            app.UseEndpoints(endpoints =>
-                            {
-                                var options = new GrpcChannelOptions
-                                {
-                                    Credentials = ChannelCredentials.Insecure,
-                                    MaxReceiveMessageSize = null,
-                                };
-
-                                endpoints.MapMagicOnionHttpGateway("_",
-                                    app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()
-                                        .MethodHandlers, GrpcChannel.ForAddress($"http://{properties.RpcListenHost}:{properties.RpcListenPort}", options));
-                                endpoints.MapMagicOnionSwagger("swagger",
-                                    app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()
-                                        .MethodHandlers, "/_/");
-
-                                endpoints.MapMagicOnionService();
-                            });
-                        });   
-                    }
                 });
         }
     }
