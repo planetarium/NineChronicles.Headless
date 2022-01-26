@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.Properties;
 using System.Net;
+using Grpc.Core;
 using Grpc.Net.Client;
 using Lib9c.Formatters;
 using MagicOnion.Server;
@@ -111,9 +112,15 @@ namespace NineChronicles.Headless
 
                             app.UseEndpoints(endpoints =>
                             {
+                                var options = new GrpcChannelOptions
+                                {
+                                    Credentials = ChannelCredentials.Insecure,
+                                    MaxReceiveMessageSize = null,
+                                };
+
                                 endpoints.MapMagicOnionHttpGateway("_",
                                     app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()
-                                        .MethodHandlers, GrpcChannel.ForAddress($"http://{properties.RpcListenHost}:{properties.RpcListenPort}"));
+                                        .MethodHandlers, GrpcChannel.ForAddress($"http://{properties.RpcListenHost}:{properties.RpcListenPort}", options));
                                 endpoints.MapMagicOnionSwagger("swagger",
                                     app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()
                                         .MethodHandlers, "/_/");
