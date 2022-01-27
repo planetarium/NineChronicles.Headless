@@ -90,8 +90,21 @@ namespace NineChronicles.Headless
         {
             var address = new Address(addressBytes);
             var hash = new BlockHash(blockHashBytes);
-            IValue state = _blockChain.GetState(address, hash);
-            // FIXME: Null과 null 구분해서 반환해야 할 듯
+            var cache = _publisher.StateCache;
+            IValue state;
+            if (cache.TryGetValue(address, out IValue value) && !(value is Null))
+            {
+                state = value;
+            }
+            else
+            {
+                state = _blockChain.GetState(address, hash);
+                if (!(state is null) && cache.ContainsKey(address))
+                {
+                    cache.AddOrUpdate(address, state);
+                }
+            }
+
             byte[] encoded = _codec.Encode(state ?? new Null());
             return UnaryResult(encoded);
         }
@@ -134,7 +147,20 @@ namespace NineChronicles.Headless
             var serializedCurrency = (Bencodex.Types.Dictionary)_codec.Decode(currencyBytes);
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
             var hash = new BlockHash(blockHashBytes);
-            FungibleAssetValue balance = _blockChain.GetBalance(address, currency, hash);
+            var cache = _publisher.BalanceCache;
+            FungibleAssetValue balance;
+            if (cache.TryGetValue(address, out var value) && !(value is null))
+            {
+                balance = (FungibleAssetValue) value;
+            }
+            else
+            {
+                balance = _blockChain.GetBalance(address, currency, hash);
+                if (cache.ContainsKey(address))
+                {
+                    cache.AddOrUpdate(address, balance);
+                }
+            }
             byte[] encoded = _codec.Encode(
               new Bencodex.Types.List(
                 new IValue[]

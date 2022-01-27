@@ -2,12 +2,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
@@ -17,7 +14,9 @@ using Grpc.Net.Client;
 using Lib9c.Renderer;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Assets;
 using Libplanet.Blocks;
+using LruCacheNet;
 using MagicOnion.Client;
 using MessagePack;
 using Microsoft.Extensions.Hosting;
@@ -42,6 +41,10 @@ namespace NineChronicles.Headless
         private readonly ConcurrentDictionary<Address, (IActionEvaluationHub hub, ImmutableHashSet<Address> addresses)> _clients =
             new ConcurrentDictionary<Address, (IActionEvaluationHub hub, ImmutableHashSet<Address> addresses)>();
 
+        public readonly LruCache<Address, IValue> StateCache = new LruCache<Address, IValue>();
+
+        public readonly LruCache<Address, FungibleAssetValue?>
+            BalanceCache = new LruCache<Address, FungibleAssetValue?>();
         private RpcContext _context;
 
         public ActionEvaluationPublisher(
@@ -155,6 +158,19 @@ namespace NineChronicles.Headless
                 {
                     try
                     {
+                        if (_clients.TryGetValue(clientAddress, out var tuple))
+                        {
+                            foreach (var address in tuple.addresses.Where(address => ev.OutputStates.UpdatedAddresses.Contains(address)))
+                            {
+                                StateCache.AddOrUpdate(address, ev.OutputStates.GetState(address)!);
+                            }
+
+                            var currency = ev.OutputStates.GetGoldCurrency();
+                            foreach (var address in tuple.addresses.Where(address => ev.OutputStates.UpdatedFungibleAssets.ContainsKey(address)))
+                            {
+                                BalanceCache.AddOrUpdate(address, ev.OutputStates.GetBalance(address, currency));
+                            }
+                        }
                         NineChroniclesActionType? pa = null;
                         var extra = new Dictionary<string, IValue>();
                         if (!(ev.Action is RewardGold))
@@ -327,6 +343,15 @@ namespace NineChronicles.Headless
             var addresses = addressesBytes.Select(a => new Address(a)).ToImmutableHashSet();
             if (_clients.TryGetValue(address, out var tuple) && _clients.TryUpdate(address, (tuple.hub, addresses), tuple))
             {
+                // Initialize State Cache
+                foreach (var cachingAddress in addresses)
+                {
+                    StateCache.TryAdd(cachingAddress, new Null());
+                }
+
+                // Initialize Balance Cache
+                BalanceCache.TryAdd(address, null);
+
                 Log.Information("[{ClientAddress}] UpdateSubscribeAddresses: {Addresses}", address, string.Join(", ", addresses));
             }
             else
@@ -340,6 +365,13 @@ namespace NineChronicles.Headless
             if (_clients.TryGetValue(clientAddress, out var tuple))
             {
                 Log.Information("[{ClientAddress}] RemoveClient", clientAddress);
+
+                // Clear Cache
+                foreach (var address in tuple.addresses)
+                {
+                    StateCache.TryPeek(address, out _);
+                }
+
                 var client = tuple.hub;
                 await client.LeaveAsync();
                 _clients.TryRemove(clientAddress, out _);
