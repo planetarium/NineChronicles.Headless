@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
@@ -94,6 +93,7 @@ namespace NineChronicles.Headless
             IValue state;
             if (cache.TryGetValue(address, out IValue value) && !(value is Null))
             {
+                Log.Information("[Cache]Get StateCache: {Address}", address);
                 state = value;
             }
             else
@@ -101,6 +101,7 @@ namespace NineChronicles.Headless
                 state = _blockChain.GetState(address, hash);
                 if (!(state is null) && cache.ContainsKey(address))
                 {
+                    Log.Information("[Cache]Update StateCache: {Address}", address);
                     cache.AddOrUpdate(address, state);
                 }
             }
@@ -149,15 +150,17 @@ namespace NineChronicles.Headless
             var hash = new BlockHash(blockHashBytes);
             var cache = _publisher.BalanceCache;
             FungibleAssetValue balance;
-            if (cache.TryGetValue(address, out var value) && !(value is null))
+            if (cache.TryGetValue(address, out var value) && !value.Equals(default))
             {
-                balance = (FungibleAssetValue) value;
+                Log.Information("[Cache]Get BalanceCache: {Address}", address);
+                balance = value;
             }
             else
             {
                 balance = _blockChain.GetBalance(address, currency, hash);
                 if (cache.ContainsKey(address))
                 {
+                    Log.Information("[Cache]Update BalanceCache: {Address}", address);
                     cache.AddOrUpdate(address, balance);
                 }
             }

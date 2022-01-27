@@ -41,10 +41,10 @@ namespace NineChronicles.Headless
         private readonly ConcurrentDictionary<Address, (IActionEvaluationHub hub, ImmutableHashSet<Address> addresses)> _clients =
             new ConcurrentDictionary<Address, (IActionEvaluationHub hub, ImmutableHashSet<Address> addresses)>();
 
-        public readonly LruCache<Address, IValue> StateCache = new LruCache<Address, IValue>();
+        public readonly LruCache<Address, IValue> StateCache = new LruCache<Address, IValue>(600);
 
-        public readonly LruCache<Address, FungibleAssetValue?>
-            BalanceCache = new LruCache<Address, FungibleAssetValue?>();
+        public readonly LruCache<Address, FungibleAssetValue>
+            BalanceCache = new LruCache<Address, FungibleAssetValue>(100);
         private RpcContext _context;
 
         public ActionEvaluationPublisher(
@@ -350,7 +350,7 @@ namespace NineChronicles.Headless
                 }
 
                 // Initialize Balance Cache
-                BalanceCache.TryAdd(address, null);
+                BalanceCache.TryAdd(address, default(FungibleAssetValue));
 
                 Log.Information("[{ClientAddress}] UpdateSubscribeAddresses: {Addresses}", address, string.Join(", ", addresses));
             }
