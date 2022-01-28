@@ -160,15 +160,37 @@ namespace NineChronicles.Headless
                     {
                         if (_clients.TryGetValue(clientAddress, out var tuple))
                         {
-                            foreach (var address in tuple.addresses.Where(address => ev.OutputStates.UpdatedAddresses.Contains(address)))
+                            var updatedAddresses = tuple.addresses.Where(address =>
+                                ev.OutputStates.UpdatedAddresses.Contains(address)).ToArray();
+                            foreach (var address in updatedAddresses)
                             {
                                 StateCache.AddOrUpdate(address, ev.OutputStates.GetState(address)!);
                             }
 
+                            if (updatedAddresses.Any())
+                            {
+                                Log.Information(
+                                    "[Cache] {Action} Update StateCache: {States}",
+                                    nameof(ev.Action),
+                                    string.Join(", ", updatedAddresses)
+                                );
+                            }
+
                             var currency = ev.OutputStates.GetGoldCurrency();
-                            foreach (var address in tuple.addresses.Where(address => ev.OutputStates.UpdatedFungibleAssets.ContainsKey(address)))
+                            var balanceUpdatedAddresses = tuple.addresses.Where(address =>
+                                ev.OutputStates.UpdatedFungibleAssets.ContainsKey(address)).ToArray();
+                            foreach (var address in balanceUpdatedAddresses)
                             {
                                 BalanceCache.AddOrUpdate(address, ev.OutputStates.GetBalance(address, currency));
+                            }
+
+                            if (balanceUpdatedAddresses.Any())
+                            {
+                                Log.Information(
+                                    "[Cache] {Action} UpdateBalanceCache: {States}",
+                                    nameof(ev.Action),
+                                    string.Join(", ", balanceUpdatedAddresses)
+                                );
                             }
                         }
                         NineChroniclesActionType? pa = null;
