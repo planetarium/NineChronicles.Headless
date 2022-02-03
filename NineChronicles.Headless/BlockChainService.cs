@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Bencodex;
@@ -113,19 +114,38 @@ namespace NineChronicles.Headless
         public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStates(IEnumerable<byte[]> addressBytesList, byte[] blockHashBytes)
         {
             var hash = new BlockHash(blockHashBytes);
+            var sw = new Stopwatch();
+            sw.Start();
             var accountStateGetter = _blockChain.ToAccountStateGetter(hash);
+            sw.Stop();
+            var gt = sw.Elapsed;
+            sw.Restart();
             var result = new ConcurrentDictionary<byte[], byte[]>();
-            var taskList = addressBytesList
-                .Select(addressBytes => Task.Run(() =>
+            var addressList = addressBytesList.Select(a => new Address(a)).ToList();
+            var avatarStates = accountStateGetter.GetAvatarStatesRaw(addressList);
+            sw.Stop();
+            var taskList = avatarStates
+                .Select(pair => Task.Run(() =>
                 {
-                    var avatarAddress = new Address(addressBytes);
-                    var avatarState = accountStateGetter.GetAvatarState(avatarAddress);
-                    result.TryAdd(addressBytes, _codec.Encode(avatarState.Serialize()));
+                    result.TryAdd(pair.Key, _codec.Encode(pair.Value));
                 }))
                 .ToList();
 
             await Task.WhenAll(taskList);
-            return result.ToDictionary(kv => kv.Key, kv => kv.Value);
+            sw.Stop();
+            var tt = sw.Elapsed;
+            sw.Restart();
+            var ur = result.ToDictionary(kv => kv.Key, kv => kv.Value);
+            sw.Stop();
+            var urt = sw.Elapsed;
+            Log.Information(
+                "[GetAvatarStates] AccountStateGetter: {Gt}, GetAvatarStates: {Tt}, UnaryResult: {Ur}, Total: {Total}",
+                gt,
+                tt,
+                urt,
+                gt + tt + urt
+            );
+            return ur;
         }
 
         public UnaryResult<Dictionary<byte[], byte[]>> GetStateBulk(IEnumerable<byte[]> addressBytesList, byte[] blockHashBytes)
