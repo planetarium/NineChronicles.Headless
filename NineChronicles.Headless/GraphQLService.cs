@@ -133,6 +133,9 @@ namespace NineChronicles.Headless
                     app.UseDeveloperExceptionPage();
                 }
 
+                // Capture requests
+                app.UseMiddleware<HttpCaptureMiddleware>();
+
                 app.UseMiddleware<LocalAuthenticationMiddleware>();
                 if (Configuration[NoCorsKey] is null)
                 {
