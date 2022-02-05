@@ -4,13 +4,14 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
-using Libplanet.Action;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States;
+using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
 using NineChronicles.Headless.GraphTypes.States.Models.Table;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -62,9 +63,36 @@ namespace NineChronicles.Headless.GraphTypes
             Field<ShopStateType>(
                 name: "shop",
                 description: "State for shop.",
+                deprecationReason: "Shop is migrated to ShardedShop and not using now. Use shardedShop() instead.",
                 resolve: context => context.Source.GetState(Addresses.Shop) is { } state
                     ? new ShopState((Dictionary) state)
                     : null);
+            Field<ShardedShopStateV2Type>(
+                name: "shardedShop",
+                description: "State for sharded shop.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ItemSubTypeEnumType>>
+                    {
+                        Name = "itemSubType",
+                        Description = "ItemSubType for shard. see from https://github.com/planetarium/lib9c/blob/main/Lib9c/Model/Item/ItemType.cs#L13"
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "nonce",
+                        Description = "Nonce for shard. It's not considered if itemSubtype is kind of costume or title. 0 ~ 15"
+                    }),
+                resolve: context =>
+                {
+                    var subType = context.GetArgument<ItemSubType>("itemSubType");
+                    var nonce = context.GetArgument<int>("nonce").ToString("X").ToLower();
+
+                    if (context.Source.GetState(ShardedShopStateV2.DeriveAddress(subType, nonce)) is { } state)
+                    {
+                        return new ShardedShopStateV2((Dictionary) state);
+                    }
+
+                    return null;
+                });
             Field<WeeklyArenaStateType>(
                 name: "weeklyArena",
                 description: "State for weekly arena.",
