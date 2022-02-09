@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using System.Linq;
+using Lib9c.Model.Order;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Crypto;
@@ -54,6 +54,42 @@ namespace NineChronicles.Headless.Tests
                 shopState.Register(shopItem);
             }
             return shopState;
+        }
+
+        public static ShardedShopStateV2 ShardedWeapon0ShopStateV2FX()
+        {
+            Address shardedWeapon0ShopStateV2Address = ShardedShopStateV2.DeriveAddress(ItemSubType.Weapon, "0");
+            var shardedShopV2State = new ShardedShopStateV2(shardedWeapon0ShopStateV2Address);
+
+            var orderDigest = new OrderDigest(
+                default,
+                1,
+                3,
+                new Guid("F9168C5E-CEB2-4faa-B6BF-329BF39FA1E4"),
+                new Guid("45082f35-699c-41f0-9332-9143966933a3"),
+                new FungibleAssetValue(new Currency("NCG", 2, minter: null), 1, 0),
+                0,
+                0,
+                10110000,
+                1
+            );
+            var orderDigest2 = new OrderDigest(
+                default,
+                2,
+                4,
+                new Guid("936DA01F-9ABD-4d9d-80C7-02AF85C822A8"),
+                new Guid("dae32f1b-6b43-4bdb-933e-fd51d003283e"),
+                new FungibleAssetValue(new Currency("NCG", 2, minter: null), 2, 0),
+                0,
+                0,
+                10110000,
+                1
+            );
+
+            shardedShopV2State.Add(orderDigest, 1);
+            shardedShopV2State.Add(orderDigest2, 2);
+
+            return shardedShopV2State;
         }
     }
 }
