@@ -19,5 +19,11 @@
         23061
     ],
     "postCreateCommand": "dotnet restore",
+    "features": {
+        "docker-from-docker": {
+            "version": "latest",
+            "moby": true
+        }
+    },
     "remoteUser": "vscode"
 }
