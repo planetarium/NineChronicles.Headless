@@ -21,6 +21,7 @@ using Serilog;
 using Serilog.Formatting.Compact;
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NineChronicles.Headless.Executable
@@ -190,7 +191,9 @@ namespace NineChronicles.Headless.Executable
             [Option(Description =
                 "Determines the type of transport.  \"netmq\" and \"tcp\" " +
                 "is available and \"tcp\" option is selected by default.")]
-            string transportType = "tcp"
+            string transportType = "tcp",
+            [Ignore]
+            CancellationToken? cancellationToken = null 
         )
         {
 #if SENTRY || ! DEBUG
@@ -369,7 +372,7 @@ namespace NineChronicles.Headless.Executable
                     );
                 }
 
-                await hostBuilder.RunConsoleAsync(Context.CancellationToken);
+                await hostBuilder.RunConsoleAsync(cancellationToken ?? Context.CancellationToken);
             }
             catch (TaskCanceledException)
             {
