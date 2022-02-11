@@ -6,13 +6,8 @@
     <VersionPrefix>1.0.0</VersionPrefix>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CodeAnalysisRuleSet>..\NineChronicles.Headless.Common.ruleset</CodeAnalysisRuleSet>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
     <Nullable>enable</Nullable>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="
-    '$([System.Runtime.InteropServices.RuntimeInformation]::
-      OSArchitecture.ToString())' == 'Arm64' ">
-    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
