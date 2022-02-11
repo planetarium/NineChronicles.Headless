@@ -19,9 +19,14 @@ namespace NineChronicles.Headless.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            context.Request.EnableBuffering();
-            var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
-            _logger.Debug("[REQUEST-CAPTURE] {Method} {Path}\n{Body}", context.Request.Method, context.Request.Path, body);
+            // Prevent to harm HTTP/2 communication.
+            if (context.Request.Protocol == "HTTP/1.1")
+            {
+                context.Request.EnableBuffering();
+                var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
+                _logger.Debug("[REQUEST-CAPTURE] {Method} {Path}\n{Body}", context.Request.Method, context.Request.Path, body);
+                context.Request.Body.Seek(0, SeekOrigin.Begin);
+            }
 
             await _next(context);
         }
