@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using Cocona;
 using Libplanet;
 using Libplanet.Blocks;
@@ -26,11 +28,12 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         }
 
         [Theory]
-        [InlineData(true, true, false)]
-        [InlineData(true, false, true)]
-        [InlineData(false, true, true)]
-        [InlineData(false, false, true)]
-        public void Mine(bool tablePathExist, bool goldDistributionPathExist, bool exc)
+        [InlineData(true, true, false, false)]
+        [InlineData(true, true, true, false)]
+        [InlineData(true, false, false, true)]
+        [InlineData(false, true, false, true)]
+        [InlineData(false, false, false, true)]
+        public void Mine(bool tablePathExist, bool goldDistributionPathExist, bool actionsExist, bool exc)
         {
             var tablePath = tablePathExist
                 ? Path.GetFullPath(Path.Combine("..", "..", "..", "..", "Lib9c", "Lib9c", "TableCSV"))
@@ -48,6 +51,17 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
 ");
             }
 
+            var actions = new List<string>();
+            if (actionsExist)
+            {
+                var actionCommand = new ActionCommand(_console);
+                for (int i = 0; i < 2; i++)
+                {
+                    var path = Path.GetTempFileName();
+                    actionCommand.MonsterCollect(i, path);
+                    actions.Add(path);
+                }
+            }
             // Avoid JsonException in Windows
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -62,20 +76,30 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
                 }
             }
 
-            var json = $@" {{
-                 ""privateKey"": ""{ByteUtil.Hex(_privateKey.ByteArray)}"",
-                 ""tablePath"": ""{tablePath}"",
-                 ""goldDistributionPath"": ""{goldDistributionPath}"",
-                 ""adminAddress"": ""0000000000000000000000000000000000000005"",
-                 ""authorizedMinerConfig"": {{
-                 ""validUntil"": 1500000,
-                 ""interval"": 50,
-                 ""miners"": [
-                     ""0000000000000000000000000000000000000001"",
-                     ""0000000000000000000000000000000000000002"",
-                     ""0000000000000000000000000000000000000003"",
-                     ""0000000000000000000000000000000000000004""
-                 ] }}}}";
+            var config = new Dictionary<string, object>
+            {
+                ["privateKey"] = ByteUtil.Hex(_privateKey.ByteArray),
+                ["tablePath"] = tablePath,
+                ["goldDistributionPath"] = goldDistributionPath,
+                ["adminAddress"] = "0000000000000000000000000000000000000005",
+                ["authorizedMinerConfig"] = new Dictionary<string, object>
+                {
+                    ["validUntil"] = 1500000,
+                    ["interval"] = 50,
+                    ["miners"] = new List<string>
+                    {
+                        "0000000000000000000000000000000000000001",
+                        "0000000000000000000000000000000000000002",
+                        "0000000000000000000000000000000000000003",
+                        "0000000000000000000000000000000000000004"
+                    }
+                }
+            };
+            if (actionsExist)
+            {
+                config["actions"] = actions;
+            }
+            string json = JsonSerializer.Serialize(config);
             var configPath = Path.GetTempFileName();
             File.WriteAllText(configPath, json);
             if (exc)

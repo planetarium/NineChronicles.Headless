@@ -81,7 +81,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
         private void Assert_Tx(long txNonce, string filePath)
         {
-            var timeStamp = default(DateTimeOffset);
+            var timeStamp = DateTimeOffset.FromUnixTimeSeconds(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
             var hashHex = ByteUtil.Hex(_blockHash.ByteArray);
             _command.Sign(ByteUtil.Hex(_privateKey.ByteArray), txNonce, hashHex, timeStamp.ToString(),
                 new[] { filePath });
