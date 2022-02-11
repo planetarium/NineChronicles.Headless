@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Bencodex;
+using Bencodex.Types;
 using Cocona;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Extensions.Cocona;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model;
@@ -84,6 +88,32 @@ namespace NineChronicles.Headless.Executable.Commands
                     );
                 }
 
+                List<ActionBase>? actions = null;
+                if (!(genesisConfig.Actions is null))
+                {
+                    actions = genesisConfig.Actions.Select(a =>
+                    {
+                        if (File.Exists(a))
+                        {
+                            a = File.ReadAllText(a);
+                        }
+
+                        var decoded = (List) Codec.Decode(Convert.FromBase64String(a));
+                        string actionType = (Text) decoded[0];
+                        Dictionary plainValue = (Dictionary) decoded[1];
+                        Type type = typeof(ActionBase).Assembly
+                            .GetTypes()
+                            .First(type => type.Namespace is { } @namespace &&
+                                           @namespace.StartsWith($"{nameof(Nekoyume)}.{nameof(Nekoyume.Action)}") &&
+                                           !type.IsAbstract &&
+                                           typeof(ActionBase).IsAssignableFrom(type) &&
+                                           type.Name == actionType);
+                        ActionBase action = (ActionBase) Activator.CreateInstance(type)!;
+                        action.LoadPlainValue(plainValue);
+                        return action;
+                    }).ToList();
+                }
+
                 Block<PolymorphicAction<ActionBase>> block = BlockHelper.MineGenesisBlock(
                     tableSheets,
                     goldDistributions,
@@ -125,6 +155,7 @@ namespace NineChronicles.Headless.Executable.Commands
             public long AdminValidUntil { get; set; }
             public AuthorizedMinerConfig AuthorizedMinerConfig { get; set; }
             public List<string> ActivatedAccounts { get; set; }
+            public List<string> Actions { get; set; }
         }
 #pragma warning restore S3459
     }
