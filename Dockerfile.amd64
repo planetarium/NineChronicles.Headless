@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:3.1-bullseye AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:3.1-bullseye-arm64v8 AS build-env
 WORKDIR /app
 ARG COMMIT
 
@@ -18,13 +18,13 @@ RUN dotnet restore NineChronicles.Headless.Executable
 COPY . ./
 RUN dotnet publish NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj \
     -c Release \
-    -r linux-arm64 \
+    -r linux-x64 \
     -o out \
     --self-contained \
     --version-suffix $COMMIT
 
 # Build runtime image
-FROM --platform=linux/arm64 mcr.microsoft.com/dotnet/aspnet:3.1-bullseye-slim-arm64v8
+FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/core/aspnet:3.1
 WORKDIR /app
 RUN apt-get update && apt-get install -y libc6-dev
 COPY --from=build-env /app/out .
