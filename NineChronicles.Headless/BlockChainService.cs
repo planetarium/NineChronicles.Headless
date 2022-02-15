@@ -26,6 +26,7 @@ using Serilog;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using NodeExceptionType = Libplanet.Headless.NodeExceptionType;
 using Libplanet.Headless;
+using Nekoyume.Model.State;
 
 namespace NineChronicles.Headless
 {
@@ -101,12 +102,12 @@ namespace NineChronicles.Headless
             var hash = new BlockHash(blockHashBytes);
             var accountStateGetter = _blockChain.ToAccountStateGetter(hash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
-            var taskList = addressBytesList
-                .Select(addressBytes => Task.Run(() =>
+            var addresses = addressBytesList.Select(a => new Address(a)).ToList();
+            var rawAvatarStates = accountStateGetter.GetRawAvatarStates(addresses);
+            var taskList = rawAvatarStates
+                .Select(pair => Task.Run(() =>
                 {
-                    var avatarAddress = new Address(addressBytes);
-                    var avatarState = accountStateGetter.GetAvatarState(avatarAddress);
-                    result.TryAdd(addressBytes, _codec.Encode(avatarState.Serialize()));
+                    result.TryAdd(_codec.Encode(pair.Key.Serialize()), _codec.Encode(pair.Value));
                 }))
                 .ToList();
 
