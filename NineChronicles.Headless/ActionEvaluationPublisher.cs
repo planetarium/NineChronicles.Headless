@@ -74,7 +74,8 @@ namespace NineChronicles.Headless
         {
             var options = new GrpcChannelOptions
             {
-                Credentials = ChannelCredentials.Insecure
+                Credentials = ChannelCredentials.Insecure,
+                MaxReceiveMessageSize = null
             };
 
             var channel = GrpcChannel.ForAddress($"http://{_host}:{_port}", options);
