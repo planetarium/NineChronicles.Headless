@@ -21,8 +21,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NineChronicles.RPC.Shared",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libplanet", "Lib9c\.Libplanet\Libplanet\Libplanet.csproj", "{E18779D4-103C-42D2-A94F-EEB801B32750}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Net", "Lib9c\.Libplanet\Libplanet.Net\Libplanet.Net.csproj", "{6922DB7E-00AD-4B23-B2F5-5FFB00C96ECA}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libplanet.RocksDBStore", "Lib9c\.Libplanet\Libplanet.RocksDBStore\Libplanet.RocksDBStore.csproj", "{2C079592-8EDC-4911-AFF9-828419E0FDC1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libplanet.Stun", "Lib9c\.Libplanet\Libplanet.Stun\Libplanet.Stun.csproj", "{3B2875B4-B6C6-4929-B885-18A922110ED2}"
@@ -230,25 +228,12 @@ Global
 		{8411BF58-22E7-4174-AEE6-7332FE690906}.Release|x64.Build.0 = Release|Any CPU
 		{8411BF58-22E7-4174-AEE6-7332FE690906}.Release|x86.ActiveCfg = Release|Any CPU
 		{8411BF58-22E7-4174-AEE6-7332FE690906}.Release|x86.Build.0 = Release|Any CPU
-		{6922DB7E-00AD-4B23-B2F5-5FFB00C96ECA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6922DB7E-00AD-4B23-B2F5-5FFB00C96ECA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6922DB7E-00AD-4B23-B2F5-5FFB00C96ECA}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{6922DB7E-00AD-4B23-B2F5-5FFB00C96ECA}.Debug|x64.Build.0 = Debug|Any CPU
-		{6922DB7E-00AD-4B23-B2F5-5FFB00C96ECA}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{6922DB7E-00AD-4B23-B2F5-5FFB00C96ECA}.Debug|x86.Build.0 = Debug|Any CPU
-		{6922DB7E-00AD-4B23-B2F5-5FFB00C96ECA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6922DB7E-00AD-4B23-B2F5-5FFB00C96ECA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6922DB7E-00AD-4B23-B2F5-5FFB00C96ECA}.Release|x64.ActiveCfg = Release|Any CPU
-		{6922DB7E-00AD-4B23-B2F5-5FFB00C96ECA}.Release|x64.Build.0 = Release|Any CPU
-		{6922DB7E-00AD-4B23-B2F5-5FFB00C96ECA}.Release|x86.ActiveCfg = Release|Any CPU
-		{6922DB7E-00AD-4B23-B2F5-5FFB00C96ECA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{AACC51F4-D38A-4094-BF50-BDC981848517} = {71CBCF83-FE87-4D84-A20C-FD328855E445}
-		{6922DB7E-00AD-4B23-B2F5-5FFB00C96ECA} = {E18779D4-103C-42D2-A94F-EEB801B32750}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4A2DD82-CCC1-4D74-88FF-91BBEBB5A47F}
