@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using GraphQL.Server;
 using GraphQL.Utilities;
+using Grpc.Core;
+using Grpc.Net.Client;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -27,6 +29,8 @@ namespace NineChronicles.Headless
         public const string NoCorsKey = "noCors";
 
         public const string UseMagicOnionKey = "useMagicOnion";
+
+        public const string MagicOnionTargetKey = "magicOnionTarget";
 
         private GraphQLNodeServiceProperties GraphQlNodeServiceProperties { get; }
 
@@ -60,6 +64,11 @@ namespace NineChronicles.Headless
                         if (GraphQlNodeServiceProperties.UseMagicOnion)
                         {
                             dictionary[UseMagicOnionKey] = string.Empty;
+                        }
+
+                        if (GraphQlNodeServiceProperties.HttpOptions is { } options)
+                        {
+                            dictionary[MagicOnionTargetKey] = options.Target;
                         }
 
                         builder.AddInMemoryCollection(dictionary);
@@ -154,6 +163,22 @@ namespace NineChronicles.Headless
                     if (!(Configuration[UseMagicOnionKey] is null))
                     {
                         endpoints.MapMagicOnionService();
+
+                        if (Configuration[MagicOnionTargetKey] is { } magicOnionTarget)
+                        {
+                            var options = new GrpcChannelOptions
+                            {
+                                Credentials = ChannelCredentials.Insecure,
+                                MaxReceiveMessageSize = null,
+                            };
+
+                            endpoints.MapMagicOnionHttpGateway("_",
+                                app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()
+                                    .MethodHandlers, GrpcChannel.ForAddress($"http://{magicOnionTarget}", options));
+                            endpoints.MapMagicOnionSwagger("swagger",
+                                app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()
+                                    .MethodHandlers, "/_/");
+                        }
                     }
                     endpoints.MapHealthChecks("/health-check");
                 });
