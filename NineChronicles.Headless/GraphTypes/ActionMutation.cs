@@ -164,7 +164,7 @@ namespace NineChronicles.Headless.GraphTypes
                             costumes = costumeIds,
                             equipments = equipmentIds,
                             foods = consumableIds,
-                            playCount = playCount < 1 ? 1 : playCount
+                            playCount = playCount
                         };
 
                         var actions = new NCAction[] { action };
