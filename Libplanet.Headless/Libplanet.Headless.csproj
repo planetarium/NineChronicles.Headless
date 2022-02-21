@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet.Net\Libplanet.Net.csproj" />
+    <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet\Libplanet.csproj" />
     <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet.RocksDBStore\Libplanet.RocksDBStore.csproj" />
     <ProjectReference Include="..\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared.csproj" />
   </ItemGroup>

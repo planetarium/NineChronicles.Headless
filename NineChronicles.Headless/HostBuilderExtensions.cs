@@ -64,7 +64,10 @@ namespace NineChronicles.Headless
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => context);
-                    services.AddGrpc();
+                    services.AddGrpc(options =>
+                    {
+                        options.MaxReceiveMessageSize = null;
+                    });
                     services.AddMagicOnion();
                     services.AddSingleton(provider =>
                     {
