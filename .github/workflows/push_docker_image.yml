@@ -18,8 +18,18 @@ jobs:
           submodules: recursive
       - name: login
         run: docker login --username '${{ secrets.DOCKER_USERNAME }}' --password '${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}'
-      - name: build
-        run: docker build . -t planetariumhq/ninechronicles-headless:git-${{ github.sha }} --build-arg COMMIT=git-${{ github.sha }}
-      - name: push git-version
-        run: docker push planetariumhq/ninechronicles-headless:git-${{ github.sha }}
+      - name: setup-qemu
+        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+      - name: build-and-push-amd64
+        run: |
+            docker build . -f Dockerfile.amd64 -t planetariumhq/ninechronicles-headless:git-${{ github.sha }}-amd64 --build-arg COMMIT=git-${{ github.sha }}
+            docker push planetariumhq/ninechronicles-headless:git-${{ github.sha }}-amd64
+      - name: build-and-push-arm64v8
+        run: |
+            docker build . -f Dockerfile.arm64v8 -t planetariumhq/ninechronicles-headless:git-${{ github.sha }}-arm64v8 --build-arg COMMIT=git-${{ github.sha }}
+            docker push planetariumhq/ninechronicles-headless:git-${{ github.sha }}-arm64v8
+      - name: merge-manifest-and-push
+        run: |
+            docker manifest create planetariumhq/ninechronicles-headless:git-${{ github.sha }} --amend planetariumhq/ninechronicles-headless:git-${{ github.sha }}-amd64 --amend planetariumhq/ninechronicles-headless:git-${{ github.sha }}-arm64v8
+            docker manifest push planetariumhq/ninechronicles-headless:git-${{ github.sha }}
 
