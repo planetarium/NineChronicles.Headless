@@ -191,8 +191,15 @@ namespace NineChronicles.Headless
                             }
                         }
                         var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputStates, ev.Exception, ev.PreviousStates, ev.RandomSeed, extra);
-                        Log.Information("[{ClientAddress}] #{BlockIndex} Broadcasting render since the given action {Action}", clientAddress, ev.BlockIndex, ev.Action.GetType());
-                        await client.BroadcastRenderAsync(MessagePackSerializer.Serialize(eval));
+                        var encoded = MessagePackSerializer.Serialize(eval);
+                        Log.Information(
+                            "[{ClientAddress}] #{BlockIndex} Broadcasting render since the given action {Action}. eval size: {Size}",
+                            clientAddress,
+                            ev.BlockIndex,
+                            ev.Action.GetType(),
+                            encoded.LongLength
+                        );
+                        await client.BroadcastRenderAsync(encoded);
                     }
                     catch (SerializationException se)
                     {
