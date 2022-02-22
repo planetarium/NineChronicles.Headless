@@ -345,7 +345,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             int stageId,
             List<Guid> costumeIds,
             List<Guid> equipmentIds,
-            List<Guid> consumableIds
+            List<Guid> consumableIds,
+            int? playCount
         )
         {
             var playerPrivateKey = new PrivateKey();
@@ -366,6 +367,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             if (consumableIds.Any())
             {
                 queryArgs += $", consumableIds: [{string.Join(",", consumableIds.Select(r => string.Format($"\"{r}\"")))}]";
+            }
+            if(playCount is int)
+            {
+                queryArgs += $", playCount:{playCount}";
             }
             var query = @$"mutation {{ action {{ hackAndSlash({queryArgs}) }} }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
@@ -391,7 +396,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(costumeIds, action.costumes);
             Assert.Equal(equipmentIds, action.equipments);
             Assert.Equal(consumableIds, action.foods);
-            Assert.Equal(1, action.playCount);
+            Assert.Equal(playCount ?? 1, action.playCount);
         }
 
         public static IEnumerable<object?[]> HackAndSlashMember => new List<object?[]>
@@ -404,6 +409,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new List<Guid>(),
                 new List<Guid>(),
                 new List<Guid>(),
+                null
             },
             new object?[]
             {
@@ -425,6 +431,29 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     Guid.NewGuid(),
                     Guid.NewGuid(),
                 },
+                null
+            },
+            new object?[]
+            {
+                new Address(),
+                2,
+                3,
+                new List<Guid>
+                {
+                    Guid.NewGuid(),
+                },
+                new List<Guid>
+                {
+                    Guid.NewGuid(),
+                    Guid.NewGuid(),
+                },
+                new List<Guid>
+                {
+                    Guid.NewGuid(),
+                    Guid.NewGuid(),
+                    Guid.NewGuid(),
+                },
+                6
             },
         };
 
@@ -460,6 +489,41 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(expected, data);
             Assert.Single(tx.Actions);
             var action = (DailyReward) tx.Actions.First().InnerAction;
+            Assert.Equal(avatarAddress, action.avatarAddress);
+        }
+
+        [Fact]
+        public async Task ChargeActionPoint()
+        {
+            var playerPrivateKey = new PrivateKey();
+            var ranking = new RankingState();
+            for (var i = 0; i < RankingState.RankingMapCapacity; i++)
+            {
+                ranking.RankingMap[RankingState.Derive(i)] = new HashSet<Address>().ToImmutableHashSet();
+            }
+            var avatarAddress = new Address();
+            var query = $@"mutation {{
+                action {{
+                    chargeActionPoint(avatarAddress: ""{avatarAddress}"")
+                    }}
+                }}";
+            ExecutionResult result = await ExecuteQueryAsync(query);
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
+            Assert.Null(result.Errors);
+
+            var txIds = BlockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = BlockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["chargeActionPoint"] = tx.Id.ToString(),
+                }
+            };
+            Assert.Equal(expected, data);
+            Assert.Single(tx.Actions);
+            var action = (ChargeActionPoint)tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
         }
 
