@@ -86,7 +86,7 @@ namespace NineChronicles.Headless
                         NineChroniclesResolver.Instance,
                         StandardResolver.Instance
                     );
-                    var options = MessagePackSerializerOptions.Standard.WithResolver(resolver);
+                    var options = MessagePackSerializerOptions.Standard.WithResolver(resolver).WithCompression(MessagePackCompression.Lz4BlockArray);
                     MessagePackSerializer.DefaultOptions = options;
                 })
                 .ConfigureWebHostDefaults(hostBuilder =>
