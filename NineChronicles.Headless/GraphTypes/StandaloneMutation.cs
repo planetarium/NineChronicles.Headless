@@ -127,14 +127,12 @@ namespace NineChronicles.Headless.GraphTypes
                             return tx.Id;
                         }
 
-                        context.Errors.Add(new ExecutionError("The given transaction is invalid."));
+                        throw new ExecutionError("The given transaction is invalid.");
                     }
                     catch (Exception e)
                     {
-                        context.Errors.Add(new ExecutionError("An unexpected exception occurred.", e));
+                        throw new ExecutionError("An unexpected exception occurred.", e);
                     }
-
-                    return null;
                 }
             );
 
