@@ -344,6 +344,7 @@ namespace NineChronicles.Headless
             {
                 NetworkType.Main => source.GetPolicy(),
                 NetworkType.Internal => source.GetInternalPolicy(),
+                NetworkType.Permanent => source.GetPermanentPolicy(),
                 NetworkType.Test => source.GetTestPolicy(),
                 _ => throw new ArgumentOutOfRangeException(nameof(networkType), networkType, null),
             };
