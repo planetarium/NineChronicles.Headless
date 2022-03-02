@@ -7,9 +7,15 @@ on:
       - rc-*
       - 9c-main
       - development
+    tags:
+      - v*
+
+env:
+  DOCKER_REPO: planetariumhq/ninechronicles-headless
 
 jobs:
   build_and_push:
+    if: github.ref_type == 'branch'
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -17,19 +23,58 @@ jobs:
         with:
           submodules: recursive
       - name: login
-        run: docker login --username '${{ secrets.DOCKER_USERNAME }}' --password '${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}'
+        run: |
+          docker login \
+            --username '${{ secrets.DOCKER_USERNAME }}' \
+            --password '${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}'
       - name: setup-qemu
-        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+        run: |
+          docker run --rm --privileged multiarch/qemu-user-static \
+            --reset \
+            -p yes
       - name: build-and-push-amd64
         run: |
-            docker build . -f Dockerfile.amd64 -t planetariumhq/ninechronicles-headless:git-${{ github.sha }}-amd64 --build-arg COMMIT=git-${{ github.sha }}
-            docker push planetariumhq/ninechronicles-headless:git-${{ github.sha }}-amd64
+          docker build . \
+            -f Dockerfile.amd64 \
+            -t $DOCKER_REPO:git-${{ github.sha }}-amd64 \
+            --build-arg COMMIT=git-${{ github.sha }}
+          docker push $DOCKER_REPO:git-${{ github.sha }}-amd64
       - name: build-and-push-arm64v8
         run: |
-            docker build . -f Dockerfile.arm64v8 -t planetariumhq/ninechronicles-headless:git-${{ github.sha }}-arm64v8 --build-arg COMMIT=git-${{ github.sha }}
-            docker push planetariumhq/ninechronicles-headless:git-${{ github.sha }}-arm64v8
+          docker build . \
+            -f Dockerfile.arm64v8 \
+            -t $DOCKER_REPO:git-${{ github.sha }}-arm64v8 \
+            --build-arg COMMIT=git-${{ github.sha }}
+          docker push $DOCKER_REPO:git-${{ github.sha }}-arm64v8
       - name: merge-manifest-and-push
         run: |
-            docker manifest create planetariumhq/ninechronicles-headless:git-${{ github.sha }} --amend planetariumhq/ninechronicles-headless:git-${{ github.sha }}-amd64 --amend planetariumhq/ninechronicles-headless:git-${{ github.sha }}-arm64v8
-            docker manifest push planetariumhq/ninechronicles-headless:git-${{ github.sha }}
+          docker manifest create $DOCKER_REPO:git-${{ github.sha }} \
+            --amend $DOCKER_REPO:git-${{ github.sha }}-amd64 \
+            --amend $DOCKER_REPO:git-${{ github.sha }}-arm64v8
+          docker manifest push $DOCKER_REPO:git-${{ github.sha }}
 
+  tag:
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - name: login
+        run: |
+          docker login \
+            --username '${{ secrets.DOCKER_USERNAME }}' \
+            --password '${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}'
+      - name: push git tagged version
+        run: |
+          docker pull $DOCKER_REPO:git-${{ github.sha }}-amd64
+          docker tag \
+            $DOCKER_REPO:git-${{ github.sha }}-amd64 \
+            $DOCKER_REPO:${{ github.ref_name }}-amd64
+          docker push $DOCKER_REPO:${{ github.ref_name }}-amd64
+          docker pull $DOCKER_REPO:git-${{ github.sha }}-arm64v8
+          docker tag \
+            $DOCKER_REPO:git-${{ github.sha }}-arm64v8 \
+            $DOCKER_REPO:${{ github.ref_name }}-arm64v8
+          docker push $DOCKER_REPO:${{ github.ref_name }}-arm64v8
+          docker manifest create $DOCKER_REPO:${{ github.ref_name }} \
+            --amend $DOCKER_REPO:${{ github.ref_name }}-amd64 \
+            --amend $DOCKER_REPO:${{ github.ref_name }}-arm64v8
+          docker manifest push $DOCKER_REPO:${{ github.ref_name }}
