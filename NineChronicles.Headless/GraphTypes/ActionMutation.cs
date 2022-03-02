@@ -129,6 +129,12 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "consumableIds",
                         Description = "List of consumable id for use."
+                    }, 
+                    new QueryArgument<IntGraphType>
+                    {
+                        Name="playCount",
+                        DefaultValue = 1,
+                        Description = "Amount of times to boost rewards in one attempt."
                     }
                 ),
                 resolve: context =>
@@ -148,6 +154,7 @@ namespace NineChronicles.Headless.GraphTypes
                         List<Guid> costumeIds = context.GetArgument<List<Guid>>("costumeIds") ?? new List<Guid>();
                         List<Guid> equipmentIds = context.GetArgument<List<Guid>>("equipmentIds") ?? new List<Guid>();
                         List<Guid> consumableIds = context.GetArgument<List<Guid>>("consumableIds") ?? new List<Guid>();
+                        int playCount = context.GetArgument<int>("playCount");
 
                         var action = new HackAndSlash
                         {
@@ -157,6 +164,7 @@ namespace NineChronicles.Headless.GraphTypes
                             costumes = costumeIds,
                             equipments = equipmentIds,
                             foods = consumableIds,
+                            playCount = playCount
                         };
 
                         var actions = new NCAction[] { action };
@@ -322,6 +330,48 @@ namespace NineChronicles.Headless.GraphTypes
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
 
                         var action = new DailyReward
+                        {
+                            avatarAddress = avatarAddress
+                        };
+
+                        var actions = new NCAction[] { action };
+                        Transaction<NCAction> tx = blockChain.MakeTransaction(privateKey, actions);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        Log.Error(msg, e);
+                        throw;
+                    }
+                });
+            Field<NonNullGraphType<TxIdType>>("chargeActionPoint",
+                description: "Charge Action Points using Material.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "Avatar to use potion."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        if (!(service.MinerPrivateKey is { } privateKey))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                        }
+
+                        if (!(service.BlockChain is { } blockChain))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
+                        }
+
+                        Address avatarAddress = context.GetArgument<Address>("avatarAddress");
+
+                        var action = new ChargeActionPoint
                         {
                             avatarAddress = avatarAddress
                         };

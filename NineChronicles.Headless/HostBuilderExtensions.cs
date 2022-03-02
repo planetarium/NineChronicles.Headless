@@ -93,45 +93,11 @@ namespace NineChronicles.Headless
                 {
                     hostBuilder.ConfigureKestrel(options =>
                     {
-                        if (properties.HttpOptions is { } httpOptions)
-                        {
-                            options.ListenAnyIP(httpOptions.Port, listenOptions =>
-                            {
-                                listenOptions.Protocols = HttpProtocols.Http1;
-                            });   
-                        }
-
                         options.ListenAnyIP(properties.RpcListenPort, listenOptions =>
                         {
                             listenOptions.Protocols = HttpProtocols.Http2;
                         });
                     });
-
-                    if (properties.HttpOptions is { })
-                    {
-                        hostBuilder.Configure(app =>
-                        {
-                            app.UseRouting();
-
-                            app.UseEndpoints(endpoints =>
-                            {
-                                var options = new GrpcChannelOptions
-                                {
-                                    Credentials = ChannelCredentials.Insecure,
-                                    MaxReceiveMessageSize = null,
-                                };
-
-                                endpoints.MapMagicOnionHttpGateway("_",
-                                    app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()
-                                        .MethodHandlers, GrpcChannel.ForAddress($"http://{properties.RpcListenHost}:{properties.RpcListenPort}", options));
-                                endpoints.MapMagicOnionSwagger("swagger",
-                                    app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()
-                                        .MethodHandlers, "/_/");
-
-                                endpoints.MapMagicOnionService();
-                            });
-                        });   
-                    }
                 });
         }
     }

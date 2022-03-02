@@ -124,10 +124,7 @@ namespace NineChronicles.Headless.Properties
         public static RpcNodeServiceProperties GenerateRpcNodeServiceProperties(
             string rpcListenHost = "0.0.0.0",
             int? rpcListenPort = null,
-            bool rpcRemoteServer = false,
-            bool rpcHttpServer = false,
-            string rpcHttpListenHost = "localhost",
-            int rpcHttpListenPort = 5000)
+            bool rpcRemoteServer = false)
         {
 
             if (string.IsNullOrEmpty(rpcListenHost))
@@ -147,9 +144,6 @@ namespace NineChronicles.Headless.Properties
                 RpcListenHost = rpcListenHost,
                 RpcListenPort = rpcPortValue,
                 RpcRemoteServer = rpcRemoteServer,
-                HttpOptions = rpcHttpServer
-                    ? new RpcNodeServiceProperties.MagicOnionHttpOptions(rpcHttpListenHost, rpcHttpListenPort)
-                    : (RpcNodeServiceProperties.MagicOnionHttpOptions?)null,
             };
         }
     }

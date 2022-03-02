@@ -13,5 +13,17 @@ namespace NineChronicles.Headless.Properties
         public bool NoCors { get; set; }
 
         public bool UseMagicOnion { get; set; }
+
+        public MagicOnionHttpOptions? HttpOptions { get; set; }
+
+        public readonly struct MagicOnionHttpOptions
+        {
+            public MagicOnionHttpOptions(string target)
+            {
+                Target = target;
+            }
+
+            public string Target { get; }
+        }
     }
 }

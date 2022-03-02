@@ -21,6 +21,7 @@ using Serilog;
 using Serilog.Formatting.Compact;
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NineChronicles.Headless.Executable
@@ -150,8 +151,8 @@ namespace NineChronicles.Headless.Executable
             string? awsSecretKey = null,
             [Option(Description = "The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2).")]
             string? awsRegion = null,
-            [Option(Description = "The lifetime of each transaction, which uses minute as its unit.  60 (m) by default.")]
-            int txLifeTime = 60,
+            [Option(Description = "The lifetime of each transaction, which uses minute as its unit.  180 (m) by default.")]
+            int txLifeTime = 180,
             [Option(Description = "The grace period for new messages, which uses second as its unit.  60 (s) by default.")]
             int messageTimeout = 60,
             [Option(Description = "The grace period for tip update, which uses second as its unit.  60 (s) by default.")]
@@ -181,8 +182,6 @@ namespace NineChronicles.Headless.Executable
             int txQuotaPerSigner = 10,
             bool rpcRemoteServer = false,
             bool rpcHttpServer = false,
-            string rpcHttpListenHost = "localhost",
-            int rpcHttpListenPort = 5000,
             [Option(Description = "The interval between block polling.  15 seconds by default.")]
             int pollInterval = 15,
             [Option(Description = "The maximum number of peers to poll blocks.  int.MaxValue by default.")]
@@ -190,7 +189,9 @@ namespace NineChronicles.Headless.Executable
             [Option(Description =
                 "Determines the type of transport.  \"netmq\" and \"tcp\" " +
                 "is available and \"tcp\" option is selected by default.")]
-            string transportType = "tcp"
+            string transportType = "tcp",
+            [Ignore]
+            CancellationToken? cancellationToken = null 
         )
         {
 #if SENTRY || ! DEBUG
@@ -291,6 +292,9 @@ namespace NineChronicles.Headless.Executable
                         SecretToken = secretToken,
                         NoCors = noCors,
                         UseMagicOnion = rpcServer,
+                        HttpOptions = rpcServer && rpcHttpServer
+                            ? new GraphQLNodeServiceProperties.MagicOnionHttpOptions($"{rpcListenHost}:{rpcListenPort}")
+                            : (GraphQLNodeServiceProperties.MagicOnionHttpOptions?)null,
                     };
 
                     var graphQLService = new GraphQLService(graphQLNodeServiceProperties);
@@ -364,12 +368,11 @@ namespace NineChronicles.Headless.Executable
                 {
                     hostBuilder.UseNineChroniclesRPC(
                         NineChroniclesNodeServiceProperties
-                        .GenerateRpcNodeServiceProperties(
-                            rpcListenHost, rpcListenPort, rpcRemoteServer, rpcHttpServer, rpcHttpListenHost, rpcHttpListenPort)
+                        .GenerateRpcNodeServiceProperties(rpcListenHost, rpcListenPort, rpcRemoteServer)
                     );
                 }
 
-                await hostBuilder.RunConsoleAsync(Context.CancellationToken);
+                await hostBuilder.RunConsoleAsync(cancellationToken ?? Context.CancellationToken);
             }
             catch (TaskCanceledException)
             {
