@@ -169,7 +169,14 @@ Usage: docker volume create [<VOLUME_NAME>]
 
 ![Docker Volume Create](https://i.imgur.com/ISgKeLc.png)
 
-#### 3. Run your Docker image with your Docker volume mounted (use -d for detached mode)
+#### 3. Download and extract snapshot
+
+```
+$ wget snapshots.nine-chronicles.com/main/partition/full/9c-main-snapshot.zip
+$ unzip 9c-main-snapshot.zip [<VOLUME_NAME>]
+```
+
+#### 4. Run your Docker image with your Docker volume mounted (use -d for detached mode)
 
 <pre>
 $ docker run \
@@ -196,6 +203,22 @@ planetariumhq/ninechronicles-headless:latest \
   - `Workers`
 * If you are using an [Elastic IP](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html) on your AWS instance, you must include the IP as the `--host` option but do not need to include the `--ice-server` option.
 * For mining, make sure to include the `--miner-private-key` option with your private key. Also, include `--libplanet-node` to run the default libplanet node.
+
+#### requirement command line options
+
+- --genesis-block-path
+- --ice-server
+- --peer
+- --store-path
+- --app-protocol-version
+- --rpc-server
+- --rpc-remote-server
+- --rpc-listen-host
+- --rpc-listen-port
+- --graphql-server
+- --graphql-host
+- --graphql-port
+- --no-cors
 
 ![Docker Run](https://i.imgur.com/VlwFybj.png)
 
