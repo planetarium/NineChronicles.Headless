@@ -106,6 +106,7 @@ $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 - `--rpc-server`: Starts with RPC server mode. Must specify `--rpc-listen-port` to use this mode.
 - `--rpc-listen-host`: Host name for RPC server mode.
 - `--rpc-listen-port`: Port number for RPC server mode.
+- `--rpc-remote-server`: Turn on RPC remote server mode. Must specify `--rpc-listen-port` to use this mode.
 - `--graphql-server`: Turn on graphQL controller.
 - `--graphql-host`: Host name for graphQL controller.
 - `--graphql-port`: Port number for graphQL controller.
@@ -115,7 +116,7 @@ $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 - `--nonblock-renderer`: Uses non-blocking renderer, which prevents the blockchain & swarm from waiting slow rendering.  Turned off by default.
 - `--nonblock-renderer-queue`: The size of the queue used by the non-blocking renderer.  512 by default.  Ignored if `--nonblock-renderer` is turned off.
 - `--max-transactions`: Specifies the number of maximum transactions can be included in a single block. Unlimited if the value is less then or equal to 0.
-- `--network-type`: Choose one of `Main`, `Internal`, `Test`.  `Main` by defualt.
+- `--network-type`: Choose one of `Main`, `Internal`, `Test`.  `Main` by default.
 - `--dev`: Flag to turn on the dev mode.
 - `--dev.block-interval`: Specifies the time interval between blocks by milliseconds in dev mode.
 - `--dev.reorg-interval`: Specifies the size of reorg interval in dev mode.
@@ -129,7 +130,8 @@ $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 - `--tx-quota-per-signer`: Specifies the number of maximum transactions can be included in stage per signer.
 - `--poll-interval`: Specifies the interval between block polling.
 - `--transport-type`: Specifies the type of transport to use.  Either `netmq` or `tcp` is available.  `tcp` by default.
-- `--maximum-poll-peers`: Specifies the maximum number of peers to poll blocks.
+- `--maximum-poll-peers`: Specifies the maximum number of peers to poll blocks. 
+- `--no-cors`: Run without CORS policy.
 
 ### Format
 
