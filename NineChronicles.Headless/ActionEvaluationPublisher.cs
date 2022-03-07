@@ -163,9 +163,9 @@ namespace NineChronicles.Headless
                             pa = new PolymorphicAction<ActionBase>(ev.Action);
                             if (ev.Action is RankingBattle rb)
                             {
-                                if (rb.EnemyAvatarState is { } enemyAvatarState)
+                                if (rb.EnemyPlayerDigest is { } enemyPlayerDigest)
                                 {
-                                    extra[nameof(RankingBattle.EnemyAvatarState)] = enemyAvatarState.Serialize();
+                                    extra[nameof(RankingBattle.EnemyPlayerDigest)] = enemyPlayerDigest.Serialize();
                                 }
                                 if (rb.EnemyArenaInfo is { } enemyArenaInfo)
                                 {
