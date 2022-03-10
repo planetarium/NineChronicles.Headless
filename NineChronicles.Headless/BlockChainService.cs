@@ -107,7 +107,7 @@ namespace NineChronicles.Headless
             var taskList = rawAvatarStates
                 .Select(pair => Task.Run(() =>
                 {
-                    result.TryAdd(_codec.Encode(pair.Key.Serialize()), _codec.Encode(pair.Value));
+                    result.TryAdd(pair.Key.ToByteArray(), _codec.Encode(pair.Value));
                 }))
                 .ToList();
 
