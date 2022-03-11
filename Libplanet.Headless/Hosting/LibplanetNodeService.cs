@@ -313,6 +313,11 @@ namespace Libplanet.Headless.Hosting
                         maxLogFileSize: 16 * 1024 * 1024,
                         keepLogFileNum: 1
                     );
+                    if (RocksDBStore.RocksDBStore.MigrateChainDBFromColumnFamilies(
+                            Path.Combine(path, "chain")))
+                    {
+                        Log.Debug("RocksDB is migrated.");
+                    }
                     Log.Debug("RocksDB is initialized.");
                 }
                 catch (TypeInitializationException e)
