@@ -159,24 +159,14 @@ Usage: docker pull [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<TAGNAME>]
 
 ![Docker Pull](https://i.imgur.com/oLCULZr.png)
 
-#### 2. Create a Docker volume for blockchain data persistance
-
-```
-$ docker volume create 9c-volume
-Usage: docker volume create [<VOLUME_NAME>]
-```
-- [Docker Volume Guide](https://docs.docker.com/engine/reference/commandline/volume_create/)
-
-![Docker Volume Create](https://i.imgur.com/ISgKeLc.png)
-
-#### 3. Download and extract snapshot
+#### 2. Download and extract snapshot
 
 ```
 $ wget snapshots.nine-chronicles.com/main/partition/full/9c-main-snapshot.zip
-$ unzip 9c-main-snapshot.zip [<VOLUME_NAME>]
+$ unzip 9c-main-snapshot.zip 9c-volume
 ```
 
-#### 4. Run your Docker image with your Docker volume mounted (use -d for detached mode)
+#### 3. Run your Docker image with your Docker volume mounted (use -d for detached mode)
 
 <pre>
 $ docker run \
