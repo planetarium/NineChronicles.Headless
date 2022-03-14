@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Bencodex.Types;
 using Libplanet;
 using Libplanet.Action;
@@ -22,6 +23,25 @@ namespace NineChronicles.Headless
             IReadOnlyList<Address> avatarAddresses
         )
         {
+            IReadOnlyDictionary<Address, Dictionary> rawAvatarStates = GetRawAvatarStates(accountStateGetter, avatarAddresses);
+            var states = new AvatarState[rawAvatarStates.Count];
+            var values = rawAvatarStates.Values.ToArray();
+            for (int i = 0; i < rawAvatarStates.Count; i++)
+            {
+                states[i] = new AvatarState(values[i]);
+            }
+
+            return states;
+        }
+
+        public static AvatarState GetAvatarState(this AccountStateGetter accountStateGetter, Address avatarAddress) =>
+            accountStateGetter.GetAvatarStates(new[] { avatarAddress })[0];
+
+        public static IReadOnlyDictionary<Address, Dictionary> GetRawAvatarStates(
+            this AccountStateGetter accountStateGetter,
+            IReadOnlyList<Address> avatarAddresses
+        )
+        {
             // Suppose avatarAddresses = [a, b, c]
             // Then,   addresses =       [a,                    b,                    c,
             //                            aInventoryKey,        bInventoryKey,        cInventoryKey,
@@ -39,7 +59,7 @@ namespace NineChronicles.Headless
             }
 
             IReadOnlyList<IValue?> values = accountStateGetter(addresses);
-            var states = new AvatarState[avatarAddresses.Count];
+            var states = new Dictionary<Address, Dictionary>(avatarAddresses.Count);
             for (var i = 0; i < avatarAddresses.Count; i++)
             {
                 IValue? value = values[i];
@@ -61,13 +81,10 @@ namespace NineChronicles.Headless
                     serializedAvatar = serializedAvatar.SetItem(AvatarLegacyKeys[j], serialized);
                 }
 
-                states[i] = v1 ? new AvatarState(original) : new AvatarState(serializedAvatar);
+                states[avatarAddresses[i]] = v1 ? original : serializedAvatar;
             }
 
             return states;
         }
-
-        public static AvatarState GetAvatarState(this AccountStateGetter accountStateGetter, Address avatarAddress) =>
-            accountStateGetter.GetAvatarStates(new[] { avatarAddress })[0];
     }
 }
