@@ -191,8 +191,22 @@ namespace NineChronicles.Headless
                             }
                         }
                         var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputStates, ev.Exception, ev.PreviousStates, ev.RandomSeed, extra);
-                        Log.Information("[{ClientAddress}] #{BlockIndex} Broadcasting render since the given action {Action}", clientAddress, ev.BlockIndex, ev.Action.GetType());
-                        await client.BroadcastRenderAsync(MessagePackSerializer.Serialize(eval));
+                        var encoded = MessagePackSerializer.Serialize(eval);
+                        var c = new MemoryStream();
+                        using (var df = new DeflateStream(c, CompressionLevel.Fastest))
+                        {
+                            df.Write(encoded, 0, encoded.Length);
+                        }
+
+                        var compressed = c.ToArray();
+                        Log.Information(
+                            "[{ClientAddress}] #{BlockIndex} Broadcasting render since the given action {Action}. eval size: {Size}",
+                            clientAddress,
+                            ev.BlockIndex,
+                            ev.Action.GetType(),
+                            compressed.LongLength
+                        );
+                        await client.BroadcastRenderAsync(compressed);
                     }
                     catch (SerializationException se)
                     {
@@ -228,7 +242,22 @@ namespace NineChronicles.Headless
                             ev.RandomSeed,
                             new Dictionary<string, IValue>()
                         );
-                        await client.BroadcastUnrenderAsync(MessagePackSerializer.Serialize(eval));
+                        var encoded = MessagePackSerializer.Serialize(eval);
+                        var c = new MemoryStream();
+                        using (var df = new DeflateStream(c, CompressionLevel.Fastest))
+                        {
+                            df.Write(encoded, 0, encoded.Length);
+                        }
+
+                        var compressed = c.ToArray();
+                        Log.Information(
+                            "[{ClientAddress}] #{BlockIndex} Broadcasting unrender since the given action {Action}. eval size: {Size}",
+                            clientAddress,
+                            ev.BlockIndex,
+                            ev.Action.GetType(),
+                            compressed.LongLength
+                        );
+                        await client.BroadcastRenderAsync(compressed);
                     }
                     catch (SerializationException se)
                     {
