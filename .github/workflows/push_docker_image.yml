@@ -7,7 +7,7 @@ on:
       - rc-*
       - 9c-main
       - development
-      - testnet
+      - previewnet
     tags:
       - v*
 
