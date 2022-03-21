@@ -173,10 +173,10 @@ namespace NineChronicles.Headless
                             };
 
                             endpoints.MapMagicOnionHttpGateway("_",
-                                app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()
+                                app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()!
                                     .MethodHandlers, GrpcChannel.ForAddress($"http://{magicOnionTarget}", options));
                             endpoints.MapMagicOnionSwagger("swagger",
-                                app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()
+                                app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()!
                                     .MethodHandlers, "/_/");
                         }
                     }
