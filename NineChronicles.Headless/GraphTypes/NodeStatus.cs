@@ -126,6 +126,9 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Whether the current node is mining.",
                 resolve: _ => context.IsMining
             );
+            Field<AppProtocolVersionType>(
+                "appProtocolVersion",
+                resolve: _ => context.NineChroniclesNodeService?.Swarm.AppProtocolVersion);
         }
 
         private IEnumerable<Block<T>> GetTopmostBlocks<T>(BlockChain<T> blockChain, int offset)
