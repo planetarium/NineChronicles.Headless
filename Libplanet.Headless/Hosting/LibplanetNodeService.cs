@@ -307,6 +307,14 @@ namespace Libplanet.Headless.Hosting
             {
                 try
                 {
+                    Log.Debug("Migrating RocksDB.");
+                    var chainPath = Path.Combine(path, "chain");
+                    if (Directory.Exists(chainPath) &&
+                        RocksDBStore.RocksDBStore.MigrateChainDBFromColumnFamilies(chainPath))
+                    {
+                        Log.Debug("RocksDB is migrated.");
+                    }
+
                     store = new RocksDBStore.RocksDBStore(
                         path,
                         maxTotalWalSize: 16 * 1024 * 1024,

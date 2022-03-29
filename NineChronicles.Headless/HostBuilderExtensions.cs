@@ -5,12 +5,15 @@ using System.Net;
 using Grpc.Core;
 using Grpc.Net.Client;
 using Lib9c.Formatters;
+using Libplanet.Action;
+using Libplanet.Headless.Hosting;
 using MagicOnion.Server;
 using MessagePack;
 using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Nekoyume.Action;
 
 namespace NineChronicles.Headless
 {
@@ -34,7 +37,10 @@ namespace NineChronicles.Headless
                 services.AddSingleton(provider => service);
                 services.AddSingleton(provider => service.Swarm);
                 services.AddSingleton(provider => service.BlockChain);
-                services.AddSingleton(provider => properties.Libplanet);
+                if (properties.Libplanet is { } libplanetNodeServiceProperties)
+                {
+                    services.AddSingleton<LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>>(provider => libplanetNodeServiceProperties);
+                }
                 services.AddSingleton(provider =>
                 {
                     return new ActionEvaluationPublisher(
@@ -51,7 +57,7 @@ namespace NineChronicles.Headless
         }
 
         public static IHostBuilder UseNineChroniclesRPC(
-            this IHostBuilder builder, 
+            this IHostBuilder builder,
             RpcNodeServiceProperties properties
         )
         {
