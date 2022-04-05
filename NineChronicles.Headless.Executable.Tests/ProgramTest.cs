@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -54,21 +56,16 @@ namespace NineChronicles.Headless.Executable.Tests
                 // It can be flaky.
                 await Task.Delay(10000).ConfigureAwait(false);
 
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://localhost:5000/graphql");
-                request.Method = "POST";
-                var requestStream = request.GetRequestStream();
-                var content = "{\"query\":\"{chainQuery{blockQuery{block(index: 0) {hash}}}}\"}";
-                request.ContentLength = content.Length;
-                request.ContentType = "application/json";
-                requestStream.Write(Encoding.UTF8.GetBytes(content));
-                requestStream.Close();
-                var response = request.GetResponse();
-                var responseStream = response.GetResponseStream();
-                var streamReader = new StreamReader(responseStream);
-                var responseString = streamReader.ReadToEnd();
+                using var client = new HttpClient();
+                var queryString = "{\"query\":\"{chainQuery{blockQuery{block(index: 0) {hash}}}}\"}";
+                var content = new StringContent(queryString);
+                content.Headers.ContentLength = queryString.Length;
+                content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                var response = await client.PostAsync("http://localhost:5000/graphql", content);
+                var responseString = await response.Content.ReadAsStringAsync();
 
                 Assert.Contains("\"data\":{\"chainQuery\":{\"blockQuery\":{\"block\":{\"hash\":\"4582250d0da33b06779a8475d283d5dd210c683b9b999d74d03fac4f58fa6bce\"}}}}", responseString);
-                
+
                 var channel = new Channel(
                     "localhost:31234",
                     ChannelCredentials.Insecure,
