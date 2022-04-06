@@ -4,6 +4,7 @@
     {
         Main,
         Internal,
+        Permanent,
         Test,
     }
 }
