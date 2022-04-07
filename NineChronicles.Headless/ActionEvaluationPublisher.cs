@@ -161,7 +161,7 @@ namespace NineChronicles.Headless
                         if (!(ev.Action is RewardGold))
                         {
                             pa = new PolymorphicAction<ActionBase>(ev.Action);
-                            if (ev.Action is RankingBattle rb)
+                            if (ev.Action is RankingBattle rb && ev.Exception is null)
                             {
                                 if (rb.EnemyPlayerDigest is { } enemyPlayerDigest)
                                 {
