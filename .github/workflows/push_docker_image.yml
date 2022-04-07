@@ -8,6 +8,7 @@ on:
       - 9c-main
       - development
       - previewnet
+      - bugfix/ranking-battle-render
     tags:
       - v*
 
