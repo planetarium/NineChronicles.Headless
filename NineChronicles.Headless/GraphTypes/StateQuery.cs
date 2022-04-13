@@ -126,7 +126,9 @@ namespace NineChronicles.Headless.GraphTypes
                                         arenaInfos.Add(info);
                                     }
                                 }
-                                arenastate.OrderedArenaInfos.AddRange(arenaInfos.OrderByDescending(a => a.Score));
+#pragma warning disable CS0618 // Type or member is obsolete
+                                arenastate.OrderedArenaInfos.AddRange(arenaInfos.OrderByDescending(a => a.Score).ThenBy(a=>a.CombatPoint));
+#pragma warning restore CS0618 // Type or member is obsolete
                             }
                         }
                         return arenastate;
