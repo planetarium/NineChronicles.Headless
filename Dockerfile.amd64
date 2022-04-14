@@ -32,7 +32,7 @@ COPY --from=build-env /app/out .
 # Install native deps & utilities for production
 RUN apt-get update \
     && apt-get install -y --allow-unauthenticated \
-        libc6-dev jq \
+        libc6-dev jq curl \
      && rm -rf /var/lib/apt/lists/*
 
 VOLUME /data
