@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
@@ -307,6 +308,14 @@ namespace Libplanet.Headless.Hosting
             {
                 try
                 {
+                    Log.Debug("Migrating RocksDB.");
+                    var chainPath = Path.Combine(path, "chain");
+                    if (Directory.Exists(chainPath) &&
+                        RocksDBStore.RocksDBStore.MigrateChainDBFromColumnFamilies(chainPath))
+                    {
+                        Log.Debug("RocksDB is migrated.");
+                    }
+
                     store = new RocksDBStore.RocksDBStore(
                         path,
                         maxTotalWalSize: 16 * 1024 * 1024,
@@ -603,8 +612,8 @@ namespace Libplanet.Headless.Hosting
                 else
                 {
                     var uri = new Uri(properties.GenesisBlockPath);
-                    using var client = new WebClient();
-                    rawBlock = client.DownloadData(uri);
+                    using var client = new HttpClient();
+                    rawBlock = client.GetByteArrayAsync(uri).Result;
                 }
                 var blockDict = (Bencodex.Types.Dictionary)Codec.Decode(rawBlock);
                 return BlockMarshaler.UnmarshalBlock<T>(hashAlgorithmGetter, blockDict);
