@@ -95,7 +95,7 @@ namespace NineChronicles.Headless
             // Policies for dev mode.
             IBlockPolicy<NCAction>? easyPolicy = null;
             IBlockPolicy<NCAction>? hardPolicy = null;
-            IStagePolicy<NCAction> stagePolicy = new StagePolicy(txLifeTime, txQuotaPerSigner);
+            IStagePolicy<NCAction> stagePolicy = new StagePolicy(TimeSpan.FromMinutes(10), txQuotaPerSigner);
             if (isDev)
             {
                 easyPolicy = new ReorgPolicy(new RewardGold(), 1);
