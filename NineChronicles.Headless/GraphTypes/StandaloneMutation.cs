@@ -38,7 +38,8 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "activationStatus",
                 resolve: _ => new ActivationStatusMutation(nodeService));
 
-            Field<ActionMutation>(
+            Field<
+                ActionMutation>(
                 name: "action",
                 resolve: _ => new ActionMutation(nodeService));
 
