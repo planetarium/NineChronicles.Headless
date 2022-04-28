@@ -21,6 +21,7 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using GraphQL.Execution;
+using Lib9c.Tests;
 using NineChronicles.Headless.Executable.Commands;
 using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Executable.Tests.IO;
@@ -38,8 +39,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         public StandaloneMutationTest(ITestOutputHelper output) : base(output)
         {
-            var fixturePath = Path.Combine("..", "..", "..", "..", "Lib9c", ".Lib9c.Tests", "Data", "TableCSV");
-            _sheets = TableSheetsImporter.ImportSheets(fixturePath);
+            _sheets = TableSheetsImporter.ImportSheets(Path.Join("..", "..", "..", "..", "Lib9c", "Lib9c", "TableCSV"));
             _tableSheets = new TableSheets(_sheets);
         }
 
