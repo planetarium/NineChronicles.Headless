@@ -402,8 +402,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 2,
                 new List<Guid>(),
                 new List<Guid>(),
-                new List<Guid>(),
-                null
+                new List<Guid>()
             },
             new object?[]
             {
@@ -424,8 +423,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     Guid.NewGuid(),
                     Guid.NewGuid(),
                     Guid.NewGuid(),
-                },
-                null
+                }
             },
             new object?[]
             {
@@ -446,8 +444,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     Guid.NewGuid(),
                     Guid.NewGuid(),
                     Guid.NewGuid(),
-                },
-                6
+                }
             },
         };
 
