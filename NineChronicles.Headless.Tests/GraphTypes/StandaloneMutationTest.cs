@@ -345,8 +345,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             int stageId,
             List<Guid> costumeIds,
             List<Guid> equipmentIds,
-            List<Guid> consumableIds,
-            int? playCount
+            List<Guid> consumableIds
         )
         {
             var playerPrivateKey = new PrivateKey();
@@ -367,10 +366,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             if (consumableIds.Any())
             {
                 queryArgs += $", consumableIds: [{string.Join(",", consumableIds.Select(r => string.Format($"\"{r}\"")))}]";
-            }
-            if(playCount is int)
-            {
-                queryArgs += $", playCount:{playCount}";
             }
             var query = @$"mutation {{ action {{ hackAndSlash({queryArgs}) }} }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
@@ -396,7 +391,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(costumeIds, action.costumes);
             Assert.Equal(equipmentIds, action.equipments);
             Assert.Equal(consumableIds, action.foods);
-            Assert.Equal(playCount ?? 1, action.playCount);
         }
 
         public static IEnumerable<object?[]> HackAndSlashMember => new List<object?[]>
@@ -408,8 +402,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 2,
                 new List<Guid>(),
                 new List<Guid>(),
-                new List<Guid>(),
-                null
+                new List<Guid>()
             },
             new object?[]
             {
@@ -430,8 +423,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     Guid.NewGuid(),
                     Guid.NewGuid(),
                     Guid.NewGuid(),
-                },
-                null
+                }
             },
             new object?[]
             {
@@ -452,8 +444,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     Guid.NewGuid(),
                     Guid.NewGuid(),
                     Guid.NewGuid(),
-                },
-                6
+                }
             },
         };
 

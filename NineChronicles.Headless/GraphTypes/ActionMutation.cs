@@ -129,12 +129,6 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "consumableIds",
                         Description = "List of consumable id for use."
-                    }, 
-                    new QueryArgument<IntGraphType>
-                    {
-                        Name="playCount",
-                        DefaultValue = 1,
-                        Description = "Amount of times to boost rewards in one attempt."
                     }
                 ),
                 resolve: context =>
@@ -154,7 +148,6 @@ namespace NineChronicles.Headless.GraphTypes
                         List<Guid> costumeIds = context.GetArgument<List<Guid>>("costumeIds") ?? new List<Guid>();
                         List<Guid> equipmentIds = context.GetArgument<List<Guid>>("equipmentIds") ?? new List<Guid>();
                         List<Guid> consumableIds = context.GetArgument<List<Guid>>("consumableIds") ?? new List<Guid>();
-                        int playCount = context.GetArgument<int>("playCount");
 
                         var action = new HackAndSlash
                         {
@@ -164,7 +157,6 @@ namespace NineChronicles.Headless.GraphTypes
                             costumes = costumeIds,
                             equipments = equipmentIds,
                             foods = consumableIds,
-                            playCount = playCount
                         };
 
                         var actions = new NCAction[] { action };
