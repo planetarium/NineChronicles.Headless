@@ -137,5 +137,32 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 action.RecipeIds
             );
         }
+
+        [Fact]
+        public async Task UnlockWorld()
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            string query = $@"
+            {{
+                unlockWorld(avatarAddress: ""{avatarAddress.ToString()}"", worldIds: [2, 3])
+            }}";
+
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query);
+            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["unlockWorld"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var action = new UnlockWorld();
+            action.LoadPlainValue(plainValue);
+
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            Assert.Equal(
+                new List<int>
+                {
+                    2,
+                    3,
+                },
+                action.WorldIds
+            );
+        }
     }
 }

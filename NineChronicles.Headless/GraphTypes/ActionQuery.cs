@@ -93,6 +93,31 @@ namespace NineChronicles.Headless.GraphTypes
                     };
                     return Codec.Encode(action.PlainValue);
                 });
+            Field<ByteStringType>(
+                name: "unlockWorld",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "Address of avatar.",
+                    },
+                    new QueryArgument<NonNullGraphType<ListGraphType<IntGraphType>>>
+                    {
+                        Name = "worldIds",
+                        Description = "List of WorldUnlockSheet row world_id_to_unlock.",
+                    }
+                ),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+                    var worldIds = context.GetArgument<List<int>>("worldIds");
+                    var action = new UnlockWorld
+                    {
+                        AvatarAddress = avatarAddress,
+                        WorldIds = worldIds,
+                    };
+                    return Codec.Encode(action.PlainValue);
+                });
         }
     }
 }
