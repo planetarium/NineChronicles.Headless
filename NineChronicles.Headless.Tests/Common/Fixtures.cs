@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Lib9c.Model.Order;
+using Lib9c.Tests;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Crypto;
@@ -20,8 +21,10 @@ namespace NineChronicles.Headless.Tests
 
         public static readonly Address AvatarAddress = new Address("983c3Fbfe8243a0e36D55C6C1aE26A7c8Bb6CBd4");
 
-        public static readonly TableSheets TableSheetsFX = new TableSheets(TableSheetsImporter.ImportSheets(
-            Path.Combine("..", "..", "..", "..", "Lib9c", ".Lib9c.Tests", "Data", "TableCSV")));
+        public static readonly TableSheets TableSheetsFX =
+            new TableSheets(
+                TableSheetsImporter.ImportSheets(
+                    Path.Join("..", "..", "..", "..", "Lib9c", "Lib9c", "TableCSV")));
 
         public static readonly AvatarState AvatarStateFX = new AvatarState(
             AvatarAddress,

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
@@ -105,9 +106,32 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var index = context.GetArgument<int>("index");
-                    if (context.Source.GetState(WeeklyArenaState.DeriveAddress(index)) is { } state)
+                    var arenaAddress = WeeklyArenaState.DeriveAddress(index);
+                    if (context.Source.GetState(arenaAddress) is { } state)
                     {
-                        return new WeeklyArenaState((Dictionary) state);
+                        var arenastate = new WeeklyArenaState((Dictionary)state);
+                        if (arenastate.OrderedArenaInfos.Count == 0)
+                        {
+                            var listAddress = arenaAddress.Derive("address_list");
+                            if (context.Source.GetState(listAddress) is List rawList)
+                            {
+                                var addressList = rawList.ToList(StateExtensions.ToAddress);
+                                var arenaInfos = new List<ArenaInfo>();
+                                foreach (var address in addressList)
+                                {
+                                    var infoAddress = arenaAddress.Derive(address.ToByteArray());
+                                    if (context.Source.GetState(infoAddress) is Dictionary rawInfo)
+                                    {
+                                        var info = new ArenaInfo(rawInfo);
+                                        arenaInfos.Add(info);
+                                    }
+                                }
+#pragma warning disable CS0618 // Type or member is obsolete
+                                arenastate.OrderedArenaInfos.AddRange(arenaInfos.OrderByDescending(a => a.Score).ThenBy(a=>a.CombatPoint));
+#pragma warning restore CS0618 // Type or member is obsolete
+                            }
+                        }
+                        return arenastate;
                     }
 
                     return null;

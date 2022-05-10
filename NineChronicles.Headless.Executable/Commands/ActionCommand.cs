@@ -27,7 +27,7 @@ namespace NineChronicles.Headless.Executable.Commands
         public int ActivateAccount(
             [Argument("INVITATION-CODE", Description = "An invitation code.")] string invitationCode,
             [Argument("NONCE", Description = "A hex-encoded nonce for activation.")] string nonceEncoded,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")] string filePath
+            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null
         )
         {
             try
@@ -35,7 +35,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 ActivationKey activationKey = ActivationKey.Decode(invitationCode);
                 byte[] nonce = ByteUtil.ParseHex(nonceEncoded);
                 Nekoyume.Action.ActivateAccount action = activationKey.CreateActivateAccount(nonce);
-                var encoded = new List(
+                var list = new List(
                     new[]
                     {
                         (Text) nameof(Nekoyume.Action.ActivateAccount),
@@ -43,8 +43,17 @@ namespace NineChronicles.Headless.Executable.Commands
                     }
                 );
 
-                byte[] raw = Codec.Encode(encoded);
-                File.WriteAllText(filePath, Convert.ToBase64String(raw));
+                byte[] raw = Codec.Encode(list);
+                string encoded = Convert.ToBase64String(raw);
+                if (filePath is null)
+                {
+                    _console.Out.Write(encoded);
+                }
+                else
+                {
+                    File.WriteAllText(filePath, encoded);   
+                }
+
                 return 0;
             }
             catch (Exception e)
@@ -57,7 +66,7 @@ namespace NineChronicles.Headless.Executable.Commands
         [Command(Description = "Create MonsterCollect action.")]
         public int MonsterCollect(
             [Range(0, 7)] int level,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")] string filePath
+            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null
         )
         {
             try
@@ -66,16 +75,24 @@ namespace NineChronicles.Headless.Executable.Commands
                 {
                     level = level
                 };
-                var encoded = new List(
+
+                byte[] raw = Codec.Encode(new List(
                     new[]
                     {
                         (Text) nameof(Nekoyume.Action.MonsterCollect),
                         action.PlainValue
                     }
-                );
+                ));
+                string encoded = Convert.ToBase64String(raw);
+                if (filePath is null)
+                {
+                    _console.Out.Write(encoded);
+                }
+                else
+                {
+                    File.WriteAllText(filePath, encoded);   
+                }
 
-                byte[] raw = Codec.Encode(encoded);
-                File.WriteAllText(filePath, Convert.ToBase64String(raw));
                 return 0;
             }
             catch (Exception e)
@@ -88,7 +105,7 @@ namespace NineChronicles.Headless.Executable.Commands
         [Command(Description = "Create ClaimMonsterCollectionReward action.")]
         public int ClaimMonsterCollectionReward(
             [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")] string encodedAddress,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")] string filePath
+            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null
         )
         {
             try
@@ -99,16 +116,23 @@ namespace NineChronicles.Headless.Executable.Commands
                     avatarAddress = avatarAddress
                 };
 
-                var encoded = new List(
+                byte[] raw = Codec.Encode(new List(
                     new[]
                     {
                         (Text) nameof(Nekoyume.Action.ClaimMonsterCollectionReward),
                         action.PlainValue
                     }
-                );
+                ));
+                string encoded = Convert.ToBase64String(raw);
+                if (filePath is null)
+                {
+                    _console.Out.Write(encoded);
+                }
+                else
+                {
+                    File.WriteAllText(filePath, encoded);   
+                }
 
-                byte[] raw = Codec.Encode(encoded);
-                File.WriteAllText(filePath, Convert.ToBase64String(raw));
                 return 0;
             }
             catch (Exception e)
@@ -129,8 +153,6 @@ namespace NineChronicles.Headless.Executable.Commands
         {
             try
             {
-                filePath ??= Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
-
                 // Minter for 9c-mainnet
                 var currency = new Currency("NCG", 2, minter: new Address("47d082a115c63e7b58b1532d20e631538eafadde"));
                 FungibleAssetValue amountFungibleAssetValue =
@@ -143,17 +165,23 @@ namespace NineChronicles.Headless.Executable.Commands
                     amountFungibleAssetValue,
                     memo);
 
-                var encoded = new List(
+                byte[] raw = Codec.Encode(new List(
                     new[]
                     {
                         (Text) nameof(Nekoyume.Action.TransferAsset),
                         action.PlainValue
                     }
-                );
-
-                byte[] raw = Codec.Encode(encoded);
-                File.WriteAllText(filePath, Convert.ToBase64String(raw));
-                Console.Write(Convert.ToBase64String(raw));
+                ));
+                string encoded = Convert.ToBase64String(raw);
+                if (filePath is null)
+                {
+                    _console.Out.Write(encoded);
+                }
+                else
+                {
+                    File.WriteAllText(filePath, encoded);
+                    Console.Write(encoded);
+                }
                 return 0;
             }
             catch (Exception e)
