@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Bencodex;
 using GraphQL;
@@ -10,28 +12,62 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class ActionQuery : ObjectGraphType
     {
+        private static readonly Codec Codec = new Codec();
         public ActionQuery()
         {
-            var codec = new Codec();
+            // TODO restore when merge development
+            // var codec = new Codec();
+            // Field<ByteStringType>(
+            //     name: "stake",
+            //     arguments: new QueryArguments(new QueryArgument<BigIntGraphType>
+            //     {
+            //         Name = "amount",
+            //         Description = "An amount to stake.",
+            //     }),
+            //     resolve: context => codec.Encode(new Stake(context.GetArgument<BigInteger>("amount")).PlainValue));
+            //
+            // Field<ByteStringType>(
+            //     name: "claimStakeReward",
+            //     arguments: new QueryArguments(
+            //         new QueryArgument<AddressType>
+            //         {
+            //             Name = "avatarAddress",
+            //             Description = "The avatar address to receive staking rewards."
+            //         }),
+            //     resolve: context =>
+            //         codec.Encode(new ClaimStakeReward(context.GetArgument<Address>("avatarAddress")).PlainValue));
             Field<ByteStringType>(
-                name: "stake",
-                arguments: new QueryArguments(new QueryArgument<BigIntGraphType>
-                {
-                    Name = "amount",
-                    Description = "An amount to stake.",
-                }),
-                resolve: context => codec.Encode(new Stake(context.GetArgument<BigInteger>("amount")).PlainValue));
-
-            Field<ByteStringType>(
-                name: "claimStakeReward",
+                name: "grinding",
                 arguments: new QueryArguments(
-                    new QueryArgument<AddressType>
+                    new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "avatarAddress",
-                        Description = "The avatar address to receive staking rewards."
-                    }),
+                        Description = "Address of avatar.",
+                    },
+                    new QueryArgument<NonNullGraphType<ListGraphType<GuidGraphType>>>
+                    {
+                        Name = "equipmentIds",
+                        Description = "List of equipment ItemId.",
+                    },
+                    new QueryArgument<BooleanGraphType>
+                    {
+                        Name = "chargeAp",
+                        Description = "Flag to Charge Action Point.",
+                    }
+                ),
                 resolve: context =>
-                    codec.Encode(new ClaimStakeReward(context.GetArgument<Address>("avatarAddress")).PlainValue));
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+                    var equipmentIds = context.GetArgument<List<Guid>>("equipmentIds");
+                    var chargeAp = context.GetArgument<bool>("chargeAp");
+                    var action = new Grinding
+                    {
+                        AvatarAddress = avatarAddress,
+                        EquipmentIds = equipmentIds,
+                        ChargeAp = chargeAp,
+                    };
+                    return Codec.Encode(action.PlainValue);
+                });
         }
     }
 }
