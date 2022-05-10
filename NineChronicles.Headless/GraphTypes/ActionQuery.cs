@@ -68,6 +68,31 @@ namespace NineChronicles.Headless.GraphTypes
                     };
                     return Codec.Encode(action.PlainValue);
                 });
+            Field<ByteStringType>(
+                name: "unlockEquipmentRecipe",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "Address of avatar.",
+                    },
+                    new QueryArgument<NonNullGraphType<ListGraphType<IntGraphType>>>
+                    {
+                        Name = "recipeIds",
+                        Description = "List of EquipmentRecipeSheet row ids to unlock.",
+                    }
+                ),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+                    var recipeIds = context.GetArgument<List<int>>("recipeIds");
+                    var action = new UnlockEquipmentRecipe
+                    {
+                        AvatarAddress = avatarAddress,
+                        RecipeIds = recipeIds,
+                    };
+                    return Codec.Encode(action.PlainValue);
+                });
         }
     }
 }
