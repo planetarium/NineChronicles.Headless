@@ -21,7 +21,7 @@
     <PackageReference Include="GraphQL.Server.Ui.Playground" Version="5.1.1" />
     <PackageReference Include="GraphQL.SystemTextJson" Version="4.7.1" />
     <PackageReference Include="MagicOnion" Version="4.3.1" />
-    <PackageReference Include="MagicOnion.Abstractions" Version="4.3.1" />
+    <PackageReference Include="MagicOnion.Abstractions" Version="4.4.1" />
     <PackageReference Include="MagicOnion.Server" Version="4.3.1" />
     <PackageReference Include="MagicOnion.Server.HttpGateway" Version="4.3.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
