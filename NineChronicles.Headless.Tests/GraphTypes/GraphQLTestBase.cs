@@ -24,6 +24,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
+using Lib9c.Tests;
 using Xunit.Abstractions;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -41,8 +42,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var goldCurrency = new Currency("NCG", 2, minter: null);
 
-            var fixturePath = Path.Combine("..", "..", "..", "..", "Lib9c", ".Lib9c.Tests", "Data", "TableCSV");
-            var sheets = TableSheetsImporter.ImportSheets(fixturePath);
+            var sheets =
+                TableSheetsImporter.ImportSheets(Path.Join("..", "..", "..", "..", "Lib9c", "Lib9c", "TableCSV"));
             var blockAction = new RewardGold();
             var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
                 HashAlgorithmType.Of<SHA256>(),
