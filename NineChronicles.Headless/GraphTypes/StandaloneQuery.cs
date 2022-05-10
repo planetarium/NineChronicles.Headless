@@ -59,6 +59,11 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
+            Field<NonNullGraphType<ActionQuery>>(
+                name: "actionQuery",
+                resolve: _ => new ActionQuery()
+            );
+
             Field<ByteStringType>(
                 name: "state",
                 arguments: new QueryArguments(
