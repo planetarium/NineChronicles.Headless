@@ -303,9 +303,6 @@ namespace NineChronicles.Headless
                     context.DifferentAppProtocolVersionEncounterSubject.OnNext(
                         new DifferentAppProtocolVersionEncounter(peer, peerVersion, localVersion)
                     );
-
-                    // FIXME: 일단은 버전이 다른 피어는 마주쳐도 쌩깐다.
-                    return false;
                 };
 
             properties.Libplanet.NodeExceptionOccurred =
