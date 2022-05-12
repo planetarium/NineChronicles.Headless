@@ -15,27 +15,25 @@ namespace NineChronicles.Headless.GraphTypes
         private static readonly Codec Codec = new Codec();
         public ActionQuery()
         {
-            // TODO restore when merge development
-            // var codec = new Codec();
-            // Field<ByteStringType>(
-            //     name: "stake",
-            //     arguments: new QueryArguments(new QueryArgument<BigIntGraphType>
-            //     {
-            //         Name = "amount",
-            //         Description = "An amount to stake.",
-            //     }),
-            //     resolve: context => codec.Encode(new Stake(context.GetArgument<BigInteger>("amount")).PlainValue));
-            //
-            // Field<ByteStringType>(
-            //     name: "claimStakeReward",
-            //     arguments: new QueryArguments(
-            //         new QueryArgument<AddressType>
-            //         {
-            //             Name = "avatarAddress",
-            //             Description = "The avatar address to receive staking rewards."
-            //         }),
-            //     resolve: context =>
-            //         codec.Encode(new ClaimStakeReward(context.GetArgument<Address>("avatarAddress")).PlainValue));
+            Field<ByteStringType>(
+                name: "stake",
+                arguments: new QueryArguments(new QueryArgument<BigIntGraphType>
+                {
+                    Name = "amount",
+                    Description = "An amount to stake.",
+                }),
+                resolve: context => Codec.Encode(new Stake(context.GetArgument<BigInteger>("amount")).PlainValue));
+
+            Field<ByteStringType>(
+                name: "claimStakeReward",
+                arguments: new QueryArguments(
+                    new QueryArgument<AddressType>
+                    {
+                        Name = "avatarAddress",
+                        Description = "The avatar address to receive staking rewards."
+                    }),
+                resolve: context =>
+                    Codec.Encode(new ClaimStakeReward(context.GetArgument<Address>("avatarAddress")).PlainValue));
             Field<ByteStringType>(
                 name: "grinding",
                 arguments: new QueryArguments(
