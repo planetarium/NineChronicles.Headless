@@ -7,6 +7,7 @@ using GraphQL.Types;
 using Libplanet;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -22,7 +23,8 @@ namespace NineChronicles.Headless.GraphTypes
                     Name = "amount",
                     Description = "An amount to stake.",
                 }),
-                resolve: context => Codec.Encode(new Stake(context.GetArgument<BigInteger>("amount")).PlainValue));
+                resolve: context => Codec.Encode(
+                    ((NCAction)new Stake(context.GetArgument<BigInteger>("amount"))).PlainValue));
 
             Field<ByteStringType>(
                 name: "claimStakeReward",
@@ -33,7 +35,9 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "The avatar address to receive staking rewards."
                     }),
                 resolve: context =>
-                    Codec.Encode(new ClaimStakeReward(context.GetArgument<Address>("avatarAddress")).PlainValue));
+                    Codec.Encode(
+                        ((NCAction)new ClaimStakeReward(
+                            context.GetArgument<Address>("avatarAddress"))).PlainValue));
             Field<ByteStringType>(
                 name: "grinding",
                 arguments: new QueryArguments(
@@ -58,7 +62,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var equipmentIds = context.GetArgument<List<Guid>>("equipmentIds");
                     var chargeAp = context.GetArgument<bool>("chargeAp");
-                    var action = new Grinding
+                    NCAction action = new Grinding
                     {
                         AvatarAddress = avatarAddress,
                         EquipmentIds = equipmentIds,
@@ -84,7 +88,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var recipeIds = context.GetArgument<List<int>>("recipeIds");
-                    var action = new UnlockEquipmentRecipe
+                    NCAction action = new UnlockEquipmentRecipe
                     {
                         AvatarAddress = avatarAddress,
                         RecipeIds = recipeIds,
@@ -109,7 +113,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var worldIds = context.GetArgument<List<int>>("worldIds");
-                    var action = new UnlockWorld
+                    NCAction action = new UnlockWorld
                     {
                         AvatarAddress = avatarAddress,
                         WorldIds = worldIds,
