@@ -236,6 +236,23 @@ namespace NineChronicles.Headless.GraphTypes
                     return null;
                 }
             );
+            
+            Field<StakeRegularRewardSheetType>(
+                nameof(StakeRegularRewardSheet),
+                resolve: context =>
+                {
+                    var sheetAddress = Addresses.GetSheetAddress<StakeRegularRewardSheet>();
+                    IValue? value = context.Source.GetState(sheetAddress);
+                    if (value is Text ss)
+                    {
+                        var stakeRegularRewardSheet = new StakeRegularRewardSheet();
+                        stakeRegularRewardSheet.Set(ss);
+                        return stakeRegularRewardSheet;
+                    }
+
+                    return null;
+                }
+            );
         }
     }
 }
