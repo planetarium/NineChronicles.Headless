@@ -13,6 +13,7 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Execution;
 using GraphQL.NewtonsoftJson;
+using Lib9c.Tests;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
@@ -42,8 +43,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         public StandaloneQueryTest(ITestOutputHelper output) : base(output)
         {
-            var fixturePath = Path.Combine("..", "..", "..", "..", "Lib9c", ".Lib9c.Tests", "Data", "TableCSV");
-            _sheets = TableSheetsImporter.ImportSheets(fixturePath);
+            _sheets = TableSheetsImporter.ImportSheets(Path.Join("..", "..", "..", "..", "Lib9c", "Lib9c", "TableCSV"));
         }
 
         [Fact]
