@@ -11,6 +11,7 @@ using Nekoyume.Action;
 using NineChronicles.Headless.GraphTypes;
 using Xunit;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -34,7 +35,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query);
             var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
-            var action = new Stake(amount);
+            NCAction action = new Stake(amount);
             var expected = new Dictionary<string, object>()
             {
                 ["stake"] = ByteUtil.Hex(_codec.Encode(action.PlainValue)),
@@ -56,7 +57,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["claimStakeReward"]));
             Assert.IsType<Dictionary>(plainValue);
             var dictionary = (Dictionary) plainValue;
-            Assert.Equal((Binary) dictionary[Lib9c.SerializeKeys.AvatarAddressKey], avatarAddress.ToByteArray());
+            Assert.IsType<ClaimStakeReward>(DeserializeNCAction(dictionary).InnerAction);
+        }
+
+        private NCAction DeserializeNCAction(IValue value)
+        {
+#pragma warning disable CS0612
+            NCAction action = new NCAction();
+#pragma warning restore CS0612
+            action.LoadPlainValue(value);
+            return action;
         }
 
         private class StakeFixture : IEnumerable<object[]>

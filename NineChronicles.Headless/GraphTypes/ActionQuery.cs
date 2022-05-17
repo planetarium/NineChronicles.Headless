@@ -5,6 +5,7 @@ using GraphQL.Types;
 using Libplanet;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -20,7 +21,8 @@ namespace NineChronicles.Headless.GraphTypes
                     Name = "amount",
                     Description = "An amount to stake.",
                 }),
-                resolve: context => codec.Encode(new Stake(context.GetArgument<BigInteger>("amount")).PlainValue));
+                resolve: context => Codec.Encode(
+                    ((NCAction)new Stake(context.GetArgument<BigInteger>("amount"))).PlainValue));
 
             Field<ByteStringType>(
                 name: "claimStakeReward",
@@ -31,7 +33,9 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "The avatar address to receive staking rewards."
                     }),
                 resolve: context =>
-                    codec.Encode(new ClaimStakeReward(context.GetArgument<Address>("avatarAddress")).PlainValue));
+                    Codec.Encode(
+                        ((NCAction)new ClaimStakeReward(
+                            context.GetArgument<Address>("avatarAddress"))).PlainValue));
         }
     }
 }
