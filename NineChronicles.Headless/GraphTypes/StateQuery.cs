@@ -159,6 +159,30 @@ namespace NineChronicles.Headless.GraphTypes
                     return null;
                 }
             );
+            
+            Field<StakeStateType>(
+                name:  nameof(StakeState),
+                description: "State for staking.",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "address",
+                    Description = "Address of agent who staked."
+                }),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("address");
+                    if (context.Source.GetState(StakeState.DeriveAddress(address)) is Dictionary state)
+                    {
+                        return new StakeStateType.StakeStateContext(
+                            new StakeState(state),
+                            context.Source.AccountStateGetter,
+                            context.Source.AccountBalanceGetter
+                        );
+                    }
+
+                    return null;
+                }
+            );
 
             Field<MonsterCollectionStateType>(
                 nameof(MonsterCollectionState),
