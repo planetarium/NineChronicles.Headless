@@ -420,6 +420,10 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Query for rpc mode information.",
                 resolve: context => new RpcInformationQuery(publisher)
             );
+
+            Field<NonNullGraphType<ActionQuery>>(
+                name: "actionQuery",
+                resolve: context => new ActionQuery());
         }
     }
 }
