@@ -1,4 +1,5 @@
 using NineChronicles.Headless.Executable.Commands.Key;
+using NineChronicles.Headless.Executable.IO;
 
 #nullable enable
 // Copied from https://git.io/Jqc0q
@@ -15,10 +16,12 @@ namespace NineChronicles.Headless.Executable.Commands
     using Libplanet.KeyStore;
 
     [HasSubCommands(typeof(ConversionCommand), "convert")]
-    public class KeyCommand
+    public class KeyCommand : CoconaLiteConsoleAppBase
     {
-        public KeyCommand(IKeyStore keyStore)
+        private readonly IConsole _console;
+        public KeyCommand(IConsole console, IKeyStore keyStore)
         {
+            _console = console;
             KeyStore = keyStore;
         }
 
@@ -137,12 +140,12 @@ namespace NineChronicles.Headless.Executable.Commands
             byte[] rawKey = publicKey ? key.PublicKey.Format(true) : key.ToByteArray();
             if (bytes)
             {
-                using Stream stdout = Console.OpenStandardOutput();
+                using Stream stdout = _console.OpenStandardOutput();
                 stdout.Write(rawKey);
             }
             else
             {
-                Console.WriteLine(ByteUtil.Hex(rawKey));
+                _console.Out.WriteLine(ByteUtil.Hex(rawKey));
             }
         }
 
@@ -179,8 +182,18 @@ namespace NineChronicles.Headless.Executable.Commands
             }
             else
             {
-                Console.WriteLine(priv);
+                _console.Out.WriteLine(priv);
             }
+        }
+
+        public void PublicKey(
+            [Argument("KEY-ID", Description = "A key UUID to sign.")]
+            Guid keyId,
+            PassphraseParameters passphrase
+        )
+        {
+            PrivateKey key = UnprotectKey(keyId, passphrase.Passphrase);
+            _console.Out.WriteLine(ByteUtil.Hex(key.PublicKey.Format(false)));
         }
 
         public PrivateKey UnprotectKey(Guid keyId, string? passphrase = null)
@@ -223,7 +236,7 @@ namespace NineChronicles.Headless.Executable.Commands
             Guid keyId = dryRun ? Guid.NewGuid() : KeyStore.Add(ppk);
             if (json)
             {
-                using Stream stdout = System.Console.OpenStandardOutput();
+                using Stream stdout = _console.OpenStandardOutput();
                 ppk.WriteJson(stdout, keyId);
                 stdout.WriteByte(0x0a);  // line ending
             }
