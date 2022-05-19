@@ -141,7 +141,7 @@ namespace NineChronicles.Headless.GraphTypes
                     },
                     new QueryArgument<NonNullGraphType<CurrencyType>>
                     {
-                        Description = "A currency value to be transferred.",
+                        Description = "A currency type to be transferred.",
                         Name = "currency",
                     },
                     new QueryArgument<StringGraphType>
@@ -158,7 +158,7 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         CurrencyEnum.NCG => CurrencyType.NCG,
                         CurrencyEnum.CRYSTAL => CurrencyType.CRYSTAL,
-                        _ => throw new ExecutionError($"Unsupported Currency type.")
+                        _ => throw new ExecutionError("Unsupported Currency type.")
                     };
                     var amount = FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
                     var memo = context.GetArgument<string?>("memo");
