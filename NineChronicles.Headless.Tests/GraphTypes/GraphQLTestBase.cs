@@ -117,7 +117,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             StandaloneContextFx.KeyStore!;
 
         protected IDocumentExecuter DocumentExecutor { get; }
-        
+
         protected SubscriptionDocumentExecuter SubscriptionDocumentExecuter { get; } = new SubscriptionDocumentExecuter();
 
         protected Task<ExecutionResult> ExecuteQueryAsync(string query)
@@ -143,8 +143,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             where T : IAction, new()
         {
             Task task = swarm.StartAsync(
-                millisecondsDialTimeout: 200,
-                millisecondsBroadcastTxInterval: 200,
+                dialTimeout: TimeSpan.FromMilliseconds(200),
+                broadcastBlockInterval: TimeSpan.FromMilliseconds(200),
+                broadcastTxInterval: TimeSpan.FromMilliseconds(200),
                 cancellationToken: cancellationToken
             );
             await swarm.WaitForRunningAsync();
