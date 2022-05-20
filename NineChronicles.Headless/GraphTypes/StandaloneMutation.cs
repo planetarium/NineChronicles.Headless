@@ -278,7 +278,7 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
                         Name = "payload",
-                        Description = "The hexadecimal of string for staging transaction."
+                        Description = "The hexadecimal string of the transaction to stage."
                     }
                 ),
                 resolve: context =>
