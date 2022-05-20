@@ -69,6 +69,11 @@ namespace NineChronicles.Headless.Executable.Commands
             {
                 throw Utils.Error("GoldDistributionPath is not set");
             }
+            
+            if (string.IsNullOrEmpty(genesisConfig.AdminAddress))
+            {
+                throw Utils.Error($"{nameof(genesisConfig.AdminAddress)} is not set");
+            }
 
             try
             {
@@ -79,7 +84,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     new AdminState(new Address(genesisConfig.AdminAddress), genesisConfig.AdminValidUntil);
 
                 AuthorizedMinersState? authorizedMinersState = null;
-                if (genesisConfig.AuthorizedMinerConfig.Miners.Any())
+                if (genesisConfig.AuthorizedMinerConfig.Miners is { } miners && miners.Any())
                 {
                     authorizedMinersState = new AuthorizedMinersState(
                         miners: genesisConfig.AuthorizedMinerConfig.Miners.Select(a => new Address(a)),
