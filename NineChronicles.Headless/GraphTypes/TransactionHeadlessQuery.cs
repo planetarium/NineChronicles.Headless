@@ -259,55 +259,6 @@ namespace NineChronicles.Headless.GraphTypes
                     return signedTransaction.Serialize(true);
                 }
             );
-
-            Field<NonNullGraphType<TxIdType>>(
-                name: "stageTx",
-                description: "Add a new transaction to staging and return TxId",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "payload",
-                        Description = "The hexadecimal of string for staging transaction."
-                    }
-                ),
-                resolve: context =>
-                {
-                    try
-                    {
-                        byte[] bytes = ByteUtil.ParseHex(context.GetArgument<string>("payload"));
-                        Transaction<NCAction> tx = Transaction<NCAction>.Deserialize(bytes);
-                        NineChroniclesNodeService? service = standaloneContext.NineChroniclesNodeService;
-                        BlockChain<NCAction>? blockChain = service?.Swarm.BlockChain;
-
-                        if (blockChain is null)
-                        {
-                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
-                        }
-
-                        Exception? validationExc = blockChain.Policy.ValidateNextBlockTx(blockChain, tx);
-                        if (validationExc is null)
-                        {
-                            blockChain.StageTransaction(tx);
-
-                            if (service?.Swarm is { } swarm && swarm.Running)
-                            {
-                                swarm.BroadcastTxs(new[] { tx });
-                            }
-
-                            return tx.Id;
-                        }
-
-                        throw new ExecutionError(
-                            $"The given transaction is invalid. (due to: {validationExc.Message})",
-                            validationExc
-                        );
-                    }
-                    catch (Exception e)
-                    {
-                        throw new ExecutionError("An unexpected exception occurred.", e);
-                    }
-                }
-            );
         }
     }
 }

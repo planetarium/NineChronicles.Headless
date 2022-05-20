@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
@@ -14,19 +13,13 @@ using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
-using Libplanet.Extensions.Cocona;
-using Libplanet.KeyStore;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Libplanet.Tx;
 using Nekoyume.Action;
-using NineChronicles.Headless.Executable.Tests.IO;
-using NineChronicles.Headless.Executable.Tests.KeyStore;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common;
 using Xunit;
-using static NineChronicles.Headless.Tests.GraphQLTestUtils;
-using KeyCommand = NineChronicles.Headless.Executable.Commands.KeyCommand;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
@@ -329,88 +322,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Store = _store,
                 NineChroniclesNodeService = _service
             });
-        }
-
-        [Fact]
-        public async Task SignTransaction()
-        {
-            var privateKey = new PrivateKey();
-            var privateKey2 = new PrivateKey();
-            var recipient = privateKey.ToAddress();
-            var sender = privateKey2.ToAddress();
-
-            // Create Action.
-            var args = $"recipient: \"{recipient}\", sender: \"{sender}\", amount: \"17.5\", currency: CRYSTAL";
-            var actionQuery = $"{{ transferAsset({args}) }}";
-            var actionQueryResult = await ExecuteQueryAsync<ActionQuery>(actionQuery);
-            var actionData = (Dictionary<string, object>) ((ExecutionNode) actionQueryResult.Data!).ToValue()!;
-            var plainValue = actionData["transferAsset"];
-
-            // Get Nonce.
-            var nonceQuery = $@"query {{
-                nextTxNonce(address: ""{privateKey.ToAddress()}"")
-            }}";
-            var nonceQueryResult = await ExecuteAsync(nonceQuery);
-            var nonce = (long) ((Dictionary<string, object>) ((ExecutionNode) nonceQueryResult.Data!).ToValue()!)["nextTxNonce"];
-
-            // Get PublicKey.
-            var keyStore = new InMemoryKeyStore();
-            Guid keyId = keyStore.Add(ProtectedPrivateKey.Protect(privateKey, "1234"));
-            var passPhrase = new PassphraseParameters();
-            passPhrase.Passphrase = "1234";
-            var console = new StringIOConsole();
-            var keyCommand = new KeyCommand(console, keyStore);
-            keyCommand.PublicKey(keyId, passPhrase);
-            var hexedPublicKey = console.Out.ToString().Trim();
-
-            Assert.Equal(hexedPublicKey, ByteUtil.Hex(privateKey.PublicKey.Format(false)));
-
-            // Create unsigned Transaction.
-            var unsignedQuery = $@"query {{
-                unsignedTransaction(publicKey: ""{hexedPublicKey}"", plainValue: ""{plainValue}"", nonce: {nonce})
-            }}";
-            var unsignedQueryResult = await ExecuteAsync(unsignedQuery);
-            var unsignedData = (string)((Dictionary<string, object>)((ExecutionNode) unsignedQueryResult.Data!).ToValue()!)["unsignedTransaction"];
-            var unsignedTxBytes = ByteUtil.ParseHex(unsignedData);
-            Transaction<NCAction> unsignedTx = Transaction<NCAction>.Deserialize(unsignedTxBytes, false);
-
-            // Sign Transaction in local.
-            var path = Path.GetTempFileName();
-            await File.WriteAllBytesAsync(path, unsignedTxBytes);
-            var outputPath = Path.GetTempFileName();
-            keyCommand.Sign(keyId, path, passPhrase, outputPath);
-
-            var signature = ByteUtil.Hex(await File.ReadAllBytesAsync(outputPath));
-            Assert.Equal(ByteUtil.Hex(privateKey.Sign(unsignedTxBytes)), signature);
-
-            // Attachment signature & unsigned transaction
-            var signQuery = $@"query {{
-                signTransaction(unsignedTransaction: ""{unsignedData}"", signature: ""{signature}"")
-            }}";
-            var signQueryResult = await ExecuteAsync(signQuery);
-            var hex = (string) ((Dictionary<string, object>) ((ExecutionNode) signQueryResult.Data!).ToValue()!)[
-                "signTransaction"];
-            byte[] result = ByteUtil.ParseHex(hex);
-            Transaction<NCAction> signedTx = Transaction<NCAction>.Deserialize(result);
-
-            Assert.Equal(unsignedTx.PublicKey, signedTx.PublicKey);
-            Assert.Equal(unsignedTx.Signer, signedTx.Signer);
-            Assert.Equal(nonce, signedTx.Nonce);
-            Assert.Equal(unsignedTx.UpdatedAddresses, signedTx.UpdatedAddresses);
-            Assert.Equal(unsignedTx.Timestamp, signedTx.Timestamp);
-            Assert.Single(unsignedTx.Actions);
-            Assert.Single(signedTx.Actions);
-            Assert.IsType<TransferAsset>(signedTx.Actions.Single().InnerAction);
-            var action = Assert.IsType<TransferAsset>(signedTx.Actions.Single().InnerAction);
-            Assert.Equal(recipient, action.Recipient);
-            Assert.Equal(sender, action.Sender);
-
-            // Staging Transaction.
-            var stageTxQuery = $"query {{ stageTx(payload: \"{hex}\") }}";
-            var stageTxResult = await ExecuteAsync(stageTxQuery);
-            var txId = (string)((Dictionary<string, object>) ((ExecutionNode) stageTxResult.Data!).ToValue()!)["stageTx"];
-            Assert.Equal(signedTx.Id.ToHex(), txId);
-            Assert.Contains(signedTx.Id, _service.BlockChain.GetStagedTransactionIds());
         }
     }
 }
