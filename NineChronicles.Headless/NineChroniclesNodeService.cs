@@ -79,11 +79,7 @@ namespace NineChronicles.Headless
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false,
             bool strictRendering = false,
-            bool isDev = false,
-            int blockInterval = 10000,
-            int reorgInterval = 0,
             TimeSpan txLifeTime = default,
-            int minerCount = 1,
             int txQuotaPerSigner = 10
         )
         {
@@ -92,15 +88,7 @@ namespace NineChronicles.Headless
 
             LogEventLevel logLevel = LogEventLevel.Debug;
             var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
-            // Policies for dev mode.
-            IBlockPolicy<NCAction>? easyPolicy = null;
-            IBlockPolicy<NCAction>? hardPolicy = null;
             IStagePolicy<NCAction> stagePolicy = new StagePolicy(txLifeTime, txQuotaPerSigner);
-            if (isDev)
-            {
-                easyPolicy = new ReorgPolicy(new RewardGold(), 1);
-                hardPolicy = new ReorgPolicy(new RewardGold(), 2);
-            }
 
             BlockRenderer = blockPolicySource.BlockRenderer;
             ActionRenderer = blockPolicySource.ActionRenderer;
@@ -145,134 +133,24 @@ namespace NineChronicles.Headless
                 renderers.Add(strictRenderer);
             }
 
-            async Task minerLoopAction(
-                BlockChain<NCAction> chain,
-                Swarm<NCAction> swarm,
-                PrivateKey privateKey,
-                CancellationToken cancellationToken)
-            {
-                var miner = new Miner(chain, swarm, privateKey);
-                Log.Debug("Miner called.");
-                while (!cancellationToken.IsCancellationRequested)
+            NodeService = new LibplanetNodeService<NCAction>(
+                Properties,
+                blockPolicy,
+                stagePolicy,
+                renderers,
+                preloadProgress,
+                (code, msg) =>
                 {
-                    try
-                    {
-                        long nextBlockIndex = chain.Tip.Index + 1;
-
-                        if (swarm.Running)
-                        {
-                            Log.Debug("Start mining.");
-
-                            if (chain.Policy is BlockPolicy bp)
-                            {
-                                if (bp.IsAllowedToMine(privateKey.ToAddress(), chain.Count))
-                                {
-                                    IEnumerable<Task<Block<NCAction>>> miners = Enumerable
-                                        .Range(0, minerCount)
-                                        .Select(_ => miner.MineBlockAsync(cancellationToken));
-                                    await Task.WhenAll(miners);
-                                }
-                                else
-                                {
-                                    Log.Debug(
-                                        "Miner {MinerAddress} is not allowed to mine a block with index {Index} " +
-                                        "under current policy.",
-                                        privateKey.ToAddress(),
-                                        chain.Count);
-                                    await Task.Delay(1000, cancellationToken);
-                                }
-                            }
-                            else
-                            {
-                                Log.Error(
-                                    "No suitable policy was found for chain {ChainId}.",
-                                    chain.Id);
-                                await Task.Delay(1000, cancellationToken);
-                            }
-                        }
-                        else
-                        {
-                            await Task.Delay(1000, cancellationToken);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "Exception occurred.");
-                    }
-                }
-            }
-
-            async Task devMinerLoopAction(
-                Swarm<NCAction> mainSwarm,
-                Swarm<NCAction> subSwarm,
-                PrivateKey privateKey,
-                CancellationToken cancellationToken)
-            {
-                var miner = new ReorgMiner(mainSwarm, subSwarm, privateKey, reorgInterval);
-                Log.Debug("Miner called.");
-                while (!cancellationToken.IsCancellationRequested)
+                    ExceptionRenderer.RenderException(code, msg);
+                    Log.Error(msg);
+                },
+                isPreloadStarted =>
                 {
-                    try
-                    {
-                        if (mainSwarm.Running)
-                        {
-                            Log.Debug("Start mining.");
-                            await miner.MineBlockAsync(cancellationToken);
-                            await Task.Delay(blockInterval, cancellationToken);
-                        }
-                        else
-                        {
-                            await Task.Delay(1000, cancellationToken);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "Exception occurred.");
-                    }
-                }
-            }
-
-            if (isDev)
-            {
-                NodeService = new DevLibplanetNodeService<NCAction>(
-                    Properties,
-                    easyPolicy,
-                    hardPolicy,
-                    stagePolicy,
-                    renderers,
-                    devMinerLoopAction,
-                    preloadProgress,
-                    (code, msg) =>
-                    {
-                        ExceptionRenderer.RenderException(code, msg);
-                        Log.Error(msg);
-                    },
-                    isPreloadStarted => { NodeStatusRenderer.PreloadStatus(isPreloadStarted); },
-                    ignoreBootstrapFailure
-                );
-            }
-            else
-            {
-                NodeService = new LibplanetNodeService<NCAction>(
-                    Properties,
-                    blockPolicy,
-                    stagePolicy,
-                    renderers,
-                    minerLoopAction,
-                    preloadProgress,
-                    (code, msg) =>
-                    {
-                        ExceptionRenderer.RenderException(code, msg);
-                        Log.Error(msg);
-                    },
-                    isPreloadStarted =>
-                    {
-                        NodeStatusRenderer.PreloadStatus(isPreloadStarted);
-                    },
-                    ignoreBootstrapFailure,
-                    ignorePreloadFailure
-                );
-            }
+                    NodeStatusRenderer.PreloadStatus(isPreloadStarted);
+                },
+                ignoreBootstrapFailure,
+                ignorePreloadFailure
+            );
 
             strictRenderer.BlockChain = NodeService.BlockChain ?? throw new Exception("BlockChain is null.");
         }
@@ -323,11 +201,7 @@ namespace NineChronicles.Headless
                 ignoreBootstrapFailure: properties.IgnoreBootstrapFailure,
                 ignorePreloadFailure: properties.IgnorePreloadFailure,
                 strictRendering: properties.StrictRender,
-                isDev: properties.Dev,
-                blockInterval: properties.BlockInterval,
-                reorgInterval: properties.ReorgInterval,
                 txLifeTime: properties.TxLifeTime,
-                minerCount: properties.MinerCount,
                 txQuotaPerSigner: properties.TxQuotaPerSigner
             );
             service.ConfigureContext(context);

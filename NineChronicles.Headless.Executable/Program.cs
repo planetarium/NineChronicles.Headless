@@ -326,7 +326,8 @@ namespace NineChronicles.Headless.Executable
                         bucketSize: bucketSize,
                         chainTipStaleBehaviorType: chainTipStaleBehaviorType,
                         maximumPollPeers: maximumPollPeers,
-                        transportType: transportType
+                        transportType: transportType,
+                        blockInterval: blockInterval
                     );
 
                 if (rpcServer)
@@ -348,12 +349,8 @@ namespace NineChronicles.Headless.Executable
                     MinerPrivateKey = minerPrivateKey,
                     Libplanet = properties,
                     NetworkType = networkType,
-                    Dev = isDev,
                     StrictRender = strictRendering,
-                    BlockInterval = blockInterval,
-                    ReorgInterval = reorgInterval,
                     TxLifeTime = TimeSpan.FromMinutes(txLifeTime),
-                    MinerCount = minerCount,
                     TxQuotaPerSigner = txQuotaPerSigner
                 };
                 hostBuilder.ConfigureServices(services =>

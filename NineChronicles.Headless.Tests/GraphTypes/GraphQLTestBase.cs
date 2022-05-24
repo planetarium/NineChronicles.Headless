@@ -182,7 +182,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 blockPolicy: new BlockPolicy<T>(),
                 stagePolicy: new VolatileStagePolicy<T>(),
                 renderers: new[] { new DummyRenderer<T>() },
-                minerLoopAction: (chain, swarm, privateKey, _) => Task.CompletedTask,
                 preloadProgress: preloadProgress,
                 exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),
                 preloadStatusHandlerAction: isPreloadStart => { }
