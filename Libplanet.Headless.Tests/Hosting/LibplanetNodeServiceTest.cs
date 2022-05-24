@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Net;
 using System.Security.Cryptography;
-using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet.Action;
 using Libplanet.Blockchain;
@@ -33,7 +32,6 @@ namespace Libplanet.Headless.Tests.Hosting
                 blockPolicy: new BlockPolicy<DummyAction>(),
                 stagePolicy: new VolatileStagePolicy<DummyAction>(),
                 renderers: null,
-                minerLoopAction: (chain, swarm, pk, ct) => Task.CompletedTask,
                 preloadProgress: null,
                 exceptionHandlerAction:  (code, msg) => throw new Exception($"{code}, {msg}"),
                 preloadStatusHandlerAction: isPreloadStart => { }
@@ -58,7 +56,6 @@ namespace Libplanet.Headless.Tests.Hosting
                     blockPolicy: new BlockPolicy<DummyAction>(),
                     stagePolicy: new VolatileStagePolicy<DummyAction>(),
                     renderers: null,
-                    minerLoopAction: (chain, swarm, pk, ct) => Task.CompletedTask,
                     preloadProgress: null,
                     exceptionHandlerAction:  (code, msg) => throw new Exception($"{code}, {msg}"),
                     preloadStatusHandlerAction: isPreloadStart => { }

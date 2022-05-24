@@ -15,11 +15,14 @@ using Libplanet.Blockchain.Renderers;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Net;
+using Libplanet.Net.Consensus;
 using Libplanet.Net.Protocols;
+using Libplanet.Net.Transports;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Microsoft.Extensions.Hosting;
+using Nekoyume.BlockChain;
 using NineChronicles.RPC.Shared.Exceptions;
 using Nito.AsyncEx;
 using Serilog;
@@ -39,14 +42,18 @@ namespace Libplanet.Headless.Hosting
         public readonly BlockChain<T> BlockChain;
 
         public readonly Swarm<T> Swarm;
+        
+        public readonly RoutingTable ConsensusTable;
+        
+        public readonly ITransport ConsensusTransport;
+        
+        public readonly IReactor Reactor;
 
         public readonly LibplanetNodeServiceProperties<T> Properties;
 
         public AsyncManualResetEvent BootstrapEnded { get; }
 
         public AsyncManualResetEvent PreloadEnded { get; }
-
-        private Func<BlockChain<T>, Swarm<T>, PrivateKey, CancellationToken, Task> _minerLoopAction;
 
         private readonly bool _ignorePreloadFailure;
 
@@ -79,7 +86,6 @@ namespace Libplanet.Headless.Hosting
             IBlockPolicy<T> blockPolicy,
             IStagePolicy<T> stagePolicy,
             IEnumerable<IRenderer<T>> renderers,
-            Func<BlockChain<T>, Swarm<T>, PrivateKey, CancellationToken, Task> minerLoopAction,
             Progress<PreloadState> preloadProgress,
             Action<RPCException, string> exceptionHandlerAction,
             Action<bool> preloadStatusHandlerAction,
@@ -160,7 +166,6 @@ namespace Libplanet.Headless.Hosting
 
             _obsoletedChainIds = chainIds.Where(chainId => chainId != BlockChain.Id).ToList();
 
-            _minerLoopAction = minerLoopAction;
             _exceptionHandlerAction = exceptionHandlerAction;
             _preloadStatusHandlerAction = preloadStatusHandlerAction;
             IEnumerable<IceServer> shuffledIceServers = null;
@@ -206,6 +211,37 @@ namespace Libplanet.Headless.Hosting
                 }
             );
 
+            if (!(properties.ConsensusPrivateKey is null))
+            {
+                if (Properties.Host is null || Properties.ConsensusPort is null)
+                {
+                    throw new ArgumentException(
+                        "Host and port must exist in order to join consensus.");
+                }
+                
+                // Bucket size is 1 in order to broadcast message to all peers.
+                ConsensusTable = new RoutingTable(
+                    Properties.ConsensusPrivateKey.ToAddress(),
+                    tableSize: 1000,
+                    bucketSize: 1);
+                ConsensusTransport = new NetMQTransport(
+                    privateKey: Properties.ConsensusPrivateKey,
+                    appProtocolVersion: Properties.AppProtocolVersion,
+                    trustedAppProtocolVersionSigners: null,
+                    workers: 100,
+                    host: Properties.Host,
+                    listenPort: Properties.ConsensusPort,
+                    iceServers: null,
+                    differentAppProtocolVersionEncountered: null);
+
+                Reactor = new ConsensusReactor<T>(
+                    ConsensusTable,
+                    ConsensusTransport,
+                    BlockChain,
+                    Properties.NodeId,
+                    Properties.Validators);
+            }
+
             PreloadEnded = new AsyncManualResetEvent();
             BootstrapEnded = new AsyncManualResetEvent();
 
@@ -239,45 +275,14 @@ namespace Libplanet.Headless.Hosting
                         tasks.Add(CheckPeerTable(cancellationToken));
                     }
 
+                    if (!(Reactor is null))
+                    {
+                        tasks.Add(await Reactor.StartAsync(cancellationToken));
+                    }
+
                     await await Task.WhenAny(tasks);
                 }
             });
-
-        // 이 privateKey는 swarm에서 사용하는 privateKey와 다를 수 있습니다.
-        public virtual void StartMining(PrivateKey privateKey)
-        {
-            if (BlockChain is null)
-            {
-                throw new InvalidOperationException(
-                    $"An exception occurred during {nameof(StartMining)}(). " +
-                    $"{nameof(BlockChain)} is null.");
-            }
-
-            if (Swarm is null)
-            {
-                throw new InvalidOperationException(
-                    $"An exception occurred during {nameof(StartMining)}(). " +
-                    $"{nameof(Swarm)} is null.");
-            }
-
-            if (privateKey is null)
-            {
-                throw new InvalidOperationException(
-                    $"An exception occurred during {nameof(StartMining)}(). " +
-                    $"{nameof(privateKey)} is null.");
-            }
-
-            MiningCancellationTokenSource =
-                CancellationTokenSource.CreateLinkedTokenSource(SwarmCancellationToken);
-            Task.Run(
-                () => _minerLoopAction(BlockChain, Swarm, privateKey, MiningCancellationTokenSource.Token),
-                MiningCancellationTokenSource.Token);
-        }
-
-        public void StopMining()
-        {
-            MiningCancellationTokenSource?.Cancel();
-        }
 
         public async Task<bool> CheckPeer(string addr)
         {
@@ -290,7 +295,6 @@ namespace Libplanet.Headless.Hosting
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
             _stopRequested = true;
-            StopMining();
             await Swarm.StopAsync(cancellationToken);
             foreach (IRenderer<T> renderer in BlockChain.Renderers)
             {
@@ -465,6 +469,56 @@ namespace Libplanet.Headless.Hosting
             {
                 Log.Error(e, "Unexpected exception occurred during Swarm.StartAsync(). {e}", e);
             }
+        }
+
+        private async Task MineBlockTask(PrivateKey minerKey, TimeSpan miningInterval, CancellationToken cts)
+        {
+            var miner = new Miner<T>(BlockChain, Swarm, minerKey);
+            while (!cts.IsCancellationRequested)
+            {
+                var block = await miner.MineBlockAsync(cts);
+                Reactor.Propose(block.Hash);
+                await Task.Delay(miningInterval, cts);
+            }
+        }
+        
+        // 이 privateKey는 swarm에서 사용하는 privateKey와 다를 수 있습니다.
+        public void StartMining(PrivateKey privateKey)
+        {
+            if (BlockChain is null)
+            {
+                throw new InvalidOperationException(
+                    $"An exception occurred during {nameof(StartMining)}(). " +
+                    $"{nameof(BlockChain)} is null.");
+            }
+
+            if (Swarm is null)
+            {
+                throw new InvalidOperationException(
+                    $"An exception occurred during {nameof(StartMining)}(). " +
+                    $"{nameof(Swarm)} is null.");
+            }
+
+            if (privateKey is null)
+            {
+                throw new InvalidOperationException(
+                    $"An exception occurred during {nameof(StartMining)}(). " +
+                    $"{nameof(privateKey)} is null.");
+            }
+
+            MiningCancellationTokenSource =
+                CancellationTokenSource.CreateLinkedTokenSource(SwarmCancellationToken);
+            Task.Run(
+                () => MineBlockTask(
+                    privateKey,
+                    TimeSpan.FromMilliseconds(Properties.BlockInterval),
+                    MiningCancellationTokenSource.Token),
+                MiningCancellationTokenSource.Token);
+        }
+
+        public void StopMining()
+        {
+            MiningCancellationTokenSource?.Cancel();
         }
 
         protected async Task CheckMessage(TimeSpan messageTimeout, CancellationToken cancellationToken = default)

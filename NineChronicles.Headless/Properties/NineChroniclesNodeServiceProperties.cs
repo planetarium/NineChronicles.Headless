@@ -23,22 +23,13 @@ namespace NineChronicles.Headless.Properties
 
         public NetworkType NetworkType { get; set; } = NetworkType.Main;
 
-        // FIXME: Replaced by NetworkType.Dev (not exist yet).
-        public bool Dev { get; set; }
-
         public bool StrictRender { get; set; }
-
-        public int BlockInterval { get; set; }
-
-        public int ReorgInterval { get; set; }
 
         public TimeSpan TxLifeTime { get; set; }
 
         public bool IgnoreBootstrapFailure { get; set; } = true;
 
         public bool IgnorePreloadFailure { get; set; } = true;
-
-        public int MinerCount { get; set; }
 
         public int TxQuotaPerSigner { get; set; }
 
@@ -72,7 +63,8 @@ namespace NineChronicles.Headless.Properties
                 string chainTipStaleBehaviorType = "reboot",
                 int pollInterval = 15,
                 int maximumPollPeers = int.MaxValue,
-                string transportType = "tcp")
+                string transportType = "tcp",
+                int blockInterval = 1500)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
@@ -117,7 +109,8 @@ namespace NineChronicles.Headless.Properties
                 ChainTipStaleBehavior = chainTipStaleBehaviorType,
                 PollInterval = TimeSpan.FromSeconds(pollInterval),
                 MaximumPollPeers = maximumPollPeers,
-                TransportType = transportType
+                TransportType = transportType,
+                BlockInterval = blockInterval,
             };
         }
 
