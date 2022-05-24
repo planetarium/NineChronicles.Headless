@@ -203,6 +203,27 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }
         }
 
+        [Theory]
+        [InlineData("NCG")]
+        [InlineData("CRYSTAL")]
+        public async Task FaucetAsset(string currencyType)
+        {
+            var recipient = new PrivateKey().ToAddress();
+            var sender = new PrivateKey().ToAddress();
+            var query = $"{{ faucetAsset(recipient: \"{recipient}\", sender: \"{sender}\", amount: \"17.5\", currency: {currencyType})}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query);
+            var data = (Dictionary<string, object>) ((ExecutionNode) queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["faucetAsset"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<FaucetAsset>(polymorphicAction.InnerAction);
+            Currency currency = currencyType == "NCG" ? CurrencyType.NCG : CurrencyType.CRYSTAL;
+
+            Assert.Equal(recipient, action.Recipient);
+            Assert.Equal(sender, action.Sender);
+            Assert.Equal(FungibleAssetValue.Parse(currency, "17.5"), action.Amount);
+        }
+
         private NCAction DeserializeNCAction(IValue value)
         {
 #pragma warning disable CS0612
