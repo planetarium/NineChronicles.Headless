@@ -6,8 +6,10 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
+using GraphQL;
 using GraphQL.Execution;
 using Libplanet;
+using Libplanet.Assets;
 using Libplanet.Crypto;
 using Nekoyume.Action;
 using NineChronicles.Headless.GraphTypes;
@@ -163,6 +165,42 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 },
                 action.WorldIds
             );
+        }
+
+        [Theory]
+        [InlineData("NCG", true)]
+        [InlineData("NCG", false)]
+        [InlineData("CRYSTAL", true)]
+        [InlineData("CRYSTAL", false)]
+        public async Task TransferAsset(string currencyType, bool memo)
+        {
+            var recipient = new PrivateKey().ToAddress();
+            var sender = new PrivateKey().ToAddress();
+            var args = $"recipient: \"{recipient}\", sender: \"{sender}\", amount: \"17.5\", currency: {currencyType}";
+            if (memo)
+            {
+                args += ", memo: \"memo\"";
+            }
+            var query = $"{{ transferAsset({args}) }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query);
+            var data = (Dictionary<string, object>) ((ExecutionNode) queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["transferAsset"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<TransferAsset>(polymorphicAction.InnerAction);
+            Currency currency = currencyType == "NCG" ? CurrencyType.NCG : CurrencyType.CRYSTAL;
+
+            Assert.Equal(recipient, action.Recipient);
+            Assert.Equal(sender, action.Sender);
+            Assert.Equal(FungibleAssetValue.Parse(currency, "17.5"), action.Amount);
+            if (memo)
+            {
+                Assert.Equal("memo", action.Memo);
+            }
+            else
+            {
+                Assert.Null(action.Memo);
+            }
         }
 
         private NCAction DeserializeNCAction(IValue value)

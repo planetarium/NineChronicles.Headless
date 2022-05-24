@@ -5,6 +5,7 @@ using Bencodex;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
+using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -118,6 +119,50 @@ namespace NineChronicles.Headless.GraphTypes
                         AvatarAddress = avatarAddress,
                         WorldIds = worldIds,
                     };
+                    return Codec.Encode(action.PlainValue);
+                });
+            Field<ByteStringType>(
+                name: "transferAsset",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Description = "Address of sender.",
+                        Name = "sender",
+                    },
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Description = "Address of recipient.",
+                        Name = "recipient",
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Description = "A string value to be transferred.",
+                        Name = "amount",
+                    },
+                    new QueryArgument<NonNullGraphType<CurrencyType>>
+                    {
+                        Description = "A currency type to be transferred.",
+                        Name = "currency",
+                    },
+                    new QueryArgument<StringGraphType>
+                    {
+                        Description = "A 80-max length string to note.",
+                        Name = "memo",
+                    }
+                ),
+                resolve: context =>
+                {
+                    var sender = context.GetArgument<Address>("sender");
+                    var recipient = context.GetArgument<Address>("recipient");
+                    Currency currency = context.GetArgument<CurrencyEnum>("currency") switch
+                    {
+                        CurrencyEnum.NCG => CurrencyType.NCG,
+                        CurrencyEnum.CRYSTAL => CurrencyType.CRYSTAL,
+                        _ => throw new ExecutionError("Unsupported Currency type.")
+                    };
+                    var amount = FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
+                    var memo = context.GetArgument<string?>("memo");
+                    NCAction action = new TransferAsset(sender, recipient, amount, memo);
                     return Codec.Encode(action.PlainValue);
                 });
         }
