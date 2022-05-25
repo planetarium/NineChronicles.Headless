@@ -163,8 +163,8 @@ namespace NineChronicles.Headless.GraphTypes
                         CurrencyEnum.NCG => new GoldCurrencyState(
                             (Dictionary)standaloneContext.BlockChain!.GetState(GoldCurrencyState.Address)
                         ).Currency,
-                    CurrencyEnum.CRYSTAL => CrystalCalculator.CRYSTAL,
-                    _ => throw new ExecutionError("Unsupported Currency type.")
+                        CurrencyEnum.CRYSTAL => CrystalCalculator.CRYSTAL,
+                        _ => throw new ExecutionError("Unsupported Currency type.")
                     };
                     var amount = FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
                     var memo = context.GetArgument<string?>("memo");
