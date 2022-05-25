@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Bencodex;
+using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
+using Nekoyume.Helper;
+using Nekoyume.Model.State;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -15,7 +18,8 @@ namespace NineChronicles.Headless.GraphTypes
     public class ActionQuery : ObjectGraphType
     {
         private static readonly Codec Codec = new Codec();
-        public ActionQuery()
+
+        public ActionQuery(StandaloneContext standaloneContext)
         {
             Field<ByteStringType>(
                 name: "stake",
@@ -156,8 +160,10 @@ namespace NineChronicles.Headless.GraphTypes
                     var recipient = context.GetArgument<Address>("recipient");
                     Currency currency = context.GetArgument<CurrencyEnum>("currency") switch
                     {
-                        CurrencyEnum.NCG => CurrencyType.NCG,
-                        CurrencyEnum.CRYSTAL => CurrencyType.CRYSTAL,
+                        CurrencyEnum.NCG => new GoldCurrencyState(
+                            (Dictionary)standaloneContext.BlockChain!.GetState(GoldCurrencyState.Address)
+                        ).Currency,
+                        CurrencyEnum.CRYSTAL => CrystalCalculator.CRYSTAL,
                         _ => throw new ExecutionError("Unsupported Currency type.")
                     };
                     var amount = FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));

@@ -423,7 +423,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<ActionQuery>>(
                 name: "actionQuery",
-                resolve: context => new ActionQuery());
+                resolve: context => new ActionQuery(standaloneContext));
         }
     }
 }
