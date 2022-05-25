@@ -159,6 +159,30 @@ namespace NineChronicles.Headless.GraphTypes
                     return null;
                 }
             );
+            
+            Field<StakeStateType>(
+                name:  nameof(StakeState),
+                description: "State for staking.",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "address",
+                    Description = "Address of agent who staked."
+                }),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("address");
+                    if (context.Source.GetState(StakeState.DeriveAddress(address)) is Dictionary state)
+                    {
+                        return new StakeStateType.StakeStateContext(
+                            new StakeState(state),
+                            context.Source.AccountStateGetter,
+                            context.Source.AccountBalanceGetter
+                        );
+                    }
+
+                    return null;
+                }
+            );
 
             Field<MonsterCollectionStateType>(
                 nameof(MonsterCollectionState),
@@ -207,6 +231,67 @@ namespace NineChronicles.Headless.GraphTypes
                         var monsterCollectionRewardSheet = new MonsterCollectionRewardSheet();
                         monsterCollectionRewardSheet.Set(srs);
                         return (monsterCollectionSheet, monsterCollectionRewardSheet);
+                    }
+
+                    return null;
+                }
+            );
+            
+            Field<StakeRegularRewardSheetType>(
+                nameof(StakeRegularRewardSheet),
+                resolve: context =>
+                {
+                    var sheetAddress = Addresses.GetSheetAddress<StakeRegularRewardSheet>();
+                    IValue? value = context.Source.GetState(sheetAddress);
+                    if (value is Text ss)
+                    {
+                        var stakeRegularRewardSheet = new StakeRegularRewardSheet();
+                        stakeRegularRewardSheet.Set(ss);
+                        return stakeRegularRewardSheet;
+                    }
+
+                    return null;
+                }
+            );
+
+            Field<ListGraphType<IntGraphType>>(
+                "unlockedRecipeIds",
+                description: "List of unlocked equipment recipe sheet row ids.",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "avatarAddress",
+                    Description = "Address of avatar."
+                }),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+                    var address = avatarAddress.Derive("recipe_ids");
+                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] {address});
+                    if (values[0] is List rawRecipeIds)
+                    {
+                        return rawRecipeIds.ToList(StateExtensions.ToInteger);
+                    }
+
+                    return null;
+                }
+            );
+
+            Field<ListGraphType<IntGraphType>>(
+                "unlockedWorldIds",
+                description: "List of unlocked world sheet row ids.",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "avatarAddress",
+                    Description = "Address of avatar."
+                }),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+                    var address = avatarAddress.Derive("world_ids");
+                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] {address});
+                    if (values[0] is List rawWorldIds)
+                    {
+                        return rawWorldIds.ToList(StateExtensions.ToInteger);
                     }
 
                     return null;
