@@ -3,15 +3,24 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Execution;
 using Libplanet;
+using Libplanet.Action;
 using Libplanet.Assets;
+using Libplanet.Blockchain;
+using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
+using Libplanet.Store;
+using Libplanet.Store.Trie;
+using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Helper;
+using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes;
 using Xunit;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
@@ -22,10 +31,47 @@ namespace NineChronicles.Headless.Tests.GraphTypes
     public class ActionQueryTest
     {
         private readonly Codec _codec;
+        private readonly StandaloneContext _standaloneContext;
 
         public ActionQueryTest()
         {
             _codec = new Codec();
+            var store = new DefaultStore(null);
+            var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
+            var minerPrivateKey = new PrivateKey();
+            var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
+                HashAlgorithmType.Of<SHA256>(),
+                new PolymorphicAction<ActionBase>[]
+                {
+                    new InitializeStates(
+                        rankingState: new RankingState0(),
+                        shopState: new ShopState(),
+                        gameConfigState: new GameConfigState(),
+                        redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                            .Add("address", RedeemCodeState.Address.Serialize())
+                            .Add("map", Bencodex.Types.Dictionary.Empty)
+                        ),
+                        adminAddressState: new AdminState(new PrivateKey().ToAddress(), 1500000),
+                        activatedAccountsState: new ActivatedAccountsState(),
+                        goldCurrencyState: new GoldCurrencyState(new Currency("NCG", 2, minerPrivateKey.ToAddress())),
+                        goldDistributions: Array.Empty<GoldDistribution>(),
+                        tableSheets: new Dictionary<string, string>(),
+                        pendingActivationStates: new PendingActivationState[]{ }
+                    ),
+                },
+                privateKey: minerPrivateKey
+            );
+            var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
+                new BlockPolicy<PolymorphicAction<ActionBase>>(),
+                new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
+                store,
+                stateStore,
+                genesisBlock);
+            _standaloneContext = new StandaloneContext
+            {
+                BlockChain = blockchain,
+                Store = store,
+            };
         }
 
         [Theory]
@@ -37,7 +83,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 stake(amount: {amount})
             }}";
 
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
             var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
             NCAction action = new Stake(amount);
             var expected = new Dictionary<string, object>()
@@ -56,7 +102,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 claimStakeReward(avatarAddress: ""{avatarAddress.ToString()}"")
             }}";
 
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
             var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["claimStakeReward"]));
             Assert.IsType<Dictionary>(plainValue);
@@ -100,7 +146,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 grinding({queryArgs})
             }}";
 
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
             var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["grinding"]));
             Assert.IsType<Dictionary>(plainValue);
@@ -122,7 +168,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 unlockEquipmentRecipe(avatarAddress: ""{avatarAddress.ToString()}"", recipeIds: [2, 3])
             }}";
 
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
             var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["unlockEquipmentRecipe"]));
             Assert.IsType<Dictionary>(plainValue);
@@ -149,7 +195,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 unlockWorld(avatarAddress: ""{avatarAddress.ToString()}"", worldIds: [2, 3])
             }}";
 
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
             var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["unlockWorld"]));
             Assert.IsType<Dictionary>(plainValue);
@@ -182,13 +228,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 args += ", memo: \"memo\"";
             }
             var query = $"{{ transferAsset({args}) }}";
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
             var data = (Dictionary<string, object>) ((ExecutionNode) queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["transferAsset"]));
             Assert.IsType<Dictionary>(plainValue);
             var polymorphicAction = DeserializeNCAction(plainValue);
             var action = Assert.IsType<TransferAsset>(polymorphicAction.InnerAction);
-            Currency currency = currencyType == "NCG" ? CurrencyType.NCG : CurrencyType.CRYSTAL;
+            var rawState = _standaloneContext.BlockChain!.GetState(Addresses.GoldCurrency);
+            var goldCurrencyState = new GoldCurrencyState((Dictionary) rawState);
+            Currency currency = currencyType == "NCG" ? goldCurrencyState.Currency : CrystalCalculator.CRYSTAL;
 
             Assert.Equal(recipient, action.Recipient);
             Assert.Equal(sender, action.Sender);

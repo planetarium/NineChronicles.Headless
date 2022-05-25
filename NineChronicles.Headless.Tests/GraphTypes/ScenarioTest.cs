@@ -11,6 +11,7 @@ using Libplanet.Extensions.Cocona;
 using Libplanet.KeyStore;
 using Libplanet.Tx;
 using Nekoyume.Action;
+using Nekoyume.Helper;
 using NineChronicles.Headless.Executable.Commands;
 using NineChronicles.Headless.Executable.Tests.IO;
 using NineChronicles.Headless.Executable.Tests.KeyStore;
@@ -40,7 +41,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             // Create Action.
             var args = $"recipient: \"{recipient}\", sender: \"{sender}\", amount: \"17.5\", currency: CRYSTAL";
             var actionQuery = $"{{ transferAsset({args}) }}";
-            var actionQueryResult = await ExecuteQueryAsync<ActionQuery>(actionQuery);
+            var actionQueryResult = await ExecuteQueryAsync<ActionQuery>(actionQuery, standaloneContext: StandaloneContextFx);
             var actionData = (Dictionary<string, object>) ((ExecutionNode) actionQueryResult.Data!).ToValue()!;
             var plainValue = actionData["transferAsset"];
 
@@ -109,7 +110,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var action = Assert.IsType<TransferAsset>(signedTx.Actions.Single().InnerAction);
             Assert.Equal(recipient, action.Recipient);
             Assert.Equal(sender, action.Sender);
-            Assert.Equal(FungibleAssetValue.Parse(CurrencyType.CRYSTAL, "17.5"), action.Amount);
+            Assert.Equal(FungibleAssetValue.Parse(CrystalCalculator.CRYSTAL, "17.5"), action.Amount);
 
             // Staging Transaction.
             var stageTxMutation = $"mutation {{ stageTransaction(payload: \"{hex}\") }}";
