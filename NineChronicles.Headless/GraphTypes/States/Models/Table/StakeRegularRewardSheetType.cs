@@ -8,7 +8,7 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Table
     {
         public StakeRegularRewardSheetType()
         {
-            Field<ListGraphType<StakeRegularRewardRowType>>(
+            Field<NonNullGraphType<ListGraphType<NonNullGraphType<StakeRegularRewardRowType>>>>(
                 nameof(MonsterCollectionSheet.OrderedList),
                 resolve: context => context.Source.OrderedList.ToList());
         }
