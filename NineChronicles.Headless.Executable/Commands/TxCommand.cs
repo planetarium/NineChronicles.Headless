@@ -55,6 +55,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     nameof(Stake) => new Stake(),
                     nameof(ClaimStakeReward) => new ClaimStakeReward(),
                     nameof(TransferAsset) => new TransferAsset(),
+                    nameof(MigrateMonsterCollection) => new MigrateMonsterCollection(),
                     _ => throw new CommandExitedException($"Unsupported action type was passed '{type}'", 128)
                 };
                 action.LoadPlainValue(plainValue);
