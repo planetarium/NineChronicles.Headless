@@ -184,5 +184,32 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 Assert.Contains("System.FormatException: Could not find any recognizable digits.", _console.Error.ToString());
             }
         }
+        
+        [Theory]
+        [InlineData("0xab1dce17dCE1Db1424BB833Af6cC087cd4F5CB6d", -1)]
+        [InlineData("ab1dce17dCE1Db1424BB833Af6cC087cd4F5CB6d", 0)]
+        public void MigrateMonsterCollection(string addressString, int expectedCode)
+        {
+            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+            var resultCode = _command.MigrateMonsterCollection(addressString, filePath);
+            Assert.Equal(expectedCode, resultCode);
+
+            if (resultCode == 0)
+            {
+                var rawAction = Convert.FromBase64String(File.ReadAllText(filePath));
+                var decoded = (List)_codec.Decode(rawAction);
+                string type = (Text)decoded[0];
+                Assert.Equal(nameof(Nekoyume.Action.MigrateMonsterCollection), type);
+
+                var plainValue = Assert.IsType<Dictionary>(decoded[1]);
+                var action = new MigrateMonsterCollection();
+                action.LoadPlainValue(plainValue);
+                Assert.Equal(addressString, action.AvatarAddress.ToHex());
+            }
+            else
+            {
+                Assert.Contains("System.FormatException: Could not find any recognizable digits.", _console.Error.ToString());
+            }
+        }
     }
 }
