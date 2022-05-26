@@ -43,6 +43,18 @@ namespace NineChronicles.Headless.GraphTypes
                     Codec.Encode(
                         ((NCAction)new ClaimStakeReward(
                             context.GetArgument<Address>("avatarAddress"))).PlainValue));
+            Field<NonNullGraphType<ByteStringType>>(
+                name: "migrateMonsterCollection",
+                arguments: new QueryArguments(
+                    new QueryArgument<AddressType>
+                    {
+                        Name = "avatarAddress",
+                        Description = "The avatar address to receive monster collection rewards."
+                    }),
+                resolve: context =>
+                    Codec.Encode(
+                        ((NCAction)new MigrateMonsterCollection(
+                            context.GetArgument<Address>("avatarAddress"))).PlainValue));
             Field<ByteStringType>(
                 name: "grinding",
                 arguments: new QueryArguments(

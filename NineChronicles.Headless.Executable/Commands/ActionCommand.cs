@@ -263,5 +263,42 @@ namespace NineChronicles.Headless.Executable.Commands
                 return -1;
             }
         }
+        
+        [Command(Description = "Create MigrateMonsterCollection action.")]
+        public int MigrateMonsterCollection(
+            [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")] string encodedAddress,
+            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null
+        )
+        {
+            try
+            {
+                Address avatarAddress = new Address(ByteUtil.ParseHex(encodedAddress));
+                Nekoyume.Action.MigrateMonsterCollection action = new MigrateMonsterCollection(avatarAddress);
+
+                byte[] raw = Codec.Encode(new List(
+                    new[]
+                    {
+                        (Text) nameof(Nekoyume.Action.MigrateMonsterCollection),
+                        action.PlainValue
+                    }
+                ));
+                string encoded = Convert.ToBase64String(raw);
+                if (filePath is null)
+                {
+                    _console.Out.Write(encoded);
+                }
+                else
+                {
+                    File.WriteAllText(filePath, encoded);   
+                }
+
+                return 0;
+            }
+            catch (Exception e)
+            {
+                _console.Error.WriteLine(e);
+                return -1;
+            }
+        }
     }
 }
