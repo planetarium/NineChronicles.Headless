@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,6 +12,7 @@ using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;
 using Libplanet.Blocks;
+using Libplanet.Consensus;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Net.Consensus;
@@ -219,6 +219,7 @@ namespace Libplanet.Headless.Hosting
                         "Host and port must exist in order to join consensus.");
                 }
                 
+                // FIXME: Using consensus network address derived from reactor's private key is ok?
                 // Bucket size is 1 in order to broadcast message to all peers.
                 ConsensusTable = new RoutingTable(
                     Properties.ConsensusPrivateKey.ToAddress(),
@@ -238,6 +239,7 @@ namespace Libplanet.Headless.Hosting
                     ConsensusTable,
                     ConsensusTransport,
                     BlockChain,
+                    Properties.ConsensusPrivateKey,
                     Properties.NodeId,
                     Properties.Validators);
             }
@@ -476,7 +478,20 @@ namespace Libplanet.Headless.Hosting
             var miner = new Miner<T>(BlockChain, Swarm, minerKey);
             while (!cts.IsCancellationRequested)
             {
-                var block = await miner.MineBlockAsync(cts);
+                // Collected votes for the previous block.
+                VoteSet voteSet = Reactor.VoteSetOf(BlockChain.Tip.Index);
+                Block<T> block;
+                if (voteSet is null)
+                {
+                    block = await miner.MineBlockAsync(lastCommit: null, cts);
+                }
+                else
+                {
+                    block = await miner.MineBlockAsync(
+                        lastCommit: new BlockCommit(voteSet, BlockChain.Tip.Hash),
+                        cts);
+                }
+
                 Reactor.Propose(block.Hash);
                 await Task.Delay(miningInterval, cts);
             }
