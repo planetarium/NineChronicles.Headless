@@ -70,7 +70,21 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     ["startedBlockIndex"] = 0,
                     ["cancellableBlockIndex"] = StakeState.LockupInterval,
                     ["receivedBlockIndex"] = 0,
-                    ["claimableBlockIndex"] = StakeState.RewardInterval,
+                    ["claimableBlockIndex"] = 0 + StakeState.RewardInterval,
+                }
+            },
+            new object[]
+            {
+                new StakeState(Fixtures.StakeStateAddress, 100),
+                100,
+                new Dictionary<string, object>
+                {
+                    ["address"] = Fixtures.StakeStateAddress.ToString(),
+                    ["deposit"] = "100.00",
+                    ["startedBlockIndex"] = 100,
+                    ["cancellableBlockIndex"] = 100 + StakeState.LockupInterval,
+                    ["receivedBlockIndex"] = 0,
+                    ["claimableBlockIndex"] = 100 + StakeState.RewardInterval,
                 }
             }
         };
