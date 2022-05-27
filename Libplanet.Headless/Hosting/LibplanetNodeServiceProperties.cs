@@ -18,9 +18,11 @@ namespace Libplanet.Headless.Hosting
         
         public ushort? ConsensusPort { get; set; }
         
+        public PrivateKey SwarmPrivateKey { get; set; }
+        
         public PrivateKey ConsensusPrivateKey { get; set; }
         
-        public PrivateKey SwarmPrivateKey { get; set; }
+        public PrivateKey MinerPrivateKey { get; set; }
 
         public long NodeId { get; set; }
         

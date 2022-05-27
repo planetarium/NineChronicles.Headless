@@ -40,7 +40,10 @@ namespace NineChronicles.Headless.Properties
                 string? genesisBlockPath = null,
                 string? swarmHost = null,
                 ushort? swarmPort = null,
+                ushort? consensusPort = null,
                 string? swarmPrivateKeyString = null,
+                string? consensusPrivateKeyString = null,
+                string? minerPrivateKeyString = null,
                 string? storeType = null,
                 string? storePath = null,
                 int storeStateCacheSize = 100,
@@ -63,11 +66,19 @@ namespace NineChronicles.Headless.Properties
                 string chainTipStaleBehaviorType = "reboot",
                 int maximumPollPeers = int.MaxValue,
                 string transportType = "tcp",
-                int blockInterval = 1500)
+                int blockInterval = 10000,
+                long nodeId = 0,
+                string[]? validatorStrings = null)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
                 : new PrivateKey(ByteUtil.ParseHex(swarmPrivateKeyString));
+            var consensusPrivateKey = string.IsNullOrEmpty(consensusPrivateKeyString)
+                ? new PrivateKey()
+                : new PrivateKey(ByteUtil.ParseHex(consensusPrivateKeyString));
+            var minerPrivateKey = string.IsNullOrEmpty(minerPrivateKeyString)
+                ? new PrivateKey()
+                : new PrivateKey(ByteUtil.ParseHex(minerPrivateKeyString));
 
             peerStrings ??= Array.Empty<string>();
             iceServerStrings ??= Array.Empty<string>();
@@ -76,12 +87,16 @@ namespace NineChronicles.Headless.Properties
             var iceServers = iceServerStrings.Select(PropertyParser.ParseIceServer).ToImmutableArray();
             var peers = peerStrings.Select(PropertyParser.ParsePeer).ToImmutableArray();
             var staticPeers = staticPeerStrings.Select(PropertyParser.ParsePeer).ToImmutableHashSet();
+            var validators = validatorStrings?.Select(s => new PublicKey(ByteUtil.ParseHex(s))).ToList();
 
             return new LibplanetNodeServiceProperties<NineChroniclesActionType>
             {
                 Host = swarmHost,
                 Port = swarmPort,
+                ConsensusPort = consensusPort,
+                MinerPrivateKey = minerPrivateKey,
                 SwarmPrivateKey = swarmPrivateKey,
+                ConsensusPrivateKey = consensusPrivateKey,
                 AppProtocolVersion = AppProtocolVersion.FromToken(appProtocolVersionToken),
                 TrustedAppProtocolVersionSigners = trustedAppProtocolVersionSigners
                     ?.Select(s => new PublicKey(ByteUtil.ParseHex(s)))
@@ -109,6 +124,8 @@ namespace NineChronicles.Headless.Properties
                 MaximumPollPeers = maximumPollPeers,
                 TransportType = transportType,
                 BlockInterval = blockInterval,
+                NodeId = nodeId,
+                Validators = validators,
             };
         }
 

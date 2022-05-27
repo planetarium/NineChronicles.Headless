@@ -75,10 +75,17 @@ namespace NineChronicles.Headless.Executable
             string? host = null,
             [Option('P')]
             ushort? port = null,
+            [Option("consensus-port",
+                Description = "Port used for communicating consensus related messages.  null by default.")]
+            ushort? consensusPort = null,
             [Option("swarm-private-key",
                 Description = "The private key used for signing messages and to specify your node. " +
                               "If you leave this null, a randomly generated value will be used.")]
             string? swarmPrivateKeyString = null,
+            [Option("consensus-private-key",
+                Description = "The private key used for signing consensus messages. " +
+                              "Cannot be null.")]
+            string? consensusPrivateKeyString = null,
             [Option("miner-private-key",
                 Description = "The private key used for mining blocks. " +
                               "Must not be null if you want to turn on mining with libplanet-node.")]
@@ -101,9 +108,10 @@ namespace NineChronicles.Headless.Executable
             string graphQLHost = "0.0.0.0",
             [Option("graphql-port")]
             int? graphQLPort = null,
-            [Option("graphql-secret-token-path", Description = "The path to write GraphQL secret token. " +
-                                                               "If you want to protect this headless application, " +
-                                                               "you should use this option and take it into headers.")]
+            [Option("graphql-secret-token-path",
+                Description = "The path to write GraphQL secret token. " + 
+                              "If you want to protect this headless application, " +
+                              "you should use this option and take it into headers.")]
             string? graphQLSecretTokenPath = null,
             [Option(Description = "Run without CORS policy.")]
             bool noCors = false,
@@ -129,18 +137,11 @@ namespace NineChronicles.Headless.Executable
             bool strictRendering = false,
             [Option("network-type", Description = "Network type.")]
             NetworkType networkType = NetworkType.Main,
-            [Option("dev", Description = "Flag to turn on the dev mode.  false by default.")]
-            bool isDev = false,
             [Option(
-                "dev.block-interval",
+                "block-interval",
                 Description =
-                    "The time interval between blocks. It's unit is milliseconds. Works only when dev mode is on.  10000 (ms) by default.")]
+                    "The time interval between blocks. It's unit is milliseconds.  10000 (ms) by default.")]
             int blockInterval = 10000,
-            [Option(
-                "dev.reorg-interval",
-                Description =
-                    "The size of reorg interval. Works only when dev mode is on.  0 by default.")]
-            int reorgInterval = 0,
             [Option(Description = "Log action renders besides block renders.  --rpc-server implies this.")]
             bool logActionRenders = false,
             [Option(Description = "The Cognito identity for AWS CloudWatch logging.")]
@@ -164,8 +165,6 @@ namespace NineChronicles.Headless.Executable
             [Option("static-peer",
                 Description = "A list of peers that the node will continue to maintain.")]
             string[]? staticPeerStrings = null,
-            [Option("miner-count", Description = "The number of miner task(thread).")]
-            int minerCount = 1,
             [Option(Description ="Run node without preloading.")]
             bool skipPreload = false,
             [Option(Description = "Minimum number of peers to broadcast message.  10 by default.")]
@@ -188,6 +187,12 @@ namespace NineChronicles.Headless.Executable
                 "Determines the type of transport.  \"netmq\" and \"tcp\" " +
                 "is available and \"tcp\" option is selected by default.")]
             string transportType = "tcp",
+            [Option(Description = "Node ID used for PBFT consensus.  0 by default.")]
+            long nodeId = 0,
+            [Option(Description =
+                "List of validator's public key strings. " +
+                "If null is given, value in policy will be used.  null by default.")]
+            string[]? validatorStrings = null,
             [Ignore]
             CancellationToken? cancellationToken = null
         )
@@ -305,7 +310,10 @@ namespace NineChronicles.Headless.Executable
                         genesisBlockPath,
                         host,
                         port,
+                        consensusPort,
                         swarmPrivateKeyString,
+                        consensusPrivateKeyString,
+                        minerPrivateKeyString,
                         storeType,
                         storePath,
                         100,
@@ -327,7 +335,9 @@ namespace NineChronicles.Headless.Executable
                         chainTipStaleBehaviorType: chainTipStaleBehaviorType,
                         maximumPollPeers: maximumPollPeers,
                         transportType: transportType,
-                        blockInterval: blockInterval
+                        blockInterval: blockInterval,
+                        nodeId: nodeId,
+                        validatorStrings: validatorStrings
                     );
 
                 if (rpcServer)
