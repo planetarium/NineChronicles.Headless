@@ -1,9 +1,7 @@
 using System;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
@@ -40,6 +38,7 @@ namespace NineChronicles.Headless.Executable.Tests
                 _genesisBlockPath,
                 noMiner: true,
                 host: "localhost",
+                consensusPort: 6000,
                 rpcServer: true,
                 rpcListenHost: "localhost",
                 rpcListenPort: 31234,
@@ -48,6 +47,7 @@ namespace NineChronicles.Headless.Executable.Tests
                 graphQLPort: 5000,
                 storePath: _storePath,
                 storeType: "rocksdb",
+                validatorStrings: new[] { new PrivateKey().PublicKey.ToString() },
                 cancellationToken: cancellationTokenSource.Token);
 
             try
