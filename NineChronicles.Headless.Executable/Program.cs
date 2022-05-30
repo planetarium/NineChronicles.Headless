@@ -162,9 +162,9 @@ namespace NineChronicles.Headless.Executable
                 "A number that determines how far behind the demand the tip of the chain " +
                 "will publish `NodeException` to GraphQL subscriptions.  1150 blocks by default.")]
             int demandBuffer = 1150,
-            [Option("static-peer",
-                Description = "A list of peers that the node will continue to maintain.")]
-            string[]? staticPeerStrings = null,
+            [Option("consensus-peer",
+                Description = "A list of peers that joining the block consensus.")]
+            string[]? consensusPeerStrings = null,
             [Option(Description ="Run node without preloading.")]
             bool skipPreload = false,
             [Option(Description = "Minimum number of peers to broadcast message.  10 by default.")]
@@ -330,7 +330,7 @@ namespace NineChronicles.Headless.Executable
                         messageTimeout: messageTimeout,
                         tipTimeout: tipTimeout,
                         demandBuffer: demandBuffer,
-                        staticPeerStrings: staticPeerStrings,
+                        consensusPeerStrings: consensusPeerStrings,
                         preload: !skipPreload,
                         minimumBroadcastTarget: minimumBroadcastTarget,
                         bucketSize: bucketSize,

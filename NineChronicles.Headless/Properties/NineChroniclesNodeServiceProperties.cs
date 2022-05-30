@@ -59,7 +59,7 @@ namespace NineChronicles.Headless.Properties
                 int messageTimeout = 60,
                 int tipTimeout = 60,
                 int demandBuffer = 1150,
-                string[]? staticPeerStrings = null,
+                string[]? consensusPeerStrings = null,
                 bool preload = true,
                 int minimumBroadcastTarget = 10,
                 int bucketSize = 16,
@@ -83,11 +83,11 @@ namespace NineChronicles.Headless.Properties
 
             peerStrings ??= Array.Empty<string>();
             iceServerStrings ??= Array.Empty<string>();
-            staticPeerStrings ??= Array.Empty<string>();
+            consensusPeerStrings ??= Array.Empty<string>();
 
             var iceServers = iceServerStrings.Select(PropertyParser.ParseIceServer).ToImmutableArray();
             var peers = peerStrings.Select(PropertyParser.ParsePeer).ToImmutableArray();
-            var staticPeers = staticPeerStrings.Select(PropertyParser.ParsePeer).ToImmutableHashSet();
+            var consensusPeers = consensusPeerStrings.Select(PropertyParser.ParsePeer).ToImmutableHashSet();
             var validators = validatorStrings?.Select(s => new PublicKey(ByteUtil.ParseHex(s))).ToList();
 
             return new LibplanetNodeServiceProperties<NineChroniclesActionType>
@@ -117,7 +117,7 @@ namespace NineChronicles.Headless.Properties
                 MessageTimeout = TimeSpan.FromSeconds(messageTimeout),
                 TipTimeout = TimeSpan.FromSeconds(tipTimeout),
                 DemandBuffer = demandBuffer,
-                StaticPeers = staticPeers,
+                ConsensusPeers = consensusPeers,
                 Preload = preload,
                 MinimumBroadcastTarget = minimumBroadcastTarget,
                 BucketSize = bucketSize,
