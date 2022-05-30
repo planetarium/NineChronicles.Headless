@@ -20,12 +20,12 @@ namespace NineChronicles.Headless
         public bool BootstrapEnded { get; set; }
         public bool PreloadEnded { get; set; }
         public bool IsMining { get; set; }
-        public ReplaySubject<NodeStatusType> NodeStatusSubject { get; } = new ReplaySubject<NodeStatusType>();
-        public ReplaySubject<PreloadState> PreloadStateSubject { get; } = new ReplaySubject<PreloadState>();
+        public ReplaySubject<NodeStatusType> NodeStatusSubject { get; } = new ReplaySubject<NodeStatusType>(1);
+        public ReplaySubject<PreloadState> PreloadStateSubject { get; } = new ReplaySubject<PreloadState>(1);
         public ReplaySubject<DifferentAppProtocolVersionEncounter> DifferentAppProtocolVersionEncounterSubject { get; }
-            = new ReplaySubject<DifferentAppProtocolVersionEncounter>();
+            = new ReplaySubject<DifferentAppProtocolVersionEncounter>(1);
         public ReplaySubject<Notification> NotificationSubject { get; } = new ReplaySubject<Notification>(1);
-        public ReplaySubject<NodeException> NodeExceptionSubject { get; } = new ReplaySubject<NodeException>();
+        public ReplaySubject<NodeException> NodeExceptionSubject { get; } = new ReplaySubject<NodeException>(1);
         public ReplaySubject<MonsterCollectionState> MonsterCollectionStateSubject { get; } = new ReplaySubject<MonsterCollectionState>();
         public ReplaySubject<MonsterCollectionStatus> MonsterCollectionStatusSubject { get; } = new ReplaySubject<MonsterCollectionStatus>();
         public NineChroniclesNodeService? NineChroniclesNodeService { get; set; }

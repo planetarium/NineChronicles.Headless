@@ -102,7 +102,7 @@ namespace NineChronicles.Headless.GraphTypes
             }
         }
 
-        private ISubject<TipChanged> _subject = new ReplaySubject<TipChanged>();
+        private ISubject<TipChanged> _subject = new ReplaySubject<TipChanged>(1);
 
         private StandaloneContext StandaloneContext { get; }
 
