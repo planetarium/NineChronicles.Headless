@@ -453,6 +453,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
             var userPrivateKey = new PrivateKey();
+            var consensusPrivateKey = new PrivateKey();
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
@@ -461,6 +462,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
+                ConsensusPrivateKey = consensusPrivateKey,
+                ConsensusPort = 5000,
+                NodeId = 0,
+                Validators = new List<PublicKey>()
+                {
+                    consensusPrivateKey.PublicKey,
+                },
                 Port = null,
                 NoMiner = true,
                 Render = false,
@@ -770,6 +778,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
             var userPrivateKey = new PrivateKey();
+            var consensusPrivateKey = new PrivateKey();
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
@@ -778,6 +787,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
+                ConsensusPrivateKey = consensusPrivateKey,
+                ConsensusPort = 5000,
+                NodeId = 0,
+                Validators = new List<PublicKey>()
+                {
+                    consensusPrivateKey.PublicKey,
+                },
                 Port = null,
                 NoMiner = true,
                 Render = false,
@@ -839,8 +855,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-
             var userPrivateKey = new PrivateKey();
+            var consensusPrivateKey = new PrivateKey();
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
@@ -849,6 +865,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
+                ConsensusPrivateKey = consensusPrivateKey,
+                ConsensusPort = 5000,
+                NodeId = 0,
+                Validators = new List<PublicKey>()
+                {
+                    consensusPrivateKey.PublicKey
+                },
                 Port = null,
                 NoMiner = true,
                 Render = false,
@@ -896,6 +919,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                         ),
                     }, blockAction: blockPolicy.BlockAction
                 );
+
+            var consensusPrivateKey = new PrivateKey();
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
@@ -904,6 +929,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
+                ConsensusPrivateKey = consensusPrivateKey,
+                ConsensusPort = 5000,
+                NodeId = 0,
+                Validators = new List<PublicKey>()
+                {
+                    consensusPrivateKey.PublicKey,
+                },
                 Port = null,
                 NoMiner = true,
                 Render = false,
