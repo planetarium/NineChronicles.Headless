@@ -42,12 +42,6 @@ namespace Libplanet.Headless.Hosting
         public readonly BlockChain<T> BlockChain;
 
         public readonly Swarm<T> Swarm;
-        
-        public readonly RoutingTable ConsensusTable;
-        
-        public readonly ITransport ConsensusTransport;
-        
-        public readonly IReactor Reactor;
 
         public readonly LibplanetNodeServiceProperties<T> Properties;
 
@@ -182,33 +176,6 @@ namespace Libplanet.Headless.Hosting
                     break;
             }
 
-            Swarm = new Swarm<T>(
-                BlockChain,
-                Properties.SwarmPrivateKey,
-                Properties.AppProtocolVersion,
-                trustedAppProtocolVersionSigners: Properties.TrustedAppProtocolVersionSigners,
-                host: Properties.Host,
-                listenPort: Properties.Port,
-                iceServers: shuffledIceServers,
-                workers: Properties.Workers,
-                differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered,
-                options: new SwarmOptions
-                {
-                    BranchpointThreshold = 50,
-                    StaticPeers = Properties.StaticPeers,
-                    MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
-                    BucketSize = Properties.BucketSize,
-                    MaximumPollPeers = Properties.MaximumPollPeers,
-                    Type = transportType,
-                    TimeoutOptions = new TimeoutOptions
-                    {
-                        MaxTimeout = TimeSpan.FromSeconds(50),
-                        GetBlockHashesTimeout = TimeSpan.FromSeconds(50),
-                        GetBlocksBaseTimeout = TimeSpan.FromSeconds(5),
-                    },
-                }
-            );
-
             if (!(properties.ConsensusPrivateKey is null))
             {
                 if (Properties.Host is null || Properties.ConsensusPort is null)
@@ -219,27 +186,39 @@ namespace Libplanet.Headless.Hosting
                 
                 // FIXME: Using consensus network address derived from reactor's private key is ok?
                 // Bucket size is 1 in order to broadcast message to all peers.
-                ConsensusTable = new RoutingTable(
-                    Properties.ConsensusPrivateKey.ToAddress(),
-                    tableSize: 1000,
-                    bucketSize: 1);
-                ConsensusTransport = new NetMQTransport(
-                    privateKey: Properties.ConsensusPrivateKey,
-                    appProtocolVersion: Properties.AppProtocolVersion,
-                    trustedAppProtocolVersionSigners: null,
-                    workers: 100,
-                    host: Properties.Host,
-                    listenPort: Properties.ConsensusPort,
-                    iceServers: null,
-                    differentAppProtocolVersionEncountered: null);
-
-                Reactor = new ConsensusReactor<T>(
-                    ConsensusTable,
-                    ConsensusTransport,
+                Swarm = new Swarm<T>(
                     BlockChain,
-                    Properties.ConsensusPrivateKey,
-                    Properties.NodeId,
-                    Properties.Validators);
+                    Properties.SwarmPrivateKey,
+                    Properties.AppProtocolVersion,
+                    trustedAppProtocolVersionSigners: Properties.TrustedAppProtocolVersionSigners,
+                    host: Properties.Host,
+                    listenPort: Properties.Port,
+                    iceServers: shuffledIceServers,
+                    workers: Properties.Workers,
+                    consensusPrivateKey: properties.ConsensusPrivateKey,
+                    consensusTableBucket: 1,
+                    consensusTableSize: 1000,
+                    consensusWorkers: 100,
+                    consensusPort: properties.ConsensusPort,
+                    nodeId: Properties.NodeId,
+                    validators: Properties.Validators,
+                    differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered,
+                    options: new SwarmOptions
+                    {
+                        BranchpointThreshold = 50,
+                        StaticPeers = Properties.StaticPeers,
+                        MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
+                        BucketSize = Properties.BucketSize,
+                        MaximumPollPeers = Properties.MaximumPollPeers,
+                        Type = transportType,
+                        TimeoutOptions = new TimeoutOptions
+                        {
+                            MaxTimeout = TimeSpan.FromSeconds(50),
+                            GetBlockHashesTimeout = TimeSpan.FromSeconds(50),
+                            GetBlocksBaseTimeout = TimeSpan.FromSeconds(5),
+                        },
+                    }
+                );
             }
 
             PreloadEnded = new AsyncManualResetEvent();
@@ -273,11 +252,6 @@ namespace Libplanet.Headless.Hosting
                     if (Properties.Peers.Any())
                     {
                         tasks.Add(CheckPeerTable(cancellationToken));
-                    }
-
-                    if (!(Reactor is null))
-                    {
-                        tasks.Add(await Reactor.StartAsync(cancellationToken));
                     }
 
                     await await Task.WhenAny(tasks);
@@ -469,7 +443,7 @@ namespace Libplanet.Headless.Hosting
             while (!cts.IsCancellationRequested)
             {
                 // Collected votes for the previous block.
-                VoteSet voteSet = Reactor.VoteSetOf(BlockChain.Tip.Index);
+                VoteSet voteSet = Swarm.VoteSetOf(BlockChain.Tip.Index);
                 Block<T> block;
                 if (voteSet is null)
                 {
@@ -482,7 +456,7 @@ namespace Libplanet.Headless.Hosting
                         cts);
                 }
 
-                Reactor.Propose(block.Hash);
+                Swarm.Propose(block.Hash);
                 await Task.Delay(miningInterval, cts);
             }
         }

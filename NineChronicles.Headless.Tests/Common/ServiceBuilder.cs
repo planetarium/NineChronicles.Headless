@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Libplanet.Action;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
@@ -26,6 +27,7 @@ namespace NineChronicles.Headless.Tests.Common
             PrivateKey? privateKey = null
         )
         {
+            var consensusPrivateKey = new PrivateKey();
             var storePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
@@ -35,6 +37,13 @@ namespace NineChronicles.Headless.Tests.Common
                 StorePath = storePath,
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
+                ConsensusPrivateKey = consensusPrivateKey,
+                ConsensusPort = 6000,
+                NodeId = 0,
+                Validators = new List<PublicKey>()
+                {
+                    consensusPrivateKey.PublicKey,
+                },
                 Port = null,
                 NoMiner = true,
                 Render = false,
