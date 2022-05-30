@@ -6,5 +6,6 @@
         Internal,
         Permanent,
         Test,
+        Default,
     }
 }
