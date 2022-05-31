@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive.Subjects;
@@ -182,6 +183,8 @@ namespace NineChronicles.Headless.Tests.Controllers
 
         private void ConfigureNineChroniclesNodeService()
         {
+            var consensusKey = new PrivateKey();
+            
             _standaloneContext.NineChroniclesNodeService = new NineChroniclesNodeService(
                 new PrivateKey(),
                 new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
@@ -190,6 +193,13 @@ namespace NineChronicles.Headless.Tests.Controllers
                     StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                     AppProtocolVersion = AppProtocolVersion.Sign(new PrivateKey(), 0),
                     SwarmPrivateKey = new PrivateKey(),
+                    ConsensusPrivateKey = consensusKey,
+                    ConsensusPort = 5000,
+                    NodeId = 0,
+                    Validators = new List<PublicKey>()
+                    {
+                        consensusKey.PublicKey,
+                    },
                     Host = IPAddress.Loopback.ToString(),
                 },
                 NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test),

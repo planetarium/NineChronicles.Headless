@@ -160,6 +160,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             ImmutableHashSet<BoundPeer>? staticPeers = null)
             where T : IAction, new()
         {
+            var consensusPrivateKey = new PrivateKey();
+            
             var properties = new LibplanetNodeServiceProperties<T>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
@@ -168,6 +170,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StoreStatesCacheSize = 2,
                 StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                 SwarmPrivateKey = new PrivateKey(),
+                ConsensusPrivateKey = consensusPrivateKey,
+                ConsensusPort = 5000,
+                NodeId = 0,
+                Validators = new List<PublicKey>()
+                {
+                    consensusPrivateKey.PublicKey,
+                },
                 Port = null,
                 NoMiner = true,
                 Render = false,

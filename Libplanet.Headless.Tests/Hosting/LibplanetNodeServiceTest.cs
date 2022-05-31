@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Security.Cryptography;
@@ -43,6 +44,7 @@ namespace Libplanet.Headless.Tests.Hosting
         [Fact]
         public void PropertiesMustContainGenesisBlockOrPath()
         {
+            var consensusPrivateKey = new PrivateKey();
             Assert.Throws<ArgumentException>(() =>
             {
                 var service = new LibplanetNodeService<DummyAction>(
@@ -50,6 +52,13 @@ namespace Libplanet.Headless.Tests.Hosting
                     {
                         AppProtocolVersion = new AppProtocolVersion(),
                         SwarmPrivateKey = new PrivateKey(),
+                        ConsensusPrivateKey = consensusPrivateKey,
+                        ConsensusPort = 5000,
+                        NodeId = 0,
+                        Validators = new List<PublicKey>()
+                        {
+                            consensusPrivateKey.PublicKey,
+                        },
                         StoreStatesCacheSize = 2,
                         Host = IPAddress.Loopback.ToString(),
                     },
