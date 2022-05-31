@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
+using System.Numerics;
 using Bencodex;
 using Bencodex.Types;
 using Cocona;
@@ -182,6 +183,115 @@ namespace NineChronicles.Headless.Executable.Commands
                     File.WriteAllText(filePath, encoded);
                     Console.Write(encoded);
                 }
+                return 0;
+            }
+            catch (Exception e)
+            {
+                _console.Error.WriteLine(e);
+                return -1;
+            }
+        }
+
+        [Command(Description = "Create Stake action.")]
+        public int Stake(
+            long amount,
+            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null
+        )
+        {
+            try
+            {
+                Nekoyume.Action.Stake action = new Stake(amount);
+                byte[] raw = Codec.Encode(new List(
+                    new[]
+                    {
+                        (Text) nameof(Nekoyume.Action.Stake),
+                        action.PlainValue
+                    }
+                ));
+                string encoded = Convert.ToBase64String(raw);
+                if (filePath is null)
+                {
+                    _console.Out.Write(encoded);
+                }
+                else
+                {
+                    File.WriteAllText(filePath, encoded);   
+                }
+
+                return 0;
+            }
+            catch (Exception e)
+            {
+                _console.Error.WriteLine(e);
+                return -1;
+            }
+        }
+
+        [Command(Description = "Create ClaimStakeReward action.")]
+        public int ClaimStakeReward(
+            [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")] string encodedAddress,
+            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null
+        )
+        {
+            try
+            {
+                Address avatarAddress = new Address(ByteUtil.ParseHex(encodedAddress));
+                Nekoyume.Action.ClaimStakeReward action = new ClaimStakeReward(avatarAddress);
+
+                byte[] raw = Codec.Encode(new List(
+                    new[]
+                    {
+                        (Text) nameof(Nekoyume.Action.ClaimStakeReward),
+                        action.PlainValue
+                    }
+                ));
+                string encoded = Convert.ToBase64String(raw);
+                if (filePath is null)
+                {
+                    _console.Out.Write(encoded);
+                }
+                else
+                {
+                    File.WriteAllText(filePath, encoded);   
+                }
+
+                return 0;
+            }
+            catch (Exception e)
+            {
+                _console.Error.WriteLine(e);
+                return -1;
+            }
+        }
+        
+        [Command(Description = "Create MigrateMonsterCollection action.")]
+        public int MigrateMonsterCollection(
+            [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")] string encodedAddress,
+            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null
+        )
+        {
+            try
+            {
+                Address avatarAddress = new Address(ByteUtil.ParseHex(encodedAddress));
+                Nekoyume.Action.MigrateMonsterCollection action = new MigrateMonsterCollection(avatarAddress);
+
+                byte[] raw = Codec.Encode(new List(
+                    new[]
+                    {
+                        (Text) nameof(Nekoyume.Action.MigrateMonsterCollection),
+                        action.PlainValue
+                    }
+                ));
+                string encoded = Convert.ToBase64String(raw);
+                if (filePath is null)
+                {
+                    _console.Out.Write(encoded);
+                }
+                else
+                {
+                    File.WriteAllText(filePath, encoded);   
+                }
+
                 return 0;
             }
             catch (Exception e)

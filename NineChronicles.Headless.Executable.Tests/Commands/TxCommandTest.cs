@@ -78,6 +78,35 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 filePath);
             Assert_Tx(1, filePath);
         }
+        
+        [Fact]
+        public void Sign_Stake()
+        {
+            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+            var actionCommand = new ActionCommand(_console);
+            actionCommand.Stake(1, filePath);
+            Assert_Tx(1, filePath);
+        }
+
+        [Fact]
+        public void Sign_ClaimStakeReward()
+        {
+            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+            var actionCommand = new ActionCommand(_console);
+            var avatarAddress = new Address();
+            actionCommand.ClaimStakeReward(avatarAddress.ToHex(), filePath);
+            Assert_Tx(1, filePath);
+        }
+        
+        [Fact]
+        public void Sign_MigrateMonsterCollection()
+        {
+            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+            var actionCommand = new ActionCommand(_console);
+            var avatarAddress = new Address();
+            actionCommand.MigrateMonsterCollection(avatarAddress.ToHex(), filePath);
+            Assert_Tx(1, filePath);
+        }
 
         private void Assert_Tx(long txNonce, string filePath)
         {

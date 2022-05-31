@@ -52,13 +52,20 @@ namespace NineChronicles.Headless.Executable.Commands
                     nameof(ActivateAccount) => new ActivateAccount(),
                     nameof(MonsterCollect) => new MonsterCollect(),
                     nameof(ClaimMonsterCollectionReward) => new ClaimMonsterCollectionReward(),
+                    nameof(Stake) => new Stake(),
+                    nameof(ClaimStakeReward) => new ClaimStakeReward(),
                     nameof(TransferAsset) => new TransferAsset(),
+                    nameof(MigrateMonsterCollection) => new MigrateMonsterCollection(),
                     _ => throw new CommandExitedException($"Unsupported action type was passed '{type}'", 128)
                 };
                 action.LoadPlainValue(plainValue);
 
                 return (NCAction)action;
             }).ToList();
+            
+            Console.WriteLine(privateKey);
+            Console.WriteLine(genesisHash);
+            Console.WriteLine(timestamp);
 
             Transaction<NCAction> tx = Transaction<NCAction>.Create(
                 nonce: nonce,
