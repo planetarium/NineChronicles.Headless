@@ -191,9 +191,10 @@ namespace NineChronicles.Headless.Executable
             string transportType = "tcp",
             [Option(Description = "Node ID used for PBFT consensus.  0 by default.")]
             long nodeId = 0,
-            [Option(Description =
-                "List of validator's public key strings. " +
-                "If null is given, value in policy will be used.  null by default.")]
+            [Option("validator",
+                Description =
+                    "List of validator's public key strings. " +
+                    "If null is given, value in policy will be used.  null by default.")]
             string[]? validatorStrings = null,
             [Ignore]
             CancellationToken? cancellationToken = null 
