@@ -15,7 +15,6 @@ using Libplanet.Blocks;
 using Libplanet.Consensus;
 using Libplanet.Crypto;
 using Libplanet.Net;
-using Libplanet.Net.Consensus;
 using Libplanet.Net.Protocols;
 using Libplanet.Net.Transports;
 using Libplanet.RocksDBStore;
@@ -188,6 +187,8 @@ namespace Libplanet.Headless.Hosting
                         "Host and port must exist in order to join consensus.");
                 }
                 
+                Log.Debug("Initializing reactor...");
+                
                 // FIXME: Using consensus network address derived from reactor's private key is ok?
                 // Bucket size is 1 in order to broadcast message to all peers.
                 Swarm = new Swarm<T>(
@@ -220,6 +221,10 @@ namespace Libplanet.Headless.Hosting
                         Type = transportType,
                     }
                 );
+            }
+            else
+            {
+                Log.Error("Failed to initialize reactor... Consensus private key is required.");
             }
 
             PreloadEnded = new AsyncManualResetEvent();
@@ -473,6 +478,7 @@ namespace Libplanet.Headless.Hosting
                         cts);
                 }
 
+                Store.PutBlock(block);
                 Swarm.Propose(block.Hash);
                 await Task.Delay(miningInterval, cts);
             }
@@ -623,7 +629,7 @@ namespace Libplanet.Headless.Hosting
                     if (grace == count)
                     {
                         var message = "No any peers are connected even seed peers were given. " +
-                                     $"(grace: {grace}";
+                                     $"(grace: {grace})";
                         Log.Error(message);
                         // _exceptionHandlerAction(RPCException.NetworkException, message);
                         Properties.NodeExceptionOccurred(NodeExceptionType.NoAnyPeer, message);
