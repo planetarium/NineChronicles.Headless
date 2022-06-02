@@ -157,7 +157,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             PublicKey appProtocolVersionSigner,
             Progress<PreloadState>? preloadProgress = null,
             IEnumerable<Peer>? peers = null,
-            ImmutableHashSet<BoundPeer>? staticPeers = null)
+            ImmutableHashSet<BoundPeer>? consensusPeers = null)
             where T : IAction, new()
         {
             var consensusPrivateKey = new PrivateKey();
@@ -182,7 +182,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Render = false,
                 Peers = peers ?? ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = ImmutableHashSet<PublicKey>.Empty.Add(appProtocolVersionSigner),
-                StaticPeers = staticPeers ?? ImmutableHashSet<BoundPeer>.Empty,
+                ConsensusPeers = consensusPeers ?? ImmutableHashSet<BoundPeer>.Empty,
             };
 
             return new LibplanetNodeService<T>(

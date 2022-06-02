@@ -200,8 +200,8 @@ namespace Libplanet.Headless.Hosting
                     iceServers: shuffledIceServers,
                     workers: Properties.Workers,
                     consensusPrivateKey: properties.ConsensusPrivateKey,
-                    consensusTableBucket: 1,
-                    consensusTableSize: 1000,
+                    consensusTableBucket: 1000,
+                    consensusTableSize: 1,
                     consensusWorkers: 100,
                     consensusPort: properties.ConsensusPort,
                     nodeId: Properties.NodeId,
@@ -213,7 +213,6 @@ namespace Libplanet.Headless.Hosting
                         BlockHashRecvTimeout = TimeSpan.FromSeconds(50),
                         BlockRecvTimeout = TimeSpan.FromSeconds(5),
                         BranchpointThreshold = 50,
-                        StaticPeers = Properties.StaticPeers,
                         MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
                         BucketSize = Properties.BucketSize,
                         PollInterval = Properties.PollInterval,
@@ -249,7 +248,15 @@ namespace Libplanet.Headless.Hosting
                     {
                         StartSwarm(Properties.Preload, cancellationToken),
                         CheckMessage(Properties.MessageTimeout, cancellationToken),
-                        CheckTip(Properties.TipTimeout, cancellationToken)
+                        CheckTip(Properties.TipTimeout, cancellationToken),
+                        /*
+                         TODO: Find a way to revive this
+                        CheckConsensusPeersAsync(
+                            Properties.ConsensusPeers,
+                            ConsensusTable,
+                            ConsensusTransport,
+                            cancellationToken)
+                            */
                     };
                     if (Properties.Peers.Any())
                     {
@@ -604,7 +611,7 @@ namespace Libplanet.Headless.Hosting
         }
 
         // FIXME: Can fixed by just restarting Swarm only (i.e. CheckMessage)
-        protected async Task CheckPeerTable(CancellationToken cancellationToken = default)
+        private async Task CheckPeerTable(CancellationToken cancellationToken = default)
         {
             const int grace = 3;
             var count = 0;
@@ -634,8 +641,49 @@ namespace Libplanet.Headless.Hosting
                 cancellationToken.ThrowIfCancellationRequested();
             }
         }
+        
+        private async Task CheckConsensusPeersAsync(
+            IEnumerable<BoundPeer> peers,
+            RoutingTable table,
+            ITransport transport,
+            CancellationToken cancellationToken)
+        {
+            var boundPeers = peers as BoundPeer[] ?? peers.ToArray();
+            var protocol = new KademliaProtocol(
+                table,
+                transport,
+                Properties.ConsensusPrivateKey.ToAddress());
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
+                    Log.Warning("Checking consensus peers. {@Peers}", boundPeers);
+                    var peersToAdd = boundPeers.Where(peer => !table.Contains(peer)).ToArray();
+                    if (peersToAdd.Any())
+                    {
+                        Log.Warning("Some of peers are not in routing table. {@Peers}", peersToAdd);
+                        await protocol.AddPeersAsync(
+                            peersToAdd,
+                            TimeSpan.FromSeconds(5),
+                            cancellationToken);
+                    }
+                }
+                catch (OperationCanceledException e)
+                {
+                    Log.Warning(e, $"{nameof(CheckConsensusPeersAsync)}() is cancelled.");
+                    throw;
+                }
+                catch (Exception e)
+                {
+                    var msg = "Unexpected exception occurred during " +
+                              $"{nameof(CheckConsensusPeersAsync)}(): {{0}}";
+                    Log.Warning(e, msg, e);
+                }
+            }
+        }
 
-        protected Block<T> LoadGenesisBlock(
+        private Block<T> LoadGenesisBlock(
             LibplanetNodeServiceProperties<T> properties,
             HashAlgorithmGetter hashAlgorithmGetter
         )
