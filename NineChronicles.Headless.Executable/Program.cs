@@ -5,8 +5,6 @@ using Amazon.S3;
 using Cocona;
 using Cocona.Lite;
 using Destructurama;
-using Libplanet;
-using Libplanet.Crypto;
 using Libplanet.Extensions.Cocona.Commands;
 using Libplanet.KeyStore;
 using Microsoft.Extensions.Configuration;
@@ -83,11 +81,11 @@ namespace NineChronicles.Headless.Executable
                               "If you leave this null, a randomly generated value will be used.")]
             string? swarmPrivateKeyString = null,
             [Option("consensus-private-key",
-                Description = "The private key used for signing consensus messages. " +
-                              "Cannot be null.")]
+                Description = "The private key used for signing consensus messages and votes," +
+                              "and propose block.")]
             string? consensusPrivateKeyString = null,
             [Option("miner-private-key",
-                Description = "The private key used for mining blocks. " +
+                Description = "[Obsolete] The private key used for mining blocks. " +
                               "Must not be null if you want to turn on mining with libplanet-node.")]
             string? minerPrivateKeyString = null,
             string? storeType = null,
@@ -200,6 +198,12 @@ namespace NineChronicles.Headless.Executable
             CancellationToken? cancellationToken = null 
         )
         {
+            if (minerPrivateKeyString is not null)
+            {
+                Console.Error.WriteLine(
+                    "--miner-private-key is obsolete. Please check --consensus-private-key.");
+            }
+            
 #if SENTRY || ! DEBUG
             try
             {
@@ -263,10 +267,10 @@ namespace NineChronicles.Headless.Executable
 
             Log.Logger = loggerConf.CreateLogger();
 
-            if (!noMiner && minerPrivateKeyString is null)
+            if (!noMiner && consensusPrivateKeyString is null)
             {
                 throw new CommandExitedException(
-                    "--miner-private-key must be present to turn on mining at libplanet node.",
+                    "--consensus-private-key must be present to turn on mining at libplanet node.",
                     -1
                 );
             }
@@ -316,7 +320,6 @@ namespace NineChronicles.Headless.Executable
                         consensusPort,
                         swarmPrivateKeyString,
                         consensusPrivateKeyString,
-                        minerPrivateKeyString,
                         storeType,
                         storePath,
                         100,
@@ -354,13 +357,9 @@ namespace NineChronicles.Headless.Executable
                 {
                     properties.LogActionRenders = true;
                 }
-
-                var minerPrivateKey = string.IsNullOrEmpty(minerPrivateKeyString)
-                    ? null
-                    : new PrivateKey(ByteUtil.ParseHex(minerPrivateKeyString));
-                var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
+                
+                var nineChroniclesProperties = new NineChroniclesNodeServiceProperties
                 {
-                    MinerPrivateKey = minerPrivateKey,
                     Libplanet = properties,
                     NetworkType = networkType,
                     StrictRender = strictRendering,

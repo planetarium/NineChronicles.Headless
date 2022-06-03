@@ -69,9 +69,9 @@ namespace NineChronicles.Headless.Controllers
                 var srcArray = ByteUtil.ParseHex(request.PrivateKeyString);
                 Array.Copy(srcArray, 0, destArray, destArray.Length - srcArray.Length, srcArray.Length);
                 var privateKey = new PrivateKey(destArray);
-                StandaloneContext.NineChroniclesNodeService.MinerPrivateKey = privateKey;
+                StandaloneContext.NineChroniclesNodeService.ConsensusPrivateKey = privateKey;
                 var msg =
-                    $"Private key set ({StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress()}).";
+                    $"Private key set ({StandaloneContext.NineChroniclesNodeService.ConsensusPrivateKey.PublicKey.ToAddress()}).";
                 Log.Information("SetPrivateKey: {Msg}", msg);
                 return Ok(msg);
             }
@@ -237,12 +237,12 @@ namespace NineChronicles.Headless.Controllers
                     $"{nameof(StandaloneContext.NineChroniclesNodeService)} is null.");
             }
 
-            if (StandaloneContext.NineChroniclesNodeService.MinerPrivateKey is null)
+            if (StandaloneContext.NineChroniclesNodeService.ConsensusPrivateKey is null)
             {
                 Log.Information("PrivateKey is not set. please call SetPrivateKey() first.");
                 return;
             }
-            Address address = StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress();
+            Address address = StandaloneContext.NineChroniclesNodeService.ConsensusPrivateKey.PublicKey.ToAddress();
             if (eval.OutputStates.UpdatedAddresses.Contains(address) || eval.Signer == address)
             {
                 if (eval.Signer == address)

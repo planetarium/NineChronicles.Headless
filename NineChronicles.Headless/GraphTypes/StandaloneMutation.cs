@@ -178,7 +178,7 @@ namespace NineChronicles.Headless.GraphTypes
                         throw new InvalidOperationException($"{nameof(NineChroniclesNodeService)} is null.");
                     }
 
-                    PrivateKey? privateKey = service.MinerPrivateKey;
+                    PrivateKey? privateKey = service.ConsensusPrivateKey;
                     if (privateKey is null)
                     {
                         // FIXME We should cover this case on unittest.
@@ -236,7 +236,7 @@ namespace NineChronicles.Headless.GraphTypes
                         throw new InvalidOperationException($"{nameof(NineChroniclesNodeService)} is null.");
                     }
 
-                    PrivateKey? privateKey = service.MinerPrivateKey;
+                    PrivateKey? privateKey = service.ConsensusPrivateKey;
                     if (privateKey is null)
                     {
                         // FIXME We should cover this case on unittest.

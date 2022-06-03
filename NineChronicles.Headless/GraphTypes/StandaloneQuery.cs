@@ -255,13 +255,13 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Address of current node.",
                 resolve: context =>
                 {
-                    if (standaloneContext.NineChroniclesNodeService?.MinerPrivateKey is null)
+                    if (standaloneContext.NineChroniclesNodeService?.ConsensusPrivateKey is null)
                     {
                         throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.NineChroniclesNodeService)}.{nameof(StandaloneContext.NineChroniclesNodeService.MinerPrivateKey)} is null.");
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.NineChroniclesNodeService)}.{nameof(StandaloneContext.NineChroniclesNodeService.ConsensusPrivateKey)} is null.");
                     }
 
-                    return standaloneContext.NineChroniclesNodeService.MinerPrivateKey.ToAddress();
+                    return standaloneContext.NineChroniclesNodeService.ConsensusPrivateKey.ToAddress();
                 });
 
             Field<MonsterCollectionStatusType>(
@@ -287,13 +287,13 @@ namespace NineChronicles.Headless.GraphTypes
                     Address agentAddress;
                     if (address is null)
                     {
-                        if (standaloneContext.NineChroniclesNodeService?.MinerPrivateKey is null)
+                        if (standaloneContext.NineChroniclesNodeService?.ConsensusPrivateKey is null)
                         {
                             throw new ExecutionError(
-                                $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.NineChroniclesNodeService)}.{nameof(StandaloneContext.NineChroniclesNodeService.MinerPrivateKey)} is null.");
+                                $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.NineChroniclesNodeService)}.{nameof(StandaloneContext.NineChroniclesNodeService.ConsensusPrivateKey)} is null.");
                         }
 
-                        agentAddress = standaloneContext.NineChroniclesNodeService!.MinerPrivateKey!.ToAddress();
+                        agentAddress = standaloneContext.NineChroniclesNodeService!.ConsensusPrivateKey!.ToAddress();
                     }
                     else
                     {

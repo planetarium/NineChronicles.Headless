@@ -459,9 +459,9 @@ namespace Libplanet.Headless.Hosting
             }
         }
 
-        private async Task MineBlockTask(TimeSpan miningInterval, CancellationToken cts)
+        private async Task MineBlockTask(PrivateKey privateKey, TimeSpan miningInterval, CancellationToken cts)
         {
-            var miner = new Miner<T>(BlockChain, Swarm, Properties.MinerPrivateKey);
+            var miner = new Miner<T>(BlockChain, Swarm, privateKey);
             while (!cts.IsCancellationRequested)
             {
                 // Collected votes for the previous block.
@@ -512,6 +512,7 @@ namespace Libplanet.Headless.Hosting
                 CancellationTokenSource.CreateLinkedTokenSource(SwarmCancellationToken);
             Task.Run(
                 () => MineBlockTask(
+                    privateKey,
                     TimeSpan.FromMilliseconds(Properties.BlockInterval),
                     MiningCancellationTokenSource.Token),
                 MiningCancellationTokenSource.Token);

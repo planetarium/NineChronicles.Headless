@@ -126,7 +126,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     data["activationStatus"])["activateAccount"];
             Assert.True(result);
 
-            Address userAddress = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!.ToAddress();
+            Address userAddress = StandaloneContextFx.NineChroniclesNodeService!.ConsensusPrivateKey!.ToAddress();
             IValue? state = BlockChain.GetState(
                 userAddress.Derive(ActivationKey.DeriveKey)
             );
@@ -145,10 +145,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 (Dictionary)BlockChain.GetState(GoldCurrencyState.Address)
             ).Currency;
 
-            Address senderAddress = service.MinerPrivateKey!.ToAddress();
+            Address senderAddress = service.ConsensusPrivateKey!.ToAddress();
             var store = service.Store;
-            await BlockChain.MineBlock(service.MinerPrivateKey);
-            await BlockChain.MineBlock(service.MinerPrivateKey);
+            await BlockChain.MineBlock(service.ConsensusPrivateKey);
+            await BlockChain.MineBlock(service.ConsensusPrivateKey);
 
             // 10 + 10 (mining rewards)
             Assert.Equal(
@@ -223,11 +223,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 (Dictionary)BlockChain.GetState(GoldCurrencyState.Address)
             ).Currency;
 
-            Address senderAddress = service.MinerPrivateKey!.ToAddress();
+            Address senderAddress = service.ConsensusPrivateKey!.ToAddress();
 
             var store = service.Store;
-            await BlockChain.MineBlock(service.MinerPrivateKey);
-            await BlockChain.MineBlock(service.MinerPrivateKey);
+            await BlockChain.MineBlock(service.ConsensusPrivateKey);
+            await BlockChain.MineBlock(service.ConsensusPrivateKey);
 
             // 10 + 10 (mining rewards)
             Assert.Equal(
@@ -695,7 +695,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 tail = 0,
                 name = "avatar",
             };
-            var playerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
+            var playerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.ConsensusPrivateKey!;
             BlockChain.MakeTransaction(playerPrivateKey, new[] { createAvatar });
             await BlockChain.MineBlock(playerPrivateKey);
 
@@ -723,7 +723,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task ClaimMonsterCollectionReward()
         {
-            var playerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
+            var playerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.ConsensusPrivateKey!;
             var avatarAddress = playerPrivateKey.ToAddress();
             string query = $@"mutation {{
                 action {{
@@ -839,7 +839,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Transaction<PolymorphicAction<ActionBase>> tx =
                 Transaction<PolymorphicAction<ActionBase>>.Create(
                     0,
-                    service.MinerPrivateKey,
+                    service.ConsensusPrivateKey,
                     genesis.Hash,
                     new PolymorphicAction<ActionBase>[] { }
                 );
@@ -856,7 +856,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 data
             );
             Block<PolymorphicAction<ActionBase>> mined =
-                await BlockChain.MineBlock(service.MinerPrivateKey);
+                await BlockChain.MineBlock(service.ConsensusPrivateKey);
             Assert.Contains(tx, mined.Transactions);
         }
 
@@ -882,7 +882,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Transaction<PolymorphicAction<ActionBase>> tx =
                 Transaction<PolymorphicAction<ActionBase>>.Create(
                     0,
-                    service.MinerPrivateKey,
+                    service.ConsensusPrivateKey,
                     genesis.Hash,
                     new PolymorphicAction<ActionBase>[] { }
                 );
@@ -899,7 +899,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 data
             );
             Block<PolymorphicAction<ActionBase>> mined =
-                await BlockChain.MineBlock(service.MinerPrivateKey!);
+                await BlockChain.MineBlock(service.ConsensusPrivateKey!);
             Assert.Contains(tx, mined.Transactions);
         }
 

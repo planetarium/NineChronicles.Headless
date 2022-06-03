@@ -8,17 +8,14 @@ using Libplanet.Headless.Hosting;
 using Libplanet.Net;
 using Libplanet.Store;
 using Microsoft.Extensions.Hosting;
-using Nekoyume.Action;
 using Nekoyume.BlockChain;
 using Nekoyume.BlockChain.Policy;
-using Nekoyume.Model.State;
 using NineChronicles.Headless.Properties;
 using NineChronicles.RPC.Shared.Exceptions;
 using Nito.AsyncEx;
 using Serilog;
 using Serilog.Events;
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading;
@@ -26,8 +23,6 @@ using System.Threading.Tasks;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using StrictRenderer =
     Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer<Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>>;
-using Libplanet.Blocks;
-using Libplanet;
 
 namespace NineChronicles.Headless
 {
@@ -55,7 +50,7 @@ namespace NineChronicles.Headless
 
         public IStore Store => NodeService.Store;
 
-        public PrivateKey? MinerPrivateKey { get; set; }
+        public PrivateKey? ConsensusPrivateKey { get; set; }
 
         static NineChroniclesNodeService()
         {
@@ -71,7 +66,6 @@ namespace NineChronicles.Headless
         }
 
         public NineChroniclesNodeService(
-            PrivateKey? minerPrivateKey,
             LibplanetNodeServiceProperties<NCAction> properties,
             IBlockPolicy<NCAction> blockPolicy,
             NetworkType networkType,
@@ -83,8 +77,8 @@ namespace NineChronicles.Headless
             int txQuotaPerSigner = 10
         )
         {
-            MinerPrivateKey = minerPrivateKey;
             Properties = properties;
+            ConsensusPrivateKey = properties.ConsensusPrivateKey;
 
             LogEventLevel logLevel = LogEventLevel.Debug;
             var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
@@ -193,7 +187,6 @@ namespace NineChronicles.Headless
 
             var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(properties.NetworkType);
             var service = new NineChroniclesNodeService(
-                properties.MinerPrivateKey,
                 properties.Libplanet,
                 blockPolicy,
                 properties.NetworkType,
@@ -224,7 +217,7 @@ namespace NineChronicles.Headless
         internal static IBlockPolicy<NCAction> GetTestBlockPolicy() =>
             new BlockPolicySource(Log.Logger, LogEventLevel.Debug).GetTestPolicy();
 
-        public void StartMining() => NodeService?.StartMining(MinerPrivateKey);
+        public void StartMining() => NodeService?.StartMining(ConsensusPrivateKey);
 
         public void StopMining() => NodeService?.StopMining();
 

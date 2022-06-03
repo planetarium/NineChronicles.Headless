@@ -328,7 +328,7 @@ namespace NineChronicles.Headless.GraphTypes
                     $"{nameof(StandaloneContext.NineChroniclesNodeService)} is null.");
             }
 
-            if (StandaloneContext.NineChroniclesNodeService.MinerPrivateKey is null)
+            if (StandaloneContext.NineChroniclesNodeService.ConsensusPrivateKey is null)
             {
                 Log.Information("PrivateKey is not set. please call SetPrivateKey() first");
             }

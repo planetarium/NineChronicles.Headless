@@ -12,13 +12,6 @@ namespace NineChronicles.Headless.Properties
 {
     public class NineChroniclesNodeServiceProperties
     {
-        /// <summary>
-        /// Gets or sets a private key that is used in mining and signing transactions,
-        /// which is different with the private key used in swarm to sign messages.
-        /// </summary>
-        /// <seealso cref="LibplanetNodeServiceProperties{T}.SwarmPrivateKey"/>
-        public PrivateKey? MinerPrivateKey { get; set; }
-
         public LibplanetNodeServiceProperties<NineChroniclesActionType>? Libplanet { get; set; }
 
         public NetworkType NetworkType { get; set; } = NetworkType.Main;
@@ -43,7 +36,6 @@ namespace NineChronicles.Headless.Properties
                 ushort? consensusPort = null,
                 string? swarmPrivateKeyString = null,
                 string? consensusPrivateKeyString = null,
-                string? minerPrivateKeyString = null,
                 string? storeType = null,
                 string? storePath = null,
                 int storeStateCacheSize = 100,
@@ -77,9 +69,6 @@ namespace NineChronicles.Headless.Properties
             var consensusPrivateKey = string.IsNullOrEmpty(consensusPrivateKeyString)
                 ? new PrivateKey()
                 : new PrivateKey(ByteUtil.ParseHex(consensusPrivateKeyString));
-            var minerPrivateKey = string.IsNullOrEmpty(minerPrivateKeyString)
-                ? new PrivateKey()
-                : new PrivateKey(ByteUtil.ParseHex(minerPrivateKeyString));
 
             peerStrings ??= Array.Empty<string>();
             iceServerStrings ??= Array.Empty<string>();
@@ -95,7 +84,6 @@ namespace NineChronicles.Headless.Properties
                 Host = swarmHost,
                 Port = swarmPort,
                 ConsensusPort = consensusPort,
-                MinerPrivateKey = minerPrivateKey,
                 SwarmPrivateKey = swarmPrivateKey,
                 ConsensusPrivateKey = consensusPrivateKey,
                 AppProtocolVersion = AppProtocolVersion.FromToken(appProtocolVersionToken),

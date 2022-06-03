@@ -58,9 +58,9 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        if (!(service.MinerPrivateKey is { } privateKey))
+                        if (!(service.ConsensusPrivateKey is { } privateKey))
                         {
-                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                            throw new InvalidOperationException($"{nameof(service.ConsensusPrivateKey)} is null.");
                         }
 
                         if (!(service.Swarm?.BlockChain is { } blockChain))
@@ -160,7 +160,7 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.ConsensusPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -220,7 +220,7 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.ConsensusPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -260,9 +260,9 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        if (!(service.MinerPrivateKey is { } privatekey))
+                        if (!(service.ConsensusPrivateKey is { } privatekey))
                         {
-                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                            throw new InvalidOperationException($"{nameof(service.ConsensusPrivateKey)} is null.");
                         }
 
                         if (!(service.Swarm?.BlockChain is { } blockChain))
@@ -309,9 +309,9 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        if (!(service.MinerPrivateKey is { } privateKey))
+                        if (!(service.ConsensusPrivateKey is { } privateKey))
                         {
-                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                            throw new InvalidOperationException($"{nameof(service.ConsensusPrivateKey)} is null.");
                         }
 
                         if (!(service.BlockChain is { } blockChain))
@@ -351,9 +351,9 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        if (!(service.MinerPrivateKey is { } privateKey))
+                        if (!(service.ConsensusPrivateKey is { } privateKey))
                         {
-                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                            throw new InvalidOperationException($"{nameof(service.ConsensusPrivateKey)} is null.");
                         }
 
                         if (!(service.BlockChain is { } blockChain))
@@ -422,7 +422,7 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.ConsensusPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -453,9 +453,9 @@ namespace NineChronicles.Headless.GraphTypes
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
                         }
 
-                        if (service.MinerPrivateKey is null)
+                        if (service.ConsensusPrivateKey is null)
                         {
-                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                            throw new InvalidOperationException($"{nameof(service.ConsensusPrivateKey)} is null.");
                         }
 
                         int level = context.GetArgument<int>("level");
@@ -465,7 +465,7 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.ConsensusPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -497,13 +497,13 @@ namespace NineChronicles.Headless.GraphTypes
                         }
 
 
-                        if (service.MinerPrivateKey is null)
+                        if (service.ConsensusPrivateKey is null)
                         {
-                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                            throw new InvalidOperationException($"{nameof(service.ConsensusPrivateKey)} is null.");
                         }
 
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
-                        Address agentAddress = service.MinerPrivateKey.ToAddress();
+                        Address agentAddress = service.ConsensusPrivateKey.ToAddress();
                         AgentState agentState = new AgentState((Dictionary) service.BlockChain.GetState(agentAddress));
 
                         var action = new ClaimMonsterCollectionReward
@@ -512,7 +512,7 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.ConsensusPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)

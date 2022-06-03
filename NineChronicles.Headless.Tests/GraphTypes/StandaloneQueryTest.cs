@@ -452,7 +452,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var userPrivateKey = new PrivateKey();
             var consensusPrivateKey = new PrivateKey();
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
@@ -478,7 +477,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
 
-            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Test);
+            var service = new NineChroniclesNodeService(properties, blockPolicy, NetworkType.Test);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
@@ -501,7 +500,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             await blockChain.MineBlock(adminPrivateKey);
 
             action = activationKey.CreateActivateAccount(nonce);
-            blockChain.MakeTransaction(userPrivateKey, new[] { action });
+            blockChain.MakeTransaction(consensusPrivateKey, new[] { action });
             await blockChain.MineBlock(adminPrivateKey);
 
             queryResult = await ExecuteQueryAsync( "query { activationStatus { activated } }");
@@ -619,11 +618,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
             if (!miner)
             {
-                StandaloneContextFx.NineChroniclesNodeService.MinerPrivateKey = null;
+                StandaloneContextFx.NineChroniclesNodeService.ConsensusPrivateKey = null;
             }
             else
             {
-                Assert.Equal(userPrivateKey, StandaloneContextFx.NineChroniclesNodeService.MinerPrivateKey!);
+                Assert.Equal(userPrivateKey, StandaloneContextFx.NineChroniclesNodeService.ConsensusPrivateKey!);
             }
             string queryArgs = miner ? "" : $@"(address: ""{userAddress}"")";
             string query = $@"query {{
@@ -657,7 +656,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
             if (!miner)
             {
-                StandaloneContextFx.NineChroniclesNodeService.MinerPrivateKey = null;
+                StandaloneContextFx.NineChroniclesNodeService.ConsensusPrivateKey = null;
             }
             var action = new CreateAvatar2
             {
@@ -777,7 +776,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var userPrivateKey = new PrivateKey();
             var consensusPrivateKey = new PrivateKey();
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
@@ -803,7 +801,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
 
             var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test);
-            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Test);
+            var service = new NineChroniclesNodeService(properties, blockPolicy, NetworkType.Test);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
@@ -855,7 +853,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var userPrivateKey = new PrivateKey();
             var consensusPrivateKey = new PrivateKey();
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
@@ -881,7 +878,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
 
-            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Test);
+            var service = new NineChroniclesNodeService(properties, blockPolicy, NetworkType.Test);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
@@ -920,7 +917,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     }, blockAction: blockPolicy.BlockAction
                 );
 
-            var consensusPrivateKey = new PrivateKey();
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
@@ -929,12 +925,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
-                ConsensusPrivateKey = consensusPrivateKey,
+                ConsensusPrivateKey = privateKey,
                 ConsensusPort = 5000,
                 NodeId = 0,
                 Validators = new List<PublicKey>()
                 {
-                    consensusPrivateKey.PublicKey,
+                    privateKey.PublicKey,
                 },
                 Port = null,
                 NoMiner = true,
@@ -944,7 +940,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ConsensusPeers = ImmutableHashSet<BoundPeer>.Empty,
             };
 
-            return new NineChroniclesNodeService(privateKey, properties, blockPolicy, NetworkType.Test);
+            return new NineChroniclesNodeService(properties, blockPolicy, NetworkType.Test);
         }
 
         private (ProtectedPrivateKey, string) CreateProtectedPrivateKey()

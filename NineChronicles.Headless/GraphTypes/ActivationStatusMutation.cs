@@ -26,7 +26,7 @@ namespace NineChronicles.Headless.GraphTypes
                         string encodedActivationKey =
                             context.GetArgument<string>("encodedActivationKey");
                         // FIXME: Private key may not exists at this moment.
-                        if (!(service.MinerPrivateKey is { } privateKey))
+                        if (!(service.ConsensusPrivateKey is { } privateKey))
                         {
                             throw new InvalidOperationException($"{nameof(privateKey)} is null.");
                         }

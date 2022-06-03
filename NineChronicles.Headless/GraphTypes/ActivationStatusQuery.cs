@@ -28,9 +28,9 @@ namespace NineChronicles.Headless.GraphTypes
 
                     try
                     {
-                        if (!(service.MinerPrivateKey is { } privateKey))
+                        if (!(service.ConsensusPrivateKey is { } privateKey))
                         {
-                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                            throw new InvalidOperationException($"{nameof(service.ConsensusPrivateKey)} is null.");
                         }
 
                         if (!(service.Swarm?.BlockChain is { } blockChain))

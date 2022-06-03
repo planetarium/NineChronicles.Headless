@@ -116,7 +116,7 @@ namespace NineChronicles.Headless.Tests.Controllers
                 PrivateKeyString = ByteUtil.Hex(privateKey.ByteArray),
             }));
 
-            Assert.Equal(_standaloneContext.NineChroniclesNodeService!.MinerPrivateKey, privateKey);
+            Assert.Equal(_standaloneContext.NineChroniclesNodeService!.ConsensusPrivateKey, privateKey);
         }
 
         [Fact]
@@ -186,7 +186,6 @@ namespace NineChronicles.Headless.Tests.Controllers
             var consensusKey = new PrivateKey();
             
             _standaloneContext.NineChroniclesNodeService = new NineChroniclesNodeService(
-                new PrivateKey(),
                 new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
                 {
                     GenesisBlock = _standaloneContext.BlockChain!.Genesis,

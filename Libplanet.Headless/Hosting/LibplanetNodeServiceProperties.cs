@@ -21,8 +21,6 @@ namespace Libplanet.Headless.Hosting
         public PrivateKey SwarmPrivateKey { get; set; }
         
         public PrivateKey ConsensusPrivateKey { get; set; }
-        
-        public PrivateKey MinerPrivateKey { get; set; }
 
         public long NodeId { get; set; }
         
