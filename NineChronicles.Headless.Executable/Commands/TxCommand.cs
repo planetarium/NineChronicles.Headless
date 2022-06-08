@@ -61,10 +61,6 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 return (NCAction)action;
             }).ToList();
-            
-            Console.WriteLine(privateKey);
-            Console.WriteLine(genesisHash);
-            Console.WriteLine(timestamp);
 
             Transaction<NCAction> tx = Transaction<NCAction>.Create(
                 nonce: nonce,
