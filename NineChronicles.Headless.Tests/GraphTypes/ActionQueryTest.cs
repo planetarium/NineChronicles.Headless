@@ -60,6 +60,23 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.IsType<ClaimStakeReward>(DeserializeNCAction(dictionary).InnerAction);
         }
 
+        [Fact]
+        public async Task MigrateMonsterCollection()
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            string query = $@"
+            {{
+                migrateMonsterCollection(avatarAddress: ""{avatarAddress.ToString()}"")
+            }}";
+
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query);
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["migrateMonsterCollection"]));
+            var dictionary = Assert.IsType<Dictionary>(plainValue);
+            var action = Assert.IsType<MigrateMonsterCollection>(DeserializeNCAction(dictionary).InnerAction);
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+        }
+
         private NCAction DeserializeNCAction(IValue value)
         {
 #pragma warning disable CS0612
