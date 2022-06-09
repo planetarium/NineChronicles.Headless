@@ -253,50 +253,6 @@ namespace NineChronicles.Headless.GraphTypes
                     return null;
                 }
             );
-
-            Field<ListGraphType<IntGraphType>>(
-                "unlockedRecipeIds",
-                description: "List of unlocked equipment recipe sheet row ids.",
-                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
-                {
-                    Name = "avatarAddress",
-                    Description = "Address of avatar."
-                }),
-                resolve: context =>
-                {
-                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
-                    var address = avatarAddress.Derive("recipe_ids");
-                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] {address});
-                    if (values[0] is List rawRecipeIds)
-                    {
-                        return rawRecipeIds.ToList(StateExtensions.ToInteger);
-                    }
-
-                    return null;
-                }
-            );
-
-            Field<ListGraphType<IntGraphType>>(
-                "unlockedWorldIds",
-                description: "List of unlocked world sheet row ids.",
-                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
-                {
-                    Name = "avatarAddress",
-                    Description = "Address of avatar."
-                }),
-                resolve: context =>
-                {
-                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
-                    var address = avatarAddress.Derive("world_ids");
-                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] {address});
-                    if (values[0] is List rawWorldIds)
-                    {
-                        return rawWorldIds.ToList(StateExtensions.ToInteger);
-                    }
-
-                    return null;
-                }
-            );
         }
     }
 }

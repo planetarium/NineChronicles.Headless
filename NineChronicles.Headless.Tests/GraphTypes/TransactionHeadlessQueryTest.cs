@@ -18,7 +18,6 @@ using Libplanet.Store.Trie;
 using Libplanet.Tx;
 using Nekoyume.Action;
 using NineChronicles.Headless.GraphTypes;
-using NineChronicles.Headless.Tests.Common;
 using Xunit;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -29,7 +28,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         private readonly BlockChain<NCAction> _blockChain;
         private readonly IStore _store;
         private readonly IStateStore _stateStore;
-        private readonly NineChroniclesNodeService _service;
 
         public TransactionHeadlessQueryTest()
         {
@@ -41,7 +39,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 _store,
                 _stateStore,
                 BlockChain<NCAction>.MakeGenesisBlock(HashAlgorithmType.Of<SHA256>()));
-            _service = ServiceBuilder.CreateNineChroniclesNodeService(_blockChain.Genesis, new PrivateKey());
         }
 
         [Fact]
@@ -319,9 +316,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             return GraphQLTestUtils.ExecuteQueryAsync<TransactionHeadlessQuery>(query, standaloneContext: new StandaloneContext
             {
                 BlockChain = _blockChain,
-                Store = _store,
-                NineChroniclesNodeService = _service
+                Store = _store
             });
-        }
-    }
+        }  
+    }     
 }

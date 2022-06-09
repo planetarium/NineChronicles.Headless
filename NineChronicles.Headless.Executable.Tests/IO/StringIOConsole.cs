@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using NineChronicles.Headless.Executable.IO;
 
@@ -23,10 +22,6 @@ namespace NineChronicles.Headless.Executable.Tests.IO
         public StringWriter Out { get; }
 
         public StringWriter Error { get; }
-        public Stream OpenStandardOutput()
-        {
-            throw new NotImplementedException();
-        }
 
         TextReader IConsole.In => In;
 

@@ -6,7 +6,6 @@ using GraphQL.Execution;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
-using Nekoyume.Helper;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
 using Xunit;
@@ -17,10 +16,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
     public class AgentStateTypeTest
     {
         [Theory]
-        [InlineData(0, "0.00", 0, "0.000000000000000000")]
-        [InlineData(10, "10.00", 2, "2.000000000000000000")]
-        [InlineData(7777, "7777.00", 30, "30.000000000000000000")]
-        public async Task Query(int goldBalance, string goldDecimalString, int crystalBalance, string crystalDecimalString)
+        [InlineData(0, "0.00")]
+        [InlineData(10, "10.00")]
+        [InlineData(7777, "7777.00")]
+        public async Task Query(int goldBalance, string decimalString)
         {
             const string query = @"
             {
@@ -33,16 +32,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 monsterCollectionRound
                 monsterCollectionLevel
                 hasTradedItem
-                crystal
             }";
             var goldCurrency = new Currency("NCG", 2, minter: null);
-            var agentState = new AgentState(new Address())
-            {
-                avatarAddresses =
-                {
-                    [0] = Fixtures.AvatarAddress
-                }
-            };
+            var agentState = new AgentState(new Address());
+            agentState.avatarAddresses[0] = Fixtures.AvatarAddress;
 
             Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(agentState.address, 0);
             MonsterCollectionState monsterCollectionState = new MonsterCollectionState(monsterCollectionAddress, 7, 0, Fixtures.TableSheetsFX.MonsterCollectionRewardSheet);
@@ -74,10 +67,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             {
                 if (address == agentState.address)
                 {
-                    var balance = currency.Equals(CrystalCalculator.CRYSTAL)
-                        ? crystalBalance
-                        : goldBalance;
-                    return new FungibleAssetValue(currency, balance, 0);
+                    return new FungibleAssetValue(currency, goldBalance, 0);
                 }
 
                 return FungibleAssetValue.FromRawValue(currency, 0);
@@ -99,11 +89,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                         ["name"] = Fixtures.AvatarStateFX.name,
                     },
                 },
-                ["gold"] = goldDecimalString,
+                ["gold"] = decimalString,
                 ["monsterCollectionRound"] = 0L,
                 ["monsterCollectionLevel"] = 7L,
                 ["hasTradedItem"] = false,
-                ["crystal"] = crystalDecimalString,
             };
             Assert.Equal(expected, data);
         }
