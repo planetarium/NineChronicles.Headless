@@ -11,6 +11,7 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class ActionQuery : ObjectGraphType
     {
+        private static readonly Codec Codec = new Codec();
         public ActionQuery()
         {
             var codec = new Codec();
