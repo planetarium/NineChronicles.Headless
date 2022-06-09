@@ -8,7 +8,6 @@ using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
-using Nekoyume.Helper;
 using Nekoyume.Model.Quest;
 using Nekoyume.Model.State;
 using static Lib9c.SerializeKeys;
@@ -121,13 +120,6 @@ namespace NineChronicles.Headless.GraphTypes.States
                     return false;
                 }
             );
-            Field<NonNullGraphType<StringGraphType>>(
-                "crystal",
-                description: "Current CRYSTAL.",
-                resolve: context => context.Source.GetBalance(
-                    context.Source.AgentAddress,
-                    CrystalCalculator.CRYSTAL
-                ).GetQuantityString(true));
         }
 
         private static bool IsTradeQuestCompleted(QuestList questList)

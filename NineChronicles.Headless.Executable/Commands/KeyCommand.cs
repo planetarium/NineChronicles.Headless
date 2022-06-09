@@ -1,5 +1,4 @@
 using NineChronicles.Headless.Executable.Commands.Key;
-using NineChronicles.Headless.Executable.IO;
 
 #nullable enable
 // Copied from https://git.io/Jqc0q
@@ -16,12 +15,10 @@ namespace NineChronicles.Headless.Executable.Commands
     using Libplanet.KeyStore;
 
     [HasSubCommands(typeof(ConversionCommand), "convert")]
-    public class KeyCommand : CoconaLiteConsoleAppBase
+    public class KeyCommand
     {
-        private readonly IConsole _console;
-        public KeyCommand(IConsole console, IKeyStore keyStore)
+        public KeyCommand(IKeyStore keyStore)
         {
-            _console = console;
             KeyStore = keyStore;
         }
 
@@ -140,12 +137,12 @@ namespace NineChronicles.Headless.Executable.Commands
             byte[] rawKey = publicKey ? key.PublicKey.Format(true) : key.ToByteArray();
             if (bytes)
             {
-                using Stream stdout = _console.OpenStandardOutput();
+                using Stream stdout = Console.OpenStandardOutput();
                 stdout.Write(rawKey);
             }
             else
             {
-                _console.Out.WriteLine(ByteUtil.Hex(rawKey));
+                Console.WriteLine(ByteUtil.Hex(rawKey));
             }
         }
 
@@ -182,74 +179,8 @@ namespace NineChronicles.Headless.Executable.Commands
             }
             else
             {
-                _console.Out.WriteLine(priv);
+                Console.WriteLine(priv);
             }
-        }
-
-        [Command(Description = "Sign a message.")]
-        public void Sign(
-            [Argument("KEY-ID", Description = "A key UUID to sign.")]
-            Guid keyId,
-            [Argument(
-                "FILE",
-                Description = "A path of the file to sign. If you pass '-' dash character, " +
-                              "it will receive the message to sign from stdin."
-            )]
-            string path,
-            PassphraseParameters passphrase,
-            [Option(Description = "A path of the file to save the signature. " +
-                                  "If you pass '-' dash character, it will print to stdout " +
-                                  "as raw bytes not hexadecimal string or else. " +
-                                  "If this option isn't given, it will print hexadecimal string " +
-                                  "to stdout as default behaviour.")]
-            string? binaryOutput = null
-        )
-        {
-            // FIXME Call Libplanet.Extensions.Cocona.Commands.KeyCommand.Sign after
-            // Libplanet.Extensions.Cocona.Commands.KeyCommand can configure KeyStore.
-            PrivateKey key = UnprotectKey(keyId, passphrase.Passphrase);
-
-            byte[] message;
-            if (path == "-")
-            {
-                // Stream for stdin does not support .Seek()
-                using MemoryStream buffer = new MemoryStream();
-                using (Stream stream = Console.OpenStandardInput())
-                {
-                    stream.CopyTo(buffer);
-                }
-
-                message = buffer.ToArray();
-            }
-            else
-            {
-                message = File.ReadAllBytes(path);
-            }
-
-            var signature = key.Sign(message);
-            if (binaryOutput is null)
-            {
-                Console.WriteLine(ByteUtil.Hex(signature));
-            }
-            else if (binaryOutput == "-")
-            {
-                using Stream stdout = Console.OpenStandardOutput();
-                stdout.Write(signature, 0, signature.Length);
-            }
-            else
-            {
-                File.WriteAllBytes(binaryOutput, signature);
-            }
-        }
-
-        public void PublicKey(
-            [Argument("KEY-ID", Description = "A key UUID to sign.")]
-            Guid keyId,
-            PassphraseParameters passphrase
-        )
-        {
-            PrivateKey key = UnprotectKey(keyId, passphrase.Passphrase);
-            _console.Out.WriteLine(ByteUtil.Hex(key.PublicKey.Format(false)));
         }
 
         public PrivateKey UnprotectKey(Guid keyId, string? passphrase = null)
@@ -292,7 +223,7 @@ namespace NineChronicles.Headless.Executable.Commands
             Guid keyId = dryRun ? Guid.NewGuid() : KeyStore.Add(ppk);
             if (json)
             {
-                using Stream stdout = _console.OpenStandardOutput();
+                using Stream stdout = System.Console.OpenStandardOutput();
                 ppk.WriteJson(stdout, keyId);
                 stdout.WriteByte(0x0a);  // line ending
             }
