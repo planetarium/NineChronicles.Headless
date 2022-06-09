@@ -22,11 +22,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                         itemId
                         rate
                     }
+                    bonusRewards {
+                        itemId
+                        count
+                    }
                 }
             }";
             var queryResult = await ExecuteQueryAsync<StakeRegularRewardSheetType>(
                 query,
-                source: Fixtures.TableSheetsFX.StakeRegularRewardSheet
+                source: (Fixtures.TableSheetsFX.StakeRegularRewardSheet,
+                    Fixtures.TableSheetsFX.StakeRegularFixedRewardSheet)
             );
             var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
             Assert.NotEmpty(data);
