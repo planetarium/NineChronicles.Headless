@@ -3,13 +3,13 @@ using System.Linq;
 using GraphQL.Types;
 using Nekoyume.TableData;
 
-namespace NineChronicles.Headless.GraphTypes.States.Models.Table
+namespace NineChronicles.Headless.GraphTypes.Abstractions
 {
-    public class StakeRegularRewardSheetType : ObjectGraphType<(StakeRegularRewardSheet StakeRegularRewardSheet, StakeRegularFixedRewardSheet StakeRegularFixedRewardSheet)>
+    public class StakeRewardsType : ObjectGraphType<(StakeRegularRewardSheet StakeRegularRewardSheet, StakeRegularFixedRewardSheet StakeRegularFixedRewardSheet)>
     {
-        public StakeRegularRewardSheetType()
+        public StakeRewardsType()
         {
-            Field<NonNullGraphType<ListGraphType<NonNullGraphType<StakeRegularRewardRowType>>>>(
+            Field<NonNullGraphType<ListGraphType<NonNullGraphType<StakeRegularRewardsType>>>>(
                 nameof(MonsterCollectionSheet.OrderedList),
                 resolve: context =>
                 {

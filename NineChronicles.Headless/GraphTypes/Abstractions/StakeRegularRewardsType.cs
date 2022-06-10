@@ -1,11 +1,12 @@
 using GraphQL.Types;
 using Nekoyume.TableData;
+using NineChronicles.Headless.GraphTypes.States.Models.Table;
 
-namespace NineChronicles.Headless.GraphTypes.States.Models.Table
+namespace NineChronicles.Headless.GraphTypes.Abstractions
 {
-    public class StakeRegularRewardRowType : ObjectGraphType<(int Level, long RequiredGold, StakeRegularRewardSheet.RewardInfo[] Rewards, StakeRegularFixedRewardSheet.RewardInfo[] BonusRewards)>
+    public class StakeRegularRewardsType : ObjectGraphType<(int Level, long RequiredGold, StakeRegularRewardSheet.RewardInfo[] Rewards, StakeRegularFixedRewardSheet.RewardInfo[] BonusRewards)>
     {
-        public StakeRegularRewardRowType()
+        public StakeRegularRewardsType()
         {
             Field<NonNullGraphType<IntGraphType>>(
                 nameof(StakeRegularRewardSheet.Row.Level),

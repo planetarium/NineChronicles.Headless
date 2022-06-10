@@ -4,13 +4,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using GraphQL.Execution;
 using Nekoyume.TableData;
+using NineChronicles.Headless.GraphTypes.Abstractions;
 using NineChronicles.Headless.GraphTypes.States.Models.Table;
 using Xunit;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 
-namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
+namespace NineChronicles.Headless.Tests.GraphTypes.Abstractions
 {
-    public class StakeRegularRewardRowTypeTest
+    public class StakeRegularRewardsTypeTest
     {
         [Fact]
         public async Task Query()
@@ -36,7 +37,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             StakeRegularFixedRewardSheet.RewardInfo[] bonusRewards = fixedRewardRow.Rewards.ToArray();
             Assert.Equal(2, rewards.Length);
             Assert.Single(bonusRewards);
-            var queryResult = await ExecuteQueryAsync<StakeRegularRewardRowType>(
+            var queryResult = await ExecuteQueryAsync<StakeRegularRewardsType>(
                 query,
                 source: (rewardRow.Level, rewardRow.RequiredGold, rewards, bonusRewards) 
             );

@@ -11,6 +11,7 @@ using Nekoyume.Action;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
+using NineChronicles.Headless.GraphTypes.Abstractions;
 using NineChronicles.Headless.GraphTypes.States;
 using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
 using NineChronicles.Headless.GraphTypes.States.Models.Table;
@@ -237,7 +238,7 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
             
-            Field<StakeRegularRewardSheetType>(
+            Field<StakeRewardsType>(
                 nameof(StakeRegularRewardSheet),
                 resolve: context =>
                 {
