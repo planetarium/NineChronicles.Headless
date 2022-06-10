@@ -69,12 +69,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes.Abstractions
                 }
             };
             Assert.Equal(data, expected);
-            // Assert.Equal(row.Level, data["level"]);
-            // Assert.Equal(row.RequiredGold, data["requiredGold"]);
-            // var dataRewards = Assert.IsType<Dictionary<string, object>[]>(data["rewards"]).ToList();
-            // Assert.Single(dataRewards);
-            // Assert.Equal(rewards.First().ItemId, dataRewards[0]["itemId"]);
-            // Assert.Equal(rewards.First().Rate, dataRewards[0]["rate"]);
         }
     }
 }
