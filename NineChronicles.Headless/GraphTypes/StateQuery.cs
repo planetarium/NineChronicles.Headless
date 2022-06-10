@@ -239,7 +239,7 @@ namespace NineChronicles.Headless.GraphTypes
             );
             
             Field<StakeRewardsType>(
-                nameof(StakeRegularRewardSheet),
+                "stakeRewards",
                 resolve: context =>
                 {
                     var sheetAddress = Addresses.GetSheetAddress<StakeRegularRewardSheet>();
