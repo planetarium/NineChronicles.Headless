@@ -64,10 +64,6 @@ namespace Libplanet.Headless.Hosting
 
         private bool _stopRequested = false;
 
-        protected static readonly TimeSpan PingSeedTimeout = TimeSpan.FromSeconds(25);
-
-        protected static readonly TimeSpan FindNeighborsTimeout = TimeSpan.FromSeconds(25);
-
         protected static readonly TimeSpan BootstrapInterval = TimeSpan.FromMinutes(5);
 
         protected static readonly TimeSpan CheckPeerTableInterval = TimeSpan.FromSeconds(10);
@@ -193,16 +189,18 @@ namespace Libplanet.Headless.Hosting
                 differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered,
                 options: new SwarmOptions
                 {
-                    MaxTimeout = TimeSpan.FromSeconds(50),
-                    BlockHashRecvTimeout = TimeSpan.FromSeconds(50),
-                    BlockRecvTimeout = TimeSpan.FromSeconds(5),
                     BranchpointThreshold = 50,
                     StaticPeers = Properties.StaticPeers,
                     MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
                     BucketSize = Properties.BucketSize,
-                    PollInterval = Properties.PollInterval,
                     MaximumPollPeers = Properties.MaximumPollPeers,
                     Type = transportType,
+                    TimeoutOptions = new TimeoutOptions
+                    {
+                        MaxTimeout = TimeSpan.FromSeconds(50),
+                        GetBlockHashesTimeout = TimeSpan.FromSeconds(50),
+                        GetBlocksBaseTimeout = TimeSpan.FromSeconds(5),
+                    }
                 }
             );
 
@@ -352,8 +350,6 @@ namespace Libplanet.Headless.Hosting
             Task BootstrapSwarmAsync(int depth)
                 => Swarm.BootstrapAsync(
                     peers,
-                    pingSeedTimeout: PingSeedTimeout,
-                    findNeighborsTimeout: FindNeighborsTimeout,
                     depth: depth,
                     cancellationToken: cancellationToken
                 );
@@ -385,7 +381,6 @@ namespace Libplanet.Headless.Hosting
                     try
                     {
                         await Swarm.PreloadAsync(
-                            TimeSpan.FromSeconds(5),
                             PreloadProgress,
                             cancellationToken: cancellationToken
                         );
@@ -447,18 +442,13 @@ namespace Libplanet.Headless.Hosting
                 if (peers.Any())
                 {
                     await await Task.WhenAny(
-                        Swarm.StartAsync(
-                            cancellationToken: cancellationToken,
-                            millisecondsBroadcastTxInterval: 15000
-                        ),
+                        Swarm.StartAsync(cancellationToken),
                         ReconnectToSeedPeers(cancellationToken)
                     );
                 }
                 else
                 {
-                    await Swarm.StartAsync(
-                        cancellationToken: cancellationToken,
-                        millisecondsBroadcastTxInterval: 15000);
+                    await Swarm.StartAsync(cancellationToken);
                 }
             }
             catch (Exception e)
@@ -530,7 +520,6 @@ namespace Libplanet.Headless.Hosting
                             {
                                 Log.Error("Start preloading due to staled tip.");
                                 await Swarm.PreloadAsync(
-                                    TimeSpan.FromSeconds(5),
                                     PreloadProgress,
                                     render: true,
                                     cancellationToken: cancellationToken

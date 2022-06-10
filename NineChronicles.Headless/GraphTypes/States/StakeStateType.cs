@@ -1,3 +1,4 @@
+using System;
 using Bencodex.Types;
 using GraphQL.Types;
 using Libplanet.Action;
@@ -52,7 +53,9 @@ namespace NineChronicles.Headless.GraphTypes.States
             Field<NonNullGraphType<LongGraphType>>(
                 "claimableBlockIndex",
                 description: "The block index the user can claim rewards.",
-                resolve: context => context.Source.StakeState.ReceivedBlockIndex + StakeState.RewardInterval);
+                resolve: context =>
+                    Math.Max(context.Source.StakeState.ReceivedBlockIndex, context.Source.StakeState.StartedBlockIndex)
+                    + StakeState.RewardInterval);
             Field<NonNullGraphType<StakeAchievementsType>>(
                 nameof(StakeState.Achievements),
                 description: "The staking achievements.",

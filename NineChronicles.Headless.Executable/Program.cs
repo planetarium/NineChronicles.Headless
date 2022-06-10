@@ -182,8 +182,6 @@ namespace NineChronicles.Headless.Executable
             int txQuotaPerSigner = 10,
             bool rpcRemoteServer = false,
             bool rpcHttpServer = false,
-            [Option(Description = "The interval between block polling.  15 seconds by default.")]
-            int pollInterval = 15,
             [Option(Description = "The maximum number of peers to poll blocks.  int.MaxValue by default.")]
             int maximumPollPeers = int.MaxValue,
             [Option(Description =
@@ -191,7 +189,7 @@ namespace NineChronicles.Headless.Executable
                 "is available and \"tcp\" option is selected by default.")]
             string transportType = "tcp",
             [Ignore]
-            CancellationToken? cancellationToken = null 
+            CancellationToken? cancellationToken = null
         )
         {
 #if SENTRY || ! DEBUG
@@ -327,7 +325,6 @@ namespace NineChronicles.Headless.Executable
                         minimumBroadcastTarget: minimumBroadcastTarget,
                         bucketSize: bucketSize,
                         chainTipStaleBehaviorType: chainTipStaleBehaviorType,
-                        pollInterval: pollInterval,
                         maximumPollPeers: maximumPollPeers,
                         transportType: transportType
                     );
