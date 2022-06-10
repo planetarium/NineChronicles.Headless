@@ -11,6 +11,7 @@ using Nekoyume.Action;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
+using NineChronicles.Headless.GraphTypes.Abstractions;
 using NineChronicles.Headless.GraphTypes.States;
 using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
 using NineChronicles.Headless.GraphTypes.States.Models.Table;
@@ -237,17 +238,22 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
             
-            Field<StakeRegularRewardSheetType>(
-                nameof(StakeRegularRewardSheet),
+            Field<StakeRewardsType>(
+                "stakeRewards",
                 resolve: context =>
                 {
                     var sheetAddress = Addresses.GetSheetAddress<StakeRegularRewardSheet>();
-                    IValue? value = context.Source.GetState(sheetAddress);
-                    if (value is Text ss)
+                    var fixedSheetAddress = Addresses.GetSheetAddress<StakeRegularFixedRewardSheet>();
+                    IValue? sheetValue = context.Source.GetState(sheetAddress);
+                    IValue? fixedSheetValue = context.Source.GetState(fixedSheetAddress);
+                    if (sheetValue is Text sv && fixedSheetValue is Text fsv)
                     {
                         var stakeRegularRewardSheet = new StakeRegularRewardSheet();
-                        stakeRegularRewardSheet.Set(ss);
-                        return stakeRegularRewardSheet;
+                        stakeRegularRewardSheet.Set(sv);
+                        var stakeRegularFixedRewardSheet = new StakeRegularFixedRewardSheet();
+                        stakeRegularFixedRewardSheet.Set(fsv);
+
+                        return (stakeRegularRewardSheet, stakeRegularFixedRewardSheet);
                     }
 
                     return null;
