@@ -42,7 +42,7 @@ namespace Libplanet.Headless.Hosting
             Func<Swarm<T>, Swarm<T>, PrivateKey, CancellationToken, Task> minerLoopAction,
             Progress<PreloadState> preloadProgress,
             Action<RPCException, string> exceptionHandlerAction,
-            Action<bool> preloadStatusHandlerAction, 
+            Action<bool> preloadStatusHandlerAction,
             bool ignoreBootstrapFailure = false
         ) : base(properties, easyPolicy, stagePolicy, renderers, null, preloadProgress, exceptionHandlerAction, preloadStatusHandlerAction, ignoreBootstrapFailure)
         {
@@ -50,12 +50,12 @@ namespace Libplanet.Headless.Hosting
             {
                 throw new ArgumentNullException(nameof(easyPolicy));
             }
-            
+
             if (hardPolicy is null)
             {
                 throw new ArgumentNullException(nameof(hardPolicy));
             }
-            
+
             Log.Debug("Initializing node service.");
 
             var genesisBlock = LoadGenesisBlock(properties, hardPolicy.GetHashAlgorithm);
@@ -72,9 +72,8 @@ namespace Libplanet.Headless.Hosting
                 stagePolicy : stagePolicy,
                 store: SubStore,
                 stateStore: SubStateStore,
-                genesisBlock: genesisBlock
-            );
-            
+                genesisBlock: genesisBlock);
+
             _minerLoopAction = minerLoopAction;
             var subSwarmPrivateKey = new PrivateKey();
             Log.Debug(
@@ -82,14 +81,13 @@ namespace Libplanet.Headless.Hosting
                 subSwarmPrivateKey.ToAddress());
             SubSwarm = new Swarm<T>(
                 SubChain,
-                subSwarmPrivateKey, 
+                subSwarmPrivateKey,
                 properties.AppProtocolVersion,
                 trustedAppProtocolVersionSigners: properties.TrustedAppProtocolVersionSigners,
                 host: "localhost",
                 listenPort: properties.Port + 1,
                 iceServers: iceServers,
-                workers: properties.Workers
-            );
+                workers: properties.Workers);
         }
 
         public override void StartMining(PrivateKey privateKey)
@@ -150,13 +148,11 @@ namespace Libplanet.Headless.Hosting
 
             Task BootstrapMainSwarmAsync(int depth)
                 => Swarm.BootstrapAsync(
-                    peers,
-                    pingSeedTimeout: PingSeedTimeout,
-                    findNeighborsTimeout: FindNeighborsTimeout,
-                    depth: depth,
-                    cancellationToken: cancellationToken
-                );
-            
+                    seedPeers: peers,
+                    searchDepth: depth,
+                    dialTimeout: null,
+                    cancellationToken: cancellationToken);
+
             if (peers.Any())
             {
                 try
@@ -178,7 +174,6 @@ namespace Libplanet.Headless.Hosting
                 if (preload)
                 {
                     await Swarm.PreloadAsync(
-                        TimeSpan.FromSeconds(5),
                         PreloadProgress,
                         cancellationToken: cancellationToken
                     );
@@ -207,23 +202,16 @@ namespace Libplanet.Headless.Hosting
 
             try
             {
-                var t = Swarm.StartAsync(
-                    cancellationToken: cancellationToken,
-                    millisecondsBroadcastTxInterval: 15000
-                );
+                var t = Swarm.StartAsync(cancellationToken);
                 await Swarm.WaitForRunningAsync();
                 await SubSwarm.BootstrapAsync(
-                    new []{ Swarm.AsPeer },
-                    PingSeedTimeout,
-                    FindNeighborsTimeout,
-                    1,
-                    cancellationToken);
+                    seedPeers: new[] { Swarm.AsPeer },
+                    searchDepth: 1,
+                    dialTimeout: null,
+                    cancellationToken: cancellationToken);
                 await await Task.WhenAny(
                     t,
-                    SubSwarm.StartAsync(
-                        cancellationToken: cancellationToken,
-                        millisecondsBroadcastTxInterval: 15000
-                    ),
+                    SubSwarm.StartAsync(cancellationToken),
                     ReconnectToSeedPeers(cancellationToken)
                 );
             }
@@ -236,7 +224,7 @@ namespace Libplanet.Headless.Hosting
         public override void Dispose()
         {
             base.Dispose();
-            
+
             Log.Debug($"Disposing {nameof(DevLibplanetNodeService<T>)}...");
 
             SubSwarm?.Dispose();
