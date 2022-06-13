@@ -11,6 +11,7 @@ using Nekoyume.Action;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
+using NineChronicles.Headless.GraphTypes.Abstractions;
 using NineChronicles.Headless.GraphTypes.States;
 using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
 using NineChronicles.Headless.GraphTypes.States.Models.Table;
@@ -159,6 +160,30 @@ namespace NineChronicles.Headless.GraphTypes
                     return null;
                 }
             );
+            
+            Field<StakeStateType>(
+                name:  nameof(StakeState),
+                description: "State for staking.",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "address",
+                    Description = "Address of agent who staked."
+                }),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("address");
+                    if (context.Source.GetState(StakeState.DeriveAddress(address)) is Dictionary state)
+                    {
+                        return new StakeStateType.StakeStateContext(
+                            new StakeState(state),
+                            context.Source.AccountStateGetter,
+                            context.Source.AccountBalanceGetter
+                        );
+                    }
+
+                    return null;
+                }
+            );
 
             Field<MonsterCollectionStateType>(
                 nameof(MonsterCollectionState),
@@ -207,6 +232,28 @@ namespace NineChronicles.Headless.GraphTypes
                         var monsterCollectionRewardSheet = new MonsterCollectionRewardSheet();
                         monsterCollectionRewardSheet.Set(srs);
                         return (monsterCollectionSheet, monsterCollectionRewardSheet);
+                    }
+
+                    return null;
+                }
+            );
+            
+            Field<StakeRewardsType>(
+                "stakeRewards",
+                resolve: context =>
+                {
+                    var sheetAddress = Addresses.GetSheetAddress<StakeRegularRewardSheet>();
+                    var fixedSheetAddress = Addresses.GetSheetAddress<StakeRegularFixedRewardSheet>();
+                    IValue? sheetValue = context.Source.GetState(sheetAddress);
+                    IValue? fixedSheetValue = context.Source.GetState(fixedSheetAddress);
+                    if (sheetValue is Text sv && fixedSheetValue is Text fsv)
+                    {
+                        var stakeRegularRewardSheet = new StakeRegularRewardSheet();
+                        stakeRegularRewardSheet.Set(sv);
+                        var stakeRegularFixedRewardSheet = new StakeRegularFixedRewardSheet();
+                        stakeRegularFixedRewardSheet.Set(fsv);
+
+                        return (stakeRegularRewardSheet, stakeRegularFixedRewardSheet);
                     }
 
                     return null;
