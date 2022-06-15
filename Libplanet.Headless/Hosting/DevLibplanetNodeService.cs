@@ -72,8 +72,7 @@ namespace Libplanet.Headless.Hosting
                 stagePolicy : stagePolicy,
                 store: SubStore,
                 stateStore: SubStateStore,
-                genesisBlock: genesisBlock
-            );
+                genesisBlock: genesisBlock);
 
             _minerLoopAction = minerLoopAction;
             var subSwarmPrivateKey = new PrivateKey();
@@ -88,8 +87,7 @@ namespace Libplanet.Headless.Hosting
                 host: "localhost",
                 listenPort: properties.Port + 1,
                 iceServers: iceServers,
-                workers: properties.Workers
-            );
+                workers: properties.Workers);
         }
 
         public override void StartMining(PrivateKey privateKey)
@@ -150,10 +148,10 @@ namespace Libplanet.Headless.Hosting
 
             Task BootstrapMainSwarmAsync(int depth)
                 => Swarm.BootstrapAsync(
-                    peers,
-                    depth: depth,
-                    cancellationToken: cancellationToken
-                );
+                    seedPeers: peers,
+                    searchDepth: depth,
+                    dialTimeout: null,
+                    cancellationToken: cancellationToken);
 
             if (peers.Any())
             {
@@ -207,9 +205,10 @@ namespace Libplanet.Headless.Hosting
                 var t = Swarm.StartAsync(cancellationToken);
                 await Swarm.WaitForRunningAsync();
                 await SubSwarm.BootstrapAsync(
-                    new []{ Swarm.AsPeer },
-                    1,
-                    cancellationToken);
+                    seedPeers: new[] { Swarm.AsPeer },
+                    searchDepth: 1,
+                    dialTimeout: null,
+                    cancellationToken: cancellationToken);
                 await await Task.WhenAny(
                     t,
                     SubSwarm.StartAsync(cancellationToken),
