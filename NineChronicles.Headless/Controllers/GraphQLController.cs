@@ -95,18 +95,7 @@ namespace NineChronicles.Headless.Controllers
                 return new StatusCodeResult(StatusCodes.Status409Conflict);
             }
 
-            bool mine = request.Mine;
-            if (mine)
-            {
-                StandaloneContext.NineChroniclesNodeService.StartMining();
-            }
-            else
-            {
-                StandaloneContext.NineChroniclesNodeService.StopMining();
-            }
-
-            StandaloneContext.IsMining = mine;
-            return Ok($"Set mining status to {mine}.");
+            return Ok();
         }
 
         [HttpPost(CheckPeerEndpoint)]

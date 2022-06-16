@@ -124,7 +124,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "isMining",
                 description: "Whether the current node is mining.",
-                resolve: _ => context.IsMining
+                resolve: _ => true
             );
             Field<AppProtocolVersionType>(
                 "appProtocolVersion",

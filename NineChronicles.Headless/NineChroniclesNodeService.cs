@@ -225,19 +225,10 @@ namespace NineChronicles.Headless
         internal static IBlockPolicy<NCAction> GetTestBlockPolicy() =>
             new BlockPolicySource(Log.Logger, LogEventLevel.Debug).GetTestPolicy();
 
-        public void StartMining() => NodeService?.StartMining(MinerPrivateKey);
-
-        public void StopMining() => NodeService?.StopMining();
-
         public Task<bool> CheckPeer(string addr) => NodeService?.CheckPeer(addr) ?? throw new InvalidOperationException();
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            if (!Properties.NoMiner)
-            {
-                StartMining();
-            }
-
             return NodeService.StartAsync(cancellationToken);
         }
 

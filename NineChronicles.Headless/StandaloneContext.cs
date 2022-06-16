@@ -19,7 +19,6 @@ namespace NineChronicles.Headless
         public IKeyStore? KeyStore { get; set; }
         public bool BootstrapEnded { get; set; }
         public bool PreloadEnded { get; set; }
-        public bool IsMining { get; set; }
         public ReplaySubject<NodeStatusType> NodeStatusSubject { get; } = new ReplaySubject<NodeStatusType>();
         public ReplaySubject<PreloadState> PreloadStateSubject { get; } = new ReplaySubject<PreloadState>();
         public ReplaySubject<DifferentAppProtocolVersionEncounter> DifferentAppProtocolVersionEncounterSubject { get; }
@@ -39,7 +38,6 @@ namespace NineChronicles.Headless
         {
             BootstrapEnded = BootstrapEnded,
             PreloadEnded = PreloadEnded,
-            IsMining = IsMining,
         };
 
         public IStore? Store { get; internal set; }
