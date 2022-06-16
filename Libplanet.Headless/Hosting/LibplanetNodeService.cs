@@ -60,8 +60,6 @@ namespace Libplanet.Headless.Hosting
 
         protected CancellationToken SwarmCancellationToken;
 
-        protected CancellationTokenSource MiningCancellationTokenSource;
-
         private bool _stopRequested = false;
 
         protected static readonly TimeSpan BootstrapInterval = TimeSpan.FromMinutes(5);
@@ -447,69 +445,6 @@ namespace Libplanet.Headless.Hosting
             {
                 Log.Error(e, "Unexpected exception occurred during Swarm.StartAsync(). {e}", e);
             }
-        }
-
-        private async Task MineBlockTask(TimeSpan miningInterval, CancellationToken cts)
-        {
-            var miner = new Miner<T>(BlockChain, Swarm, Properties.MinerPrivateKey);
-            while (!cts.IsCancellationRequested)
-            {
-                // Collected votes for the previous block.
-                VoteSet voteSet = Swarm.VoteSetOf(BlockChain.Tip.Index);
-                Block<T> block;
-                if (voteSet is null)
-                {
-                    block = await miner.MineBlockAsync(lastCommit: null, cts);
-                }
-                else
-                {
-                    block = await miner.MineBlockAsync(
-                        lastCommit: new BlockCommit(voteSet, BlockChain.Tip.Hash),
-                        cts);
-                }
-
-                Store.PutBlock(block);
-                Swarm.Propose(block.Hash);
-                await Task.Delay(miningInterval, cts);
-            }
-        }
-        
-        // 이 privateKey는 swarm에서 사용하는 privateKey와 다를 수 있습니다.
-        public void StartMining(PrivateKey privateKey)
-        {
-            if (BlockChain is null)
-            {
-                throw new InvalidOperationException(
-                    $"An exception occurred during {nameof(StartMining)}(). " +
-                    $"{nameof(BlockChain)} is null.");
-            }
-
-            if (Swarm is null)
-            {
-                throw new InvalidOperationException(
-                    $"An exception occurred during {nameof(StartMining)}(). " +
-                    $"{nameof(Swarm)} is null.");
-            }
-
-            if (privateKey is null)
-            {
-                throw new InvalidOperationException(
-                    $"An exception occurred during {nameof(StartMining)}(). " +
-                    $"{nameof(privateKey)} is null.");
-            }
-
-            MiningCancellationTokenSource =
-                CancellationTokenSource.CreateLinkedTokenSource(SwarmCancellationToken);
-            Task.Run(
-                () => MineBlockTask(
-                    TimeSpan.FromMilliseconds(Properties.BlockInterval),
-                    MiningCancellationTokenSource.Token),
-                MiningCancellationTokenSource.Token);
-        }
-
-        public void StopMining()
-        {
-            MiningCancellationTokenSource?.Cancel();
         }
 
         protected async Task CheckMessage(TimeSpan messageTimeout, CancellationToken cancellationToken = default)
