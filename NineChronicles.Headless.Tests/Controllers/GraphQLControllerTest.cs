@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reactive.Subjects;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using Libplanet;
 using Libplanet.Action;
-using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
@@ -158,10 +159,14 @@ namespace NineChronicles.Headless.Tests.Controllers
                     SwarmPrivateKey = new PrivateKey(),
                     ConsensusPrivateKey = consensusKey,
                     ConsensusPort = 5000,
-                    Validators = new List<PublicKey>()
+                    Validators = new List<PublicKey>
                     {
                         consensusKey.PublicKey,
                     },
+                    ConsensusPeers = new List<BoundPeer>
+                    {
+                        new (consensusKey.PublicKey, new DnsEndPoint("localhost", 5000)),
+                    }.ToImmutableHashSet(),
                     Host = IPAddress.Loopback.ToString(),
                 },
                 NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test),

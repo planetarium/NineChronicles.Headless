@@ -12,8 +12,6 @@ using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;
 using Libplanet.Blocks;
-using Libplanet.Consensus;
-using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Net.Protocols;
 using Libplanet.Net.Transports;
@@ -21,7 +19,6 @@ using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Microsoft.Extensions.Hosting;
-using Nekoyume.BlockChain;
 using NineChronicles.RPC.Shared.Exceptions;
 using Nito.AsyncEx;
 using Serilog;
@@ -211,6 +208,7 @@ namespace Libplanet.Headless.Hosting
                             GetBlockHashesTimeout = TimeSpan.FromSeconds(50),
                             GetBlocksBaseTimeout = TimeSpan.FromSeconds(5),
                         },
+                        ConsensusPeers = Properties.ConsensusPeers,
                     }
                 );
             }
@@ -246,14 +244,6 @@ namespace Libplanet.Headless.Hosting
                         StartSwarm(Properties.Preload, cancellationToken),
                         CheckMessage(Properties.MessageTimeout, cancellationToken),
                         CheckTip(Properties.TipTimeout, cancellationToken),
-                        /*
-                         TODO: Find a way to revive this
-                        CheckConsensusPeersAsync(
-                            Properties.ConsensusPeers,
-                            ConsensusTable,
-                            ConsensusTransport,
-                            cancellationToken)
-                            */
                     };
                     if (Properties.Peers.Any())
                     {
@@ -565,47 +555,6 @@ namespace Libplanet.Headless.Hosting
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();
-            }
-        }
-        
-        private async Task CheckConsensusPeersAsync(
-            IEnumerable<BoundPeer> peers,
-            RoutingTable table,
-            ITransport transport,
-            CancellationToken cancellationToken)
-        {
-            var boundPeers = peers as BoundPeer[] ?? peers.ToArray();
-            var protocol = new KademliaProtocol(
-                table,
-                transport,
-                Properties.ConsensusPrivateKey.ToAddress());
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                try
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
-                    Log.Warning("Checking consensus peers. {@Peers}", boundPeers);
-                    var peersToAdd = boundPeers.Where(peer => !table.Contains(peer)).ToArray();
-                    if (peersToAdd.Any())
-                    {
-                        Log.Warning("Some of peers are not in routing table. {@Peers}", peersToAdd);
-                        await protocol.AddPeersAsync(
-                            peersToAdd,
-                            TimeSpan.FromSeconds(5),
-                            cancellationToken);
-                    }
-                }
-                catch (OperationCanceledException e)
-                {
-                    Log.Warning(e, $"{nameof(CheckConsensusPeersAsync)}() is cancelled.");
-                    throw;
-                }
-                catch (Exception e)
-                {
-                    var msg = "Unexpected exception occurred during " +
-                              $"{nameof(CheckConsensusPeersAsync)}(): {{0}}";
-                    Log.Warning(e, msg, e);
-                }
             }
         }
 
