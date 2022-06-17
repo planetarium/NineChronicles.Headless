@@ -26,6 +26,13 @@ jobs:
           dotnet test --configuration Release --no-restore --verbosity normal NineChronicles.Headless.Executable.Tests
           dotnet test --configuration Release --no-restore --verbosity normal Libplanet.Headless.Tests
 
+  typos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Check spelling of file.txt
+        uses: crate-ci/typos@master
+
   build-and-test:
     needs: [build-and-tests]
     runs-on: ubuntu-latest
