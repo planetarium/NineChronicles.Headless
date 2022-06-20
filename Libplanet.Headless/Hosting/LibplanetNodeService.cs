@@ -97,7 +97,8 @@ namespace Libplanet.Headless.Hosting
             (Store, StateStore) = LoadStore(
                 Properties.StorePath,
                 Properties.StoreType,
-                Properties.StoreStatesCacheSize);
+                Properties.StoreStatesCacheSize,
+                Properties.NoReduceStore);
 
             var chainIds = Store.ListChainIds().ToList();
             Log.Debug($"Number of chain ids: {chainIds.Count()}");
@@ -287,7 +288,7 @@ namespace Libplanet.Headless.Hosting
             }
         }
 
-        protected (IStore, IStateStore) LoadStore(string path, string type, int statesCacheSize)
+        protected (IStore, IStateStore) LoadStore(string path, string type, int statesCacheSize, bool noReduceStore = false)
         {
             IStore store = null;
             if (type == "rocksdb")
@@ -324,7 +325,10 @@ namespace Libplanet.Headless.Hosting
             }
 
             store ??= new DefaultStore(path, flush: false);
-            store = new ReducedStore(store);
+            if (!noReduceStore)
+            {
+                store = new ReducedStore(store);   
+            }
 
             IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states"));
             IStateStore stateStore = new TrieStateStore(stateKeyValueStore);
