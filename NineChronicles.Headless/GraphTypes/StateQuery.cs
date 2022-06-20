@@ -11,6 +11,7 @@ using Nekoyume.Action;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
+using Nekoyume.TableData.Crystal;
 using NineChronicles.Headless.GraphTypes.Abstractions;
 using NineChronicles.Headless.GraphTypes.States;
 using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
@@ -259,6 +260,22 @@ namespace NineChronicles.Headless.GraphTypes
                     return null;
                 }
             );
+
+            Field<CrystalMonsterCollectionMultiplierSheetType>(
+                name: nameof(CrystalMonsterCollectionMultiplierSheet),
+                resolve: context =>
+                {
+                    var sheetAddress = Addresses.GetSheetAddress<CrystalMonsterCollectionMultiplierSheet>();
+                    IValue? sheetValue = context.Source.GetState(sheetAddress);
+                    if (sheetValue is Text sv)
+                    {
+                        var crystalMonsterCollectionMultiplierSheet = new CrystalMonsterCollectionMultiplierSheet();
+                        crystalMonsterCollectionMultiplierSheet.Set(sv);
+                        return crystalMonsterCollectionMultiplierSheet;
+                    }
+
+                    return null;
+                });
 
             Field<ListGraphType<IntGraphType>>(
                 "unlockedRecipeIds",
