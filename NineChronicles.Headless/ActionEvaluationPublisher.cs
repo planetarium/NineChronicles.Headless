@@ -161,19 +161,16 @@ namespace NineChronicles.Headless
                         if (!(ev.Action is RewardGold))
                         {
                             pa = new PolymorphicAction<ActionBase>(ev.Action);
-                            if (ev.Action is RankingBattle rb && ev.Exception is null)
+                            if (ev.Action is BattleArena ba && ev.Exception is null)
                             {
-                                if (rb.PreviousEnemyPlayerDigest is { } previousEnemyPlayerDigest)
+                                if (ba.ExtraMyArenaPlayerDigest is { } myDigest)
                                 {
-                                    extra[nameof(RankingBattle.PreviousEnemyPlayerDigest)] = previousEnemyPlayerDigest.Serialize();
+                                    extra[nameof(BattleArena.ExtraMyArenaPlayerDigest)] = myDigest.Serialize();
                                 }
-                                if (rb.PreviousEnemyArenaInfo is { } previousEnemyArenaInfo)
+                                
+                                if (ba.ExtraEnemyArenaPlayerDigest is { } enemyDigest)
                                 {
-                                    extra[nameof(RankingBattle.PreviousEnemyArenaInfo)] = previousEnemyArenaInfo.Serialize();
-                                }
-                                if (rb.PreviousArenaInfo is { } previousArenaInfo)
-                                {
-                                    extra[nameof(RankingBattle.PreviousArenaInfo)] = previousArenaInfo.Serialize();
+                                    extra[nameof(BattleArena.ExtraEnemyArenaPlayerDigest)] = enemyDigest.Serialize();
                                 }
                             }
 

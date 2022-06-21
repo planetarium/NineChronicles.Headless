@@ -7,5 +7,6 @@ namespace NineChronicles.Headless.Executable.IO
         TextReader In { get; }
         TextWriter Out { get; }
         TextWriter Error { get; }
+        Stream OpenStandardOutput();
     }
 }

@@ -11,6 +11,7 @@ using Nekoyume.Action;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
+using Nekoyume.TableData.Crystal;
 using NineChronicles.Headless.GraphTypes.Abstractions;
 using NineChronicles.Headless.GraphTypes.States;
 using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
@@ -254,6 +255,66 @@ namespace NineChronicles.Headless.GraphTypes
                         stakeRegularFixedRewardSheet.Set(fsv);
 
                         return (stakeRegularRewardSheet, stakeRegularFixedRewardSheet);
+                    }
+
+                    return null;
+                }
+            );
+
+            Field<CrystalMonsterCollectionMultiplierSheetType>(
+                name: nameof(CrystalMonsterCollectionMultiplierSheet),
+                resolve: context =>
+                {
+                    var sheetAddress = Addresses.GetSheetAddress<CrystalMonsterCollectionMultiplierSheet>();
+                    IValue? sheetValue = context.Source.GetState(sheetAddress);
+                    if (sheetValue is Text sv)
+                    {
+                        var crystalMonsterCollectionMultiplierSheet = new CrystalMonsterCollectionMultiplierSheet();
+                        crystalMonsterCollectionMultiplierSheet.Set(sv);
+                        return crystalMonsterCollectionMultiplierSheet;
+                    }
+
+                    return null;
+                });
+
+            Field<ListGraphType<IntGraphType>>(
+                "unlockedRecipeIds",
+                description: "List of unlocked equipment recipe sheet row ids.",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "avatarAddress",
+                    Description = "Address of avatar."
+                }),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+                    var address = avatarAddress.Derive("recipe_ids");
+                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] {address});
+                    if (values[0] is List rawRecipeIds)
+                    {
+                        return rawRecipeIds.ToList(StateExtensions.ToInteger);
+                    }
+
+                    return null;
+                }
+            );
+
+            Field<ListGraphType<IntGraphType>>(
+                "unlockedWorldIds",
+                description: "List of unlocked world sheet row ids.",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "avatarAddress",
+                    Description = "Address of avatar."
+                }),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+                    var address = avatarAddress.Derive("world_ids");
+                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] {address});
+                    if (values[0] is List rawWorldIds)
+                    {
+                        return rawWorldIds.ToList(StateExtensions.ToInteger);
                     }
 
                     return null;
