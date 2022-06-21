@@ -26,52 +26,42 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
             Assert.NotEmpty(data);
             Assert.Null(queryResult.Errors);
-            Assert.Equal(new Dictionary<string, object>
+
+            var list = new object[]
             {
-                ["orderedList"] = new[]
+                new Dictionary<string, object>
                 {
-                    new Dictionary<string, object>
-                    {
-                        ["level"] = 0,
-                        ["multiplier"] = 0,
-                    },
-                    new Dictionary<string, object>
-                    {
-                        ["level"] = 1,
-                        ["multiplier"] = 20,
-                    },
-                    new Dictionary<string, object>
-                    {
-                        ["level"] = 2,
-                        ["multiplier"] = 100,
-                    },
-                    new Dictionary<string, object>
-                    {
-                        ["level"] = 3,
-                        ["multiplier"] = 200,
-                    },
-                    new Dictionary<string, object>
-                    {
-                        ["level"] = 4,
-                        ["multiplier"] = 500,
-                    },
-                    new Dictionary<string, object>
-                    {
-                        ["level"] = 5,
-                        ["multiplier"] = 2000,
-                    },
-                    new Dictionary<string, object>
-                    {
-                        ["level"] = 6,
-                        ["multiplier"] = 2000,
-                    },
-                    new Dictionary<string, object>
-                    {
-                        ["level"] = 7,
-                        ["multiplier"] = 2000,
-                    },
-                }
-            }, data);
+                    ["level"] = 0,
+                    ["multiplier"] = 0,
+                },
+                new Dictionary<string, object>
+                {
+                    ["level"] = 1,
+                    ["multiplier"] = 0,
+                },
+                new Dictionary<string, object>
+                {
+                    ["level"] = 2,
+                    ["multiplier"] = 50,
+                },
+                new Dictionary<string, object>
+                {
+                    ["level"] = 3,
+                    ["multiplier"] = 100,
+                },
+                new Dictionary<string, object>
+                {
+                    ["level"] = 4,
+                    ["multiplier"] = 200,
+                },
+                new Dictionary<string, object>
+                {
+                    ["level"] = 5,
+                    ["multiplier"] = 300,
+                },
+            };
+            var expected = new Dictionary<string, object> { { "orderedList", list } };
+            Assert.Equal(expected, data);
         }
     }
 }
