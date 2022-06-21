@@ -350,7 +350,7 @@ namespace Libplanet.Headless.Hosting
             Task BootstrapSwarmAsync(int depth)
                 => Swarm.BootstrapAsync(
                     seedPeers: peers,
-                    searchDepth: depth,
+                    depth: depth,
                     dialTimeout: null,
                     cancellationToken: cancellationToken);
 

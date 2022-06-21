@@ -149,7 +149,7 @@ namespace Libplanet.Headless.Hosting
             Task BootstrapMainSwarmAsync(int depth)
                 => Swarm.BootstrapAsync(
                     seedPeers: peers,
-                    searchDepth: depth,
+                    depth: depth,
                     dialTimeout: null,
                     cancellationToken: cancellationToken);
 
@@ -206,7 +206,7 @@ namespace Libplanet.Headless.Hosting
                 await Swarm.WaitForRunningAsync();
                 await SubSwarm.BootstrapAsync(
                     seedPeers: new[] { Swarm.AsPeer },
-                    searchDepth: 1,
+                    depth: 1,
                     dialTimeout: null,
                     cancellationToken: cancellationToken);
                 await await Task.WhenAny(

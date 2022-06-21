@@ -14,7 +14,7 @@ namespace Libplanet.Headless
                 var uri = new Uri(iceServerInfo);
                 string[] userInfo = uri.UserInfo.Split(':');
 
-                return new IceServer(uri, userInfo[0], userInfo[1]);
+                return new IceServer(new[] {uri}, userInfo[0], userInfo[1]);
             }
             catch (Exception e)
             {
