@@ -54,8 +54,8 @@ namespace NineChronicles.Headless.GraphTypes.States
                 "claimableBlockIndex",
                 description: "The block index the user can claim rewards.",
                 resolve: context =>
-                    Math.Max(context.Source.StakeState.ReceivedBlockIndex, context.Source.StakeState.StartedBlockIndex)
-                    + StakeState.RewardInterval);
+                    Math.Max(context.Source.StakeState.ReceivedBlockIndex,
+                        context.Source.StakeState.StartedBlockIndex) + StakeState.RewardInterval);
             Field<NonNullGraphType<StakeAchievementsType>>(
                 nameof(StakeState.Achievements),
                 description: "The staking achievements.",

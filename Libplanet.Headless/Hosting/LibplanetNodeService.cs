@@ -200,7 +200,7 @@ namespace Libplanet.Headless.Hosting
                         MaxTimeout = TimeSpan.FromSeconds(50),
                         GetBlockHashesTimeout = TimeSpan.FromSeconds(50),
                         GetBlocksBaseTimeout = TimeSpan.FromSeconds(5),
-                    }
+                    },
                 }
             );
 
@@ -349,10 +349,10 @@ namespace Libplanet.Headless.Hosting
 
             Task BootstrapSwarmAsync(int depth)
                 => Swarm.BootstrapAsync(
-                    peers,
-                    depth: depth,
-                    cancellationToken: cancellationToken
-                );
+                    seedPeers: peers,
+                    searchDepth: depth,
+                    dialTimeout: null,
+                    cancellationToken: cancellationToken);
 
             // We assume the first phase of preloading is BlockHashDownloadState...
             ((IProgress<PreloadState>)PreloadProgress)?.Report(new BlockHashDownloadState());
