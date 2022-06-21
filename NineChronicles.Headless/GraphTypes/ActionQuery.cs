@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Numerics;
+using System.Text;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL;
@@ -11,6 +14,8 @@ using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
 using Nekoyume.Helper;
 using Nekoyume.Model.State;
+using Nekoyume.TableData;
+using Serilog;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -183,6 +188,48 @@ namespace NineChronicles.Headless.GraphTypes
                     NCAction action = new TransferAsset(sender, recipient, amount, memo);
                     return Codec.Encode(action.PlainValue);
                 });
+            Field<ByteStringType>(
+                name: "patchTableSheet",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Description = "name of table sheet.",
+                        Name = "tableName",
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Description = "table data.",
+                        Name = "tableCsv",
+                    }
+                ),
+                resolve: context =>
+                {
+                    var tableName = context.GetArgument<string>("tableName");
+                    var tableCsv = context.GetArgument<string>("tableCsv");
+                    try
+                    {
+                        var _ = typeof(ISheet).Assembly
+                            .GetTypes()
+                            .First(type => type.Namespace is { } @namespace &&
+                                           @namespace.StartsWith($"{nameof(Nekoyume)}.{nameof(Nekoyume.TableData)}") &&
+                                           !type.IsAbstract &&
+                                           typeof(ISheet).IsAssignableFrom(type) &&
+                                           type.Name == tableName);
+                    }
+                    catch (Exception)
+                    {
+                        throw new ExecutionError("Invalid tableName.");
+                    }
+
+                    // TODO validate row data.
+                    NCAction action = new PatchTableSheet
+                    {
+                        TableName = tableName,
+                        TableCsv = tableCsv
+                    };
+                    return Codec.Encode(action.PlainValue);
+                }
+            );
         }
     }
 }
