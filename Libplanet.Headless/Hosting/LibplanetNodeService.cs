@@ -195,12 +195,9 @@ namespace Libplanet.Headless.Hosting
                     iceServers: shuffledIceServers,
                     workers: Properties.Workers,
                     consensusPrivateKey: properties.ConsensusPrivateKey,
-                    consensusTableBucket: 1000,
-                    consensusTableSize: 1,
                     consensusWorkers: 100,
                     consensusPort: properties.ConsensusPort,
                     nodeId: Properties.NodeId,
-                    validators: Properties.Validators,
                     differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered,
                     options: new SwarmOptions
                     {
