@@ -172,6 +172,11 @@ namespace NineChronicles.Headless
                                 {
                                     extra[nameof(BattleArena.ExtraEnemyArenaPlayerDigest)] = enemyDigest.Serialize();
                                 }
+                                
+                                if (ba.ExtraPreviousMyScore is { } myScore)
+                                {
+                                    extra[nameof(BattleArena.ExtraPreviousMyScore)] = myScore.Serialize();
+                                }
                             }
 
                             if (ev.Action is Buy buy)
