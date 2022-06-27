@@ -10,9 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
-using GraphQL;
 using GraphQL.Execution;
-using GraphQL.NewtonsoftJson;
 using Lib9c.Tests;
 using Libplanet;
 using Libplanet.Action;
@@ -23,14 +21,12 @@ using Libplanet.Crypto;
 using Libplanet.KeyStore;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
-using Libplanet.Tx;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.Properties;
-using NineChronicles.Headless.Tests.Common;
 using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
 using Xunit.Abstractions;
@@ -464,16 +460,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
                 ConsensusPort = 5000,
-                Validators = new List<PublicKey>()
-                {
-                    consensusPrivateKey.PublicKey,
-                },
                 Port = null,
                 NoMiner = true,
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
-                ConsensusPeers = ImmutableHashSet<BoundPeer>.Empty
+                ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
 
@@ -788,16 +780,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
                 ConsensusPort = 5000,
-                Validators = new List<PublicKey>()
-                {
-                    consensusPrivateKey.PublicKey,
-                },
                 Port = null,
                 NoMiner = true,
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
-                ConsensusPeers = ImmutableHashSet<BoundPeer>.Empty
+                ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
 
             var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test);
@@ -865,16 +853,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
                 ConsensusPort = 5000,
-                Validators = new List<PublicKey>()
-                {
-                    consensusPrivateKey.PublicKey
-                },
                 Port = null,
                 NoMiner = true,
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
-                ConsensusPeers = ImmutableHashSet<BoundPeer>.Empty
+                ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
 
@@ -928,16 +912,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
                 ConsensusPort = 5000,
-                Validators = new List<PublicKey>()
-                {
-                    consensusPrivateKey.PublicKey,
-                },
                 Port = null,
                 NoMiner = true,
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
-                ConsensusPeers = ImmutableHashSet<BoundPeer>.Empty,
+                ConsensusPeers = ImmutableList<BoundPeer>.Empty,
             };
 
             return new NineChroniclesNodeService(privateKey, properties, blockPolicy, NetworkType.Test);

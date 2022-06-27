@@ -14,7 +14,6 @@ using Libplanet.Blockchain.Renderers;
 using Libplanet.Blocks;
 using Libplanet.Net;
 using Libplanet.Net.Protocols;
-using Libplanet.Net.Transports;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Store.Trie;

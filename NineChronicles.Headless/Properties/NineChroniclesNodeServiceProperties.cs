@@ -66,8 +66,7 @@ namespace NineChronicles.Headless.Properties
                 string chainTipStaleBehaviorType = "reboot",
                 int maximumPollPeers = int.MaxValue,
                 string transportType = "tcp",
-                int blockInterval = 10000,
-                string[]? validatorStrings = null)
+                int blockInterval = 10000)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
@@ -85,8 +84,7 @@ namespace NineChronicles.Headless.Properties
 
             var iceServers = iceServerStrings.Select(PropertyParser.ParseIceServer).ToImmutableArray();
             var peers = peerStrings.Select(PropertyParser.ParsePeer).ToImmutableArray();
-            var consensusPeers = consensusPeerStrings.Select(PropertyParser.ParsePeer).ToImmutableHashSet();
-            var validators = validatorStrings?.Select(s => new PublicKey(ByteUtil.ParseHex(s))).ToList();
+            var consensusPeers = consensusPeerStrings.Select(PropertyParser.ParsePeer).ToImmutableList();
 
             return new LibplanetNodeServiceProperties<NineChroniclesActionType>
             {
@@ -123,7 +121,6 @@ namespace NineChronicles.Headless.Properties
                 MaximumPollPeers = maximumPollPeers,
                 TransportType = transportType,
                 BlockInterval = blockInterval,
-                Validators = validators,
             };
         }
 

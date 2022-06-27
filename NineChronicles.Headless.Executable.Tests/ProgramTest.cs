@@ -47,7 +47,6 @@ namespace NineChronicles.Headless.Executable.Tests
                 graphQLPort: 5000,
                 storePath: _storePath,
                 storeType: "rocksdb",
-                validatorStrings: new[] { new PrivateKey().PublicKey.ToString() },
                 cancellationToken: cancellationTokenSource.Token);
 
             try

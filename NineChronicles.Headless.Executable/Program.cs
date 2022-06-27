@@ -187,11 +187,6 @@ namespace NineChronicles.Headless.Executable
                 "Determines the type of transport.  \"netmq\" and \"tcp\" " +
                 "is available and \"tcp\" option is selected by default.")]
             string transportType = "tcp",
-            [Option("validator",
-                Description =
-                    "List of validator's public key strings. " +
-                    "If null is given, value in policy will be used.  null by default.")]
-            string[]? validatorStrings = null,
             [Ignore]
             CancellationToken? cancellationToken = null
         )
@@ -334,8 +329,7 @@ namespace NineChronicles.Headless.Executable
                         chainTipStaleBehaviorType: chainTipStaleBehaviorType,
                         maximumPollPeers: maximumPollPeers,
                         transportType: transportType,
-                        blockInterval: blockInterval,
-                        validatorStrings: validatorStrings
+                        blockInterval: blockInterval
                     );
 
                 if (rpcServer)

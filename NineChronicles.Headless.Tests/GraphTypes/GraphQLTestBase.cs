@@ -158,7 +158,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             PublicKey appProtocolVersionSigner,
             Progress<PreloadState>? preloadProgress = null,
             IEnumerable<Peer>? peers = null,
-            ImmutableHashSet<BoundPeer>? consensusPeers = null)
+            ImmutableList<BoundPeer>? consensusPeers = null)
             where T : IAction, new()
         {
             var consensusPrivateKey = new PrivateKey();
@@ -173,16 +173,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
                 ConsensusPort = 5000,
-                Validators = new List<PublicKey>()
-                {
-                    consensusPrivateKey.PublicKey,
-                },
                 Port = null,
                 NoMiner = true,
                 Render = false,
                 Peers = peers ?? ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = ImmutableHashSet<PublicKey>.Empty.Add(appProtocolVersionSigner),
-                ConsensusPeers = consensusPeers ?? ImmutableHashSet<BoundPeer>.Empty,
+                ConsensusPeers = consensusPeers ?? ImmutableList<BoundPeer>.Empty,
             };
 
             return new LibplanetNodeService<T>(

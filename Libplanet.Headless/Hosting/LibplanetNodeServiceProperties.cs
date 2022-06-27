@@ -23,8 +23,6 @@ namespace Libplanet.Headless.Hosting
         public PrivateKey ConsensusPrivateKey { get; set; }
         
         public PrivateKey MinerPrivateKey { get; set; }
-        
-        public List<PublicKey> Validators { get; set; }
 
         public string StoreType { get; set; }
 
@@ -68,7 +66,7 @@ namespace Libplanet.Headless.Hosting
 
         public int DemandBuffer { get; set; } = 1150;
 
-        public ImmutableHashSet<BoundPeer> ConsensusPeers { get; set; }
+        public ImmutableList<BoundPeer> ConsensusPeers { get; set; }
 
         public bool Preload { get; set; } = true;
 

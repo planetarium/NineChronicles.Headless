@@ -159,14 +159,10 @@ namespace NineChronicles.Headless.Tests.Controllers
                     SwarmPrivateKey = new PrivateKey(),
                     ConsensusPrivateKey = consensusKey,
                     ConsensusPort = 5000,
-                    Validators = new List<PublicKey>
-                    {
-                        consensusKey.PublicKey,
-                    },
                     ConsensusPeers = new List<BoundPeer>
                     {
                         new (consensusKey.PublicKey, new DnsEndPoint("localhost", 5000)),
-                    }.ToImmutableHashSet(),
+                    }.ToImmutableList(),
                     Host = IPAddress.Loopback.ToString(),
                 },
                 NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test),
