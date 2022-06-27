@@ -59,11 +59,6 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            Field<NonNullGraphType<ActionQuery>>(
-                name: "actionQuery",
-                resolve: _ => new ActionQuery()
-            );
-
             Field<ByteStringType>(
                 name: "state",
                 arguments: new QueryArguments(
@@ -425,6 +420,10 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Query for rpc mode information.",
                 resolve: context => new RpcInformationQuery(publisher)
             );
+
+            Field<NonNullGraphType<ActionQuery>>(
+                name: "actionQuery",
+                resolve: context => new ActionQuery(standaloneContext));
         }
     }
 }
