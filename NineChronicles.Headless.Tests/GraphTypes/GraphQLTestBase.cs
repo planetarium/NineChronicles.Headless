@@ -173,7 +173,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
                 ConsensusPort = 5000,
-                NodeId = 0,
                 Validators = new List<PublicKey>()
                 {
                     consensusPrivateKey.PublicKey,

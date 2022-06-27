@@ -23,8 +23,6 @@ namespace Libplanet.Headless.Hosting
         public PrivateKey ConsensusPrivateKey { get; set; }
         
         public PrivateKey MinerPrivateKey { get; set; }
-
-        public long NodeId { get; set; }
         
         public List<PublicKey> Validators { get; set; }
 

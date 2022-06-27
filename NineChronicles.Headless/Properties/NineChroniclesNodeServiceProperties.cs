@@ -67,7 +67,6 @@ namespace NineChronicles.Headless.Properties
                 int maximumPollPeers = int.MaxValue,
                 string transportType = "tcp",
                 int blockInterval = 10000,
-                long nodeId = 0,
                 string[]? validatorStrings = null)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
@@ -124,7 +123,6 @@ namespace NineChronicles.Headless.Properties
                 MaximumPollPeers = maximumPollPeers,
                 TransportType = transportType,
                 BlockInterval = blockInterval,
-                NodeId = nodeId,
                 Validators = validators,
             };
         }

@@ -187,8 +187,6 @@ namespace NineChronicles.Headless.Executable
                 "Determines the type of transport.  \"netmq\" and \"tcp\" " +
                 "is available and \"tcp\" option is selected by default.")]
             string transportType = "tcp",
-            [Option(Description = "Node ID used for PBFT consensus.  0 by default.")]
-            long nodeId = 0,
             [Option("validator",
                 Description =
                     "List of validator's public key strings. " +
@@ -337,7 +335,6 @@ namespace NineChronicles.Headless.Executable
                         maximumPollPeers: maximumPollPeers,
                         transportType: transportType,
                         blockInterval: blockInterval,
-                        nodeId: nodeId,
                         validatorStrings: validatorStrings
                     );
 

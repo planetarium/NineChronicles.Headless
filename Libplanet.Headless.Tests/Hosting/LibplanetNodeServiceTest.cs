@@ -54,7 +54,6 @@ namespace Libplanet.Headless.Tests.Hosting
                         SwarmPrivateKey = new PrivateKey(),
                         ConsensusPrivateKey = consensusPrivateKey,
                         ConsensusPort = 5000,
-                        NodeId = 0,
                         Validators = new List<PublicKey>()
                         {
                             consensusPrivateKey.PublicKey,

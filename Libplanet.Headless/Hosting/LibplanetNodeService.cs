@@ -197,7 +197,6 @@ namespace Libplanet.Headless.Hosting
                     consensusPrivateKey: properties.ConsensusPrivateKey,
                     consensusWorkers: 100,
                     consensusPort: properties.ConsensusPort,
-                    nodeId: Properties.NodeId,
                     differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered,
                     options: new SwarmOptions
                     {

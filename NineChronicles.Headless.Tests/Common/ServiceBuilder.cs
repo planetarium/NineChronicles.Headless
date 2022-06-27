@@ -39,7 +39,6 @@ namespace NineChronicles.Headless.Tests.Common
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
                 ConsensusPort = 6000,
-                NodeId = 0,
                 Validators = new List<PublicKey>()
                 {
                     consensusPrivateKey.PublicKey,
