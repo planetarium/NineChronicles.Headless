@@ -188,7 +188,7 @@ namespace NineChronicles.Headless.GraphTypes
                     NCAction action = new TransferAsset(sender, recipient, amount, memo);
                     return Codec.Encode(action.PlainValue);
                 });
-            Field<ByteStringType>(
+            Field<NonNullGraphType<ByteStringType>>(
                 name: "patchTableSheet",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>

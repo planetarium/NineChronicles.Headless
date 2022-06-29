@@ -270,8 +270,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }
         }
 
-        [Theory]
-        [InlineData(nameof(ArenaSheet), @"
+        [Fact]
+        public async Task PatchTableSheet()
+        {
+            var tableName = nameof(ArenaSheet);
+            var csv = @"
             id,round,arena_type,start_block_index,end_block_index,required_medal_count,entrance_fee,ticket_price,additional_ticket_price
             1,1,OffSeason,1,2,0,0,5,2
             1,2,Season,3,4,0,100,50,20
@@ -289,45 +292,44 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             2,6,Season,200000009,200000010,0,10000,50,20
             2,7,OffSeason,200000011,200000012,0,0,5,2
             2,8,Championship,200000013,200000014,20,100000,50,20
-            ", null)]
-        [InlineData("Sheet", "id", "Invalid tableName.")]
-        public async Task PatchTableSheet(string tableName, string csv, string? excMessage)
-        {
+            ";
             var query = $"{{ patchTableSheet(tableName: \"{tableName}\", tableCsv: \"\"\"{csv}\"\"\") }}";
-            await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
-            if (excMessage is null)
-            {
-                var data = (Dictionary<string, object>) ((ExecutionNode) queryResult.Data!).ToValue()!;
-                var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["patchTableSheet"]));
-                Assert.IsType<Dictionary>(plainValue);
-                var polymorphicAction = DeserializeNCAction(plainValue);
-                var action = Assert.IsType<PatchTableSheet>(polymorphicAction.InnerAction);
+            var data = (Dictionary<string, object>) ((ExecutionNode) queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["patchTableSheet"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<PatchTableSheet>(polymorphicAction.InnerAction);
 
-                Assert.Equal(tableName, action.TableName);
+            Assert.Equal(tableName, action.TableName);
 
-                var sheet = new ArenaSheet();
-                sheet.Set(action.TableCsv);
-                var row = sheet.First!;
-                var round = row.Round.First();
+            // FIXME parameterize sheet type.
+            var sheet = new ArenaSheet();
+            sheet.Set(action.TableCsv);
+            var row = sheet.First!;
+            var round = row.Round.First();
 
-                Assert.Equal(1, row.ChampionshipId);
-                Assert.Equal(1, round.Round);
-                Assert.Equal(ArenaType.OffSeason, round.ArenaType);
-                Assert.Equal(1, round.StartBlockIndex);
-                Assert.Equal(2, round.EndBlockIndex);
-                Assert.Equal(0, round.RequiredMedalCount);
-                Assert.Equal(0, round.EntranceFee);
-                Assert.Equal(5, round.TicketPrice);
-                Assert.Equal(2, round.AdditionalTicketPrice);
-            }
-            else
-            {
-                var error = queryResult.Errors!.Single();
-                Assert.Contains(excMessage, error.Message);
-            }
+            Assert.Equal(1, row.ChampionshipId);
+            Assert.Equal(1, round.Round);
+            Assert.Equal(ArenaType.OffSeason, round.ArenaType);
+            Assert.Equal(1, round.StartBlockIndex);
+            Assert.Equal(2, round.EndBlockIndex);
+            Assert.Equal(0, round.RequiredMedalCount);
+            Assert.Equal(0, round.EntranceFee);
+            Assert.Equal(5, round.TicketPrice);
+            Assert.Equal(2, round.AdditionalTicketPrice);
         }
 
+        [Fact]
+        public async Task PatchTableSheet_Invalid_TableName()
+        {
+            var tableName = "Sheet";
+            var csv = "id";
+            var query = $"{{ patchTableSheet(tableName: \"{tableName}\", tableCsv: \"\"\"{csv}\"\"\") }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var error = queryResult.Errors!.Single();
+            Assert.Contains("Invalid tableName.", error.Message);
+        }
         private NCAction DeserializeNCAction(IValue value)
         {
 #pragma warning disable CS0612
