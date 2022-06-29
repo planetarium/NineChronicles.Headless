@@ -44,7 +44,7 @@ namespace NineChronicles.Headless.Executable
 #if SENTRY || ! DEBUG
             using var _ = SentrySdk.Init(ConfigureSentryOptions);
 #endif
-            await CoconaLiteApp.Create()
+            await CoconaLiteApp.CreateHostBuilder()
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton<IConsole, StandardConsole>();

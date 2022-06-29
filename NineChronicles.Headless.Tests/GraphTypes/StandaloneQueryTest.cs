@@ -473,7 +473,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
-                ConsensusPeers = ImmutableHashSet<BoundPeer>.Empty
+                ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
 
@@ -797,7 +797,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
-                ConsensusPeers = ImmutableHashSet<BoundPeer>.Empty
+                ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
 
             var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test);
@@ -874,7 +874,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
-                ConsensusPeers = ImmutableHashSet<BoundPeer>.Empty
+                ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
 
@@ -937,7 +937,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Render = false,
                 Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
-                ConsensusPeers = ImmutableHashSet<BoundPeer>.Empty,
+                ConsensusPeers = ImmutableList<BoundPeer>.Empty,
             };
 
             return new NineChroniclesNodeService(privateKey, properties, blockPolicy, NetworkType.Test);

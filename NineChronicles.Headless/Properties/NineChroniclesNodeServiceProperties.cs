@@ -85,7 +85,7 @@ namespace NineChronicles.Headless.Properties
 
             var iceServers = iceServerStrings.Select(PropertyParser.ParseIceServer).ToImmutableArray();
             var peers = peerStrings.Select(PropertyParser.ParsePeer).ToImmutableArray();
-            var consensusPeers = consensusPeerStrings.Select(PropertyParser.ParsePeer).ToImmutableHashSet();
+            var consensusPeers = consensusPeerStrings.Select(PropertyParser.ParsePeer).ToImmutableList();
             var validators = validatorStrings?.Select(s => new PublicKey(ByteUtil.ParseHex(s))).ToList();
 
             return new LibplanetNodeServiceProperties<NineChroniclesActionType>
