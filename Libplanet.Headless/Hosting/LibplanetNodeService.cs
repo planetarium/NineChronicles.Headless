@@ -15,6 +15,7 @@ using Libplanet.Blocks;
 using Libplanet.Consensus;
 using Libplanet.Crypto;
 using Libplanet.Net;
+using Libplanet.Net.Consensus;
 using Libplanet.Net.Protocols;
 using Libplanet.Net.Transports;
 using Libplanet.RocksDBStore;
@@ -162,14 +163,14 @@ namespace Libplanet.Headless.Hosting
                 shuffledIceServers = iceServers.OrderBy(x => rand.Next());
             }
 
-            SwarmOptions.TransportType transportType = SwarmOptions.TransportType.TcpTransport;
+            TransportType transportType = TransportType.TcpTransport;
             switch (Properties.TransportType)
             {
                 case "netmq":
-                    transportType = SwarmOptions.TransportType.NetMQTransport;
+                    transportType = TransportType.NetMQTransport;
                     break;
                 case "tcp":
-                    transportType = SwarmOptions.TransportType.TcpTransport;
+                    transportType = TransportType.TcpTransport;
                     break;
             }
 
@@ -194,9 +195,6 @@ namespace Libplanet.Headless.Hosting
                     listenPort: Properties.Port,
                     iceServers: shuffledIceServers,
                     workers: Properties.Workers,
-                    consensusPrivateKey: properties.ConsensusPrivateKey,
-                    consensusWorkers: 100,
-                    consensusPort: properties.ConsensusPort,
                     differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered,
                     options: new SwarmOptions
                     {
@@ -211,7 +209,15 @@ namespace Libplanet.Headless.Hosting
                             GetBlockHashesTimeout = TimeSpan.FromSeconds(50),
                             GetBlocksBaseTimeout = TimeSpan.FromSeconds(5),
                         },
+                    },
+                    consensusOption: new ConsensusReactorOption
+                    {
+                        ConsensusPeers = Properties.ConsensusPeers,
+                        ConsensusPort = (int)Properties.ConsensusPort,
+                        ConsensusPrivateKey = Properties.ConsensusPrivateKey,
+                        ConsensusWorkers = 100
                     }
+
                 );
             }
             else

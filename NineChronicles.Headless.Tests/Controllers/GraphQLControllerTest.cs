@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reactive.Subjects;
@@ -157,6 +158,7 @@ namespace NineChronicles.Headless.Tests.Controllers
                     AppProtocolVersion = AppProtocolVersion.Sign(new PrivateKey(), 0),
                     SwarmPrivateKey = new PrivateKey(),
                     ConsensusPrivateKey = consensusKey,
+                    ConsensusPeers = ImmutableList<BoundPeer>.Empty,
                     ConsensusPort = 5000,
                     Validators = new List<PublicKey>()
                     {
