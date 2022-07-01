@@ -174,56 +174,54 @@ namespace Libplanet.Headless.Hosting
                     break;
             }
 
-            if (!(properties.ConsensusPrivateKey is null))
+            ConsensusReactorOption? consensusReactorOption = null;
+            if (!(Properties.ConsensusPrivateKey is null) &&
+                !(Properties.Host is null) &&
+                !(Properties.ConsensusPort is null) &&
+                !(Properties.ConsensusPeers is null))
             {
-                if (Properties.Host is null || Properties.ConsensusPort is null)
+                consensusReactorOption = new ConsensusReactorOption
                 {
-                    throw new ArgumentException(
-                        "Host and port must exist in order to join consensus.");
-                }
-                
-                Log.Debug("Initializing reactor...");
-                
-                // FIXME: Using consensus network address derived from reactor's private key is ok?
-                // Bucket size is 1 in order to broadcast message to all peers.
-                Swarm = new Swarm<T>(
-                    BlockChain,
-                    Properties.SwarmPrivateKey,
-                    Properties.AppProtocolVersion,
-                    trustedAppProtocolVersionSigners: Properties.TrustedAppProtocolVersionSigners,
-                    host: Properties.Host,
-                    listenPort: Properties.Port,
-                    iceServers: shuffledIceServers,
-                    workers: Properties.Workers,
-                    differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered,
-                    options: new SwarmOptions
-                    {
-                        BranchpointThreshold = 50,
-                        MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
-                        BucketSize = Properties.BucketSize,
-                        MaximumPollPeers = Properties.MaximumPollPeers,
-                        Type = transportType,
-                        TimeoutOptions = new TimeoutOptions
-                        {
-                            MaxTimeout = TimeSpan.FromSeconds(50),
-                            GetBlockHashesTimeout = TimeSpan.FromSeconds(50),
-                            GetBlocksBaseTimeout = TimeSpan.FromSeconds(5),
-                        },
-                    },
-                    consensusOption: new ConsensusReactorOption
-                    {
-                        ConsensusPeers = Properties.ConsensusPeers,
-                        ConsensusPort = (int)Properties.ConsensusPort,
-                        ConsensusPrivateKey = Properties.ConsensusPrivateKey,
-                        ConsensusWorkers = 100
-                    }
+                    ConsensusPeers = Properties.ConsensusPeers,
+                    ConsensusPort = (int)Properties.ConsensusPort,
+                    ConsensusPrivateKey = Properties.ConsensusPrivateKey,
+                    ConsensusWorkers = 500,
+                    TargetBlockInterval = TimeSpan.FromSeconds(10)
+                };
+            }
 
-                );
-            }
-            else
-            {
-                Log.Error("Failed to initialize reactor... Consensus private key is required.");
-            }
+            Log.Debug(
+                "Initializing {Swarm}. {Reactor}: {Validator}",
+                nameof(Swarm),
+                nameof(ConsensusReactor<T>),
+                !(consensusReactorOption is null));
+
+            Swarm = new Swarm<T>(
+                BlockChain,
+                Properties.SwarmPrivateKey,
+                Properties.AppProtocolVersion,
+                trustedAppProtocolVersionSigners: Properties.TrustedAppProtocolVersionSigners,
+                host: Properties.Host,
+                listenPort: Properties.Port,
+                iceServers: shuffledIceServers,
+                workers: Properties.Workers,
+                differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered,
+                options: new SwarmOptions
+                {
+                    BranchpointThreshold = 50,
+                    MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
+                    BucketSize = Properties.BucketSize,
+                    MaximumPollPeers = Properties.MaximumPollPeers,
+                    Type = transportType,
+                    TimeoutOptions = new TimeoutOptions
+                    {
+                        MaxTimeout = TimeSpan.FromSeconds(50),
+                        GetBlockHashesTimeout = TimeSpan.FromSeconds(50),
+                        GetBlocksBaseTimeout = TimeSpan.FromSeconds(5),
+                    },
+                },
+                consensusOption: consensusReactorOption
+            );
 
             PreloadEnded = new AsyncManualResetEvent();
             BootstrapEnded = new AsyncManualResetEvent();
