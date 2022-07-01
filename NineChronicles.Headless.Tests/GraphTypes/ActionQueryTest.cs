@@ -20,7 +20,9 @@ using Libplanet.Store.Trie;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Helper;
+using Nekoyume.Model.EnumType;
 using Nekoyume.Model.State;
+using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
 using Xunit;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
@@ -268,6 +270,66 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }
         }
 
+        [Fact]
+        public async Task PatchTableSheet()
+        {
+            var tableName = nameof(ArenaSheet);
+            var csv = @"
+            id,round,arena_type,start_block_index,end_block_index,required_medal_count,entrance_fee,ticket_price,additional_ticket_price
+            1,1,OffSeason,1,2,0,0,5,2
+            1,2,Season,3,4,0,100,50,20
+            1,3,OffSeason,5,1005284,0,0,5,2
+            1,4,Season,1005285,1019684,0,100,50,20
+            1,5,OffSeason,1019685,1026884,0,0,5,2
+            1,6,Season,1026885,1034084,0,10000,50,20
+            1,7,OffSeason,1034085,1041284,0,0,5,2
+            1,8,Championship,1041285,1062884,20,100000,50,20
+            2,1,OffSeason,1062885,200000000,0,0,5,2
+            2,2,Season,200000001,200000002,0,100,50,20
+            2,3,OffSeason,200000003,200000004,0,0,5,2
+            2,4,Season,200000005,200000006,0,100,50,20
+            2,5,OffSeason,200000007,200000008,0,0,5,2
+            2,6,Season,200000009,200000010,0,10000,50,20
+            2,7,OffSeason,200000011,200000012,0,0,5,2
+            2,8,Championship,200000013,200000014,20,100000,50,20
+            ";
+            var query = $"{{ patchTableSheet(tableName: \"{tableName}\", tableCsv: \"\"\"{csv}\"\"\") }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>) ((ExecutionNode) queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["patchTableSheet"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<PatchTableSheet>(polymorphicAction.InnerAction);
+
+            Assert.Equal(tableName, action.TableName);
+
+            // FIXME parameterize sheet type.
+            var sheet = new ArenaSheet();
+            sheet.Set(action.TableCsv);
+            var row = sheet.First!;
+            var round = row.Round.First();
+
+            Assert.Equal(1, row.ChampionshipId);
+            Assert.Equal(1, round.Round);
+            Assert.Equal(ArenaType.OffSeason, round.ArenaType);
+            Assert.Equal(1, round.StartBlockIndex);
+            Assert.Equal(2, round.EndBlockIndex);
+            Assert.Equal(0, round.RequiredMedalCount);
+            Assert.Equal(0, round.EntranceFee);
+            Assert.Equal(5, round.TicketPrice);
+            Assert.Equal(2, round.AdditionalTicketPrice);
+        }
+
+        [Fact]
+        public async Task PatchTableSheet_Invalid_TableName()
+        {
+            var tableName = "Sheet";
+            var csv = "id";
+            var query = $"{{ patchTableSheet(tableName: \"{tableName}\", tableCsv: \"\"\"{csv}\"\"\") }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var error = queryResult.Errors!.Single();
+            Assert.Contains("Invalid tableName.", error.Message);
+        }
         private NCAction DeserializeNCAction(IValue value)
         {
 #pragma warning disable CS0612
