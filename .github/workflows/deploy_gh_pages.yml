@@ -35,7 +35,7 @@ jobs:
             -H localhost \
             -V "0/CbfC996ad185c61a031f40CeeE80a055e6D83005/MEUCIQCtoZmiFgg5NXW7+5jYMae80lTlj7xO4tQfX9CnvomAtwIgWViM8s.4mYQ89wlGkohmynZ43olDzZLBk.bHShKCVrc=" \
             -G "https://download.nine-chronicles.com/genesis-block-9c-main" &
-          sleep 30
+          sleep 180s
           wget http://localhost:30000/schema.graphql -O schema.graphql
       - name: Cache node modules
         uses: actions/cache@v2
