@@ -24,12 +24,14 @@ jobs:
         run: |
           dotnet restore
           dotnet build
-          dotnet run -p NineChronicles.Headless.Executable -- \
+          dotnet run --project NineChronicles.Headless.Executable -- \
             --graphql-server \
             --graphql-port 30000 \
             --graphql-host localhost \
             --store-path /tmp/store \
             --no-miner \
+            --no-cors \
+            --skip-preload \
             -H localhost \
             -V "0/CbfC996ad185c61a031f40CeeE80a055e6D83005/MEUCIQCtoZmiFgg5NXW7+5jYMae80lTlj7xO4tQfX9CnvomAtwIgWViM8s.4mYQ89wlGkohmynZ43olDzZLBk.bHShKCVrc=" \
             -G "https://download.nine-chronicles.com/genesis-block-9c-main" &
