@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Lib9c.DevExtensions.Model;
 using Lib9c.Model.Order;
 using Lib9c.Tests;
 using Libplanet;
@@ -37,6 +38,11 @@ namespace NineChronicles.Headless.Tests
             new Address(),
             "avatar_state_fx"
         );
+
+        public static readonly AgentState AgentStateFx = new AgentState(UserAddress)
+        {
+            avatarAddresses = { [2] = AvatarAddress },
+        };
 
         public static readonly Currency CurrencyFX = new Currency("NCG", 2, minter: null);
 

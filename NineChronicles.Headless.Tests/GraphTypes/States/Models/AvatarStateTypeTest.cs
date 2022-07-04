@@ -21,12 +21,32 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             {
                 address
                 agentAddress
+                index
             }";
             var queryResult = await ExecuteQueryAsync<AvatarStateType>(
                 query,
                 source: new AvatarStateType.AvatarStateContext(
                     avatarState,
-                    _ => Array.Empty<IValue?>(),
+                    addresses =>
+                    {
+                        var arr = new IValue?[addresses.Count];
+                        for (int i = 0; i < addresses.Count; i++)
+                        {
+                            arr[i] = null;
+
+                            if (addresses[i].Equals(Fixtures.AvatarAddress))
+                            {
+                                arr[i] = Fixtures.AvatarStateFX.Serialize();
+                            }
+                            
+                            if (addresses[i].Equals(Fixtures.UserAddress))
+                            {
+                                arr[i] = Fixtures.AgentStateFx.Serialize();
+                            }
+                        }
+
+                        return arr;
+                    },
                     (_, _) => new FungibleAssetValue()));
             var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
@@ -41,6 +61,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 {
                     ["address"] = Fixtures.AvatarAddress.ToString(),
                     ["agentAddress"] = Fixtures.UserAddress.ToString(),
+                    ["index"] = 2,
                 },
             },
         };
