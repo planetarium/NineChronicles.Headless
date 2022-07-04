@@ -45,7 +45,11 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context =>
                 {
                     IReadOnlyList<Address> avatarAddresses = context.Source.GetAvatarAddresses();
-                    return context.Source.AccountStateGetter.GetAvatarStates(avatarAddresses);
+                    return context.Source.AccountStateGetter.GetAvatarStates(avatarAddresses).Select(
+                        x => new AvatarStateType.AvatarStateContext(
+                            x,
+                            context.Source.AccountStateGetter,
+                            context.Source.AccountBalanceGetter));
                 });
             Field<NonNullGraphType<StringGraphType>>(
                 "gold",
