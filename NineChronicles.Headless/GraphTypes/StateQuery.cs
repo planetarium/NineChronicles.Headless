@@ -39,7 +39,10 @@ namespace NineChronicles.Headless.GraphTypes
                     var address = context.GetArgument<Address>("avatarAddress");
                     try
                     {
-                        return context.Source.AccountStateGetter.GetAvatarState(address);
+                        return new AvatarStateType.AvatarStateContext(
+                            context.Source.AccountStateGetter.GetAvatarState(address),
+                            context.Source.AccountStateGetter,
+                            context.Source.AccountBalanceGetter);
                     }
                     catch (InvalidAddressException)
                     {
