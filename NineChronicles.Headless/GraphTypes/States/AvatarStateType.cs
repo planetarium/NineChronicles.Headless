@@ -1,3 +1,6 @@
+using System;
+using System.Linq;
+using Bencodex.Types;
 using GraphQL.Types;
 using Libplanet.Action;
 using Libplanet.Explorer.GraphTypes;
@@ -45,6 +48,21 @@ namespace NineChronicles.Headless.GraphTypes.States
                 nameof(AvatarState.agentAddress),
                 description: "Address of agent.",
                 resolve: context => context.Source.AvatarState.agentAddress);
+            Field<NonNullGraphType<IntGraphType>>(
+                "index",
+                description: "The index of this avatar state among its agent's avatar addresses.",
+                resolve: context =>
+                {
+                    if (!(context.Source.GetState(context.Source.AvatarState.agentAddress) is Dictionary dictionary))
+                    {
+                        throw new InvalidOperationException();
+                    }
+
+                    var agentState = new AgentState(dictionary);
+                    return agentState.avatarAddresses
+                        .First(x => x.Value.Equals(context.Source.AvatarState.address))
+                        .Key;
+                });
             Field<NonNullGraphType<LongGraphType>>(
                 nameof(AvatarState.updatedAt),
                 description: "Block index at the latest executed action.",
