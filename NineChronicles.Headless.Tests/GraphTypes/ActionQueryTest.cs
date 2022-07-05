@@ -320,15 +320,20 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(2, round.AdditionalTicketPrice);
         }
 
-        [Fact]
-        public async Task PatchTableSheet_Invalid_TableName()
+        [Theory]
+        [InlineData("Sheet", "id", "Invalid tableName.")]
+        [InlineData("GameConfigSheet", @"key,value
+hourglass_per_block,3
+action_point_max,120
+daily_reward_interval,1700
+daily_arena_interval,5040
+weekly_arena_interval", "Invalid tableCsv.")]
+        public async Task PatchTableSheet_Throw_Exception(string tableName, string csv, string excMsg)
         {
-            var tableName = "Sheet";
-            var csv = "id";
             var query = $"{{ patchTableSheet(tableName: \"{tableName}\", tableCsv: \"\"\"{csv}\"\"\") }}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
             var error = queryResult.Errors!.Single();
-            Assert.Contains("Invalid tableName.", error.Message);
+            Assert.Contains(excMsg, error.Message);
         }
         private NCAction DeserializeNCAction(IValue value)
         {

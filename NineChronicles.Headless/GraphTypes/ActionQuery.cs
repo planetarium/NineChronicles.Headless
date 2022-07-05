@@ -206,9 +206,10 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var tableName = context.GetArgument<string>("tableName");
                     var tableCsv = context.GetArgument<string>("tableCsv");
+                    Type sheetType;
                     try
                     {
-                        var _ = typeof(ISheet).Assembly
+                        sheetType = typeof(ISheet).Assembly
                             .GetTypes()
                             .First(type => type.Namespace is { } @namespace &&
                                            @namespace.StartsWith($"{nameof(Nekoyume)}.{nameof(Nekoyume.TableData)}") &&
@@ -220,8 +221,16 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         throw new ExecutionError("Invalid tableName.");
                     }
+                    var sheet = (ISheet)Activator.CreateInstance(sheetType)!;
+                    try
+                    {
+                        sheet.Set(tableCsv);
+                    }
+                    catch (Exception)
+                    {
+                        throw new ExecutionError("Invalid tableCsv.");
+                    }
 
-                    // TODO validate row data.
                     NCAction action = new PatchTableSheet
                     {
                         TableName = tableName,
