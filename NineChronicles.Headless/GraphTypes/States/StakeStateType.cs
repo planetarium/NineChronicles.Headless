@@ -16,8 +16,8 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class StakeStateContext : StateContext
         {
-            public StakeStateContext(StakeState stakeState, AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter)
-                : base(accountStateGetter, accountBalanceGetter)
+            public StakeStateContext(StakeState stakeState, AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter, long chainTip)
+                : base(accountStateGetter, accountBalanceGetter, chainTip)
             {
                 StakeState = stakeState;
             }
