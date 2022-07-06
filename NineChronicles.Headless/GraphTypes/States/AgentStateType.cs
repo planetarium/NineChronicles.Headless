@@ -19,8 +19,8 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class AgentStateContext : StateContext
         {
-            public AgentStateContext(AgentState agentState, AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter)
-                : base(accountStateGetter, accountBalanceGetter)
+            public AgentStateContext(AgentState agentState, AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter, long chainTip)
+                : base(accountStateGetter, accountBalanceGetter, chainTip)
             {
                 AgentState = agentState;
             }
