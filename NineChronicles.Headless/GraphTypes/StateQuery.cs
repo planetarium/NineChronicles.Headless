@@ -8,6 +8,7 @@ using Libplanet;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Model.Arena;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -58,7 +59,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var index = context.GetArgument<int>("index");
                     if (context.Source.GetState(RankingState.Derive(index)) is { } state)
                     {
-                        return new RankingMapState((Dictionary) state);
+                        return new RankingMapState((Dictionary)state);
                     }
 
                     return null;
@@ -68,7 +69,7 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "State for shop.",
                 deprecationReason: "Shop is migrated to ShardedShop and not using now. Use shardedShop() instead.",
                 resolve: context => context.Source.GetState(Addresses.Shop) is { } state
-                    ? new ShopState((Dictionary) state)
+                    ? new ShopState((Dictionary)state)
                     : null);
             Field<ShardedShopStateV2Type>(
                 name: "shardedShop",
@@ -91,8 +92,79 @@ namespace NineChronicles.Headless.GraphTypes
 
                     if (context.Source.GetState(ShardedShopStateV2.DeriveAddress(subType, nonce)) is { } state)
                     {
-                        return new ShardedShopStateV2((Dictionary) state);
+                        return new ShardedShopStateV2((Dictionary)state);
                     }
+
+                    return null;
+                });
+            Field<ChampionshipArenaStateType>(
+                name: "championshipArena",
+                description: "State for championShip arena.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "championshipid",
+                        Description = "Championship Id, increases each season"
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "round",
+                        Description = "The round number"
+                    }),
+                resolve: context =>
+                {
+                    var championshipId = context.GetArgument<int>("championshipid");
+                    var round = context.GetArgument<int>("round");
+                    var sheets = context.Source.GetSheets(sheetTypes: new[]
+                    {
+                        typeof(ArenaSheet)
+                    });
+                    var arenaSheet = sheets.FirstOrDefault().Value.sheet as ArenaSheet;
+                    if (arenaSheet == null || !arenaSheet.TryGetValue(championshipId, out var arenaRow))
+                    {
+                        throw new SheetRowNotFoundException(nameof(ArenaSheet),
+                            $"championship Id : {championshipId}");
+                    }
+                    if (!arenaRow.TryGetRound(round, out var roundData))
+                    {
+                        throw new RoundNotFoundException(
+                            $"[{nameof(BattleArena)}] ChampionshipId({arenaRow.ChampionshipId}) - round({round})");
+                    }
+
+                    var arenaParticipantsAdr =
+                        ArenaParticipants.DeriveAddress(roundData.ChampionshipId, roundData.Round);
+                    if (!context.Source.TryGetArenaParticipants(arenaParticipantsAdr, out var arenaParticipants))
+                    {
+                        throw new ArenaParticipantsNotFoundException(
+                            $"[{nameof(BattleArena)}] ChampionshipId({roundData.ChampionshipId}) - round({roundData.Round})");
+                    }
+                    var championshipInfo = new ChampionshipArenaStateType();
+                    List<ChampionArenaInfo> arenaInformations = new List<ChampionArenaInfo>();
+                    //championshipInfo.
+                    foreach (var participant in arenaParticipants.AvatarAddresses)
+                    {
+                        var arenaInformationAdr =
+                            ArenaInformation.DeriveAddress(participant, roundData.ChampionshipId, roundData.Round);
+                        if (!context.Source.TryGetArenaInformation(arenaInformationAdr, out var arenaInformation))
+                        {
+                            continue;
+                        }
+                        var arenaScoreAdr =
+                                ArenaScore.DeriveAddress(participant, roundData.ChampionshipId, roundData.Round);
+                        if (!context.Source.TryGetArenaScore(arenaScoreAdr, out var arenaScore))
+                        {
+                            continue;
+                        }
+
+                        var arenaInfo = new ChampionArenaInfo();
+                        arenaInfo.AvatarAddress = participant;
+                        arenaInfo.Win = arenaInformation.Win;
+                        arenaInfo.Ticket = arenaInformation.Ticket;
+                        arenaInfo.Lose = arenaInformation.Lose;
+                        arenaInfo.Score = arenaScore.Score;
+                        arenaInformations.Add(arenaInfo);
+                    }
+
 
                     return null;
                 });
@@ -103,7 +175,7 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "index",
-                        Description = "WeeklyArenaState index. It increases every 56,000 blocks."
+                        Description = "Old WeeklyArenaState index. It increases every 56,000 blocks."
                     }),
                 resolve: context =>
                 {
@@ -129,7 +201,7 @@ namespace NineChronicles.Headless.GraphTypes
                                     }
                                 }
 #pragma warning disable CS0618 // Type or member is obsolete
-                                arenastate.OrderedArenaInfos.AddRange(arenaInfos.OrderByDescending(a => a.Score).ThenBy(a=>a.CombatPoint));
+                                arenastate.OrderedArenaInfos.AddRange(arenaInfos.OrderByDescending(a => a.Score).ThenBy(a => a.CombatPoint));
 #pragma warning restore CS0618 // Type or member is obsolete
                             }
                         }
@@ -161,9 +233,9 @@ namespace NineChronicles.Headless.GraphTypes
                     return null;
                 }
             );
-            
+
             Field<StakeStateType>(
-                name:  nameof(StakeState),
+                name: nameof(StakeState),
                 description: "State for staking.",
                 arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
                 {
@@ -238,7 +310,7 @@ namespace NineChronicles.Headless.GraphTypes
                     return null;
                 }
             );
-            
+
             Field<StakeRewardsType>(
                 "stakeRewards",
                 resolve: context =>
@@ -289,7 +361,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var address = avatarAddress.Derive("recipe_ids");
-                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] {address});
+                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] { address });
                     if (values[0] is List rawRecipeIds)
                     {
                         return rawRecipeIds.ToList(StateExtensions.ToInteger);
@@ -311,7 +383,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var address = avatarAddress.Derive("world_ids");
-                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] {address});
+                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] { address });
                     if (values[0] is List rawWorldIds)
                     {
                         return rawWorldIds.ToList(StateExtensions.ToInteger);
