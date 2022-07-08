@@ -11,7 +11,6 @@
     <ProjectReference Include="..\Lib9c\Lib9c.DevExtensions\Lib9c.DevExtensions.csproj" />
     <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet.Explorer\Libplanet.Explorer.csproj" />
     <ProjectReference Include="..\Libplanet.Headless\Libplanet.Headless.csproj" />
-    <ProjectReference Include="..\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="GraphQL.Server.Authorization.AspNetCore" Version="5.1.1" />
@@ -20,10 +19,10 @@
     <PackageReference Include="GraphQL.Server.Transports.Subscriptions.WebSockets" Version="5.1.1" />
     <PackageReference Include="GraphQL.Server.Ui.Playground" Version="5.1.1" />
     <PackageReference Include="GraphQL.SystemTextJson" Version="4.7.1" />
-    <PackageReference Include="MagicOnion" Version="4.3.1" />
-    <PackageReference Include="MagicOnion.Abstractions" Version="4.3.1" />
-    <PackageReference Include="MagicOnion.Server" Version="4.3.1" />
-    <PackageReference Include="MagicOnion.Server.HttpGateway" Version="4.3.1" />
+    <PackageReference Include="MagicOnion" Version="4.5.1" />
+    <PackageReference Include="MagicOnion.Abstractions" Version="4.5.1" />
+    <PackageReference Include="MagicOnion.Server" Version="4.5.1" />
+    <PackageReference Include="MagicOnion.Server.HttpGateway" Version="4.5.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
     <PackageReference Include="GraphQL" Version="4.7.1" />
@@ -38,5 +37,9 @@
   </ItemGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared.csproj" />
+    <Compile Include="..\NineChronicles.RPC.Shared\Generated\*.cs" LinkBase="Shared" />
   </ItemGroup>
 </Project>
