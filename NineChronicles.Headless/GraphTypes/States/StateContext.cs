@@ -9,14 +9,16 @@ namespace NineChronicles.Headless.GraphTypes.States
 {
     public class StateContext : IAccountStateDelta
     {
-        public StateContext(AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter)
+        public StateContext(AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter, long chainTipIndex)
         {
             AccountStateGetter = accountStateGetter;
             AccountBalanceGetter = accountBalanceGetter;
+            ChainTipIndex = chainTipIndex;
         }
 
         public AccountStateGetter AccountStateGetter { get; }
         public AccountBalanceGetter AccountBalanceGetter { get; }
+        public long ChainTipIndex { get; }
 
         public IImmutableSet<Address> UpdatedAddresses => throw new System.NotImplementedException();
 

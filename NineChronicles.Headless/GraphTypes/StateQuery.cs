@@ -226,7 +226,8 @@ namespace NineChronicles.Headless.GraphTypes
                         return new AgentStateType.AgentStateContext(
                             new AgentState(state),
                             context.Source.AccountStateGetter,
-                            context.Source.AccountBalanceGetter
+                            context.Source.AccountBalanceGetter,
+                            context.Source.ChainTipIndex
                         );
                     }
 
@@ -250,7 +251,8 @@ namespace NineChronicles.Headless.GraphTypes
                         return new StakeStateType.StakeStateContext(
                             new StakeState(state),
                             context.Source.AccountStateGetter,
-                            context.Source.AccountBalanceGetter
+                            context.Source.AccountBalanceGetter,
+                            context.Source.ChainTipIndex
                         );
                     }
 
