@@ -14,5 +14,6 @@ namespace NineChronicles.Headless.GraphTypes.States
         public int PurchasedTicketCount { get; set; }
         public int Score { get; set; }
         public bool Active { get; set; }
+        public int Rank { get; set; }
     }
 }

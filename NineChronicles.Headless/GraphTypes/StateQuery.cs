@@ -160,12 +160,9 @@ namespace NineChronicles.Headless.GraphTypes
                             continue;
                         }
                         var ticket = arenaInformation.Ticket;
-                        if(ticket == 0)
+                        if (ticket == 0 && arenaInformation.TicketResetCount < currentTicketResetCount)
                         {
-                            if (arenaInformation.TicketResetCount < currentTicketResetCount)
-                            {
-                                ticket = 8;
-                            }
+                            ticket = 8;
                         }
                         var avatar = context.Source.GetAvatarStateV2(participant);
                         var arenaInfo = new ChampionArenaInfo();
@@ -179,8 +176,13 @@ namespace NineChronicles.Headless.GraphTypes
                         arenaInformations.Add(arenaInfo);
                     }
 
+                    var ranks = StateContext.AddRank(arenaInformations.ToArray());
+                    foreach (var rank in ranks)
+                    {
+                        arenaInformations.First(a => a.AvatarAddress == rank.AgentAddress).Rank = rank.Rank;
+                    }
 
-                    return arenaInformations;
+                    return arenaInformations.OrderBy(a => a.Rank);
                 });
             Field<WeeklyArenaStateType>(
                 name: "weeklyArena",
