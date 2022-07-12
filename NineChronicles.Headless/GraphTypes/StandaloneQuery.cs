@@ -55,7 +55,7 @@ namespace NineChronicles.Headless.GraphTypes
                     return new StateContext(
                         chain.ToAccountStateGetter(blockHash),
                         chain.ToAccountBalanceGetter(blockHash),
-                        chain.Tip.Index
+                        blockHash != null ? chain[blockHash.Value].Index : chain.Tip.Index
                     );
                 }
             );
