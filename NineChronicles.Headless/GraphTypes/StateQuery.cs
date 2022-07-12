@@ -8,6 +8,7 @@ using Libplanet;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Arena;
 using Nekoyume.Model.Arena;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
@@ -140,7 +141,9 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                     var championshipInfo = new ChampionshipArenaStateType();
                     List<ChampionArenaInfo> arenaInformations = new List<ChampionArenaInfo>();
-                    //championshipInfo.
+                    var gameConfigState = context.Source.GetGameConfigState();
+                    var interval = gameConfigState.DailyArenaInterval;
+
                     foreach (var participant in arenaParticipants.AvatarAddresses)
                     {
                         var arenaInformationAdr =
@@ -155,18 +158,30 @@ namespace NineChronicles.Headless.GraphTypes
                         {
                             continue;
                         }
-
+                        var ticket = arenaInformation.Ticket;
+                        if(ticket == 0)
+                        {
+                            var currentTicketResetCount = ArenaHelper.GetCurrentTicketResetCount(
+                                    context.Source.BlockIndex, roundData.StartBlockIndex, interval);
+                            if (arenaInformation.TicketResetCount < currentTicketResetCount)
+                            {
+                                ticket = 8;
+                            }
+                        }
+                        var avatar = context.Source.GetAvatarStateV2(participant);
                         var arenaInfo = new ChampionArenaInfo();
                         arenaInfo.AvatarAddress = participant;
+                        arenaInfo.AgentAddress = avatar.agentAddress;
+                        arenaInfo.AvatarName = avatar.name;
                         arenaInfo.Win = arenaInformation.Win;
-                        arenaInfo.Ticket = arenaInformation.Ticket;
+                        arenaInfo.Ticket = ticket;
                         arenaInfo.Lose = arenaInformation.Lose;
                         arenaInfo.Score = arenaScore.Score;
                         arenaInformations.Add(arenaInfo);
                     }
 
 
-                    return null;
+                    return arenaInformations;
                 });
             Field<WeeklyArenaStateType>(
                 name: "weeklyArena",
