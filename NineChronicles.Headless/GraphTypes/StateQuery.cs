@@ -143,7 +143,8 @@ namespace NineChronicles.Headless.GraphTypes
                     List<ChampionArenaInfo> arenaInformations = new List<ChampionArenaInfo>();
                     var gameConfigState = context.Source.GetGameConfigState();
                     var interval = gameConfigState.DailyArenaInterval;
-
+                    var currentTicketResetCount = ArenaHelper.GetCurrentTicketResetCount(
+                                    context.Source.BlockIndex, roundData.StartBlockIndex, interval);
                     foreach (var participant in arenaParticipants.AvatarAddresses)
                     {
                         var arenaInformationAdr =
@@ -161,8 +162,6 @@ namespace NineChronicles.Headless.GraphTypes
                         var ticket = arenaInformation.Ticket;
                         if(ticket == 0)
                         {
-                            var currentTicketResetCount = ArenaHelper.GetCurrentTicketResetCount(
-                                    context.Source.BlockIndex, roundData.StartBlockIndex, interval);
                             if (arenaInformation.TicketResetCount < currentTicketResetCount)
                             {
                                 ticket = 8;
