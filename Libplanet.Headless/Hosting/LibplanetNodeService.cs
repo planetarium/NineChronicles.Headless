@@ -166,17 +166,6 @@ namespace Libplanet.Headless.Hosting
                 shuffledIceServers = iceServers.OrderBy(x => rand.Next());
             }
 
-            SwarmOptions.TransportType transportType = SwarmOptions.TransportType.TcpTransport;
-            switch (Properties.TransportType)
-            {
-                case "netmq":
-                    transportType = SwarmOptions.TransportType.NetMQTransport;
-                    break;
-                case "tcp":
-                    transportType = SwarmOptions.TransportType.TcpTransport;
-                    break;
-            }
-
             Swarm = new Swarm<T>(
                 BlockChain,
                 Properties.SwarmPrivateKey,
@@ -194,7 +183,6 @@ namespace Libplanet.Headless.Hosting
                     MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
                     BucketSize = Properties.BucketSize,
                     MaximumPollPeers = Properties.MaximumPollPeers,
-                    Type = transportType,
                     TimeoutOptions = new TimeoutOptions
                     {
                         MaxTimeout = TimeSpan.FromSeconds(50),
