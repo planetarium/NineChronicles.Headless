@@ -49,15 +49,17 @@ namespace NineChronicles.Headless.Executable.Commands
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<PolymorphicAction<ActionBase>>();
             IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
             IStore store = storeType.CreateStore(storePath);
-            var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            Block<NCAction> genesisBlock = store.GetGenesisBlock<NCAction>(blockPolicy.GetHashAlgorithm);
-            BlockChain<NCAction> chain = new BlockChain<NCAction>(
-                blockPolicy,
-                stagePolicy,
-                store,
-                stateStore,
-                genesisBlock);
-            _console.Out.WriteLine(Utils.SerializeHumanReadable(chain.Tip.Header));
+            if (!(store.GetCanonicalChainId() is { } chainId))
+            {
+                throw new CommandExitedException(
+                    $"There is no canonical chain: {storePath}",
+                    -1);
+            }
+
+            BlockHash tipHash = store.IndexBlockHash(chainId, -1)
+                          ?? throw new CommandExitedException("The given chain seems empty.", -1);
+            Block<NCAction> tip = store.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, tipHash);
+            _console.Out.WriteLine(Utils.SerializeHumanReadable(tip.Header));
             (store as IDisposable)?.Dispose();
         }
 
@@ -86,7 +88,6 @@ namespace NineChronicles.Headless.Executable.Commands
             IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
             IStore store = storeType.CreateStore(storePath);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            Block<NCAction> genesisBlock = store.GetGenesisBlock<NCAction>(blockPolicy.GetHashAlgorithm);
             if (!(store.GetCanonicalChainId() is { } chainId))
             {
                 throw new CommandExitedException($"There is no canonical chain: {storePath}", -1);
@@ -97,6 +98,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 throw new CommandExitedException($"There is no genesis block: {storePath}", -1);
             }
 
+            Block<NCAction> genesisBlock = store.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, gHash);
             BlockChain<NCAction> chain = new BlockChain<NCAction>(
                 blockPolicy,
                 stagePolicy,
