@@ -31,7 +31,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         private readonly ChainCommand _command;
 
         private readonly string _storePath;
-        private readonly string _storePath2;
 
         public ChainCommandTest()
         {
@@ -39,7 +38,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             _command = new ChainCommand(_console);
 
             _storePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-            _storePath2 = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         }
 
         [Theory]
@@ -76,7 +74,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
                 HashAlgorithmType.Of<SHA256>()
             );
-            IStore store = storeType.CreateStore(_storePath2);
+            IStore store = storeType.CreateStore(_storePath);
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
             store.PutBlock(genesisBlock);
@@ -107,7 +105,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             await chain.MineBlock(minerKey, DateTimeOffset.Now);
             store.Dispose();
 
-            _command.Inspect(storeType, _storePath2);
+            _command.Inspect(storeType, _storePath);
             List<double> output = _console.Out.ToString().Split("\n")[1]
                 .Split(',').Select(double.Parse).ToList();
             var totalTxCount = Convert.ToInt32(output[2]);
@@ -117,16 +115,64 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             Assert.Equal(1, hackandslashCount);
         }
 
+        [Theory]
+        [InlineData(StoreType.Default)]
+        [InlineData(StoreType.RocksDb)]
+        public async Task Truncate(StoreType storeType)
+        {
+            Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
+                HashAlgorithmType.Of<SHA256>()
+            );
+            IStore store = storeType.CreateStore(_storePath);
+            Guid chainId = Guid.NewGuid();
+            store.SetCanonicalChainId(chainId);
+            store.PutBlock(genesisBlock);
+            store.AppendIndex(chainId, genesisBlock.Hash);
+            var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
+
+            IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<PolymorphicAction<ActionBase>>();
+            IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
+            BlockChain<NCAction> chain = new BlockChain<NCAction>(
+                blockPolicy,
+                stagePolicy,
+                store,
+                stateStore,
+                genesisBlock);
+
+            var action = new HackAndSlash
+            {
+                costumes = new List<Guid>(),
+                equipments = new List<Guid>(),
+                foods = new List<Guid>(),
+                worldId = 1,
+                stageId = 1,
+                avatarAddress = default
+            };
+
+            var minerKey = new PrivateKey();
+            for (var i = 0; i < 2; i++)
+            {
+                chain.MakeTransaction(minerKey, new PolymorphicAction<ActionBase>[] { action });
+                await chain.MineBlock(minerKey, DateTimeOffset.Now);
+            }
+
+            var indexCountBeforeTruncate = store.CountIndex(chainId);
+            store.Dispose();
+            _command.Truncate(storeType, _storePath, 1);
+            IStore storeAfterTruncate = storeType.CreateStore(_storePath);
+            chainId = storeAfterTruncate.GetCanonicalChainId() ?? new Guid();
+            var indexCountAfterTruncate = storeAfterTruncate.CountIndex(chainId);
+            storeAfterTruncate.Dispose();
+
+            Assert.Equal(3, indexCountBeforeTruncate);
+            Assert.Equal(2, indexCountAfterTruncate);
+        }
+
         public void Dispose()
         {
             if (Directory.Exists(_storePath))
             {
                 Directory.Delete(_storePath, true);
-            }
-
-            if (Directory.Exists(_storePath2))
-            {
-                Directory.Delete(_storePath2, true);
             }
         }
     }
