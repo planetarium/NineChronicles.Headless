@@ -85,6 +85,7 @@ namespace NineChronicles.Headless.Executable
             string? minerPrivateKeyString = null,
             string? storeType = null,
             string? storePath = null,
+            bool noReduceStore = false,
             [Option("ice-server", new [] { 'I', })]
             string[]? iceServerStrings = null,
             [Option("peer")]
@@ -304,6 +305,7 @@ namespace NineChronicles.Headless.Executable
                         swarmPrivateKeyString,
                         storeType,
                         storePath,
+                        noReduceStore,
                         100,
                         iceServerStrings,
                         peerStrings,
