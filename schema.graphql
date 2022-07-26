@@ -82,6 +82,7 @@ type AvatarStateType {
   characterId: Int!
   dailyRewardReceivedIndex: Long!
   agentAddress: Address!
+  index: Int!
   updatedAt: Long!
   name: String!
   exp: Int!
