@@ -93,7 +93,7 @@ namespace NineChronicles.Headless.Executable.Commands
         {
             if (storeType == StoreType.Memory)
             {
-                throw new CommandExitedException("Memory is volatile. "+
+                throw new CommandExitedException("Memory is volatile. " +
                                                  "Please use persistent StoreType like RocksDb.", -1);
             }
 
