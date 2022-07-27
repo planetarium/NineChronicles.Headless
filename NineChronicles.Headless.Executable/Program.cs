@@ -85,7 +85,6 @@ namespace NineChronicles.Headless.Executable
             string? minerPrivateKeyString = null,
             string? storeType = null,
             string? storePath = null,
-            bool noReduceStore = false,
             [Option("ice-server", new [] { 'I', })]
             string[]? iceServerStrings = null,
             [Option("peer")]
@@ -224,7 +223,7 @@ namespace NineChronicles.Headless.Executable
                 Directory.Delete("_logs", true);
             }
 
-            if (useBasicAwsCredentials ^ useCognitoCredentials  && !(awsRegion is null))
+            if (useBasicAwsCredentials ^ useCognitoCredentials && !(awsRegion is null))
             {
                 RegionEndpoint regionEndpoint = RegionEndpoint.GetBySystemName(awsRegion);
                 AWSCredentials credentials = useCognitoCredentials
@@ -305,7 +304,6 @@ namespace NineChronicles.Headless.Executable
                         swarmPrivateKeyString,
                         storeType,
                         storePath,
-                        noReduceStore,
                         100,
                         iceServerStrings,
                         peerStrings,

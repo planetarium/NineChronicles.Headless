@@ -24,6 +24,9 @@ using Libplanet.Headless;
 using Nekoyume.Model;
 using NineChronicles.Headless.GraphTypes.States;
 using Serilog;
+using Nekoyume.Model.Arena;
+using System.Text;
+using Nekoyume.Extensions;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -425,6 +428,188 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<ActionQuery>>(
                 name: "actionQuery",
                 resolve: context => new ActionQuery(standaloneContext));
+
+            Field<StringGraphType>(
+                "arenaBattleData",
+                description: "All of the information to playback an arena battle.",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<TxIdType>>
+                {
+                    Name = "transactionId",
+                    Description = "Transaction of the battle."
+                }),
+                resolve: context =>
+                {
+                    var transactionId = context.GetArgument<TxId>("transactionId");
+
+                    if (!(standaloneContext.Store is { } store))
+                    {
+                        throw new InvalidOperationException("Store is not ready");
+                    }
+                    var transaction = store.GetTransaction<NCAction>(transactionId);
+                    var action = transaction.Actions.FirstOrDefault();
+                    if(action == null)
+                    {
+                        throw new InvalidOperationException("Action is null.");
+                    }
+                    if(action.InnerAction.GetType() != typeof(BattleArena))
+                    {
+                        throw new InvalidOperationException("Wrong Transaction Type, please choose a BattleArena action");
+                    }
+                    var innerAction = action.InnerAction as BattleArena;
+                    if(innerAction == null)
+                    {
+                        throw new InvalidOperationException("Inner action is null");
+                    }
+                    var blockHash = store.GetFirstTxIdBlockHashIndex(transactionId);
+                    
+                    if (blockHash == null)
+                    {
+                        throw new InvalidOperationException("Block Hash is null");
+                    }
+                    var digest = store.GetBlockDigest(blockHash.Value);
+                    if (digest == null)
+                    {
+                        throw new InvalidOperationException("Block Digest is null.");
+                    }
+                    if (!(standaloneContext.BlockChain is { } chain))
+                    {
+                        return null;
+                    }
+                    var header = digest.Value.GetHeader(chain.Policy.GetHashAlgorithm);
+                    if (header == null)
+                    {
+                        throw new InvalidOperationException("Block Header is null.");
+                    }
+                    var preEvaluationHash = header.PreEvaluationHash;
+                    if (transaction.Signature == null)
+                    {
+                        throw new InvalidOperationException("Transaction Signature is null.");
+                    }
+                    byte[] hashedSignature;
+                    using (var hasher = System.Security.Cryptography.SHA1.Create())
+                    {
+                        hashedSignature = hasher.ComputeHash(transaction.Signature);
+                    }
+                    //var block = store.GetBlock<NCAction>(chain.Policy.GetHashAlgorithm, blockHash.Value);
+                    //IActionContext.Random.Seed can be calculated by Block<T>.PreEvaluationHash and Transaction<T>.Signature.  
+                    //var preEvaluationHash = block.PreEvaluationHash;
+                    byte[] preEvaluationHashBytes = preEvaluationHash.ToBuilder().ToArray();
+                    //if (block.Signature == null)
+                    //{
+                    //    throw new InvalidOperationException();
+                    //}
+                    //var hashedSignature = block.Signature.Value.ToBuilder().ToArray();
+                    int seed =
+                    (preEvaluationHashBytes.Length > 0
+                        ? BitConverter.ToInt32(preEvaluationHashBytes, 0) : 0)
+                    ^ BitConverter.ToInt32(hashedSignature, 0);
+
+                    var random = new LocalRandom(seed);
+                    var simulator = new Nekoyume.Arena.ArenaSimulator(random);
+
+                    var previousHash = header.PreviousHash;
+                    if(!(previousHash is BlockHash))
+                    {
+                        throw new InvalidOperationException("Previous BlockHash missing.");
+                    }
+                    var states = new StateContext(
+                        chain.ToAccountStateGetter(previousHash),
+                        chain.ToAccountBalanceGetter(previousHash),
+                        chain[previousHash.Value].Index
+                    );
+
+                    var sheets = states.GetSheets(
+                        containArenaSimulatorSheets: true,
+                        sheetTypes: new[]
+                        {
+                            typeof(ArenaSheet),
+                            typeof(ItemRequirementSheet),
+                            typeof(EquipmentItemRecipeSheet),
+                            typeof(EquipmentItemSubRecipeSheetV2),
+                            typeof(EquipmentItemOptionSheet),
+                            typeof(MaterialItemSheet),
+                        });
+                    var myAvatarAddress = innerAction.myAvatarAddress;
+                    if (!states.TryGetAvatarStateV2(transaction.Signer, myAvatarAddress,
+                    out var avatarState, out var _))
+                    {
+                        throw new FailedLoadStateException(
+                            $"Aborted as the avatar state of the signer was failed to load.");
+                    }
+                    var myArenaAvatarStateAdr = ArenaAvatarState.DeriveAddress(myAvatarAddress);
+                    var enemyAvatarAddress = innerAction.enemyAvatarAddress;
+
+                    if (!states.TryGetArenaAvatarState(myArenaAvatarStateAdr, out var myArenaAvatarState))
+                    {
+                        throw new ArenaAvatarStateNotFoundException(
+                            $"[{nameof(BattleArena)}] my avatar address : {myAvatarAddress}");
+                    }
+
+                    var enemyArenaAvatarStateAdr = ArenaAvatarState.DeriveAddress(enemyAvatarAddress);
+                    if (!states.TryGetArenaAvatarState(enemyArenaAvatarStateAdr,
+                            out var enemyArenaAvatarState))
+                    {
+                        throw new ArenaAvatarStateNotFoundException(
+                            $"[{nameof(BattleArena)}] enemy avatar address : {enemyAvatarAddress}");
+                    }
+
+                    // update arena avatar state
+                    myArenaAvatarState.UpdateEquipment(innerAction.equipments);
+                    myArenaAvatarState.UpdateCostumes(innerAction.costumes);
+
+                    // simulate
+                    var enemyAvatarState = states.GetEnemyAvatarState(enemyAvatarAddress);
+                    ArenaPlayerDigest ExtraMyArenaPlayerDigest = new ArenaPlayerDigest(avatarState, myArenaAvatarState);
+                    ArenaPlayerDigest ExtraEnemyArenaPlayerDigest = new ArenaPlayerDigest(enemyAvatarState, enemyArenaAvatarState);
+                    var arenaSheets = sheets.GetArenaSimulatorSheets();
+                    //var previousState = new StateContext(
+                    //    chain.ToAccountStateGetter(block.PreviousHash),
+                    //    chain.ToAccountBalanceGetter(block.PreviousHash),
+                    //    block.PreviousHash != null ? chain[block.PreviousHash.Value].Index : chain.Tip.Index
+                    //);
+                    //var results = chain.ActionEvaluator.Evaluate(block, StateCompleterSet<NCAction>.Recalculate);
+                    //var ncAction = transaction.Actions.First();
+                    //var evaluation = results.First(r => r.Action.Equals(ncAction.InnerAction));
+                    //if (evaluation != null)
+                    //{
+                    //    return evaluation;
+                    //}
+                    var log = simulator.Simulate(ExtraMyArenaPlayerDigest, ExtraEnemyArenaPlayerDigest, arenaSheets);
+                    var sb = new StringBuilder();
+                    foreach (var arenaEvent in log.Events)
+                    {
+                        
+                        if (arenaEvent is Nekoyume.Model.BattleStatus.Arena.ArenaSkill arenaSkillEvent)
+                        {
+                            sb.AppendLine($"Arena Attack {arenaSkillEvent.GetType()}");
+                            if (arenaSkillEvent is Nekoyume.Model.BattleStatus.Arena.ArenaBuff arenaBuffEvent)
+                            {
+                                sb.AppendLine($"Buff {arenaBuffEvent.SkillInfos.First().SkillCategory}");
+                            }
+                            else
+                            {
+                                foreach (var hit in arenaSkillEvent.SkillInfos)
+                                {
+                                    sb.AppendLine($"{(arenaSkillEvent.SkillInfos.First().Target.IsEnemy ? "Enemy " : "Player ")} Damaged for: {hit.Effect} - Crit? {hit.Critical}");
+                                }
+                                sb.AppendLine($"Total Damage: {arenaSkillEvent.SkillInfos.Sum(ae => ae.Effect)}");
+                                sb.AppendLine($"Target HP Remaining: {arenaSkillEvent.SkillInfos.Last().Target.CurrentHP}");
+                            }
+                        }
+                        else if (arenaEvent is Nekoyume.Model.BattleStatus.Arena.ArenaTurnEnd arenaTurnEnd)
+                        {
+                            sb.AppendLine($"Turn #: {arenaTurnEnd.TurnNumber}; Remaining HP: {arenaTurnEnd.Character.CurrentHP}");
+                        }
+                        else
+                        {
+                            sb.AppendLine(arenaEvent.ToString());
+                        }
+                    }
+                    sb.AppendLine(log.Result.ToString());
+                    return sb.ToString();
+                }
+            );
+
         }
     }
 }
