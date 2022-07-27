@@ -13,7 +13,7 @@
   <ItemGroup>
     <PackageReference Include="AWSSDK.CognitoIdentity" Version="3.7.0.5" />
     <PackageReference Include="AWSSDK.S3" Version="3.7.8.24" />
-    <PackageReference Include="Cocona.Lite" Version="1.6.*" />
+    <PackageReference Include="Cocona.Lite" Version="2.0.*" />
     <PackageReference Include="Destructurama.Attributed" Version="2.0.0" />
     <PackageReference Include="HaemmerElectronics.SeppPenner.Serilog.Sinks.AmazonS3" Version="1.1.3" />
     <PackageReference Include="Sentry.Serilog" Version="2.1.*" />
