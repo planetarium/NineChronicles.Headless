@@ -22,6 +22,8 @@ namespace Libplanet.Headless.Hosting
 
         public string StorePath { get; set; }
 
+        public bool NoReduceStore { get; set; }
+
         public int StoreStatesCacheSize { get; set; }
 
         public string GenesisBlockPath { get; set; }
