@@ -142,12 +142,15 @@ namespace NineChronicles.Headless.GraphTypes
                         throw new ArenaParticipantsNotFoundException(
                             $"[{nameof(BattleArena)}] ChampionshipId({roundData.ChampionshipId}) - round({roundData.Round})");
                     }
-                    var championshipInfo = new ChampionshipArenaStateType();
+                    var championshipInfo = new ChampionshipArenaState();
+                    championshipInfo.StartIndex = roundData.StartBlockIndex;
+                    championshipInfo.EndIndex = roundData.EndBlockIndex;
+                    championshipInfo.Address = arenaParticipantsAdr;
                     List<ChampionArenaInfo> arenaInformations = new List<ChampionArenaInfo>();
                     var gameConfigState = context.Source.GetGameConfigState();
                     var interval = gameConfigState.DailyArenaInterval;
                     var currentTicketResetCount = ArenaHelper.GetCurrentTicketResetCount(
-                                    context.Source.BlockIndex, roundData.StartBlockIndex, interval);
+                                    context.Source.BlockIndex!.Value, roundData.StartBlockIndex, interval);
                     foreach (var participant in arenaParticipants.AvatarAddresses)
                     {
                         var arenaInformationAdr =
@@ -182,10 +185,14 @@ namespace NineChronicles.Headless.GraphTypes
                     var ranks = StateContext.AddRank(arenaInformations.ToArray());
                     foreach (var rank in ranks)
                     {
-                        arenaInformations.First(a => a.AvatarAddress == rank.AgentAddress).Rank = rank.Rank;
+                        var info = arenaInformations.First(a => a.AvatarAddress == rank.AvatarAddress);
+                        if (info != null) {
+                            info.Rank = rank.Rank;
+                        }
                     }
-
-                    return arenaInformations.OrderBy(a => a.Rank);
+                    var orderInfos = arenaInformations.OrderBy(a => a.Rank).ToList();
+                    championshipInfo.OrderedArenaInfos = orderInfos;
+                    return championshipInfo;
                 });
             Field<WeeklyArenaStateType>(
                 name: "weeklyArena",

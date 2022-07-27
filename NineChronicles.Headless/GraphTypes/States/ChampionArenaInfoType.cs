@@ -38,6 +38,9 @@ namespace NineChronicles.Headless.GraphTypes.States
             Field<NonNullGraphType<IntGraphType>>(
                 nameof(ChampionArenaInfo.Score),
                 resolve: context => context.Source.Score);
+            Field<NonNullGraphType<IntGraphType>>(
+                nameof(ChampionArenaInfo.Rank),
+                resolve: context => context.Source.Rank);
         }
     }
 }
