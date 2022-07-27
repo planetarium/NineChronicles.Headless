@@ -331,7 +331,7 @@ namespace Libplanet.Headless.Hosting
             store ??= new DefaultStore(path, flush: false);
             if (!noReduceStore)
             {
-                store = new ReducedStore(store);   
+                store = new ReducedStore(store);
             }
 
             IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states"));
