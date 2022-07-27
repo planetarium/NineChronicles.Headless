@@ -42,7 +42,6 @@ namespace NineChronicles.Headless.Properties
 
         public int TxQuotaPerSigner { get; set; }
 
-
         public static LibplanetNodeServiceProperties<NineChroniclesActionType>
             GenerateLibplanetNodeServiceProperties(
                 string? appProtocolVersionToken = null,
@@ -52,6 +51,66 @@ namespace NineChronicles.Headless.Properties
                 string? swarmPrivateKeyString = null,
                 string? storeType = null,
                 string? storePath = null,
+                int storeStateCacheSize = 100,
+                string[]? iceServerStrings = null,
+                string[]? peerStrings = null,
+                string[]? trustedAppProtocolVersionSigners = null,
+                bool noMiner = false,
+                bool render = false,
+                int workers = 5,
+                int confirmations = 0,
+                bool nonblockRenderer = false,
+                int nonblockRendererQueue = 512,
+                int messageTimeout = 60,
+                int tipTimeout = 60,
+                int demandBuffer = 1150,
+                string[]? staticPeerStrings = null,
+                bool preload = true,
+                int minimumBroadcastTarget = 10,
+                int bucketSize = 16,
+                string chainTipStaleBehaviorType = "reboot",
+                int maximumPollPeers = int.MaxValue)
+        {
+            return GenerateLibplanetNodeServiceProperties(
+                appProtocolVersionToken,
+                genesisBlockPath,
+                swarmHost,
+                swarmPort,
+                swarmPrivateKeyString,
+                storeType,
+                storePath,
+                noReduceStore: false,
+                storeStateCacheSize,
+                iceServerStrings,
+                peerStrings,
+                trustedAppProtocolVersionSigners,
+                noMiner,
+                render,
+                workers,
+                confirmations,
+                nonblockRenderer,
+                nonblockRendererQueue,
+                messageTimeout,
+                tipTimeout,
+                demandBuffer,
+                staticPeerStrings,
+                preload,
+                minimumBroadcastTarget,
+                bucketSize,
+                chainTipStaleBehaviorType,
+                maximumPollPeers
+                );
+        }
+        public static LibplanetNodeServiceProperties<NineChroniclesActionType>
+            GenerateLibplanetNodeServiceProperties(
+                string? appProtocolVersionToken = null,
+                string? genesisBlockPath = null,
+                string? swarmHost = null,
+                ushort? swarmPort = null,
+                string? swarmPrivateKeyString = null,
+                string? storeType = null,
+                string? storePath = null,
+                bool noReduceStore = false,
                 int storeStateCacheSize = 100,
                 string[]? iceServerStrings = null,
                 string[]? peerStrings = null,
@@ -99,6 +158,7 @@ namespace NineChronicles.Headless.Properties
                 Peers = peers,
                 StoreType = storeType,
                 StorePath = storePath,
+                NoReduceStore = noReduceStore,
                 StoreStatesCacheSize = storeStateCacheSize,
                 Render = render,
                 Workers = workers,
