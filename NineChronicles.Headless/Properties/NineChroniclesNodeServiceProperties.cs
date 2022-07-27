@@ -52,6 +52,7 @@ namespace NineChronicles.Headless.Properties
                 string? swarmPrivateKeyString = null,
                 string? storeType = null,
                 string? storePath = null,
+                bool noReduceStore = false,
                 int storeStateCacheSize = 100,
                 string[]? iceServerStrings = null,
                 string[]? peerStrings = null,
@@ -70,8 +71,7 @@ namespace NineChronicles.Headless.Properties
                 int minimumBroadcastTarget = 10,
                 int bucketSize = 16,
                 string chainTipStaleBehaviorType = "reboot",
-                int maximumPollPeers = int.MaxValue,
-                string transportType = "tcp")
+                int maximumPollPeers = int.MaxValue)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
@@ -100,6 +100,7 @@ namespace NineChronicles.Headless.Properties
                 Peers = peers,
                 StoreType = storeType,
                 StorePath = storePath,
+                NoReduceStore = noReduceStore,
                 StoreStatesCacheSize = storeStateCacheSize,
                 Render = render,
                 Workers = workers,
@@ -114,8 +115,7 @@ namespace NineChronicles.Headless.Properties
                 MinimumBroadcastTarget = minimumBroadcastTarget,
                 BucketSize = bucketSize,
                 ChainTipStaleBehavior = chainTipStaleBehaviorType,
-                MaximumPollPeers = maximumPollPeers,
-                TransportType = transportType
+                MaximumPollPeers = maximumPollPeers
             };
         }
 

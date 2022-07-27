@@ -44,7 +44,7 @@ namespace NineChronicles.Headless.Executable
 #if SENTRY || ! DEBUG
             using var _ = SentrySdk.Init(ConfigureSentryOptions);
 #endif
-            await CoconaLiteApp.Create()
+            await CoconaLiteApp.CreateHostBuilder()
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton<IConsole, StandardConsole>();
@@ -85,6 +85,7 @@ namespace NineChronicles.Headless.Executable
             string? minerPrivateKeyString = null,
             string? storeType = null,
             string? storePath = null,
+            bool noReduceStore = false,
             [Option("ice-server", new [] { 'I', })]
             string[]? iceServerStrings = null,
             [Option("peer")]
@@ -184,10 +185,6 @@ namespace NineChronicles.Headless.Executable
             bool rpcHttpServer = false,
             [Option(Description = "The maximum number of peers to poll blocks.  int.MaxValue by default.")]
             int maximumPollPeers = int.MaxValue,
-            [Option(Description =
-                "Determines the type of transport.  \"netmq\" and \"tcp\" " +
-                "is available and \"tcp\" option is selected by default.")]
-            string transportType = "tcp",
             [Ignore]
             CancellationToken? cancellationToken = null
         )
@@ -308,6 +305,7 @@ namespace NineChronicles.Headless.Executable
                         swarmPrivateKeyString,
                         storeType,
                         storePath,
+                        noReduceStore,
                         100,
                         iceServerStrings,
                         peerStrings,
@@ -325,8 +323,7 @@ namespace NineChronicles.Headless.Executable
                         minimumBroadcastTarget: minimumBroadcastTarget,
                         bucketSize: bucketSize,
                         chainTipStaleBehaviorType: chainTipStaleBehaviorType,
-                        maximumPollPeers: maximumPollPeers,
-                        transportType: transportType
+                        maximumPollPeers: maximumPollPeers
                     );
 
                 if (rpcServer)

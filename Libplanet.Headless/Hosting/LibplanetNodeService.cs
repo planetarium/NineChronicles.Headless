@@ -97,7 +97,8 @@ namespace Libplanet.Headless.Hosting
             (Store, StateStore) = LoadStore(
                 Properties.StorePath,
                 Properties.StoreType,
-                Properties.StoreStatesCacheSize);
+                Properties.StoreStatesCacheSize,
+                Properties.NoReduceStore);
 
             var chainIds = Store.ListChainIds().ToList();
             Log.Debug($"Number of chain ids: {chainIds.Count()}");
@@ -166,17 +167,6 @@ namespace Libplanet.Headless.Hosting
                 shuffledIceServers = iceServers.OrderBy(x => rand.Next());
             }
 
-            SwarmOptions.TransportType transportType = SwarmOptions.TransportType.TcpTransport;
-            switch (Properties.TransportType)
-            {
-                case "netmq":
-                    transportType = SwarmOptions.TransportType.NetMQTransport;
-                    break;
-                case "tcp":
-                    transportType = SwarmOptions.TransportType.TcpTransport;
-                    break;
-            }
-
             Swarm = new Swarm<T>(
                 BlockChain,
                 Properties.SwarmPrivateKey,
@@ -194,7 +184,6 @@ namespace Libplanet.Headless.Hosting
                     MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
                     BucketSize = Properties.BucketSize,
                     MaximumPollPeers = Properties.MaximumPollPeers,
-                    Type = transportType,
                     TimeoutOptions = new TimeoutOptions
                     {
                         MaxTimeout = TimeSpan.FromSeconds(50),
@@ -299,7 +288,7 @@ namespace Libplanet.Headless.Hosting
             }
         }
 
-        protected (IStore, IStateStore) LoadStore(string path, string type, int statesCacheSize)
+        protected (IStore, IStateStore) LoadStore(string path, string type, int statesCacheSize, bool noReduceStore = false)
         {
             IStore store = null;
             if (type == "rocksdb")
@@ -336,7 +325,10 @@ namespace Libplanet.Headless.Hosting
             }
 
             store ??= new DefaultStore(path, flush: false);
-            store = new ReducedStore(store);
+            if (!noReduceStore)
+            {
+                store = new ReducedStore(store);   
+            }
 
             IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states"));
             IStateStore stateStore = new TrieStateStore(stateKeyValueStore);
