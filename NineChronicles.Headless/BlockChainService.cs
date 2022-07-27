@@ -70,7 +70,7 @@ namespace NineChronicles.Headless
                     Log.Debug("PutTransaction: (nonce: {nonce}, id: {id})", tx.Nonce, tx.Id);
                     Log.Debug("StagedTransactions: {txIds}", string.Join(", ", _blockChain.GetStagedTransactionIds()));
                     _blockChain.StageTransaction(tx);
-                    _swarm.BroadcastTxs(new[] {tx});
+                    _swarm.BroadcastTxs(new[] { tx });
 
                     return UnaryResult(true);
                 }

@@ -1,4 +1,4 @@
-﻿using Bencodex.Types;
+using Bencodex.Types;
 
 namespace NineChronicles.Headless.GraphTypes
 {

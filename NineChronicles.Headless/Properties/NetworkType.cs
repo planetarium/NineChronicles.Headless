@@ -1,4 +1,4 @@
-﻿namespace NineChronicles.Headless.Properties
+namespace NineChronicles.Headless.Properties
 {
     public enum NetworkType
     {
