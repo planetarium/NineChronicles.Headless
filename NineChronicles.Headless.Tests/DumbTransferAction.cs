@@ -1,4 +1,4 @@
-﻿using Bencodex;
+using Bencodex;
 using Bencodex.Types;
 using Libplanet;
 using Libplanet.Action;
@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using Nekoyume.Action;
 
-namespace NineChronicles.Headless.Tests 
+namespace NineChronicles.Headless.Tests
 {
     [Serializable]
     [ActionType("dumb_transfer_action")]
@@ -27,7 +27,7 @@ namespace NineChronicles.Headless.Tests
         protected DumbTransferAction(SerializationInfo info, StreamingContext context)
         {
             var rawBytes = (byte[])info.GetValue("serialized", typeof(byte[]))!;
-            Dictionary pv = (Dictionary) new Codec().Decode(rawBytes);
+            Dictionary pv = (Dictionary)new Codec().Decode(rawBytes);
 
             LoadPlainValue(pv);
         }
@@ -62,7 +62,7 @@ namespace NineChronicles.Headless.Tests
 
         public override void LoadPlainValue(IValue plainValue)
         {
-            var asDict = (Dictionary) plainValue;
+            var asDict = (Dictionary)plainValue;
 
             Sender = asDict["sender"].ToAddress();
             Recipient = asDict["recipient"].ToAddress();
