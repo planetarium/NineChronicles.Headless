@@ -79,7 +79,7 @@ namespace NineChronicles.Headless.Properties
                 swarmPrivateKeyString,
                 storeType,
                 storePath,
-                noReduceStore: false,
+                false,
                 storeStateCacheSize,
                 iceServerStrings,
                 peerStrings,

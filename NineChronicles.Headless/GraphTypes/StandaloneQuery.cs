@@ -27,6 +27,7 @@ using Serilog;
 using Nekoyume.Model.Arena;
 using System.Text;
 using Nekoyume.Extensions;
+using Nekoyume.Model.BattleStatus.Arena;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -71,7 +72,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -190,7 +191,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -222,7 +223,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -243,7 +244,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -429,7 +430,7 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "actionQuery",
                 resolve: context => new ActionQuery(standaloneContext));
 
-            Field<StringGraphType>(
+            Field<ListGraphType<Abstractions.ArenaEventBaseType>>(
                 "arenaBattleData",
                 description: "All of the information to playback an arena battle.",
                 arguments: new QueryArguments(new QueryArgument<NonNullGraphType<TxIdType>>
@@ -490,15 +491,7 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         hashedSignature = hasher.ComputeHash(transaction.Signature);
                     }
-                    //var block = store.GetBlock<NCAction>(chain.Policy.GetHashAlgorithm, blockHash.Value);
-                    //IActionContext.Random.Seed can be calculated by Block<T>.PreEvaluationHash and Transaction<T>.Signature.  
-                    //var preEvaluationHash = block.PreEvaluationHash;
                     byte[] preEvaluationHashBytes = preEvaluationHash.ToBuilder().ToArray();
-                    //if (block.Signature == null)
-                    //{
-                    //    throw new InvalidOperationException();
-                    //}
-                    //var hashedSignature = block.Signature.Value.ToBuilder().ToArray();
                     int seed =
                     (preEvaluationHashBytes.Length > 0
                         ? BitConverter.ToInt32(preEvaluationHashBytes, 0) : 0)
@@ -562,51 +555,9 @@ namespace NineChronicles.Headless.GraphTypes
                     ArenaPlayerDigest ExtraMyArenaPlayerDigest = new ArenaPlayerDigest(avatarState, myArenaAvatarState);
                     ArenaPlayerDigest ExtraEnemyArenaPlayerDigest = new ArenaPlayerDigest(enemyAvatarState, enemyArenaAvatarState);
                     var arenaSheets = sheets.GetArenaSimulatorSheets();
-                    //var previousState = new StateContext(
-                    //    chain.ToAccountStateGetter(block.PreviousHash),
-                    //    chain.ToAccountBalanceGetter(block.PreviousHash),
-                    //    block.PreviousHash != null ? chain[block.PreviousHash.Value].Index : chain.Tip.Index
-                    //);
-                    //var results = chain.ActionEvaluator.Evaluate(block, StateCompleterSet<NCAction>.Recalculate);
-                    //var ncAction = transaction.Actions.First();
-                    //var evaluation = results.First(r => r.Action.Equals(ncAction.InnerAction));
-                    //if (evaluation != null)
-                    //{
-                    //    return evaluation;
-                    //}
                     var log = simulator.Simulate(ExtraMyArenaPlayerDigest, ExtraEnemyArenaPlayerDigest, arenaSheets);
-                    var sb = new StringBuilder();
-                    foreach (var arenaEvent in log.Events)
-                    {
-                        
-                        if (arenaEvent is Nekoyume.Model.BattleStatus.Arena.ArenaSkill arenaSkillEvent)
-                        {
-                            sb.AppendLine($"Arena Attack {arenaSkillEvent.GetType()}");
-                            if (arenaSkillEvent is Nekoyume.Model.BattleStatus.Arena.ArenaBuff arenaBuffEvent)
-                            {
-                                sb.AppendLine($"Buff {arenaBuffEvent.SkillInfos.First().SkillCategory}");
-                            }
-                            else
-                            {
-                                foreach (var hit in arenaSkillEvent.SkillInfos)
-                                {
-                                    sb.AppendLine($"{(arenaSkillEvent.SkillInfos.First().Target.IsEnemy ? "Enemy " : "Player ")} Damaged for: {hit.Effect} - Crit? {hit.Critical}");
-                                }
-                                sb.AppendLine($"Total Damage: {arenaSkillEvent.SkillInfos.Sum(ae => ae.Effect)}");
-                                sb.AppendLine($"Target HP Remaining: {arenaSkillEvent.SkillInfos.Last().Target.CurrentHP}");
-                            }
-                        }
-                        else if (arenaEvent is Nekoyume.Model.BattleStatus.Arena.ArenaTurnEnd arenaTurnEnd)
-                        {
-                            sb.AppendLine($"Turn #: {arenaTurnEnd.TurnNumber}; Remaining HP: {arenaTurnEnd.Character.CurrentHP}");
-                        }
-                        else
-                        {
-                            sb.AppendLine(arenaEvent.ToString());
-                        }
-                    }
-                    sb.AppendLine(log.Result.ToString());
-                    return sb.ToString();
+                    return log.Events;
+                    
                 }
             );
 
