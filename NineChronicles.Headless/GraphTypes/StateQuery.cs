@@ -171,14 +171,19 @@ namespace NineChronicles.Headless.GraphTypes
                             ticket = 8;
                         }
                         var avatar = context.Source.GetAvatarStateV2(participant);
-                        var arenaInfo = new ChampionArenaInfo();
-                        arenaInfo.AvatarAddress = participant;
-                        arenaInfo.AgentAddress = avatar.agentAddress;
-                        arenaInfo.AvatarName = avatar.name;
-                        arenaInfo.Win = arenaInformation.Win;
-                        arenaInfo.Ticket = ticket;
-                        arenaInfo.Lose = arenaInformation.Lose;
-                        arenaInfo.Score = arenaScore.Score;
+                        var arenaInfo = new ChampionArenaInfo
+                        {
+                            AvatarAddress = participant,
+                            AgentAddress = avatar.agentAddress,
+                            AvatarName = avatar.name,
+                            Win = arenaInformation.Win,
+                            Ticket = ticket,
+                            Lose = arenaInformation.Lose,
+                            Score = arenaScore.Score,
+                            PurchasedTicketCount = arenaInformation.PurchasedTicketCount,
+                            TicketResetCount = arenaInformation.TicketResetCount,
+                            Active = true
+                        };
                         arenaInformations.Add(arenaInfo);
                     }
 
@@ -186,7 +191,8 @@ namespace NineChronicles.Headless.GraphTypes
                     foreach (var rank in ranks)
                     {
                         var info = arenaInformations.First(a => a.AvatarAddress == rank.AvatarAddress);
-                        if (info != null) {
+                        if (info != null)
+                        {
                             info.Rank = rank.Rank;
                         }
                     }
