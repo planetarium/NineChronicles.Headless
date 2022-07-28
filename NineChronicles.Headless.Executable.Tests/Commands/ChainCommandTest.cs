@@ -26,10 +26,8 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 {
     public class ChainCommandTest : IDisposable
     {
-        /// <summary>
-        /// `StoreType.Memory` will not be tested.
-        /// Because the purpose of ChainCommandTest is to store and read blockchain data.
-        /// </summary>
+        // `StoreType.Memory` will not be tested.
+        // Because the purpose of ChainCommandTest is to store and read blockchain data.
         private readonly StringIOConsole _console;
         private readonly ChainCommand _command;
 
