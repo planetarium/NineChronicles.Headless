@@ -83,6 +83,9 @@ namespace NineChronicles.Headless.Executable
                 Description = "The private key used for mining blocks. " +
                               "Must not be null if you want to turn on mining with libplanet-node.")]
             string? minerPrivateKeyString = null,
+            [Option(Description = "The type of storage to store blockchain data. " +
+                                  "If not provided, \"LiteDB\" will be used as default. " + 
+                                  "Available type: [\"rocksdb\", \"memory\"]")]
             string? storeType = null,
             string? storePath = null,
             bool noReduceStore = false,
