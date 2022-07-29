@@ -40,12 +40,19 @@ namespace NineChronicles.Headless.Executable.Commands
 
         [Command(Description = "Print the tip's header of the chain placed at given store path.")]
         public void Tip(
-            [Argument("STORE-TYPE")]
+            [Argument("STORE-TYPE",
+                Description = "The storage type to store blockchain data. " +
+                              "You cannot use \"Memory\" because it's volatile.")]
             StoreType storeType,
-            [Argument("STORE-PATH")]
-            string storePath)
+            [Argument("STORE-PATH")] string storePath)
         {
-            if (storeType != StoreType.Memory && !Directory.Exists(storePath))
+            if (storeType == StoreType.Memory)
+            {
+                throw new CommandExitedException("Memory is volatile. " +
+                                                 "Please use persistent StoreType like RocksDb.", -1);
+            }
+
+            if (!Directory.Exists(storePath))
             {
                 throw new CommandExitedException($"The given STORE-PATH, {storePath} seems not existed.", -1);
             }
@@ -61,17 +68,19 @@ namespace NineChronicles.Headless.Executable.Commands
             }
 
             BlockHash tipHash = store.IndexBlockHash(chainId, -1)
-                          ?? throw new CommandExitedException("The given chain seems empty.", -1);
+                                ?? throw new CommandExitedException("The given chain seems empty.", -1);
             Block<NCAction> tip = store.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, tipHash);
             _console.Out.WriteLine(Utils.SerializeHumanReadable(tip.Header));
             (store as IDisposable)?.Dispose();
         }
 
-        [Command(Description = "Print each block's mining time and tx stats (total tx, hack and slash, ranking battle, " +
-                               "mimisbrunnr) of a given chain in csv format.")]
+        [Command(Description =
+            "Print each block's mining time and tx stats (total tx, hack and slash, ranking battle, " +
+            "mimisbrunnr) of a given chain in csv format.")]
         public void Inspect(
             [Argument("STORE-TYPE",
-                Description = "Store type of blockchain storage.")]
+                Description = "The storage type to store blockchain data. " +
+                              "You cannot use \"Memory\" because it's volatile.")]
             StoreType storeType,
             [Argument("STORE-PATH",
                 Description = "Store path to inspect.")]
@@ -83,7 +92,13 @@ namespace NineChronicles.Headless.Executable.Commands
                 Description = "Limit of block count.")]
             int? limit = null)
         {
-            if (storeType != StoreType.Memory && !Directory.Exists(storePath))
+            if (storeType == StoreType.Memory)
+            {
+                throw new CommandExitedException("Memory is volatile. "+
+                                                 "Please use persistent StoreType like RocksDb.", -1);
+            }
+
+            if (!Directory.Exists(storePath))
             {
                 throw new CommandExitedException($"The given STORE-PATH, {storePath} seems not existed.", -1);
             }
@@ -127,7 +142,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             var typeOfActionTypeAttribute = typeof(ActionTypeAttribute);
             foreach (var item in
-                store.IterateIndexes(chain.Id, offset + 1 ?? 1, limit).Select((value, i) => new { i, value }))
+                     store.IterateIndexes(chain.Id, offset + 1 ?? 1, limit).Select((value, i) => new { i, value }))
             {
                 var block = store.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
                 var previousBlock = store.GetBlock<NCAction>(
@@ -183,7 +198,8 @@ namespace NineChronicles.Headless.Executable.Commands
         [Command(Description = "Truncate the chain from the tip by the input value (in blocks)")]
         public void Truncate(
             [Argument("STORE-TYPE",
-                Description = "Store type of RocksDb.")]
+                Description = "The storage type to store blockchain data. " +
+                              "You cannot use \"Memory\" because it's volatile.")]
             StoreType storeType,
             [Argument("STORE-PATH",
                 Description = "Store path to inspect.")]
@@ -192,7 +208,13 @@ namespace NineChronicles.Headless.Executable.Commands
                 Description = "Number of blocks to truncate from the tip")]
             int blocksBefore)
         {
-            if (storeType != StoreType.Memory && !Directory.Exists(storePath))
+            if (storeType == StoreType.Memory)
+            {
+                throw new CommandExitedException("Memory is volatile. " +
+                                                 "Please use persistent StoreType like RocksDb.", -1);
+            }
+
+            if (!Directory.Exists(storePath))
             {
                 throw new CommandExitedException(
                     $"The given STORE-PATH, {storePath} seems not existed.",
@@ -207,7 +229,7 @@ namespace NineChronicles.Headless.Executable.Commands
             if (!(store.GetCanonicalChainId() is { } chainId))
             {
                 throw new CommandExitedException(
-                    $"There is no canonical chain: {storePath}", 
+                    $"There is no canonical chain: {storePath}",
                     -1);
             }
 
@@ -243,7 +265,8 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 snapshotTipHash = hash;
-            } while (!stateStore.ContainsStateRoot(store.GetBlock<NCAction>(hashAlgorithmGetter, snapshotTipHash).StateRootHash));
+            } while (!stateStore.ContainsStateRoot(store.GetBlock<NCAction>(hashAlgorithmGetter, snapshotTipHash)
+                         .StateRootHash));
 
             var forkedId = Guid.NewGuid();
 
