@@ -68,15 +68,14 @@ namespace NineChronicles.Headless.Executable.Commands
             }
 
             BlockHash tipHash = store.IndexBlockHash(chainId, -1)
-                                ?? throw new CommandExitedException("The given chain seems empty.", -1);
+                          ?? throw new CommandExitedException("The given chain seems empty.", -1);
             Block<NCAction> tip = store.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, tipHash);
             _console.Out.WriteLine(Utils.SerializeHumanReadable(tip.Header));
             (store as IDisposable)?.Dispose();
         }
 
-        [Command(Description =
-            "Print each block's mining time and tx stats (total tx, hack and slash, ranking battle, " +
-            "mimisbrunnr) of a given chain in csv format.")]
+        [Command(Description = "Print each block's mining time and tx stats (total tx, hack and slash, ranking battle, " +
+                               "mimisbrunnr) of a given chain in csv format.")]
         public void Inspect(
             [Argument("STORE-TYPE",
                 Description = "The storage type to store blockchain data. " +
@@ -142,7 +141,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             var typeOfActionTypeAttribute = typeof(ActionTypeAttribute);
             foreach (var item in
-                     store.IterateIndexes(chain.Id, offset + 1 ?? 1, limit).Select((value, i) => new { i, value }))
+                store.IterateIndexes(chain.Id, offset + 1 ?? 1, limit).Select((value, i) => new { i, value }))
             {
                 var block = store.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
                 var previousBlock = store.GetBlock<NCAction>(
@@ -265,8 +264,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 snapshotTipHash = hash;
-            } while (!stateStore.ContainsStateRoot(store.GetBlock<NCAction>(hashAlgorithmGetter, snapshotTipHash)
-                         .StateRootHash));
+            } while (!stateStore.ContainsStateRoot(store.GetBlock<NCAction>(hashAlgorithmGetter, snapshotTipHash).StateRootHash));
 
             var forkedId = Guid.NewGuid();
 
