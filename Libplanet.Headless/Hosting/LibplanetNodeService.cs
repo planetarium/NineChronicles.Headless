@@ -316,6 +316,10 @@ namespace Libplanet.Headless.Hosting
                     Log.Error("RocksDB is not available. DefaultStore will be used. {0}", e);
                 }
             }
+            else if (type == "memory")
+            {
+                store = new MemoryStore();
+            }
             else
             {
                 var message = type is null
