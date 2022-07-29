@@ -1,4 +1,6 @@
 using Libplanet;
+using System;
+using System.Collections.Generic;
 
 namespace NineChronicles.Headless.GraphTypes.States
 {
@@ -15,5 +17,7 @@ namespace NineChronicles.Headless.GraphTypes.States
         public int Score { get; set; }
         public bool Active { get; set; }
         public int Rank { get; set; }
+        public List<Guid>? Equipment { get; internal set; }
+        public List<Guid>? Costumes { get; internal set; }
     }
 }

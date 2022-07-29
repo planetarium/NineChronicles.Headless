@@ -54,7 +54,7 @@ namespace NineChronicles.Headless
                 addresses[i] = a;
                 for (int j = 0; j < AvatarLegacyKeys.Length; j++)
                 {
-                    addresses[avatarAddresses.Count * (j + 1) + i] = a.Derive(AvatarLegacyKeys[j]);
+                    addresses[(avatarAddresses.Count * (j + 1)) + i] = a.Derive(AvatarLegacyKeys[j]);
                 }
             }
 
@@ -72,7 +72,7 @@ namespace NineChronicles.Headless
                 bool v1 = false;
                 for (int j = 0; j < AvatarLegacyKeys.Length; j++)
                 {
-                    if (!(values[avatarAddresses.Count * (j + 1) + i] is { } serialized))
+                    if (!(values[(avatarAddresses.Count * (j + 1)) + i] is { } serialized))
                     {
                         v1 = true;
                         break;
