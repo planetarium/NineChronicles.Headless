@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Libplanet;
 using Libplanet.Action;
@@ -27,6 +26,10 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 {
     public class ChainCommandTest : IDisposable
     {
+        /// <summary>
+        /// `StoreType.Memory` will not be tested.
+        /// Because the purpose of ChainCommandTest is to store and read blockchain data.
+        /// </summary>
         private readonly StringIOConsole _console;
         private readonly ChainCommand _command;
 

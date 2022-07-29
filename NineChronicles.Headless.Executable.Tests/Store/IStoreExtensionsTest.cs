@@ -23,6 +23,7 @@ namespace NineChronicles.Headless.Executable.Tests.Store
         [Theory]
         [InlineData(StoreType.Default)]
         [InlineData(StoreType.RocksDb)]
+        [InlineData(StoreType.Memory)]
         public void GetGenesisBlock(StoreType storeType)
         {
             IStore store = storeType.CreateStore(_storePath);
@@ -41,6 +42,7 @@ namespace NineChronicles.Headless.Executable.Tests.Store
         [Theory]
         [InlineData(StoreType.Default)]
         [InlineData(StoreType.RocksDb)]
+        [InlineData(StoreType.Memory)]
         public void GetGenesisBlock_ThrowsInvalidOperationException_IfChainIdNotExist(StoreType storeType)
         {
             IStore store = storeType.CreateStore(_storePath);

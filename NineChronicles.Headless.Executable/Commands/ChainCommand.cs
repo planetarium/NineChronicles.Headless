@@ -45,7 +45,7 @@ namespace NineChronicles.Headless.Executable.Commands
             [Argument("STORE-PATH")]
             string storePath)
         {
-            if (!Directory.Exists(storePath))
+            if (storeType != StoreType.Memory && !Directory.Exists(storePath))
             {
                 throw new CommandExitedException($"The given STORE-PATH, {storePath} seems not existed.", -1);
             }
@@ -71,7 +71,7 @@ namespace NineChronicles.Headless.Executable.Commands
                                "mimisbrunnr) of a given chain in csv format.")]
         public void Inspect(
             [Argument("STORE-TYPE",
-                Description = "Store type of RocksDb.")]
+                Description = "Store type of blockchain storage.")]
             StoreType storeType,
             [Argument("STORE-PATH",
                 Description = "Store path to inspect.")]
@@ -83,7 +83,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 Description = "Limit of block count.")]
             int? limit = null)
         {
-            if (!Directory.Exists(storePath))
+            if (storeType != StoreType.Memory && !Directory.Exists(storePath))
             {
                 throw new CommandExitedException($"The given STORE-PATH, {storePath} seems not existed.", -1);
             }
@@ -192,7 +192,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 Description = "Number of blocks to truncate from the tip")]
             int blocksBefore)
         {
-            if (!Directory.Exists(storePath))
+            if (storeType != StoreType.Memory && !Directory.Exists(storePath))
             {
                 throw new CommandExitedException(
                     $"The given STORE-PATH, {storePath} seems not existed.",
