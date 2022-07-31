@@ -97,7 +97,8 @@ namespace NineChronicles.Headless.Executable
                                   "If not provided, \"LiteDB\" will be used as default. " +
                                   "Available type: [\"rocksdb\", \"memory\"]")]
             string? storeType = null,
-            [Option(Description = "Path of storage. If not provided, default path will be used.")]
+            [Option(Description = "Path of storage. " +
+                                  "This values is required if you use persistent storage e.g. \"rocksdb\"")]
             string? storePath = null,
             [Option(Description = "Do not reduce storage. Enabling this option will use enormous disk spaces.")]
             bool noReduceStore = false,
