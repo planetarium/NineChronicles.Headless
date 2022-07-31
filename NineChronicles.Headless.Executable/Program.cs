@@ -135,7 +135,7 @@ namespace NineChronicles.Headless.Executable
             [Option(Description = "Run without CORS policy.")]
             bool noCors = false,
             [Option("confirmations",
-                Description = "The number of required confirmations to recognize a block. 0 by default."
+                Description = "The number of required confirmations to recognize a block."
             )]
             int confirmations = 0,
             [Option("nonblock-renderer",
@@ -143,8 +143,8 @@ namespace NineChronicles.Headless.Executable
                               "swarm from waiting slow rendering.  Turned off by default.")]
             bool nonblockRenderer = false,
             [Option("nonblock-renderer-queue",
-                Description = "The size of the queue used by the non-blocking renderer.   " +
-                              "512 by default.  Ignored if --nonblock-renderer is turned off.")]
+                Description = "The size of the queue used by the non-blocking renderer. " +
+                              "Ignored if --nonblock-renderer is turned off.")]
             int nonblockRendererQueue = 512,
             [Option("strict-rendering", Description = "Flag to turn on validating action renderer.")]
             bool strictRendering = false,
@@ -155,11 +155,11 @@ namespace NineChronicles.Headless.Executable
             [Option("dev", Description = "Flag to turn on the dev mode.  false by default.")]
             bool isDev = false,
             [Option("dev.block-interval",
-                Description = "The time interval between blocks. It's unit is milliseconds." +
-                              " Works only when dev mode is on.  10000 (ms) by default.")]
+                Description = "The time interval between blocks. It's unit is milliseconds. " +
+                              "Works only when dev mode is on.")]
             int blockInterval = 10000,
             [Option("dev.reorg-interval",
-                Description = "The size of reorg interval. Works only when dev mode is on.  0 by default.")]
+                Description = "The size of reorg interval. Works only when dev mode is on.")]
             int reorgInterval = 0,
             [Option(Description = "The Cognito identity for AWS CloudWatch logging.")]
             string? awsCognitoIdentity = null,
@@ -177,24 +177,24 @@ namespace NineChronicles.Headless.Executable
             int messageTimeout = 60,
             [Option(Description = "The grace period for tip update, which uses second as its unit.")]
             int tipTimeout = 60,
-            [Option(Description = "A number that determines how far behind the demand the tip of the chain " +
-                                  "will publish `NodeException` to GraphQL subscriptions.  1150 blocks by default.")]
+            [Option(Description = "A number of block size that determines how far behind the demand "+
+                                  "the tip of the chain will publish `NodeException` to GraphQL subscriptions.")]
             int demandBuffer = 1150,
             [Option("static-peer",
                 Description = "A list of peers that the node will continue to maintain.")]
             string[]? staticPeerStrings = null,
             [Option(Description = "Run node without preloading.")]
             bool skipPreload = false,
-            [Option(Description = "Minimum number of peers to broadcast message.  10 by default.")]
+            [Option(Description = "Minimum number of peers to broadcast message.")]
             int minimumBroadcastTarget = 10,
-            [Option(Description = "Number of the peers can be stored in each bucket.  16 by default.")]
+            [Option(Description = "Number of the peers can be stored in each bucket.")]
             int bucketSize = 16,
             [Option(Description = "Determines behavior when the chain's tip is stale. \"reboot\" and \"preload\" " +
                                   "is available and \"reboot\" option is selected by default.")]
             string chainTipStaleBehaviorType = "reboot",
             [Option(Description = "The number of maximum transactions can be included in stage per signer.")]
             int txQuotaPerSigner = 10,
-            [Option(Description = "The maximum number of peers to poll blocks.  int.MaxValue by default.")]
+            [Option(Description = "The maximum number of peers to poll blocks. int.MaxValue by default.")]
             int maximumPollPeers = int.MaxValue,
             [Ignore]
             CancellationToken? cancellationToken = null
