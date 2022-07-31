@@ -73,7 +73,7 @@ namespace NineChronicles.Headless.Executable
                 Description = "Genesis block path of blockchain. Blockchain is recognized by its genesis block.")]
             string genesisBlockPath,
             [Option('H',
-                Description = "Hostname of this node for another nodes to access." +
+                Description = "Hostname of this node for another nodes to access. " +
                               "This is not listening host like 0.0.0.0")]
             string? host = null,
             [Option('P',
