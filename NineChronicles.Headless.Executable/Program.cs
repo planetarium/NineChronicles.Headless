@@ -98,7 +98,7 @@ namespace NineChronicles.Headless.Executable
                                   "Available type: [\"rocksdb\", \"memory\"]")]
             string? storeType = null,
             [Option(Description = "Path of storage. " +
-                                  "This values is required if you use persistent storage e.g. \"rocksdb\"")]
+                                  "This value is required if you use persistent storage e.g. \"rocksdb\"")]
             string? storePath = null,
             [Option(Description = "Do not reduce storage. Enabling this option will use enormous disk spaces.")]
             bool noReduceStore = false,
