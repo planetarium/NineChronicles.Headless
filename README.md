@@ -41,7 +41,7 @@ Options:
   --miner-count <Int32>                                    The number of miner task(thread). (Default: 1)
   --miner-private-key <String>                             The private key used for mining blocks. Must not be null if you want to turn on mining with libplanet-node.
   --store-type <String>                                    The type of storage to store blockchain data. If not provided, "LiteDB" will be used as default. Available type: ["rocksdb", "memory"]
-  --store-path <String>                                    Path of storage. This values is required if you use persistent storage e.g. "rocksdb"
+  --store-path <String>                                    Path of storage. This value is required if you use persistent storage e.g. "rocksdb"
   --no-reduce-store                                        Do not reduce storage. Enabling this option will use enormous disk spaces.
   -I, --ice-server <String>...                             ICE server to NAT traverse.
   --peer <String>...                                       Seed peer list to communicate to another nodes.

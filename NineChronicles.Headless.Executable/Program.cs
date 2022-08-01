@@ -141,7 +141,7 @@ namespace NineChronicles.Headless.Executable
             int confirmations = 0,
             [Option("nonblock-renderer",
                 Description = "Uses non-blocking renderer, which prevents the blockchain & " +
-                              "swarm from waiting slow rendering.  Turned off by default.")]
+                              "swarm from waiting slow rendering. Turned off by default.")]
             bool nonblockRenderer = false,
             [Option("nonblock-renderer-queue",
                 Description = "The size of the queue used by the non-blocking renderer. " +
@@ -149,11 +149,11 @@ namespace NineChronicles.Headless.Executable
             int nonblockRendererQueue = 512,
             [Option("strict-rendering", Description = "Flag to turn on validating action renderer.")]
             bool strictRendering = false,
-            [Option(Description = "Log action renders besides block renders.  --rpc-server implies this.")]
+            [Option(Description = "Log action renders besides block renders. --rpc-server implies this.")]
             bool logActionRenders = false,
             [Option("network-type", Description = "Network type.")]
             NetworkType networkType = NetworkType.Main,
-            [Option("dev", Description = "Flag to turn on the dev mode.  false by default.")]
+            [Option("dev", Description = "Flag to turn on the dev mode. false by default.")]
             bool isDev = false,
             [Option("dev.block-interval",
                 Description = "The time interval between blocks. It's unit is milliseconds. " +
@@ -178,7 +178,7 @@ namespace NineChronicles.Headless.Executable
             int messageTimeout = 60,
             [Option(Description = "The grace period for tip update, which uses second as its unit.")]
             int tipTimeout = 60,
-            [Option(Description = "A number of block size that determines how far behind the demand "+
+            [Option(Description = "A number of block size that determines how far behind the demand " +
                                   "the tip of the chain will publish `NodeException` to GraphQL subscriptions.")]
             int demandBuffer = 1150,
             [Option("static-peer",
