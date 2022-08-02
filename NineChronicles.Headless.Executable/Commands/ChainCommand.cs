@@ -304,7 +304,7 @@ namespace NineChronicles.Headless.Executable.Commands
             if (!(store.GetCanonicalChainId() is { } chainId))
             {
                 throw new CommandExitedException(
-                    $"There is no canonical chain: {storePath}", 
+                    $"There is no canonical chain: {storePath}",
                     -1);
             }
 
