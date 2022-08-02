@@ -24,5 +24,5 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "extra",
                 resolve: context => _codec.Encode(context.Source.Extra));
         }
-    }   
+    }
 }

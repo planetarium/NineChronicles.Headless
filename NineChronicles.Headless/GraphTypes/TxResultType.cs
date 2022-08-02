@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Bencodex;
 using GraphQL.Types;
 using Libplanet;
@@ -43,7 +43,7 @@ namespace NineChronicles.Headless.GraphTypes
                 nameof(TxResult.ExceptionMetadata),
                 description: "A hexadecimal string to present the metadata of the exception when the transaction failed. "
                     + "It is a Bencodex value. There will be a value when only the transaction fails.",
-                resolve: context => context.Source.ExceptionMetadata is {} metadata ? ByteUtil.Hex(Codec.Encode(metadata)) : null
+                resolve: context => context.Source.ExceptionMetadata is { } metadata ? ByteUtil.Hex(Codec.Encode(metadata)) : null
             );
         }
     }

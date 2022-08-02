@@ -12,10 +12,10 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context => context.Source.Peer.ToString());
             Field<NonNullGraphType<AppProtocolVersionType>>(
                 name: "peerVersion",
-                resolve: context => context.Source.PeerVersion);   
+                resolve: context => context.Source.PeerVersion);
             Field<NonNullGraphType<AppProtocolVersionType>>(
                 name: "localVersion",
                 resolve: context => context.Source.LocalVersion);
         }
-    }   
+    }
 }

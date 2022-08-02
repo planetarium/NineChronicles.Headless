@@ -49,7 +49,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             // FIXME: passphrase로 "passphrase" 대신 랜덤 문자열을 사용하면 좋을 것 같습니다.
             var result = await ExecuteQueryAsync(
                 "mutation { keyStore { createPrivateKey(passphrase: \"passphrase\") { publicKey { address } } } }");
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             var createdPrivateKeyAddress = (string)
                 ((Dictionary<string, object>)
                     ((Dictionary<string, object>)
@@ -68,11 +68,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var privateKeyHex = ByteUtil.Hex(privateKey.ByteArray);
             var result = await ExecuteQueryAsync(
                 $"mutation {{ keyStore {{ createPrivateKey(passphrase: \"passphrase\", privateKey: \"{privateKeyHex}\") {{ hex publicKey {{ address }} }} }} }}");
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             var privateKeyResult = (Dictionary<string, object>)
                 ((Dictionary<string, object>)
                     data["keyStore"])["createPrivateKey"];
-            var createdPrivateKeyHex = (string) privateKeyResult["hex"];
+            var createdPrivateKeyHex = (string)privateKeyResult["hex"];
             var createdPrivateKeyAddress = (string)((Dictionary<string, object>)privateKeyResult["publicKey"])["address"];
 
             Assert.Equal(privateKey, new PrivateKey(ByteUtil.ParseHex(createdPrivateKeyHex)));
@@ -93,7 +93,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var result = await ExecuteQueryAsync(
                 $"mutation {{ keyStore {{ revokePrivateKey(address: \"{address.ToHex()}\") {{ address }} }} }}");
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             var revokedPrivateKeyAddress = (string)
                 ((Dictionary<string, object>)
                     ((Dictionary<string, object>)
@@ -118,11 +118,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var encodedActivationKey = activationKey.Encode();
             var queryResult = await ExecuteQueryAsync(
                 $"mutation {{ activationStatus {{ activateAccount(encodedActivationKey: \"{encodedActivationKey}\") }} }}");
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             await BlockChain.MineBlock(AdminPrivateKey);
 
-            var result = 
-                (bool) ((Dictionary<string, object>)
+            var result =
+                (bool)((Dictionary<string, object>)
                     data["activationStatus"])["activateAccount"];
             Assert.True(result);
 
@@ -168,7 +168,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var query = $"mutation {{ transfer({args}) }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
 
             if (error)
             {
@@ -189,7 +189,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     filtered: true);
                 Assert.NotNull(tx);
                 Assert.IsType<TransferAsset>(tx!.Actions.Single().InnerAction);
-                TransferAsset transferAsset = (TransferAsset) tx.Actions.Single().InnerAction;
+                TransferAsset transferAsset = (TransferAsset)tx.Actions.Single().InnerAction;
                 Assert.Equal(memo, transferAsset.Memo);
 
                 var expectedResult = new Dictionary<string, object>
@@ -239,7 +239,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Address recipient = recipientKey.ToAddress();
             var query = $"mutation {{ transferGold(recipient: \"{recipient}\", amount: \"17.5\") }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
 
             var stagedTxIds = BlockChain.GetStagedTransactionIds().ToImmutableList();
             Assert.Single(stagedTxIds);
@@ -282,7 +282,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     }}
                 }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             Assert.Null(result.Errors);
 
             var txIds = BlockChain.GetStagedTransactionIds();
@@ -297,7 +297,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, data!);
             Assert.Single(tx.Actions);
-            var action = (CreateAvatar) tx.Actions.First().InnerAction;
+            var action = (CreateAvatar)tx.Actions.First().InnerAction;
             Assert.Equal(name, action.name);
             Assert.Equal(index, action.index);
             Assert.Equal(hair, action.hair);
@@ -369,7 +369,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }
             var query = @$"mutation {{ action {{ hackAndSlash({queryArgs}) }} }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             Assert.Null(result.Errors);
 
             var txIds = BlockChain.GetStagedTransactionIds();
@@ -384,7 +384,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, data);
             Assert.Single(tx.Actions);
-            var action = (HackAndSlash) tx.Actions.First().InnerAction;
+            var action = (HackAndSlash)tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(worldId, action.worldId);
             Assert.Equal(stageId, action.stageId);
@@ -464,7 +464,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     }}
                 }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             Assert.Null(result.Errors);
 
             var txIds = BlockChain.GetStagedTransactionIds();
@@ -479,7 +479,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, data);
             Assert.Single(tx.Actions);
-            var action = (DailyReward) tx.Actions.First().InnerAction;
+            var action = (DailyReward)tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
         }
 
@@ -530,7 +530,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }
             var query = @$"mutation {{ action {{ combinationEquipment({queryArgs}) }} }}";
             var result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             Assert.Null(result.Errors);
 
             var txIds = BlockChain.GetStagedTransactionIds();
@@ -545,7 +545,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, data);
             Assert.Single(tx.Actions);
-            var action = (CombinationEquipment) tx.Actions.First().InnerAction;
+            var action = (CombinationEquipment)tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(recipeId, action.recipeId);
             Assert.Equal(slotIndex, action.slotIndex);
@@ -588,7 +588,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }}
             }}";
             var result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             Assert.Null(result.Errors);
 
             var txIds = BlockChain.GetStagedTransactionIds();
@@ -603,7 +603,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, data);
             Assert.Single(tx.Actions);
-            var action = (ItemEnhancement) tx.Actions.First().InnerAction;
+            var action = (ItemEnhancement)tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(itemId, action.itemId);
             Assert.Equal(materialId, action.materialId);
@@ -640,7 +640,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }}
             }}";
             var result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             Assert.Null(result.Errors);
 
             var txIds = BlockChain.GetStagedTransactionIds();
@@ -655,7 +655,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, data);
             Assert.Single(tx.Actions);
-            var action = (CombinationConsumable) tx.Actions.First().InnerAction;
+            var action = (CombinationConsumable)tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(recipeId, action.recipeId);
             Assert.Equal(slotIndex, action.slotIndex);
@@ -701,7 +701,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             Assert.NotNull(BlockChain.GetState(playerPrivateKey.ToAddress()));
             var result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             Assert.Null(result.Errors);
 
             var txIds = BlockChain.GetStagedTransactionIds();
@@ -716,7 +716,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, data);
             Assert.Single(tx.Actions);
-            var action = (MonsterCollect) tx.Actions.First().InnerAction;
+            var action = (MonsterCollect)tx.Actions.First().InnerAction;
             Assert.Equal(1, action.level);
         }
 
@@ -746,7 +746,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.NotNull(BlockChain.GetState(playerPrivateKey.ToAddress()));
 
             var result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             Assert.Null(result.Errors);
 
             var txIds = BlockChain.GetStagedTransactionIds();
@@ -761,7 +761,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, data);
             Assert.Single(tx.Actions);
-            var action = (ClaimMonsterCollectionReward) tx.Actions.First().InnerAction;
+            var action = (ClaimMonsterCollectionReward)tx.Actions.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
         }
 
@@ -826,7 +826,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             // Error: empty payload
             var query = $"mutation {{ stageTx(payload: \"\") }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             Assert.NotNull(result.Errors);
             Assert.Equal(
                 new Dictionary<string, object>
@@ -846,7 +846,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             string base64Encoded = Convert.ToBase64String(tx.Serialize(true));
             query = $"mutation {{ stageTx(payload: \"{base64Encoded}\") }}";
             result = await ExecuteQueryAsync(query);
-            data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             Assert.Null(result.Errors);
             Assert.Equal(
                 new Dictionary<string, object>
@@ -889,7 +889,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             string base64Encoded = Convert.ToBase64String(tx.Serialize(true));
             query = $"mutation {{ stageTxV2(payload: \"{base64Encoded}\") }}";
             result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             Assert.Null(result.Errors);
             Assert.Equal(
                 new Dictionary<string, object>
@@ -920,12 +920,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var console = new StringIOConsole();
             var txCommand = new TxCommand(console);
             var timeStamp = DateTimeOffset.UtcNow;
-            txCommand.Sign(ByteUtil.Hex(privateKey.ByteArray), BlockChain.GetNextTxNonce(privateKey.ToAddress()), ByteUtil.Hex(BlockChain.Genesis.Hash.ByteArray), timeStamp.ToString(), new []{ filePath });
+            txCommand.Sign(ByteUtil.Hex(privateKey.ByteArray), BlockChain.GetNextTxNonce(privateKey.ToAddress()), ByteUtil.Hex(BlockChain.Genesis.Hash.ByteArray), timeStamp.ToString(), new[] { filePath });
             var output = console.Out.ToString();
             output = output.Trim();
             var queryResult = await ExecuteQueryAsync(
                 $"mutation {{ stageTx(payload: \"{output}\") }}");
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             await BlockChain.MineBlock(AdminPrivateKey);
 
             var result = (bool)data["stageTx"];

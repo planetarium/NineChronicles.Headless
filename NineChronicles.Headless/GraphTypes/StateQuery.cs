@@ -61,7 +61,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var index = context.GetArgument<int>("index");
                     if (context.Source.GetState(RankingState.Derive(index)) is { } state)
                     {
-                        return new RankingMapState((Dictionary) state);
+                        return new RankingMapState((Dictionary)state);
                     }
 
                     return null;
@@ -71,7 +71,7 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "State for shop.",
                 deprecationReason: "Shop is migrated to ShardedShop and not using now. Use shardedShop() instead.",
                 resolve: context => context.Source.GetState(Addresses.Shop) is { } state
-                    ? new ShopState((Dictionary) state)
+                    ? new ShopState((Dictionary)state)
                     : null);
             Field<ShardedShopStateV2Type>(
                 name: "shardedShop",
@@ -94,7 +94,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     if (context.Source.GetState(ShardedShopStateV2.DeriveAddress(subType, nonce)) is { } state)
                     {
-                        return new ShardedShopStateV2((Dictionary) state);
+                        return new ShardedShopStateV2((Dictionary)state);
                     }
 
                     return null;
@@ -132,7 +132,7 @@ namespace NineChronicles.Headless.GraphTypes
                                     }
                                 }
 #pragma warning disable CS0618 // Type or member is obsolete
-                                arenastate.OrderedArenaInfos.AddRange(arenaInfos.OrderByDescending(a => a.Score).ThenBy(a=>a.CombatPoint));
+                                arenastate.OrderedArenaInfos.AddRange(arenaInfos.OrderByDescending(a => a.Score).ThenBy(a => a.CombatPoint));
 #pragma warning restore CS0618 // Type or member is obsolete
                             }
                         }
@@ -164,9 +164,9 @@ namespace NineChronicles.Headless.GraphTypes
                     return null;
                 }
             );
-            
+
             Field<StakeStateType>(
-                name:  nameof(StakeState),
+                name: nameof(StakeState),
                 description: "State for staking.",
                 arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
                 {
@@ -241,7 +241,7 @@ namespace NineChronicles.Headless.GraphTypes
                     return null;
                 }
             );
-            
+
             Field<StakeRewardsType>(
                 "stakeRewards",
                 resolve: context =>
@@ -292,7 +292,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var address = avatarAddress.Derive("recipe_ids");
-                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] {address});
+                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] { address });
                     if (values[0] is List rawRecipeIds)
                     {
                         return rawRecipeIds.ToList(StateExtensions.ToInteger);
@@ -314,7 +314,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var address = avatarAddress.Derive("world_ids");
-                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] {address});
+                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] { address });
                     if (values[0] is List rawWorldIds)
                     {
                         return rawWorldIds.ToList(StateExtensions.ToInteger);

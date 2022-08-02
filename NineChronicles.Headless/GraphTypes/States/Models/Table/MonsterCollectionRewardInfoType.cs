@@ -3,7 +3,7 @@ using Nekoyume.TableData;
 
 namespace NineChronicles.Headless.GraphTypes.States.Models.Table
 {
-    public class MonsterCollectionRewardInfoType: ObjectGraphType<MonsterCollectionRewardSheet.RewardInfo>
+    public class MonsterCollectionRewardInfoType : ObjectGraphType<MonsterCollectionRewardSheet.RewardInfo>
     {
         public MonsterCollectionRewardInfoType()
         {

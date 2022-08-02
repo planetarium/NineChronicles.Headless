@@ -1,0 +1,15 @@
+name: lint
+
+on: [push, pull_request]
+
+jobs:
+    format:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Setup .NET Core
+              uses: actions/setup-dotnet@v1
+              with:
+                  dotnet-version: 6.0.*
+            - name: dotnet format
+              run: dotnet format --exclude Lib9c --exclude NineChronicles.RPC.Shared -v=d --no-restore --verify-no-changes

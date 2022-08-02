@@ -236,7 +236,7 @@ namespace NineChronicles.Headless.Executable
                 Directory.Delete("_logs", true);
             }
 
-            if (useBasicAwsCredentials ^ useCognitoCredentials  && !(awsRegion is null))
+            if (useBasicAwsCredentials ^ useCognitoCredentials && !(awsRegion is null))
             {
                 RegionEndpoint regionEndpoint = RegionEndpoint.GetBySystemName(awsRegion);
                 AWSCredentials credentials = useCognitoCredentials

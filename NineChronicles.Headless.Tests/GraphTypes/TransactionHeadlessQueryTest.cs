@@ -51,7 +51,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var userAddress = userPrivateKey.ToAddress();
             string query = $"{{ nextTxNonce(address: \"{userAddress}\") }}";
             var queryResult = await ExecuteAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(
                 new Dictionary<string, object>
                 {
@@ -62,7 +62,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             _blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { });
             queryResult = await ExecuteAsync(query);
-            data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(
                 new Dictionary<string, object>
                 {
@@ -90,7 +90,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }}
             }}";
             var queryResult = await ExecuteAsync(string.Format(queryFormat, new TxId()));
-            var data = (Dictionary<string, object?>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object?>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(
                 new Dictionary<string, object?>
                 {
@@ -112,7 +112,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             _blockChain.StageTransaction(transaction);
             await _blockChain.MineBlock(new PrivateKey());
             queryResult = await ExecuteAsync(string.Format(queryFormat, transaction.Id.ToString()));
-            var tx = (Transaction<PolymorphicAction<ActionBase>>)((RootExecutionNode) queryResult.Data.GetValue()).SubFields![0].Result!;
+            var tx = (Transaction<PolymorphicAction<ActionBase>>)((RootExecutionNode)queryResult.Data.GetValue()).SubFields![0].Result!;
 
             Assert.Equal(tx.Id, transaction.Id);
             Assert.Equal(tx.Nonce, transaction.Nonce);
@@ -124,7 +124,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var plainValue = tx.Actions.First().PlainValue.Inspect(true);
             Assert.Equal(transaction.Actions.First().PlainValue.Inspect(true), plainValue);
         }
-        
+
         [Theory]
         [InlineData(null)]
         [InlineData(0)]
@@ -155,7 +155,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Convert.ToBase64String(codec.Encode(action.PlainValue)),
                 expectedNonce.ToString()));
             var base64EncodedUnsignedTx = (string)(
-                (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!)["createUnsignedTx"];
+                (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!)["createUnsignedTx"];
             Transaction<NCAction> unsignedTx =
                 Transaction<NCAction>.Deserialize(Convert.FromBase64String(base64EncodedUnsignedTx), validate: false);
             Assert.Empty(unsignedTx.Signature);
@@ -164,7 +164,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(expectedNonce, unsignedTx.Nonce);
             Assert.Contains(signer, unsignedTx.UpdatedAddresses);
         }
-        
+
         [Theory]
         [InlineData("", "")]  // Empty String
         [InlineData(
@@ -182,7 +182,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var result = await ExecuteAsync(string.Format(queryFormat, publicKey, plainValue));
             Assert.NotNull(result.Errors);
         }
-        
+
         [Fact]
         public async Task AttachSignature()
         {
@@ -209,7 +209,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Convert.ToBase64String(signature)));
             Assert.Null(result.Errors);
             var base64EncodedSignedTx = (string)(
-                (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!)["attachSignature"];
+                (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!)["attachSignature"];
             Transaction<NCAction> signedTx =
                 Transaction<NCAction>.Deserialize(Convert.FromBase64String(base64EncodedSignedTx));
             Assert.Equal(signature, signedTx.Signature);
@@ -246,8 +246,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var privateKey = new PrivateKey();
             Transaction<NCAction> tx = Transaction<NCAction>.Create(
                 0,
-                privateKey, 
-                _blockChain.Genesis.Hash, 
+                privateKey,
+                _blockChain.Genesis.Hash,
                 ImmutableArray<NCAction>.Empty);
             _blockChain.StageTransaction(tx);
             var queryFormat = @"query {{
@@ -261,19 +261,19 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 tx.Id.ToString()));
             Assert.NotNull(result.Data);
             var transactionResult =
-                ((Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!)["transactionResult"];
-            var txStatus = (string) ((Dictionary<string, object>)transactionResult)["txStatus"];
+                ((Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!)["transactionResult"];
+            var txStatus = (string)((Dictionary<string, object>)transactionResult)["txStatus"];
             Assert.Equal("STAGING", txStatus);
         }
-        
+
         [Fact]
         public async Task TransactionResultIsInvalid()
         {
             var privateKey = new PrivateKey();
             Transaction<NCAction> tx = Transaction<NCAction>.Create(
                 0,
-                privateKey, 
-                _blockChain.Genesis.Hash, 
+                privateKey,
+                _blockChain.Genesis.Hash,
                 ImmutableArray<NCAction>.Empty);
             var queryFormat = @"query {{
                 transactionResult(txId: ""{0}"") {{
@@ -286,17 +286,17 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 tx.Id.ToString()));
             Assert.NotNull(result.Data);
             var transactionResult =
-                ((Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!)["transactionResult"];
-            var txStatus = (string) ((Dictionary<string, object>)transactionResult)["txStatus"];
+                ((Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!)["transactionResult"];
+            var txStatus = (string)((Dictionary<string, object>)transactionResult)["txStatus"];
             Assert.Equal("INVALID", txStatus);
         }
-        
+
         [Fact]
         public async Task TransactionResultIsSuccess()
         {
             var privateKey = new PrivateKey();
             var action = new DumbTransferAction(new Address(), new Address());
-            Transaction<NCAction> tx = _blockChain.MakeTransaction(privateKey, new NCAction[]{action});
+            Transaction<NCAction> tx = _blockChain.MakeTransaction(privateKey, new NCAction[] { action });
             await _blockChain.MineBlock(new PrivateKey());
             var queryFormat = @"query {{
                 transactionResult(txId: ""{0}"") {{
@@ -309,11 +309,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 tx.Id.ToString()));
             Assert.NotNull(result.Data);
             var transactionResult =
-                ((Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!)["transactionResult"];
-            var txStatus = (string) ((Dictionary<string, object>)transactionResult)["txStatus"];
+                ((Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!)["transactionResult"];
+            var txStatus = (string)((Dictionary<string, object>)transactionResult)["txStatus"];
             Assert.Equal("SUCCESS", txStatus);
         }
-        
+
         private Task<ExecutionResult> ExecuteAsync(string query)
         {
             return GraphQLTestUtils.ExecuteQueryAsync<TransactionHeadlessQuery>(query, standaloneContext: new StandaloneContext

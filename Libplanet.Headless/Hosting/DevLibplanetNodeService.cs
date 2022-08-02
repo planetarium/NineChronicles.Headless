@@ -69,7 +69,7 @@ namespace Libplanet.Headless.Hosting
 
             SubChain = new BlockChain<T>(
                 policy: hardPolicy,
-                stagePolicy : stagePolicy,
+                stagePolicy: stagePolicy,
                 store: SubStore,
                 stateStore: SubStateStore,
                 genesisBlock: genesisBlock);

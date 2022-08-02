@@ -26,12 +26,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     itemType
                 }}
             }}";
-            
+
             var row = Fixtures.TableSheetsFX.MaterialItemSheet.Values.Single(r => r.Id == inventoryItemId);
             var item = ItemFactory.CreateMaterial(row);
             Inventory inventory = Fixtures.AvatarStateFX.inventory;
             inventory.AddFungibleItem(item);
-            
+
             ExecutionResult queryResult = await ExecuteQueryAsync<InventoryType>(query, source: inventory);
             Assert.Null(queryResult.Errors);
         }

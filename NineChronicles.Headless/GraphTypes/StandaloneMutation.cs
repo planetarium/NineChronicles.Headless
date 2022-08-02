@@ -130,7 +130,7 @@ namespace NineChronicles.Headless.GraphTypes
                         }
 
                         throw new ExecutionError(
-                            $"The given transaction is invalid. (due to: {validationExc.Message})", 
+                            $"The given transaction is invalid. (due to: {validationExc.Message})",
                             validationExc
                         );
                     }
