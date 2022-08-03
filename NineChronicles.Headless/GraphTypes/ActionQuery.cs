@@ -160,7 +160,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "A string value to be transferred.",
                         Name = "amount",
                     },
-                    new QueryArgument<NonNullGraphType<CurrencyType>>
+                    new QueryArgument<NonNullGraphType<CurrencyEnumType>>
                     {
                         Description = "A currency type to be transferred.",
                         Name = "currency",
