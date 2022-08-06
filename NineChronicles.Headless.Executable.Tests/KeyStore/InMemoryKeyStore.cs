@@ -13,7 +13,7 @@ namespace NineChronicles.Headless.Executable.Tests.KeyStore
         {
             _protectedPrivateKeys = new Dictionary<Guid, ProtectedPrivateKey>();
         }
-        
+
         public IEnumerable<Guid> ListIds()
         {
             return _protectedPrivateKeys.Keys;

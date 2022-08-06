@@ -22,7 +22,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 query,
                 source: Fixtures.TableSheetsFX.CrystalMonsterCollectionMultiplierSheet.OrderedList.First()
             );
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.NotEmpty(data);
             Assert.Null(queryResult.Errors);
             Assert.Equal(new Dictionary<string, object>

@@ -37,7 +37,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             }";
             var shopState = new ShopState();
             var queryResult = await ExecuteQueryAsync<ShopStateType>(query, source: shopState);
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(
                 new Dictionary<string, object>
                 {
@@ -80,7 +80,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 }}
             }}";
             var queryResult = await ExecuteQueryAsync<ShopStateType>(query, source: Fixtures.ShopStateFX());
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var products = (IList)data["products"];
             Assert.Equal(expected, products.Count!);
         }

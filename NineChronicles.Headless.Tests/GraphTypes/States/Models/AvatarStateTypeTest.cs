@@ -38,7 +38,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                             {
                                 arr[i] = Fixtures.AvatarStateFX.Serialize();
                             }
-                            
+
                             if (addresses[i].Equals(Fixtures.UserAddress))
                             {
                                 arr[i] = Fixtures.AgentStateFx.Serialize();
@@ -48,7 +48,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                         return arr;
                     },
                     (_, _) => new FungibleAssetValue()));
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
         }
 

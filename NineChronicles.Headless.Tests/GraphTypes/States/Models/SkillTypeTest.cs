@@ -26,7 +26,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             var row = Fixtures.TableSheetsFX.SkillSheet.OrderedList.First();
             var skill = SkillFactory.Get(row, power, chance);
             var queryResult = await ExecuteQueryAsync<Headless.GraphTypes.States.Models.SkillType>(query, source: skill);
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(new Dictionary<string, object>
             {
                 ["id"] = row.Id,

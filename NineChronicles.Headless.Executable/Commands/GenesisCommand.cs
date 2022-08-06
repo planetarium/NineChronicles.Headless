@@ -69,7 +69,7 @@ namespace NineChronicles.Headless.Executable.Commands
             {
                 throw Utils.Error("GoldDistributionPath is not set");
             }
-            
+
             if (string.IsNullOrEmpty(genesisConfig.AdminAddress))
             {
                 throw Utils.Error($"{nameof(genesisConfig.AdminAddress)} is not set");
@@ -103,9 +103,9 @@ namespace NineChronicles.Headless.Executable.Commands
                             a = File.ReadAllText(a);
                         }
 
-                        var decoded = (List) Codec.Decode(Convert.FromBase64String(a));
-                        string actionType = (Text) decoded[0];
-                        Dictionary plainValue = (Dictionary) decoded[1];
+                        var decoded = (List)Codec.Decode(Convert.FromBase64String(a));
+                        string actionType = (Text)decoded[0];
+                        Dictionary plainValue = (Dictionary)decoded[1];
                         Type type = typeof(ActionBase).Assembly
                             .GetTypes()
                             .First(type => type.Namespace is { } @namespace &&
@@ -113,7 +113,7 @@ namespace NineChronicles.Headless.Executable.Commands
                                            !type.IsAbstract &&
                                            typeof(ActionBase).IsAssignableFrom(type) &&
                                            type.Name == actionType);
-                        ActionBase action = (ActionBase) Activator.CreateInstance(type)!;
+                        ActionBase action = (ActionBase)Activator.CreateInstance(type)!;
                         action.LoadPlainValue(plainValue);
                         return action;
                     }).ToList();

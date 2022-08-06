@@ -25,7 +25,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             }";
 
             var queryResult = await ExecuteQueryAsync<RankingMapStateType>(query, source: rankingMapState);
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
         }
 

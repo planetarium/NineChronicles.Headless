@@ -10,7 +10,7 @@ namespace NineChronicles.Headless.GraphTypes
         NCG,
     }
 
-    public class CurrencyType: EnumerationGraphType<CurrencyEnum>
+    public class CurrencyType : EnumerationGraphType<CurrencyEnum>
     {
     }
 }

@@ -316,6 +316,10 @@ namespace Libplanet.Headless.Hosting
                     Log.Error("RocksDB is not available. DefaultStore will be used. {0}", e);
                 }
             }
+            else if (type == "memory")
+            {
+                store = new MemoryStore();
+            }
             else
             {
                 var message = type is null
@@ -327,7 +331,7 @@ namespace Libplanet.Headless.Hosting
             store ??= new DefaultStore(path, flush: false);
             if (!noReduceStore)
             {
-                store = new ReducedStore(store);   
+                store = new ReducedStore(store);
             }
 
             IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states"));
