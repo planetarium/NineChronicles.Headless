@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using NineChronicles.RPC.Shared.Exceptions;

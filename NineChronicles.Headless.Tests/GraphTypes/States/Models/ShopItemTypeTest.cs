@@ -62,7 +62,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             };
 
             var queryResult = await ExecuteQueryAsync<ShopItemType>(query, source: shopItem);
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var expectedItemUsable = (Dictionary<string, object>)expected["itemUsable"];
             var dataItemUsable = (Dictionary<string, object>)data["itemUsable"];
             var expectedCostume = (Dictionary<string, object>)expected["costume"];

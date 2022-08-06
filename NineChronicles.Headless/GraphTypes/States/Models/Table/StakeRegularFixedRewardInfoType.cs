@@ -3,7 +3,7 @@ using Nekoyume.TableData;
 
 namespace NineChronicles.Headless.GraphTypes.States.Models.Table
 {
-    public class StakeRegularFixedRewardInfoType: ObjectGraphType<StakeRegularFixedRewardSheet.RewardInfo>
+    public class StakeRegularFixedRewardInfoType : ObjectGraphType<StakeRegularFixedRewardSheet.RewardInfo>
     {
         public StakeRegularFixedRewardInfoType()
         {

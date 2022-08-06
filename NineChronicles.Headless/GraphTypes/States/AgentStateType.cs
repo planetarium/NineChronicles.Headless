@@ -81,7 +81,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                     );
                     if (context.Source.GetState(monsterCollectionAddress) is { } state)
                     {
-                        return new MonsterCollectionState((Dictionary) state).Level;
+                        return new MonsterCollectionState((Dictionary)state).Level;
                     }
 
                     return 0;
@@ -113,7 +113,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                         }
                         else if (values[avatarAddresses.Count + i] is { } state)
                         {
-                            var avatarState = new AvatarState((Dictionary) state);
+                            var avatarState = new AvatarState((Dictionary)state);
                             var traded = IsTradeQuestCompleted(avatarState.questList);
                             if (traded)
                             {

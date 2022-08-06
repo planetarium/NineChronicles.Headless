@@ -25,7 +25,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             Address address = default;
             CombinationSlotState combinationSlotState = new CombinationSlotState(address, 1);
             var queryResult = await ExecuteQueryAsync<CombinationSlotStateType>(query, source: combinationSlotState);
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var expected = new Dictionary<string, object>()
             {
                 ["address"] = address.ToString(),
