@@ -24,7 +24,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             var result = await ExecuteQueryAsync<CollectionMapType>(
                 "{ count pairs }",
                 source: collectionMap);
-            var resultData = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var resultData = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             Assert.Equal(pairs.Length, resultData["count"]);
             Assert.Equal(pairs, resultData["pairs"]);
         }
@@ -33,7 +33,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
         {
             new[]
             {
-               new int[][] {}, 
+               new int[][] {},
             },
             new[]
             {

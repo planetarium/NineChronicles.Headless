@@ -35,7 +35,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
             var privateKey = new PrivateKey();
             (ActivationKey activationKey, PendingActivationState _) = ActivationKey.Create(privateKey, nonce);
-            string invitationCode =  invalid ? "invalid_code" : activationKey.Encode();
+            string invitationCode = invalid ? "invalid_code" : activationKey.Encode();
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
             var resultCode = _command.ActivateAccount(invitationCode, ByteUtil.Hex(nonce), filePath);
             Assert.Equal(expectedCode, resultCode);
@@ -116,7 +116,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var recipientPrivateKey = new PrivateKey();
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
             var resultCode = _command.TransferAsset(
-                senderPrivateKey.ToAddress().ToHex(), 
+                senderPrivateKey.ToAddress().ToHex(),
                 recipientPrivateKey.ToAddress().ToHex(),
                 Convert.ToString(amount),
                 filePath,
@@ -184,7 +184,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 Assert.Contains("System.FormatException: Could not find any recognizable digits.", _console.Error.ToString());
             }
         }
-        
+
         [Theory]
         [InlineData("0xab1dce17dCE1Db1424BB833Af6cC087cd4F5CB6d", -1)]
         [InlineData("ab1dce17dCE1Db1424BB833Af6cC087cd4F5CB6d", 0)]

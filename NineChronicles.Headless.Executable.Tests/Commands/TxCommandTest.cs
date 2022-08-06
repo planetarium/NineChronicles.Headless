@@ -78,7 +78,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 filePath);
             Assert_Tx(1, filePath);
         }
-        
+
         [Fact]
         public void Sign_Stake()
         {
@@ -97,7 +97,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             actionCommand.ClaimStakeReward(avatarAddress.ToHex(), filePath);
             Assert_Tx(1, filePath);
         }
-        
+
         [Fact]
         public void Sign_MigrateMonsterCollection()
         {

@@ -3,7 +3,7 @@ using System;
 namespace Libplanet.Headless
 {
     [Serializable]
-    public class PeerInvalidException: Exception
+    public class PeerInvalidException : Exception
     {
         public PeerInvalidException()
         {

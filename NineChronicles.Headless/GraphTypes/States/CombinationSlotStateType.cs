@@ -4,7 +4,7 @@ using Nekoyume.Model.State;
 
 namespace NineChronicles.Headless.GraphTypes.States
 {
-    public class CombinationSlotStateType: ObjectGraphType<CombinationSlotState>
+    public class CombinationSlotStateType : ObjectGraphType<CombinationSlotState>
     {
         public CombinationSlotStateType()
         {

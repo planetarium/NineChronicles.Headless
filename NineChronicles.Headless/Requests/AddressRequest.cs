@@ -1,7 +1,7 @@
-﻿namespace NineChronicles.Headless.Requests
+namespace NineChronicles.Headless.Requests
 {
-  public struct AddressRequest
-  {
-    public string AddressString { get; set; }
-  }
+    public struct AddressRequest
+    {
+        public string AddressString { get; set; }
+    }
 }

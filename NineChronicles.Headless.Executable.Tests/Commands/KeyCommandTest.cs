@@ -31,7 +31,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         {
             PrivateKey privateKey = new PrivateKey();
             Guid keyId = _keyStore.Add(ProtectedPrivateKey.Protect(privateKey, passphrase));
-            
+
             Assert.Contains(keyId, _keyStore.ListIds());
             _keyCommand.Remove(keyId, passphrase: inputPassphrase, noPassphrase: true);
             Assert.DoesNotContain(keyId, _keyStore.ListIds());
