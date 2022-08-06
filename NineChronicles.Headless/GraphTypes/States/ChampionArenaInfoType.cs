@@ -41,6 +41,12 @@ namespace NineChronicles.Headless.GraphTypes.States
             Field<NonNullGraphType<IntGraphType>>(
                 nameof(ChampionArenaInfo.Rank),
                 resolve: context => context.Source.Rank);
+            Field<ListGraphType<GuidGraphType>>(
+                nameof(ChampionArenaInfo.Equipment),
+                resolve: context => context.Source.Equipment);
+            Field<ListGraphType<GuidGraphType>>(
+                nameof(ChampionArenaInfo.Costumes),
+                resolve: context => context.Source.Costumes);
         }
     }
 }

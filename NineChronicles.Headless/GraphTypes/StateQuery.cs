@@ -171,6 +171,8 @@ namespace NineChronicles.Headless.GraphTypes
                             ticket = 8;
                         }
                         var avatar = context.Source.GetAvatarStateV2(participant);
+                        var arenaAvatarStateAdr = ArenaAvatarState.DeriveAddress(participant);
+                        var arenaAvatarState = context.Source.GetArenaAvatarState(arenaAvatarStateAdr, avatar);
                         var arenaInfo = new ChampionArenaInfo
                         {
                             AvatarAddress = participant,
@@ -182,7 +184,9 @@ namespace NineChronicles.Headless.GraphTypes
                             Score = arenaScore.Score,
                             PurchasedTicketCount = arenaInformation.PurchasedTicketCount,
                             TicketResetCount = arenaInformation.TicketResetCount,
-                            Active = true
+                            Active = true,
+                            Equipment = arenaAvatarState.Equipments,
+                            Costumes = arenaAvatarState.Costumes
                         };
                         arenaInformations.Add(arenaInfo);
                     }
