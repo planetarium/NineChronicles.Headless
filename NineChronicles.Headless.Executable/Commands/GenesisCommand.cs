@@ -2,18 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Numerics;
-using System.Security.AccessControl;
 using System.Text.Json;
 using Bencodex;
 using Bencodex.Types;
 using Cocona;
-using CsvHelper.Configuration.Attributes;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
-using Libplanet.Explorer.GraphTypes;
 using Libplanet.Extensions.Cocona;
 using Nekoyume;
 using Nekoyume.Action;
@@ -182,6 +178,38 @@ namespace NineChronicles.Headless.Executable.Commands
                 );
 
                 Lib9cUtils.ExportBlock(block, "genesis-block");
+                if (genesisConfig.Admin?.Activate == true)
+                {
+                    if (string.IsNullOrEmpty(genesisConfig.Admin.Value.Address))
+                    {
+                        Console.WriteLine("Initial minter has admin privilege. Keep this account in secret.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Admin privilege has been granted to given admin address. " +
+                                          "Keep this account in secret.");
+                    }
+                }
+
+                if (genesisConfig.Currency?.InitialCurrencyDeposit.Count == 0)
+                {
+                    if (string.IsNullOrEmpty(genesisConfig.Currency?.InitialMinter))
+                    {
+                        Console.WriteLine("No currency data provided. Initial minter gets initial deposition.\n" +
+                                          "Please check `initial_deposit.csv` file to get detailed info.");
+                        File.WriteAllText("initial_deposit.csv",
+                            "Address,PrivateKey,AmountPerBlock,StartBlock,EndBlock\n");
+                        File.AppendAllText("initial_deposit.csv",
+                            $"{initialMinter.ToAddress()},{ByteUtil.Hex(initialMinter.ByteArray)},{DefaultCurrencyValue},0,0");
+                    }
+                    else
+                    {
+                        Console.WriteLine("No initial deposit data provided. " +
+                                          "Initial minter you provided gets initial deposition.");
+                    }
+                }
+
+                Console.WriteLine("\nGenesis block created.");
             }
             catch (Exception e)
             {
