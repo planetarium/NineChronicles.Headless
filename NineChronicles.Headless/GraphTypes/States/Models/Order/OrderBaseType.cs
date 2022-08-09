@@ -9,16 +9,18 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
         protected OrderBaseType()
         {
             Field<NonNullGraphType<GuidGraphType>>(
-                nameof(NonFungibleOrder.OrderId),
-                description: "Guid of order.");
+                nameof(OrderBase.OrderId),
+                description: "Guid of order.",
+                resolve: context => context.Source.OrderId);
             Field<NonNullGraphType<GuidGraphType>>(
-                nameof(NonFungibleOrder.TradableId),
-                description: "Tradable guid of order.");
+                nameof(OrderBase.TradableId),
+                description: "Tradable guid of order.",
+                resolve: context => context.Source.TradableId);
             Field<NonNullGraphType<IntGraphType>>(
-                nameof(NonFungibleOrder.StartedBlockIndex),
+                nameof(OrderBase.StartedBlockIndex),
                 description: "Block index order started.");
             Field<NonNullGraphType<IntGraphType>>(
-                nameof(NonFungibleOrder.ExpiredBlockIndex),
+                nameof(OrderBase.ExpiredBlockIndex),
                 description: "Block index order expired.");
         }
     }

@@ -17,5 +17,9 @@ namespace NineChronicles.Headless.Executable.IO
         public TextWriter Out { get; }
 
         public TextWriter Error { get; }
+        public Stream OpenStandardOutput()
+        {
+            return Console.OpenStandardOutput();
+        }
     }
 }

@@ -163,17 +163,6 @@ namespace Libplanet.Headless.Hosting
                 shuffledIceServers = iceServers.OrderBy(x => rand.Next());
             }
 
-            TransportType transportType = TransportType.TcpTransport;
-            switch (Properties.TransportType)
-            {
-                case "netmq":
-                    transportType = TransportType.NetMQTransport;
-                    break;
-                case "tcp":
-                    transportType = TransportType.TcpTransport;
-                    break;
-            }
-
             ConsensusReactorOption? consensusReactorOption = null;
             if (!(Properties.ConsensusPrivateKey is null) &&
                 !(Properties.Host is null) &&
@@ -212,7 +201,6 @@ namespace Libplanet.Headless.Hosting
                     MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
                     BucketSize = Properties.BucketSize,
                     MaximumPollPeers = Properties.MaximumPollPeers,
-                    Type = transportType,
                     TimeoutOptions = new TimeoutOptions
                     {
                         MaxTimeout = TimeSpan.FromSeconds(50),
@@ -571,7 +559,7 @@ namespace Libplanet.Headless.Hosting
                 cancellationToken.ThrowIfCancellationRequested();
             }
         }
-        
+
         private async Task CheckConsensusPeersAsync(
             IEnumerable<BoundPeer> peers,
             RoutingTable table,

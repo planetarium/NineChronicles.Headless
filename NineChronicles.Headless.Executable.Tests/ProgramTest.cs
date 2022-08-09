@@ -44,11 +44,14 @@ namespace NineChronicles.Headless.Executable.Tests
                 rpcListenPort: 31234,
                 graphQLServer: true,
                 graphQLHost: "localhost",
-                graphQLPort: 5000,
+                graphQLPort: 31238,
                 storePath: _storePath,
                 storeType: "rocksdb",
                 validatorStrings: new[] { new PrivateKey().PublicKey.ToString() },
-                cancellationToken: cancellationTokenSource.Token);
+                skipPreload: true,
+                noCors: true,
+                cancellationToken: cancellationTokenSource.Token
+            );
 
             try
             {
@@ -61,9 +64,9 @@ namespace NineChronicles.Headless.Executable.Tests
                 var content = new StringContent(queryString);
                 content.Headers.ContentLength = queryString.Length;
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                var response = await client.PostAsync("http://localhost:5000/graphql", content);
+                var response = await client.PostAsync("http://localhost:31238/graphql", content);
                 var responseString = await response.Content.ReadAsStringAsync();
-
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
                 Assert.Contains("\"data\":{\"chainQuery\":{\"blockQuery\":{\"block\":{\"hash\":\"4582250d0da33b06779a8475d283d5dd210c683b9b999d74d03fac4f58fa6bce\"}}}}", responseString);
 
                 var channel = new Channel(

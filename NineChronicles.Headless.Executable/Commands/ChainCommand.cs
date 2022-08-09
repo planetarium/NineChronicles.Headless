@@ -1,13 +1,17 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using Cocona;
 using Cocona.Help;
+using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
 using Libplanet.Extensions.Cocona;
+using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Nekoyume.Action;
@@ -49,15 +53,17 @@ namespace NineChronicles.Headless.Executable.Commands
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<PolymorphicAction<ActionBase>>();
             IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
             IStore store = storeType.CreateStore(storePath);
-            var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            Block<NCAction> genesisBlock = store.GetGenesisBlock<NCAction>(blockPolicy.GetHashAlgorithm);
-            BlockChain<NCAction> chain = new BlockChain<NCAction>(
-                blockPolicy,
-                stagePolicy,
-                store,
-                stateStore,
-                genesisBlock);
-            _console.Out.WriteLine(Utils.SerializeHumanReadable(chain.Tip.Header));
+            if (!(store.GetCanonicalChainId() is { } chainId))
+            {
+                throw new CommandExitedException(
+                    $"There is no canonical chain: {storePath}",
+                    -1);
+            }
+
+            BlockHash tipHash = store.IndexBlockHash(chainId, -1)
+                          ?? throw new CommandExitedException("The given chain seems empty.", -1);
+            Block<NCAction> tip = store.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, tipHash);
+            _console.Out.WriteLine(Utils.SerializeHumanReadable(tip.Header));
             (store as IDisposable)?.Dispose();
         }
 
@@ -86,7 +92,6 @@ namespace NineChronicles.Headless.Executable.Commands
             IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
             IStore store = storeType.CreateStore(storePath);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            Block<NCAction> genesisBlock = store.GetGenesisBlock<NCAction>(blockPolicy.GetHashAlgorithm);
             if (!(store.GetCanonicalChainId() is { } chainId))
             {
                 throw new CommandExitedException($"There is no canonical chain: {storePath}", -1);
@@ -97,6 +102,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 throw new CommandExitedException($"There is no genesis block: {storePath}", -1);
             }
 
+            Block<NCAction> genesisBlock = store.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, gHash);
             BlockChain<NCAction> chain = new BlockChain<NCAction>(
                 blockPolicy,
                 stagePolicy,
@@ -172,6 +178,115 @@ namespace NineChronicles.Headless.Executable.Commands
             }
 
             (store as IDisposable)?.Dispose();
+        }
+
+        [Command(Description = "Truncate the chain from the tip by the input value (in blocks)")]
+        public void Truncate(
+            [Argument("STORE-TYPE",
+                Description = "Store type of RocksDb.")]
+            StoreType storeType,
+            [Argument("STORE-PATH",
+                Description = "Store path to inspect.")]
+            string storePath,
+            [Argument("BLOCKS-BEFORE",
+                Description = "Number of blocks to truncate from the tip")]
+            int blocksBefore)
+        {
+            if (!Directory.Exists(storePath))
+            {
+                throw new CommandExitedException(
+                    $"The given STORE-PATH, {storePath} seems not existed.",
+                    -1);
+            }
+
+            HashAlgorithmGetter hashAlgorithmGetter = _ => HashAlgorithmType.Of<SHA256>();
+            IStore store = storeType.CreateStore(storePath);
+            var statesPath = Path.Combine(storePath, "states");
+            IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(statesPath);
+            var stateStore = new TrieStateStore(stateKeyValueStore);
+            if (!(store.GetCanonicalChainId() is { } chainId))
+            {
+                throw new CommandExitedException(
+                    $"There is no canonical chain: {storePath}", 
+                    -1);
+            }
+
+            if (!(store.IndexBlockHash(chainId, 0) is { } gHash))
+            {
+                throw new CommandExitedException(
+                    $"There is no genesis block: {storePath}",
+                    -1);
+            }
+
+            var tipHash = store.IndexBlockHash(chainId, -1)
+                          ?? throw new CommandExitedException("The given chain seems empty.", -1);
+            if (!(store.GetBlockIndex(tipHash) is { } tipIndex))
+            {
+                throw new CommandExitedException(
+                    $"The index of {tipHash} doesn't exist.",
+                    -1);
+            }
+
+            var tip = store.GetBlock<NCAction>(hashAlgorithmGetter, tipHash);
+            var snapshotTipIndex = Math.Max(tipIndex - (blocksBefore + 1), 0);
+            BlockHash snapshotTipHash;
+
+            do
+            {
+                snapshotTipIndex++;
+                Console.WriteLine(snapshotTipIndex);
+                if (!(store.IndexBlockHash(chainId, snapshotTipIndex) is { } hash))
+                {
+                    throw new CommandExitedException(
+                        $"The index {snapshotTipIndex} doesn't exist on ${chainId}.",
+                        -1);
+                }
+
+                snapshotTipHash = hash;
+            } while (!stateStore.ContainsStateRoot(store.GetBlock<NCAction>(hashAlgorithmGetter, snapshotTipHash).StateRootHash));
+
+            var forkedId = Guid.NewGuid();
+
+            Fork(chainId, forkedId, snapshotTipHash, tip, store, hashAlgorithmGetter);
+
+            store.SetCanonicalChainId(forkedId);
+            foreach (var id in store.ListChainIds().Where(id => !id.Equals(forkedId)))
+            {
+                store.DeleteChainId(id);
+            }
+
+            store.Dispose();
+            stateStore.Dispose();
+        }
+
+        private void Fork(
+            Guid src,
+            Guid dest,
+            BlockHash branchPointHash,
+            Block<NCAction> tip,
+            IStore store,
+            HashAlgorithmGetter hashAlgorithmGetter)
+        {
+            var branchPoint = store.GetBlock<NCAction>(hashAlgorithmGetter, branchPointHash);
+            store.ForkBlockIndexes(src, dest, branchPointHash);
+            store.ForkTxNonces(src, dest);
+
+            for (
+                Block<NCAction> block = tip;
+                block.PreviousHash is { } hash
+                && !block.Hash.Equals(branchPointHash);
+                block = store.GetBlock<NCAction>(hashAlgorithmGetter, hash))
+            {
+                IEnumerable<(Address, int)> signers = block
+                    .Transactions
+                    .GroupBy(tx => tx.Signer)
+                    .Select(g => (g.Key, g.Count()));
+
+                foreach ((Address address, int txCount) in signers)
+                {
+                    store.IncreaseTxNonce(dest, address, -txCount);
+                }
+            }
         }
     }
 }
