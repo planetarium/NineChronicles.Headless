@@ -19,6 +19,6 @@
         "validUntil": 10000
     },
     "extra": {
-        "pendingActivationStatePath": "pendingActivation.csv"
+        "pendingActivationStatePath": "pendingActivation"
     }
 }

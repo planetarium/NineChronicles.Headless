@@ -10,6 +10,7 @@
   * [On Your AWS EC2 Instance](#on-your-aws-ec2-instance)
   * [Building Your Own Docker Image from Your Local](#building-your-own-docker-image-from-your-local)
 - [Nine Chronicles GraphQL API Documentation](#nine-chronicles-graphql-api-documentation)
+- [Create New Genesis Block](#create-new-genesis-block)
 
 ## Run
 
@@ -234,3 +235,85 @@ Usage: docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<TAGNAME>]
 Check out [Nine Chronicles GraphQL API Tutorial](https://www.notion.so/Getting-Started-with-Nine-Chronicles-GraphQL-API-a14388a910844a93ab8dc0a2fe269f06) to get you started with using GraphQL API with NineChronicles Headless.
 
 For more information on the GraphQL API, refer to the [NineChronicles Headless GraphQL Documentation](http://api.nine-chronicles.com/).
+
+---
+
+## Create new genesis block
+
+### 1. (Optional) Create activation keys and PendingActivationState
+Activation key is the code for 9c account to register/activate into NineChronicles.  
+You can create activation key whenever you want later, so you can just skip this step.
+
+```shell
+$ dotnet run --project ./.Lib9c.Tools tx create-activation-keys [Key count] > ActivationKeys.csv // Change [Key count to number of new activation keys]
+$ dotnet run --project ./.Lib9c.Tools tx create-pending-activations ActivationKeys.csv > PendingActivation
+```
+
+### 2. Create config file for genesis block
+1. Copy `config.json.example` to `config.json`
+2. Change values inside `config.json`
+   - `data.tablePath` is required.
+   - If you have `PendingActivation` file, set file path to `extra.pendingActivationStatePath`
+
+#### Structure of genesis block
+| Key                                        | Type                | Required | Description                                                                                                                                                                        |
+|:-------------------------------------------|---------------------|:--------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| data                                       |                     | Required | Related to the game data. This field is required.                                                                                                                                  |
+| data.tablePath                             | string              |          | Path of game data table. `Lib9c/Lib9c/TableCSV` for NineChronicles.                                                                                                                |
+| currency                                   |                     | Optional | Related to currency data. Set initial mint / deposits.                                                                                                                             |
+| currency.initialMinter                     | PrivateKey (string) |          | PrivateKey of initial minter.  <br/>Initial minting Tx. will be signed using this key and included in genesis block.                                                               |
+| currency.initialCurrencyDeposit            | List                |          | Initial deposit data. These data will be created to Tx. and goes inside of genesis block.  <br/>If you leave this to null, the `initialMinter` will get 10000 currency as default. |
+| currency.initialCurrencyDeposit[i].address | Address (string)    |          | Address of depositor. Use address string except leading `0x`.                                                                                                                      |
+| currency.initialCurrencyDeposit[i].amount  | BigInteger          |          | Amount of currency give to depositor. <br/>This amount will be given every block from start to end. ex) 100 from 0 to 9: total 1000 currency will be given.                        |
+| currency.initialCurrencyDeposit[i].start   | long                |          | First block to give currency to depositor. genesis block is #0                                                                                                                     |
+| currency.initialCurrencyDeposit[i].end     | long                |          | Last block to give currency to depositor. <br/>If you want to give only once, set this value as same as `start`.                                                                   |
+| admin                                      |                     | Optional | Related to admin setting.                                                                                                                                                          |
+| admin.activate                             | bool                |          | If true, give admin privilege to admin address.                                                                                                                                    |
+| admin.address                              | Address (string)    |          | Address to be admin. If not provided, the `initialMinter` will be set as admin.                                                                                                    |
+| admin.validUntil                           | long                |          | Block number of admin lifetime. Admin address loses its privilege after this block.                                                                                                |
+| extra                                      |                     | Optional | Extra setting.                                                                                                                                                                     |
+| extra.pendingActivationStatePath           | string              |          | If you want to set activation key inside genesis block to use, create `PendingActivationData` and save to file and provide here.                                                   |
+
+### 3. Create genesis block
+```shell
+$ dotnet run --project ./NineChronicles.Headless.Executable/ genesis ./config.json
+```
+After this step, you will get `genesis-block` file as output and another info in addition.
+
+### 4. Run Headless node with genesis block
+```shell
+$ dotnet run --project ./NineChronicles.Headless.Executable/ \
+    -V=100260/6ec8E598962F1f475504F82fD5bF3410eAE58B9B/MEUCIQCG2yQNyXu3ovuUBNMEQiqx1vdo.FCMet9FoayFiIL89QIgXGRTU84nrcmLL4ud2j9ogrGt7ScmqaD97N.4rrtraXE=/ZHUxNjpXaW5kb3dzQmluYXJ5VXJsdTU2Omh0dHBzOi8vZG93bmxvYWQubmluZS1jaHJvbmljbGVzLmNvbS92MTAwMjYwL1dpbmRvd3MuemlwdTk6dGltZXN0YW1wdTEwOjIwMjItMDctMjhl \ 
+    -G=[PATH/TO/GENESIS/BLOCK] \
+    --store-type=memory \
+    --store-path= [PATH/TO/BLOCK/STORAGE] \
+    --workers=1000 \
+    --host=localhost \
+    --port=43210 \
+    --miner-private-key=[PRIVATE_KEY_OF_BLOCK_MINER]
+```
+If you see log like this, all process is successfully done:
+```text
+Start mining.
+[BlockChain] 424037645/18484: Starting to mine block #1 with difficulty 5000000 and previous hash 29f53d22...
+[BlockChain] Gathering transactions to mine for block #1 from 0 staged transactions...
+[BlockChain] Gathered total of 0 transactions to mine for block #1 from 0 staged transactions.
+Evaluating actions in the block #1 pre-evaluation hash: 10d93de7...
+Evaluating policy block action for block #1 System.Collections.Immutable.ImmutableArray`1[System.Byte]
+Actions in 0 transactions for block #1 pre-evaluation hash: 10d93de7... evaluated in 20ms.
+[BlockChain] 424037645/18484: Mined block #1 0838b084... with difficulty 5000000 and previous hash 29f53d22...
+[BlockChain] Trying to append block #1 0838b084...
+[BlockChain] Unstaging 0 transactions from block #1 0838b084...
+[BlockChain] Unstaged 0 transactions from block #1 0838b084...
+[Swarm] Trying to broadcast blocks...
+[NetMQTransport] Broadcasting message Libplanet.Net.Messages.BlockHeaderMessage as 0x7862DD9b....Unspecified/localhost:43210. to 0 peers
+[Swarm] Block broadcasting complete.
+[BlockChain] Appended the block #1 0838b084...
+[BlockChain] Invoking renderers for #1 0838b084... (1 renderer(s), 0 action renderer(s))
+[LoggedRenderer] Invoking RenderBlock() for #1 0838b084... (was #0 29f53d22...)...
+[LoggedRenderer] Invoked RenderBlock() for #1 0838b084... (was #0 29f53d22...).
+[BlockChain] Invoked renderers for #1 0838b084... (1 renderer(s), 0 action renderer(s))
+[Swarm] Trying to broadcast blocks...
+[NetMQTransport] Broadcasting message Libplanet.Net.Messages.BlockHeaderMessage as 0x7862DD9b....Unspecified/localhost:43210. to 0 peers
+[Swarm] Block broadcasting complete.
+```

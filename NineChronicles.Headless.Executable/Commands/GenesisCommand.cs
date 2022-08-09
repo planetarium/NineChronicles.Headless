@@ -33,6 +33,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
         private void ProcessData(DataConfig config, out Dictionary<string, string> tableSheets)
         {
+            Console.WriteLine("Processing data for genesis...");
             if (string.IsNullOrEmpty(config.TablePath))
             {
                 throw Utils.Error("TablePath is not set.");
@@ -47,6 +48,7 @@ namespace NineChronicles.Headless.Executable.Commands
             out List<GoldDistribution> initialDepositList
         )
         {
+            Console.WriteLine("Processing currency for genesis...");
             if (config is null)
             {
                 Log.Information("CurrencyConfig not provided. Skip setting...");
@@ -93,6 +95,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
         private void ProcessAdmin(AdminConfig? config, PrivateKey initialMinter, out AdminState adminState)
         {
+            Console.WriteLine("Processing admin for genesis...");
             // FIXME: If the `adminState` is not required inside `MineGenesisBlock`,
             //        this logic will be much lighter.
             adminState = new AdminState(new PrivateKey().ToAddress(), 0);
@@ -122,6 +125,7 @@ namespace NineChronicles.Headless.Executable.Commands
             out List<PendingActivationState> pendingActivationStates
         )
         {
+            Console.WriteLine("Processing extra data for genesis...");
             pendingActivationStates = new List<PendingActivationState>();
 
             if (config is null)
@@ -169,6 +173,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 ProcessExtra(genesisConfig.Extra, out List<PendingActivationState> pendingActivationStates);
 
                 // Mine genesis block
+                Console.WriteLine("\nMining genesis block...\n");
                 Block<PolymorphicAction<ActionBase>> block = BlockHelper.MineGenesisBlock(
                     tableSheets: tableSheets,
                     goldDistributions: initialDepositList.ToArray(),
@@ -227,7 +232,7 @@ namespace NineChronicles.Headless.Executable.Commands
         [Serializable]
         private struct CurrencyConfig
         {
-            public string InitialMinter { get; set; }
+            public string InitialMinter { get; set; } // PrivateKey, not Address
             public List<GoldDistribution> InitialCurrencyDeposit { get; set; }
         }
 
@@ -249,7 +254,7 @@ namespace NineChronicles.Headless.Executable.Commands
         [Serializable]
         private struct GenesisConfig
         {
-            public DataConfig Data { get; set; }
+            public DataConfig Data { get; set; } // Required
             public CurrencyConfig? Currency { get; set; }
             public AdminConfig? Admin { get; set; }
 
