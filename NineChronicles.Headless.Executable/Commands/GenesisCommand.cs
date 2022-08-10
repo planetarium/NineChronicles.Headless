@@ -224,41 +224,107 @@ namespace NineChronicles.Headless.Executable.Commands
         }
 
 #pragma warning disable S3459
+        /// <summary>
+        /// Game data to set into genesis block.
+        /// </summary>
+        /// <seealso cref="GenesisConfig"/>
         [Serializable]
         private struct DataConfig
         {
+            /// <value>A path of game data table directory.</value>
             public string TablePath { get; set; }
         }
 
+        /// <summary>
+        /// Currency related configurations.<br/>
+        /// Set initial minter(Tx signer) and/or initial currency depositions.<br/>
+        /// If not provided, default values will set.
+        /// </summary>
         [Serializable]
         private struct CurrencyConfig
         {
+            /// <value>
+            /// Private Key of initial currency minter.<br/>
+            /// If not provided, a new private key will be created and used.<br/>
+            /// </value>
             public string? InitialMinter { get; set; } // PrivateKey, not Address
+
+            /// <value>
+            /// Initial currency deposition list.<br/>
+            /// If you leave it to empty list or even not provide, the `InitialMinter` will get 10000 currency.<br.>
+            /// You can see newly created deposition info in <c>initial_deposit.csv</c> file.
+            /// </value>
             public List<GoldDistribution>? InitialCurrencyDeposit { get; set; }
         }
 
+        /// <summary>
+        /// Admin related configurations.<br/>
+        /// If not provided, no admin will be set.
+        /// </summary>
         [Serializable]
         private struct AdminConfig
         {
+            /// <value>Whether active admin address or not.</value>
             public bool Activate { get; set; }
+
+            /// <value>
+            /// Address to give admin privilege.<br/>
+            /// If <c>Activate</c> is <c>true</c> and no <c>Address</c> provided, the <see cref="CurrencyConfig.InitialMinter"/> will get admin privilege.
+            /// </value>
             public string Address { get; set; }
+
+            /// <value>
+            /// The block count to persist admin privilege.<br/>
+            /// After this block, admin will no longer be admin.
+            /// </value>
             public long ValidUntil { get; set; }
         }
 
+        /// <summary>
+        /// Extra configurations.
+        /// </summary>
         [Serializable]
         private struct ExtraConfig
         {
+            /// <value>
+            /// Dump file path of pending activation state created using <c>9c-tools</c><br/>
+            /// This will set activation codes that can be used to genesis block. <br/>
+            /// See <a href="https://github.com/planetarium/lib9c/blob/development/.Lib9c.Tools/SubCommand/Tx.cs">Tx.cs</a> to create activation key.
+            /// </value>
             public string? PendingActivationStatePath { get; set; }
         }
 
-        // Config to mine new genesis block.
+        /// <summary>
+        /// Config to mine new genesis block.
+        /// </summary>
+        /// <list type="table">
+        /// <listheader>
+        /// <term>Config</term>
+        /// <description>Description</description>
+        /// </listheader>
+        /// <item>
+        /// <term><see cref="DataConfig">Data</see></term>
+        /// <description>Required. Sets game data to genesis block.</description>
+        /// </item>
+        /// <item>
+        /// <term><see cref="CurrencyConfig">Currency</see></term>
+        /// <description>Optional. Sets initial currency mint/deposition data to genesis block.</description>
+        /// </item>
+        /// <item>
+        /// <term><see cref="AdminConfig">Admin</see></term>
+        /// <description>Optional. Sets game admin and lifespan to genesis block.</description>
+        /// </item>
+        /// <item>
+        /// <term><see cref="ExtraConfig">Extra</see></term>
+        /// <description>Optional. Sets extra data (e.g. activation keys) to genesis block.</description>
+        /// </item>
+        /// </list>
         [Serializable]
         private struct GenesisConfig
         {
             public DataConfig Data { get; set; } // Required
             public CurrencyConfig? Currency { get; set; }
             public AdminConfig? Admin { get; set; }
-
             public ExtraConfig? Extra { get; set; }
         }
 #pragma warning restore S3459
