@@ -31,7 +31,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Fact]
-        public async Task SignTransaction()
+        public async Task SignTransaction_TransferAsset()
         {
             var privateKey = new PrivateKey();
             var privateKey2 = new PrivateKey();
@@ -40,11 +40,48 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             // Create Action.
             var args = $"recipient: \"{recipient}\", sender: \"{sender}\", amount: \"17.5\", currency: CRYSTAL";
-            var actionQuery = $"{{ transferAsset({args}) }}";
+            object plainValue = await GetAction("transferAsset", args);
+
+            (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
+            var action = Assert.IsType<TransferAsset>(signedTx.Actions.Single().InnerAction);
+            Assert.Equal(recipient, action.Recipient);
+            Assert.Equal(sender, action.Sender);
+            Assert.Equal(FungibleAssetValue.Parse(CrystalCalculator.CRYSTAL, "17.5"), action.Amount);
+            await StageTransaction(signedTx, hex);
+        }
+
+        [Fact]
+        public async Task SignTransaction_Raid()
+        {
+            var privateKey = new PrivateKey();
+            var avatarAddress = privateKey.ToAddress();
+            var guid = Guid.NewGuid();
+            string ids = $"[\"{guid}\"]";
+
+            // Create Action.
+            var args = $"avatarAddress: \"{avatarAddress}\", equipmentIds: {ids}, costumeIds: {ids}, foodIds: {ids}, payNcg: true";
+            object plainValue = await GetAction("raid", args);
+
+            (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
+            var action = Assert.IsType<Raid>(signedTx.Actions.Single().InnerAction);
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            Guid equipmentId = Assert.Single(action.EquipmentIds);
+            Guid costumeId = Assert.Single(action.CostumeIds);
+            Guid foodId = Assert.Single(action.FoodIds);
+            Assert.All(new[] {equipmentId, costumeId, foodId}, id => Assert.Equal(guid, id));
+            Assert.True(action.PayNcg);
+            await StageTransaction(signedTx, hex);
+        }
+
+        private async Task<object> GetAction(string actionName, string queryArgs)
+        {
+            var actionQuery = $"{{ {actionName}({queryArgs}) }}";
             var actionQueryResult = await ExecuteQueryAsync<ActionQuery>(actionQuery, standaloneContext: StandaloneContextFx);
             var actionData = (Dictionary<string, object>) ((ExecutionNode) actionQueryResult.Data!).ToValue()!;
-            var plainValue = actionData["transferAsset"];
-
+            return actionData[actionName];
+        }
+        private async Task<(Transaction<NCAction>, string)> GetSignedTransaction(PrivateKey privateKey, object plainValue)
+        {
             // Get Nonce.
             var nonceQuery = $@"query {{
                     nextTxNonce(address: ""{privateKey.ToAddress()}"")
@@ -106,12 +143,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(unsignedTx.Timestamp, signedTx.Timestamp);
             Assert.Single(unsignedTx.Actions);
             Assert.Single(signedTx.Actions);
-            Assert.IsType<TransferAsset>(signedTx.Actions.Single().InnerAction);
-            var action = Assert.IsType<TransferAsset>(signedTx.Actions.Single().InnerAction);
-            Assert.Equal(recipient, action.Recipient);
-            Assert.Equal(sender, action.Sender);
-            Assert.Equal(FungibleAssetValue.Parse(CrystalCalculator.CRYSTAL, "17.5"), action.Amount);
 
+            return (signedTx, hex);
+        }
+
+        private async Task StageTransaction(Transaction<NCAction> signedTx, string hex)
+        {
             // Staging Transaction.
             var stageTxMutation = $"mutation {{ stageTransaction(payload: \"{hex}\") }}";
             var stageTxResult = await ExecuteQueryAsync(stageTxMutation);
