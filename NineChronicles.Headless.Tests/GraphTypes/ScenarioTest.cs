@@ -80,6 +80,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var actionData = (Dictionary<string, object>) ((ExecutionNode) actionQueryResult.Data!).ToValue()!;
             return actionData[actionName];
         }
+
         private async Task<(Transaction<NCAction>, string)> GetSignedTransaction(PrivateKey privateKey, object plainValue)
         {
             // Get Nonce.
