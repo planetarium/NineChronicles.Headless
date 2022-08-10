@@ -95,10 +95,10 @@ namespace NineChronicles.Headless.Executable.Commands
 
         private void ProcessAdmin(AdminConfig? config, PrivateKey initialMinter, out AdminState adminState)
         {
-            Console.WriteLine("Processing admin for genesis...");
             // FIXME: If the `adminState` is not required inside `MineGenesisBlock`,
             //        this logic will be much lighter.
-            adminState = new AdminState(new PrivateKey().ToAddress(), 0);
+            Console.WriteLine("Processing admin for genesis...");
+            adminState = new AdminState(new Address(), 0);
             if (config is null)
             {
                 Log.Information("AdminConfig not provided. Skip admin setting...");
