@@ -65,7 +65,6 @@ namespace NineChronicles.Headless.Properties
                 int bucketSize = 16,
                 string chainTipStaleBehaviorType = "reboot",
                 int maximumPollPeers = int.MaxValue,
-                string transportType = "tcp",
                 int blockInterval = 10000,
                 string[]? validatorStrings = null)
         {
@@ -121,7 +120,6 @@ namespace NineChronicles.Headless.Properties
                 BucketSize = bucketSize,
                 ChainTipStaleBehavior = chainTipStaleBehaviorType,
                 MaximumPollPeers = maximumPollPeers,
-                TransportType = transportType,
                 BlockInterval = blockInterval,
                 Validators = validators,
             };

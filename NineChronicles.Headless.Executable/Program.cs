@@ -109,7 +109,7 @@ namespace NineChronicles.Headless.Executable
             [Option("graphql-port")]
             int? graphQLPort = null,
             [Option("graphql-secret-token-path",
-                Description = "The path to write GraphQL secret token. " + 
+                Description = "The path to write GraphQL secret token. " +
                               "If you want to protect this headless application, " +
                               "you should use this option and take it into headers.")]
             string? graphQLSecretTokenPath = null,
@@ -183,10 +183,6 @@ namespace NineChronicles.Headless.Executable
             bool rpcHttpServer = false,
             [Option(Description = "The maximum number of peers to poll blocks.  int.MaxValue by default.")]
             int maximumPollPeers = int.MaxValue,
-            [Option(Description =
-                "Determines the type of transport.  \"netmq\" and \"tcp\" " +
-                "is available and \"tcp\" option is selected by default.")]
-            string transportType = "tcp",
             [Option("validator",
                 Description =
                     "List of validator's public key strings. " +
@@ -333,7 +329,6 @@ namespace NineChronicles.Headless.Executable
                         bucketSize: bucketSize,
                         chainTipStaleBehaviorType: chainTipStaleBehaviorType,
                         maximumPollPeers: maximumPollPeers,
-                        transportType: transportType,
                         blockInterval: blockInterval,
                         validatorStrings: validatorStrings
                     );

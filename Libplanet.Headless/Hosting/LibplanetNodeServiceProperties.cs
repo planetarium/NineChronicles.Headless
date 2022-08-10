@@ -15,15 +15,15 @@ namespace Libplanet.Headless.Hosting
         public string Host { get; set; }
 
         public ushort? Port { get; set; }
-        
+
         public ushort? ConsensusPort { get; set; }
-        
+
         public PrivateKey SwarmPrivateKey { get; set; }
-        
+
         public PrivateKey ConsensusPrivateKey { get; set; }
-        
+
         public PrivateKey MinerPrivateKey { get; set; }
-        
+
         public List<PublicKey> Validators { get; set; }
 
         public string StoreType { get; set; }
@@ -79,8 +79,6 @@ namespace Libplanet.Headless.Hosting
         public string ChainTipStaleBehavior { get; set; } = "reboot";
 
         public int MaximumPollPeers { get; set; } = int.MaxValue;
-
-        public string TransportType { get; set; } = "tcp";
 
         public int BlockInterval { get; set; }
     }
