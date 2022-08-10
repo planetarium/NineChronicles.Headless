@@ -245,8 +245,8 @@ Activation key is the code for 9c account to register/activate into NineChronicl
 You can create activation key whenever you want later, so you can just skip this step.
 
 ```shell
-$ dotnet run --project ./.Lib9c.Tools tx create-activation-keys [Key count] > ActivationKeys.csv // Change [Key count to number of new activation keys]
-$ dotnet run --project ./.Lib9c.Tools tx create-pending-activations ActivationKeys.csv > PendingActivation
+dotnet run --project ./.Lib9c.Tools tx create-activation-keys 10 > ActivationKeys.csv  # Change [10] to your number of new activation keys
+dotnet run --project ./.Lib9c.Tools tx create-pending-activations ActivationKeys.csv > PendingActivation
 ```
 
 ### 2. Create config file for genesis block
@@ -276,13 +276,13 @@ $ dotnet run --project ./.Lib9c.Tools tx create-pending-activations ActivationKe
 
 ### 3. Create genesis block
 ```shell
-$ dotnet run --project ./NineChronicles.Headless.Executable/ genesis ./config.json
+dotnet run --project ./NineChronicles.Headless.Executable/ genesis ./config.json
 ```
 After this step, you will get `genesis-block` file as output and another info in addition.
 
 ### 4. Run Headless node with genesis block
 ```shell
-$ dotnet run --project ./NineChronicles.Headless.Executable/ \
+dotnet run --project ./NineChronicles.Headless.Executable/ \
     -V=100260/6ec8E598962F1f475504F82fD5bF3410eAE58B9B/MEUCIQCG2yQNyXu3ovuUBNMEQiqx1vdo.FCMet9FoayFiIL89QIgXGRTU84nrcmLL4ud2j9ogrGt7ScmqaD97N.4rrtraXE=/ZHUxNjpXaW5kb3dzQmluYXJ5VXJsdTU2Omh0dHBzOi8vZG93bmxvYWQubmluZS1jaHJvbmljbGVzLmNvbS92MTAwMjYwL1dpbmRvd3MuemlwdTk6dGltZXN0YW1wdTEwOjIwMjItMDctMjhl \ 
     -G=[PATH/TO/GENESIS/BLOCK] \
     --store-type=memory \
