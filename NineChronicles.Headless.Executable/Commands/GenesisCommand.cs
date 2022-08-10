@@ -75,7 +75,7 @@ namespace NineChronicles.Headless.Executable.Commands
             }
 
             initialDepositList = new List<GoldDistribution>();
-            if (config.Value.InitialCurrencyDeposit.Count == 0)
+            if (config.Value.InitialCurrencyDeposit is null || config.Value.InitialCurrencyDeposit.Count == 0)
             {
                 Log.Information("Initial currency deposit list not provided. " +
                                 $"Give initial ${DefaultCurrencyValue} currency to InitialMinter");
@@ -196,7 +196,8 @@ namespace NineChronicles.Headless.Executable.Commands
                     }
                 }
 
-                if (genesisConfig.Currency?.InitialCurrencyDeposit.Count == 0)
+                if (genesisConfig.Currency?.InitialCurrencyDeposit is null ||
+                    genesisConfig.Currency.Value.InitialCurrencyDeposit.Count == 0)
                 {
                     if (string.IsNullOrEmpty(genesisConfig.Currency?.InitialMinter))
                     {
@@ -232,8 +233,8 @@ namespace NineChronicles.Headless.Executable.Commands
         [Serializable]
         private struct CurrencyConfig
         {
-            public string InitialMinter { get; set; } // PrivateKey, not Address
-            public List<GoldDistribution> InitialCurrencyDeposit { get; set; }
+            public string? InitialMinter { get; set; } // PrivateKey, not Address
+            public List<GoldDistribution>? InitialCurrencyDeposit { get; set; }
         }
 
         [Serializable]
