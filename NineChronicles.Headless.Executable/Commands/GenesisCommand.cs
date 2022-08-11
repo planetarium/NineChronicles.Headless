@@ -33,7 +33,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
         private void ProcessData(DataConfig config, out Dictionary<string, string> tableSheets)
         {
-            Console.WriteLine("Processing data for genesis...");
+            _console.Out.WriteLine("\nProcessing data for genesis...");
             if (string.IsNullOrEmpty(config.TablePath))
             {
                 throw Utils.Error("TablePath is not set.");
@@ -48,10 +48,10 @@ namespace NineChronicles.Headless.Executable.Commands
             out List<GoldDistribution> initialDepositList
         )
         {
-            Console.WriteLine("Processing currency for genesis...");
+            _console.Out.WriteLine("\nProcessing currency for genesis...");
             if (config is null)
             {
-                Log.Information("CurrencyConfig not provided. Skip setting...");
+                _console.Out.WriteLine("CurrencyConfig not provided. Skip setting...");
                 initialMinter = new PrivateKey();
                 initialDepositList = new List<GoldDistribution>
                 {
@@ -66,7 +66,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             if (string.IsNullOrEmpty(config.Value.InitialMinter))
             {
-                Log.Information("Private Key not provided. Create random one...");
+                _console.Out.WriteLine("Private Key not provided. Create random one...");
                 initialMinter = new PrivateKey();
             }
             else
@@ -77,8 +77,8 @@ namespace NineChronicles.Headless.Executable.Commands
             initialDepositList = new List<GoldDistribution>();
             if (config.Value.InitialCurrencyDeposit is null || config.Value.InitialCurrencyDeposit.Count == 0)
             {
-                Log.Information("Initial currency deposit list not provided. " +
-                                $"Give initial ${DefaultCurrencyValue} currency to InitialMinter");
+                _console.Out.WriteLine("Initial currency deposit list not provided. " +
+                                $"Give initial {DefaultCurrencyValue} currency to InitialMinter");
                 initialDepositList.Add(new GoldDistribution
                 {
                     Address = initialMinter.ToAddress(),
@@ -97,11 +97,11 @@ namespace NineChronicles.Headless.Executable.Commands
         {
             // FIXME: If the `adminState` is not required inside `MineGenesisBlock`,
             //        this logic will be much lighter.
-            Console.WriteLine("Processing admin for genesis...");
+            _console.Out.WriteLine("\nProcessing admin for genesis...");
             adminState = new AdminState(new Address(), 0);
             if (config is null)
             {
-                Log.Information("AdminConfig not provided. Skip admin setting...");
+                _console.Out.WriteLine("AdminConfig not provided. Skip admin setting...");
                 return;
             }
 
@@ -109,28 +109,28 @@ namespace NineChronicles.Headless.Executable.Commands
             {
                 if (string.IsNullOrEmpty(config.Value.Address))
                 {
-                    Log.Information("Admin address not provided. Give admin privilege to initialMinter");
+                    _console.Out.WriteLine("Admin address not provided. Give admin privilege to initialMinter");
                     adminState = new AdminState(initialMinter.ToAddress(), config.Value.ValidUntil);
                 }
             }
             else
             {
-                Log.Information("Inactivate Admin. Skip admin setting...");
+                _console.Out.WriteLine("Inactivate Admin. Skip admin setting...");
             }
 
-            Log.Information("Admin config done");
+            _console.Out.WriteLine("Admin config done");
         }
 
         private void ProcessExtra(ExtraConfig? config,
             out List<PendingActivationState> pendingActivationStates
         )
         {
-            Console.WriteLine("Processing extra data for genesis...");
+            _console.Out.WriteLine("\nProcessing extra data for genesis...");
             pendingActivationStates = new List<PendingActivationState>();
 
             if (config is null)
             {
-                Log.Information("Extra config not provided");
+                _console.Out.WriteLine("Extra config not provided");
                 return;
             }
 
@@ -151,9 +151,6 @@ namespace NineChronicles.Headless.Executable.Commands
             [Argument("CONFIG", Description = "JSON config path to mine genesis block")]
             string configPath)
         {
-            var loggerConf = new LoggerConfiguration();
-            Log.Logger = loggerConf.CreateLogger();
-
             var options = new JsonSerializerOptions
             {
                 AllowTrailingCommas = true,
@@ -173,7 +170,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 ProcessExtra(genesisConfig.Extra, out List<PendingActivationState> pendingActivationStates);
 
                 // Mine genesis block
-                Console.WriteLine("\nMining genesis block...\n");
+                _console.Out.WriteLine("\nMining genesis block...\n");
                 Block<PolymorphicAction<ActionBase>> block = BlockHelper.MineGenesisBlock(
                     tableSheets: tableSheets,
                     goldDistributions: initialDepositList.ToArray(),
@@ -187,11 +184,11 @@ namespace NineChronicles.Headless.Executable.Commands
                 {
                     if (string.IsNullOrEmpty(genesisConfig.Admin.Value.Address))
                     {
-                        Console.WriteLine("Initial minter has admin privilege. Keep this account in secret.");
+                        _console.Out.WriteLine("Initial minter has admin privilege. Keep this account in secret.");
                     }
                     else
                     {
-                        Console.WriteLine("Admin privilege has been granted to given admin address. " +
+                        _console.Out.WriteLine("Admin privilege has been granted to given admin address. " +
                                           "Keep this account in secret.");
                     }
                 }
@@ -201,7 +198,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 {
                     if (string.IsNullOrEmpty(genesisConfig.Currency?.InitialMinter))
                     {
-                        Console.WriteLine("No currency data provided. Initial minter gets initial deposition.\n" +
+                        _console.Out.WriteLine("No currency data provided. Initial minter gets initial deposition.\n" +
                                           "Please check `initial_deposit.csv` file to get detailed info.");
                         File.WriteAllText("initial_deposit.csv",
                             "Address,PrivateKey,AmountPerBlock,StartBlock,EndBlock\n");
@@ -210,12 +207,12 @@ namespace NineChronicles.Headless.Executable.Commands
                     }
                     else
                     {
-                        Console.WriteLine("No initial deposit data provided. " +
+                        _console.Out.WriteLine("No initial deposit data provided. " +
                                           "Initial minter you provided gets initial deposition.");
                     }
                 }
 
-                Console.WriteLine("\nGenesis block created.");
+                _console.Out.WriteLine("\nGenesis block created.");
             }
             catch (Exception e)
             {
