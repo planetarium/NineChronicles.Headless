@@ -8,6 +8,7 @@ using Libplanet;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Extensions;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -318,6 +319,51 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return null;
+                }
+            );
+
+            Field<RaiderStateType>(
+                name: "raiderState",
+                description: "world boss season information.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "raiderAddress",
+                        Description = "address of world boss season."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var raiderAddress = context.GetArgument<Address>("raiderAddress");
+                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] { raiderAddress });
+                    if (values[0] is List list)
+                    {
+                        return new RaiderState(list);
+                    }
+
+                    return null;
+                }
+            );
+
+            Field<NonNullGraphType<IntGraphType>>(
+                "raidId",
+                description: "world boss season id by block index.",
+                arguments: new QueryArguments(new QueryArgument<LongGraphType>
+                {
+                    Name = "blockIndex"
+                }),
+                resolve: context =>
+                {
+                    var blockIndex = context.GetArgument<long>("blockIndex");
+                    var sheet = new WorldBossListSheet();
+                    var address = Addresses.GetSheetAddress<WorldBossListSheet>();
+                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] {address});
+                    if (values[0] is Text text)
+                    {
+                        sheet.Set(text);
+                    }
+
+                    return sheet.FindRaidIdByBlockIndex(blockIndex);
                 }
             );
         }
