@@ -24,9 +24,9 @@ using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
-    public class ScenarioTest : GraphQLTestBase
+    public class SignScenarioTest : GraphQLTestBase
     {
-        public ScenarioTest(ITestOutputHelper output) : base(output)
+        public SignScenarioTest(ITestOutputHelper output) : base(output)
         {
         }
 
