@@ -324,7 +324,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<RaiderStateType>(
                 name: "raiderState",
-                description: "world boss season information.",
+                description: "world boss season user information.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
@@ -364,6 +364,26 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return sheet.FindRaidIdByBlockIndex(blockIndex);
+                }
+            );
+
+            Field<WorldBossStateType>(
+                "worldBossState",
+                description: "world boss season boss information.",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "bossAddress"
+                }),
+                resolve: context =>
+                {
+                    var bossAddress = context.GetArgument<Address>("bossAddress");
+                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] {bossAddress});
+                    if (values[0] is List list)
+                    {
+                        return new WorldBossState(list);
+                    }
+
+                    return null;
                 }
             );
         }
