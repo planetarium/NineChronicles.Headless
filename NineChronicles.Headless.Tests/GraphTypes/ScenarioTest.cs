@@ -73,6 +73,22 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             await StageTransaction(signedTx, hex);
         }
 
+        [Fact]
+        public async Task SignTransaction_ClaimRaidReward()
+        {
+            var privateKey = new PrivateKey();
+            var avatarAddress = privateKey.ToAddress();
+            var guid = Guid.NewGuid();
+            // Create Action.
+            var args = $"avatarAddress: \"{avatarAddress}\"";
+            object plainValue = await GetAction("claimRaidReward", args);
+
+            (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
+            var action = Assert.IsType<ClaimRaidReward>(signedTx.Actions.Single().InnerAction);
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            await StageTransaction(signedTx, hex);
+        }
+
         private async Task<object> GetAction(string actionName, string queryArgs)
         {
             var actionQuery = $"{{ {actionName}({queryArgs}) }}";

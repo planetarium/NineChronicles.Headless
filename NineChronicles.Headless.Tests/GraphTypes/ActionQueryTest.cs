@@ -410,5 +410,20 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             Assert.Equal(payNcg, action.PayNcg);
         }
+
+        [Fact]
+        public async Task ClaimRaidReward()
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var query = $"{{ claimRaidReward(avatarAddress: \"{avatarAddress}\") }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>) ((ExecutionNode) queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["claimRaidReward"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<ClaimRaidReward>(polymorphicAction.InnerAction);
+
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+        }
     }
 }
