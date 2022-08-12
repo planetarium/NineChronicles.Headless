@@ -230,6 +230,58 @@ namespace NineChronicles.Headless.GraphTypes
                     return Codec.Encode(action.PlainValue);
                 }
             );
+            Field<NonNullGraphType<ByteStringType>>(
+                name: "raid",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Description = "address of avatar state.",
+                        Name = "avatarAddress",
+                    },
+                    new QueryArgument<ListGraphType<GuidGraphType>>
+                    {
+                        Description = "list of equipment id.",
+                        DefaultValue = new List<Guid>(),
+                        Name = "equipmentIds",
+                    },
+                    new QueryArgument<ListGraphType<GuidGraphType>>
+                    {
+                        Description = "list of costume id.",
+                        DefaultValue = new List<Guid>(),
+                        Name = "costumeIds",
+                    },
+                    new QueryArgument<ListGraphType<GuidGraphType>>
+                    {
+                        Description = "list of food id.",
+                        DefaultValue = new List<Guid>(),
+                        Name = "foodIds",
+                    },
+                    new QueryArgument<BooleanGraphType>
+                    {
+                        Description = "refill ticket by NCG.",
+                        DefaultValue = false,
+                        Name = "payNcg",
+                    }
+                ),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+                    var equipmentIds = context.GetArgument<List<Guid>>("equipmentIds");
+                    var costumeIds = context.GetArgument<List<Guid>>("costumeIds");
+                    var foodIds = context.GetArgument<List<Guid>>("foodIds");
+                    var payNcg = context.GetArgument<bool>("payNcg");
+
+                    NCAction action = new Raid
+                    {
+                        AvatarAddress = avatarAddress,
+                        EquipmentIds = equipmentIds,
+                        CostumeIds = costumeIds,
+                        FoodIds = foodIds,
+                        PayNcg = payNcg
+                    };
+                    return Codec.Encode(action.PlainValue);
+                }
+            );
         }
     }
 }
