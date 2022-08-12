@@ -89,6 +89,22 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             await StageTransaction(signedTx, hex);
         }
 
+        [Fact]
+        public async Task SignTransaction_ClaimWorldBossKillReward()
+        {
+            var privateKey = new PrivateKey();
+            var avatarAddress = privateKey.ToAddress();
+            var guid = Guid.NewGuid();
+            // Create Action.
+            var args = $"avatarAddress: \"{avatarAddress}\"";
+            object plainValue = await GetAction("claimWorldBossKillReward", args);
+
+            (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
+            var action = Assert.IsType<ClaimWordBossKillReward>(signedTx.Actions.Single().InnerAction);
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            await StageTransaction(signedTx, hex);
+        }
+
         private async Task<object> GetAction(string actionName, string queryArgs)
         {
             var actionQuery = $"{{ {actionName}({queryArgs}) }}";

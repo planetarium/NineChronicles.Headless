@@ -300,6 +300,26 @@ namespace NineChronicles.Headless.GraphTypes
                     return Codec.Encode(action.PlainValue);
                 }
             );
+            Field<NonNullGraphType<ByteStringType>>(
+                "claimWorldBossKillReward",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "address of avatar state to receive reward."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+
+                    NCAction action = new ClaimWordBossKillReward
+                    {
+                        AvatarAddress = avatarAddress,
+                    };
+                    return Codec.Encode(action.PlainValue);
+                }
+            );
         }
     }
 }
