@@ -66,83 +66,102 @@ namespace NineChronicles.Headless.Executable
 
         [PrimaryCommand]
         public async Task Run(
-            [Option("app-protocol-version", new[] { 'V' }, Description = "App protocol version token")]
+            [Option("app-protocol-version", new[] { 'V' },
+                Description = "App protocol version token.")]
             string appProtocolVersionToken,
-            [Option('G')]
+            [Option('G',
+                Description = "Genesis block path of blockchain. Blockchain is recognized by its genesis block.")]
             string genesisBlockPath,
-            bool noMiner = false,
-            [Option('H')]
+            [Option('H',
+                Description = "Hostname of this node for another nodes to access. " +
+                              "This is not listening host like 0.0.0.0")]
             string? host = null,
-            [Option('P')]
+            [Option('P',
+                Description = "Port of this node for another nodes to access.")]
             ushort? port = null,
             [Option("swarm-private-key",
                 Description = "The private key used for signing messages and to specify your node. " +
                               "If you leave this null, a randomly generated value will be used.")]
             string? swarmPrivateKeyString = null,
+            [Option("workers", Description = "Number of workers to use in Swarm")]
+            int workers = 5,
+            [Option(Description = "Disable block mining.")]
+            bool noMiner = false,
+            [Option("miner-count", Description = "The number of miner task(thread).")]
+            int minerCount = 1,
             [Option("miner-private-key",
                 Description = "The private key used for mining blocks. " +
                               "Must not be null if you want to turn on mining with libplanet-node.")]
             string? minerPrivateKeyString = null,
+            [Option(Description = "The type of storage to store blockchain data. " +
+                                  "If not provided, \"LiteDB\" will be used as default. " +
+                                  "Available type: [\"rocksdb\", \"memory\"]")]
             string? storeType = null,
+            [Option(Description = "Path of storage. " +
+                                  "This value is required if you use persistent storage e.g. \"rocksdb\"")]
             string? storePath = null,
-            [Option("ice-server", new [] { 'I', })]
+            [Option(Description = "Do not reduce storage. Enabling this option will use enormous disk spaces.")]
+            bool noReduceStore = false,
+            [Option("ice-server", new[] { 'I', },
+                Description = "ICE server to NAT traverse.")]
             string[]? iceServerStrings = null,
-            [Option("peer")]
+            [Option("peer", Description = "Seed peer list to communicate to another nodes.")]
             string[]? peerStrings = null,
             [Option("trusted-app-protocol-version-signer", new[] { 'T' },
-                    Description = "Trustworthy signers who claim new app protocol versions")]
+                Description = "Trustworthy signers who claim new app protocol versions")]
             string[]? trustedAppProtocolVersionSigners = null,
+            [Option(Description = "Run RPC server?")]
             bool rpcServer = false,
+            [Option(Description = "RPC listen host")]
             string rpcListenHost = "0.0.0.0",
+            [Option(Description = "RPC listen port")]
             int? rpcListenPort = null,
-            [Option("graphql-server")]
+            [Option(Description = "Do a role as RPC remote server?" +
+                                  " If you enable this option, multiple Unity clients can connect to your RPC server.")]
+            bool rpcRemoteServer = false,
+            [Option(Description = "If you enable this option with \"rpcRemoteServer\" option at the same time, " +
+                                  "RPC server will use HTTP/1, not gRPC.")]
+            bool rpcHttpServer = false,
+            [Option("graphql-server", Description = "Run GraphQL server?")]
             bool graphQLServer = false,
-            [Option("graphql-host")]
+            [Option("graphql-host", Description = "GraphQL listen host")]
             string graphQLHost = "0.0.0.0",
-            [Option("graphql-port")]
+            [Option("graphql-port", Description = "GraphQL listen port")]
             int? graphQLPort = null,
-            [Option("graphql-secret-token-path", Description = "The path to write GraphQL secret token. " +
-                                                               "If you want to protect this headless application, " +
-                                                               "you should use this option and take it into headers.")]
+            [Option("graphql-secret-token-path",
+                Description = "The path to write GraphQL secret token. " +
+                              "If you want to protect this headless application, " +
+                              "you should use this option and take it into headers.")]
             string? graphQLSecretTokenPath = null,
             [Option(Description = "Run without CORS policy.")]
             bool noCors = false,
-            [Option("workers", Description = "Number of workers to use in Swarm")]
-            int workers = 5,
-            [Option(
-                "confirmations",
-                Description =
-                    "The number of required confirmations to recognize a block.  0 by default."
+            [Option("confirmations",
+                Description = "The number of required confirmations to recognize a block."
             )]
             int confirmations = 0,
-            [Option(
-                "nonblock-renderer",
+            [Option("nonblock-renderer",
                 Description = "Uses non-blocking renderer, which prevents the blockchain & " +
-                    "swarm from waiting slow rendering.  Turned off by default.")]
+                              "swarm from waiting slow rendering. Turned off by default.")]
             bool nonblockRenderer = false,
-            [Option(
-                "nonblock-renderer-queue",
-                Description = "The size of the queue used by the non-blocking renderer.   " +
-                    "512 by default.  Ignored if --nonblock-renderer is turned off.")]
+            [Option("nonblock-renderer-queue",
+                Description = "The size of the queue used by the non-blocking renderer. " +
+                              "Ignored if --nonblock-renderer is turned off.")]
             int nonblockRendererQueue = 512,
             [Option("strict-rendering", Description = "Flag to turn on validating action renderer.")]
             bool strictRendering = false,
+            [Option(Description = "Log action renders besides block renders. --rpc-server implies this.")]
+            bool logActionRenders = false,
             [Option("network-type", Description = "Network type.")]
             NetworkType networkType = NetworkType.Main,
-            [Option("dev", Description = "Flag to turn on the dev mode.  false by default.")]
+            [Option("dev", Description = "Flag to turn on the dev mode. false by default.")]
             bool isDev = false,
-            [Option(
-                "dev.block-interval",
-                Description =
-                    "The time interval between blocks. It's unit is milliseconds. Works only when dev mode is on.  10000 (ms) by default.")]
+            [Option("dev.block-interval",
+                Description = "The time interval between blocks. It's unit is milliseconds. " +
+                              "Works only when dev mode is on.")]
             int blockInterval = 10000,
-            [Option(
-                "dev.reorg-interval",
-                Description =
-                    "The size of reorg interval. Works only when dev mode is on.  0 by default.")]
+            [Option("dev.reorg-interval",
+                Description = "The size of reorg interval. Works only when dev mode is on.")]
             int reorgInterval = 0,
-            [Option(Description = "Log action renders besides block renders.  --rpc-server implies this.")]
-            bool logActionRenders = false,
             [Option(Description = "The Cognito identity for AWS CloudWatch logging.")]
             string? awsCognitoIdentity = null,
             [Option(Description = "The access key for AWS CloudWatch logging.")]
@@ -151,38 +170,32 @@ namespace NineChronicles.Headless.Executable
             string? awsSecretKey = null,
             [Option(Description = "The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2).")]
             string? awsRegion = null,
-            [Option(Description = "The lifetime of each transaction, which uses minute as its unit.  180 (m) by default.")]
-            int txLifeTime = 180,
-            [Option(Description = "The grace period for new messages, which uses second as its unit.  60 (s) by default.")]
-            int messageTimeout = 60,
-            [Option(Description = "The grace period for tip update, which uses second as its unit.  60 (s) by default.")]
-            int tipTimeout = 60,
             [Option(Description =
-                "A number that determines how far behind the demand the tip of the chain " +
-                "will publish `NodeException` to GraphQL subscriptions.  1150 blocks by default.")]
+                "The lifetime of each transaction, which uses minute as its unit.")]
+            int txLifeTime = 180,
+            [Option(Description =
+                "The grace period for new messages, which uses second as its unit.")]
+            int messageTimeout = 60,
+            [Option(Description = "The grace period for tip update, which uses second as its unit.")]
+            int tipTimeout = 60,
+            [Option(Description = "A number of block size that determines how far behind the demand " +
+                                  "the tip of the chain will publish `NodeException` to GraphQL subscriptions.")]
             int demandBuffer = 1150,
             [Option("static-peer",
                 Description = "A list of peers that the node will continue to maintain.")]
             string[]? staticPeerStrings = null,
-            [Option("miner-count", Description = "The number of miner task(thread).")]
-            int minerCount = 1,
-            [Option(Description ="Run node without preloading.")]
+            [Option(Description = "Run node without preloading.")]
             bool skipPreload = false,
-            [Option(Description = "Minimum number of peers to broadcast message.  10 by default.")]
+            [Option(Description = "Minimum number of peers to broadcast message.")]
             int minimumBroadcastTarget = 10,
-            [Option(Description =
-                "Number of the peers can be stored in each bucket.  16 by default.")]
+            [Option(Description = "Number of the peers can be stored in each bucket.")]
             int bucketSize = 16,
-            [Option(Description =
-                "Determines behavior when the chain's tip is stale. \"reboot\" and \"preload\" " +
-                "is available and \"reboot\" option is selected by default.")]
+            [Option(Description = "Determines behavior when the chain's tip is stale. \"reboot\" and \"preload\" " +
+                                  "is available and \"reboot\" option is selected by default.")]
             string chainTipStaleBehaviorType = "reboot",
-            [Option(Description =
-                "The number of maximum transactions can be included in stage per signer.")]
+            [Option(Description = "The number of maximum transactions can be included in stage per signer.")]
             int txQuotaPerSigner = 10,
-            bool rpcRemoteServer = false,
-            bool rpcHttpServer = false,
-            [Option(Description = "The maximum number of peers to poll blocks.  int.MaxValue by default.")]
+            [Option(Description = "The maximum number of peers to poll blocks. int.MaxValue by default.")]
             int maximumPollPeers = int.MaxValue,
             [Ignore]
             CancellationToken? cancellationToken = null
@@ -223,7 +236,7 @@ namespace NineChronicles.Headless.Executable
                 Directory.Delete("_logs", true);
             }
 
-            if (useBasicAwsCredentials ^ useCognitoCredentials  && !(awsRegion is null))
+            if (useBasicAwsCredentials ^ useCognitoCredentials && !(awsRegion is null))
             {
                 RegionEndpoint regionEndpoint = RegionEndpoint.GetBySystemName(awsRegion);
                 AWSCredentials credentials = useCognitoCredentials
@@ -304,6 +317,7 @@ namespace NineChronicles.Headless.Executable
                         swarmPrivateKeyString,
                         storeType,
                         storePath,
+                        noReduceStore,
                         100,
                         iceServerStrings,
                         peerStrings,

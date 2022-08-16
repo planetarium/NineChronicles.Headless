@@ -1,0 +1,5 @@
+#!/bin/bash
+
+dotnet format \
+    --exclude Lib9c \
+    --exclude NineChronicles.RPC.Shared

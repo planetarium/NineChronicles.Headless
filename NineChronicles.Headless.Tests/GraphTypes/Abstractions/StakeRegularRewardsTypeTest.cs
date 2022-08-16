@@ -39,9 +39,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes.Abstractions
             Assert.Single(bonusRewards);
             var queryResult = await ExecuteQueryAsync<StakeRegularRewardsType>(
                 query,
-                source: (rewardRow.Level, rewardRow.RequiredGold, rewards, bonusRewards) 
+                source: (rewardRow.Level, rewardRow.RequiredGold, rewards, bonusRewards)
             );
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var expected = new Dictionary<string, object>
             {
                 ["level"] = rewardRow.Level,

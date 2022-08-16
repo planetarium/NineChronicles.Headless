@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 using System;
 using System.Threading.Tasks;
 using MagicOnion.Server.Hubs;
@@ -44,13 +44,13 @@ namespace NineChronicles.Headless
             Broadcast(_addressGroup).OnRenderBlock(oldTip, newTip);
             await Task.CompletedTask;
         }
-        
+
         public async Task ReportReorgAsync(byte[] oldTip, byte[] newTip, byte[] branchpoint)
         {
             Broadcast(_addressGroup).OnReorged(oldTip, newTip, branchpoint);
             await Task.CompletedTask;
         }
-        
+
         public async Task ReportReorgEndAsync(byte[] oldTip, byte[] newTip, byte[] branchpoint)
         {
             Broadcast(_addressGroup).OnReorgEnd(oldTip, newTip, branchpoint);

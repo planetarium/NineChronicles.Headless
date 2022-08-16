@@ -30,7 +30,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 query,
                 source: (row, Fixtures.TableSheetsFX.MonsterCollectionRewardSheet)
             );
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var expected = new Dictionary<string, object>
             {
                 ["level"] = row.Level,

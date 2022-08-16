@@ -141,7 +141,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     var histories = filteredTransactions.Select(tx =>
-                        ToTransferNCGHistory((TxSuccess) store.GetTxExecution(blockHash, tx.Id),
+                        ToTransferNCGHistory((TxSuccess)store.GetTxExecution(blockHash, tx.Id),
                             ((TransferAsset)tx.Actions.Single().InnerAction).Memo));
 
                     return histories;
@@ -235,7 +235,7 @@ namespace NineChronicles.Headless.GraphTypes
                                    "Use transaction.getTx()",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<TxIdType>>
-                        {Name = "txId", Description = "transaction id."}
+                    { Name = "txId", Description = "transaction id." }
                 ),
                 resolve: context =>
                 {
@@ -307,7 +307,7 @@ namespace NineChronicles.Headless.GraphTypes
                         AgentState agentState = new AgentState(agentDict);
                         Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
                         Currency currency = new GoldCurrencyState(
-                            (Dictionary) blockChain.GetState(Addresses.GoldCurrency, offset)
+                            (Dictionary)blockChain.GetState(Addresses.GoldCurrency, offset)
                             ).Currency;
 
                         FungibleAssetValue balance = blockChain.GetBalance(agentAddress, currency, offset);

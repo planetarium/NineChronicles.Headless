@@ -37,7 +37,7 @@ namespace NineChronicles.Headless.Executable.Commands.Key
 
             if (publicKey)
             {
-                _console.Out.WriteLine(ByteUtil.Hex(privateKey.PublicKey.Format(true)));   
+                _console.Out.WriteLine(ByteUtil.Hex(privateKey.PublicKey.Format(true)));
             }
         }
     }

@@ -17,7 +17,7 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
                 nameof(ItemBase.Id),
                 description: "ID from ItemSheet."
             );
-            
+
             Field<NonNullGraphType<ItemTypeEnumType>>(
                 nameof(ItemBase.ItemType),
                 description: "Item category.",

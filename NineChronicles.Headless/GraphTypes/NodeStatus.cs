@@ -19,7 +19,7 @@ namespace NineChronicles.Headless.GraphTypes
         public bool BootstrapEnded { get; set; }
 
         public bool PreloadEnded { get; set; }
-        
+
         public bool IsMining { get; set; }
 
         public NodeStatusType(StandaloneContext context)

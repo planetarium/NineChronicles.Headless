@@ -45,7 +45,11 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context =>
                 {
                     IReadOnlyList<Address> avatarAddresses = context.Source.GetAvatarAddresses();
-                    return context.Source.AccountStateGetter.GetAvatarStates(avatarAddresses);
+                    return context.Source.AccountStateGetter.GetAvatarStates(avatarAddresses).Select(
+                        x => new AvatarStateType.AvatarStateContext(
+                            x,
+                            context.Source.AccountStateGetter,
+                            context.Source.AccountBalanceGetter));
                 });
             Field<NonNullGraphType<StringGraphType>>(
                 "gold",
@@ -77,7 +81,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                     );
                     if (context.Source.GetState(monsterCollectionAddress) is { } state)
                     {
-                        return new MonsterCollectionState((Dictionary) state).Level;
+                        return new MonsterCollectionState((Dictionary)state).Level;
                     }
 
                     return 0;
@@ -109,7 +113,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                         }
                         else if (values[avatarAddresses.Count + i] is { } state)
                         {
-                            var avatarState = new AvatarState((Dictionary) state);
+                            var avatarState = new AvatarState((Dictionary)state);
                             var traded = IsTradeQuestCompleted(avatarState.questList);
                             if (traded)
                             {

@@ -50,7 +50,7 @@ namespace NineChronicles.Headless.Tests
             IReadOnlyList<IValue?> GetStatesMock(IReadOnlyList<Address> addresses) =>
                 addresses.Select(GetStateMock).ToArray();
 
-            var getter = (AccountStateGetter) GetStatesMock;
+            var getter = (AccountStateGetter)GetStatesMock;
 
             if (exc)
             {

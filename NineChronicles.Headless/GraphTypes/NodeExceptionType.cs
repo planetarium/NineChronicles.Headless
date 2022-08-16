@@ -1,4 +1,4 @@
-﻿using GraphQL.Types;
+using GraphQL.Types;
 using Libplanet.Headless;
 
 namespace NineChronicles.Headless.GraphTypes

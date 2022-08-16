@@ -1,4 +1,4 @@
-﻿namespace NineChronicles.Headless.Requests
+namespace NineChronicles.Headless.Requests
 {
     public struct SetMiningRequest
     {
