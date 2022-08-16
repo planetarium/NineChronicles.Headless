@@ -385,12 +385,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(expected, data);
             Assert.Single(tx.Actions);
             var action = (HackAndSlash)tx.Actions.First().InnerAction;
-            Assert.Equal(avatarAddress, action.avatarAddress);
-            Assert.Equal(worldId, action.worldId);
-            Assert.Equal(stageId, action.stageId);
-            Assert.Equal(costumeIds, action.costumes);
-            Assert.Equal(equipmentIds, action.equipments);
-            Assert.Equal(consumableIds, action.foods);
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            Assert.Equal(worldId, action.WorldId);
+            Assert.Equal(stageId, action.StageId);
+            Assert.Equal(costumeIds, action.Costumes);
+            Assert.Equal(equipmentIds, action.Equipments);
+            Assert.Equal(consumableIds, action.Foods);
         }
 
         public static IEnumerable<object?[]> HackAndSlashMember => new List<object?[]>
