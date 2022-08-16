@@ -386,6 +386,25 @@ namespace NineChronicles.Headless.GraphTypes
                     return null;
                 }
             );
+
+            Field<WorldBossKillRewardRecordType>(
+                "worldBossKillRewardRecord",
+                description: "user boss kill reward record by world boss season.",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "worldBossKillRewardRecordAddress"
+                }),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("worldBossKillRewardRecordAddress");
+                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] {address});
+                    if (values[0] is List list)
+                    {
+                        return new WorldBossKillRewardRecord(list);
+                    }
+                    return null;
+                }
+            );
         }
     }
 }

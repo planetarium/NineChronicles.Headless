@@ -51,6 +51,29 @@ namespace NineChronicles.Headless.GraphTypes
                     return Addresses.GetWorldBossAddress(raidId);
                 }
             );
+
+            Field<NonNullGraphType<AddressType>>(
+                name: "worldBossKillRewardRecordAddress",
+                description: "user boss kill reward record address by world boss season.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "address of avatar state."
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "raidId",
+                        Description = "world boss season id."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+                    var raidId = context.GetArgument<int>("raidId");
+                    return Addresses.GetWorldBossKillRewardRecordAddress(avatarAddress, raidId);
+                }
+            );
         }
     }
 }

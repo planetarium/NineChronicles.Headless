@@ -21,15 +21,18 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         private readonly Address _avatarAddress;
         private readonly Address _raiderStateAddress;
         private readonly Address _worldBossAddress;
+        private readonly Address _worldBossKillRewardRecordAddress;
         private readonly RaiderState _raiderState;
         private readonly StateContext _stateContext;
         private readonly WorldBossState _worldBossState;
+        private readonly WorldBossKillRewardRecord _worldBossKillRewardRecord;
 
         public WorldBossScenarioTest()
         {
             _avatarAddress = new Address("4FcaCfCeC22717789Cb00b427b95B476BBAaA5b2");
             _raiderStateAddress = new Address("Bd9a12559be0F746Cade6272b6ACb1F1426C8c5D");
             _worldBossAddress = new Address("0x8ce55655e4c2a20Ab24d0C4689EA7BF953D351Ed");
+            _worldBossKillRewardRecordAddress = new Address("0xE9653E92a5169bFbA66a4CbC07780ED370986d98");
             _stateContext = new StateContext(GetStatesMock, GetBalanceMock);
             _raiderState = new RaiderState
             {
@@ -49,6 +52,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 LatestBossLevel = 1,
             };
             _worldBossState = new WorldBossState(List.Empty.Add("1").Add("2").Add(10).Add("2").Add("3"));
+            _worldBossKillRewardRecord = new WorldBossKillRewardRecord
+            {
+                [1] = true,
+                [2] = false,
+            };
         }
 
         [Theory]
@@ -160,7 +168,59 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
                 Assert.Equal(expectedData, worldBossStateData);
             }
         }
-        
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task WorldBossKillRewardRecord(bool stateExist)
+        {
+            int raidId = await GetRaidId();
+
+            // Find address.
+            var addressQuery = $@"query {{
+worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
+}}";
+            var addressQueryResult = await ExecuteQueryAsync<AddressQuery>(addressQuery);
+            var addressData = (Dictionary<string, object>) ((ExecutionNode) addressQueryResult.Data!).ToValue()!;
+            Assert.Equal("0xE9653E92a5169bFbA66a4CbC07780ED370986d98", addressData["worldBossKillRewardRecordAddress"]);
+
+            var worldBossKillRewardRecordAddress = stateExist ? addressData["worldBossKillRewardRecordAddress"] : default;
+            // Get WorldBossKillRewardRecord.
+            var stateQuery = $@"query {{
+    worldBossKillRewardRecord(worldBossKillRewardRecordAddress: ""{worldBossKillRewardRecordAddress}"") {{        
+        map {{
+            bossLevel
+            claimed
+        }}
+    }}
+}}";
+            
+            var stateQueryResult = await ExecuteQueryAsync<StateQuery>(stateQuery, source: _stateContext);
+            var stateData =
+                ((Dictionary<string, object>) ((ExecutionNode) stateQueryResult.Data!).ToValue()!)[
+                    "worldBossKillRewardRecord"];
+            Assert.Equal(!stateExist, stateData is null);
+            if (stateExist)
+            {
+                var expectedData = new Dictionary<string, object>
+                {
+                    ["map"] = new List<Dictionary<string, object>>
+                    {
+                        new()
+                        {
+                            ["bossLevel"] = 1,
+                            ["claimed"] = true,
+                        },
+                        new()
+                        {
+                            ["bossLevel"] = 2,
+                            ["claimed"] = false,
+                        },
+                    }
+                };
+                Assert.Equal(expectedData, stateData);
+            }
+        }
         private IValue? GetStateMock(Address address)
         {
             if (address.Equals(_raiderStateAddress))
@@ -178,6 +238,11 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
             if (address.Equals(_worldBossAddress))
             {
                 return _worldBossState.Serialize();
+            }
+
+            if (address.Equals(_worldBossKillRewardRecordAddress))
+            {
+                return _worldBossKillRewardRecord.Serialize();
             }
 
             return null;
