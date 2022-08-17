@@ -91,7 +91,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 ["stake"] = ByteUtil.Hex(_codec.Encode(action.PlainValue)),
             };
-            Assert.Equal(expected, data);
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["stake"]));
+            var expectedPlainValue = _codec.Decode(ByteUtil.ParseHex((string)expected["stake"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var dictionary = (Dictionary)plainValue;
+            Assert.IsType<Stake>(DeserializeNCAction(dictionary).InnerAction);
+            var actualAmount = ((Dictionary)dictionary["values"])["am"].ToBigInteger();
+            var expectedAmount = ((Dictionary)((Dictionary)expectedPlainValue)["values"])["am"].ToBigInteger();
+            Assert.Equal(expectedAmount, actualAmount);
         }
 
         [Fact]
