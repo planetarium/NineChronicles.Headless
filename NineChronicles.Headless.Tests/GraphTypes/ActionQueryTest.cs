@@ -42,7 +42,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             var minerPrivateKey = new PrivateKey();
             var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
-                HashAlgorithmType.Of<SHA256>(),
                 new PolymorphicAction<ActionBase>[]
                 {
                     new InitializeStates(

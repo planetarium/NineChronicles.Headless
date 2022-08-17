@@ -55,7 +55,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         public void Tip(StoreType storeType)
         {
             HashAlgorithmType hashAlgo = HashAlgorithmType.Of<SHA256>();
-            Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(hashAlgo);
+            Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock();
             IStore store = storeType.CreateStore(_storePath);
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
@@ -65,7 +65,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
             // FIXME For an unknown reason, BlockHeader.TimeStamp precision issue occurred and the store we should open it again.
             store = storeType.CreateStore(_storePath);
-            genesisBlock = store.GetBlock<NCAction>(_ => hashAlgo, genesisBlock.Hash);
+            genesisBlock = store.GetBlock<NCAction>(genesisBlock.Hash);
             store.Dispose();
 
             _command.Tip(storeType, _storePath);
@@ -80,9 +80,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [InlineData(StoreType.RocksDb)]
         public async Task Inspect(StoreType storeType)
         {
-            Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
-                HashAlgorithmType.Of<SHA256>()
-            );
+            Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock();
             IStore store = storeType.CreateStore(_storePath);
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
@@ -130,9 +128,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [InlineData(StoreType.RocksDb)]
         public async Task Truncate(StoreType storeType)
         {
-            Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
-                HashAlgorithmType.Of<SHA256>()
-            );
+            Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock();
             IStore store = storeType.CreateStore(_storePath);
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
