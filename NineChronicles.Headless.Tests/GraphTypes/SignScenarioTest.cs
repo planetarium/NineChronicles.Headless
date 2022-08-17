@@ -78,7 +78,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             var privateKey = new PrivateKey();
             var avatarAddress = privateKey.ToAddress();
-            var guid = Guid.NewGuid();
             // Create Action.
             var args = $"avatarAddress: \"{avatarAddress}\"";
             object plainValue = await GetAction("claimRaidReward", args);
@@ -94,7 +93,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             var privateKey = new PrivateKey();
             var avatarAddress = privateKey.ToAddress();
-            var guid = Guid.NewGuid();
             // Create Action.
             var args = $"avatarAddress: \"{avatarAddress}\"";
             object plainValue = await GetAction("claimWorldBossKillReward", args);

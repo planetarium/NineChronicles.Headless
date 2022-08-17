@@ -427,6 +427,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<AddressQuery>>(
                 name: "addressQuery",
+                description: "Query to get derived address.",
                 resolve: context => new AddressQuery());
         }
     }

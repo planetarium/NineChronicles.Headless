@@ -335,8 +335,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var raiderAddress = context.GetArgument<Address>("raiderAddress");
-                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] { raiderAddress });
-                    if (values[0] is List list)
+                    if (context.Source.GetState(raiderAddress) is List list)
                     {
                         return new RaiderState(list);
                     }
@@ -348,7 +347,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<IntGraphType>>(
                 "raidId",
                 description: "world boss season id by block index.",
-                arguments: new QueryArguments(new QueryArgument<LongGraphType>
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<LongGraphType>>
                 {
                     Name = "blockIndex"
                 }),
@@ -357,8 +356,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var blockIndex = context.GetArgument<long>("blockIndex");
                     var sheet = new WorldBossListSheet();
                     var address = Addresses.GetSheetAddress<WorldBossListSheet>();
-                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] {address});
-                    if (values[0] is Text text)
+                    if (context.Source.GetState(address) is Text text)
                     {
                         sheet.Set(text);
                     }
@@ -377,8 +375,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var bossAddress = context.GetArgument<Address>("bossAddress");
-                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] {bossAddress});
-                    if (values[0] is List list)
+                    if (context.Source.GetState(bossAddress) is List list)
                     {
                         return new WorldBossState(list);
                     }
@@ -397,8 +394,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var address = context.GetArgument<Address>("worldBossKillRewardRecordAddress");
-                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] {address});
-                    if (values[0] is List list)
+                    if (context.Source.GetState(address) is List list)
                     {
                         return new WorldBossKillRewardRecord(list);
                     }
