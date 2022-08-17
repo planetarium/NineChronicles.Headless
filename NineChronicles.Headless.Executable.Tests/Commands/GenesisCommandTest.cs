@@ -114,37 +114,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
             // ExtraConfig: pendingActivationStatePath
 
-            // Deprecated: actions
-            var actions = new List<string>();
-            if (actionsExist)
-            {
-                var actionCommand = new ActionCommand(_console);
-                for (int i = 0; i < 2; i++)
-                {
-                    var path = Path.GetTempFileName();
-                    actionCommand.MonsterCollect(i, path);
-                    actions.Add(path);
-                }
-            }
-            // if (actionsExist)
-            // {
-            //     config["actions"] = actions;
-            // }
-
-            // Deprecated: authorizedMinerConfig
-            var authorizedMinerConfig = new Dictionary<string, object>
-            {
-                ["validUntil"] = 1500000,
-                ["interval"] = 50,
-                ["miners"] = new List<string>
-                {
-                    "0000000000000000000000000000000000000001",
-                    "0000000000000000000000000000000000000002",
-                    "0000000000000000000000000000000000000003",
-                    "0000000000000000000000000000000000000004"
-                }
-            };
-
             string json = JsonSerializer.Serialize(config);
             var configPath = Path.GetTempFileName();
             File.WriteAllText(configPath, json);
