@@ -33,7 +33,7 @@ namespace NineChronicles.Headless.GraphTypes
                     Name = "amount",
                     Description = "An amount to stake.",
                 }),
-                resolve: context => 
+                resolve: context =>
                     Codec.Encode(
                     ((NCAction)new Stake(context.GetArgument<BigInteger>("amount"))).PlainValue));
 
