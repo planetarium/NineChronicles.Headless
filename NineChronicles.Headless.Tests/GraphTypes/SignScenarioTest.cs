@@ -24,9 +24,9 @@ using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
-    public class ScenarioTest : GraphQLTestBase
+    public class SignScenarioTest : GraphQLTestBase
     {
-        public ScenarioTest(ITestOutputHelper output) : base(output)
+        public SignScenarioTest(ITestOutputHelper output) : base(output)
         {
         }
 
@@ -70,6 +70,36 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Guid foodId = Assert.Single(action.FoodIds);
             Assert.All(new[] {equipmentId, costumeId, foodId}, id => Assert.Equal(guid, id));
             Assert.True(action.PayNcg);
+            await StageTransaction(signedTx, hex);
+        }
+
+        [Fact]
+        public async Task SignTransaction_ClaimRaidReward()
+        {
+            var privateKey = new PrivateKey();
+            var avatarAddress = privateKey.ToAddress();
+            // Create Action.
+            var args = $"avatarAddress: \"{avatarAddress}\"";
+            object plainValue = await GetAction("claimRaidReward", args);
+
+            (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
+            var action = Assert.IsType<ClaimRaidReward>(signedTx.Actions.Single().InnerAction);
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            await StageTransaction(signedTx, hex);
+        }
+
+        [Fact]
+        public async Task SignTransaction_ClaimWorldBossKillReward()
+        {
+            var privateKey = new PrivateKey();
+            var avatarAddress = privateKey.ToAddress();
+            // Create Action.
+            var args = $"avatarAddress: \"{avatarAddress}\"";
+            object plainValue = await GetAction("claimWorldBossKillReward", args);
+
+            (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
+            var action = Assert.IsType<ClaimWordBossKillReward>(signedTx.Actions.Single().InnerAction);
+            Assert.Equal(avatarAddress, action.AvatarAddress);
             await StageTransaction(signedTx, hex);
         }
 

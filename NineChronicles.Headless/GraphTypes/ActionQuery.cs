@@ -11,6 +11,7 @@ using GraphQL.Types;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
+using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Helper;
 using Nekoyume.Model.State;
@@ -278,6 +279,43 @@ namespace NineChronicles.Headless.GraphTypes
                         CostumeIds = costumeIds,
                         FoodIds = foodIds,
                         PayNcg = payNcg
+                    };
+                    return Codec.Encode(action.PlainValue);
+                }
+            );
+            Field<NonNullGraphType<ByteStringType>>(
+                "claimRaidReward",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "address of avatar state to receive reward."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+
+                    NCAction action = new ClaimRaidReward(avatarAddress);
+                    return Codec.Encode(action.PlainValue);
+                }
+            );
+            Field<NonNullGraphType<ByteStringType>>(
+                "claimWorldBossKillReward",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "address of avatar state to receive reward."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+
+                    NCAction action = new ClaimWordBossKillReward
+                    {
+                        AvatarAddress = avatarAddress,
                     };
                     return Codec.Encode(action.PlainValue);
                 }
