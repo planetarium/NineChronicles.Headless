@@ -10,7 +10,7 @@ namespace NineChronicles.Headless.GraphTypes.States
         {
             public WorldBossKillRewardRecordMapType()
             {
-                Field<IntGraphType>("bossLevel", resolve: context => context.Source.Key);
+                Field<NonNullGraphType<IntGraphType>>("bossLevel", resolve: context => context.Source.Key);
                 Field<NonNullGraphType<BooleanGraphType>>(
                     "claimed",
                     description: "check reward already claimed. if already claimed return true.",
@@ -20,7 +20,7 @@ namespace NineChronicles.Headless.GraphTypes.States
 
         public WorldBossKillRewardRecordType()
         {
-            Field<NonNullGraphType<ListGraphType<WorldBossKillRewardRecordMapType>>>(
+            Field<NonNullGraphType<ListGraphType<NonNullGraphType<WorldBossKillRewardRecordMapType>>>>(
                 "map",
                 resolve: context => context.Source);
         }
