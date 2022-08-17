@@ -114,6 +114,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
             // ExtraConfig: pendingActivationStatePath
 
+            // Serialize and write config file
             string json = JsonSerializer.Serialize(config);
             var configPath = Path.GetTempFileName();
             File.WriteAllText(configPath, json);
