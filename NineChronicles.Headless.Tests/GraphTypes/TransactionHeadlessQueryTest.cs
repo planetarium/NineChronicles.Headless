@@ -253,7 +253,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var queryFormat = @"query {{
                 transactionResult(txId: ""{0}"") {{
                     blockHash
-                    transactionStatus
+                    txStatus
                 }}
             }}";
             var result = await ExecuteAsync(string.Format(
@@ -262,8 +262,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.NotNull(result.Data);
             var transactionResult =
                 ((Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!)["transactionResult"];
-            var transactionStatus = (string)((Dictionary<string, object>)transactionResult)["transactionStatus"];
-            Assert.Equal("STAGING", transactionStatus);
+            var txStatus = (string)((Dictionary<string, object>)transactionResult)["txStatus"];
+            Assert.Equal("STAGING", txStatus);
         }
 
         [Fact]
@@ -278,7 +278,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var queryFormat = @"query {{
                 transactionResult(txId: ""{0}"") {{
                     blockHash
-                    transactionStatus
+                    txStatus
                 }}
             }}";
             var result = await ExecuteAsync(string.Format(
@@ -287,8 +287,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.NotNull(result.Data);
             var transactionResult =
                 ((Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!)["transactionResult"];
-            var transactionStatus = (string)((Dictionary<string, object>)transactionResult)["transactionStatus"];
-            Assert.Equal("INVALID", transactionStatus);
+            var txStatus = (string)((Dictionary<string, object>)transactionResult)["txStatus"];
+            Assert.Equal("INVALID", txStatus);
         }
 
         [Fact]
@@ -301,7 +301,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var queryFormat = @"query {{
                 transactionResult(txId: ""{0}"") {{
                     blockHash
-                    transactionStatus
+                    txStatus
                 }}
             }}";
             var result = await ExecuteAsync(string.Format(
@@ -310,8 +310,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.NotNull(result.Data);
             var transactionResult =
                 ((Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!)["transactionResult"];
-            var transactionStatus = (string)((Dictionary<string, object>)transactionResult)["transactionStatus"];
-            Assert.Equal("SUCCESS", transactionStatus);
+            var txStatus = (string)((Dictionary<string, object>)transactionResult)["txStatus"];
+            Assert.Equal("SUCCESS", txStatus);
         }
 
         private Task<ExecutionResult> ExecuteAsync(string query)
