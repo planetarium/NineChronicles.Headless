@@ -116,8 +116,8 @@ namespace NineChronicles.Headless.GraphTypes
                         .Select(b => new TxId(b.ToBuilder().ToArray()))
                         .Select(store.GetTransaction<NCAction>);
                     var filteredTransactions = txs.Where(tx =>
-                        tx.Actions.Count == 1 &&
-                        tx.Actions.First().InnerAction is TransferAsset transferAsset &&
+                        tx.CustomActions!.Count == 1 &&
+                        tx.CustomActions.First().InnerAction is TransferAsset transferAsset &&
                         (!recipient.HasValue || transferAsset.Recipient == recipient) &&
                         transferAsset.Amount.Currency.Ticker == "NCG" &&
                         store.GetTxExecution(blockHash, tx.Id) is TxSuccess);
@@ -142,7 +142,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var histories = filteredTransactions.Select(tx =>
                         ToTransferNCGHistory((TxSuccess)store.GetTxExecution(blockHash, tx.Id),
-                            ((TransferAsset)tx.Actions.Single().InnerAction).Memo));
+                            ((TransferAsset)tx.CustomActions!.Single().InnerAction).Memo));
 
                     return histories;
                 });

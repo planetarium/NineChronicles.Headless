@@ -28,13 +28,13 @@ namespace NineChronicles.Headless.Executable.Tests.Store
         {
             IStore store = storeType.CreateStore(_storePath);
             HashAlgorithmType hashAlgo = HashAlgorithmType.Of<SHA256>();
-            Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(hashAlgo);
+            Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock();
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
             store.PutBlock(genesisBlock);
             store.AppendIndex(chainId, genesisBlock.Hash);
 
-            Assert.Equal(genesisBlock, store.GetGenesisBlock<NCAction>(_ => hashAlgo));
+            Assert.Equal(genesisBlock, store.GetGenesisBlock<NCAction>());
 
             (store as IDisposable)?.Dispose();
         }
@@ -47,7 +47,7 @@ namespace NineChronicles.Headless.Executable.Tests.Store
         {
             IStore store = storeType.CreateStore(_storePath);
             Assert.Throws<InvalidOperationException>(
-                () => store.GetGenesisBlock<NCAction>(_ => HashAlgorithmType.Of<SHA256>())
+                () => store.GetGenesisBlock<NCAction>()
             );
             (store as IDisposable)?.Dispose();
         }

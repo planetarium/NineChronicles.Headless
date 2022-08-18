@@ -120,20 +120,23 @@ namespace NineChronicles.Headless.GraphTypes
                         Transaction<NCAction>.Deserialize(
                             Convert.FromBase64String(context.GetArgument<string>("unsignedTransaction")),
                             false);
+                    TxMetadata txMetadata = new TxMetadata(unsignedTransaction.PublicKey)
+                    {
+                        Nonce = unsignedTransaction.Nonce,
+                        GenesisHash = unsignedTransaction.GenesisHash,
+                        UpdatedAddresses = unsignedTransaction.UpdatedAddresses,
+                        Timestamp = unsignedTransaction.Timestamp
+                    };
+
                     Transaction<NCAction> signedTransaction = new Transaction<NCAction>(
-                        unsignedTransaction.Nonce,
-                        unsignedTransaction.Signer,
-                        unsignedTransaction.PublicKey,
-                        unsignedTransaction.GenesisHash,
-                        unsignedTransaction.UpdatedAddresses,
-                        unsignedTransaction.Timestamp,
-                        unsignedTransaction.Actions,
+                        txMetadata,
+                        unsignedTransaction.CustomActions!,
                         signature);
 
                     return Convert.ToBase64String(signedTransaction.Serialize(true));
                 });
 
-            Field<NonNullGraphType<TxResultType>>(
+            Field<NonNullGraphType<TransactionResultType>>(
                 name: "transactionResult",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<TxIdType>>
@@ -157,8 +160,8 @@ namespace NineChronicles.Headless.GraphTypes
                     if (!(store.GetFirstTxIdBlockHashIndex(txId) is { } txExecutedBlockHash))
                     {
                         return blockChain.GetStagedTransactionIds().Contains(txId)
-                            ? new TxResult(TxStatus.STAGING, null, null, null, null)
-                            : new TxResult(TxStatus.INVALID, null, null, null, null);
+                            ? new TransactionResult(TransactionStatus.STAGING, null, null, null, null)
+                            : new TransactionResult(TransactionStatus.INVALID, null, null, null, null);
                     }
 
                     try
@@ -167,9 +170,9 @@ namespace NineChronicles.Headless.GraphTypes
                         Block<PolymorphicAction<ActionBase>> txExecutedBlock = blockChain[txExecutedBlockHash];
                         return execution switch
                         {
-                            TxSuccess txSuccess => new TxResult(TxStatus.SUCCESS, txExecutedBlock.Index,
+                            TxSuccess txSuccess => new TransactionResult(TransactionStatus.SUCCESS, txExecutedBlock.Index,
                                 txExecutedBlock.Hash.ToString(), null, null),
-                            TxFailure txFailure => new TxResult(TxStatus.FAILURE, txExecutedBlock.Index,
+                            TxFailure txFailure => new TransactionResult(TransactionStatus.FAILURE, txExecutedBlock.Index,
                                 txExecutedBlock.Hash.ToString(), txFailure.ExceptionName, txFailure.ExceptionMetadata),
                             _ => throw new NotImplementedException(
                                 $"{nameof(execution)} is not expected concrete class.")
@@ -177,7 +180,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                     catch (Exception)
                     {
-                        return new TxResult(TxStatus.INVALID, null, null, null, null);
+                        return new TransactionResult(TransactionStatus.INVALID, null, null, null, null);
                     }
                 }
             );
@@ -245,14 +248,17 @@ namespace NineChronicles.Headless.GraphTypes
                         Transaction<NCAction>.Deserialize(
                             ByteUtil.ParseHex(context.GetArgument<string>("unsignedTransaction")),
                             false);
+                    TxMetadata txMetadata = new TxMetadata(unsignedTransaction.PublicKey)
+                    {
+                        Nonce = unsignedTransaction.Nonce,
+                        GenesisHash = unsignedTransaction.GenesisHash,
+                        UpdatedAddresses = unsignedTransaction.UpdatedAddresses,
+                        Timestamp = unsignedTransaction.Timestamp
+                    };
+
                     Transaction<NCAction> signedTransaction = new Transaction<NCAction>(
-                        unsignedTransaction.Nonce,
-                        unsignedTransaction.Signer,
-                        unsignedTransaction.PublicKey,
-                        unsignedTransaction.GenesisHash,
-                        unsignedTransaction.UpdatedAddresses,
-                        unsignedTransaction.Timestamp,
-                        unsignedTransaction.Actions,
+                        txMetadata,
+                        unsignedTransaction.CustomActions!,
                         signature);
                     signedTransaction.Validate();
 

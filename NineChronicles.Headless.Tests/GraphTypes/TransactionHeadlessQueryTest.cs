@@ -40,7 +40,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new VolatileStagePolicy<NCAction>(),
                 _store,
                 _stateStore,
-                BlockChain<NCAction>.MakeGenesisBlock(HashAlgorithmType.Of<SHA256>()));
+                BlockChain<NCAction>.MakeGenesisBlock());
             _service = ServiceBuilder.CreateNineChroniclesNodeService(_blockChain.Genesis, new PrivateKey());
         }
 
@@ -84,7 +84,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     signature
                     timestamp
                     updatedAddresses
-                    actions {{
+                    customActions {{
                         inspection
                     }}
                 }}
@@ -121,8 +121,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(tx.Timestamp, transaction.Timestamp);
             Assert.Equal(tx.UpdatedAddresses, transaction.UpdatedAddresses);
 
-            var plainValue = tx.Actions.First().PlainValue.Inspect(true);
-            Assert.Equal(transaction.Actions.First().PlainValue.Inspect(true), plainValue);
+            var plainValue = tx.CustomActions!.First().PlainValue.Inspect(true);
+            Assert.Equal(transaction.CustomActions!.First().PlainValue.Inspect(true), plainValue);
         }
 
         [Theory]
@@ -218,7 +218,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(unsignedTx.Nonce, signedTx.Nonce);
             Assert.Equal(unsignedTx.UpdatedAddresses, signedTx.UpdatedAddresses);
             Assert.Equal(unsignedTx.Timestamp, signedTx.Timestamp);
-            Assert.Equal(unsignedTx.Actions, signedTx.Actions);
+            Assert.Equal(unsignedTx.CustomActions, signedTx.CustomActions);
         }
 
         [Theory]
@@ -253,7 +253,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var queryFormat = @"query {{
                 transactionResult(txId: ""{0}"") {{
                     blockHash
-                    txStatus
+                    transactionStatus
                 }}
             }}";
             var result = await ExecuteAsync(string.Format(
@@ -262,8 +262,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.NotNull(result.Data);
             var transactionResult =
                 ((Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!)["transactionResult"];
-            var txStatus = (string)((Dictionary<string, object>)transactionResult)["txStatus"];
-            Assert.Equal("STAGING", txStatus);
+            var transactionStatus = (string)((Dictionary<string, object>)transactionResult)["transactionStatus"];
+            Assert.Equal("STAGING", transactionStatus);
         }
 
         [Fact]
@@ -278,7 +278,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var queryFormat = @"query {{
                 transactionResult(txId: ""{0}"") {{
                     blockHash
-                    txStatus
+                    transactionStatus
                 }}
             }}";
             var result = await ExecuteAsync(string.Format(
@@ -287,8 +287,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.NotNull(result.Data);
             var transactionResult =
                 ((Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!)["transactionResult"];
-            var txStatus = (string)((Dictionary<string, object>)transactionResult)["txStatus"];
-            Assert.Equal("INVALID", txStatus);
+            var transactionStatus = (string)((Dictionary<string, object>)transactionResult)["transactionStatus"];
+            Assert.Equal("INVALID", transactionStatus);
         }
 
         [Fact]
@@ -301,7 +301,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var queryFormat = @"query {{
                 transactionResult(txId: ""{0}"") {{
                     blockHash
-                    txStatus
+                    transactionStatus
                 }}
             }}";
             var result = await ExecuteAsync(string.Format(
@@ -310,8 +310,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.NotNull(result.Data);
             var transactionResult =
                 ((Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!)["transactionResult"];
-            var txStatus = (string)((Dictionary<string, object>)transactionResult)["txStatus"];
-            Assert.Equal("SUCCESS", txStatus);
+            var transactionStatus = (string)((Dictionary<string, object>)transactionResult)["transactionStatus"];
+            Assert.Equal("SUCCESS", transactionStatus);
         }
 
         private Task<ExecutionResult> ExecuteAsync(string query)
