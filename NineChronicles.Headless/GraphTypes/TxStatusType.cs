@@ -4,7 +4,7 @@ using GraphQL.Types;
 namespace NineChronicles.Headless.GraphTypes
 {
     [Description("The result of querying transaction.")]
-    public enum TxStatus
+    public enum TransactionStatus
     {
         [Description("The Transaction doesn't staged or invalid.")]
         INVALID,
@@ -19,7 +19,7 @@ namespace NineChronicles.Headless.GraphTypes
         FAILURE,
     }
 
-    public class TxStatusType : EnumerationGraphType<TxStatus>
+    public class TransactionStatusType : EnumerationGraphType<TransactionStatus>
     {
 
     }

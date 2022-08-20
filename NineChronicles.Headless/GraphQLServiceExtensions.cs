@@ -35,6 +35,9 @@ namespace NineChronicles.Headless
             services.TryAddSingleton<AddressType>();
             services.TryAddSingleton<ByteStringType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.PublicKeyType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.TxResultType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.TxStatusType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.BencodexValueType>();
 
             return services;
         }

@@ -120,14 +120,17 @@ namespace NineChronicles.Headless.GraphTypes
                         Transaction<NCAction>.Deserialize(
                             Convert.FromBase64String(context.GetArgument<string>("unsignedTransaction")),
                             false);
+                    TxMetadata txMetadata = new TxMetadata(unsignedTransaction.PublicKey)
+                    {
+                        Nonce = unsignedTransaction.Nonce,
+                        GenesisHash = unsignedTransaction.GenesisHash,
+                        UpdatedAddresses = unsignedTransaction.UpdatedAddresses,
+                        Timestamp = unsignedTransaction.Timestamp
+                    };
+
                     Transaction<NCAction> signedTransaction = new Transaction<NCAction>(
-                        unsignedTransaction.Nonce,
-                        unsignedTransaction.Signer,
-                        unsignedTransaction.PublicKey,
-                        unsignedTransaction.GenesisHash,
-                        unsignedTransaction.UpdatedAddresses,
-                        unsignedTransaction.Timestamp,
-                        unsignedTransaction.Actions,
+                        txMetadata,
+                        unsignedTransaction.CustomActions!,
                         signature);
 
                     return Convert.ToBase64String(signedTransaction.Serialize(true));
@@ -245,14 +248,17 @@ namespace NineChronicles.Headless.GraphTypes
                         Transaction<NCAction>.Deserialize(
                             ByteUtil.ParseHex(context.GetArgument<string>("unsignedTransaction")),
                             false);
+                    TxMetadata txMetadata = new TxMetadata(unsignedTransaction.PublicKey)
+                    {
+                        Nonce = unsignedTransaction.Nonce,
+                        GenesisHash = unsignedTransaction.GenesisHash,
+                        UpdatedAddresses = unsignedTransaction.UpdatedAddresses,
+                        Timestamp = unsignedTransaction.Timestamp
+                    };
+
                     Transaction<NCAction> signedTransaction = new Transaction<NCAction>(
-                        unsignedTransaction.Nonce,
-                        unsignedTransaction.Signer,
-                        unsignedTransaction.PublicKey,
-                        unsignedTransaction.GenesisHash,
-                        unsignedTransaction.UpdatedAddresses,
-                        unsignedTransaction.Timestamp,
-                        unsignedTransaction.Actions,
+                        txMetadata,
+                        unsignedTransaction.CustomActions!,
                         signature);
                     signedTransaction.Validate();
 

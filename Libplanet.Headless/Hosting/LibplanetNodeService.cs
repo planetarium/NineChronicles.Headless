@@ -90,7 +90,7 @@ namespace Libplanet.Headless.Hosting
 
             Properties = properties;
 
-            var genesisBlock = LoadGenesisBlock(properties, blockPolicy.GetHashAlgorithm);
+            var genesisBlock = LoadGenesisBlock(properties);
 
             var iceServers = Properties.IceServers;
 
@@ -106,12 +106,11 @@ namespace Libplanet.Headless.Hosting
 
             if (Properties.Confirmations > 0)
             {
-                HashAlgorithmGetter getHashAlgo = blockPolicy.GetHashAlgorithm;
                 IComparer<IBlockExcerpt> comparer = blockPolicy.CanonicalChainComparer;
                 int confirms = Properties.Confirmations;
                 renderers = renderers.Select(r => r is IActionRenderer<T> ar
-                    ? new DelayedActionRenderer<T>(ar, comparer, Store, getHashAlgo, confirms, 50)
-                    : new DelayedRenderer<T>(r, comparer, Store, getHashAlgo, confirms)
+                    ? new DelayedActionRenderer<T>(ar, comparer, Store, confirms, 50)
+                    : new DelayedRenderer<T>(r, comparer, Store, confirms)
                 );
 
                 // Log the outmost (before delayed) events as well as
@@ -579,8 +578,7 @@ namespace Libplanet.Headless.Hosting
         }
 
         protected Block<T> LoadGenesisBlock(
-            LibplanetNodeServiceProperties<T> properties,
-            HashAlgorithmGetter hashAlgorithmGetter
+            LibplanetNodeServiceProperties<T> properties
         )
         {
             if (!(properties.GenesisBlock is null))
@@ -601,7 +599,7 @@ namespace Libplanet.Headless.Hosting
                     rawBlock = client.GetByteArrayAsync(uri).Result;
                 }
                 var blockDict = (Bencodex.Types.Dictionary)Codec.Decode(rawBlock);
-                return BlockMarshaler.UnmarshalBlock<T>(hashAlgorithmGetter, blockDict);
+                return BlockMarshaler.UnmarshalBlock<T>(blockDict);
             }
             else
             {

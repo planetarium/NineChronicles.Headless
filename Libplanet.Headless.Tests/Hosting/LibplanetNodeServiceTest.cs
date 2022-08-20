@@ -19,7 +19,7 @@ namespace Libplanet.Headless.Tests.Hosting
         [Fact]
         public void Constructor()
         {
-            var genesisBlock = BlockChain<DummyAction>.MakeGenesisBlock(HashAlgorithmType.Of<SHA256>());
+            var genesisBlock = BlockChain<DummyAction>.MakeGenesisBlock();
             var service = new LibplanetNodeService<DummyAction>(
                 new LibplanetNodeServiceProperties<DummyAction>()
                 {
