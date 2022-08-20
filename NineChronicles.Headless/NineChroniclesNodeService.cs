@@ -20,6 +20,7 @@ using Serilog.Events;
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,6 +29,7 @@ using StrictRenderer =
     Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer<Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>>;
 using Libplanet.Blocks;
 using Libplanet;
+using Libplanet.Assets;
 
 namespace NineChronicles.Headless
 {
@@ -98,8 +100,8 @@ namespace NineChronicles.Headless
             IStagePolicy<NCAction> stagePolicy = new StagePolicy(txLifeTime, txQuotaPerSigner);
             if (isDev)
             {
-                easyPolicy = new ReorgPolicy(new RewardGold(), 1);
-                hardPolicy = new ReorgPolicy(new RewardGold(), 2);
+                easyPolicy = new ReorgPolicy(new RewardGold(), 1, ImmutableHashSet<Currency>.Empty);
+                hardPolicy = new ReorgPolicy(new RewardGold(), 2, ImmutableHashSet<Currency>.Empty);
             }
 
             BlockRenderer = blockPolicySource.BlockRenderer;
