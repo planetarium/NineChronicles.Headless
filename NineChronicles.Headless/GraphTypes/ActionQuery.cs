@@ -328,7 +328,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Name = "rewardPoolAddress",
                         Description = "address of reward pool for charge reward."
                     },
-                    new QueryArgument<NonNullGraphType<ListGraphType<FungibleAssetValueInputType>>>
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<FungibleAssetValueInputType>>>>
                     {
                         Name = "assets",
                         Description = "list of FungibleAssetValue for charge reward."

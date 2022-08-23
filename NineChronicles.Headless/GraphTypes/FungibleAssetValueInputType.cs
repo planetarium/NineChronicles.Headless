@@ -16,7 +16,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<BigIntGraphType>>("quantity");
             Field<NonNullGraphType<StringGraphType>>("ticker");
             Field<NonNullGraphType<ByteGraphType>>("decimalPlaces");
-            Field<ListGraphType<AddressType>>("minters");
+            Field<ListGraphType<NonNullGraphType<AddressType>>>("minters");
         }
 
         public override object ParseDictionary(IDictionary<string, object?> value)
