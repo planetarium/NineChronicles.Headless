@@ -1,5 +1,8 @@
 # NineChronicles Headless
 
+[![Planetarium Discord invite](https://img.shields.io/discord/539405872346955788?color=6278DA&label=Planetarium&logo=discord&logoColor=white)](https://discord.gg/JyujU8E4SD)
+[![Planetarium-Dev Discord Invite](https://img.shields.io/discord/928926944937013338?color=6278DA&label=Planetarium-dev&logo=discord&logoColor=white)](https://discord.gg/RYJDyFRYY7)
+
 ## Table of Contents
 
 - [Run](#run)
