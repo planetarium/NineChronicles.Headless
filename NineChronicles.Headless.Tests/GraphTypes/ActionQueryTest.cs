@@ -440,5 +440,42 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             Assert.Equal(avatarAddress, action.AvatarAddress);
         }
+
+        [Theory]
+        [InlineData(true, 2)]
+        [InlineData(false, 1)]
+        public async Task PrepareRewardAssets(bool mintersExist, int expectedCount)
+        {
+            var rewardPoolAddress = new PrivateKey().ToAddress();
+            var assets = "{quantity: 100, decimalPlaces: 0, ticker: \"CRYSTAL\"}";
+            if (mintersExist)
+            {
+                assets += $", {{quantity: 100, decimalPlaces: 2, ticker: \"NCG\", minters: [\"{rewardPoolAddress}\"]}}";
+            }
+            var query = $"{{ prepareRewardAssets(rewardPoolAddress: \"{rewardPoolAddress}\", assets: [{assets}]) }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>) ((ExecutionNode) queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["prepareRewardAssets"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<PrepareRewardAssets>(polymorphicAction.InnerAction);
+
+            Assert.Equal(rewardPoolAddress, action.RewardPoolAddress);
+            Assert.Equal(expectedCount, action.Assets.Count);
+
+            var crystal = action.Assets.First(r => r.Currency.Ticker == "CRYSTAL");
+            Assert.Equal(100, crystal.MajorUnit);
+            Assert.Equal(0, crystal.Currency.DecimalPlaces);
+            Assert.Null(crystal.Currency.Minters);
+
+            if (mintersExist)
+            {
+                var ncg = action.Assets.First(r => r.Currency.Ticker == "NCG");
+                Assert.Equal(100, ncg.MajorUnit);
+                Assert.Equal(2, ncg.Currency.DecimalPlaces);
+                var minter = Assert.Single(ncg.Currency.Minters!);
+                Assert.Equal(rewardPoolAddress, minter);
+            }
+        }
     }
 }

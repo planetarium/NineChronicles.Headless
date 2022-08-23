@@ -320,6 +320,33 @@ namespace NineChronicles.Headless.GraphTypes
                     return Codec.Encode(action.PlainValue);
                 }
             );
+            Field<NonNullGraphType<ByteStringType>>(
+                "prepareRewardAssets",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "rewardPoolAddress",
+                        Description = "address of reward pool for charge reward."
+                    },
+                    new QueryArgument<NonNullGraphType<ListGraphType<FungibleAssetValueInputType>>>
+                    {
+                        Name = "assets",
+                        Description = "list of FungibleAssetValue for charge reward."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var assets = context.GetArgument<List<FungibleAssetValue>>("assets");
+                    var rewardPoolAddress = context.GetArgument<Address>("rewardPoolAddress");
+
+                    NCAction action = new PrepareRewardAssets
+                    {
+                        Assets = assets,
+                        RewardPoolAddress = rewardPoolAddress,
+                    };
+                    return Codec.Encode(action.PlainValue);
+                }
+            );
         }
     }
 }
