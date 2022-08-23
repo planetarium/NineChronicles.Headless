@@ -103,6 +103,22 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             await StageTransaction(signedTx, hex);
         }
 
+        [Fact]
+        public async Task SignTransaction_PrepareRewardAssets()
+        {
+            var privateKey = new PrivateKey();
+            var rewardPoolAddress = privateKey.ToAddress();
+            // Create Action.
+            var args = $"rewardPoolAddress: \"{rewardPoolAddress}\", assets:[{{ quantity: 100, decimalPlaces: 0, ticker: \"CRYSTAL\" }}]";
+            object plainValue = await GetAction("prepareRewardAssets", args);
+
+            (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
+            var action = Assert.IsType<PrepareRewardAssets>(signedTx.Actions.Single().InnerAction);
+            Assert.Equal(rewardPoolAddress, action.RewardPoolAddress);
+            Assert.Equal(new Currency("CRYSTAL", 0, minters: null) * 100, action.Assets.Single());
+            await StageTransaction(signedTx, hex);
+        }
+
         private async Task<object> GetAction(string actionName, string queryArgs)
         {
             var actionQuery = $"{{ {actionName}({queryArgs}) }}";

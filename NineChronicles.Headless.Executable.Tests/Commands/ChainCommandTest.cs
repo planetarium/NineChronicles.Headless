@@ -92,12 +92,12 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
             var action = new HackAndSlash
             {
-                costumes = new List<Guid>(),
-                equipments = new List<Guid>(),
-                foods = new List<Guid>(),
-                worldId = 1,
-                stageId = 1,
-                avatarAddress = default
+                Costumes = new List<Guid>(),
+                Equipments = new List<Guid>(),
+                Foods = new List<Guid>(),
+                WorldId = 1,
+                StageId = 1,
+                AvatarAddress = default
             };
 
             var minerKey = new PrivateKey();
@@ -141,12 +141,12 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
             var action = new HackAndSlash
             {
-                costumes = new List<Guid>(),
-                equipments = new List<Guid>(),
-                foods = new List<Guid>(),
-                worldId = 1,
-                stageId = 1,
-                avatarAddress = default
+                Costumes = new List<Guid>(),
+                Equipments = new List<Guid>(),
+                Foods = new List<Guid>(),
+                WorldId = 1,
+                StageId = 1,
+                AvatarAddress = default
             };
 
             var minerKey = new PrivateKey();

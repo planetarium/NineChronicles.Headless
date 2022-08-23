@@ -151,12 +151,12 @@ namespace NineChronicles.Headless.GraphTypes
 
                         var action = new HackAndSlash
                         {
-                            avatarAddress = avatarAddress,
-                            worldId = worldId,
-                            stageId = stageId,
-                            costumes = costumeIds,
-                            equipments = equipmentIds,
-                            foods = consumableIds,
+                            AvatarAddress = avatarAddress,
+                            WorldId = worldId,
+                            StageId = stageId,
+                            Costumes = costumeIds,
+                            Equipments = equipmentIds,
+                            Foods = consumableIds,
                         };
 
                         var actions = new NCAction[] { action };
