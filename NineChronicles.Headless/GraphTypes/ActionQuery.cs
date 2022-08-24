@@ -161,7 +161,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "A string value to be transferred.",
                         Name = "amount",
                     },
-                    new QueryArgument<NonNullGraphType<CurrencyType>>
+                    new QueryArgument<NonNullGraphType<CurrencyEnumType>>
                     {
                         Description = "A currency type to be transferred.",
                         Name = "currency",
@@ -316,6 +316,33 @@ namespace NineChronicles.Headless.GraphTypes
                     NCAction action = new ClaimWordBossKillReward
                     {
                         AvatarAddress = avatarAddress,
+                    };
+                    return Codec.Encode(action.PlainValue);
+                }
+            );
+            Field<NonNullGraphType<ByteStringType>>(
+                "prepareRewardAssets",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "rewardPoolAddress",
+                        Description = "address of reward pool for charge reward."
+                    },
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<FungibleAssetValueInputType>>>>
+                    {
+                        Name = "assets",
+                        Description = "list of FungibleAssetValue for charge reward."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var assets = context.GetArgument<List<FungibleAssetValue>>("assets");
+                    var rewardPoolAddress = context.GetArgument<Address>("rewardPoolAddress");
+
+                    NCAction action = new PrepareRewardAssets
+                    {
+                        Assets = assets,
+                        RewardPoolAddress = rewardPoolAddress,
                     };
                     return Codec.Encode(action.PlainValue);
                 }
