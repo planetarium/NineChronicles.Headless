@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Net;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Security.Cryptography;
@@ -170,7 +171,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var apvPrivateKey = new PrivateKey();
             var apv1 = AppProtocolVersion.Sign(apvPrivateKey, 1);
             var apv2 = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var peer = new Peer(apvPrivateKey.PublicKey);
+            var peer = new BoundPeer(apvPrivateKey.PublicKey, new DnsEndPoint("0.0.0.0", 0));
             StandaloneContextFx.DifferentAppProtocolVersionEncounterSubject.OnNext(
                 new DifferentAppProtocolVersionEncounter(peer, apv1, apv2)
             );
