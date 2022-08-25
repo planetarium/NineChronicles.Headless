@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Security.Cryptography;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
@@ -17,9 +19,12 @@ namespace NineChronicles.Headless
 
         public IAction BlockAction { get; }
 
-        public ReorgPolicy(IAction blockAction, long difficulty)
+        public IImmutableSet<Currency> NativeTokens { get; }
+
+        public ReorgPolicy(IAction blockAction, long difficulty, IImmutableSet<Currency> nativeTokens)
         {
             BlockAction = blockAction;
+            NativeTokens = nativeTokens;
             _difficulty = difficulty;
         }
 

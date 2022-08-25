@@ -68,7 +68,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 privateKey: new PrivateKey(ByteUtil.ParseHex(privateKey)),
                 genesisHash: BlockHash.FromString(genesisHash),
                 timestamp: DateTimeOffset.Parse(timestamp),
-                actions: parsedActions
+                customActions: parsedActions
             );
             byte[] raw = tx.Serialize(true);
 

@@ -104,10 +104,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(nonce, signedTx.Nonce);
             Assert.Equal(unsignedTx.UpdatedAddresses, signedTx.UpdatedAddresses);
             Assert.Equal(unsignedTx.Timestamp, signedTx.Timestamp);
-            Assert.Single(unsignedTx.Actions);
-            Assert.Single(signedTx.Actions);
-            Assert.IsType<TransferAsset>(signedTx.Actions.Single().InnerAction);
-            var action = Assert.IsType<TransferAsset>(signedTx.Actions.Single().InnerAction);
+            Assert.Single(unsignedTx.CustomActions!);
+            Assert.Single(signedTx.CustomActions!);
+            Assert.IsType<TransferAsset>(signedTx.CustomActions!.Single().InnerAction);
+            var action = Assert.IsType<TransferAsset>(signedTx.CustomActions!.Single().InnerAction);
             Assert.Equal(recipient, action.Recipient);
             Assert.Equal(sender, action.Sender);
             Assert.Equal(FungibleAssetValue.Parse(CrystalCalculator.CRYSTAL, "17.5"), action.Amount);
