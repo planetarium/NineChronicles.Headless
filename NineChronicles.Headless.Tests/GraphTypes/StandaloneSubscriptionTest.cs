@@ -292,7 +292,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             IObservable<ExecutionResult> stream = subscribeResult.Streams!.Values.First();
             Assert.NotNull(stream);
 
-            Currency currency = new Currency("NCG", 2, minter: null);
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            Currency currency = Currency.Legacy("NCG", 2, null);
+#pragma warning restore CS0618
             FungibleAssetValue fungibleAssetValue = new FungibleAssetValue(currency, major, minor);
             StandaloneContextFx.MonsterCollectionStatusSubject.OnNext(
                 new MonsterCollectionStatus(
@@ -411,7 +414,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.NotNull(stream);
             Assert.NotEmpty(StandaloneContextFx.AgentAddresses);
 
-            Currency currency = new Currency("NCG", 2, minter: null);
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            Currency currency = Currency.Legacy("NCG", 2, null);
+#pragma warning restore CS0618
             FungibleAssetValue fungibleAssetValue = new FungibleAssetValue(currency, major, minor);
             StandaloneContextFx.AgentAddresses[address].statusSubject.OnNext(
                 new MonsterCollectionStatus(
@@ -478,7 +484,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.NotNull(stream);
             Assert.NotEmpty(StandaloneContextFx.AgentAddresses);
 
-            Currency currency = new Currency("NCG", 2, minter: null);
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            Currency currency = Currency.Legacy("NCG", 2, null);
+#pragma warning restore CS0618
             FungibleAssetValue fungibleAssetValue = new FungibleAssetValue(currency, major, minor);
             StandaloneContextFx.AgentAddresses[address].balanceSubject.OnNext(fungibleAssetValue.GetQuantityString(true));
             ExecutionResult rawEvents = await stream.Take(1);

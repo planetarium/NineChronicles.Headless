@@ -439,7 +439,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             ),
                             adminAddressState: new AdminState(adminAddress, 1500000),
                             activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-                            goldCurrencyState: new GoldCurrencyState(new Currency("NCG", 2, minter: null)),
+#pragma warning disable CS0618
+                            // Use of obsolete method Currency.Legacy():
+                            // https://github.com/planetarium/lib9c/discussions/1319
+                            goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
+#pragma warning restore CS0618
                             goldDistributions: new GoldDistribution[0],
                             tableSheets: _sheets,
                             pendingActivationStates: new PendingActivationState[]{ }
@@ -762,7 +766,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             ),
                             adminAddressState: new AdminState(adminAddress, 1500000),
                             activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-                            goldCurrencyState: new GoldCurrencyState(new Currency("NCG", 2, minter: null)),
+#pragma warning disable CS0618
+                            // Use of obsolete method Currency.Legacy():
+                            // https://github.com/planetarium/lib9c/discussions/1319
+                            goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
+#pragma warning restore CS0618
                             goldDistributions: new GoldDistribution[0],
                             tableSheets: _sheets,
                             pendingActivationStates: pendingActivationStates.ToArray()
@@ -838,7 +846,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             ),
                             adminAddressState: new AdminState(adminAddress, 1500000),
                             activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-                            goldCurrencyState: new GoldCurrencyState(new Currency("NCG", 2, minter: null)),
+#pragma warning disable CS0618
+                            // Use of obsolete method Currency.Legacy():
+                            // https://github.com/planetarium/lib9c/discussions/1319
+                            goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
+#pragma warning restore CS0618
                             goldDistributions: new GoldDistribution[0],
                             tableSheets: _sheets,
                             pendingActivationStates: pendingActivationStates.ToArray()
@@ -886,7 +898,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)
         {
-            var goldCurrency = new Currency("NCG", 2, minter: null);
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            var goldCurrency = Currency.Legacy("NCG", 2, null);
+#pragma warning restore CS0618
 
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
             Block<PolymorphicAction<ActionBase>> genesis =
