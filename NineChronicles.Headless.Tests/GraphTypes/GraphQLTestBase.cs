@@ -96,8 +96,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             services.AddSingleton<IConfiguration>(configuration);
             services.AddGraphTypes();
             services.AddLibplanetExplorer<NCAction>();
-            services.AddSingleton<StateQuery>();
             services.AddSingleton(ncService);
+            services.AddSingleton(ncService.Store);
             ServiceProvider serviceProvider = services.BuildServiceProvider();
             Schema = new StandaloneSchema(serviceProvider);
 
