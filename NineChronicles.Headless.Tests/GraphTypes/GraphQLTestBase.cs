@@ -159,12 +159,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             AppProtocolVersion appProtocolVersion,
             PublicKey appProtocolVersionSigner,
             Progress<PreloadState>? preloadProgress = null,
-            IEnumerable<Peer>? peers = null,
+            IEnumerable<BoundPeer>? peers = null,
             ImmutableList<BoundPeer>? consensusPeers = null)
             where T : IAction, new()
         {
             var consensusPrivateKey = new PrivateKey();
-            
+
             var properties = new LibplanetNodeServiceProperties<T>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
@@ -182,7 +182,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Port = null,
                 NoMiner = true,
                 Render = false,
-                Peers = peers ?? ImmutableHashSet<Peer>.Empty,
+                Peers = peers ?? ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = ImmutableHashSet<PublicKey>.Empty.Add(appProtocolVersionSigner),
                 ConsensusPeers = consensusPeers ?? ImmutableList<BoundPeer>.Empty,
             };

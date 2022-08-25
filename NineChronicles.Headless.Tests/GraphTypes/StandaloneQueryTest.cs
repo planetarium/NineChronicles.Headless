@@ -472,7 +472,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Port = null,
                 NoMiner = true,
                 Render = false,
-                Peers = ImmutableHashSet<Peer>.Empty,
+                Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
@@ -799,7 +799,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Port = null,
                 NoMiner = true,
                 Render = false,
-                Peers = ImmutableHashSet<Peer>.Empty,
+                Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
@@ -879,7 +879,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Port = null,
                 NoMiner = true,
                 Render = false,
-                Peers = ImmutableHashSet<Peer>.Empty,
+                Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
@@ -944,7 +944,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Port = null,
                 NoMiner = true,
                 Render = false,
-                Peers = ImmutableHashSet<Peer>.Empty,
+                Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty,
             };
