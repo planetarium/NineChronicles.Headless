@@ -103,6 +103,8 @@ type AvatarStateType {
   worldInformation: WorldInformationType!
 }
 
+scalar BencodexValue
+
 scalar BigInt
 
 type Block {
@@ -125,6 +127,10 @@ type BlockHeader {
   id: ID!
   hash: String!
   miner: Address
+}
+
+type BlockPolicy {
+  nativeTokens: [Currency!]!
 }
 
 type BlockQuery {
@@ -166,6 +172,15 @@ type CrystalMonsterCollectionMultiplierRowType {
 
 type CrystalMonsterCollectionMultiplierSheetType {
   orderedList: [CrystalMonsterCollectionMultiplierRowType!]!
+}
+
+type Currency {
+  ticker: String!
+  decimalPlaces: UInt!
+  minters: [Address!]
+  maximumSupply: FungibleAssetValue
+  totalSupplyTrackable: Boolean!
+  hash: ByteString!
 }
 
 enum CurrencyEnum {
@@ -215,7 +230,18 @@ type EquipmentType {
 type ExplorerQuery {
   blockQuery: BlockQuery
   transactionQuery: TransactionQuery
+  stateQuery: LibplanetStateQuery
   nodeState: NodeState!
+  blockPolicy: BlockPolicy!
+}
+
+type FungibleAssetValue {
+  currency: Currency!
+  sign: Int!
+  majorUnit: BigInt!
+  minorUnit: BigInt!
+  quantity: String!
+  string: String!
 }
 
 type FungibleAssetValueType {
@@ -286,6 +312,11 @@ type KeyStoreType {
   protectedPrivateKeys: [ProtectedPrivateKeyType!]!
   decryptedPrivateKey(address: Address!, passphrase: String!): ByteString!
   privateKey(hex: ByteString!): PrivateKeyType!
+}
+
+type LibplanetStateQuery {
+  balance(owner: Address!, currencyHash: ByteString!, offsetBlockHash: ID!): FungibleAssetValue!
+  totalSupply(currencyHash: ByteString!, offsetBlockHash: ID!): FungibleAssetValue
 }
 
 scalar Long
@@ -621,6 +652,9 @@ type TransactionQuery {
   transactions(signer: Address, involvedAddress: Address, desc: Boolean = false, offset: Int = 0, limit: Int): [Transaction!]!
   stagedTransactions(signer: Address, involvedAddress: Address, desc: Boolean = false, offset: Int = 0, limit: Int): [Transaction!]!
   transaction(id: ID): Transaction
+  unsignedTransaction(publicKey: String!, plainValue: String!, nonce: Long): ByteString!
+  bindSignature(unsignedTransaction: String!, signature: String!): String!
+  transactionResult(txId: ID!): TxResultType!
 }
 
 type TransactionType_1 {
@@ -631,7 +665,7 @@ type TransactionType_1 {
   signer: Address!
   timestamp: String!
   updatedAddresses: [Address]!
-  actions: [Action]!
+  customActions: [Action]!
 }
 
 type TransferNCGHistoryType {
@@ -650,7 +684,7 @@ type TxResultType {
   blockIndex: Long
   blockHash: String
   exceptionName: String
-  exceptionMetadata: String
+  exceptionMetadata: BencodexValue
 }
 
 enum TxStatus {
@@ -659,6 +693,8 @@ enum TxStatus {
   SUCCESS
   FAILURE
 }
+
+scalar UInt
 
 type ValidationQuery {
   metadata(raw: String!): Boolean!
