@@ -37,6 +37,7 @@ namespace NineChronicles.Headless
                 services.AddSingleton(provider => service);
                 services.AddSingleton(provider => service.Swarm);
                 services.AddSingleton(provider => service.BlockChain);
+                services.AddSingleton(provider => service.Store);
                 if (properties.Libplanet is { } libplanetNodeServiceProperties)
                 {
                     services.AddSingleton<LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>>(provider => libplanetNodeServiceProperties);

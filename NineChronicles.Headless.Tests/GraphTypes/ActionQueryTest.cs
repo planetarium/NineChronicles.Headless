@@ -54,7 +54,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                         ),
                         adminAddressState: new AdminState(new PrivateKey().ToAddress(), 1500000),
                         activatedAccountsState: new ActivatedAccountsState(),
-                        goldCurrencyState: new GoldCurrencyState(new Currency("NCG", 2, minerPrivateKey.ToAddress())),
+#pragma warning disable CS0618
+                        // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                        goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, minerPrivateKey.ToAddress())),
+#pragma warning restore CS0618
                         goldDistributions: Array.Empty<GoldDistribution>(),
                         tableSheets: new Dictionary<string, string>(),
                         pendingActivationStates: new PendingActivationState[]{ }
