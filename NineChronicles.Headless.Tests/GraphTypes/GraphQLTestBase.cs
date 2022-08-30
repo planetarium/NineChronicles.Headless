@@ -40,10 +40,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             _output = output;
 
-#pragma warning disable CS0618
-            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
-            var goldCurrency = Currency.Legacy("NCG", 2, null);
-#pragma warning restore CS0618
+            var goldCurrency = new Currency("NCG", 2, minter: null);
 
             var sheets =
                 TableSheetsImporter.ImportSheets(Path.Join("..", "..", "..", "..", "Lib9c", "Lib9c", "TableCSV"));
@@ -96,8 +93,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             services.AddSingleton<IConfiguration>(configuration);
             services.AddGraphTypes();
             services.AddLibplanetExplorer<NCAction>();
+            services.AddSingleton<StateQuery>();
             services.AddSingleton(ncService);
-            services.AddSingleton(ncService.Store);
             ServiceProvider serviceProvider = services.BuildServiceProvider();
             Schema = new StandaloneSchema(serviceProvider);
 
@@ -159,7 +156,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             AppProtocolVersion appProtocolVersion,
             PublicKey appProtocolVersionSigner,
             Progress<PreloadState>? preloadProgress = null,
-            IEnumerable<BoundPeer>? peers = null,
+            IEnumerable<Peer>? peers = null,
             ImmutableHashSet<BoundPeer>? staticPeers = null)
             where T : IAction, new()
         {
@@ -174,7 +171,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Port = null,
                 NoMiner = true,
                 Render = false,
-                Peers = peers ?? ImmutableHashSet<BoundPeer>.Empty,
+                Peers = peers ?? ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = ImmutableHashSet<PublicKey>.Empty.Add(appProtocolVersionSigner),
                 StaticPeers = staticPeers ?? ImmutableHashSet<BoundPeer>.Empty,
             };

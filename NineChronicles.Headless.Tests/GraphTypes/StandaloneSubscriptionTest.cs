@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Net;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Security.Cryptography;
@@ -171,7 +170,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var apvPrivateKey = new PrivateKey();
             var apv1 = AppProtocolVersion.Sign(apvPrivateKey, 1);
             var apv2 = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var peer = new BoundPeer(apvPrivateKey.PublicKey, new DnsEndPoint("0.0.0.0", 0));
+            var peer = new Peer(apvPrivateKey.PublicKey);
             StandaloneContextFx.DifferentAppProtocolVersionEncounterSubject.OnNext(
                 new DifferentAppProtocolVersionEncounter(peer, apv1, apv2)
             );
@@ -293,10 +292,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             IObservable<ExecutionResult> stream = subscribeResult.Streams!.Values.First();
             Assert.NotNull(stream);
 
-#pragma warning disable CS0618
-            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
-            Currency currency = Currency.Legacy("NCG", 2, null);
-#pragma warning restore CS0618
+            Currency currency = new Currency("NCG", 2, minter: null);
             FungibleAssetValue fungibleAssetValue = new FungibleAssetValue(currency, major, minor);
             StandaloneContextFx.MonsterCollectionStatusSubject.OnNext(
                 new MonsterCollectionStatus(
@@ -415,10 +411,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.NotNull(stream);
             Assert.NotEmpty(StandaloneContextFx.AgentAddresses);
 
-#pragma warning disable CS0618
-            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
-            Currency currency = Currency.Legacy("NCG", 2, null);
-#pragma warning restore CS0618
+            Currency currency = new Currency("NCG", 2, minter: null);
             FungibleAssetValue fungibleAssetValue = new FungibleAssetValue(currency, major, minor);
             StandaloneContextFx.AgentAddresses[address].statusSubject.OnNext(
                 new MonsterCollectionStatus(
@@ -485,10 +478,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.NotNull(stream);
             Assert.NotEmpty(StandaloneContextFx.AgentAddresses);
 
-#pragma warning disable CS0618
-            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
-            Currency currency = Currency.Legacy("NCG", 2, null);
-#pragma warning restore CS0618
+            Currency currency = new Currency("NCG", 2, minter: null);
             FungibleAssetValue fungibleAssetValue = new FungibleAssetValue(currency, major, minor);
             StandaloneContextFx.AgentAddresses[address].balanceSubject.OnNext(fungibleAssetValue.GetQuantityString(true));
             ExecutionResult rawEvents = await stream.Take(1);

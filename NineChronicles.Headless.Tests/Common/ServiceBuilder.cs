@@ -39,7 +39,7 @@ namespace NineChronicles.Headless.Tests.Common
                 NoMiner = true,
                 Render = false,
                 LogActionRenders = false,
-                Peers = ImmutableHashSet<BoundPeer>.Empty,
+                Peers = ImmutableHashSet<Peer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 MessageTimeout = TimeSpan.FromMinutes(1),
                 TipTimeout = TimeSpan.FromMinutes(1),
