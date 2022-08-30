@@ -44,7 +44,10 @@ namespace NineChronicles.Headless.Tests
             avatarAddresses = { [2] = AvatarAddress },
         };
 
-        public static readonly Currency CurrencyFX = new Currency("NCG", 2, minter: null);
+#pragma warning disable CS0618
+        // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+        public static readonly Currency CurrencyFX = Currency.Legacy("NCG", 2, null);
+#pragma warning restore CS0618
 
         public static ShopState ShopStateFX()
         {
@@ -78,7 +81,10 @@ namespace NineChronicles.Headless.Tests
                 3,
                 new Guid("F9168C5E-CEB2-4faa-B6BF-329BF39FA1E4"),
                 new Guid("45082f35-699c-41f0-9332-9143966933a3"),
-                new FungibleAssetValue(new Currency("NCG", 2, minter: null), 1, 0),
+#pragma warning disable CS0618
+                // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                new FungibleAssetValue(Currency.Legacy("NCG", 2, null), 1, 0),
+#pragma warning restore CS0618
                 0,
                 0,
                 10110000,
@@ -90,7 +96,10 @@ namespace NineChronicles.Headless.Tests
                 4,
                 new Guid("936DA01F-9ABD-4d9d-80C7-02AF85C822A8"),
                 new Guid("dae32f1b-6b43-4bdb-933e-fd51d003283e"),
-                new FungibleAssetValue(new Currency("NCG", 2, minter: null), 2, 0),
+#pragma warning disable CS0618
+                // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                new FungibleAssetValue(Currency.Legacy("NCG", 2, null), 2, 0),
+#pragma warning restore CS0618
                 0,
                 0,
                 10110000,
