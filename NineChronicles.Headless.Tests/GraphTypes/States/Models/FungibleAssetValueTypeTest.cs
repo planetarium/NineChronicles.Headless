@@ -21,10 +21,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 currency
                 quantity
             }";
-#pragma warning disable CS0618
-            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
-            var goldCurrency = Currency.Legacy("NCG", 2, null);
-#pragma warning restore CS0618
+            var goldCurrency = new Currency("NCG", 2, minter: null);
             var fav = new FungibleAssetValue(goldCurrency, major, minor);
             var queryResult = await ExecuteQueryAsync<FungibleAssetValueType>(query, source: fav);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;

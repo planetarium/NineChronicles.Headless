@@ -155,10 +155,7 @@ namespace NineChronicles.Headless.Executable.Commands
             try
             {
                 // Minter for 9c-mainnet
-#pragma warning disable CS0618
-                // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
-                var currency = Currency.Legacy("NCG", 2, minter: new Address("47d082a115c63e7b58b1532d20e631538eafadde"));
-#pragma warning restore CS0618
+                var currency = new Currency("NCG", 2, minter: new Address("47d082a115c63e7b58b1532d20e631538eafadde"));
                 FungibleAssetValue amountFungibleAssetValue =
                     FungibleAssetValue.Parse(currency, amount);
                 Address sender = new Address(ByteUtil.ParseHex(senderAddress));

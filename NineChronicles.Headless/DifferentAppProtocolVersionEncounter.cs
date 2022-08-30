@@ -4,14 +4,14 @@ namespace NineChronicles.Headless
 {
     public class DifferentAppProtocolVersionEncounter
     {
-        public BoundPeer Peer { get; }
+        public Peer Peer { get; }
 
         public AppProtocolVersion PeerVersion { get; }
 
         public AppProtocolVersion LocalVersion { get; }
 
         public DifferentAppProtocolVersionEncounter(
-            BoundPeer peer,
+            Peer peer,
             AppProtocolVersion peerVersion,
             AppProtocolVersion localVersion)
         {

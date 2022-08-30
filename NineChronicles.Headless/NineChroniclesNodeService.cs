@@ -300,7 +300,7 @@ namespace NineChronicles.Headless
             }
 
             properties.Libplanet.DifferentAppProtocolVersionEncountered =
-                (BoundPeer peer, AppProtocolVersion peerVersion, AppProtocolVersion localVersion) =>
+                (Peer peer, AppProtocolVersion peerVersion, AppProtocolVersion localVersion) =>
                 {
                     context.DifferentAppProtocolVersionEncounterSubject.OnNext(
                         new DifferentAppProtocolVersionEncounter(peer, peerVersion, localVersion)

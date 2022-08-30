@@ -23,10 +23,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Random random = new Random();
             Address sender = new PrivateKey().ToAddress(),
                 recipient = new PrivateKey().ToAddress();
-#pragma warning disable CS0618
-            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
-            Currency currency = Currency.Legacy("NCG", 2, null);
-#pragma warning restore CS0618
+            Currency currency = new Currency("NCG", 2, minter: null);
             byte[] buffer = new byte[HashDigest<SHA256>.Size];
             random.NextBytes(buffer);
             BlockHash blockHash = new BlockHash(buffer);
