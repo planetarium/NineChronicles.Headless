@@ -129,10 +129,6 @@ type BlockHeader {
   miner: Address
 }
 
-type BlockPolicy {
-  nativeTokens: [Currency!]!
-}
-
 type BlockQuery {
   blocks(desc: Boolean = false, offset: Int = 0, limit: Int, excludeEmptyTxs: Boolean = false, miner: Address): [Block!]!
   block(hash: ID, index: ID): Block
@@ -172,15 +168,6 @@ type CrystalMonsterCollectionMultiplierRowType {
 
 type CrystalMonsterCollectionMultiplierSheetType {
   orderedList: [CrystalMonsterCollectionMultiplierRowType!]!
-}
-
-type Currency {
-  ticker: String!
-  decimalPlaces: UInt!
-  minters: [Address!]
-  maximumSupply: FungibleAssetValue
-  totalSupplyTrackable: Boolean!
-  hash: ByteString!
 }
 
 enum CurrencyEnum {
@@ -230,18 +217,7 @@ type EquipmentType {
 type ExplorerQuery {
   blockQuery: BlockQuery
   transactionQuery: TransactionQuery
-  stateQuery: LibplanetStateQuery
   nodeState: NodeState!
-  blockPolicy: BlockPolicy!
-}
-
-type FungibleAssetValue {
-  currency: Currency!
-  sign: Int!
-  majorUnit: BigInt!
-  minorUnit: BigInt!
-  quantity: String!
-  string: String!
 }
 
 type FungibleAssetValueType {
@@ -312,11 +288,6 @@ type KeyStoreType {
   protectedPrivateKeys: [ProtectedPrivateKeyType!]!
   decryptedPrivateKey(address: Address!, passphrase: String!): ByteString!
   privateKey(hex: ByteString!): PrivateKeyType!
-}
-
-type LibplanetStateQuery {
-  balance(owner: Address!, currencyHash: ByteString!, offsetBlockHash: ID!): FungibleAssetValue!
-  totalSupply(currencyHash: ByteString!, offsetBlockHash: ID!): FungibleAssetValue
 }
 
 scalar Long
@@ -693,8 +664,6 @@ enum TxStatus {
   SUCCESS
   FAILURE
 }
-
-scalar UInt
 
 type ValidationQuery {
   metadata(raw: String!): Boolean!
