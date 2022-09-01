@@ -9,6 +9,7 @@ using NineChronicles.Headless.GraphTypes.States.Models.World;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
 using NineChronicles.Headless.GraphTypes.States.Models.Mail;
 using NineChronicles.Headless.GraphTypes.States.Models.Quest;
+using Nekoyume.BlockChain.Policy;
 
 namespace NineChronicles.Headless.GraphTypes.States
 {
@@ -56,19 +57,23 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context =>
                 {
                     var stakeState = context.Source.StakeState;
-
-                    if (stakeState.ReceivedBlockIndex > 0)
+                    if (context.Source.BlockIndex >= BlockPolicySource.V100290ObsoleteIndex)
                     {
-                        long lastStep = Math.DivRem(
-                            stakeState.ReceivedBlockIndex - stakeState.StartedBlockIndex,
-                            StakeState.RewardInterval,
-                            out _
-                        );
+                        if (stakeState.ReceivedBlockIndex > 0)
+                        {
+                            long lastStep = Math.DivRem(
+                                stakeState.ReceivedBlockIndex - stakeState.StartedBlockIndex,
+                                StakeState.RewardInterval,
+                                out _
+                            );
 
-                        return stakeState.StartedBlockIndex + (lastStep + 1) * StakeState.RewardInterval;
+                            return stakeState.StartedBlockIndex + (lastStep + 1) * StakeState.RewardInterval;
+                        }
+
+                        return stakeState.StartedBlockIndex + StakeState.RewardInterval;
                     }
 
-                    return stakeState.StartedBlockIndex + StakeState.RewardInterval;
+                    return Math.Max(stakeState.StartedBlockIndex, stakeState.ReceivedBlockIndex) + StakeState.RewardInterval;
                 });
             Field<NonNullGraphType<StakeAchievementsType>>(
                 nameof(StakeState.Achievements),
