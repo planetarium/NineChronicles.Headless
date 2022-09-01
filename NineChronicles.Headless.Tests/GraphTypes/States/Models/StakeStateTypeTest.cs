@@ -52,7 +52,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 cancellableBlockIndex
                 claimableBlockIndex
             }";
-            var queryResult = await ExecuteQueryAsync<StakeStateType>(query, source: new StakeStateType.StakeStateContext(stakeState, GetStatesMock, GetBalanceMock));
+            var queryResult = await ExecuteQueryAsync<StakeStateType>(query, source: new StakeStateType.StakeStateContext(stakeState, GetStatesMock, GetBalanceMock, 0));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
         }
