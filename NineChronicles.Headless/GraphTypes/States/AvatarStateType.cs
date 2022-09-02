@@ -17,8 +17,8 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class AvatarStateContext : StateContext
         {
-            public AvatarStateContext(AvatarState avatarState, AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter)
-                : base(accountStateGetter, accountBalanceGetter)
+            public AvatarStateContext(AvatarState avatarState, AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter, long blockIndex)
+                : base(accountStateGetter, accountBalanceGetter, blockIndex)
             {
                 AvatarState = avatarState;
             }
