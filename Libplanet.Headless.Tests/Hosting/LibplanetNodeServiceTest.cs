@@ -19,7 +19,7 @@ namespace Libplanet.Headless.Tests.Hosting
         [Fact]
         public void Constructor()
         {
-            var genesisBlock = BlockChain<DummyAction>.MakeGenesisBlock(HashAlgorithmType.Of<SHA256>());
+            var genesisBlock = BlockChain<DummyAction>.MakeGenesisBlock();
             var service = new LibplanetNodeService<DummyAction>(
                 new LibplanetNodeServiceProperties<DummyAction>()
                 {
@@ -34,7 +34,7 @@ namespace Libplanet.Headless.Tests.Hosting
                 stagePolicy: new VolatileStagePolicy<DummyAction>(),
                 renderers: null,
                 preloadProgress: null,
-                exceptionHandlerAction:  (code, msg) => throw new Exception($"{code}, {msg}"),
+                exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),
                 preloadStatusHandlerAction: isPreloadStart => { }
             );
 
@@ -53,7 +53,7 @@ namespace Libplanet.Headless.Tests.Hosting
                         AppProtocolVersion = new AppProtocolVersion(),
                         SwarmPrivateKey = new PrivateKey(),
                         ConsensusPrivateKey = consensusPrivateKey,
-                        ConsensusPort = 5000,
+                        ConsensusPort = null,
                         Validators = new List<PublicKey>()
                         {
                             consensusPrivateKey.PublicKey,
@@ -65,7 +65,7 @@ namespace Libplanet.Headless.Tests.Hosting
                     stagePolicy: new VolatileStagePolicy<DummyAction>(),
                     renderers: null,
                     preloadProgress: null,
-                    exceptionHandlerAction:  (code, msg) => throw new Exception($"{code}, {msg}"),
+                    exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),
                     preloadStatusHandlerAction: isPreloadStart => { }
                 );
             });

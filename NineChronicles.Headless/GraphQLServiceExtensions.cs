@@ -17,7 +17,7 @@ namespace NineChronicles.Headless
         public static IServiceCollection AddGraphTypes(this IServiceCollection services)
         {
             var graphTypes = Assembly.GetAssembly(typeof(GraphQLServiceExtensions))!.GetTypes().Where(
-                type => type.Namespace is {} @namespace &&
+                type => type.Namespace is { } @namespace &&
                         @namespace.StartsWith($"{nameof(NineChronicles)}.{nameof(Headless)}.{nameof(GraphTypes)}") &&
                         (typeof(IGraphType).IsAssignableFrom(type) || typeof(ISchema).IsAssignableFrom(type)) &&
                         !type.IsAbstract);
@@ -35,6 +35,11 @@ namespace NineChronicles.Headless
             services.TryAddSingleton<AddressType>();
             services.TryAddSingleton<ByteStringType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.PublicKeyType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.TxResultType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.TxStatusType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.BencodexValueType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.FungibleAssetValueType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.CurrencyType>();
 
             return services;
         }
@@ -59,6 +64,11 @@ namespace NineChronicles.Headless
             services.TryAddSingleton<BlockQuery<T>>();
             services.TryAddSingleton<TransactionQuery<T>>();
             services.TryAddSingleton<ExplorerQuery<T>>();
+            services.TryAddSingleton(_ => new StateQuery<T>()
+            {
+                Name = "LibplanetStateQuery",
+            });
+            services.TryAddSingleton<BlockPolicyType<T>>();
 
             return services;
         }

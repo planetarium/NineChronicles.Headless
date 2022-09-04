@@ -3,7 +3,7 @@ using System;
 namespace Libplanet.Headless
 {
     [Serializable]
-    public class IceServerInvalidException: Exception
+    public class IceServerInvalidException : Exception
     {
         public IceServerInvalidException()
         {

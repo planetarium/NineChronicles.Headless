@@ -88,14 +88,15 @@ namespace Libplanet.Headless.Hosting
 
             Properties = properties;
 
-            var genesisBlock = LoadGenesisBlock(properties, blockPolicy.GetHashAlgorithm);
+            var genesisBlock = LoadGenesisBlock(properties);
 
             var iceServers = Properties.IceServers;
 
             (Store, StateStore) = LoadStore(
                 Properties.StorePath,
                 Properties.StoreType,
-                Properties.StoreStatesCacheSize);
+                Properties.StoreStatesCacheSize,
+                Properties.NoReduceStore);
 
             var chainIds = Store.ListChainIds().ToList();
             Log.Debug($"Number of chain ids: {chainIds.Count()}");
@@ -103,12 +104,11 @@ namespace Libplanet.Headless.Hosting
 
             if (Properties.Confirmations > 0)
             {
-                HashAlgorithmGetter getHashAlgo = blockPolicy.GetHashAlgorithm;
                 IComparer<IBlockExcerpt> comparer = blockPolicy.CanonicalChainComparer;
                 int confirms = Properties.Confirmations;
                 renderers = renderers.Select(r => r is IActionRenderer<T> ar
-                    ? new DelayedActionRenderer<T>(ar, comparer, Store, getHashAlgo, confirms, 50)
-                    : new DelayedRenderer<T>(r, comparer, Store, getHashAlgo, confirms)
+                    ? new DelayedActionRenderer<T>(ar, comparer, Store, confirms, 50)
+                    : new DelayedRenderer<T>(r, comparer, Store, confirms)
                 );
 
                 // Log the outmost (before delayed) events as well as
@@ -277,7 +277,7 @@ namespace Libplanet.Headless.Hosting
             }
         }
 
-        protected (IStore, IStateStore) LoadStore(string path, string type, int statesCacheSize)
+        protected (IStore, IStateStore) LoadStore(string path, string type, int statesCacheSize, bool noReduceStore = false)
         {
             IStore store = null;
             if (type == "rocksdb")
@@ -305,6 +305,10 @@ namespace Libplanet.Headless.Hosting
                     Log.Error("RocksDB is not available. DefaultStore will be used. {0}", e);
                 }
             }
+            else if (type == "memory")
+            {
+                store = new MemoryStore();
+            }
             else
             {
                 var message = type is null
@@ -314,7 +318,10 @@ namespace Libplanet.Headless.Hosting
             }
 
             store ??= new DefaultStore(path, flush: false);
-            store = new ReducedStore(store);
+            if (!noReduceStore)
+            {
+                store = new ReducedStore(store);
+            }
 
             IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states"));
             IStateStore stateStore = new TrieStateStore(stateKeyValueStore);
@@ -601,9 +608,8 @@ namespace Libplanet.Headless.Hosting
             }
         }
 
-        private Block<T> LoadGenesisBlock(
-            LibplanetNodeServiceProperties<T> properties,
-            HashAlgorithmGetter hashAlgorithmGetter
+        protected Block<T> LoadGenesisBlock(
+            LibplanetNodeServiceProperties<T> properties
         )
         {
             if (!(properties.GenesisBlock is null))
@@ -624,7 +630,7 @@ namespace Libplanet.Headless.Hosting
                     rawBlock = client.GetByteArrayAsync(uri).Result;
                 }
                 var blockDict = (Bencodex.Types.Dictionary)Codec.Decode(rawBlock);
-                return BlockMarshaler.UnmarshalBlock<T>(hashAlgorithmGetter, blockDict);
+                return BlockMarshaler.UnmarshalBlock<T>(blockDict);
             }
             else
             {

@@ -40,13 +40,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             _output = output;
 
-            var goldCurrency = new Currency("NCG", 2, minter: null);
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            var goldCurrency = Currency.Legacy("NCG", 2, null);
+#pragma warning restore CS0618
 
             var sheets =
                 TableSheetsImporter.ImportSheets(Path.Join("..", "..", "..", "..", "Lib9c", "Lib9c", "TableCSV"));
             var blockAction = new RewardGold();
             var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
-                HashAlgorithmType.Of<SHA256>(),
                 new NCAction[]
                 {
                     new InitializeStates(
@@ -94,8 +96,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             services.AddSingleton<IConfiguration>(configuration);
             services.AddGraphTypes();
             services.AddLibplanetExplorer<NCAction>();
-            services.AddSingleton<StateQuery>();
             services.AddSingleton(ncService);
+            services.AddSingleton(ncService.Store);
             ServiceProvider serviceProvider = services.BuildServiceProvider();
             Schema = new StandaloneSchema(serviceProvider);
 
@@ -157,12 +159,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             AppProtocolVersion appProtocolVersion,
             PublicKey appProtocolVersionSigner,
             Progress<PreloadState>? preloadProgress = null,
-            IEnumerable<Peer>? peers = null,
+            IEnumerable<BoundPeer>? peers = null,
             ImmutableList<BoundPeer>? consensusPeers = null)
             where T : IAction, new()
         {
             var consensusPrivateKey = new PrivateKey();
-            
+
             var properties = new LibplanetNodeServiceProperties<T>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
@@ -172,7 +174,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
-                ConsensusPort = 5000,
+                ConsensusPort = null,
                 Validators = new List<PublicKey>()
                 {
                     consensusPrivateKey.PublicKey,
@@ -180,7 +182,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Port = null,
                 NoMiner = true,
                 Render = false,
-                Peers = peers ?? ImmutableHashSet<Peer>.Empty,
+                Peers = peers ?? ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = ImmutableHashSet<PublicKey>.Empty.Add(appProtocolVersionSigner),
                 ConsensusPeers = consensusPeers ?? ImmutableList<BoundPeer>.Empty,
             };

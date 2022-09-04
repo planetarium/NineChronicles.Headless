@@ -45,9 +45,9 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context => context.Source.UpdatedAddresses
             );
             Field<NonNullGraphType<ListGraphType<ActionType<T>>>>(
-                nameof(Transaction<T>.Actions),
+                nameof(Transaction<T>.CustomActions),
                 description: "A list of actions in this transaction.",
-                resolve: context => context.Source.Actions
+                resolve: context => context.Source.CustomActions
             );
         }
     }

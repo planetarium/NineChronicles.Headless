@@ -38,7 +38,7 @@ namespace NineChronicles.Headless.Tests.Common
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
-                ConsensusPort = 6000,
+                ConsensusPort = null,
                 Validators = new List<PublicKey>()
                 {
                     consensusPrivateKey.PublicKey,
@@ -47,7 +47,7 @@ namespace NineChronicles.Headless.Tests.Common
                 NoMiner = true,
                 Render = false,
                 LogActionRenders = false,
-                Peers = ImmutableHashSet<Peer>.Empty,
+                Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 MessageTimeout = TimeSpan.FromMinutes(1),
                 TipTimeout = TimeSpan.FromMinutes(1),

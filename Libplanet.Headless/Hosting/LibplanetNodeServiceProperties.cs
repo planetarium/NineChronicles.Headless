@@ -30,13 +30,15 @@ namespace Libplanet.Headless.Hosting
 
         public string StorePath { get; set; }
 
+        public bool NoReduceStore { get; set; }
+
         public int StoreStatesCacheSize { get; set; }
 
         public string GenesisBlockPath { get; set; }
 
         public Block<T> GenesisBlock { get; set; }
 
-        public IEnumerable<Peer> Peers { get; set; }
+        public IEnumerable<BoundPeer> Peers { get; set; }
 
         public bool NoMiner { get; set; }
 

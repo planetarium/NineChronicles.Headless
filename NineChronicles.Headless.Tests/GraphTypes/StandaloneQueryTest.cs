@@ -51,7 +51,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             Address adminStateAddress = AdminState.Address;
             var result = await ExecuteQueryAsync($"query {{ state(address: \"{adminStateAddress}\") }}");
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             IValue rawVal = new Codec().Decode(ByteUtil.ParseHex((string)data!["state"]));
             AdminState adminState = new AdminState((Dictionary)rawVal);
 
@@ -74,8 +74,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var result = await ExecuteQueryAsync("query { keyStore { protectedPrivateKeys { address } } }");
 
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
-            var keyStoreResult = (Dictionary<string, object>) data["keyStore"];
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
+            var keyStoreResult = (Dictionary<string, object>)data["keyStore"];
             var protectedPrivateKeyAddresses = ((IList)keyStoreResult["protectedPrivateKeys"])
                 .Cast<Dictionary<string, object>>()
                 .Select(x => x["address"] as string)
@@ -99,9 +99,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var result = await ExecuteQueryAsync($"query {{ keyStore {{ decryptedPrivateKey(address: \"{privateKey.ToAddress()}\", passphrase: \"{passphrase}\") }} }}");
 
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
-            var keyStoreResult = (Dictionary<string, object>) data["keyStore"];
-            var decryptedPrivateKeyResult = (string) keyStoreResult["decryptedPrivateKey"];
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
+            var keyStoreResult = (Dictionary<string, object>)data["keyStore"];
+            var decryptedPrivateKeyResult = (string)keyStoreResult["decryptedPrivateKey"];
 
             Assert.Equal(ByteUtil.Hex(privateKey.ByteArray), decryptedPrivateKeyResult);
         }
@@ -113,16 +113,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var genesisBlock = BlockChain<EmptyAction>.MakeGenesisBlock(
-                HashAlgorithmType.Of<SHA256>()
-            );
+            var genesisBlock = BlockChain<EmptyAction>.MakeGenesisBlock();
 
             // 에러로 인하여 NineChroniclesNodeService 를 사용할 수 없습니다. https://git.io/JfS0M
             // 따라서 LibplanetNodeService로 비슷한 환경을 맞춥니다.
             // 1. 노드를 생성합니다.
             var seedNode = CreateLibplanetNodeService<EmptyAction>(genesisBlock, apv, apvPrivateKey.PublicKey);
             await StartAsync(seedNode.Swarm, cts.Token);
-            var service = CreateLibplanetNodeService<EmptyAction>(genesisBlock, apv, apvPrivateKey.PublicKey, peers: new [] { seedNode.Swarm.AsPeer });
+            var service = CreateLibplanetNodeService<EmptyAction>(genesisBlock, apv, apvPrivateKey.PublicKey, peers: new[] { seedNode.Swarm.AsPeer });
 
             // 2. NineChroniclesNodeService.ConfigureStandaloneContext(standaloneContext)를 호출합니다.
             // BlockChain 객체 공유 및 PreloadEnded, BootstrapEnded 이벤트 훅의 처리를 합니다.
@@ -138,8 +136,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             async Task<Dictionary<string, bool>> QueryNodeStatus()
             {
                 var result = await ExecuteQueryAsync("query { nodeStatus { bootstrapEnded preloadEnded } }");
-                var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
-                var nodeStatusData = (Dictionary<string, object>) data["nodeStatus"];
+                var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
+                var nodeStatusData = (Dictionary<string, object>)data["nodeStatus"];
                 return nodeStatusData.ToDictionary(pair => pair.Key, pair => (bool)pair.Value);
             }
 
@@ -168,7 +166,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var privateKey = new PrivateKey();
 
             var result = await ExecuteQueryAsync("query { nodeStatus { stagedTxIds } }");
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             var expectedResult = new Dictionary<string, object>()
             {
                 ["nodeStatus"] = new Dictionary<string, object>()
@@ -185,7 +183,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             );
 
             result = await ExecuteQueryAsync("query { nodeStatus { stagedTxIds } }");
-            data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             expectedResult = new Dictionary<string, object>()
             {
                 ["nodeStatus"] = new Dictionary<string, object>()
@@ -211,7 +209,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }}
             }}";
             result = await ExecuteQueryAsync(query);
-            data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             expectedResult = new Dictionary<string, object>()
             {
                 ["nodeStatus"] = new Dictionary<string, object>()
@@ -258,7 +256,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }";
 
             var queryResult = await ExecuteQueryAsync(queryWithoutOffset);
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var actualResult = ((Dictionary<string, object>)data["nodeStatus"])["topmostBlocks"];
             var expectedResult = new List<object>
             {
@@ -270,7 +268,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(expectedResult, actualResult);
 
             queryResult = await ExecuteQueryAsync(queryWithOffset);
-            data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             actualResult = ((Dictionary<string, object>)data["nodeStatus"])["topmostBlocks"];
             expectedResult = new List<object>
             {
@@ -303,7 +301,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }}";
 
             var result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
 
             var validationResult =
                 ((Dictionary<string, object>)data["validation"])["metadata"];
@@ -328,7 +326,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }}";
 
             var result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             var validationResult =
                 ((Dictionary<string, object>)data["validation"])["privateKey"];
             Assert.IsType<bool>(validationResult);
@@ -374,7 +372,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }}";
 
             var result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
 
             var validationResult =
                 ((Dictionary<string, object>)data["validation"])["publicKey"];
@@ -404,7 +402,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             ";
 
             var result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             var privateKeyResult = (Dictionary<string, object>)
                 ((Dictionary<string, object>)data["keyStore"])["privateKey"];
             Assert.Equal(privateKeyHex, privateKeyResult["hex"]);
@@ -429,7 +427,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
-                    HashAlgorithmType.Of<SHA256>(),
                     new PolymorphicAction<ActionBase>[]
                     {
                         new InitializeStates(
@@ -442,7 +439,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             ),
                             adminAddressState: new AdminState(adminAddress, 1500000),
                             activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-                            goldCurrencyState: new GoldCurrencyState(new Currency("NCG", 2, minter: null)),
+#pragma warning disable CS0618
+                            // Use of obsolete method Currency.Legacy():
+                            // https://github.com/planetarium/lib9c/discussions/1319
+                            goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
+#pragma warning restore CS0618
                             goldDistributions: new GoldDistribution[0],
                             tableSheets: _sheets,
                             pendingActivationStates: new PendingActivationState[]{ }
@@ -463,7 +464,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
-                ConsensusPort = 5000,
+                ConsensusPort = null,
                 Validators = new List<PublicKey>()
                 {
                     consensusPrivateKey.PublicKey,
@@ -471,7 +472,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Port = null,
                 NoMiner = true,
                 Render = false,
-                Peers = ImmutableHashSet<Peer>.Empty,
+                Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
@@ -483,28 +484,28 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var blockChain = StandaloneContextFx.BlockChain!;
 
-            var queryResult = await ExecuteQueryAsync( "query { activationStatus { activated } }");
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var queryResult = await ExecuteQueryAsync("query { activationStatus { activated } }");
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var result = (bool)
                 ((Dictionary<string, object>)data["activationStatus"])["activated"];
 
             // If we don't use activated accounts, bypass check (always true).
             Assert.Equal(!existsActivatedAccounts, result);
 
-            var nonce = new byte[] {0x00, 0x01, 0x02, 0x03};
+            var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
             var privateKey = new PrivateKey();
             (ActivationKey activationKey, PendingActivationState pendingActivation) =
                 ActivationKey.Create(privateKey, nonce);
             PolymorphicAction<ActionBase> action = new CreatePendingActivation(pendingActivation);
-            blockChain.MakeTransaction(adminPrivateKey, new[] {action});
+            blockChain.MakeTransaction(adminPrivateKey, new[] { action });
             await blockChain.MineBlock(adminPrivateKey);
 
             action = activationKey.CreateActivateAccount(nonce);
             blockChain.MakeTransaction(userPrivateKey, new[] { action });
             await blockChain.MineBlock(adminPrivateKey);
 
-            queryResult = await ExecuteQueryAsync( "query { activationStatus { activated } }");
-            data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            queryResult = await ExecuteQueryAsync("query { activationStatus { activated } }");
+            data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             result = (bool)
                 ((Dictionary<string, object>)data["activationStatus"])["activated"];
 
@@ -523,7 +524,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockChain = StandaloneContextFx.BlockChain;
             var query = $"query {{ goldBalance(address: \"{userAddress}\") }}";
             var queryResult = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(
                 new Dictionary<string, object>
                 {
@@ -535,7 +536,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             await blockChain!.MineBlock(userPrivateKey);
 
             queryResult = await ExecuteQueryAsync(query);
-            data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(
                 new Dictionary<string, object>
                 {
@@ -557,9 +558,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             await BlockChain.MineBlock(senderKey);
             await BlockChain.MineBlock(recipientKey);
 
-            var currency = new GoldCurrencyState((Dictionary) BlockChain.GetState(Addresses.GoldCurrency)).Currency;
+            var currency = new GoldCurrencyState((Dictionary)BlockChain.GetState(Addresses.GoldCurrency)).Currency;
             var transferAsset = new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 10, 0), memo);
-            var tx = BlockChain.MakeTransaction(minerPrivateKey, new PolymorphicAction<ActionBase>[] {transferAsset});
+            var tx = BlockChain.MakeTransaction(minerPrivateKey, new PolymorphicAction<ActionBase>[] { transferAsset });
             var block = await BlockChain.MineBlock(minerPrivateKey, append: false);
             BlockChain.Append(block);
             Assert.NotNull(StandaloneContextFx.Store?.GetTxExecution(block.Hash, tx.Id));
@@ -568,7 +569,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var result =
                 await ExecuteQueryAsync(
                     $"{{ transferNCGHistories(blockHash: \"{blockHashHex}\") {{ blockHash txId sender recipient amount memo }} }}");
-            var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             Assert.Null(result.Errors);
             Assert.Equal(new List<object>
             {
@@ -596,7 +597,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 minerAddress
             }";
             var queryResult = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object?>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object?>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(
                 new Dictionary<string, object?>
                 {
@@ -743,7 +744,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var adminPrivateKey = new PrivateKey();
             var adminAddress = adminPrivateKey.ToAddress();
             var activatedAccounts = ImmutableHashSet<Address>.Empty;
-            var nonce = new byte[] {0x00, 0x01, 0x02, 0x03};
+            var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
             var privateKey = new PrivateKey();
             (ActivationKey activationKey, PendingActivationState pendingActivation) =
                 ActivationKey.Create(privateKey, nonce);
@@ -753,7 +754,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
-                    HashAlgorithmType.Of<SHA256>(),
                     new PolymorphicAction<ActionBase>[]
                     {
                         new InitializeStates(
@@ -766,7 +766,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             ),
                             adminAddressState: new AdminState(adminAddress, 1500000),
                             activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-                            goldCurrencyState: new GoldCurrencyState(new Currency("NCG", 2, minter: null)),
+#pragma warning disable CS0618
+                            // Use of obsolete method Currency.Legacy():
+                            // https://github.com/planetarium/lib9c/discussions/1319
+                            goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
+#pragma warning restore CS0618
                             goldDistributions: new GoldDistribution[0],
                             tableSheets: _sheets,
                             pendingActivationStates: pendingActivationStates.ToArray()
@@ -787,7 +791,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
-                ConsensusPort = 5000,
+                ConsensusPort = null,
                 Validators = new List<PublicKey>()
                 {
                     consensusPrivateKey.PublicKey,
@@ -795,7 +799,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Port = null,
                 NoMiner = true,
                 Render = false,
-                Peers = ImmutableHashSet<Peer>.Empty,
+                Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
@@ -812,7 +816,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }
             var query = $"query {{ activationKeyNonce(invitationCode: \"{code}\") }}";
             var queryResult = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var result = (string)data["activationKeyNonce"];
             Assert.Equal(nonce, ByteUtil.ParseHex(result));
         }
@@ -830,7 +834,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
-                    HashAlgorithmType.Of<SHA256>(),
                     new PolymorphicAction<ActionBase>[]
                     {
                         new InitializeStates(
@@ -843,7 +846,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             ),
                             adminAddressState: new AdminState(adminAddress, 1500000),
                             activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-                            goldCurrencyState: new GoldCurrencyState(new Currency("NCG", 2, minter: null)),
+#pragma warning disable CS0618
+                            // Use of obsolete method Currency.Legacy():
+                            // https://github.com/planetarium/lib9c/discussions/1319
+                            goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
+#pragma warning restore CS0618
                             goldDistributions: new GoldDistribution[0],
                             tableSheets: _sheets,
                             pendingActivationStates: pendingActivationStates.ToArray()
@@ -864,7 +871,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
-                ConsensusPort = 5000,
+                ConsensusPort = null,
                 Validators = new List<PublicKey>()
                 {
                     consensusPrivateKey.PublicKey
@@ -872,7 +879,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Port = null,
                 NoMiner = true,
                 Render = false,
-                Peers = ImmutableHashSet<Peer>.Empty,
+                Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
@@ -891,12 +898,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)
         {
-            var goldCurrency = new Currency("NCG", 2, minter: null);
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            var goldCurrency = Currency.Legacy("NCG", 2, null);
+#pragma warning restore CS0618
 
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
-                    HashAlgorithmType.Of<SHA256>(),
                     new PolymorphicAction<ActionBase>[]
                     {
                         new InitializeStates(
@@ -927,7 +936,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
-                ConsensusPort = 5000,
+                ConsensusPort = null,
                 Validators = new List<PublicKey>()
                 {
                     consensusPrivateKey.PublicKey,
@@ -935,7 +944,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Port = null,
                 NoMiner = true,
                 Render = false,
-                Peers = ImmutableHashSet<Peer>.Empty,
+                Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty,
             };

@@ -42,7 +42,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             var minerPrivateKey = new PrivateKey();
             var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
-                HashAlgorithmType.Of<SHA256>(),
                 new PolymorphicAction<ActionBase>[]
                 {
                     new InitializeStates(
@@ -55,7 +54,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                         ),
                         adminAddressState: new AdminState(new PrivateKey().ToAddress(), 1500000),
                         activatedAccountsState: new ActivatedAccountsState(),
-                        goldCurrencyState: new GoldCurrencyState(new Currency("NCG", 2, minerPrivateKey.ToAddress())),
+#pragma warning disable CS0618
+                        // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                        goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, minerPrivateKey.ToAddress())),
+#pragma warning restore CS0618
                         goldDistributions: Array.Empty<GoldDistribution>(),
                         tableSheets: new Dictionary<string, string>(),
                         pendingActivationStates: new PendingActivationState[]{ }
@@ -86,13 +88,20 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }}";
 
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             NCAction action = new Stake(amount);
             var expected = new Dictionary<string, object>()
             {
                 ["stake"] = ByteUtil.Hex(_codec.Encode(action.PlainValue)),
             };
-            Assert.Equal(expected, data);
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["stake"]));
+            var expectedPlainValue = _codec.Decode(ByteUtil.ParseHex((string)expected["stake"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var dictionary = (Dictionary)plainValue;
+            Assert.IsType<Stake>(DeserializeNCAction(dictionary).InnerAction);
+            var actualAmount = ((Dictionary)dictionary["values"])["am"].ToBigInteger();
+            var expectedAmount = ((Dictionary)((Dictionary)expectedPlainValue)["values"])["am"].ToBigInteger();
+            Assert.Equal(expectedAmount, actualAmount);
         }
 
         [Fact]
@@ -105,10 +114,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }}";
 
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
-            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["claimStakeReward"]));
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["claimStakeReward"]));
             Assert.IsType<Dictionary>(plainValue);
-            var dictionary = (Dictionary) plainValue;
+            var dictionary = (Dictionary)plainValue;
             Assert.IsType<ClaimStakeReward>(DeserializeNCAction(dictionary).InnerAction);
         }
 
@@ -166,8 +175,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }}";
 
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
-            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["grinding"]));
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["grinding"]));
             Assert.IsType<Dictionary>(plainValue);
             var polymorphicAction = DeserializeNCAction(plainValue);
             var action = Assert.IsType<Grinding>(polymorphicAction.InnerAction);
@@ -188,8 +197,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }}";
 
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
-            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["unlockEquipmentRecipe"]));
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["unlockEquipmentRecipe"]));
             Assert.IsType<Dictionary>(plainValue);
             var polymorphicAction = DeserializeNCAction(plainValue);
             var action = Assert.IsType<UnlockEquipmentRecipe>(polymorphicAction.InnerAction);
@@ -215,8 +224,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }}";
 
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
-            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["unlockWorld"]));
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["unlockWorld"]));
             Assert.IsType<Dictionary>(plainValue);
             var polymorphicAction = DeserializeNCAction(plainValue);
             var action = Assert.IsType<UnlockWorld>(polymorphicAction.InnerAction);
@@ -248,13 +257,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }
             var query = $"{{ transferAsset({args}) }}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
-            var data = (Dictionary<string, object>) ((ExecutionNode) queryResult.Data!).ToValue()!;
-            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["transferAsset"]));
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["transferAsset"]));
             Assert.IsType<Dictionary>(plainValue);
             var polymorphicAction = DeserializeNCAction(plainValue);
             var action = Assert.IsType<TransferAsset>(polymorphicAction.InnerAction);
             var rawState = _standaloneContext.BlockChain!.GetState(Addresses.GoldCurrency);
-            var goldCurrencyState = new GoldCurrencyState((Dictionary) rawState);
+            var goldCurrencyState = new GoldCurrencyState((Dictionary)rawState);
             Currency currency = currencyType == "NCG" ? goldCurrencyState.Currency : CrystalCalculator.CRYSTAL;
 
             Assert.Equal(recipient, action.Recipient);
@@ -295,8 +304,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             ";
             var query = $"{{ patchTableSheet(tableName: \"{tableName}\", tableCsv: \"\"\"{csv}\"\"\") }}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
-            var data = (Dictionary<string, object>) ((ExecutionNode) queryResult.Data!).ToValue()!;
-            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["patchTableSheet"]));
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["patchTableSheet"]));
             Assert.IsType<Dictionary>(plainValue);
             var polymorphicAction = DeserializeNCAction(plainValue);
             var action = Assert.IsType<PatchTableSheet>(polymorphicAction.InnerAction);

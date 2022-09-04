@@ -28,7 +28,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 Fixtures.TableSheetsFX.MonsterCollectionRewardSheet
             );
             var queryResult = await ExecuteQueryAsync<MonsterCollectionStateType>(query, source: state);
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var expected = new Dictionary<string, object>
             {
                 ["address"] = state.address.ToString(),

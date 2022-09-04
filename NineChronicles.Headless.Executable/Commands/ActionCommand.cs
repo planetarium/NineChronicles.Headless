@@ -52,7 +52,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
                 else
                 {
-                    File.WriteAllText(filePath, encoded);   
+                    File.WriteAllText(filePath, encoded);
                 }
 
                 return 0;
@@ -91,7 +91,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
                 else
                 {
-                    File.WriteAllText(filePath, encoded);   
+                    File.WriteAllText(filePath, encoded);
                 }
 
                 return 0;
@@ -131,7 +131,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
                 else
                 {
-                    File.WriteAllText(filePath, encoded);   
+                    File.WriteAllText(filePath, encoded);
                 }
 
                 return 0;
@@ -147,7 +147,7 @@ namespace NineChronicles.Headless.Executable.Commands
         public int TransferAsset(
             [Argument("SENDER-ADDRESS", Description = "A hex-encoded sender address.")] string senderAddress,
             [Argument("RECIPIENT-ADDRESS", Description = "A hex-encoded recipient address.")] string recipientAddress,
-            [Argument("AMOUNT", Description = "The amount of asset to transfer.")]  string amount,
+            [Argument("AMOUNT", Description = "The amount of asset to transfer.")] string amount,
             [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null,
             [Argument("MEMO", Description = "A memo of asset transfer")] string? memo = null
         )
@@ -155,7 +155,10 @@ namespace NineChronicles.Headless.Executable.Commands
             try
             {
                 // Minter for 9c-mainnet
-                var currency = new Currency("NCG", 2, minter: new Address("47d082a115c63e7b58b1532d20e631538eafadde"));
+#pragma warning disable CS0618
+                // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                var currency = Currency.Legacy("NCG", 2, minter: new Address("47d082a115c63e7b58b1532d20e631538eafadde"));
+#pragma warning restore CS0618
                 FungibleAssetValue amountFungibleAssetValue =
                     FungibleAssetValue.Parse(currency, amount);
                 Address sender = new Address(ByteUtil.ParseHex(senderAddress));
@@ -215,7 +218,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
                 else
                 {
-                    File.WriteAllText(filePath, encoded);   
+                    File.WriteAllText(filePath, encoded);
                 }
 
                 return 0;
@@ -252,7 +255,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
                 else
                 {
-                    File.WriteAllText(filePath, encoded);   
+                    File.WriteAllText(filePath, encoded);
                 }
 
                 return 0;
@@ -263,7 +266,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 return -1;
             }
         }
-        
+
         [Command(Description = "Create MigrateMonsterCollection action.")]
         public int MigrateMonsterCollection(
             [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")] string encodedAddress,
@@ -289,7 +292,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
                 else
                 {
-                    File.WriteAllText(filePath, encoded);   
+                    File.WriteAllText(filePath, encoded);
                 }
 
                 return 0;

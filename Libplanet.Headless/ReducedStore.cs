@@ -41,17 +41,11 @@ namespace Libplanet.Headless
         public long CountIndex(Guid chainId) =>
             InternalStore.CountIndex(chainId);
 
-        public long CountTransactions() =>
-            InternalStore.CountTransactions();
-
         public bool DeleteBlock(BlockHash blockHash) =>
             InternalStore.DeleteBlock(blockHash);
 
         public void DeleteChainId(Guid chainId) =>
             InternalStore.DeleteChainId(chainId);
-
-        public bool DeleteTransaction(TxId txid) =>
-            InternalStore.DeleteTransaction(txid);
 
         public void ForkBlockIndexes(
             Guid sourceChainId,
@@ -63,9 +57,9 @@ namespace Libplanet.Headless
         public void ForkTxNonces(Guid sourceChainId, Guid destinationChainId) =>
             InternalStore.ForkTxNonces(sourceChainId, destinationChainId);
 
-        public Block<T> GetBlock<T>(HashAlgorithmGetter hashAlgorithmGetter, BlockHash blockHash)
+        public Block<T> GetBlock<T>(BlockHash blockHash)
             where T : IAction, new() =>
-            InternalStore.GetBlock<T>(hashAlgorithmGetter, blockHash);
+            InternalStore.GetBlock<T>(blockHash);
 
         public BlockDigest? GetBlockDigest(BlockHash blockHash) =>
             InternalStore.GetBlockDigest(blockHash);
@@ -104,9 +98,6 @@ namespace Libplanet.Headless
         ) =>
             InternalStore.IterateIndexes(chainId, offset, limit);
 
-        public IEnumerable<TxId> IterateTransactionIds() =>
-            InternalStore.IterateTransactionIds();
-
         public IEnumerable<Guid> ListChainIds() =>
             InternalStore.ListChainIds();
 
@@ -140,6 +131,10 @@ namespace Libplanet.Headless
 
         public void SetCanonicalChainId(Guid chainId) =>
             InternalStore.SetCanonicalChainId(chainId);
+
+        public Block<T> GetCanonicalGenesisBlock<T>()
+            where T : IAction, new() =>
+            InternalStore.GetCanonicalGenesisBlock<T>();
 
         public void PutTxIdBlockHashIndex(TxId txId, BlockHash blockHash) =>
             InternalStore.PutTxIdBlockHashIndex(txId, blockHash);

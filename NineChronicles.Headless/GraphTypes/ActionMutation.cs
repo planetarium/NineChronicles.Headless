@@ -151,12 +151,12 @@ namespace NineChronicles.Headless.GraphTypes
 
                         var action = new HackAndSlash
                         {
-                            avatarAddress = avatarAddress,
-                            worldId = worldId,
-                            stageId = stageId,
-                            costumes = costumeIds,
-                            equipments = equipmentIds,
-                            foods = consumableIds,
+                            AvatarAddress = avatarAddress,
+                            WorldId = worldId,
+                            StageId = stageId,
+                            Costumes = costumeIds,
+                            Equipments = equipmentIds,
+                            Foods = consumableIds,
                         };
 
                         var actions = new NCAction[] { action };
@@ -188,7 +188,7 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "slotIndex",
-                        Description =  "The empty combination slot index to combine equipment. 0 ~ 3"
+                        Description = "The empty combination slot index to combine equipment. 0 ~ 3"
                     },
                     new QueryArgument<IntGraphType>
                     {
@@ -253,7 +253,7 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "slotIndex",
-                        Description =  "The empty combination slot index to upgrade equipment. 0 ~ 3"
+                        Description = "The empty combination slot index to upgrade equipment. 0 ~ 3"
                     }
                 ),
                 resolve: context =>
@@ -397,7 +397,7 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "slotIndex",
-                        Description =  "The empty combination slot index to combine consumable. 0 ~ 3"
+                        Description = "The empty combination slot index to combine consumable. 0 ~ 3"
                     }
                 ),
                 resolve: context =>
@@ -504,7 +504,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
                         Address agentAddress = service.MinerPrivateKey.ToAddress();
-                        AgentState agentState = new AgentState((Dictionary) service.BlockChain.GetState(agentAddress));
+                        AgentState agentState = new AgentState((Dictionary)service.BlockChain.GetState(agentAddress));
 
                         var action = new ClaimMonsterCollectionReward
                         {

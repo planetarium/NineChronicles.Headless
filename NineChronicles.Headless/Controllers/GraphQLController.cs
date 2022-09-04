@@ -118,7 +118,7 @@ namespace NineChronicles.Headless.Controllers
                 {
                     return Ok($"Found peer {request.AddressString}.");
                 }
-                
+
                 return BadRequest($"No such peer {request.AddressString}");
             }
             catch (Exception e)
@@ -176,12 +176,12 @@ namespace NineChronicles.Headless.Controllers
             }
 
             var agentStates =
-                states.Select(state => new AgentState((Bencodex.Types.Dictionary) state));
+                states.Select(state => new AgentState((Bencodex.Types.Dictionary)state));
             var avatarStates = agentStates.SelectMany(agentState =>
                 agentState.avatarAddresses.Values.Select(address =>
-                    new AvatarState((Bencodex.Types.Dictionary) chain.GetState(address))));
+                    new AvatarState((Bencodex.Types.Dictionary)chain.GetState(address))));
             var gameConfigState =
-                new GameConfigState((Bencodex.Types.Dictionary) chain.GetState(Addresses.GameConfig));
+                new GameConfigState((Bencodex.Types.Dictionary)chain.GetState(Addresses.GameConfig));
 
             bool IsDailyRewardRefilled(long dailyRewardReceivedIndex)
             {

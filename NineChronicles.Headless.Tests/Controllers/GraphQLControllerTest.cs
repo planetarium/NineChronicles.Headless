@@ -41,9 +41,7 @@ namespace NineChronicles.Headless.Tests.Controllers
         {
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
-                HashAlgorithmType.Of<SHA256>()
-            );
+            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock();
             var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
                 new BlockPolicy<PolymorphicAction<ActionBase>>(),
                 new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
@@ -148,7 +146,7 @@ namespace NineChronicles.Headless.Tests.Controllers
         private void ConfigureNineChroniclesNodeService()
         {
             var consensusKey = new PrivateKey();
-            
+
             _standaloneContext.NineChroniclesNodeService = new NineChroniclesNodeService(
                 new PrivateKey(),
                 new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
@@ -159,7 +157,7 @@ namespace NineChronicles.Headless.Tests.Controllers
                     SwarmPrivateKey = new PrivateKey(),
                     ConsensusPrivateKey = consensusKey,
                     ConsensusPeers = ImmutableList<BoundPeer>.Empty,
-                    ConsensusPort = 5000,
+                    ConsensusPort = null,
                     Validators = new List<PublicKey>()
                     {
                         consensusKey.PublicKey,
