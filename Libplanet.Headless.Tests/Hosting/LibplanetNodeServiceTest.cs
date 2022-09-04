@@ -53,7 +53,7 @@ namespace Libplanet.Headless.Tests.Hosting
                         AppProtocolVersion = new AppProtocolVersion(),
                         SwarmPrivateKey = new PrivateKey(),
                         ConsensusPrivateKey = consensusPrivateKey,
-                        ConsensusPort = 5000,
+                        ConsensusPort = null,
                         Validators = new List<PublicKey>()
                         {
                             consensusPrivateKey.PublicKey,

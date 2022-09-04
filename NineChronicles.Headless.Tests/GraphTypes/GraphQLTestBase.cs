@@ -174,7 +174,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
-                ConsensusPort = 5000,
+                ConsensusPort = null,
                 Validators = new List<PublicKey>()
                 {
                     consensusPrivateKey.PublicKey,

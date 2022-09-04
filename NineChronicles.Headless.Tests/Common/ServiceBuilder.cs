@@ -38,7 +38,7 @@ namespace NineChronicles.Headless.Tests.Common
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
-                ConsensusPort = 6000,
+                ConsensusPort = null,
                 Validators = new List<PublicKey>()
                 {
                     consensusPrivateKey.PublicKey,

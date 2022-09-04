@@ -464,7 +464,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
-                ConsensusPort = 5000,
+                ConsensusPort = null,
                 Validators = new List<PublicKey>()
                 {
                     consensusPrivateKey.PublicKey,
@@ -791,7 +791,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
-                ConsensusPort = 5000,
+                ConsensusPort = null,
                 Validators = new List<PublicKey>()
                 {
                     consensusPrivateKey.PublicKey,
@@ -871,7 +871,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
-                ConsensusPort = 5000,
+                ConsensusPort = null,
                 Validators = new List<PublicKey>()
                 {
                     consensusPrivateKey.PublicKey
@@ -936,7 +936,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
-                ConsensusPort = 5000,
+                ConsensusPort = null,
                 Validators = new List<PublicKey>()
                 {
                     consensusPrivateKey.PublicKey,
