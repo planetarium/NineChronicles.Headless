@@ -7,7 +7,7 @@ namespace NineChronicles.Headless.GraphTypes
 
         public Notification(NotificationEnum type, string msg = "")
         {
-            Type = type;   
+            Type = type;
             Message = msg;
         }
     }

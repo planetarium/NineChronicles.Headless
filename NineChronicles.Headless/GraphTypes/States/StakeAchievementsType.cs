@@ -19,6 +19,6 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context =>
                     Enumerable.Range(0, int.MaxValue)
                         .SkipWhile(x => context.Source.Check(context.GetArgument<int>("level"), x)).First() - 1);
-        }    
+        }
     }
 }

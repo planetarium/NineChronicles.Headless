@@ -40,7 +40,7 @@ namespace NineChronicles.Headless.Tests.Middleware
 
             Assert.True(_httpContext.User.HasClaim("role", "Admin"));
         }
-        
+
         [Theory]
         [MemberData(nameof(IncorrectHeaders))]
         public async Task AuthorizeWithIncorrectSecretToken(string incorrectHeader)
@@ -56,8 +56,8 @@ namespace NineChronicles.Headless.Tests.Middleware
 
             Assert.False(_httpContext.User.HasClaim("role", "Admin"));
         }
-        
-        public static IEnumerable<object[]> IncorrectHeaders => new []
+
+        public static IEnumerable<object[]> IncorrectHeaders => new[]
         {
             new [] { "" },
             new [] { "Basic" },

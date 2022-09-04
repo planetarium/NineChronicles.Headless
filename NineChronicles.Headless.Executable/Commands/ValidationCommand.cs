@@ -32,7 +32,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 return -1;
             }
         }
-        
+
         [Command(Description = "Validate public key")]
         public int PublicKey(
             [Argument(

@@ -42,7 +42,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var args = $"recipient: \"{recipient}\", sender: \"{sender}\", amount: \"17.5\", currency: CRYSTAL";
             var actionQuery = $"{{ transferAsset({args}) }}";
             var actionQueryResult = await ExecuteQueryAsync<ActionQuery>(actionQuery, standaloneContext: StandaloneContextFx);
-            var actionData = (Dictionary<string, object>) ((ExecutionNode) actionQueryResult.Data!).ToValue()!;
+            var actionData = (Dictionary<string, object>)((ExecutionNode)actionQueryResult.Data!).ToValue()!;
             var plainValue = actionData["transferAsset"];
 
             // Get Nonce.
@@ -52,7 +52,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var nonceQueryResult =
                 await ExecuteQueryAsync<TransactionHeadlessQuery>(nonceQuery, standaloneContext: StandaloneContextFx);
             var nonce =
-                (long) ((Dictionary<string, object>) ((ExecutionNode) nonceQueryResult.Data!)
+                (long)((Dictionary<string, object>)((ExecutionNode)nonceQueryResult.Data!)
                     .ToValue()!)["nextTxNonce"];
 
             // Get PublicKey.
@@ -74,7 +74,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var unsignedQueryResult =
                 await ExecuteQueryAsync<TransactionHeadlessQuery>(unsignedQuery, standaloneContext: StandaloneContextFx);
             var unsignedData =
-                (string) ((Dictionary<string, object>) ((ExecutionNode) unsignedQueryResult.Data!).ToValue()!)[
+                (string)((Dictionary<string, object>)((ExecutionNode)unsignedQueryResult.Data!).ToValue()!)[
                     "unsignedTransaction"];
             var unsignedTxBytes = ByteUtil.ParseHex(unsignedData);
             Transaction<NCAction> unsignedTx = Transaction<NCAction>.Deserialize(unsignedTxBytes, false);
@@ -94,7 +94,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }}";
             var signQueryResult =
                 await ExecuteQueryAsync<TransactionHeadlessQuery>(signQuery, standaloneContext: StandaloneContextFx);
-            var hex = (string) ((Dictionary<string, object>) ((ExecutionNode) signQueryResult.Data!).ToValue()!)[
+            var hex = (string)((Dictionary<string, object>)((ExecutionNode)signQueryResult.Data!).ToValue()!)[
                 "signTransaction"];
             byte[] result = ByteUtil.ParseHex(hex);
             Transaction<NCAction> signedTx = Transaction<NCAction>.Deserialize(result);
@@ -104,10 +104,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(nonce, signedTx.Nonce);
             Assert.Equal(unsignedTx.UpdatedAddresses, signedTx.UpdatedAddresses);
             Assert.Equal(unsignedTx.Timestamp, signedTx.Timestamp);
-            Assert.Single(unsignedTx.Actions);
-            Assert.Single(signedTx.Actions);
-            Assert.IsType<TransferAsset>(signedTx.Actions.Single().InnerAction);
-            var action = Assert.IsType<TransferAsset>(signedTx.Actions.Single().InnerAction);
+            Assert.Single(unsignedTx.CustomActions!);
+            Assert.Single(signedTx.CustomActions!);
+            Assert.IsType<TransferAsset>(signedTx.CustomActions!.Single().InnerAction);
+            var action = Assert.IsType<TransferAsset>(signedTx.CustomActions!.Single().InnerAction);
             Assert.Equal(recipient, action.Recipient);
             Assert.Equal(sender, action.Sender);
             Assert.Equal(FungibleAssetValue.Parse(CrystalCalculator.CRYSTAL, "17.5"), action.Amount);
@@ -116,7 +116,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var stageTxMutation = $"mutation {{ stageTransaction(payload: \"{hex}\") }}";
             var stageTxResult = await ExecuteQueryAsync(stageTxMutation);
             var txId =
-                (string) ((Dictionary<string, object>) ((ExecutionNode) stageTxResult.Data!).ToValue()!)["stageTransaction"];
+                (string)((Dictionary<string, object>)((ExecutionNode)stageTxResult.Data!).ToValue()!)["stageTransaction"];
             Assert.Equal(signedTx.Id.ToHex(), txId);
             Assert.Contains(signedTx.Id, StandaloneContextFx.BlockChain!.GetStagedTransactionIds());
         }

@@ -39,7 +39,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 weeklyArenaState.End();
             }
             var queryResult = await ExecuteQueryAsync<WeeklyArenaStateType>(query, source: weeklyArenaState);
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
 
             Assert.Equal(
                 new Dictionary<string, object>

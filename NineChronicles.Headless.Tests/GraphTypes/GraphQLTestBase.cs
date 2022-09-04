@@ -46,7 +46,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 TableSheetsImporter.ImportSheets(Path.Join("..", "..", "..", "..", "Lib9c", "Lib9c", "TableCSV"));
             var blockAction = new RewardGold();
             var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
-                HashAlgorithmType.Of<SHA256>(),
                 new NCAction[]
                 {
                     new InitializeStates(

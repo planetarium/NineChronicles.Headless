@@ -20,7 +20,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 agentAddress
             }";
             var queryResult = await ExecuteQueryAsync<RankingInfoType>(query, source: rankingInfo);
-            var data = (Dictionary<string, object>)((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
         }
 

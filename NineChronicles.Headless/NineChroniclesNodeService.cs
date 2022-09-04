@@ -20,6 +20,7 @@ using Serilog.Events;
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,6 +29,7 @@ using StrictRenderer =
     Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer<Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>>;
 using Libplanet.Blocks;
 using Libplanet;
+using Libplanet.Assets;
 
 namespace NineChronicles.Headless
 {

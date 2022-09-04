@@ -31,7 +31,8 @@ namespace NineChronicles.Headless
 
         public ConcurrentDictionary<Address,
                 (ReplaySubject<MonsterCollectionStatus> statusSubject, ReplaySubject<MonsterCollectionState> stateSubject, ReplaySubject<string> balanceSubject)>
-            AgentAddresses { get; } = new ConcurrentDictionary<Address,
+            AgentAddresses
+        { get; } = new ConcurrentDictionary<Address,
                 (ReplaySubject<MonsterCollectionStatus>, ReplaySubject<MonsterCollectionState>, ReplaySubject<string>)>();
 
         public NodeStatusType NodeStatus => new NodeStatusType(this)

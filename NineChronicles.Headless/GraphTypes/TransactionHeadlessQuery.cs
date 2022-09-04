@@ -97,7 +97,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Transaction<NCAction>.CreateUnsigned(nonce, publicKey, blockChain.Genesis.Hash, new[] { action });
                     return Convert.ToBase64String(unsignedTransaction.Serialize(false));
                 });
-            
+
             Field<NonNullGraphType<StringGraphType>>(
                 name: "attachSignature",
                 deprecationReason: "Use signTransaction",
@@ -118,26 +118,29 @@ namespace NineChronicles.Headless.GraphTypes
                     byte[] signature = Convert.FromBase64String(context.GetArgument<string>("signature"));
                     Transaction<NCAction> unsignedTransaction =
                         Transaction<NCAction>.Deserialize(
-                            Convert.FromBase64String(context.GetArgument<string>("unsignedTransaction")), 
+                            Convert.FromBase64String(context.GetArgument<string>("unsignedTransaction")),
                             false);
+                    TxMetadata txMetadata = new TxMetadata(unsignedTransaction.PublicKey)
+                    {
+                        Nonce = unsignedTransaction.Nonce,
+                        GenesisHash = unsignedTransaction.GenesisHash,
+                        UpdatedAddresses = unsignedTransaction.UpdatedAddresses,
+                        Timestamp = unsignedTransaction.Timestamp
+                    };
+
                     Transaction<NCAction> signedTransaction = new Transaction<NCAction>(
-                        unsignedTransaction.Nonce,
-                        unsignedTransaction.Signer,
-                        unsignedTransaction.PublicKey,
-                        unsignedTransaction.GenesisHash,
-                        unsignedTransaction.UpdatedAddresses,
-                        unsignedTransaction.Timestamp,
-                        unsignedTransaction.Actions,
+                        txMetadata,
+                        unsignedTransaction.CustomActions!,
                         signature);
 
                     return Convert.ToBase64String(signedTransaction.Serialize(true));
                 });
-            
+
             Field<NonNullGraphType<TxResultType>>(
                 name: "transactionResult",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<TxIdType>>
-                        {Name = "txId", Description = "transaction id."}
+                    { Name = "txId", Description = "transaction id." }
                 ),
                 resolve: context =>
                 {
@@ -152,7 +155,7 @@ namespace NineChronicles.Headless.GraphTypes
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.Store)} was not set yet!");
                     }
-                    
+
                     TxId txId = context.GetArgument<TxId>("txId");
                     if (!(store.GetFirstTxIdBlockHashIndex(txId) is { } txExecutedBlockHash))
                     {
@@ -175,7 +178,7 @@ namespace NineChronicles.Headless.GraphTypes
                                 $"{nameof(execution)} is not expected concrete class.")
                         };
                     }
-                    catch(Exception)
+                    catch (Exception)
                     {
                         return new TxResult(TxStatus.INVALID, null, null, null, null);
                     }
@@ -245,14 +248,17 @@ namespace NineChronicles.Headless.GraphTypes
                         Transaction<NCAction>.Deserialize(
                             ByteUtil.ParseHex(context.GetArgument<string>("unsignedTransaction")),
                             false);
+                    TxMetadata txMetadata = new TxMetadata(unsignedTransaction.PublicKey)
+                    {
+                        Nonce = unsignedTransaction.Nonce,
+                        GenesisHash = unsignedTransaction.GenesisHash,
+                        UpdatedAddresses = unsignedTransaction.UpdatedAddresses,
+                        Timestamp = unsignedTransaction.Timestamp
+                    };
+
                     Transaction<NCAction> signedTransaction = new Transaction<NCAction>(
-                        unsignedTransaction.Nonce,
-                        unsignedTransaction.Signer,
-                        unsignedTransaction.PublicKey,
-                        unsignedTransaction.GenesisHash,
-                        unsignedTransaction.UpdatedAddresses,
-                        unsignedTransaction.Timestamp,
-                        unsignedTransaction.Actions,
+                        txMetadata,
+                        unsignedTransaction.CustomActions!,
                         signature);
                     signedTransaction.Validate();
 

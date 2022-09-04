@@ -41,9 +41,7 @@ namespace NineChronicles.Headless.Tests.Controllers
         {
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
-                HashAlgorithmType.Of<SHA256>()
-            );
+            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock();
             var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
                 new BlockPolicy<PolymorphicAction<ActionBase>>(),
                 new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),

@@ -109,13 +109,15 @@ namespace NineChronicles.Headless.GraphTypes
         public StandaloneSubscription(StandaloneContext standaloneContext)
         {
             StandaloneContext = standaloneContext;
-            AddField(new EventStreamFieldType {
+            AddField(new EventStreamFieldType
+            {
                 Name = "tipChanged",
                 Type = typeof(TipChanged),
                 Resolver = new FuncFieldResolver<TipChanged>(ResolveTipChanged),
                 Subscriber = new EventStreamResolver<TipChanged>(SubscribeTipChanged),
             });
-            AddField(new EventStreamFieldType {
+            AddField(new EventStreamFieldType
+            {
                 Name = "preloadProgress",
                 Type = typeof(PreloadStateType),
                 Resolver = new FuncFieldResolver<PreloadState>(context => (context.Source as PreloadState)!),
@@ -265,10 +267,10 @@ namespace NineChronicles.Headless.GraphTypes
         private void RenderBlock((Block<PolymorphicAction<ActionBase>> OldTip, Block<PolymorphicAction<ActionBase>> NewTip) pair)
         {
             _subject.OnNext(new TipChanged
-                {
-                    Index = pair.NewTip.Index,
-                    Hash = pair.NewTip.Hash,
-                }
+            {
+                Index = pair.NewTip.Index,
+                Hash = pair.NewTip.Hash,
+            }
             );
             if (StandaloneContext.NineChroniclesNodeService is null)
             {
@@ -281,7 +283,7 @@ namespace NineChronicles.Headless.GraphTypes
             BlockHash? offset = delayedRenderer?.Tip?.Hash;
             Currency currency =
                 new GoldCurrencyState(
-                    (Dictionary) blockChain.GetState(Addresses.GoldCurrency, offset)
+                    (Dictionary)blockChain.GetState(Addresses.GoldCurrency, offset)
                 ).Currency;
             var rewardSheet = new MonsterCollectionRewardSheet();
             var csv = blockChain.GetState(

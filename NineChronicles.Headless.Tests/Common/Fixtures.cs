@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Lib9c.DevExtensions.Model;
 using Lib9c.Model.Order;
 using Lib9c.Tests;
 using Libplanet;
@@ -20,7 +21,7 @@ namespace NineChronicles.Headless.Tests
         public static readonly Address UserAddress = UserPrivateKey.PublicKey.ToAddress();
 
         public static readonly Address AvatarAddress = new Address("983c3Fbfe8243a0e36D55C6C1aE26A7c8Bb6CBd4");
-        
+
         public static readonly Address StakeStateAddress = StakeState.DeriveAddress(UserAddress);
 
         public static readonly TableSheets TableSheetsFX =
@@ -37,6 +38,11 @@ namespace NineChronicles.Headless.Tests
             new Address(),
             "avatar_state_fx"
         );
+
+        public static readonly AgentState AgentStateFx = new AgentState(UserAddress)
+        {
+            avatarAddresses = { [2] = AvatarAddress },
+        };
 
         public static readonly Currency CurrencyFX = new Currency("NCG", 2, minter: null);
 
