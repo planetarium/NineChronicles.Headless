@@ -5,6 +5,7 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
+using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Action;
@@ -402,6 +403,26 @@ namespace NineChronicles.Headless.GraphTypes
                         return new WorldBossKillRewardRecord(list);
                     }
                     return null;
+                }
+            );
+
+            Field<NonNullGraphType<FungibleAssetValueWithCurrencyType>>("balance",
+                description: "asset balance by currency.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "address"
+                    },
+                    new QueryArgument<NonNullGraphType<CurrencyInputType>>
+                    {
+                        Name = "currency"
+                    }
+                ),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("address");
+                    var currency = context.GetArgument<Currency>("currency");
+                    return context.Source.GetBalance(address, currency);
                 }
             );
         }

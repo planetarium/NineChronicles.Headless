@@ -26,6 +26,7 @@ using Libplanet.Headless.Hosting;
 using Libplanet.Tx;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Helper;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -864,6 +865,86 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(msg, queryResult.Errors!.First().Message);
 
         }
+
+        [Fact]
+        public async Task Balance()
+        {
+            var adminPrivateKey = new PrivateKey();
+            var adminAddress = adminPrivateKey.ToAddress();
+            var activatedAccounts = ImmutableHashSet<Address>.Empty;
+            var pendingActivationStates = new List<PendingActivationState>();
+
+            Block<PolymorphicAction<ActionBase>> genesis =
+                BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+                    new PolymorphicAction<ActionBase>[]
+                    {
+                        new InitializeStates(
+                            rankingState: new RankingState0(),
+                            shopState: new ShopState(),
+                            gameConfigState: new GameConfigState(),
+                            redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                                .Add("address", RedeemCodeState.Address.Serialize())
+                                .Add("map", Bencodex.Types.Dictionary.Empty)
+                            ),
+                            adminAddressState: new AdminState(adminAddress, 1500000),
+                            activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
+                            goldCurrencyState: new GoldCurrencyState(new Currency("NCG", 2, minter: null)),
+                            goldDistributions: new GoldDistribution[0],
+                            tableSheets: _sheets,
+                            pendingActivationStates: pendingActivationStates.ToArray()
+                        ),
+                    }
+                );
+
+            var apvPrivateKey = new PrivateKey();
+            var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
+
+            var userPrivateKey = new PrivateKey();
+            var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+            {
+                Host = System.Net.IPAddress.Loopback.ToString(),
+                AppProtocolVersion = apv,
+                GenesisBlock = genesis,
+                StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
+                StoreStatesCacheSize = 2,
+                SwarmPrivateKey = new PrivateKey(),
+                Port = null,
+                NoMiner = true,
+                Render = false,
+                Peers = ImmutableHashSet<Peer>.Empty,
+                TrustedAppProtocolVersionSigners = null,
+                StaticPeers = ImmutableHashSet<BoundPeer>.Empty
+            };
+            var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
+
+            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Test);
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
+
+            var query = $@"query {{ 
+stateQuery {{ balance(address: ""{adminAddress}"", currency: {{ decimalPlaces: 18, ticker: ""CRYSTAL"" }})
+{{
+quantity
+currency {{
+ticker
+minters
+decimalPlaces
+}}
+}}
+}} 
+}}";
+            var queryResult = await ExecuteQueryAsync(query);
+            Assert.Null(queryResult.Errors);
+            var data = (Dictionary<string, object>)((Dictionary<string, object>)((Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!)["stateQuery"])["balance"];
+            Assert.Equal("0", data["quantity"]);
+            var currencyData = (Dictionary<string, object>) data["currency"];
+            var currency = new Currency((string) currencyData["ticker"], (byte) currencyData["decimalPlaces"],
+                minters: (IImmutableSet<Address>?) currencyData["minters"]);
+            var crystal = CrystalCalculator.CRYSTAL;
+            Assert.Equal(0 * crystal, 0 * new Currency(crystal.Ticker, crystal.DecimalPlaces, crystal.Minters));
+            Assert.Equal(0 * CrystalCalculator.CRYSTAL, 0 * currency);
+        }
+        
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)
         {
             var goldCurrency = new Currency("NCG", 2, minter: null);
