@@ -7,6 +7,7 @@ using GraphQL.Execution;
 using Libplanet;
 using Libplanet.Assets;
 using Nekoyume;
+using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
@@ -31,7 +32,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             _avatarAddress = new Address("4FcaCfCeC22717789Cb00b427b95B476BBAaA5b2");
             _raiderStateAddress = new Address("Bd9a12559be0F746Cade6272b6ACb1F1426C8c5D");
-            _worldBossAddress = new Address("0x8ce55655e4c2a20Ab24d0C4689EA7BF953D351Ed");
+            _worldBossAddress = Addresses.GetWorldBossAddress(1);
             _worldBossKillRewardRecordAddress = new Address("0xE9653E92a5169bFbA66a4CbC07780ED370986d98");
             _stateContext = new StateContext(GetStatesMock, GetBalanceMock);
             _raiderState = new RaiderState
@@ -130,12 +131,13 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
         public async Task WorldBossState(bool stateExist)
         {
             int raidId = await GetRaidId();
+            var expectedAddress = Addresses.GetWorldBossAddress(raidId);
 
             // Find address.
             var addressQuery = $@"query {{ worldBossAddress(raidId: {raidId}) }}";
             var addressQueryResult = await ExecuteQueryAsync<AddressQuery>(addressQuery);
             var addressData = (Dictionary<string, object>) ((ExecutionNode) addressQueryResult.Data!).ToValue()!;
-            Assert.Equal("0x8ce55655e4c2a20Ab24d0C4689EA7BF953D351Ed", addressData["worldBossAddress"]);
+            Assert.Equal(expectedAddress.ToString(), addressData["worldBossAddress"]);
             var worldBossAddress = stateExist ? addressData["worldBossAddress"] : default;
 
             // Get RaiderState.
