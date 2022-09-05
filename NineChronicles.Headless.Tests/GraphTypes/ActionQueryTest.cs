@@ -344,5 +344,144 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             action.LoadPlainValue(value);
             return action;
         }
+
+        [Theory]
+        [InlineData(true, false, false, false)]
+        [InlineData(false, true, false, false)]
+        [InlineData(false, false, true, false)]
+        [InlineData(false, false, false, true)]
+        public async Task Raid(bool equipment, bool costume, bool food, bool payNcg)
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var args = $"avatarAddress: \"{avatarAddress}\"";
+            var guid = Guid.NewGuid();
+            if (equipment)
+            {
+                args += $", equipmentIds: [\"{guid}\"]";
+            }
+
+            if (costume)
+            {
+                args += $", costumeIds: [\"{guid}\"]";
+            }
+
+            if (food)
+            {
+                args += $", foodIds: [\"{guid}\"]";
+            }
+
+            if (payNcg)
+            {
+                args += $", payNcg: true";
+            }
+
+            var query = $"{{ raid({args}) }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>) ((ExecutionNode) queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["raid"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<Raid>(polymorphicAction.InnerAction);
+
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            if (equipment)
+            {
+                var equipmentId = Assert.Single(action.EquipmentIds);
+                Assert.Equal(guid, equipmentId);
+            }
+            else
+            {
+                Assert.Empty(action.EquipmentIds);
+            }
+
+            if (costume)
+            {
+                var costumeId = Assert.Single(action.CostumeIds);
+                Assert.Equal(guid, costumeId);
+            }
+            else
+            {
+                Assert.Empty(action.CostumeIds);
+            }
+
+            if (food)
+            {
+                var foodId = Assert.Single(action.FoodIds);
+                Assert.Equal(guid, foodId);
+            }
+            else
+            {
+                Assert.Empty(action.FoodIds);
+            }
+
+            Assert.Equal(payNcg, action.PayNcg);
+        }
+
+        [Fact]
+        public async Task ClaimRaidReward()
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var query = $"{{ claimRaidReward(avatarAddress: \"{avatarAddress}\") }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>) ((ExecutionNode) queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["claimRaidReward"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<ClaimRaidReward>(polymorphicAction.InnerAction);
+
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+        }
+
+        [Fact]
+        public async Task ClaimWorldBossKillReward()
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var query = $"{{ claimWorldBossKillReward(avatarAddress: \"{avatarAddress}\") }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>) ((ExecutionNode) queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["claimWorldBossKillReward"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<ClaimWordBossKillReward>(polymorphicAction.InnerAction);
+
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+        }
+
+        [Theory]
+        [InlineData(true, 2)]
+        [InlineData(false, 1)]
+        public async Task PrepareRewardAssets(bool mintersExist, int expectedCount)
+        {
+            var rewardPoolAddress = new PrivateKey().ToAddress();
+            var assets = "{quantity: 100, decimalPlaces: 0, ticker: \"CRYSTAL\"}";
+            if (mintersExist)
+            {
+                assets += $", {{quantity: 100, decimalPlaces: 2, ticker: \"NCG\", minters: [\"{rewardPoolAddress}\"]}}";
+            }
+            var query = $"{{ prepareRewardAssets(rewardPoolAddress: \"{rewardPoolAddress}\", assets: [{assets}]) }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>) ((ExecutionNode) queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["prepareRewardAssets"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<PrepareRewardAssets>(polymorphicAction.InnerAction);
+
+            Assert.Equal(rewardPoolAddress, action.RewardPoolAddress);
+            Assert.Equal(expectedCount, action.Assets.Count);
+
+            var crystal = action.Assets.First(r => r.Currency.Ticker == "CRYSTAL");
+            Assert.Equal(100, crystal.MajorUnit);
+            Assert.Equal(0, crystal.Currency.DecimalPlaces);
+            Assert.Null(crystal.Currency.Minters);
+
+            if (mintersExist)
+            {
+                var ncg = action.Assets.First(r => r.Currency.Ticker == "NCG");
+                Assert.Equal(100, ncg.MajorUnit);
+                Assert.Equal(2, ncg.Currency.DecimalPlaces);
+                var minter = Assert.Single(ncg.Currency.Minters!);
+                Assert.Equal(rewardPoolAddress, minter);
+            }
+        }
     }
 }
