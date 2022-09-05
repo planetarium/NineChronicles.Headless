@@ -377,8 +377,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var query = $"{{ raid({args}) }}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
-            var data = (Dictionary<string, object>) ((ExecutionNode) queryResult.Data!).ToValue()!;
-            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["raid"]));
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["raid"]));
             Assert.IsType<Dictionary>(plainValue);
             var polymorphicAction = DeserializeNCAction(plainValue);
             var action = Assert.IsType<Raid>(polymorphicAction.InnerAction);
@@ -423,8 +423,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var avatarAddress = new PrivateKey().ToAddress();
             var query = $"{{ claimRaidReward(avatarAddress: \"{avatarAddress}\") }}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
-            var data = (Dictionary<string, object>) ((ExecutionNode) queryResult.Data!).ToValue()!;
-            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["claimRaidReward"]));
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["claimRaidReward"]));
             Assert.IsType<Dictionary>(plainValue);
             var polymorphicAction = DeserializeNCAction(plainValue);
             var action = Assert.IsType<ClaimRaidReward>(polymorphicAction.InnerAction);
@@ -438,8 +438,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var avatarAddress = new PrivateKey().ToAddress();
             var query = $"{{ claimWorldBossKillReward(avatarAddress: \"{avatarAddress}\") }}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
-            var data = (Dictionary<string, object>) ((ExecutionNode) queryResult.Data!).ToValue()!;
-            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["claimWorldBossKillReward"]));
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["claimWorldBossKillReward"]));
             Assert.IsType<Dictionary>(plainValue);
             var polymorphicAction = DeserializeNCAction(plainValue);
             var action = Assert.IsType<ClaimWordBossKillReward>(polymorphicAction.InnerAction);
@@ -460,8 +460,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }
             var query = $"{{ prepareRewardAssets(rewardPoolAddress: \"{rewardPoolAddress}\", assets: [{assets}]) }}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
-            var data = (Dictionary<string, object>) ((ExecutionNode) queryResult.Data!).ToValue()!;
-            var plainValue = _codec.Decode(ByteUtil.ParseHex((string) data["prepareRewardAssets"]));
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["prepareRewardAssets"]));
             Assert.IsType<Dictionary>(plainValue);
             var polymorphicAction = DeserializeNCAction(plainValue);
             var action = Assert.IsType<PrepareRewardAssets>(polymorphicAction.InnerAction);

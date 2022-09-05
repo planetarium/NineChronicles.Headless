@@ -30,7 +30,7 @@ namespace NineChronicles.Headless.GraphTypes
                     minters = ImmutableHashSet<Address>.Empty;
                     foreach (var rawMinter in rawMinters)
                     {
-                        minters = minters.Add((Address) rawMinter);
+                        minters = minters.Add((Address)rawMinter);
                     }
                 }
             }

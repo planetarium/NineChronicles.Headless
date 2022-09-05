@@ -27,12 +27,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             var minters = mintersExist ? ImmutableHashSet<Address>.Empty.Add(default) : null;
             var currency = new Currency("NCG", decimalPlaces: decimalPlaces, minters: minters);
             var queryResult = await ExecuteQueryAsync<CurrencyType>(query, source: currency);
-            var data = (Dictionary<string, object>) ((ExecutionNode) queryResult.Data!).ToValue()!;
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal("NCG", data["ticker"]);
             Assert.Equal(decimalPlaces, data["decimalPlaces"]);
             if (mintersExist)
             {
-                var minter = Assert.Single((object[]) data["minters"]);
+                var minter = Assert.Single((object[])data["minters"]);
                 Assert.Equal(minter, default(Address).ToString());
             }
             else

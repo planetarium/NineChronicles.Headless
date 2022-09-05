@@ -30,7 +30,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
         [Theory]
         [InlineData(true, true, false)]
-        [InlineData(true, true, false)]
         [InlineData(true, false, false)]
         [InlineData(false, true, true)]
         [InlineData(false, false, true)]

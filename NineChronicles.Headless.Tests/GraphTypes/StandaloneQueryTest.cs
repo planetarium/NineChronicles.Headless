@@ -937,14 +937,14 @@ decimalPlaces
             Assert.Null(queryResult.Errors);
             var data = (Dictionary<string, object>)((Dictionary<string, object>)((Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!)["stateQuery"])["balance"];
             Assert.Equal("0", data["quantity"]);
-            var currencyData = (Dictionary<string, object>) data["currency"];
-            var currency = new Currency((string) currencyData["ticker"], (byte) currencyData["decimalPlaces"],
-                minters: (IImmutableSet<Address>?) currencyData["minters"]);
+            var currencyData = (Dictionary<string, object>)data["currency"];
+            var currency = new Currency((string)currencyData["ticker"], (byte)currencyData["decimalPlaces"],
+                minters: (IImmutableSet<Address>?)currencyData["minters"]);
             var crystal = CrystalCalculator.CRYSTAL;
             Assert.Equal(0 * crystal, 0 * new Currency(crystal.Ticker, crystal.DecimalPlaces, crystal.Minters));
             Assert.Equal(0 * CrystalCalculator.CRYSTAL, 0 * currency);
         }
-        
+
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)
         {
             var goldCurrency = new Currency("NCG", 2, minter: null);
