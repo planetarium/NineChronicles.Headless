@@ -8,14 +8,16 @@ namespace NineChronicles.Headless.GraphTypes.States
 {
     public class StateContext
     {
-        public StateContext(AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter)
+        public StateContext(AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter, long blockIndex)
         {
             AccountStateGetter = accountStateGetter;
             AccountBalanceGetter = accountBalanceGetter;
+            BlockIndex = blockIndex;
         }
 
         public AccountStateGetter AccountStateGetter { get; }
         public AccountBalanceGetter AccountBalanceGetter { get; }
+        public long BlockIndex { get; }
 
         public IValue? GetState(Address address) =>
             AccountStateGetter(new[] { address })[0];

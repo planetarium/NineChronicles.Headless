@@ -40,7 +40,8 @@ namespace NineChronicles.Headless.GraphTypes
                         return new AvatarStateType.AvatarStateContext(
                             context.Source.AccountStateGetter.GetAvatarState(address),
                             context.Source.AccountStateGetter,
-                            context.Source.AccountBalanceGetter);
+                            context.Source.AccountBalanceGetter,
+                            context.Source.BlockIndex);
                     }
                     catch (InvalidAddressException)
                     {
@@ -157,7 +158,8 @@ namespace NineChronicles.Headless.GraphTypes
                         return new AgentStateType.AgentStateContext(
                             new AgentState(state),
                             context.Source.AccountStateGetter,
-                            context.Source.AccountBalanceGetter
+                            context.Source.AccountBalanceGetter,
+                            context.Source.BlockIndex
                         );
                     }
 
@@ -181,7 +183,8 @@ namespace NineChronicles.Headless.GraphTypes
                         return new StakeStateType.StakeStateContext(
                             new StakeState(state),
                             context.Source.AccountStateGetter,
-                            context.Source.AccountBalanceGetter
+                            context.Source.AccountBalanceGetter,
+                            context.Source.BlockIndex
                         );
                     }
 
