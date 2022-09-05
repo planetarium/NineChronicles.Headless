@@ -43,7 +43,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             object plainValue = await GetAction("transferAsset", args);
 
             (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
-            var action = Assert.IsType<TransferAsset>(signedTx.Actions.Single().InnerAction);
+            var action = Assert.IsType<TransferAsset>(signedTx.CustomActions!.Single().InnerAction);
             Assert.Equal(recipient, action.Recipient);
             Assert.Equal(sender, action.Sender);
             Assert.Equal(FungibleAssetValue.Parse(CrystalCalculator.CRYSTAL, "17.5"), action.Amount);
@@ -63,7 +63,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             object plainValue = await GetAction("raid", args);
 
             (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
-            var action = Assert.IsType<Raid>(signedTx.Actions.Single().InnerAction);
+            var action = Assert.IsType<Raid>(signedTx.CustomActions!.Single().InnerAction);
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Guid equipmentId = Assert.Single(action.EquipmentIds);
             Guid costumeId = Assert.Single(action.CostumeIds);
@@ -83,7 +83,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             object plainValue = await GetAction("claimRaidReward", args);
 
             (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
-            var action = Assert.IsType<ClaimRaidReward>(signedTx.Actions.Single().InnerAction);
+            var action = Assert.IsType<ClaimRaidReward>(signedTx.CustomActions!.Single().InnerAction);
             Assert.Equal(avatarAddress, action.AvatarAddress);
             await StageTransaction(signedTx, hex);
         }
@@ -98,7 +98,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             object plainValue = await GetAction("claimWorldBossKillReward", args);
 
             (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
-            var action = Assert.IsType<ClaimWordBossKillReward>(signedTx.Actions.Single().InnerAction);
+            var action = Assert.IsType<ClaimWordBossKillReward>(signedTx.CustomActions!.Single().InnerAction);
             Assert.Equal(avatarAddress, action.AvatarAddress);
             await StageTransaction(signedTx, hex);
         }
@@ -113,7 +113,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             object plainValue = await GetAction("prepareRewardAssets", args);
 
             (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
-            var action = Assert.IsType<PrepareRewardAssets>(signedTx.Actions.Single().InnerAction);
+            var action = Assert.IsType<PrepareRewardAssets>(signedTx.CustomActions!.Single().InnerAction);
             Assert.Equal(rewardPoolAddress, action.RewardPoolAddress);
             Assert.Equal(new Currency("CRYSTAL", 0, minters: null) * 100, action.Assets.Single());
             await StageTransaction(signedTx, hex);
@@ -124,7 +124,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var actionQuery = $"{{ {actionName}({queryArgs}) }}";
             var actionQueryResult = await ExecuteQueryAsync<ActionQuery>(actionQuery, standaloneContext: StandaloneContextFx);
             var actionData = (Dictionary<string, object>)((ExecutionNode)actionQueryResult.Data!).ToValue()!;
-            var plainValue = actionData["transferAsset"];
             return actionData[actionName];
         }
 
@@ -191,13 +190,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(unsignedTx.Timestamp, signedTx.Timestamp);
             Assert.Single(unsignedTx.CustomActions!);
             Assert.Single(signedTx.CustomActions!);
-            Assert.IsType<TransferAsset>(signedTx.CustomActions!.Single().InnerAction);
-            var action = Assert.IsType<TransferAsset>(signedTx.CustomActions!.Single().InnerAction);
-            Assert.Equal(recipient, action.Recipient);
-            Assert.Equal(sender, action.Sender);
-            Assert.Equal(FungibleAssetValue.Parse(CrystalCalculator.CRYSTAL, "17.5"), action.Amount);
-            Assert.Single(unsignedTx.Actions);
-            Assert.Single(signedTx.Actions);
             return (signedTx, hex);
         }
 
