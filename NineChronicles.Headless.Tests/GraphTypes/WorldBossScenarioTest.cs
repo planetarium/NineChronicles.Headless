@@ -72,7 +72,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
 }}";
             var addressQueryResult = await ExecuteQueryAsync<AddressQuery>(addressQuery);
-            var addressData = (Dictionary<string, object>) ((ExecutionNode) addressQueryResult.Data!).ToValue()!;
+            var addressData = (Dictionary<string, object>)((ExecutionNode)addressQueryResult.Data!).ToValue()!;
             Assert.Equal("0xBd9a12559be0F746Cade6272b6ACb1F1426C8c5D", addressData["raiderAddress"]);
 
             var raiderAddress = stateExist ? addressData["raiderAddress"] : default;
@@ -95,10 +95,10 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
         latestBossLevel
     }}
 }}";
-            
+
             var stateQueryResult = await ExecuteQueryAsync<StateQuery>(stateQuery, source: _stateContext);
             var raiderStateData =
-                ((Dictionary<string, object>) ((ExecutionNode) stateQueryResult.Data!).ToValue()!)[
+                ((Dictionary<string, object>)((ExecutionNode)stateQueryResult.Data!).ToValue()!)[
                     "raiderState"];
 
             Assert.Equal(!stateExist, raiderStateData is null);
@@ -124,7 +124,7 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
                 Assert.Equal(expectedData, raiderStateData);
             }
         }
-        
+
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
@@ -136,7 +136,7 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
             // Find address.
             var addressQuery = $@"query {{ worldBossAddress(raidId: {raidId}) }}";
             var addressQueryResult = await ExecuteQueryAsync<AddressQuery>(addressQuery);
-            var addressData = (Dictionary<string, object>) ((ExecutionNode) addressQueryResult.Data!).ToValue()!;
+            var addressData = (Dictionary<string, object>)((ExecutionNode)addressQueryResult.Data!).ToValue()!;
             Assert.Equal(expectedAddress.ToString(), addressData["worldBossAddress"]);
             var worldBossAddress = stateExist ? addressData["worldBossAddress"] : default;
 
@@ -150,10 +150,10 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
         endedBlockIndex
     }}
 }}";
-            
+
             var stateQueryResult = await ExecuteQueryAsync<StateQuery>(stateQuery, source: _stateContext);
             var worldBossStateData =
-                ((Dictionary<string, object>) ((ExecutionNode) stateQueryResult.Data!).ToValue()!)[
+                ((Dictionary<string, object>)((ExecutionNode)stateQueryResult.Data!).ToValue()!)[
                     "worldBossState"];
 
             Assert.Equal(!stateExist, worldBossStateData is null);
@@ -183,7 +183,7 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
 worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
 }}";
             var addressQueryResult = await ExecuteQueryAsync<AddressQuery>(addressQuery);
-            var addressData = (Dictionary<string, object>) ((ExecutionNode) addressQueryResult.Data!).ToValue()!;
+            var addressData = (Dictionary<string, object>)((ExecutionNode)addressQueryResult.Data!).ToValue()!;
             Assert.Equal("0xE9653E92a5169bFbA66a4CbC07780ED370986d98", addressData["worldBossKillRewardRecordAddress"]);
 
             var worldBossKillRewardRecordAddress = stateExist ? addressData["worldBossKillRewardRecordAddress"] : default;
@@ -196,10 +196,10 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
         }}
     }}
 }}";
-            
+
             var stateQueryResult = await ExecuteQueryAsync<StateQuery>(stateQuery, source: _stateContext);
             var stateData =
-                ((Dictionary<string, object>) ((ExecutionNode) stateQueryResult.Data!).ToValue()!)[
+                ((Dictionary<string, object>)((ExecutionNode)stateQueryResult.Data!).ToValue()!)[
                     "worldBossKillRewardRecord"];
             Assert.Equal(!stateExist, stateData is null);
             if (stateExist)
@@ -249,7 +249,7 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
 
             return null;
         }
-        
+
         private IReadOnlyList<IValue?> GetStatesMock(IReadOnlyList<Address> addresses) =>
             addresses.Select(GetStateMock).ToArray();
 
@@ -263,10 +263,10 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
             // Get RaidId.
             var raidIdQuery = @"query { raidId(blockIndex: 0) }";
             var raidIdQueryResult = await ExecuteQueryAsync<StateQuery>(raidIdQuery, source: _stateContext);
-            var raidIdData = (Dictionary<string, object>) ((ExecutionNode) raidIdQueryResult.Data!).ToValue()!;
+            var raidIdData = (Dictionary<string, object>)((ExecutionNode)raidIdQueryResult.Data!).ToValue()!;
             var raidId = raidIdData["raidId"];
             Assert.Equal(1, raidId);
-            
+
             return 1;
         }
     }

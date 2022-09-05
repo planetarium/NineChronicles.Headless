@@ -68,7 +68,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Guid equipmentId = Assert.Single(action.EquipmentIds);
             Guid costumeId = Assert.Single(action.CostumeIds);
             Guid foodId = Assert.Single(action.FoodIds);
-            Assert.All(new[] {equipmentId, costumeId, foodId}, id => Assert.Equal(guid, id));
+            Assert.All(new[] { equipmentId, costumeId, foodId }, id => Assert.Equal(guid, id));
             Assert.True(action.PayNcg);
             await StageTransaction(signedTx, hex);
         }

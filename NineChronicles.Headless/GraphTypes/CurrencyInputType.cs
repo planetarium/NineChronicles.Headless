@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Numerics;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Assets;
@@ -9,11 +8,10 @@ using Libplanet.Explorer.GraphTypes;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    public class FungibleAssetValueInputType : InputObjectGraphType<FungibleAssetValue>
+    public class CurrencyInputType : InputObjectGraphType<CurrencyType>
     {
-        public FungibleAssetValueInputType()
+        public CurrencyInputType()
         {
-            Field<NonNullGraphType<BigIntGraphType>>("quantity");
             Field<NonNullGraphType<StringGraphType>>("ticker");
             Field<NonNullGraphType<ByteGraphType>>("decimalPlaces");
             Field<ListGraphType<NonNullGraphType<AddressType>>>("minters");
@@ -35,7 +33,8 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             }
             var currency = new Currency((string)value["ticker"]!, (byte)value["decimalPlaces"]!, minters: minters);
-            return currency * (BigInteger)value["quantity"]!;
+            return currency;
         }
+
     }
 }
