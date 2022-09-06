@@ -74,9 +74,9 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context => context.Source.AvatarAddress
             );
             Field<NonNullGraphType<StringGraphType>>(
-                nameof(RaiderState.AvatarNameWithHash),
+                nameof(RaiderState.AvatarName),
                 description: "name of avatar state.",
-                resolve: context => context.Source.AvatarNameWithHash
+                resolve: context => context.Source.AvatarName
             );
         }
     }
