@@ -49,7 +49,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Level = 4,
                 IconId = 5,
                 AvatarAddress = _avatarAddress,
-                AvatarNameWithHash = "avatar",
+                AvatarName = "avatar",
                 LatestBossLevel = 1,
             };
             _worldBossState = new WorldBossState(List.Empty.Add("1").Add("2").Add(10).Add("2").Add("3"));
@@ -91,7 +91,7 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
         level
         iconId
         avatarAddress
-        avatarNameWithHash
+        avatarName
         latestBossLevel
     }}
 }}";
@@ -118,7 +118,7 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
                     ["level"] = 4,
                     ["iconId"] = 5,
                     ["avatarAddress"] = _avatarAddress.ToString(),
-                    ["avatarNameWithHash"] = "avatar",
+                    ["avatarName"] = "avatar",
                     ["latestBossLevel"] = 1,
                 };
                 Assert.Equal(expectedData, raiderStateData);
