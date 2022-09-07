@@ -5,14 +5,11 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
-using GraphQL;
 using GraphQL.Execution;
-using GraphQL.NewtonsoftJson;
 using Lib9c.Tests;
 using Libplanet;
 using Libplanet.Action;
@@ -23,14 +20,12 @@ using Libplanet.Crypto;
 using Libplanet.KeyStore;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
-using Libplanet.Tx;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.Properties;
-using NineChronicles.Headless.Tests.Common;
 using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
 using Xunit.Abstractions;
@@ -113,7 +108,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var genesisBlock = BlockChain<EmptyAction>.MakeGenesisBlock();
+            var genesisBlock = BlockChain<EmptyAction>.ProposeGenesisBlock();
 
             // 에러로 인하여 NineChroniclesNodeService 를 사용할 수 없습니다. https://git.io/JfS0M
             // 따라서 LibplanetNodeService로 비슷한 환경을 맞춥니다.
@@ -236,7 +231,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockChain = StandaloneContextFx.BlockChain;
             for (int i = 0; i < 10; i++)
             {
-                await blockChain!.MineBlock(userPrivateKey);
+                blockChain!.Append(blockChain.ProposeBlock(userPrivateKey));
             }
 
             var queryWithoutOffset = @"query {
@@ -292,7 +287,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             for (int i = 0; i < 10; i++)
             {
-                await BlockChain.MineBlock(minerKey);
+                BlockChain.Append(BlockChain.ProposeBlock(minerKey));
             }
             var query = $@"query {{
                 validation {{
@@ -426,7 +421,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }
 
             Block<PolymorphicAction<ActionBase>> genesis =
-                BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+                BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
                     new PolymorphicAction<ActionBase>[]
                     {
                         new InitializeStates(
@@ -498,11 +493,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ActivationKey.Create(privateKey, nonce);
             PolymorphicAction<ActionBase> action = new CreatePendingActivation(pendingActivation);
             blockChain.MakeTransaction(adminPrivateKey, new[] { action });
-            await blockChain.MineBlock(adminPrivateKey);
+            blockChain.Append(blockChain.ProposeBlock(adminPrivateKey));
 
             action = activationKey.CreateActivateAccount(nonce);
             blockChain.MakeTransaction(userPrivateKey, new[] { action });
-            await blockChain.MineBlock(adminPrivateKey);
+            blockChain.Append(blockChain.ProposeBlock(adminPrivateKey));
 
             queryResult = await ExecuteQueryAsync("query { activationStatus { activated } }");
             data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
@@ -533,7 +528,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 data
             );
 
-            await blockChain!.MineBlock(userPrivateKey);
+            blockChain!.Append(blockChain.ProposeBlock(userPrivateKey));
 
             queryResult = await ExecuteQueryAsync(query);
             data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
@@ -555,13 +550,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             PrivateKey senderKey = minerPrivateKey, recipientKey = new PrivateKey();
             Address sender = senderKey.ToAddress(), recipient = recipientKey.ToAddress();
 
-            await BlockChain.MineBlock(senderKey);
-            await BlockChain.MineBlock(recipientKey);
+            BlockChain.Append(BlockChain.ProposeBlock(senderKey));
+            BlockChain.Append(BlockChain.ProposeBlock(recipientKey));
 
             var currency = new GoldCurrencyState((Dictionary)BlockChain.GetState(Addresses.GoldCurrency)).Currency;
             var transferAsset = new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 10, 0), memo);
             var tx = BlockChain.MakeTransaction(minerPrivateKey, new PolymorphicAction<ActionBase>[] { transferAsset });
-            var block = await BlockChain.MineBlock(minerPrivateKey, append: false);
+            var block = BlockChain.ProposeBlock(minerPrivateKey);
             BlockChain.Append(block);
             Assert.NotNull(StandaloneContextFx.Store?.GetTxExecution(block.Hash, tx.Id));
 
@@ -671,7 +666,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockChain = StandaloneContextFx.BlockChain;
             var transaction = blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
             blockChain.StageTransaction(transaction);
-            await blockChain.MineBlock(new PrivateKey());
+            blockChain.Append(blockChain.ProposeBlock(new PrivateKey()));
 
             string queryArgs = miner ? "" : $@"(address: ""{userAddress}"")";
             string query = $@"query {{
@@ -715,7 +710,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockChain = StandaloneContextFx.BlockChain;
             var transaction = blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
             blockChain.StageTransaction(transaction);
-            await blockChain.MineBlock(new PrivateKey());
+            blockChain.Append(blockChain.ProposeBlock(new PrivateKey()));
 
             var avatarAddress = userAddress.Derive(
                 string.Format(
@@ -753,7 +748,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 pendingActivation,
             };
             Block<PolymorphicAction<ActionBase>> genesis =
-                BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+                BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
                     new PolymorphicAction<ActionBase>[]
                     {
                         new InitializeStates(
@@ -833,7 +828,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var pendingActivationStates = new List<PendingActivationState>();
 
             Block<PolymorphicAction<ActionBase>> genesis =
-                BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+                BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
                     new PolymorphicAction<ActionBase>[]
                     {
                         new InitializeStates(
@@ -905,7 +900,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
             Block<PolymorphicAction<ActionBase>> genesis =
-                BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
+                BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
                     new PolymorphicAction<ActionBase>[]
                     {
                         new InitializeStates(

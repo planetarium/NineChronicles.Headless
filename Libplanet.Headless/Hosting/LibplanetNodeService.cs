@@ -104,11 +104,10 @@ namespace Libplanet.Headless.Hosting
 
             if (Properties.Confirmations > 0)
             {
-                IComparer<IBlockExcerpt> comparer = blockPolicy.CanonicalChainComparer;
                 int confirms = Properties.Confirmations;
                 renderers = renderers.Select(r => r is IActionRenderer<T> ar
-                    ? new DelayedActionRenderer<T>(ar, comparer, Store, confirms, 50)
-                    : new DelayedRenderer<T>(r, comparer, Store, confirms)
+                    ? new DelayedActionRenderer<T>(ar, Store, confirms, 50)
+                    : new DelayedRenderer<T>(r, Store, confirms)
                 );
 
                 // Log the outmost (before delayed) events as well as

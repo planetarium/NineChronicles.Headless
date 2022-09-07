@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -54,8 +53,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [InlineData(StoreType.RocksDb)]
         public void Tip(StoreType storeType)
         {
-            HashAlgorithmType hashAlgo = HashAlgorithmType.Of<SHA256>();
-            Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock();
+            Block<NCAction> genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock();
             IStore store = storeType.CreateStore(_storePath);
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
@@ -80,7 +78,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [InlineData(StoreType.RocksDb)]
         public async Task Inspect(StoreType storeType)
         {
-            Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock();
+            Block<NCAction> genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock();
             IStore store = storeType.CreateStore(_storePath);
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
@@ -109,7 +107,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
             var minerKey = new PrivateKey();
             chain.MakeTransaction(minerKey, new PolymorphicAction<ActionBase>[] { action });
-            await chain.MineBlock(minerKey, DateTimeOffset.Now);
+            chain.Append(chain.ProposeBlock(minerKey, DateTimeOffset.Now));
             store.Dispose();
             stateStore.Dispose();
 
@@ -128,7 +126,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [InlineData(StoreType.RocksDb)]
         public async Task Truncate(StoreType storeType)
         {
-            Block<NCAction> genesisBlock = BlockChain<NCAction>.MakeGenesisBlock();
+            Block<NCAction> genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock();
             IStore store = storeType.CreateStore(_storePath);
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
@@ -159,7 +157,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             for (var i = 0; i < 2; i++)
             {
                 chain.MakeTransaction(minerKey, new NCAction[] { action });
-                await chain.MineBlock(minerKey, DateTimeOffset.Now);
+                chain.Append(chain.ProposeBlock(minerKey, DateTimeOffset.Now));
             }
 
             var indexCountBeforeTruncate = store.CountIndex(chainId);
@@ -263,7 +261,7 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
                 .LoadInDescendingEndBlockOrder(goldDistributionPath);
             AdminState adminState =
                 new AdminState(new Address(genesisConfig.AdminAddress), genesisConfig.AdminValidUntil);
-            Block<NCAction> genesisBlock = BlockHelper.MineGenesisBlock(
+            Block<NCAction> genesisBlock = BlockHelper.ProposeGenesisBlock(
                 tableSheets,
                 goldDistributions,
                 pendingActivationStates.ToArray(),

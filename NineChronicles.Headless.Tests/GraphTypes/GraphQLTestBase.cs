@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Lib9c.Tests;
@@ -48,7 +47,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var sheets =
                 TableSheetsImporter.ImportSheets(Path.Join("..", "..", "..", "..", "Lib9c", "Lib9c", "TableCSV"));
             var blockAction = new RewardGold();
-            var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
+            var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
                 new NCAction[]
                 {
                     new InitializeStates(

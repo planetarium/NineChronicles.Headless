@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Security.Cryptography;
 using Bencodex;
 using GraphQL;
 using GraphQL.Execution;
@@ -40,7 +39,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new VolatileStagePolicy<NCAction>(),
                 _store,
                 _stateStore,
-                BlockChain<NCAction>.MakeGenesisBlock());
+                BlockChain<NCAction>.ProposeGenesisBlock());
             _service = ServiceBuilder.CreateNineChroniclesNodeService(_blockChain.Genesis, new PrivateKey());
         }
 
@@ -110,7 +109,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             var transaction = _blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
             _blockChain.StageTransaction(transaction);
-            await _blockChain.MineBlock(new PrivateKey());
+            _blockChain.Append(_blockChain.ProposeBlock(new PrivateKey()));
             queryResult = await ExecuteAsync(string.Format(queryFormat, transaction.Id.ToString()));
             var tx = (Transaction<PolymorphicAction<ActionBase>>)((RootExecutionNode)queryResult.Data.GetValue()).SubFields![0].Result!;
 
@@ -297,7 +296,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var privateKey = new PrivateKey();
             var action = new DumbTransferAction(new Address(), new Address());
             Transaction<NCAction> tx = _blockChain.MakeTransaction(privateKey, new NCAction[] { action });
-            await _blockChain.MineBlock(new PrivateKey());
+            _blockChain.Append(_blockChain.ProposeBlock(new PrivateKey()));
             var queryFormat = @"query {{
                 transactionResult(txId: ""{0}"") {{
                     blockHash

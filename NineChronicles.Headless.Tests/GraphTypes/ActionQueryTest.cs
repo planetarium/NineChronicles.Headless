@@ -3,11 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
-using GraphQL;
 using GraphQL.Execution;
 using Libplanet;
 using Libplanet.Action;
@@ -41,7 +39,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             var minerPrivateKey = new PrivateKey();
-            var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
+            var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
                 new PolymorphicAction<ActionBase>[]
                 {
                     new InitializeStates(
