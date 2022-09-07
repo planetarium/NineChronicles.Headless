@@ -351,13 +351,22 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<IntGraphType>>(
                 "raidId",
                 description: "world boss season id by block index.",
-                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<LongGraphType>>
-                {
-                    Name = "blockIndex"
-                }),
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<LongGraphType>>
+                    {
+                        Name = "blockIndex"
+                    },
+                    new QueryArgument<BooleanGraphType>
+                    {
+                        Name = "prev",
+                        Description = "find previous raid id.",
+                        DefaultValue = false
+                    }
+                ),
                 resolve: context =>
                 {
                     var blockIndex = context.GetArgument<long>("blockIndex");
+                    var prev = context.GetArgument<bool>("prev");
                     var sheet = new WorldBossListSheet();
                     var address = Addresses.GetSheetAddress<WorldBossListSheet>();
                     if (context.Source.GetState(address) is Text text)
@@ -365,7 +374,9 @@ namespace NineChronicles.Headless.GraphTypes
                         sheet.Set(text);
                     }
 
-                    return sheet.FindRaidIdByBlockIndex(blockIndex);
+                    return prev
+                        ? sheet.FindPreviousRaidIdByBlockIndex(blockIndex)
+                        : sheet.FindRaidIdByBlockIndex(blockIndex);
                 }
             );
 
