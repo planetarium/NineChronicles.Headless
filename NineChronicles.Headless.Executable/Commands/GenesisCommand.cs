@@ -171,7 +171,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 // Mine genesis block
                 _console.Out.WriteLine("\nMining genesis block...\n");
-                Block<PolymorphicAction<ActionBase>> block = BlockHelper.MineGenesisBlock(
+                Block<PolymorphicAction<ActionBase>> block = BlockHelper.ProposeGenesisBlock(
                     tableSheets: tableSheets,
                     goldDistributions: initialDepositList.ToArray(),
                     pendingActivationStates: pendingActivationStates.ToArray(),

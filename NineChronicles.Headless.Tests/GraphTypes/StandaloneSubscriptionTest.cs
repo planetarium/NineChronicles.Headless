@@ -4,8 +4,6 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using GraphQL;
@@ -13,17 +11,14 @@ using GraphQL.Execution;
 using GraphQL.NewtonsoftJson;
 using GraphQL.Subscription;
 using Libplanet;
-using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless;
-using Libplanet.Tx;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
-using NineChronicles.Headless.GraphTypes.States;
 using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
 using Xunit.Abstractions;
@@ -44,7 +39,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             const int repeat = 10;
             foreach (long index in Enumerable.Range(1, repeat))
             {
-                await BlockChain.MineBlock(miner);
+                BlockChain.Append(BlockChain.ProposeBlock(miner));
 
                 var result = await ExecuteSubscriptionQueryAsync("subscription { tipChanged { index hash } }");
 
@@ -70,7 +65,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var genesisBlock = BlockChain<EmptyAction>.MakeGenesisBlock();
+            var genesisBlock = BlockChain<EmptyAction>.ProposeGenesisBlock();
 
             // 에러로 인하여 NineChroniclesNodeService 를 사용할 수 없습니다. https://git.io/JfS0M
             // 따라서 LibplanetNodeService로 비슷한 환경을 맞춥니다.
@@ -90,7 +85,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new[] { seedNode.Swarm.AsPeer });
 
             var miner = new PrivateKey();
-            await seedNode.BlockChain.MineBlock(miner);
+            seedNode.BlockChain.Append(seedNode.BlockChain.ProposeBlock(miner));
             var result = await ExecuteSubscriptionQueryAsync("subscription { preloadProgress { currentPhase totalPhase extra { type currentCount totalCount } } }");
             Assert.IsType<SubscriptionExecutionResult>(result);
 
