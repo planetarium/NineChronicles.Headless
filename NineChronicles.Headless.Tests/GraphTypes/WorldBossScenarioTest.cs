@@ -61,11 +61,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public async Task RaiderState(bool stateExist)
+        [InlineData(true, 0L, false)]
+        [InlineData(false, 0L, false)]
+        [InlineData(true, 150L, true)]
+        [InlineData(false, 150L, true)]
+        public async Task RaiderState(bool stateExist, long blockIndex, bool prev)
         {
-            int raidId = await GetRaidId();
+            int raidId = await GetRaidId(blockIndex, prev);
 
             // Find address.
             var addressQuery = $@"query {{
@@ -126,11 +128,13 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
         }
 
         [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public async Task WorldBossState(bool stateExist)
+        [InlineData(true, 0L, false)]
+        [InlineData(false, 0L, false)]
+        [InlineData(true, 150L, true)]
+        [InlineData(false, 150L, true)]
+        public async Task WorldBossState(bool stateExist, long blockIndex, bool prev)
         {
-            int raidId = await GetRaidId();
+            int raidId = await GetRaidId(blockIndex, prev);
             var expectedAddress = Addresses.GetWorldBossAddress(raidId);
 
             // Find address.
@@ -172,11 +176,13 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
         }
 
         [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public async Task WorldBossKillRewardRecord(bool stateExist)
+        [InlineData(true, 0L, false)]
+        [InlineData(false, 0L, false)]
+        [InlineData(true, 150L, true)]
+        [InlineData(false, 150L, true)]
+        public async Task WorldBossKillRewardRecord(bool stateExist, long blockIndex, bool prev)
         {
-            int raidId = await GetRaidId();
+            int raidId = await GetRaidId(blockIndex, prev);
 
             // Find address.
             var addressQuery = $@"query {{
@@ -234,6 +240,7 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
             {
                 return @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
 1,205005,0,100,300,200,100,10
+2,205005,200,300,300,200,100,10
 ".Serialize();
             }
 
@@ -258,10 +265,15 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
             return FungibleAssetValue.FromRawValue(currency, 0);
         }
 
-        private async Task<int> GetRaidId()
+        private async Task<int> GetRaidId(long blockIndex, bool prev)
         {
             // Get RaidId.
-            var raidIdQuery = @"query { raidId(blockIndex: 0) }";
+            var queryArgs = $"blockIndex: {blockIndex}";
+            if (prev)
+            {
+                queryArgs += ", prev: true";
+            }
+            var raidIdQuery = @$"query {{ raidId({queryArgs}) }}";
             var raidIdQueryResult = await ExecuteQueryAsync<StateQuery>(raidIdQuery, source: _stateContext);
             var raidIdData = (Dictionary<string, object>)((ExecutionNode)raidIdQueryResult.Data!).ToValue()!;
             var raidId = raidIdData["raidId"];
