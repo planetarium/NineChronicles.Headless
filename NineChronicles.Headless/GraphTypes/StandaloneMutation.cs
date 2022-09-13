@@ -90,7 +90,6 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            // TODO deprecate stageTx and use this.
             Field<NonNullGraphType<TxIdType>>(
                 name: "stageTxV2",
                 deprecationReason: "API update with action query. use stageTransaction mutation",
