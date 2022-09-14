@@ -9,8 +9,12 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
+using Libplanet.Action;
 using Libplanet.Assets;
+using Libplanet.Blockchain;
+using Libplanet.Crypto;
 using Libplanet.Explorer.GraphTypes;
+using Libplanet.Tx;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Helper;
@@ -24,9 +28,12 @@ namespace NineChronicles.Headless.GraphTypes
     public class ActionQuery : ObjectGraphType
     {
         private static readonly Codec Codec = new Codec();
+        private StandaloneContext standaloneContext { get; set; }
 
         public ActionQuery(StandaloneContext standaloneContext)
         {
+            this.standaloneContext = standaloneContext;
+
             Field<ByteStringType>(
                 name: "stake",
                 arguments: new QueryArguments(new QueryArgument<BigIntGraphType>
@@ -348,6 +355,30 @@ namespace NineChronicles.Headless.GraphTypes
                     return Codec.Encode(action.PlainValue);
                 }
             );
+        }
+
+        private byte[] Encode(IResolveFieldContext context, NCAction action)
+        {
+            if (context.FieldDefinition.Name.Equals("actionTxQuery"))
+            {
+                if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                {
+                    throw new ExecutionError(
+                        $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                }
+
+                var publicKey = new PublicKey(Convert.FromBase64String(context.Parent!.GetArgument<string>("publicKey")));
+                Address signer = publicKey.ToAddress();
+                long nonce = context.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
+                Transaction<NCAction> unsignedTransaction =
+                    Transaction<NCAction>.CreateUnsigned(nonce, publicKey, blockChain.Genesis.Hash, new[] { action });
+
+                return unsignedTransaction.Serialize(false);
+            }
+            else
+            {
+                return Codec.Encode(action.PlainValue);
+            }
         }
     }
 }
