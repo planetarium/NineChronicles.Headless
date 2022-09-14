@@ -426,6 +426,22 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "actionQuery",
                 resolve: context => new ActionQuery(standaloneContext));
 
+            Field<NonNullGraphType<ActionQuery>>(
+                name: "actionTxQuery",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "publicKey",
+                        Description = "The hexadecimal string of public key for Transaction.",
+                    },
+                    new QueryArgument<LongGraphType>
+                    {
+                        Name = "nonce",
+                        Description = "The nonce for Transaction.",
+                    }
+                ),
+                resolve: context => new ActionQuery(standaloneContext));
+
             Field<NonNullGraphType<AddressQuery>>(
                 name: "addressQuery",
                 description: "Query to get derived address.",
