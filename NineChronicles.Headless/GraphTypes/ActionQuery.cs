@@ -25,14 +25,23 @@ using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
+    public class ActionTxQueryOptions
+    {
+        public PublicKey PublicKey { get; set; } = new PrivateKey().PublicKey;
+        public long? Nonce { get; set; }
+    }
     public class ActionQuery : ObjectGraphType
     {
         private static readonly Codec Codec = new Codec();
         private StandaloneContext standaloneContext { get; set; }
+        private ActionTxQueryOptions? options { get; set; }
 
-        public ActionQuery(StandaloneContext standaloneContext)
+        public ActionQuery(StandaloneContext standaloneContext) : this(standaloneContext, null) { }
+
+        public ActionQuery(StandaloneContext standaloneContext, ActionTxQueryOptions? options)
         {
             this.standaloneContext = standaloneContext;
+            this.options = options;
 
             Field<ByteStringType>(
                 name: "stake",
@@ -359,7 +368,7 @@ namespace NineChronicles.Headless.GraphTypes
 
         private byte[] Encode(IResolveFieldContext context, NCAction action)
         {
-            if (context.FieldDefinition.Name.Equals("actionTxQuery"))
+            if (options is ActionTxQueryOptions { })
             {
                 if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
                 {
@@ -367,11 +376,10 @@ namespace NineChronicles.Headless.GraphTypes
                         $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
                 }
 
-                var publicKey = new PublicKey(Convert.FromBase64String(context.Parent!.GetArgument<string>("publicKey")));
-                Address signer = publicKey.ToAddress();
-                long nonce = context.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
+                Address signer = options.PublicKey.ToAddress();
+                long nonce = options.Nonce ?? blockChain.GetNextTxNonce(signer);
                 Transaction<NCAction> unsignedTransaction =
-                    Transaction<NCAction>.CreateUnsigned(nonce, publicKey, blockChain.Genesis.Hash, new[] { action });
+                    Transaction<NCAction>.CreateUnsigned(nonce, options.PublicKey, blockChain.Genesis.Hash, new[] { action });
 
                 return unsignedTransaction.Serialize(false);
             }
