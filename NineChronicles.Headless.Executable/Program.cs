@@ -21,6 +21,7 @@ using Serilog;
 using Serilog.Formatting.Compact;
 using System;
 using System.IO;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -197,6 +198,8 @@ namespace NineChronicles.Headless.Executable
             int txQuotaPerSigner = 10,
             [Option(Description = "The maximum number of peers to poll blocks. int.MaxValue by default.")]
             int maximumPollPeers = int.MaxValue,
+            [Option("config", new[] { 'C' }, Description = "The full path of appsettings.json file")]
+            string? configPath = "appsettings.json",
             [Ignore]
             CancellationToken? cancellationToken = null
         )
@@ -205,9 +208,21 @@ namespace NineChronicles.Headless.Executable
             try
             {
 #endif
+            var configurationBuilder = new ConfigurationBuilder();
+            if (Uri.IsWellFormedUriString(configPath, UriKind.Absolute))
+            {
+                HttpClient client = new HttpClient();
+                HttpResponseMessage resp = await client.GetAsync(configPath);
+                resp.EnsureSuccessStatusCode();
+                Stream body = await resp.Content.ReadAsStreamAsync();
+                configurationBuilder.AddJsonStream(body);
+            }
+            else
+            {
+                configurationBuilder.AddJsonFile(configPath);
+            }
 
             // Setup logger.
-            var configurationBuilder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
             var configuration = configurationBuilder.Build();
             var loggerConf = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
