@@ -162,7 +162,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             ImmutableList<BoundPeer>? consensusPeers = null)
             where T : IAction, new()
         {
-            var consensusPrivateKey = new PrivateKey();
+            var consensusPrivateKey = new BlsPrivateKey();
 
             var properties = new LibplanetNodeServiceProperties<T>
             {
@@ -174,7 +174,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
                 ConsensusPort = null,
-                Validators = new List<PublicKey>()
+                Validators = new List<BlsPublicKey>()
                 {
                     consensusPrivateKey.PublicKey,
                 },

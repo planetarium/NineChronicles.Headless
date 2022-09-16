@@ -73,8 +73,8 @@ namespace NineChronicles.Headless.Properties
                 ? new PrivateKey()
                 : new PrivateKey(ByteUtil.ParseHex(swarmPrivateKeyString));
             var consensusPrivateKey = string.IsNullOrEmpty(consensusPrivateKeyString)
-                ? new PrivateKey()
-                : new PrivateKey(ByteUtil.ParseHex(consensusPrivateKeyString));
+                ? new BlsPrivateKey()
+                : new BlsPrivateKey(ByteUtil.ParseHex(consensusPrivateKeyString));
             var minerPrivateKey = string.IsNullOrEmpty(minerPrivateKeyString)
                 ? new PrivateKey()
                 : new PrivateKey(ByteUtil.ParseHex(minerPrivateKeyString));
@@ -86,7 +86,7 @@ namespace NineChronicles.Headless.Properties
             var iceServers = iceServerStrings.Select(PropertyParser.ParseIceServer).ToImmutableArray();
             var peers = peerStrings.Select(PropertyParser.ParsePeer).ToImmutableArray();
             var consensusPeers = consensusPeerStrings.Select(PropertyParser.ParsePeer).ToImmutableList();
-            var validators = validatorStrings?.Select(s => new PublicKey(ByteUtil.ParseHex(s))).ToList();
+            var validators = validatorStrings?.Select(s => new BlsPublicKey(ByteUtil.ParseHex(s))).ToList();
 
             return new LibplanetNodeServiceProperties<NineChroniclesActionType>
             {

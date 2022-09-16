@@ -20,11 +20,11 @@ namespace Libplanet.Headless.Hosting
 
         public PrivateKey SwarmPrivateKey { get; set; }
 
-        public PrivateKey ConsensusPrivateKey { get; set; }
+        public BlsPrivateKey ConsensusPrivateKey { get; set; }
 
         public PrivateKey MinerPrivateKey { get; set; }
 
-        public List<PublicKey> Validators { get; set; }
+        public List<BlsPublicKey> Validators { get; set; }
 
         public string StoreType { get; set; }
 

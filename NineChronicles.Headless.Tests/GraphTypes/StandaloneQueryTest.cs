@@ -449,7 +449,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
             var userPrivateKey = new PrivateKey();
-            var consensusPrivateKey = new PrivateKey();
+            var consensusPrivateKey = new BlsPrivateKey();
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
@@ -460,7 +460,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
                 ConsensusPort = null,
-                Validators = new List<PublicKey>()
+                Validators = new List<BlsPublicKey>()
                 {
                     consensusPrivateKey.PublicKey,
                 },
@@ -776,7 +776,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
             var userPrivateKey = new PrivateKey();
-            var consensusPrivateKey = new PrivateKey();
+            var consensusPrivateKey = new BlsPrivateKey();
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
@@ -787,7 +787,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
                 ConsensusPort = null,
-                Validators = new List<PublicKey>()
+                Validators = new List<BlsPublicKey>
                 {
                     consensusPrivateKey.PublicKey,
                 },
@@ -856,7 +856,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
             var userPrivateKey = new PrivateKey();
-            var consensusPrivateKey = new PrivateKey();
+            var consensusPrivateKey = new BlsPrivateKey();
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
@@ -867,7 +867,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
                 ConsensusPort = null,
-                Validators = new List<PublicKey>()
+                Validators = new List<BlsPublicKey>
                 {
                     consensusPrivateKey.PublicKey
                 },
@@ -921,7 +921,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     }, blockAction: blockPolicy.BlockAction
                 );
 
-            var consensusPrivateKey = new PrivateKey();
+            var consensusPrivateKey = new BlsPrivateKey();
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
@@ -932,7 +932,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
                 ConsensusPort = null,
-                Validators = new List<PublicKey>()
+                Validators = new List<BlsPublicKey>
                 {
                     consensusPrivateKey.PublicKey,
                 },

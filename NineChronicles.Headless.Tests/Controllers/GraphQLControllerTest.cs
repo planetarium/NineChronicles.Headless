@@ -143,7 +143,7 @@ namespace NineChronicles.Headless.Tests.Controllers
 
         private void ConfigureNineChroniclesNodeService()
         {
-            var consensusKey = new PrivateKey();
+            var consensusKey = new BlsPrivateKey();
 
             _standaloneContext.NineChroniclesNodeService = new NineChroniclesNodeService(
                 new PrivateKey(),
@@ -156,7 +156,7 @@ namespace NineChronicles.Headless.Tests.Controllers
                     ConsensusPrivateKey = consensusKey,
                     ConsensusPeers = ImmutableList<BoundPeer>.Empty,
                     ConsensusPort = null,
-                    Validators = new List<PublicKey>()
+                    Validators = new List<BlsPublicKey>
                     {
                         consensusKey.PublicKey,
                     },
