@@ -149,6 +149,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<KeyStoreType>(
                 name: "keyStore",
+                deprecationReason: "Use `planet key` command instead.  https://www.npmjs.com/package/@planetarium/cli",
                 resolve: context => standaloneContext.KeyStore
             ).AuthorizeWithLocalPolicyIf(useSecretToken);
 

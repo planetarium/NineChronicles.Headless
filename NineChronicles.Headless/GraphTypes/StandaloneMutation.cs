@@ -32,6 +32,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<KeyStoreMutation>(
                 name: "keyStore",
+                deprecationReason: "Use `planet key` command instead.  https://www.npmjs.com/package/@planetarium/cli",
                 resolve: context => standaloneContext.KeyStore);
 
             Field<ActivationStatusMutation>(
