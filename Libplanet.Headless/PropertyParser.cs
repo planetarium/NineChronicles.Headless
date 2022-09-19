@@ -31,7 +31,7 @@ namespace Libplanet.Headless
                     $"--peer '{peerInfo}', should have format <pubkey>,<host>,<port>");
             }
 
-            if (!(tokens[0].Length == 130 || tokens[0].Length == 66))
+            if (!(tokens[0].Length == 130 || tokens[0].Length == 96 || tokens[0].Length == 66))
             {
                 throw new PeerInvalidException(
                     $"--peer '{peerInfo}', a length of public key must be 130 or 66 in hexadecimal," +
@@ -40,7 +40,7 @@ namespace Libplanet.Headless
 
             try
             {
-                var pubKey = new PublicKey(ByteUtil.ParseHex(tokens[0]));
+                var pubKey = PublicKeyGetter.Get(ByteUtil.ParseHex(tokens[0]));
                 var host = tokens[1];
                 var port = int.Parse(tokens[2]);
 
@@ -52,7 +52,7 @@ namespace Libplanet.Headless
             catch (Exception e)
             {
                 throw new PeerInvalidException(
-                    $"--peer '{peerInfo}' seems invalid.\n" +
+                    $"Given peer (-peer or --consensus-peer) '{peerInfo}' seems invalid.\n" +
                     $"{e.GetType()} {e.Message}\n" +
                     $"{e.StackTrace}", innerException: e);
             }
