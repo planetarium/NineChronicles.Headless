@@ -5,6 +5,7 @@ namespace NineChronicles.Headless.Executable
     public class Configuration
     {
         public const bool DefaultNoReduceStore = false;
+        public const int DefaultStoreStateCacheSize = 100;
         public const bool DefaultNoMiner = false;
         public const int DefaultWorkers = 5;
         public const int DefaultConfirmations = 0;
@@ -18,7 +19,14 @@ namespace NineChronicles.Headless.Executable
         public const int DefaultBucketSize = 16;
         public const string DefaultChainTipStaleBehaviorType = "reboot";
         public const int DefaultMaximumPollPeers = int.MaxValue;
-
+        public const NetworkType DefaultNetworkType = Properties.NetworkType.Main;
+        public const bool DefaultIsDev = false;
+        public const int DefaultBlockInterval = 100;
+        public const int DefaultReorgInterval = 100;
+        public const bool DefaultStrictRendering = false;
+        public const int DefaultTxLifeTime = 1000;
+        public const int DefaultMinerCount = 1;
+        public const int DefaultTxQuotaPerSigner = 10;
         public const bool DefaultGraphQLServer = false;
         public const bool DefaultNoCors = false;
         public const bool DefaultRpcServer = false;

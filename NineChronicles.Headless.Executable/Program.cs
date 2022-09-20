@@ -349,7 +349,7 @@ namespace NineChronicles.Headless.Executable
                         headlessConfig.StoreType,
                         headlessConfig.StorePath,
                         headlessConfig.NoReduceStore ?? Configuration.DefaultNoReduceStore,
-                        100,
+                        Configuration.DefaultStoreStateCacheSize,
                         headlessConfig.IceServerStrings,
                         headlessConfig.PeerStrings,
                         headlessConfig.TrustedAppProtocolVersionSignerStrings,
@@ -390,14 +390,14 @@ namespace NineChronicles.Headless.Executable
                 {
                     MinerPrivateKey = minerPrivateKey,
                     Libplanet = properties,
-                    NetworkType = headlessConfig.NetworkType ?? NetworkType.Main,
-                    Dev = headlessConfig.IsDev ?? false,
-                    StrictRender = headlessConfig.StrictRendering ?? false,
-                    BlockInterval = headlessConfig.Dev.BlockInterval ?? 100,
-                    ReorgInterval = headlessConfig.Dev.ReorgInterval ?? 100,
-                    TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime ?? 1000),
-                    MinerCount = headlessConfig.MinerCount ?? 1,
-                    TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner ?? 10
+                    NetworkType = headlessConfig.NetworkType ?? Configuration.DefaultNetworkType,
+                    Dev = headlessConfig.IsDev ?? Configuration.DefaultIsDev,
+                    StrictRender = headlessConfig.StrictRendering ?? Configuration.DefaultStrictRendering,
+                    BlockInterval = headlessConfig.Dev.BlockInterval ?? Configuration.DefaultBlockInterval,
+                    ReorgInterval = headlessConfig.Dev.ReorgInterval ?? Configuration.DefaultReorgInterval,
+                    TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime ?? Configuration.DefaultTxLifeTime),
+                    MinerCount = headlessConfig.MinerCount ?? Configuration.DefaultMinerCount,
+                    TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner ?? Configuration.DefaultTxQuotaPerSigner
                 };
                 hostBuilder.ConfigureServices(services =>
                 {
