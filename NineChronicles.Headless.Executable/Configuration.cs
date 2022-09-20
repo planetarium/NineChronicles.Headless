@@ -38,39 +38,16 @@ namespace NineChronicles.Headless.Executable
             public int? ReorgInterval { get; set; }
         }
 
-        public string? AppProtocolVersionString
-        {
-            get;
-            set;
-            // set => AppProtocolVersion = Libplanet.Net.AppProtocolVersion.FromToken(value);
-        }
+        public string? AppProtocolVersionString { get; set; }
 
-        public AppProtocolVersion? AppProtocolVersion { get; set; }
+        public string[]? TrustedAppProtocolVersionSignerStrings { get; set; }
 
-        public string[]? TrustedAppProtocolVersionSignerStrings
-        {
-            get;
-            set;
-            // set => TrustedAppProtocolVersionSigners = value
-            // ?.Select(s => new PublicKey(ByteUtil.ParseHex(s)))
-            // ?.ToHashSet();
-        }
-
-        public HashSet<PublicKey>? TrustedAppProtocolVersionSigners { get; set; }
         public string? GenesisBlockPath { get; set; }
         public string? Host { get; set; }
         public ushort? Port { get; set; }
 
-        public string? SwarmPrivateKeyString
-        {
-            get;
-            set;
-            // set => SwarmPrivateKey = string.IsNullOrEmpty(value)
-            // ? new PrivateKey()
-            // : new PrivateKey(ByteUtil.ParseHex(value));
-        }
+        public string? SwarmPrivateKeyString { get; set; }
 
-        public PrivateKey? SwarmPrivateKey { get; set; }
         public int? Workers { get; set; }
 
         // Storage
@@ -87,7 +64,6 @@ namespace NineChronicles.Headless.Executable
         public NetworkType? NetworkType { get; set; } = Properties.NetworkType.Main;
         public string[]? IceServerStrings { get; set; }
         public string[]? PeerStrings { get; set; }
-        public ImmutableArray<BoundPeer>? Peers { get; set; }
 
         // RPC Server
         public bool? RpcServer { get; set; }
