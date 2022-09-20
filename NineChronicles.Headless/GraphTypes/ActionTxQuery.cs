@@ -20,7 +20,7 @@ namespace NineChronicles.Headless.GraphTypes
             Nonce = nonce;
         }
 
-        internal new byte[] Encode(NCAction action)
+        internal override byte[] Encode(NCAction action)
         {
             if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
             {

@@ -349,7 +349,7 @@ namespace NineChronicles.Headless.GraphTypes
             );
         }
 
-        internal byte[] Encode(NCAction action)
+        internal virtual byte[] Encode(NCAction action)
         {
             return Codec.Encode(action.PlainValue);
         }
