@@ -38,7 +38,7 @@ using Xunit.Abstractions;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
-    public class StandaloneQueryTest : GraphQLTestBase
+    public partial class StandaloneQueryTest : GraphQLTestBase
     {
         private readonly Dictionary<string, string> _sheets;
 

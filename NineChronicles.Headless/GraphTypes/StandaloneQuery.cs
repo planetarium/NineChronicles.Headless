@@ -24,6 +24,7 @@ using Libplanet.Headless;
 using Nekoyume.Model;
 using NineChronicles.Headless.GraphTypes.States;
 using Serilog;
+using Libplanet.Crypto;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -425,6 +426,22 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<ActionQuery>>(
                 name: "actionQuery",
                 resolve: context => new ActionQuery(standaloneContext));
+
+            Field<NonNullGraphType<ActionTxQuery>>(
+                name: "actionTxQuery",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "publicKey",
+                        Description = "The hexadecimal string of public key for Transaction.",
+                    },
+                    new QueryArgument<LongGraphType>
+                    {
+                        Name = "nonce",
+                        Description = "The nonce for Transaction.",
+                    }
+                ),
+                resolve: context => new ActionTxQuery(standaloneContext));
 
             Field<NonNullGraphType<AddressQuery>>(
                 name: "addressQuery",
