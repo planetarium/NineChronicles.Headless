@@ -441,10 +441,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "The nonce for Transaction.",
                     }
                 ),
-                resolve: context => new ActionTxQuery(standaloneContext,
-                    new PublicKey(ByteUtil.ParseHex(context.GetArgument<string>("publicKey"))),
-                    context.GetArgument<long?>("nonce")
-                ));
+                resolve: context => new ActionTxQuery(standaloneContext));
 
             Field<NonNullGraphType<AddressQuery>>(
                 name: "addressQuery",

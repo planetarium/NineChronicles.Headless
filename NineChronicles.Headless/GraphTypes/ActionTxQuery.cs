@@ -11,27 +11,23 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class ActionTxQuery : ActionQuery
     {
-        private PublicKey PublicKey;
-        private long? Nonce;
-
-        public ActionTxQuery(StandaloneContext standaloneContext, PublicKey publicKey, long? nonce) : base(standaloneContext)
+        public ActionTxQuery(StandaloneContext standaloneContext) : base(standaloneContext)
         {
-            PublicKey = publicKey;
-            Nonce = nonce;
         }
 
-        internal override byte[] Encode(NCAction action)
+        internal override byte[] Encode(IResolveFieldContext context, NCAction action)
         {
+            var publicKey = new PublicKey(ByteUtil.ParseHex(context.Parent!.GetArgument<string>("publicKey")));
             if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
             {
                 throw new ExecutionError(
                     $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
             }
 
-            Address signer = PublicKey.ToAddress();
-            long nonce = Nonce ?? blockChain.GetNextTxNonce(signer);
+            Address signer = publicKey.ToAddress();
+            long nonce = context.Parent!.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
             Transaction<NCAction> unsignedTransaction =
-                Transaction<NCAction>.CreateUnsigned(nonce, PublicKey, blockChain.Genesis.Hash, new[] { action });
+                Transaction<NCAction>.CreateUnsigned(nonce, publicKey, blockChain.Genesis.Hash, new[] { action });
 
             return unsignedTransaction.Serialize(false);
         }
