@@ -427,7 +427,7 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "actionQuery",
                 resolve: context => new ActionQuery(standaloneContext));
 
-            Field<NonNullGraphType<ActionQuery>>(
+            Field<NonNullGraphType<ActionTxQuery>>(
                 name: "actionTxQuery",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>
