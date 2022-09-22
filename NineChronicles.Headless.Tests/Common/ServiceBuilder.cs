@@ -27,7 +27,7 @@ namespace NineChronicles.Headless.Tests.Common
             PrivateKey? privateKey = null
         )
         {
-            var consensusPrivateKey = new BlsPrivateKey();
+            var consensusPrivateKey = new PrivateKey();
             var storePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
@@ -39,7 +39,7 @@ namespace NineChronicles.Headless.Tests.Common
                 SwarmPrivateKey = new PrivateKey(),
                 ConsensusPrivateKey = consensusPrivateKey,
                 ConsensusPort = null,
-                Validators = new List<BlsPublicKey>()
+                Validators = new List<PublicKey>()
                 {
                     consensusPrivateKey.PublicKey,
                 },
