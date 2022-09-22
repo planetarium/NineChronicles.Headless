@@ -293,7 +293,7 @@ namespace NineChronicles.Headless.Executable
 
             Log.Logger = loggerConf.CreateLogger();
 
-            if (headlessConfig.NoMiner != true && headlessConfig.MinerPrivateKeyString is null)
+            if (!headlessConfig.NoMiner && headlessConfig.MinerPrivateKeyString is null)
             {
                 throw new CommandExitedException(
                     "--miner-private-key must be present to turn on mining at libplanet node.",
@@ -310,7 +310,7 @@ namespace NineChronicles.Headless.Executable
                     KeyStore = Web3KeyStore.DefaultKeyStore,
                 };
 
-                if (headlessConfig.GraphQLServer == true)
+                if (headlessConfig.GraphQLServer)
                 {
                     string? secretToken = null;
                     if (headlessConfig.GraphQLSecretTokenPath is { })
@@ -323,13 +323,13 @@ namespace NineChronicles.Headless.Executable
 
                     var graphQLNodeServiceProperties = new GraphQLNodeServiceProperties
                     {
-                        GraphQLServer = headlessConfig.GraphQLServer ?? Configuration.DefaultGraphQLServer,
+                        GraphQLServer = headlessConfig.GraphQLServer,
                         GraphQLListenHost = headlessConfig.GraphQLHost,
                         GraphQLListenPort = headlessConfig.GraphQLPort,
                         SecretToken = secretToken,
-                        NoCors = headlessConfig.NoCors ?? Configuration.DefaultNoCors,
-                        UseMagicOnion = headlessConfig.RpcServer ?? Configuration.DefaultRpcServer,
-                        HttpOptions = headlessConfig.RpcServer == true && headlessConfig.RpcHttpServer == true
+                        NoCors = headlessConfig.NoCors,
+                        UseMagicOnion = headlessConfig.RpcServer,
+                        HttpOptions = headlessConfig.RpcServer && headlessConfig.RpcHttpServer == true
                             ? new GraphQLNodeServiceProperties.MagicOnionHttpOptions(
                                 $"{headlessConfig.RpcListenHost}:{headlessConfig.RpcListenPort}")
                             : (GraphQLNodeServiceProperties.MagicOnionHttpOptions?)null,
@@ -348,31 +348,28 @@ namespace NineChronicles.Headless.Executable
                         headlessConfig.SwarmPrivateKeyString,
                         headlessConfig.StoreType,
                         headlessConfig.StorePath,
-                        headlessConfig.NoReduceStore ?? Configuration.DefaultNoReduceStore,
-                        Configuration.DefaultStoreStateCacheSize,
+                        headlessConfig.NoReduceStore,
+                        headlessConfig.StoreStateCacheSize,
                         headlessConfig.IceServerStrings,
                         headlessConfig.PeerStrings,
                         headlessConfig.TrustedAppProtocolVersionSignerStrings,
-                        headlessConfig.NoMiner ?? Configuration.DefaultNoMiner,
-                        workers: headlessConfig.Workers ?? Configuration.DefaultWorkers,
-                        confirmations: headlessConfig.Confirmations ?? Configuration.DefaultConfirmations,
-                        nonblockRenderer: headlessConfig.NonblockRenderer ?? Configuration.DefaultNonblockRenderer,
-                        nonblockRendererQueue: headlessConfig.NonblockRendererQueue ??
-                                               Configuration.DefaultNonblockRendererQueue,
-                        messageTimeout: headlessConfig.MessageTimeout ?? Configuration.DefaultMessageTimeout,
-                        tipTimeout: headlessConfig.TipTimeout ?? Configuration.DefaultTipTimeout,
-                        demandBuffer: headlessConfig.DemandBuffer ?? Configuration.DefaultDemandBuffer,
+                        headlessConfig.NoMiner,
+                        workers: headlessConfig.Workers,
+                        confirmations: headlessConfig.Confirmations,
+                        nonblockRenderer: headlessConfig.NonblockRenderer,
+                        nonblockRendererQueue: headlessConfig.NonblockRendererQueue,
+                        messageTimeout: headlessConfig.MessageTimeout,
+                        tipTimeout: headlessConfig.TipTimeout,
+                        demandBuffer: headlessConfig.DemandBuffer,
                         staticPeerStrings: headlessConfig.StaticPeerStrings,
-                        preload: !(headlessConfig.SkipPreload ?? Configuration.DefaultSkipPreload),
-                        minimumBroadcastTarget: headlessConfig.MinimumBroadcastTarget ??
-                                                Configuration.DefaultMinimumBroadcastTarget,
-                        bucketSize: headlessConfig.BucketSize ?? Configuration.DefaultBucketSize,
-                        chainTipStaleBehaviorType: headlessConfig.ChainTipStaleBehaviorType ??
-                                                   Configuration.DefaultChainTipStaleBehaviorType,
-                        maximumPollPeers: headlessConfig.MaximumPollPeers ?? Configuration.DefaultMaximumPollPeers
+                        preload: !headlessConfig.SkipPreload,
+                        minimumBroadcastTarget: headlessConfig.MinimumBroadcastTarget,
+                        bucketSize: headlessConfig.BucketSize,
+                        chainTipStaleBehaviorType: headlessConfig.ChainTipStaleBehaviorType,
+                        maximumPollPeers: headlessConfig.MaximumPollPeers
                     );
 
-                if (headlessConfig.RpcServer == true)
+                if (headlessConfig.RpcServer)
                 {
                     properties.Render = true;
                     properties.LogActionRenders = true;
@@ -390,26 +387,23 @@ namespace NineChronicles.Headless.Executable
                 {
                     MinerPrivateKey = minerPrivateKey,
                     Libplanet = properties,
-                    NetworkType = headlessConfig.NetworkType ?? Configuration.DefaultNetworkType,
-                    Dev = headlessConfig.IsDev ?? Configuration.DefaultIsDev,
-                    StrictRender = headlessConfig.StrictRendering ?? Configuration.DefaultStrictRendering,
-                    BlockInterval = headlessConfig.Dev.BlockInterval ?? Configuration.DefaultBlockInterval,
-                    ReorgInterval = headlessConfig.Dev.ReorgInterval ?? Configuration.DefaultReorgInterval,
-                    TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime ?? Configuration.DefaultTxLifeTime),
-                    MinerCount = headlessConfig.MinerCount ?? Configuration.DefaultMinerCount,
-                    TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner ?? Configuration.DefaultTxQuotaPerSigner
+                    NetworkType = headlessConfig.NetworkType,
+                    Dev = headlessConfig.IsDev,
+                    StrictRender = headlessConfig.StrictRendering,
+                    BlockInterval = headlessConfig.Dev.BlockInterval,
+                    ReorgInterval = headlessConfig.Dev.ReorgInterval,
+                    TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime),
+                    MinerCount = headlessConfig.MinerCount,
+                    TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner,
                 };
-                hostBuilder.ConfigureServices(services =>
-                {
-                    services.AddSingleton(_ => standaloneContext);
-                });
+                hostBuilder.ConfigureServices(services => { services.AddSingleton(_ => standaloneContext); });
                 hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, standaloneContext);
-                if (headlessConfig.RpcServer == true)
+                if (headlessConfig.RpcServer)
                 {
                     hostBuilder.UseNineChroniclesRPC(
                         NineChroniclesNodeServiceProperties
                             .GenerateRpcNodeServiceProperties(
-                                headlessConfig.RpcListenHost ?? Configuration.DefaultRpcListenHost,
+                                headlessConfig.RpcListenHost,
                                 headlessConfig.RpcListenPort,
                                 headlessConfig.RpcRemoteServer == true
                             )
