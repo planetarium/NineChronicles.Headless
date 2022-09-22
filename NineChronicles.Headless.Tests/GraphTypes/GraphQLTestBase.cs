@@ -9,6 +9,7 @@ using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
 using Libplanet.KeyStore;
 using Libplanet.Net;
+using Libplanet.PoS;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Nekoyume.Action;
@@ -65,7 +66,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                         tableSheets: sheets,
                         pendingActivationStates: new PendingActivationState[]{ }
                     ),
-                }, blockAction: blockAction);
+                }, blockAction: blockAction,
+                nativeTokenPredicate: _ => true,
+                nativeTokens: new Currency[] { Asset.GovernanceToken }.ToImmutableHashSet());
 
             var ncService = ServiceBuilder.CreateNineChroniclesNodeService(genesisBlock, new PrivateKey());
             var tempKeyStorePath = Path.Join(Path.GetTempPath(), Path.GetRandomFileName());

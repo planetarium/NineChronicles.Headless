@@ -34,7 +34,7 @@ namespace NineChronicles.Headless.Executable.Tests
         {
             var cancellationTokenSource = new CancellationTokenSource();
 
-            _ = new Program().Run(
+            var program = new Program().Run(
                 _apvString,
                 _genesisBlockPath,
                 noMiner: true,

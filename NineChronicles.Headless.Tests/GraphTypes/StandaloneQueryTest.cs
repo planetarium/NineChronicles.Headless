@@ -18,6 +18,7 @@ using Libplanet.Blockchain;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.KeyStore;
+using Libplanet.PoS;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
 using Nekoyume;
@@ -443,7 +444,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             tableSheets: _sheets,
                             pendingActivationStates: new PendingActivationState[]{ }
                         ),
-                    }
+                    },
+                    nativeTokenPredicate: _ => true,
+                    nativeTokens: new Currency[] { Asset.GovernanceToken }.ToImmutableHashSet()
                 );
 
             var apvPrivateKey = new PrivateKey();
@@ -770,7 +773,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             tableSheets: _sheets,
                             pendingActivationStates: pendingActivationStates.ToArray()
                         ),
-                    }
+                    },
+                    nativeTokenPredicate: _ => true,
+                    nativeTokens: new Currency[] { Asset.GovernanceToken }.ToImmutableHashSet()
                 );
 
             var apvPrivateKey = new PrivateKey();
@@ -850,7 +855,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             tableSheets: _sheets,
                             pendingActivationStates: pendingActivationStates.ToArray()
                         ),
-                    }
+                    },
+                    nativeTokenPredicate: _ => true,
+                    nativeTokens: new Currency[] { Asset.GovernanceToken }.ToImmutableHashSet()
                 );
 
             var apvPrivateKey = new PrivateKey();
@@ -918,7 +925,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             tableSheets: _sheets,
                             pendingActivationStates: new PendingActivationState[]{ }
                         ),
-                    }, blockAction: blockPolicy.BlockAction
+                    }, blockAction: blockPolicy.BlockAction,
+                    nativeTokenPredicate: _ => true,
+                    nativeTokens: new Currency[] { Asset.GovernanceToken }.ToImmutableHashSet()
                 );
 
             var consensusPrivateKey = new PrivateKey();

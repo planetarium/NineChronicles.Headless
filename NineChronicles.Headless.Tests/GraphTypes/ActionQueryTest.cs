@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
+using Libplanet.PoS;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Nekoyume;
@@ -61,7 +63,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                         pendingActivationStates: new PendingActivationState[]{ }
                     ),
                 },
-                privateKey: minerPrivateKey
+                privateKey: minerPrivateKey,
+                nativeTokenPredicate: _ => true,
+                nativeTokens: new Currency[] { Asset.GovernanceToken }.ToImmutableHashSet()
             );
             var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
                 new BlockPolicy<PolymorphicAction<ActionBase>>(),

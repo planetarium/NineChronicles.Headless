@@ -1,11 +1,15 @@
 using GraphQL;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Action.Sys;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blocks;
+using Libplanet.Consensus;
 using Libplanet.Crypto;
 using Libplanet.KeyStore;
+using Libplanet.PoS;
+using Libplanet.PoS.Model;
 using Libplanet.Tx;
 using Nekoyume.Action;
 using Nekoyume.Model;
@@ -218,15 +222,66 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task TransferGold()
         {
             NineChroniclesNodeService service = StandaloneContextFx.NineChroniclesNodeService!;
-            Currency goldCurrency = new GoldCurrencyState(
-                (Dictionary)BlockChain.GetState(GoldCurrencyState.Address)
-            ).Currency;
+            Currency goldCurrency = Asset.GovernanceToken;
 
             Address senderAddress = service.MinerPrivateKey!.ToAddress();
 
             var store = service.Store;
             BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey));
             BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey));
+
+            if (service.MinerPrivateKey is null)
+            {
+                throw new Exception();
+            }
+
+            BlockChain.MakeTransaction(
+                service.MinerPrivateKey,
+                new Mint(service.MinerPrivateKey.ToAddress(), Asset.GovernanceToken * 100)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                service.MinerPrivateKey,
+                new PromoteValidator(service.MinerPrivateKey.PublicKey, Asset.GovernanceToken * 100)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey));
+
+            ImmutableArray<Vote> votes1 =
+                new Vote[]
+                {
+                    new Vote(4, 0, BlockChain.Tip.Hash, BlockChain.Tip.Timestamp, service.MinerPrivateKey.PublicKey, VoteFlag.Commit, null)
+                    .Sign(service.MinerPrivateKey),
+                }.ToImmutableArray();
+            BlockCommit commit1 = new BlockCommit(4, 0, BlockChain.Tip.Hash, votes1);
+            BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey, lastCommit: commit1));
+
+            ImmutableArray<Vote> votes2 =
+                new Vote[]
+                {
+                    new Vote(5, 0, BlockChain.Tip.Hash, BlockChain.Tip.Timestamp, service.MinerPrivateKey.PublicKey, VoteFlag.Commit, null)
+                    .Sign(service.MinerPrivateKey),
+                }.ToImmutableArray();
+            BlockCommit commit2 = new BlockCommit(5, 0, BlockChain.Tip.Hash, votes2);
+            BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey, lastCommit: commit2));
+
+            ImmutableArray<Vote> votes3 =
+                new Vote[]
+                {
+                    new Vote(6, 0, BlockChain.Tip.Hash, BlockChain.Tip.Timestamp, service.MinerPrivateKey.PublicKey, VoteFlag.Commit, null)
+                    .Sign(service.MinerPrivateKey),
+                }.ToImmutableArray();
+            BlockCommit commit3 = new BlockCommit(6, 0, BlockChain.Tip.Hash, votes3);
+            BlockChain.MakeTransaction(
+                service.MinerPrivateKey,
+                new WithdrawValidator()
+            );
+
+            BlockChain.MakeTransaction(
+                service.MinerPrivateKey,
+                new WithdrawDelegator(Validator.DeriveAddress(service.MinerPrivateKey.ToAddress()))
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey, lastCommit: commit3));
 
             // 10 + 10 (mining rewards)
             Assert.Equal(
@@ -965,7 +1020,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     tableSheets: _sheets,
                     pendingActivationStates: new PendingActivationState[]{ }
                 ),
-            }, blockAction: ServiceBuilder.BlockPolicy.BlockAction
+            }, blockAction: ServiceBuilder.BlockPolicy.BlockAction,
+            nativeTokenPredicate: _ => true,
+            nativeTokens: new Currency[] { Asset.GovernanceToken }.ToImmutableHashSet()
         );
     }
 }
