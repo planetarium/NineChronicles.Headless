@@ -2,9 +2,12 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
+using Libplanet.Action.Sys;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
+using Libplanet.Crypto;
 using Libplanet.Explorer.GraphTypes;
+using Libplanet.PoS;
 using Libplanet.Tx;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
@@ -523,6 +526,101 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 }
             );
+
+            Field<NonNullGraphType<TxIdType>>("mintGovernanceToken",
+                description: "Minting governance token for governance.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "recipient",
+                        Description = "Address of the recipient to receive minted token."
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount of the asset to be minted."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        if (!(service.MinerPrivateKey is { } privateKey))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                        }
+
+                        if (!(service.BlockChain is { } blockChain))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
+                        }
+                        Currency currency = Asset.GovernanceToken;
+                        Address recipient = context.GetArgument<Address>("recipient");
+                        FungibleAssetValue amount =
+                        FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
+
+                        var action = new Mint(recipient, amount);
+
+                        Transaction<NCAction> tx = blockChain.MakeTransaction(privateKey, action);
+       
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        Log.Error(msg, e);
+                        throw;
+                    }
+                });
+
+            Field<NonNullGraphType<TxIdType>>("promoteValidator",
+                description: "Promote node to validator.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ByteStringType>>
+                    {
+                        Name = "validatorPubKey",
+                        Description = "Public key of node to be promoted to validator."
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount of the asset to be initially delegated."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        if (!(service.MinerPrivateKey is { } privateKey))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                        }
+
+                        if (!(service.BlockChain is { } blockChain))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
+                        }
+                        Currency currency = Asset.GovernanceToken;
+                        var rawPublicKey = context.GetArgument<byte[]>("validatorPubKey");
+                        PublicKey validatorPubKey = new PublicKey(rawPublicKey);
+                        FungibleAssetValue amount =
+                        FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
+
+                        var action = new PromoteValidator(validatorPubKey, amount);
+
+                        Transaction<NCAction> tx = blockChain.MakeTransaction(privateKey, action);
+
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        Log.Error(msg, e);
+                        throw;
+                    }
+                });
         }
     }
 }

@@ -6,6 +6,8 @@ using GraphQL;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Explorer.GraphTypes;
+using Libplanet.PoS;
+using Libplanet.PoS.Model;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.Item;
@@ -323,6 +325,24 @@ namespace NineChronicles.Headless.GraphTypes
                     return null;
                 }
             );
+
+            Field<ListGraphType<StringGraphType>>(
+                name: "validatorSet",
+                description: "Public keys of validator set.",
+                resolve: context =>
+                {
+                    Address validatorSetAddr = ReservedAddress.BondedValidatorSet;
+                    IValue? sheetValue = context.Source.GetState(validatorSetAddr);
+                    if (sheetValue is { } serialized)
+                    {
+                        ValidatorSet valSet = new ValidatorSet(serialized);
+                        return valSet.Set.Select(x => x.OperatorPublicKey.ToString());
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                });
         }
     }
 }
