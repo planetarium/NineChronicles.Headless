@@ -144,15 +144,58 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task Transfer(string? memo, bool error)
         {
             NineChroniclesNodeService service = StandaloneContextFx.NineChroniclesNodeService!;
-            Currency goldCurrency = new GoldCurrencyState(
-                (Dictionary)BlockChain.GetState(GoldCurrencyState.Address)
-            ).Currency;
+            Currency goldCurrency = Asset.GovernanceToken;
 
             Address senderAddress = service.MinerPrivateKey!.ToAddress();
             var store = service.Store;
             BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey));
             BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey));
 
+            if (service.MinerPrivateKey is null)
+            {
+                throw new Exception();
+            }
+
+            BlockChain.MakeTransaction(
+                service.MinerPrivateKey,
+                new Mint(service.MinerPrivateKey.ToAddress(), Asset.GovernanceToken * 100)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                service.MinerPrivateKey,
+                new PromoteValidator(service.MinerPrivateKey.PublicKey, Asset.GovernanceToken * 100)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey));
+
+            ImmutableArray<Vote> votes1 =
+                new Vote[]
+                {
+                    new Vote(4, 0, BlockChain.Tip.Hash, BlockChain.Tip.Timestamp, service.MinerPrivateKey.PublicKey, VoteFlag.Commit, null)
+                    .Sign(service.MinerPrivateKey),
+                }.ToImmutableArray();
+            BlockCommit commit1 = new BlockCommit(4, 0, BlockChain.Tip.Hash, votes1);
+            BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey, lastCommit: commit1));
+
+            ImmutableArray<Vote> votes2 =
+                new Vote[]
+                {
+                    new Vote(5, 0, BlockChain.Tip.Hash, BlockChain.Tip.Timestamp, service.MinerPrivateKey.PublicKey, VoteFlag.Commit, null)
+                    .Sign(service.MinerPrivateKey),
+                }.ToImmutableArray();
+            BlockCommit commit2 = new BlockCommit(5, 0, BlockChain.Tip.Hash, votes2);
+            BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey, lastCommit: commit2));
+
+            BlockChain.MakeTransaction(
+                service.MinerPrivateKey,
+                new WithdrawValidator()
+            );
+
+            BlockChain.MakeTransaction(
+                service.MinerPrivateKey,
+                new WithdrawDelegator(Validator.DeriveAddress(service.MinerPrivateKey.ToAddress()))
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey));
             // 10 + 10 (mining rewards)
             Assert.Equal(
                 20 * goldCurrency,
@@ -169,7 +212,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 args += $"memo: \"{memo}\"";
             }
 
-            var query = $"mutation {{ transfer({args}) }}";
+            var query = $"mutation {{ transferG({args}) }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
             var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
 
@@ -197,7 +240,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
                 var expectedResult = new Dictionary<string, object>
                 {
-                    ["transfer"] = transferTxIdString,
+                    ["transferG"] = transferTxIdString,
                 };
 
                 Assert.Equal(expectedResult, data);
@@ -212,7 +255,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
                 // 0 + 17.5(transfer) + 10(mining reward)
                 Assert.Equal(
-                    FungibleAssetValue.Parse(goldCurrency, "27.5"),
+                    FungibleAssetValue.Parse(goldCurrency, "17.5"),
                     BlockChain.GetBalance(recipient, goldCurrency)
                 );
             }
@@ -265,13 +308,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             BlockCommit commit2 = new BlockCommit(5, 0, BlockChain.Tip.Hash, votes2);
             BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey, lastCommit: commit2));
 
-            ImmutableArray<Vote> votes3 =
-                new Vote[]
-                {
-                    new Vote(6, 0, BlockChain.Tip.Hash, BlockChain.Tip.Timestamp, service.MinerPrivateKey.PublicKey, VoteFlag.Commit, null)
-                    .Sign(service.MinerPrivateKey),
-                }.ToImmutableArray();
-            BlockCommit commit3 = new BlockCommit(6, 0, BlockChain.Tip.Hash, votes3);
             BlockChain.MakeTransaction(
                 service.MinerPrivateKey,
                 new WithdrawValidator()
@@ -281,7 +317,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 service.MinerPrivateKey,
                 new WithdrawDelegator(Validator.DeriveAddress(service.MinerPrivateKey.ToAddress()))
             );
-            BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey, lastCommit: commit3));
+            BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey));
 
             // 10 + 10 (mining rewards)
             Assert.Equal(
@@ -291,7 +327,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var recipientKey = new PrivateKey();
             Address recipient = recipientKey.ToAddress();
-            var query = $"mutation {{ transferGold(recipient: \"{recipient}\", amount: \"17.5\") }}";
+            var query = $"mutation {{ transferGov(recipient: \"{recipient}\", amount: \"17.5\") }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
             var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
 
@@ -300,11 +336,42 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var expectedResult = new Dictionary<string, object>
             {
-                ["transferGold"] = stagedTxIds.Single().ToString(),
+                ["transferGov"] = stagedTxIds.Single().ToString(),
             };
             Assert.Null(result.Errors);
             Assert.Equal(expectedResult, data);
 
+            BlockChain.MakeTransaction(
+                recipientKey,
+                new Mint(recipientKey.ToAddress(), Asset.GovernanceToken * 100)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(recipientKey));
+
+            BlockChain.MakeTransaction(
+                recipientKey,
+                new PromoteValidator(recipientKey.PublicKey, Asset.GovernanceToken * 100)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(recipientKey));
+
+            BlockChain.Append(BlockChain.ProposeBlock(recipientKey));
+            ImmutableArray<Vote> votes3 =
+                new Vote[]
+                {
+                    new Vote(10, 0, BlockChain.Tip.Hash, BlockChain.Tip.Timestamp, recipientKey.PublicKey, VoteFlag.Commit, null)
+                    .Sign(recipientKey),
+                }.ToImmutableArray();
+            BlockCommit commit3 = new BlockCommit(10, 0, BlockChain.Tip.Hash, votes3);
+            BlockChain.Append(BlockChain.ProposeBlock(recipientKey, lastCommit: commit3));
+
+            BlockChain.MakeTransaction(
+                recipientKey,
+                new WithdrawValidator()
+            );
+
+            BlockChain.MakeTransaction(
+                recipientKey,
+                new WithdrawDelegator(Validator.DeriveAddress(recipientKey.ToAddress()))
+            );
             BlockChain.Append(BlockChain.ProposeBlock(recipientKey));
 
             // 10 + 10 - 17.5(transfer)
@@ -313,9 +380,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 BlockChain.GetBalance(senderAddress, goldCurrency)
             );
 
-            // 0 + 17.5(transfer) + 10(mining reward)
+            // 0 + 17.5(transfer) + 5.15(mining reward)
             Assert.Equal(
-                FungibleAssetValue.Parse(goldCurrency, "27.5"),
+                FungibleAssetValue.Parse(goldCurrency, "22.65"),
                 BlockChain.GetBalance(recipient, goldCurrency)
             );
         }

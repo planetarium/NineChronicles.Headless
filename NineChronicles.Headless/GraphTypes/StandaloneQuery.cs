@@ -14,6 +14,7 @@ using Libplanet.Blocks;
 using Libplanet.Explorer.GraphTypes;
 using Microsoft.Extensions.Configuration;
 using Libplanet.Tx;
+using Libplanet.PoS;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
@@ -84,6 +85,68 @@ namespace NineChronicles.Headless.GraphTypes
                     return new Codec().Encode(state);
                 }
             );
+
+            Field<NonNullGraphType<ListGraphType<NonNullGraphType<TransferGovHistoryType>>>>(
+                "transferGovHistories",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ByteStringType>>
+                    {
+                        Name = "blockHash"
+                    },
+                    new QueryArgument<AddressType>
+                    {
+                        Name = "recipient"
+                    }
+                ), resolve: context =>
+                {
+                    BlockHash blockHash = new BlockHash(context.GetArgument<byte[]>("blockHash"));
+
+                    if (!(standaloneContext.Store is { } store))
+                    {
+                        throw new InvalidOperationException();
+                    }
+
+                    if (!(store.GetBlockDigest(blockHash) is { } digest))
+                    {
+                        throw new ArgumentException("blockHash");
+                    }
+
+                    var recipient = context.GetArgument<Address?>("recipient");
+
+                    IEnumerable<Transaction<NCAction>> txs = digest.TxIds
+                        .Select(b => new TxId(b.ToBuilder().ToArray()))
+                        .Select(store.GetTransaction<NCAction>);
+                    var filteredTransactions = txs.Where(tx =>
+                        tx.CustomActions!.Count == 1 &&
+                        tx.CustomActions.First().InnerAction is TransferAsset transferAsset &&
+                        (!recipient.HasValue || transferAsset.Recipient == recipient) &&
+                        transferAsset.Amount.Currency.Ticker == "GovernanceToken" &&
+                        store.GetTxExecution(blockHash, tx.Id) is TxSuccess);
+
+                    TransferGovHistory ToTransferGovHistory(TxSuccess txSuccess, string memo)
+                    {
+                        var rawTransferGovHistories = txSuccess.FungibleAssetsDelta.Select(pair =>
+                                (pair.Key, pair.Value.Values.First(fav => fav.Currency.Ticker == "GovernanceToken")))
+                            .ToArray();
+                        var ((senderAddress, _), (recipientAddress, amount)) =
+                            rawTransferGovHistories[0].Item2.RawValue > rawTransferGovHistories[1].Item2.RawValue
+                                ? (rawTransferGovHistories[1], rawTransferGovHistories[0])
+                                : (rawTransferGovHistories[0], rawTransferGovHistories[1]);
+                        return new TransferGovHistory(
+                            txSuccess.BlockHash,
+                            txSuccess.TxId,
+                            senderAddress,
+                            recipientAddress,
+                            amount,
+                            memo);
+                    }
+
+                    var histories = filteredTransactions.Select(tx =>
+                        ToTransferGovHistory((TxSuccess)store.GetTxExecution(blockHash, tx.Id),
+                            ((TransferAsset)tx.CustomActions!.Single().InnerAction).Memo));
+
+                    return histories;
+                });
 
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<TransferNCGHistoryType>>>>(
                 "transferNCGHistories",
@@ -177,6 +240,35 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "peerChainState",
                 description: "Get the peer's block chain state",
                 resolve: context => new PeerChainStateQuery(standaloneContext));
+
+            Field<NonNullGraphType<StringGraphType>>(
+                name: "govBalance",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "Target address to query" },
+                    new QueryArgument<ByteStringType> { Name = "hash", Description = "Offset block hash for query." }
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    Address address = context.GetArgument<Address>("address");
+                    byte[] blockHashByteArray = context.GetArgument<byte[]>("hash");
+                    var blockHash = blockHashByteArray is null
+                        ? blockChain.Tip.Hash
+                        : new BlockHash(blockHashByteArray);
+                    Currency currency = Asset.GovernanceToken;
+
+                    return blockChain.GetBalance(
+                        address,
+                        currency,
+                        blockHash
+                    ).GetQuantityString();
+                }
+            );
 
             Field<NonNullGraphType<StringGraphType>>(
                 name: "goldBalance",
