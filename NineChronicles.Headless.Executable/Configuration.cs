@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using NineChronicles.Headless.Properties;
 
 namespace NineChronicles.Headless.Executable
@@ -24,7 +26,16 @@ namespace NineChronicles.Headless.Executable
 
         // Storage
         public string? StoreType { get; set; }
-        public string? StorePath { get; set; }
+
+        public string? StorePath { get; set; } =
+            Path.Combine(
+                new string[]
+                {
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    "AppData", "Local", "planetarium", "9c-main-partition"
+                }
+            );
+
         public bool NoReduceStore { get; set; }
         public int StoreStateCacheSize { get; set; } = 100;
 
