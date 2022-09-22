@@ -32,7 +32,10 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 }
             }
-            var currency = new Currency((string)value["ticker"]!, (byte)value["decimalPlaces"]!, minters: minters);
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            var currency = Currency.Legacy((string)value["ticker"]!, (byte)value["decimalPlaces"]!, minters: minters);
+#pragma warning restore CS0618
             return currency;
         }
 

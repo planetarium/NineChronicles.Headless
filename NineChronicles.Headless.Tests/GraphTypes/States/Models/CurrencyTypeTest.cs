@@ -25,7 +25,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
 }
 ";
             var minters = mintersExist ? ImmutableHashSet<Address>.Empty.Add(default) : null;
-            var currency = new Currency("NCG", decimalPlaces: decimalPlaces, minters: minters);
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            var currency = Currency.Legacy("NCG", decimalPlaces: decimalPlaces, minters: minters);
+#pragma warning restore CS0618
             var queryResult = await ExecuteQueryAsync<CurrencyType>(query, source: currency);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal("NCG", data["ticker"]);
