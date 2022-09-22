@@ -15,6 +15,7 @@ using Libplanet.Explorer.GraphTypes;
 using Microsoft.Extensions.Configuration;
 using Libplanet.Tx;
 using Libplanet.PoS;
+using Libplanet.PoS.Model;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
@@ -240,6 +241,30 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "peerChainState",
                 description: "Get the peer's block chain state",
                 resolve: context => new PeerChainStateQuery(standaloneContext));
+
+            Field<ListGraphType<StringGraphType>>(
+                name: "validatorSet",
+                description: "Public keys of validator set.",
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    Address validatorSetAddr = ReservedAddress.BondedValidatorSet;         
+                    IValue? sheetValue = blockChain.GetState(validatorSetAddr);
+                    if (sheetValue is { } serialized)
+                    {
+                        ValidatorSet valSet = new ValidatorSet(serialized);
+                        return valSet.Set.Select(x => x.OperatorPublicKey.ToString());
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                });
 
             Field<NonNullGraphType<StringGraphType>>(
                 name: "govBalance",

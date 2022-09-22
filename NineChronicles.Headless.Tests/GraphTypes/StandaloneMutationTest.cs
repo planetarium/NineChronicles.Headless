@@ -886,6 +886,88 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(avatarAddress, action.avatarAddress);
         }
 
+        [Fact]
+        public async Task MintGovernanceToken()
+        {
+            var privateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
+            var address = privateKey.ToAddress();
+            var amount = 1024;
+            string query = $@"mutation {{
+                action {{
+                    mintGovernanceToken(recipient: ""{address}"", amount: ""{amount}"")
+                }}
+            }}";
+
+            var result = await ExecuteQueryAsync(query);
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
+            Assert.Null(result.Errors);
+
+            var txIds = BlockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = BlockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["mintGovernanceToken"] = tx.Id.ToString(),
+                }
+            };
+            BlockChain.Append(BlockChain.ProposeBlock(privateKey));
+
+            Assert.Equal(expected, data);
+            Assert.Equal(Asset.GovernanceToken * 1024, BlockChain.GetBalance(address, Asset.GovernanceToken));
+        }
+
+        [Fact]
+        public async Task PromoteValidator()
+        {
+            var privateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
+            var address = privateKey.ToAddress();
+
+            BlockChain.MakeTransaction(
+                privateKey,
+                new Mint(privateKey.ToAddress(), Asset.GovernanceToken * 1024)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(privateKey));
+
+            var amount = 128;
+            string query = $@"mutation {{
+                action {{
+                    promoteValidator(validatorPubKey: ""{privateKey.PublicKey}"", amount: ""{amount}"")
+                }}
+            }}";
+
+            var result = await ExecuteQueryAsync(query);
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
+            Assert.Null(result.Errors);
+
+            var txIds = BlockChain.GetStagedTransactionIds();
+            Assert.Single(txIds);
+            var tx = BlockChain.GetTransaction(txIds.First());
+            var expected = new Dictionary<string, object>
+            {
+                ["action"] = new Dictionary<string, object>
+                {
+                    ["promoteValidator"] = tx.Id.ToString(),
+                }
+            };
+            BlockChain.Append(BlockChain.ProposeBlock(privateKey));
+
+            Assert.Equal(expected, data);
+            Assert.Equal(Asset.GovernanceToken * 896, BlockChain.GetBalance(address, Asset.GovernanceToken));
+
+            string query2 = $"{{ validatorSet }}";
+            var result2 = await ExecuteQueryAsync(query2);
+            var data2 = (Dictionary<string, object>)((ExecutionNode)result2.Data!).ToValue()!;
+            Assert.Equal(
+                new Dictionary<string, object>
+                {
+                    ["validatorSet"] = new List<object>() { privateKey.PublicKey.ToString() }
+                },
+                data2
+            );
+        }
+
         // [Fact]
         // public async Task CancelMonsterCollect()
         // {
