@@ -111,7 +111,7 @@ namespace NineChronicles.Headless.Executable
             [Option("trusted-app-protocol-version-signer", new[] { 'T' },
                 Description = "Trustworthy signers who claim new app protocol versions")]
             string[]? trustedAppProtocolVersionSigners = null,
-            [Option(Description = "Run RPC server?")]
+            [Option(Description = "Use this option if you want to make unity clients to communicate with this server with RPC")]
             bool? rpcServer = null,
             [Option(Description = "RPC listen host")]
             string? rpcListenHost = null,
@@ -123,7 +123,8 @@ namespace NineChronicles.Headless.Executable
             [Option(Description = "If you enable this option with \"rpcRemoteServer\" option at the same time, " +
                                   "RPC server will use HTTP/1, not gRPC.")]
             bool? rpcHttpServer = null,
-            [Option("graphql-server", Description = "Run GraphQL server?")]
+            [Option("graphql-server", 
+                Description = "Use this option if you want to enable GraphQL server to enable querying data.")]
             bool? graphQLServer = null,
             [Option("graphql-host", Description = "GraphQL listen host")]
             string? graphQLHost = null,
@@ -198,7 +199,8 @@ namespace NineChronicles.Headless.Executable
             int? txQuotaPerSigner = null,
             [Option(Description = "The maximum number of peers to poll blocks. int.MaxValue by default.")]
             int? maximumPollPeers = null,
-            [Option("config", new[] { 'C' }, Description = "The full path of appsettings.json file")]
+            [Option("config", new[] { 'C' }, 
+                Description = "Absolute path of \"appsettings.json\" file to provide headless configurations.")]
             string? configPath = "appsettings.json",
             [Ignore] CancellationToken? cancellationToken = null
         )
