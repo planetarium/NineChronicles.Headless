@@ -43,7 +43,7 @@ namespace Libplanet.Headless.Tests.Hosting
         [Fact]
         public void PropertiesMustContainGenesisBlockOrPath()
         {
-            var consensusPrivateKey = new BlsPrivateKey();
+            var consensusPrivateKey = new PrivateKey();
             Assert.Throws<ArgumentException>(() =>
             {
                 var service = new LibplanetNodeService<DummyAction>(
@@ -53,7 +53,7 @@ namespace Libplanet.Headless.Tests.Hosting
                         SwarmPrivateKey = new PrivateKey(),
                         ConsensusPrivateKey = consensusPrivateKey,
                         ConsensusPort = null,
-                        Validators = new List<BlsPublicKey>()
+                        Validators = new List<PublicKey>()
                         {
                             consensusPrivateKey.PublicKey,
                         },

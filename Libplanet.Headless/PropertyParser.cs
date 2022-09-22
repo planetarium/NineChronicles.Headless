@@ -40,7 +40,7 @@ namespace Libplanet.Headless
 
             try
             {
-                var pubKey = PublicKeyGetter.Get(ByteUtil.ParseHex(tokens[0]));
+                var pubKey = new PublicKey(ByteUtil.ParseHex(tokens[0]));
                 var host = tokens[1];
                 var port = int.Parse(tokens[2]);
 
