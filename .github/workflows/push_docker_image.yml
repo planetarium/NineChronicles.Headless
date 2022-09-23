@@ -10,6 +10,7 @@ on:
       - previewnet
       - qa-*
       - 2022q3-worldboss
+      - hotfix/issue-1583
     tags:
       - v*
 
