@@ -11,6 +11,7 @@ using GraphQL.Types;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
+using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Helper;
 using Nekoyume.Model.State;
@@ -161,7 +162,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "A string value to be transferred.",
                         Name = "amount",
                     },
-                    new QueryArgument<NonNullGraphType<CurrencyType>>
+                    new QueryArgument<NonNullGraphType<CurrencyEnumType>>
                     {
                         Description = "A currency type to be transferred.",
                         Name = "currency",
@@ -227,6 +228,122 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         TableName = tableName,
                         TableCsv = tableCsv
+                    };
+                    return Codec.Encode(action.PlainValue);
+                }
+            );
+            Field<NonNullGraphType<ByteStringType>>(
+                name: "raid",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Description = "address of avatar state.",
+                        Name = "avatarAddress",
+                    },
+                    new QueryArgument<ListGraphType<GuidGraphType>>
+                    {
+                        Description = "list of equipment id.",
+                        DefaultValue = new List<Guid>(),
+                        Name = "equipmentIds",
+                    },
+                    new QueryArgument<ListGraphType<GuidGraphType>>
+                    {
+                        Description = "list of costume id.",
+                        DefaultValue = new List<Guid>(),
+                        Name = "costumeIds",
+                    },
+                    new QueryArgument<ListGraphType<GuidGraphType>>
+                    {
+                        Description = "list of food id.",
+                        DefaultValue = new List<Guid>(),
+                        Name = "foodIds",
+                    },
+                    new QueryArgument<BooleanGraphType>
+                    {
+                        Description = "refill ticket by NCG.",
+                        DefaultValue = false,
+                        Name = "payNcg",
+                    }
+                ),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+                    var equipmentIds = context.GetArgument<List<Guid>>("equipmentIds");
+                    var costumeIds = context.GetArgument<List<Guid>>("costumeIds");
+                    var foodIds = context.GetArgument<List<Guid>>("foodIds");
+                    var payNcg = context.GetArgument<bool>("payNcg");
+
+                    NCAction action = new Raid
+                    {
+                        AvatarAddress = avatarAddress,
+                        EquipmentIds = equipmentIds,
+                        CostumeIds = costumeIds,
+                        FoodIds = foodIds,
+                        PayNcg = payNcg
+                    };
+                    return Codec.Encode(action.PlainValue);
+                }
+            );
+            Field<NonNullGraphType<ByteStringType>>(
+                "claimRaidReward",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "address of avatar state to receive reward."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+
+                    NCAction action = new ClaimRaidReward(avatarAddress);
+                    return Codec.Encode(action.PlainValue);
+                }
+            );
+            Field<NonNullGraphType<ByteStringType>>(
+                "claimWorldBossKillReward",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "address of avatar state to receive reward."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+
+                    NCAction action = new ClaimWordBossKillReward
+                    {
+                        AvatarAddress = avatarAddress,
+                    };
+                    return Codec.Encode(action.PlainValue);
+                }
+            );
+            Field<NonNullGraphType<ByteStringType>>(
+                "prepareRewardAssets",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "rewardPoolAddress",
+                        Description = "address of reward pool for charge reward."
+                    },
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<FungibleAssetValueInputType>>>>
+                    {
+                        Name = "assets",
+                        Description = "list of FungibleAssetValue for charge reward."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var assets = context.GetArgument<List<FungibleAssetValue>>("assets");
+                    var rewardPoolAddress = context.GetArgument<Address>("rewardPoolAddress");
+
+                    NCAction action = new PrepareRewardAssets
+                    {
+                        Assets = assets,
+                        RewardPoolAddress = rewardPoolAddress,
                     };
                     return Codec.Encode(action.PlainValue);
                 }
