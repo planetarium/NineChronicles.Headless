@@ -25,7 +25,7 @@ namespace NineChronicles.Headless.Executable.Tests
             var privateKey = new PrivateKey();
             _apvString = AppProtocolVersion.Sign(privateKey, 1000).Token;
 
-            _genesisBlockPath = "https://download.nine-chronicles.com/pos-genesis/genesis-block-pos-20220922-00";
+            _genesisBlockPath = "https://download.nine-chronicles.com/pos-genesis/genesis-block-pos-20220923-01";
             _storePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         }
 
@@ -68,7 +68,7 @@ namespace NineChronicles.Headless.Executable.Tests
                 var response = await client.PostAsync("http://localhost:31238/graphql", content);
                 var responseString = await response.Content.ReadAsStringAsync();
                 Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-                Assert.Contains("\"data\":{\"chainQuery\":{\"blockQuery\":{\"block\":{\"hash\":\"4582250d0da33b06779a8475d283d5dd210c683b9b999d74d03fac4f58fa6bce\"}}}}", responseString);
+                Assert.Contains("\"data\":{\"chainQuery\":{\"blockQuery\":{\"block\":{\"hash\":\"2c47e40a3d18d2457d65b2d4d8cd42a5ac9bb47e434341eb5ce7d217355eb0c1\"}}}}", responseString);
 
                 var channel = new Channel(
                     "localhost:31234",
@@ -83,7 +83,7 @@ namespace NineChronicles.Headless.Executable.Tests
 
                 var service = MagicOnionClient.Create<IBlockChainService>(channel, Array.Empty<IClientFilter>())
                     .WithCancellationToken(channel.ShutdownToken);
-                Assert.Equal(11085640, (await service.GetTip()).Length);
+                Assert.Equal(4246612, (await service.GetTip()).Length);
             }
             finally
             {

@@ -185,9 +185,12 @@ namespace NineChronicles.Headless.Executable
                                   "the tip of the chain will publish `NodeException` to GraphQL subscriptions.")]
             int demandBuffer = 1150,
             [Option("consensus-peer",
-                Description = "A list of peers that joining the block consensus.")]
+                Description = "A list of init peers that joining the block consensus.")]
             string[]? consensusPeerStrings = null,
-            [Option(Description = "Run node without preloading.")]
+            [Option("consensus-seed-peer",
+                Description = "A list of seed peers that joining the block consensus.")]
+            string[]? consensusSeedPeerStrings = null,
+            [Option(Description = "Run node without preloading.")]           
             bool skipPreload = false,
             [Option(Description = "Minimum number of peers to broadcast message.")]
             int minimumBroadcastTarget = 10,

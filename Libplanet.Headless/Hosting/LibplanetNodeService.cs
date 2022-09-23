@@ -166,11 +166,13 @@ namespace Libplanet.Headless.Hosting
             if (!(Properties.ConsensusPrivateKey is null) &&
                 !(Properties.Host is null) &&
                 !(Properties.ConsensusPort is null) &&
-                !(Properties.ConsensusPeers is null))
+                !(Properties.ConsensusPeers is null) &&
+                !(Properties.ConsensusSeedPeers is null))
             {
                 consensusReactorOption = new ConsensusReactorOption
                 {
                     ConsensusPeers = Properties.ConsensusPeers,
+                    SeedPeers = Properties.ConsensusSeedPeers,
                     ConsensusPort = (int)Properties.ConsensusPort,
                     ConsensusPrivateKey = Properties.ConsensusPrivateKey,
                     ConsensusWorkers = 500,

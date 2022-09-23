@@ -72,6 +72,8 @@ namespace Libplanet.Headless.Hosting
 
         public ImmutableList<BoundPeer> ConsensusPeers { get; set; }
 
+        public ImmutableList<BoundPeer> ConsensusSeedPeers { get; set; }
+
         public bool Preload { get; set; } = true;
 
         public int MinimumBroadcastTarget { get; set; } = 10;

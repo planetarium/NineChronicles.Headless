@@ -122,11 +122,12 @@ namespace NineChronicles.Headless.Executable.Commands
         }
 
         private void ProcessExtra(ExtraConfig? config,
-            out List<PendingActivationState> pendingActivationStates
+            out List<PendingActivationState> pendingActivationStates, out List<PrivateKey>? initValidatorPrivateKey
         )
         {
             _console.Out.WriteLine("\nProcessing extra data for genesis...");
             pendingActivationStates = new List<PendingActivationState>();
+            initValidatorPrivateKey = null;
 
             if (config is null)
             {
@@ -137,13 +138,22 @@ namespace NineChronicles.Headless.Executable.Commands
             if (!string.IsNullOrEmpty(config.Value.PendingActivationStatePath))
             {
                 string hex = File.ReadAllText(config.Value.PendingActivationStatePath).Trim();
-                List decoded = (List)_codec.Decode(ByteUtil.ParseHex(hex));
+                List decoded = (List) _codec.Decode(ByteUtil.ParseHex(hex));
                 CreatePendingActivations action = new();
                 action.LoadPlainValue(decoded[1]);
                 pendingActivationStates = action.PendingActivations.Select(
                     pa => new PendingActivationState(pa.Nonce, new PublicKey(pa.PublicKey))
                 ).ToList();
             }
+
+            if (config.Value.InitialValidatorPrivateKey is null)
+            {
+                return;
+            }
+
+            initValidatorPrivateKey = config.Value.InitialValidatorPrivateKey
+                .Select(privateKeyString => new PrivateKey(privateKeyString))
+                .ToList();
         }
 
         [Command(Description = "Mine a new genesis block")]
@@ -167,7 +177,8 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 ProcessAdmin(genesisConfig.Admin, initialMinter, out var adminState);
 
-                ProcessExtra(genesisConfig.Extra, out List<PendingActivationState> pendingActivationStates);
+                ProcessExtra(genesisConfig.Extra,
+                    out var pendingActivationStates, out var initValidatorPrivateKey);
 
                 // Mine genesis block
                 _console.Out.WriteLine("\nMining genesis block...\n");
@@ -176,7 +187,8 @@ namespace NineChronicles.Headless.Executable.Commands
                     goldDistributions: initialDepositList.ToArray(),
                     pendingActivationStates: pendingActivationStates.ToArray(),
                     adminState: adminState,
-                    privateKey: initialMinter
+                    privateKey: initialMinter,
+                    initialValidator: initValidatorPrivateKey
                 );
 
                 Lib9cUtils.ExportBlock(block, "genesis-block");
@@ -289,6 +301,8 @@ namespace NineChronicles.Headless.Executable.Commands
             /// See <a href="https://github.com/planetarium/lib9c/blob/development/.Lib9c.Tools/SubCommand/Tx.cs">Tx.cs</a> to create activation key.
             /// </value>
             public string? PendingActivationStatePath { get; set; }
+            
+            public List<string>? InitialValidatorPrivateKey { get; set; }
         }
 
         /// <summary>
