@@ -5,6 +5,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -102,7 +103,7 @@ namespace NineChronicles.Headless
             if (!_blockRenderDictionary.ContainsKey(clientAddress))
             {
                 _blockRenderDictionary[clientAddress] = true;
-                _blockRenderer.BlockSubject.Subscribe(
+                _blockRenderer.BlockSubject.SubscribeOn(NewThreadScheduler.Default).Subscribe(
                     async pair =>
                     {
                         try
@@ -123,7 +124,7 @@ namespace NineChronicles.Headless
                     }
                 );
 
-                _blockRenderer.ReorgSubject.Subscribe(
+                _blockRenderer.ReorgSubject.SubscribeOn(NewThreadScheduler.Default).Subscribe(
                     async ev =>
                     {
                         try
@@ -145,7 +146,7 @@ namespace NineChronicles.Headless
                     }
                 );
 
-                _blockRenderer.ReorgEndSubject.Subscribe(
+                _blockRenderer.ReorgEndSubject.SubscribeOn(NewThreadScheduler.Default).Subscribe(
                     async ev =>
                     {
                         try
@@ -173,6 +174,7 @@ namespace NineChronicles.Headless
                 _actionRenderDictionary[clientAddress] = true;
                 _actionRenderer.EveryRender<ActionBase>()
                     .Where(ev => ContainsAddressToBroadcast(ev, clientAddress))
+                    .SubscribeOn(NewThreadScheduler.Default)
                     .Subscribe(
                     async ev =>
                     {
@@ -250,6 +252,7 @@ namespace NineChronicles.Headless
 
                 _actionRenderer.EveryUnrender<ActionBase>()
                     .Where(ev => ContainsAddressToBroadcast(ev, clientAddress))
+                    .SubscribeOn(NewThreadScheduler.Default)
                     .Subscribe(
                     async ev =>
                     {
@@ -306,7 +309,7 @@ namespace NineChronicles.Headless
             if (!_exceptionRenderDictionary.ContainsKey(clientAddress))
             {
                 _exceptionRenderDictionary[clientAddress] = true;
-                _exceptionRenderer.EveryException().Subscribe(
+                _exceptionRenderer.EveryException().SubscribeOn(NewThreadScheduler.Default).Subscribe(
                     async tuple =>
                     {
                         try
@@ -314,7 +317,7 @@ namespace NineChronicles.Headless
                             (RPC.Shared.Exceptions.RPCException code, string message) = tuple;
                             if (_clients.TryGetValue(clientAddress, out var clientTuple))
                             {
-                                await clientTuple.hub.ReportExceptionAsync((int) code, message);
+                                await clientTuple.hub.ReportExceptionAsync((int)code, message);
                             }
                         }
                         catch (Exception e)
@@ -329,7 +332,7 @@ namespace NineChronicles.Headless
             if (!_nodeStatusRenderDictionary.ContainsKey(clientAddress))
             {
                 _nodeStatusRenderDictionary[clientAddress] = true;
-                _nodeStatusRenderer.EveryChangedStatus().Subscribe(
+                _nodeStatusRenderer.EveryChangedStatus().SubscribeOn(NewThreadScheduler.Default).Subscribe(
                     async isPreloadStarted =>
                     {
                         try
