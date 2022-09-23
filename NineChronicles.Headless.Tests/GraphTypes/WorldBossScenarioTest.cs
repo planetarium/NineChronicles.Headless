@@ -34,7 +34,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             _raiderStateAddress = new Address("Bd9a12559be0F746Cade6272b6ACb1F1426C8c5D");
             _worldBossAddress = Addresses.GetWorldBossAddress(1);
             _worldBossKillRewardRecordAddress = new Address("0xE9653E92a5169bFbA66a4CbC07780ED370986d98");
-            _stateContext = new StateContext(GetStatesMock, GetBalanceMock);
+            _stateContext = new StateContext(GetStatesMock, GetBalanceMock, 1L);
             _raiderState = new RaiderState
             {
                 TotalScore = 2_000,
