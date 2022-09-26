@@ -21,7 +21,7 @@
 $ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
 
 Usage: NineChronicles.Headless.Executable [command]
-Usage: NineChronicles.Headless.Executable [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <UInt16>] [--swarm-private-key <String>] [--workers <Int32>] [--no-miner] [--miner-count <Int32>] [--miner-private-key <String>] [--store-type <String>] [--store-path <String>] [--no-reduce-store] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Int32>] [--rpc-remote-server] [--rpc-http-server] [--graphql-server] [--graphql-host <String>] [--graphql-port <Int32>] [--graphql-secret-token-path <String>] [--no-cors] [--confirmations <Int32>] [--nonblock-renderer] [--nonblock-renderer-queue <Int32>] [--strict-rendering] [--log-action-renders] [--network-type <NetworkType>] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--static-peer <String>...] [--skip-preload] [--minimum-broadcast-target <Int32>] [--bucket-size <Int32>] [--chain-tip-stale-behavior-type <String>] [--tx-quota-per-signer <Int32>] [--maximum-poll-peers <Int32>] [--help] [--version]
+Usage: NineChronicles.Headless.Executable [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <UInt16>] [--swarm-private-key <String>] [--workers <Int32>] [--no-miner] [--miner-count <Int32>] [--miner-private-key <String>] [--store-type <String>] [--store-path <String>] [--no-reduce-store] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Int32>] [--rpc-remote-server] [--rpc-http-server] [--graphql-server] [--graphql-host <String>] [--graphql-port <Int32>] [--graphql-secret-token-path <String>] [--no-cors] [--confirmations <Int32>] [--nonblock-renderer] [--nonblock-renderer-queue <Int32>] [--strict-rendering] [--log-action-renders] [--network-type <NetworkType>] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--static-peer <String>...] [--skip-preload] [--minimum-broadcast-target <Int32>] [--bucket-size <Int32>] [--chain-tip-stale-behavior-type <String>] [--tx-quota-per-signer <Int32>] [--maximum-poll-peers <Int32>] [--config <String>] [--help] [--version]
 
 NineChronicles.Headless.Executable
 
@@ -35,14 +35,14 @@ Commands:
   genesis
 
 Options:
-  -V, --app-protocol-version <String>                      App protocol version token. (Required)
-  -G, --genesis-block-path <String>                        Genesis block path of blockchain. Blockchain is recognized by its genesis block. (Required)
+  -V, --app-protocol-version <String>                      App protocol version token.
+  -G, --genesis-block-path <String>                        Genesis block path of blockchain. Blockchain is recognized by its genesis block.
   -H, --host <String>                                      Hostname of this node for another nodes to access. This is not listening host like 0.0.0.0
   -P, --port <UInt16>                                      Port of this node for another nodes to access.
   --swarm-private-key <String>                             The private key used for signing messages and to specify your node. If you leave this null, a randomly generated value will be used.
-  --workers <Int32>                                        Number of workers to use in Swarm (Default: 5)
+  --workers <Int32>                                        Number of workers to use in Swarm
   --no-miner                                               Disable block mining.
-  --miner-count <Int32>                                    The number of miner task(thread). (Default: 1)
+  --miner-count <Int32>                                    The number of miner task(thread).
   --miner-private-key <String>                             The private key used for mining blocks. Must not be null if you want to turn on mining with libplanet-node.
   --store-type <String>                                    The type of storage to store blockchain data. If not provided, "LiteDB" will be used as default. Available type: ["rocksdb", "memory"]
   --store-path <String>                                    Path of storage. This value is required if you use persistent storage e.g. "rocksdb"
@@ -50,43 +50,52 @@ Options:
   -I, --ice-server <String>...                             ICE server to NAT traverse.
   --peer <String>...                                       Seed peer list to communicate to another nodes.
   -T, --trusted-app-protocol-version-signer <String>...    Trustworthy signers who claim new app protocol versions
-  --rpc-server                                             Run RPC server?
-  --rpc-listen-host <String>                               RPC listen host (Default: 0.0.0.0)
+  --rpc-server                                             Use this option if you want to make unity clients to communicate with this server with RPC
+  --rpc-listen-host <String>                               RPC listen host
   --rpc-listen-port <Int32>                                RPC listen port
   --rpc-remote-server                                      Do a role as RPC remote server? If you enable this option, multiple Unity clients can connect to your RPC server.
   --rpc-http-server                                        If you enable this option with "rpcRemoteServer" option at the same time, RPC server will use HTTP/1, not gRPC.
-  --graphql-server                                         Run GraphQL server?
-  --graphql-host <String>                                  GraphQL listen host (Default: 0.0.0.0)
+  --graphql-server                                         Use this option if you want to enable GraphQL server to enable querying data.
+  --graphql-host <String>                                  GraphQL listen host
   --graphql-port <Int32>                                   GraphQL listen port
   --graphql-secret-token-path <String>                     The path to write GraphQL secret token. If you want to protect this headless application, you should use this option and take it into headers.
   --no-cors                                                Run without CORS policy.
-  --confirmations <Int32>                                  The number of required confirmations to recognize a block. (Default: 0)
-  --nonblock-renderer                                      Uses non-blocking renderer, which prevents the blockchain & swarm from waiting slow rendering.  Turned off by default.
-  --nonblock-renderer-queue <Int32>                        The size of the queue used by the non-blocking renderer. Ignored if --nonblock-renderer is turned off. (Default: 512)
+  --confirmations <Int32>                                  The number of required confirmations to recognize a block.
+  --nonblock-renderer                                      Uses non-blocking renderer, which prevents the blockchain & swarm from waiting slow rendering. Turned off by default.
+  --nonblock-renderer-queue <Int32>                        The size of the queue used by the non-blocking renderer. Ignored if --nonblock-renderer is turned off.
   --strict-rendering                                       Flag to turn on validating action renderer.
-  --log-action-renders                                     Log action renders besides block renders.  --rpc-server implies this.
-  --network-type <NetworkType>                             Network type. (Default: Main) (Allowed values: Main, Internal, Permanent, Test, Default)
-  --dev                                                    Flag to turn on the dev mode.  false by default.
-  --dev.block-interval <Int32>                             The time interval between blocks. It's unit is milliseconds. Works only when dev mode is on. (Default: 10000)
-  --dev.reorg-interval <Int32>                             The size of reorg interval. Works only when dev mode is on. (Default: 0)
+  --log-action-renders                                     Log action renders besides block renders. --rpc-server implies this.
+  --network-type <NetworkType>                             Network type. (Allowed values: Main, Internal, Permanent, Test, Default)
+  --dev                                                    Flag to turn on the dev mode. false by default.
+  --dev.block-interval <Int32>                             The time interval between blocks. It's unit is milliseconds. Works only when dev mode is on.
+  --dev.reorg-interval <Int32>                             The size of reorg interval. Works only when dev mode is on.
   --aws-cognito-identity <String>                          The Cognito identity for AWS CloudWatch logging.
   --aws-access-key <String>                                The access key for AWS CloudWatch logging.
   --aws-secret-key <String>                                The secret key for AWS CloudWatch logging.
   --aws-region <String>                                    The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2).
-  --tx-life-time <Int32>                                   The lifetime of each transaction, which uses minute as its unit. (Default: 180)
-  --message-timeout <Int32>                                The grace period for new messages, which uses second as its unit. (Default: 60)
-  --tip-timeout <Int32>                                    The grace period for tip update, which uses second as its unit. (Default: 60)
-  --demand-buffer <Int32>                                  A number of block size that determines how far behind the demand the tip of the chain will publish `NodeException` to GraphQL subscriptions. (Default: 1150)
+  --tx-life-time <Int32>                                   The lifetime of each transaction, which uses minute as its unit.
+  --message-timeout <Int32>                                The grace period for new messages, which uses second as its unit.
+  --tip-timeout <Int32>                                    The grace period for tip update, which uses second as its unit.
+  --demand-buffer <Int32>                                  A number of block size that determines how far behind the demand the tip of the chain will publish `NodeException` to GraphQL subscriptions.
   --static-peer <String>...                                A list of peers that the node will continue to maintain.
   --skip-preload                                           Run node without preloading.
-  --minimum-broadcast-target <Int32>                       Minimum number of peers to broadcast message. (Default: 10)
-  --bucket-size <Int32>                                    Number of the peers can be stored in each bucket. (Default: 16)
-  --chain-tip-stale-behavior-type <String>                 Determines behavior when the chain's tip is stale. "reboot" and "preload" is available and "reboot" option is selected by default. (Default: reboot)
-  --tx-quota-per-signer <Int32>                            The number of maximum transactions can be included in stage per signer. (Default: 10)
-  --maximum-poll-peers <Int32>                             The maximum number of peers to poll blocks. int.MaxValue by default. (Default: 2147483647)
+  --minimum-broadcast-target <Int32>                       Minimum number of peers to broadcast message.
+  --bucket-size <Int32>                                    Number of the peers can be stored in each bucket.
+  --chain-tip-stale-behavior-type <String>                 Determines behavior when the chain's tip is stale. "reboot" and "preload" is available and "reboot" option is selected by default.
+  --tx-quota-per-signer <Int32>                            The number of maximum transactions can be included in stage per signer.
+  --maximum-poll-peers <Int32>                             The maximum number of peers to poll blocks. int.MaxValue by default.
+  -C, --config <String>                                    Absolute path of "appsettings.json" file to provide headless configurations. (Default: appsettings.json)
   -h, --help                                               Show help message
   --version                                                Show version
 ```
+
+### Use `appsettings.json` to provide CLI options
+
+You can provide headless CLI options using file, `appsettings.json`. You'll find the default file at [here](NineChronicles.Headless.Executable/appsettings.json).  
+The path of `appsettings.json` can be either local file storage or URL.  
+Refer full configuration fields from [this file](NineChronicles.Headless.Executable/Configuration.cs), set your options into `appsettings.json` under `Headless` section.  
+You can also run headless server with previous way; You don't need to change anything if you don't want to.  
+In case that the same option is provided from both `appsetting.json` and CLI option, the CLI option value is used instead from `appsettings.json`.  
 
 ## Docker Build
 
