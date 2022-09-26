@@ -138,7 +138,7 @@ namespace NineChronicles.Headless.Executable.Commands
             if (!string.IsNullOrEmpty(config.Value.PendingActivationStatePath))
             {
                 string hex = File.ReadAllText(config.Value.PendingActivationStatePath).Trim();
-                List decoded = (List) _codec.Decode(ByteUtil.ParseHex(hex));
+                List decoded = (List)_codec.Decode(ByteUtil.ParseHex(hex));
                 CreatePendingActivations action = new();
                 action.LoadPlainValue(decoded[1]);
                 pendingActivationStates = action.PendingActivations.Select(
@@ -301,7 +301,7 @@ namespace NineChronicles.Headless.Executable.Commands
             /// See <a href="https://github.com/planetarium/lib9c/blob/development/.Lib9c.Tools/SubCommand/Tx.cs">Tx.cs</a> to create activation key.
             /// </value>
             public string? PendingActivationStatePath { get; set; }
-            
+
             public List<string>? InitialValidatorPrivateKey { get; set; }
         }
 

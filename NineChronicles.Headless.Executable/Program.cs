@@ -190,7 +190,7 @@ namespace NineChronicles.Headless.Executable
             [Option("consensus-seed-peer",
                 Description = "A list of seed peers that joining the block consensus.")]
             string[]? consensusSeedPeerStrings = null,
-            [Option(Description = "Run node without preloading.")]           
+            [Option(Description = "Run node without preloading.")]
             bool skipPreload = false,
             [Option(Description = "Minimum number of peers to broadcast message.")]
             int minimumBroadcastTarget = 10,

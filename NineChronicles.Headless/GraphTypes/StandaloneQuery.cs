@@ -253,7 +253,7 @@ namespace NineChronicles.Headless.GraphTypes
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
                     }
 
-                    Address validatorSetAddr = ReservedAddress.BondedValidatorSet;         
+                    Address validatorSetAddr = ReservedAddress.BondedValidatorSet;
                     IValue? sheetValue = blockChain.GetState(validatorSetAddr);
                     if (sheetValue is { } serialized)
                     {

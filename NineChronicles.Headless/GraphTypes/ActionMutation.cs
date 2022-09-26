@@ -562,7 +562,7 @@ namespace NineChronicles.Headless.GraphTypes
                         var action = new Mint(recipient, amount);
 
                         Transaction<NCAction> tx = blockChain.MakeTransaction(privateKey, action);
-       
+
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -843,7 +843,7 @@ namespace NineChronicles.Headless.GraphTypes
                         {
                             throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
                         }
-   
+
                         var rawAddress = context.GetArgument<byte[]>("validatorAddress");
                         Address validatorAddress = new Address(rawAddress);
 
