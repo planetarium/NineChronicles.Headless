@@ -52,6 +52,7 @@ namespace NineChronicles.Headless.Tests.Common
                 MessageTimeout = TimeSpan.FromMinutes(1),
                 TipTimeout = TimeSpan.FromMinutes(1),
                 DemandBuffer = 1150,
+                ConsensusSeeds = ImmutableList<BoundPeer>.Empty,
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty,
             };
             return new NineChroniclesNodeService(privateKey, properties, BlockPolicy, NetworkType.Test);

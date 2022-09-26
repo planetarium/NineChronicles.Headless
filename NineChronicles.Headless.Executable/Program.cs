@@ -184,6 +184,9 @@ namespace NineChronicles.Headless.Executable
             [Option(Description = "A number of block size that determines how far behind the demand " +
                                   "the tip of the chain will publish `NodeException` to GraphQL subscriptions.")]
             int demandBuffer = 1150,
+            [Option("consensus-seed",
+                Description = "A list of seed peers to join the block consensus.")]
+            string[]? consensusSeedStrings = null,
             [Option("consensus-peer",
                 Description = "A list of peers that joining the block consensus.")]
             string[]? consensusPeerStrings = null,
@@ -341,6 +344,7 @@ namespace NineChronicles.Headless.Executable
                         messageTimeout: messageTimeout,
                         tipTimeout: tipTimeout,
                         demandBuffer: demandBuffer,
+                        consensusSeedStrings: consensusSeedStrings,
                         consensusPeerStrings: consensusPeerStrings,
                         preload: !skipPreload,
                         minimumBroadcastTarget: minimumBroadcastTarget,
