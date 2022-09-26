@@ -227,6 +227,7 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,3000,3600,13600
 Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
 ");
             var privateKey = new PrivateKey();
+            var initialValidatorPrivateKey = new[] { new PrivateKey() };
             goldDistributionPath = goldDistributionPath.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             var config = new Dictionary<string, object>
             {
@@ -270,7 +271,8 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
                 ImmutableHashSet<Address>.Empty,
                 genesisConfig.ActivationKeyCount != 0,
                 null,
-                new PrivateKey(ByteUtil.ParseHex(genesisConfig.PrivateKey))
+                new PrivateKey(ByteUtil.ParseHex(genesisConfig.PrivateKey)),
+                initialValidator: initialValidatorPrivateKey
             );
             return genesisBlock;
         }

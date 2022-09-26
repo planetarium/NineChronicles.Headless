@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using Cocona;
@@ -94,6 +95,14 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 };
             }
 
+            var initialValidatorPrivateKey = new List<PrivateKey>
+            {
+                new PrivateKey("126862cc8f877b4c3b6d61e5ca8da507bab9f7170194f44ac888700b2e916a42"),
+                new PrivateKey("06f554bffe30d0fbb294ec3661654da2b0d87b31e76998245409d86ddd047ebe"),
+                new PrivateKey("1fe9468914cc07fe59d40451627ba04267e77112f665b1d5151a1a97d1acb53c"),
+                new PrivateKey("5d662edbc9e44b48d00cfa51dd007ab379499d45d4fe6f9354e439dfbd769416"),
+            };
+
             if (!(goldDistribution is null))
             {
                 config["currency"] = new Dictionary<string, object>
@@ -111,6 +120,10 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 ["validUntil"] = 1500000,
             };
             config["admin"] = adminConfig;
+            config["extra"] = new Dictionary<string, object>
+            {
+                ["initialValidatorPrivateKey"] = initialValidatorPrivateKey.Select(x => ByteUtil.Hex(x.ByteArray))
+            };
 
             // ExtraConfig: pendingActivationStatePath
 
