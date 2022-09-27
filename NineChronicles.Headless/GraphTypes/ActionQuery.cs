@@ -9,8 +9,11 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
+using Libplanet.Action.Sys;
 using Libplanet.Assets;
+using Libplanet.Crypto;
 using Libplanet.Explorer.GraphTypes;
+using Libplanet.PoS;
 using Nekoyume.Action;
 using Nekoyume.Helper;
 using Nekoyume.Model.State;
@@ -231,6 +234,152 @@ namespace NineChronicles.Headless.GraphTypes
                     return Codec.Encode(action.PlainValue);
                 }
             );
+            Field<ByteStringType>(
+                name: "promoteValidator",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ByteStringType>>
+                    {
+                        Name = "validatorPubKey",
+                        Description = "Public key of node to be promoted to validator."
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount of the governance token to be initially delegated."
+                    }
+                ),
+                resolve: context =>
+                {
+                    Currency currency = Asset.GovernanceToken;
+                    var rawPublicKey = context.GetArgument<byte[]>("validatorPubKey");
+                    PublicKey validatorPubKey = new PublicKey(rawPublicKey);
+                    FungibleAssetValue amount =
+                    FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
+                    var action = new PromoteValidator(validatorPubKey, amount);
+                    return Codec.Encode(Registry.Serialize(action));
+                });
+            Field<ByteStringType>(
+                name: "delegate",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "validatorAddress",
+                        Description = "Address of validator to delegate."
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount of the governance token to be delegated."
+                    }
+                ),
+                resolve: context =>
+                {
+                    Currency currency = Asset.GovernanceToken;
+                    Address validatorAddress = context.GetArgument<Address>("validatorAddress");
+                    FungibleAssetValue amount =
+                    FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
+                    var action = new Libplanet.Action.Sys.Delegate(validatorAddress, amount);
+                    return Codec.Encode(Registry.Serialize(action));
+                });
+            Field<ByteStringType>(
+                name: "undelegate",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "validatorAddress",
+                        Description = "Address of validator to undelegate."
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount of the shares to undelegate."
+                    }
+                ),
+                resolve: context =>
+                {
+                    Currency currency = Asset.Share;
+                    Address validatorAddress = context.GetArgument<Address>("validatorAddress");
+                    FungibleAssetValue amount =
+                    FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
+                    var action = new Undelegate(validatorAddress, amount);
+                    return Codec.Encode(Registry.Serialize(action));
+                });
+            Field<ByteStringType>(
+                name: "cancelUndelegation",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "validatorAddress",
+                        Description = "Address of validator to cancel undelegation."
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount of the governance token to cancel undelegation."
+                    }
+                ),
+                resolve: context =>
+                {
+                    Currency currency = Asset.ConsensusToken;
+                    Address validatorAddress = context.GetArgument<Address>("validatorAddress");
+                    FungibleAssetValue amount =
+                    FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
+                    var action = new CancelUndelegation(validatorAddress, amount);
+                    return Codec.Encode(Registry.Serialize(action));
+                });
+            Field<ByteStringType>(
+                name: "redelegate",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "srcValidatorAddress",
+                        Description = "Address of source validator to redelegate."
+                    },
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "dstValidatorAddress",
+                        Description = "Address of destination validator to redelegate."
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount of the share to redelegate."
+                    }
+                ),
+                resolve: context =>
+                {
+                    Currency currency = Asset.Share;
+                    Address srcValidatorAddress = context.GetArgument<Address>("srcValidatorAddress");
+                    Address dstValidatorAddress = context.GetArgument<Address>("dstValidatorAddress");
+                    FungibleAssetValue amount =
+                    FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
+                    var action = new Redelegate(srcValidatorAddress, dstValidatorAddress, amount);
+                    return Codec.Encode(Registry.Serialize(action));
+                });
+
+            Field<ByteStringType>(
+                name: "withdrawDelegator",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "validatorAddress",
+                        Description = "Address of validator to withdraw."
+                    }
+                ),
+                resolve: context =>
+                {
+                    Address validatorAddress = context.GetArgument<Address>("validatorAddress");
+                    var action = new WithdrawDelegator(validatorAddress);
+                    return Codec.Encode(Registry.Serialize(action));
+                });
+
+            Field<ByteStringType>(
+                name: "withdrawValidator",
+                resolve: context =>
+                {
+                    var action = new WithdrawValidator();
+                    return Codec.Encode(Registry.Serialize(action));
+                });
         }
     }
 }

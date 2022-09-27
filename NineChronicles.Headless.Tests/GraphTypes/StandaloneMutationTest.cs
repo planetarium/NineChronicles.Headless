@@ -7,6 +7,7 @@ using Libplanet.Blockchain;
 using Libplanet.Blocks;
 using Libplanet.Consensus;
 using Libplanet.Crypto;
+using Libplanet.Extensions.Cocona;
 using Libplanet.KeyStore;
 using Libplanet.PoS;
 using Libplanet.PoS.Model;
@@ -25,11 +26,14 @@ using System.Threading.Tasks;
 using Bencodex.Types;
 using GraphQL.Execution;
 using Lib9c.Tests;
+using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Executable.Commands;
 using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Executable.Tests.IO;
+using NineChronicles.Headless.Executable.Tests.KeyStore;
 using Xunit;
 using Xunit.Abstractions;
+using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
@@ -921,39 +925,77 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task PromoteValidator()
         {
-            var privateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
+            var minerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
+            var privateKey = new PrivateKey();
             var address = privateKey.ToAddress();
 
             BlockChain.MakeTransaction(
                 privateKey,
                 new Mint(privateKey.ToAddress(), Asset.GovernanceToken * 1024)
             );
-            BlockChain.Append(BlockChain.ProposeBlock(privateKey));
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
 
             var amount = 128;
-            string query = $@"mutation {{
-                action {{
-                    promoteValidator(validatorPubKey: ""{privateKey.PublicKey}"", amount: ""{amount}"")
-                }}
-            }}";
 
-            var result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
-            Assert.Null(result.Errors);
+            // Create Action.
+            var args = $"validatorPubKey: \"{privateKey.PublicKey}\", amount:  \"{amount}\"";
+            var actionQuery = $"{{ promoteValidator({args}) }}";
+            var actionQueryResult = await ExecuteQueryAsync<ActionQuery>(actionQuery, standaloneContext: StandaloneContextFx);
+            var actionData = (Dictionary<string, object>)((ExecutionNode)actionQueryResult.Data!).ToValue()!;
+            var systemAction = actionData["promoteValidator"];
 
-            var txIds = BlockChain.GetStagedTransactionIds();
-            Assert.Single(txIds);
-            var tx = BlockChain.GetTransaction(txIds.First());
-            var expected = new Dictionary<string, object>
-            {
-                ["action"] = new Dictionary<string, object>
-                {
-                    ["promoteValidator"] = tx.Id.ToString(),
-                }
-            };
-            BlockChain.Append(BlockChain.ProposeBlock(privateKey));
+            // Get Nonce.
+            var nonceQuery = $@"query {{
+                    nextTxNonce(address: ""{privateKey.ToAddress()}"")
+                }}";
+            var nonceQueryResult =
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(nonceQuery, standaloneContext: StandaloneContextFx);
+            var nonce =
+                (long)((Dictionary<string, object>)((ExecutionNode)nonceQueryResult.Data!)
+                    .ToValue()!)["nextTxNonce"];
 
-            Assert.Equal(expected, data);
+            // Get PublicKey.
+            var keyStore = new InMemoryKeyStore();
+            Guid keyId = keyStore.Add(ProtectedPrivateKey.Protect(privateKey, "1234"));
+            var passPhrase = new PassphraseParameters();
+            passPhrase.Passphrase = "1234";
+            var console = new StringIOConsole();
+            var keyCommand = new KeyCommand(console, keyStore);
+            keyCommand.PublicKey(keyId, passPhrase);
+            var hexedPublicKey = console.Out.ToString().Trim();
+
+            // Create unsigned Transaction.
+            var unsignedQuery = $@"query {{
+                    unsignedSysTransaction(publicKey: ""{hexedPublicKey}"", systemAction: ""{systemAction}"", nonce: {nonce})
+                }}";
+            var unsignedQueryResult =
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(unsignedQuery, standaloneContext: StandaloneContextFx);
+            var unsignedData =
+                (string)((Dictionary<string, object>)((ExecutionNode)unsignedQueryResult.Data!).ToValue()!)[
+                    "unsignedSysTransaction"];
+            var unsignedTxBytes = ByteUtil.ParseHex(unsignedData);
+
+            // Sign Transaction in local.
+            var path = Path.GetTempFileName();
+            await File.WriteAllBytesAsync(path, unsignedTxBytes);
+            var outputPath = Path.GetTempFileName();
+            keyCommand.Sign(keyId, path, passPhrase, outputPath);
+            var signature = ByteUtil.Hex(await File.ReadAllBytesAsync(outputPath));
+
+            // Attachment signature & unsigned transaction
+            var signQuery = $@"query {{
+                    signSysTransaction(unsignedTransaction: ""{unsignedData}"", signature: ""{signature}"")
+                }}";
+            var signQueryResult =
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(signQuery, standaloneContext: StandaloneContextFx);
+            var hex = (string)((Dictionary<string, object>)((ExecutionNode)signQueryResult.Data!).ToValue()!)[
+                "signSysTransaction"];
+
+            // Staging Transaction.
+            var stageTxMutation = $"mutation {{ stageTransaction(payload: \"{hex}\") }}";
+            var stageTxResult = await ExecuteQueryAsync(stageTxMutation);
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
             Assert.Equal(Asset.GovernanceToken * 896, BlockChain.GetBalance(address, Asset.GovernanceToken));
 
             string query2 = $"{{ validatorSet }}";
@@ -966,6 +1008,519 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 },
                 data2
             );
+        }
+
+        [Fact]
+        public async Task Delegate()
+        {
+            var delPrivateKey = new PrivateKey();
+            var valPrivateKey = new PrivateKey();
+            var minerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
+            var delAddress = delPrivateKey.ToAddress();
+            var valAddress = valPrivateKey.ToAddress();
+            var validatorAddress = Validator.DeriveAddress(valAddress);
+
+            BlockChain.MakeTransaction(
+                delPrivateKey,
+                new Mint(delPrivateKey.ToAddress(), Asset.GovernanceToken * 512)
+            );
+            BlockChain.MakeTransaction(
+                valPrivateKey,
+                new Mint(valPrivateKey.ToAddress(), Asset.GovernanceToken * 1024)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                valPrivateKey,
+                new PromoteValidator(valPrivateKey.PublicKey, Asset.GovernanceToken * 128)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            var amount = 384;
+            // Create Action.
+            var args = $"validatorAddress: \"{validatorAddress}\", amount: \"{amount}\"";
+            var actionQuery = $"{{ delegate({args}) }}";
+            var actionQueryResult = await ExecuteQueryAsync<ActionQuery>(actionQuery, standaloneContext: StandaloneContextFx);
+            var actionData = (Dictionary<string, object>)((ExecutionNode)actionQueryResult.Data!).ToValue()!;
+            var systemAction = actionData["delegate"];
+
+            // Get Nonce.
+            var nonceQuery = $@"query {{
+                    nextTxNonce(address: ""{delPrivateKey.ToAddress()}"")
+                }}";
+            var nonceQueryResult =
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(nonceQuery, standaloneContext: StandaloneContextFx);
+            var nonce =
+                (long)((Dictionary<string, object>)((ExecutionNode)nonceQueryResult.Data!)
+                    .ToValue()!)["nextTxNonce"];
+
+            // Get PublicKey.
+            var keyStore = new InMemoryKeyStore();
+            Guid keyId = keyStore.Add(ProtectedPrivateKey.Protect(delPrivateKey, "1234"));
+            var passPhrase = new PassphraseParameters();
+            passPhrase.Passphrase = "1234";
+            var console = new StringIOConsole();
+            var keyCommand = new KeyCommand(console, keyStore);
+            keyCommand.PublicKey(keyId, passPhrase);
+            var hexedPublicKey = console.Out.ToString().Trim();
+
+            // Create unsigned Transaction.
+            var unsignedQuery = $@"query {{
+                    unsignedSysTransaction(publicKey: ""{hexedPublicKey}"", systemAction: ""{systemAction}"", nonce: {nonce})
+                }}";
+            var unsignedQueryResult =
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(unsignedQuery, standaloneContext: StandaloneContextFx);
+            var unsignedData =
+                (string)((Dictionary<string, object>)((ExecutionNode)unsignedQueryResult.Data!).ToValue()!)[
+                    "unsignedSysTransaction"];
+            var unsignedTxBytes = ByteUtil.ParseHex(unsignedData);
+
+            // Sign Transaction in local.
+            var path = Path.GetTempFileName();
+            await File.WriteAllBytesAsync(path, unsignedTxBytes);
+            var outputPath = Path.GetTempFileName();
+            keyCommand.Sign(keyId, path, passPhrase, outputPath);
+            var signature = ByteUtil.Hex(await File.ReadAllBytesAsync(outputPath));
+
+            // Attachment signature & unsigned transaction
+            var signQuery = $@"query {{
+                    signSysTransaction(unsignedTransaction: ""{unsignedData}"", signature: ""{signature}"")
+                }}";
+            var signQueryResult =
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(signQuery, standaloneContext: StandaloneContextFx);
+            var hex = (string)((Dictionary<string, object>)((ExecutionNode)signQueryResult.Data!).ToValue()!)[
+                "signSysTransaction"];
+
+            // Staging Transaction.
+            var stageTxMutation = $"mutation {{ stageTransaction(payload: \"{hex}\") }}";
+            var stageTxResult = await ExecuteQueryAsync(stageTxMutation);
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            Assert.Equal(Asset.GovernanceToken * 128, BlockChain.GetBalance(delAddress, Asset.GovernanceToken));
+            Assert.Equal(
+                Asset.Share * 384, 
+                BlockChain.GetBalance(Delegation.DeriveAddress(delAddress, validatorAddress), Asset.Share));
+        }
+
+        [Fact]
+        public async Task Undelegate()
+        {
+            var delPrivateKey = new PrivateKey();
+            var valPrivateKey = new PrivateKey();
+            var minerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
+            var delAddress = delPrivateKey.ToAddress();
+            var valAddress = valPrivateKey.ToAddress();
+            var validatorAddress = Validator.DeriveAddress(valAddress);
+
+            BlockChain.MakeTransaction(
+                delPrivateKey,
+                new Mint(delPrivateKey.ToAddress(), Asset.GovernanceToken * 512)
+            );
+            BlockChain.MakeTransaction(
+                valPrivateKey,
+                new Mint(valPrivateKey.ToAddress(), Asset.GovernanceToken * 1024)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                valPrivateKey,
+                new PromoteValidator(valPrivateKey.PublicKey, Asset.GovernanceToken * 128)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                delPrivateKey,
+                new Libplanet.Action.Sys.Delegate(validatorAddress, Asset.GovernanceToken * 384)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            var amount = 184;
+            // Create Action.
+            var args = $"validatorAddress: \"{validatorAddress}\", amount: \"{amount}\"";
+            var actionQuery = $"{{ undelegate({args}) }}";
+            var actionQueryResult = await ExecuteQueryAsync<ActionQuery>(actionQuery, standaloneContext: StandaloneContextFx);
+            var actionData = (Dictionary<string, object>)((ExecutionNode)actionQueryResult.Data!).ToValue()!;
+            var systemAction = actionData["undelegate"];
+
+            // Get Nonce.
+            var nonceQuery = $@"query {{
+                    nextTxNonce(address: ""{delPrivateKey.ToAddress()}"")
+                }}";
+            var nonceQueryResult =
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(nonceQuery, standaloneContext: StandaloneContextFx);
+            var nonce =
+                (long)((Dictionary<string, object>)((ExecutionNode)nonceQueryResult.Data!)
+                    .ToValue()!)["nextTxNonce"];
+
+            // Get PublicKey.
+            var keyStore = new InMemoryKeyStore();
+            Guid keyId = keyStore.Add(ProtectedPrivateKey.Protect(delPrivateKey, "1234"));
+            var passPhrase = new PassphraseParameters();
+            passPhrase.Passphrase = "1234";
+            var console = new StringIOConsole();
+            var keyCommand = new KeyCommand(console, keyStore);
+            keyCommand.PublicKey(keyId, passPhrase);
+            var hexedPublicKey = console.Out.ToString().Trim();
+
+            // Create unsigned Transaction.
+            var unsignedQuery = $@"query {{
+                    unsignedSysTransaction(publicKey: ""{hexedPublicKey}"", systemAction: ""{systemAction}"", nonce: {nonce})
+                }}";
+            var unsignedQueryResult =
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(unsignedQuery, standaloneContext: StandaloneContextFx);
+            var unsignedData =
+                (string)((Dictionary<string, object>)((ExecutionNode)unsignedQueryResult.Data!).ToValue()!)[
+                    "unsignedSysTransaction"];
+            var unsignedTxBytes = ByteUtil.ParseHex(unsignedData);
+
+            // Sign Transaction in local.
+            var path = Path.GetTempFileName();
+            await File.WriteAllBytesAsync(path, unsignedTxBytes);
+            var outputPath = Path.GetTempFileName();
+            keyCommand.Sign(keyId, path, passPhrase, outputPath);
+            var signature = ByteUtil.Hex(await File.ReadAllBytesAsync(outputPath));
+
+            // Attachment signature & unsigned transaction
+            var signQuery = $@"query {{
+                    signSysTransaction(unsignedTransaction: ""{unsignedData}"", signature: ""{signature}"")
+                }}";
+            var signQueryResult =
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(signQuery, standaloneContext: StandaloneContextFx);
+            var hex = (string)((Dictionary<string, object>)((ExecutionNode)signQueryResult.Data!).ToValue()!)[
+                "signSysTransaction"];
+
+            // Staging Transaction.
+            var stageTxMutation = $"mutation {{ stageTransaction(payload: \"{hex}\") }}";
+            var stageTxResult = await ExecuteQueryAsync(stageTxMutation);
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            Assert.Equal(Asset.GovernanceToken * 128, BlockChain.GetBalance(delAddress, Asset.GovernanceToken));
+            Assert.Equal(
+                Asset.Share * 200,
+                BlockChain.GetBalance(Delegation.DeriveAddress(delAddress, validatorAddress), Asset.Share));
+        }
+
+        [Fact]
+        public async Task CancelUndelegation()
+        {
+            var delPrivateKey = new PrivateKey();
+            var valPrivateKey = new PrivateKey();
+            var minerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
+            var delAddress = delPrivateKey.ToAddress();
+            var valAddress = valPrivateKey.ToAddress();
+            var validatorAddress = Validator.DeriveAddress(valAddress);
+
+            BlockChain.MakeTransaction(
+                delPrivateKey,
+                new Mint(delPrivateKey.ToAddress(), Asset.GovernanceToken * 512)
+            );
+            BlockChain.MakeTransaction(
+                valPrivateKey,
+                new Mint(valPrivateKey.ToAddress(), Asset.GovernanceToken * 1024)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                valPrivateKey,
+                new PromoteValidator(valPrivateKey.PublicKey, Asset.GovernanceToken * 128)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                delPrivateKey,
+                new Libplanet.Action.Sys.Delegate(validatorAddress, Asset.GovernanceToken * 384)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                delPrivateKey,
+                new Undelegate(validatorAddress, Asset.GovernanceToken * 200)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            var amount = 184;
+            // Create Action.
+            var args = $"validatorAddress: \"{validatorAddress}\", amount: \"{amount}\"";
+            var actionQuery = $"{{ cancelUndelegation({args}) }}";
+            var actionQueryResult = await ExecuteQueryAsync<ActionQuery>(actionQuery, standaloneContext: StandaloneContextFx);
+            var actionData = (Dictionary<string, object>)((ExecutionNode)actionQueryResult.Data!).ToValue()!;
+            var systemAction = actionData["cancelUndelegation"];
+
+            // Get Nonce.
+            var nonceQuery = $@"query {{
+                    nextTxNonce(address: ""{delPrivateKey.ToAddress()}"")
+                }}";
+            var nonceQueryResult =
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(nonceQuery, standaloneContext: StandaloneContextFx);
+            var nonce =
+                (long)((Dictionary<string, object>)((ExecutionNode)nonceQueryResult.Data!)
+                    .ToValue()!)["nextTxNonce"];
+
+            // Get PublicKey.
+            var keyStore = new InMemoryKeyStore();
+            Guid keyId = keyStore.Add(ProtectedPrivateKey.Protect(delPrivateKey, "1234"));
+            var passPhrase = new PassphraseParameters();
+            passPhrase.Passphrase = "1234";
+            var console = new StringIOConsole();
+            var keyCommand = new KeyCommand(console, keyStore);
+            keyCommand.PublicKey(keyId, passPhrase);
+            var hexedPublicKey = console.Out.ToString().Trim();
+
+            // Create unsigned Transaction.
+            var unsignedQuery = $@"query {{
+                    unsignedSysTransaction(publicKey: ""{hexedPublicKey}"", systemAction: ""{systemAction}"", nonce: {nonce})
+                }}";
+            var unsignedQueryResult =
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(unsignedQuery, standaloneContext: StandaloneContextFx);
+            var unsignedData =
+                (string)((Dictionary<string, object>)((ExecutionNode)unsignedQueryResult.Data!).ToValue()!)[
+                    "unsignedSysTransaction"];
+            var unsignedTxBytes = ByteUtil.ParseHex(unsignedData);
+
+            // Sign Transaction in local.
+            var path = Path.GetTempFileName();
+            await File.WriteAllBytesAsync(path, unsignedTxBytes);
+            var outputPath = Path.GetTempFileName();
+            keyCommand.Sign(keyId, path, passPhrase, outputPath);
+            var signature = ByteUtil.Hex(await File.ReadAllBytesAsync(outputPath));
+
+            // Attachment signature & unsigned transaction
+            var signQuery = $@"query {{
+                    signSysTransaction(unsignedTransaction: ""{unsignedData}"", signature: ""{signature}"")
+                }}";
+            var signQueryResult =
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(signQuery, standaloneContext: StandaloneContextFx);
+            var hex = (string)((Dictionary<string, object>)((ExecutionNode)signQueryResult.Data!).ToValue()!)[
+                "signSysTransaction"];
+
+            // Staging Transaction.
+            var stageTxMutation = $"mutation {{ stageTransaction(payload: \"{hex}\") }}";
+            var stageTxResult = await ExecuteQueryAsync(stageTxMutation);
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            Assert.Equal(Asset.GovernanceToken * 128, BlockChain.GetBalance(delAddress, Asset.GovernanceToken));
+            Assert.Equal(
+                Asset.Share * 384,
+                BlockChain.GetBalance(Delegation.DeriveAddress(delAddress, validatorAddress), Asset.Share));
+        }
+
+        [Fact]
+        public async Task Redelegate()
+        {
+            var delPrivateKey = new PrivateKey();
+            var valPrivateKey = new PrivateKey();
+            var dstPrivateKey = new PrivateKey();
+            var minerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
+            var delAddress = delPrivateKey.ToAddress();
+            var valAddress = valPrivateKey.ToAddress();
+            var dstAddress = dstPrivateKey.ToAddress();
+            var validatorAddress = Validator.DeriveAddress(valAddress);
+            var dstValidatorAddress = Validator.DeriveAddress(dstAddress);
+
+            BlockChain.MakeTransaction(
+                delPrivateKey,
+                new Mint(delPrivateKey.ToAddress(), Asset.GovernanceToken * 512)
+            );
+            BlockChain.MakeTransaction(
+                valPrivateKey,
+                new Mint(valPrivateKey.ToAddress(), Asset.GovernanceToken * 1024)
+            );
+            BlockChain.MakeTransaction(
+                dstPrivateKey,
+                new Mint(dstPrivateKey.ToAddress(), Asset.GovernanceToken * 1024)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                valPrivateKey,
+                new PromoteValidator(valPrivateKey.PublicKey, Asset.GovernanceToken * 128)
+            );
+            BlockChain.MakeTransaction(
+                dstPrivateKey,
+                new PromoteValidator(dstPrivateKey.PublicKey, Asset.GovernanceToken * 128)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                delPrivateKey,
+                new Libplanet.Action.Sys.Delegate(validatorAddress, Asset.GovernanceToken * 384)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            var amount = 184;
+            // Create Action.
+            var args = $"srcValidatorAddress: \"{validatorAddress}\", dstValidatorAddress: \"{dstValidatorAddress}\", amount: \"{amount}\"";
+            var actionQuery = $"{{ redelegate({args}) }}";
+            var actionQueryResult = await ExecuteQueryAsync<ActionQuery>(actionQuery, standaloneContext: StandaloneContextFx);
+            var actionData = (Dictionary<string, object>)((ExecutionNode)actionQueryResult.Data!).ToValue()!;
+            var systemAction = actionData["redelegate"];
+
+            // Get Nonce.
+            var nonceQuery = $@"query {{
+                    nextTxNonce(address: ""{delPrivateKey.ToAddress()}"")
+                }}";
+            var nonceQueryResult =
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(nonceQuery, standaloneContext: StandaloneContextFx);
+            var nonce =
+                (long)((Dictionary<string, object>)((ExecutionNode)nonceQueryResult.Data!)
+                    .ToValue()!)["nextTxNonce"];
+
+            // Get PublicKey.
+            var keyStore = new InMemoryKeyStore();
+            Guid keyId = keyStore.Add(ProtectedPrivateKey.Protect(delPrivateKey, "1234"));
+            var passPhrase = new PassphraseParameters();
+            passPhrase.Passphrase = "1234";
+            var console = new StringIOConsole();
+            var keyCommand = new KeyCommand(console, keyStore);
+            keyCommand.PublicKey(keyId, passPhrase);
+            var hexedPublicKey = console.Out.ToString().Trim();
+
+            // Create unsigned Transaction.
+            var unsignedQuery = $@"query {{
+                    unsignedSysTransaction(publicKey: ""{hexedPublicKey}"", systemAction: ""{systemAction}"", nonce: {nonce})
+                }}";
+            var unsignedQueryResult =
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(unsignedQuery, standaloneContext: StandaloneContextFx);
+            var unsignedData =
+                (string)((Dictionary<string, object>)((ExecutionNode)unsignedQueryResult.Data!).ToValue()!)[
+                    "unsignedSysTransaction"];
+            var unsignedTxBytes = ByteUtil.ParseHex(unsignedData);
+
+            // Sign Transaction in local.
+            var path = Path.GetTempFileName();
+            await File.WriteAllBytesAsync(path, unsignedTxBytes);
+            var outputPath = Path.GetTempFileName();
+            keyCommand.Sign(keyId, path, passPhrase, outputPath);
+            var signature = ByteUtil.Hex(await File.ReadAllBytesAsync(outputPath));
+
+            // Attachment signature & unsigned transaction
+            var signQuery = $@"query {{
+                    signSysTransaction(unsignedTransaction: ""{unsignedData}"", signature: ""{signature}"")
+                }}";
+            var signQueryResult =
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(signQuery, standaloneContext: StandaloneContextFx);
+            var hex = (string)((Dictionary<string, object>)((ExecutionNode)signQueryResult.Data!).ToValue()!)[
+                "signSysTransaction"];
+
+            // Staging Transaction.
+            var stageTxMutation = $"mutation {{ stageTransaction(payload: \"{hex}\") }}";
+            var stageTxResult = await ExecuteQueryAsync(stageTxMutation);
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            Assert.Equal(Asset.GovernanceToken * 128, BlockChain.GetBalance(delAddress, Asset.GovernanceToken));
+            Assert.Equal(Asset.ConsensusToken * 312, BlockChain.GetBalance(dstValidatorAddress, Asset.ConsensusToken));
+            Assert.Equal(
+                Asset.Share * 200,
+                BlockChain.GetBalance(Delegation.DeriveAddress(delAddress, validatorAddress), Asset.Share));
+            Assert.Equal(
+                Asset.Share * 184,
+                BlockChain.GetBalance(Delegation.DeriveAddress(delAddress, dstValidatorAddress), Asset.Share));
+        }
+
+        [Fact]
+        public async Task WithdrawDelegator()
+        {
+            NineChroniclesNodeService service = StandaloneContextFx.NineChroniclesNodeService!;
+            var delPrivateKey = new PrivateKey();
+            var valPrivateKey = new PrivateKey();
+            var minerPrivateKey = service.MinerPrivateKey!;
+            var delAddress = delPrivateKey.ToAddress();
+            var valAddress = valPrivateKey.ToAddress();
+            var minerAddress = minerPrivateKey.ToAddress();
+            var validatorAddress = Validator.DeriveAddress(valAddress);
+            var minerValidatorAddress = Validator.DeriveAddress(minerAddress);
+
+            BlockChain.MakeTransaction(
+                delPrivateKey,
+                new Mint(delPrivateKey.ToAddress(), Asset.GovernanceToken * 1000)
+            );
+            BlockChain.MakeTransaction(
+                valPrivateKey,
+                new Mint(valPrivateKey.ToAddress(), Asset.GovernanceToken * 1000)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                valPrivateKey,
+                new PromoteValidator(valPrivateKey.PublicKey, Asset.GovernanceToken * 1000)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                delPrivateKey,
+                new Libplanet.Action.Sys.Delegate(validatorAddress, Asset.GovernanceToken * 1000)
+            );
+            var block = BlockChain.ProposeBlock(valPrivateKey);
+            ImmutableArray<Vote> votes =
+                new Vote[]
+                {
+                    new Vote(2, 0, BlockChain.Tip.Hash, BlockChain.Tip.Timestamp, valPrivateKey.PublicKey, VoteFlag.Commit, null)
+                    .Sign(valPrivateKey),
+                }.ToImmutableArray();
+            BlockCommit commit = new BlockCommit(2, 0, BlockChain.Tip.Hash, votes);
+            BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey, lastCommit: commit));
+
+            // Create Action.
+            var args = $"validatorAddress: \"{validatorAddress}\"";
+            var actionQuery = $"{{ withdrawDelegator({args}) }}";
+            var actionQueryResult = await ExecuteQueryAsync<ActionQuery>(actionQuery, standaloneContext: StandaloneContextFx);
+            var actionData = (Dictionary<string, object>)((ExecutionNode)actionQueryResult.Data!).ToValue()!;
+            var systemAction = actionData["withdrawDelegator"];
+
+            // Get Nonce.
+            var nonceQuery = $@"query {{
+                    nextTxNonce(address: ""{delPrivateKey.ToAddress()}"")
+                }}";
+            var nonceQueryResult =
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(nonceQuery, standaloneContext: StandaloneContextFx);
+            var nonce =
+                (long)((Dictionary<string, object>)((ExecutionNode)nonceQueryResult.Data!)
+                    .ToValue()!)["nextTxNonce"];
+
+            // Get PublicKey.
+            var keyStore = new InMemoryKeyStore();
+            Guid keyId = keyStore.Add(ProtectedPrivateKey.Protect(delPrivateKey, "1234"));
+            var passPhrase = new PassphraseParameters();
+            passPhrase.Passphrase = "1234";
+            var console = new StringIOConsole();
+            var keyCommand = new KeyCommand(console, keyStore);
+            keyCommand.PublicKey(keyId, passPhrase);
+            var hexedPublicKey = console.Out.ToString().Trim();
+
+            // Create unsigned Transaction.
+            var unsignedQuery = $@"query {{
+                    unsignedSysTransaction(publicKey: ""{hexedPublicKey}"", systemAction: ""{systemAction}"", nonce: {nonce})
+                }}";
+            var unsignedQueryResult =
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(unsignedQuery, standaloneContext: StandaloneContextFx);
+            var unsignedData =
+                (string)((Dictionary<string, object>)((ExecutionNode)unsignedQueryResult.Data!).ToValue()!)[
+                    "unsignedSysTransaction"];
+            var unsignedTxBytes = ByteUtil.ParseHex(unsignedData);
+
+            // Sign Transaction in local.
+            var path = Path.GetTempFileName();
+            await File.WriteAllBytesAsync(path, unsignedTxBytes);
+            var outputPath = Path.GetTempFileName();
+            keyCommand.Sign(keyId, path, passPhrase, outputPath);
+            var signature = ByteUtil.Hex(await File.ReadAllBytesAsync(outputPath));
+
+            // Attachment signature & unsigned transaction
+            var signQuery = $@"query {{
+                    signSysTransaction(unsignedTransaction: ""{unsignedData}"", signature: ""{signature}"")
+                }}";
+            var signQueryResult =
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(signQuery, standaloneContext: StandaloneContextFx);
+            var hex = (string)((Dictionary<string, object>)((ExecutionNode)signQueryResult.Data!).ToValue()!)[
+                "signSysTransaction"];
+
+            // Staging Transaction.
+            var stageTxMutation = $"mutation {{ stageTransaction(payload: \"{hex}\") }}";
+            var stageTxResult = await ExecuteQueryAsync(stageTxMutation);
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            var (rew, _) = (Asset.GovernanceToken * 4275).DivRem(new System.Numerics.BigInteger(1000));
+            Assert.Equal(rew, BlockChain.GetBalance(delAddress, Asset.GovernanceToken));
         }
 
         // [Fact]

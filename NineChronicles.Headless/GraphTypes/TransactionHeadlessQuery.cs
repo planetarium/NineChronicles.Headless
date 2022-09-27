@@ -5,6 +5,7 @@ using Libplanet.Blockchain;
 using Libplanet.Action;
 using Libplanet.Tx;
 using Libplanet;
+using Libplanet.Action.Sys;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -228,6 +229,45 @@ namespace NineChronicles.Headless.GraphTypes
                 });
 
             Field<NonNullGraphType<ByteStringType>>(
+                name: "unsignedSysTransaction",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "publicKey",
+                        Description = "The hexadecimal string of public key for Transaction.",
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "systemAction",
+                        Description = "The serialized string of system action.",
+                    },
+                    new QueryArgument<LongGraphType>
+                    {
+                        Name = "nonce",
+                        Description = "The nonce for Transaction.",
+                    }
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    string systemActionString = context.GetArgument<string>("systemAction");
+                    var serialized = new Bencodex.Codec().Decode(ByteUtil.ParseHex(systemActionString));
+                    var action = Registry.Deserialize((Bencodex.Types.Dictionary)serialized);
+
+                    var publicKey = new PublicKey(ByteUtil.ParseHex(context.GetArgument<string>("publicKey")));
+                    Address signer = publicKey.ToAddress();
+                    long nonce = context.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
+                    Transaction<NCAction> unsignedTransaction =
+                        Transaction<NCAction>.CreateUnsigned(nonce, publicKey, blockChain.Genesis.Hash, action);
+                    return unsignedTransaction.Serialize(false);
+                });
+
+            Field<NonNullGraphType<ByteStringType>>(
                 name: "signTransaction",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>
@@ -259,6 +299,45 @@ namespace NineChronicles.Headless.GraphTypes
                     Transaction<NCAction> signedTransaction = new Transaction<NCAction>(
                         txMetadata,
                         unsignedTransaction.CustomActions!,
+                        signature);
+                    signedTransaction.Validate();
+
+                    return signedTransaction.Serialize(true);
+                }
+            );
+
+            Field<NonNullGraphType<ByteStringType>>(
+                name: "signSysTransaction",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "unsignedTransaction",
+                        Description = "The hexadecimal string of unsigned transaction to attach the given signature."
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "signature",
+                        Description = "The hexadecimal string of signature of the given unsigned transaction."
+                    }
+                ),
+                resolve: context =>
+                {
+                    byte[] signature = ByteUtil.ParseHex(context.GetArgument<string>("signature"));
+                    Transaction<NCAction> unsignedTransaction =
+                        Transaction<NCAction>.Deserialize(
+                            ByteUtil.ParseHex(context.GetArgument<string>("unsignedTransaction")),
+                            false);
+                    TxMetadata txMetadata = new TxMetadata(unsignedTransaction.PublicKey)
+                    {
+                        Nonce = unsignedTransaction.Nonce,
+                        GenesisHash = unsignedTransaction.GenesisHash,
+                        UpdatedAddresses = unsignedTransaction.UpdatedAddresses,
+                        Timestamp = unsignedTransaction.Timestamp
+                    };
+
+                    Transaction<NCAction> signedTransaction = new Transaction<NCAction>(
+                        txMetadata,
+                        unsignedTransaction.SystemAction!,
                         signature);
                     signedTransaction.Validate();
 
