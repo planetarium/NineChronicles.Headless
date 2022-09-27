@@ -10,8 +10,6 @@ using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Tx;
 using Nekoyume.Action;
-using Nekoyume.Model;
-using Nekoyume.Model.State;
 using NineChronicles.Headless.Executable.IO;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -29,11 +27,19 @@ namespace NineChronicles.Headless.Executable.Commands
 
         [Command(Description = "Create new transaction with given actions and dump it.")]
         public void Sign(
-            [Argument("PRIVATE-KEY", Description = "A hex-encoded private key for signing.")] string privateKey,
-            [Argument("NONCE", Description = "A nonce for new transaction.")] long nonce,
-            [Argument("GENESIS-HASH", Description = "A hex-encoded genesis block hash.")] string genesisHash,
-            [Argument("TIMESTAMP", Description = "A datetime for new transaction.")] string timestamp,
-            [Option("action", new[] { 'a' }, Description = "A path of the file contained base64 encoded actions.")] string[] actions
+            [Argument("PRIVATE-KEY", Description = "A hex-encoded private key for signing.")]
+            string privateKey,
+            [Argument("NONCE", Description = "A nonce for new transaction.")]
+            long nonce,
+            [Argument("GENESIS-HASH", Description = "A hex-encoded genesis block hash.")]
+            string genesisHash,
+            [Argument("TIMESTAMP", Description = "A datetime for new transaction.")]
+            string timestamp,
+            [Option("action", new[] { 'a' }, Description = "A path of the file contained base64 encoded actions.")]
+            string[] actions,
+            [Option("bytes", new[] { 'b' },
+                Description = "Print raw bytes instead of base64.  No trailing LF appended.")]
+            bool bytes = false
         )
         {
             List<NCAction> parsedActions = actions.Select(a =>
@@ -72,7 +78,14 @@ namespace NineChronicles.Headless.Executable.Commands
             );
             byte[] raw = tx.Serialize(true);
 
-            _console.Out.WriteLine(Convert.ToBase64String(raw));
+            if (bytes)
+            {
+                _console.Out.WriteLine(raw);
+            }
+            else
+            {
+                _console.Out.WriteLine(Convert.ToBase64String(raw));
+            }
         }
     }
 }
