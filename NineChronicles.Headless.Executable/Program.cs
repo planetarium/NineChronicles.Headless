@@ -27,6 +27,7 @@ using System.Threading.Tasks;
 
 namespace NineChronicles.Headless.Executable
 {
+    [HasSubCommands(typeof(AccountCommand), "account")]
     [HasSubCommands(typeof(ValidationCommand), "validation")]
     [HasSubCommands(typeof(ChainCommand), "chain")]
     [HasSubCommands(typeof(NineChronicles.Headless.Executable.Commands.KeyCommand), "key")]
