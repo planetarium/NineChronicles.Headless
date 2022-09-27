@@ -159,6 +159,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             PublicKey appProtocolVersionSigner,
             Progress<PreloadState>? preloadProgress = null,
             IEnumerable<BoundPeer>? peers = null,
+            ImmutableList<BoundPeer>? consensusSeeds = null,
             ImmutableList<BoundPeer>? consensusPeers = null)
             where T : IAction, new()
         {
@@ -183,6 +184,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Render = false,
                 Peers = peers ?? ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = ImmutableHashSet<PublicKey>.Empty.Add(appProtocolVersionSigner),
+                ConsensusSeeds = consensusSeeds ?? ImmutableList<BoundPeer>.Empty,
                 ConsensusPeers = consensusPeers ?? ImmutableList<BoundPeer>.Empty,
             };
 

@@ -52,7 +52,7 @@ namespace Libplanet.Headless
             catch (Exception e)
             {
                 throw new PeerInvalidException(
-                    $"Given peer (-peer or --consensus-peer) '{peerInfo}' seems invalid.\n" +
+                    $"Given peer (--peer or --consensus-peer) '{peerInfo}' seems invalid.\n" +
                     $"{e.GetType()} {e.Message}\n" +
                     $"{e.StackTrace}", innerException: e);
             }

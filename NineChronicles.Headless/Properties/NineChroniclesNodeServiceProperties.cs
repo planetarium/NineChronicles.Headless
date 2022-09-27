@@ -60,6 +60,7 @@ namespace NineChronicles.Headless.Properties
                 int messageTimeout = 60,
                 int tipTimeout = 60,
                 int demandBuffer = 1150,
+                string[]? consensusSeedStrings = null,
                 string[]? consensusPeerStrings = null,
                 bool preload = true,
                 int minimumBroadcastTarget = 10,
@@ -81,10 +82,12 @@ namespace NineChronicles.Headless.Properties
 
             peerStrings ??= Array.Empty<string>();
             iceServerStrings ??= Array.Empty<string>();
+            consensusSeedStrings ??= Array.Empty<string>();
             consensusPeerStrings ??= Array.Empty<string>();
 
             var iceServers = iceServerStrings.Select(PropertyParser.ParseIceServer).ToImmutableArray();
             var peers = peerStrings.Select(PropertyParser.ParsePeer).ToImmutableArray();
+            var consensusSeeds = consensusSeedStrings.Select(PropertyParser.ParsePeer).ToImmutableList();
             var consensusPeers = consensusPeerStrings.Select(PropertyParser.ParsePeer).ToImmutableList();
             var validators = validatorStrings?.Select(s => new PublicKey(ByteUtil.ParseHex(s))).ToList();
 
@@ -116,6 +119,7 @@ namespace NineChronicles.Headless.Properties
                 MessageTimeout = TimeSpan.FromSeconds(messageTimeout),
                 TipTimeout = TimeSpan.FromSeconds(tipTimeout),
                 DemandBuffer = demandBuffer,
+                ConsensusSeeds = consensusSeeds,
                 ConsensusPeers = consensusPeers,
                 Preload = preload,
                 MinimumBroadcastTarget = minimumBroadcastTarget,

@@ -154,6 +154,7 @@ namespace NineChronicles.Headless.Tests.Controllers
                     AppProtocolVersion = AppProtocolVersion.Sign(new PrivateKey(), 0),
                     SwarmPrivateKey = new PrivateKey(),
                     ConsensusPrivateKey = consensusKey,
+                    ConsensusSeeds = ImmutableList<BoundPeer>.Empty,
                     ConsensusPeers = ImmutableList<BoundPeer>.Empty,
                     ConsensusPort = null,
                     Validators = new List<PublicKey>
