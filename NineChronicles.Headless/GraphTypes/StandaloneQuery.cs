@@ -266,6 +266,121 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 });
 
+            Field<ListGraphType<StringGraphType>>(
+                name: "delegationStatus",
+                description: "Status of delegations.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "address"
+                    }),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+                    var address = context.GetArgument<Address>("address");
+                    IValue? sheetValue = blockChain.GetState(DelegationMap.DeriveAddress(address));
+                    if (sheetValue is { } serialized)
+                    {
+                        DelegationMap delegationMap = new DelegationMap(serialized);
+
+                        var bondedList = new List<string>();
+                        foreach (var delAddr in delegationMap.Delegations)
+                        {
+                            var delegation = new Delegation(blockChain.GetState(delAddr));
+                            var share = blockChain.GetBalance(delAddr, Asset.Share);
+                            string output = $"Delegator: {delegation.DelegatorAddress}, Validator: {delegation.ValidatorAddress}, Share: {share}";
+                            bondedList.Add(output);
+                        }
+
+                        return bondedList;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                });
+
+            Field<ListGraphType<StringGraphType>>(
+                name: "unbondingStatus",
+                description: "Status of unbonding delegations.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "address"
+                    }),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+                    var address = context.GetArgument<Address>("address");
+                    IValue? sheetValue = blockChain.GetState(DelegationMap.DeriveAddress(address));
+                    if (sheetValue is { } serialized)
+                    {
+                        DelegationMap delegationMap = new DelegationMap(serialized);
+
+                        var unbondedList = new List<string>();
+                        foreach (var delAddr in delegationMap.UnbondingDelegations)
+                        {
+                            var delegation = new Delegation(blockChain.GetState(delAddr));
+                            var undelegationAddr = Undelegation.DeriveAddress(delegation.DelegatorAddress, delegation.ValidatorAddress);
+                            var undelegation = new Undelegation(blockChain.GetState(undelegationAddr));
+                            var entries = undelegation.UndelegationEntryAddresses;
+                            FungibleAssetValue consensusToken = Asset.ConsensusToken * 0;
+                            foreach (KeyValuePair<long, Address> entry in entries)
+                            {
+                                consensusToken += new UndelegationEntry(blockChain.GetState(entry.Value)).UnbondingConsensusToken;
+                            }
+                            string output = $"Delegator: {delegation.DelegatorAddress}, Validator: {delegation.ValidatorAddress}, ConsensusToken: {consensusToken}";
+                            unbondedList.Add(output);
+                        }
+
+                        return unbondedList;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                });
+
+            Field<StringGraphType>(
+                name: "validatorStatus",
+                description: "Status of validator.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "address"
+                    }),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+                    var address = context.GetArgument<Address>("address");
+                    IValue? sheetValue = blockChain.GetState(address);
+                    if (sheetValue is { } serialized)
+                    {
+                        Validator validator = new Validator(serialized);
+
+                        string output = $"Operator: {validator.OperatorAddress}, Validator: {validator.Address}, " +
+                        $"IssuedShare: {validator.DelegatorShares}, Jailed: {validator.Jailed}";
+
+                        return output;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                });
+
             Field<NonNullGraphType<StringGraphType>>(
                 name: "govBalance",
                 arguments: new QueryArguments(

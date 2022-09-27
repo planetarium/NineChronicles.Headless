@@ -410,6 +410,165 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(privateKey.ToAddress().ToString(), publicKeyResult["address"]);
         }
 
+        [Fact]
+        public async Task DelegationStatus()
+        {
+            var delPrivateKey = new PrivateKey();
+            var valPrivateKey = new PrivateKey();
+            var minerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
+            var delAddress = delPrivateKey.ToAddress();
+            var valAddress = valPrivateKey.ToAddress();
+            var validatorAddress = Validator.DeriveAddress(valAddress);
+
+            BlockChain.MakeTransaction(
+                delPrivateKey,
+                new Mint(delPrivateKey.ToAddress(), Asset.GovernanceToken * 512)
+            );
+            BlockChain.MakeTransaction(
+                valPrivateKey,
+                new Mint(valPrivateKey.ToAddress(), Asset.GovernanceToken * 1024)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                valPrivateKey,
+                new PromoteValidator(valPrivateKey.PublicKey, Asset.GovernanceToken * 128)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                delPrivateKey,
+                new Libplanet.Action.Sys.Delegate(validatorAddress, Asset.GovernanceToken * 384)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                delPrivateKey,
+                new Undelegate(validatorAddress, Asset.GovernanceToken * 200)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            var query1 = $"query {{ delegationStatus(address: \"{delAddress}\") }}";
+            var queryResult1 = await ExecuteQueryAsync(query1);
+            var data1 = (Dictionary<string, object>)((ExecutionNode)queryResult1.Data!).ToValue()!;
+            Assert.Equal(
+                new Dictionary<string, object>
+                {
+                    ["delegationStatus"] = new List<object>() {
+                        $"Delegator: {delAddress}, " +
+                        $"Validator: {validatorAddress}, " +
+                        "Share: 384 Share", }
+                },
+                data1
+            );
+        }
+
+        [Fact]
+        public async Task UnbondingStatus()
+        {
+            var delPrivateKey = new PrivateKey();
+            var valPrivateKey = new PrivateKey();
+            var minerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
+            var delAddress = delPrivateKey.ToAddress();
+            var valAddress = valPrivateKey.ToAddress();
+            var validatorAddress = Validator.DeriveAddress(valAddress);
+
+            BlockChain.MakeTransaction(
+                delPrivateKey,
+                new Mint(delPrivateKey.ToAddress(), Asset.GovernanceToken * 512)
+            );
+            BlockChain.MakeTransaction(
+                valPrivateKey,
+                new Mint(valPrivateKey.ToAddress(), Asset.GovernanceToken * 1024)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                valPrivateKey,
+                new PromoteValidator(valPrivateKey.PublicKey, Asset.GovernanceToken * 128)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                delPrivateKey,
+                new Libplanet.Action.Sys.Delegate(validatorAddress, Asset.GovernanceToken * 384)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                delPrivateKey,
+                new Undelegate(validatorAddress, Asset.Share * 384)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            Assert.Equal(Asset.Share * 0, BlockChain.GetBalance(Delegation.DeriveAddress(delAddress, validatorAddress), Asset.Share));
+            var query1 = $"query {{ unbondingStatus(address: \"{delAddress}\") }}";
+            var queryResult1 = await ExecuteQueryAsync(query1);
+            var data1 = (Dictionary<string, object>)((ExecutionNode)queryResult1.Data!).ToValue()!;
+            Assert.Equal(
+                new Dictionary<string, object>
+                {
+                    ["unbondingStatus"] = new List<object>() {
+                        $"Delegator: {delAddress}, " +
+                        $"Validator: {validatorAddress}, " +
+                        "ConsensusToken: 384 ConsensusToken", }
+                },
+                data1
+            );
+        }
+
+        [Fact]
+        public async Task ValidatorStatus()
+        {
+            var delPrivateKey = new PrivateKey();
+            var valPrivateKey = new PrivateKey();
+            var minerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
+            var delAddress = delPrivateKey.ToAddress();
+            var valAddress = valPrivateKey.ToAddress();
+            var validatorAddress = Validator.DeriveAddress(valAddress);
+
+            BlockChain.MakeTransaction(
+                delPrivateKey,
+                new Mint(delPrivateKey.ToAddress(), Asset.GovernanceToken * 512)
+            );
+            BlockChain.MakeTransaction(
+                valPrivateKey,
+                new Mint(valPrivateKey.ToAddress(), Asset.GovernanceToken * 1024)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                valPrivateKey,
+                new PromoteValidator(valPrivateKey.PublicKey, Asset.GovernanceToken * 128)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                delPrivateKey,
+                new Libplanet.Action.Sys.Delegate(validatorAddress, Asset.GovernanceToken * 384)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            BlockChain.MakeTransaction(
+                delPrivateKey,
+                new Undelegate(validatorAddress, Asset.GovernanceToken * 200)
+            );
+            BlockChain.Append(BlockChain.ProposeBlock(minerPrivateKey));
+
+            var query = $"query {{ validatorStatus(address: \"{validatorAddress}\") }}";
+            var queryResult = await ExecuteQueryAsync(query);
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            Assert.Equal(
+                new Dictionary<string, object>
+                {
+                    ["validatorStatus"] = $"Operator: {valAddress}, Validator: {validatorAddress}, " +
+                        $"IssuedShare: 512 Share, Jailed: False"
+                },
+                data
+            );
+        }
+
+
         [Theory]
         [InlineData(true)]
         [InlineData(false)]

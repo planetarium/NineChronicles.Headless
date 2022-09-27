@@ -1098,7 +1098,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             Assert.Equal(Asset.GovernanceToken * 128, BlockChain.GetBalance(delAddress, Asset.GovernanceToken));
             Assert.Equal(
-                Asset.Share * 384, 
+                Asset.Share * 384,
                 BlockChain.GetBalance(Delegation.DeriveAddress(delAddress, validatorAddress), Asset.Share));
         }
 
