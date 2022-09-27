@@ -34,6 +34,7 @@ namespace NineChronicles.Headless.Executable
     [HasSubCommands(typeof(ApvCommand), "apv")]
     [HasSubCommands(typeof(ActionCommand), "action")]
     [HasSubCommands(typeof(TxCommand), "tx")]
+    [HasSubCommands(typeof(MarketCommand), "market")]
     [HasSubCommands(typeof(GenesisCommand), "genesis")]
     public class Program : CoconaLiteConsoleAppBase
     {
