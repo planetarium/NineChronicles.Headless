@@ -1,11 +1,14 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
-using System.Numerics;
+using System.Linq;
+using System.Reflection;
 using Bencodex;
 using Bencodex.Types;
 using Cocona;
+using Cocona.Help;
 using Libplanet;
+using Libplanet.Action;
 using Libplanet.Assets;
 using Nekoyume.Action;
 using Nekoyume.Model;
@@ -22,6 +25,12 @@ namespace NineChronicles.Headless.Executable.Commands
         public ActionCommand(IConsole console)
         {
             _console = console;
+        }
+
+        [PrimaryCommand]
+        public void Help([FromService] ICoconaHelpMessageBuilder helpMessageBuilder)
+        {
+            _console.Error.WriteLine(helpMessageBuilder.BuildAndRenderForCurrentContext());
         }
 
         [Command(Description = "Create ActivateAccount action.")]
@@ -63,6 +72,53 @@ namespace NineChronicles.Headless.Executable.Commands
                 return -1;
             }
         }
+
+        [Command(Description = "Lists all actions' type ids.")]
+        public IOrderedEnumerable<string?> List(
+            [Option(
+                Description = "If true, filter obsoleted actions since the --block-index option."
+            )]
+            bool excludeObsolete = false,
+            [Option(
+                Description = "The current block index to filter obsoleted actions."
+            )]
+            long blockIndex = 0
+        )
+        {
+            Type baseType = typeof(Nekoyume.Action.ActionBase);
+            Type attrType = typeof(ActionTypeAttribute);
+            Type obsoleteType = typeof(ActionObsoleteAttribute);
+
+            bool IsTarget(Type type)
+            {
+                return baseType.IsAssignableFrom(type) &&
+                       type.IsDefined(attrType) &&
+                       ActionTypeAttribute.ValueOf(type) is { } &&
+                       (
+                           !excludeObsolete ||
+                           !type.IsDefined(obsoleteType) ||
+                           type
+                               .GetCustomAttributes()
+                               .OfType<ActionObsoleteAttribute>()
+                               .Select(attr => attr.ObsoleteIndex)
+                               .FirstOrDefault() > blockIndex
+                       );
+            }
+
+            var assembly = baseType.Assembly;
+            var typeIds = assembly.GetTypes()
+                .Where(IsTarget)
+                .Select(type => ActionTypeAttribute.ValueOf(type))
+                .OrderBy(type => type);
+
+            foreach (string? typeId in typeIds)
+            {
+                _console.Out.WriteLine(typeId);
+            }
+
+            return typeIds;
+        }
+
 
         [Command(Description = "Create MonsterCollect action.")]
         public int MonsterCollect(
