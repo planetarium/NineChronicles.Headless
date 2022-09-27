@@ -163,7 +163,7 @@ namespace Libplanet.Headless.Hosting
             }
 
             ConsensusReactorOption? consensusReactorOption = null;
-            
+
             // One of consensus seeds or consensus peers should not be null
             if (!(Properties.ConsensusPrivateKey is null) &&
                 !(Properties.Host is null) &&
