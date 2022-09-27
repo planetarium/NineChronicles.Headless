@@ -35,9 +35,12 @@ namespace NineChronicles.Headless.Executable.Commands
 
         [Command(Description = "Create ActivateAccount action.")]
         public int ActivateAccount(
-            [Argument("INVITATION-CODE", Description = "An invitation code.")] string invitationCode,
-            [Argument("NONCE", Description = "A hex-encoded nonce for activation.")] string nonceEncoded,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null
+            [Argument("INVITATION-CODE", Description = "An invitation code.")]
+            string invitationCode,
+            [Argument("NONCE", Description = "A hex-encoded nonce for activation.")]
+            string nonceEncoded,
+            [Argument("PATH", Description = "A file path of base64 encoded action.")]
+            string? filePath = null
         )
         {
             try
@@ -123,7 +126,8 @@ namespace NineChronicles.Headless.Executable.Commands
         [Command(Description = "Create MonsterCollect action.")]
         public int MonsterCollect(
             [Range(0, 7)] int level,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null
+            [Argument("PATH", Description = "A file path of base64 encoded action.")]
+            string? filePath = null
         )
         {
             try
@@ -161,8 +165,10 @@ namespace NineChronicles.Headless.Executable.Commands
 
         [Command(Description = "Create ClaimMonsterCollectionReward action.")]
         public int ClaimMonsterCollectionReward(
-            [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")] string encodedAddress,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null
+            [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")]
+            string encodedAddress,
+            [Argument("PATH", Description = "A file path of base64 encoded action.")]
+            string? filePath = null
         )
         {
             try
@@ -201,11 +207,16 @@ namespace NineChronicles.Headless.Executable.Commands
 
         [Command(Description = "Create TransferAsset action.")]
         public int TransferAsset(
-            [Argument("SENDER-ADDRESS", Description = "A hex-encoded sender address.")] string senderAddress,
-            [Argument("RECIPIENT-ADDRESS", Description = "A hex-encoded recipient address.")] string recipientAddress,
-            [Argument("AMOUNT", Description = "The amount of asset to transfer.")] string amount,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null,
-            [Argument("MEMO", Description = "A memo of asset transfer")] string? memo = null
+            [Argument("SENDER-ADDRESS", Description = "A hex-encoded sender address.")]
+            string senderAddress,
+            [Argument("RECIPIENT-ADDRESS", Description = "A hex-encoded recipient address.")]
+            string recipientAddress,
+            [Argument("AMOUNT", Description = "The amount of asset to transfer.")]
+            string amount,
+            [Argument("PATH", Description = "A file path of base64 encoded action.")]
+            string? filePath = null,
+            [Argument("MEMO", Description = "A memo of asset transfer")]
+            string? memo = null
         )
         {
             try
@@ -254,7 +265,8 @@ namespace NineChronicles.Headless.Executable.Commands
         [Command(Description = "Create Stake action.")]
         public int Stake(
             long amount,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null
+            [Argument("PATH", Description = "A file path of base64 encoded action.")]
+            string? filePath = null
         )
         {
             try
@@ -288,8 +300,10 @@ namespace NineChronicles.Headless.Executable.Commands
 
         [Command(Description = "Create ClaimStakeReward action.")]
         public int ClaimStakeReward(
-            [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")] string encodedAddress,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null
+            [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")]
+            string encodedAddress,
+            [Argument("PATH", Description = "A file path of base64 encoded action.")]
+            string? filePath = null
         )
         {
             try
@@ -325,8 +339,10 @@ namespace NineChronicles.Headless.Executable.Commands
 
         [Command(Description = "Create MigrateMonsterCollection action.")]
         public int MigrateMonsterCollection(
-            [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")] string encodedAddress,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null
+            [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")]
+            string encodedAddress,
+            [Argument("PATH", Description = "A file path of base64 encoded action.")]
+            string? filePath = null
         )
         {
             try
