@@ -62,14 +62,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 stateStore,
                 genesisBlock);
             chain.ExecuteActions(chain.Tip);
-            int prevStatesCount = stateKeyValueStore.ListKeys().Count();
-            stateKeyValueStore.Set(
-                new KeyBytes("alpha", Encoding.UTF8),
-                ByteUtil.ParseHex("00"));
-            stateKeyValueStore.Set(
-                new KeyBytes("beta", Encoding.UTF8),
-                ByteUtil.ParseHex("00"));
-            Assert.Equal(prevStatesCount + 2, stateKeyValueStore.ListKeys().Count());
             store.Dispose();
             stateStore.Dispose();
 
