@@ -251,7 +251,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 else
                 {
                     File.WriteAllText(filePath, encoded);
-                    Console.Write(encoded);
+                    _console.Out.Write(encoded);
                 }
                 return 0;
             }

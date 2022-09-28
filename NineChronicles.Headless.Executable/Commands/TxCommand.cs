@@ -124,7 +124,7 @@ namespace NineChronicles.Headless.Executable.Commands
             );
 
             byte[] raw = _codec.Encode(bencoded);
-            Console.Write(ByteUtil.Hex(raw));
+            _console.Out.Write(ByteUtil.Hex(raw));
         }
 
         [Command(Description = "Create PatchTable action and dump it.")]
@@ -139,11 +139,11 @@ namespace NineChronicles.Headless.Executable.Commands
                 tableName = tableName.Split(".csv")[0];
             }
 
-            Console.Error.Write("----------------\n");
-            Console.Error.Write(tableName);
-            Console.Error.Write("\n----------------\n");
+            _console.Error.Write("----------------\n");
+            _console.Error.Write(tableName);
+            _console.Error.Write("\n----------------\n");
             var tableCsv = File.ReadAllText(tablePath);
-            Console.Error.Write(tableCsv);
+            _console.Error.Write(tableCsv);
 
             var type = typeof(ISheet).Assembly
                 .GetTypes()
@@ -167,7 +167,7 @@ namespace NineChronicles.Headless.Executable.Commands
             );
 
             byte[] raw = _codec.Encode(bencoded);
-            Console.WriteLine(ByteUtil.Hex(raw));
+            _console.Out.WriteLine(ByteUtil.Hex(raw));
         }
 
         [Command(Description = "Create MigrationLegacyShop action and dump it.")]
@@ -181,7 +181,7 @@ namespace NineChronicles.Headless.Executable.Commands
             );
 
             byte[] raw = _codec.Encode(bencoded);
-            Console.WriteLine(ByteUtil.Hex(raw));
+            _console.Out.WriteLine(ByteUtil.Hex(raw));
         }
 
         [Command(Description = "Create MigrationActivatedAccountsState action and dump it.")]
@@ -194,7 +194,7 @@ namespace NineChronicles.Headless.Executable.Commands
             );
 
             byte[] raw = _codec.Encode(bencoded);
-            Console.WriteLine(ByteUtil.Hex(raw));
+            _console.Out.WriteLine(ByteUtil.Hex(raw));
         }
 
         [Command(Description = "Create MigrationAvatarState action and dump it.")]
@@ -241,7 +241,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 action.PlainValue
             );
             byte[] raw = _codec.Encode(encoded);
-            Console.WriteLine(ByteUtil.Hex(raw));
+            _console.Out.WriteLine(ByteUtil.Hex(raw));
         }
 
         [Command(Description = "Create CreatePendingActivations action and dump it.")]
@@ -273,7 +273,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
             );
             byte[] raw = _codec.Encode(encoded);
-            Console.WriteLine(ByteUtil.Hex(raw));
+            _console.Out.WriteLine(ByteUtil.Hex(raw));
         }
 
         [Command(Description = "Create RenewAdminState action and dump it.")]
@@ -287,7 +287,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 action.PlainValue
             );
             byte[] raw = _codec.Encode(encoded);
-            Console.WriteLine(ByteUtil.Hex(raw));
+            _console.Out.WriteLine(ByteUtil.Hex(raw));
         }
 
         [Command(Description = "Create ActvationKey-nonce pairs and dump them as csv")]
@@ -298,7 +298,7 @@ namespace NineChronicles.Headless.Executable.Commands
         {
             var rng = new Random();
             var nonce = new byte[4];
-            Console.WriteLine("EncodedActivationKey,NonceHex");
+            _console.Out.WriteLine("EncodedActivationKey,NonceHex");
             foreach (int i in Enumerable.Range(0, count))
             {
                 PrivateKey key;
@@ -313,7 +313,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 rng.NextBytes(nonce);
                 var (ak, _) = ActivationKey.Create(key, nonce);
-                Console.WriteLine($"{ak.Encode()},{ByteUtil.Hex(nonce)}");
+                _console.Out.WriteLine($"{ak.Encode()},{ByteUtil.Hex(nonce)}");
             }
         }
     }

@@ -60,7 +60,7 @@ namespace NineChronicles.Headless.Executable.Commands
         )
         {
             using Logger logger = Utils.ConfigureLogger(verbose);
-            TextWriter stderr = Console.Error;
+            TextWriter stderr = _console.Error;
             (BlockChain<NCAction> chain, IStore store, _, _) =
                 Utils.GetBlockChain(logger, storePath, chainId);
 
@@ -86,7 +86,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             Block<NCAction> block = end;
             int indexWidth = block.Index.ToString().Length + 1;
-            Console.WriteLine(
+            _console.Out.WriteLine(
                 "{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\t{9}",
                 $"#IDX".PadRight(indexWidth),
                 "HASH".PadRight(BlockHash.Size * 2),
@@ -164,7 +164,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
                     foreach (Order order in orders)
                     {
-                        Console.WriteLine(
+                        _console.Out.WriteLine(
                             "{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\t{9}",
                             $"#{block.Index}".PadLeft(indexWidth),
                             block.Hash,
