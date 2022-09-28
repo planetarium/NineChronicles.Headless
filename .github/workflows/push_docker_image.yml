@@ -9,6 +9,7 @@ on:
       - development
       - previewnet
       - qa-*
+      - pbft-pow
     tags:
       - v*
 

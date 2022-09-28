@@ -62,5 +62,7 @@ namespace NineChronicles.Headless
         {
             throw new NotImplementedException();
         }
+
+        public int GetMinBlockProtocolVersion(long index) => 0;
     }
 }
