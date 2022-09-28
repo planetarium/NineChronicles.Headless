@@ -45,7 +45,6 @@ namespace NineChronicles.Headless.Executable.Commands
             string? address = null
         )
         {
-            Console.WriteLine(address);
             using Logger logger = Utils.ConfigureLogger(verbose);
             (BlockChain<NCAction> chain, IStore store, _, _) =
                 Utils.GetBlockChain(logger, storePath, chainId);
