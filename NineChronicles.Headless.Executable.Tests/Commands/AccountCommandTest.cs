@@ -1,7 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
-using System.Text;
 using Bencodex;
 using Libplanet;
 using Libplanet.Blockchain;
@@ -10,7 +8,6 @@ using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
-using Libplanet.Store.Trie;
 using Nekoyume.BlockChain.Policy;
 using NineChronicles.Headless.Executable.Commands;
 using NineChronicles.Headless.Executable.Store;
@@ -38,17 +35,17 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         }
 
         [Theory]
-        [InlineData(StoreType.Default)]
+        // [InlineData(StoreType.Default)]  // Balance() loads loads only RocksDB 
         [InlineData(StoreType.RocksDb)]
         public void Balance(StoreType storeType)
         {
+            IStore store = storeType.CreateStore(_storePath);
             var statesPath = Path.Combine(_storePath, "states");
             Address targetAddress = new PrivateKey().ToAddress();
             int targetCurrency = 10000; // 100 NCG
-            Block<NCAction> genesisBlock = GenesisHelper.MineGenesisBlock(targetAddress, targetCurrency);
-            IStore store = storeType.CreateStore(_storePath);
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
+            Block<NCAction> genesisBlock = GenesisHelper.MineGenesisBlock(targetAddress, targetCurrency);
             store.PutBlock(genesisBlock);
             store.AppendIndex(chainId, genesisBlock.Hash);
             var stateKeyValueStore = new RocksDBKeyValueStore(statesPath);
@@ -65,7 +62,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             store.Dispose();
             stateStore.Dispose();
 
-            _command.Balance(false, _storePath, address: targetAddress.ToString());
+            _command.Balance(false, _storePath, chainId: chainId, address: targetAddress.ToString());
             string[] result = _console.Out.ToString().Trim().Split("\t");
             Assert.Equal(targetAddress.ToString(), result[0]);
             // NCG recognizes the last two digits after the decimal point.
