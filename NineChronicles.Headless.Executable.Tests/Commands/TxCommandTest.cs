@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using Bencodex;
 using Libplanet;
 using Libplanet.Blocks;
 using Libplanet.Crypto;

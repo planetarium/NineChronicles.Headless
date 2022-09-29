@@ -27,12 +27,15 @@ using System.Threading.Tasks;
 
 namespace NineChronicles.Headless.Executable
 {
+    [HasSubCommands(typeof(AccountCommand), "account")]
     [HasSubCommands(typeof(ValidationCommand), "validation")]
     [HasSubCommands(typeof(ChainCommand), "chain")]
     [HasSubCommands(typeof(NineChronicles.Headless.Executable.Commands.KeyCommand), "key")]
     [HasSubCommands(typeof(ApvCommand), "apv")]
     [HasSubCommands(typeof(ActionCommand), "action")]
+    [HasSubCommands(typeof(StateCommand), "state")]
     [HasSubCommands(typeof(TxCommand), "tx")]
+    [HasSubCommands(typeof(MarketCommand), "market")]
     [HasSubCommands(typeof(GenesisCommand), "genesis")]
     public class Program : CoconaLiteConsoleAppBase
     {
