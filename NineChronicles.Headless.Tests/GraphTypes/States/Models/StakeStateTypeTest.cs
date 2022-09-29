@@ -5,6 +5,7 @@ using Bencodex.Types;
 using GraphQL.Execution;
 using Libplanet;
 using Libplanet.Assets;
+using Nekoyume.BlockChain.Policy;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
 using Xunit;
@@ -16,7 +17,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
     {
         [Theory]
         [MemberData(nameof(Members))]
-        public async Task Query(StakeState stakeState, long deposit, Dictionary<string, object> expected)
+        public async Task Query(StakeState stakeState, long deposit, long blockIndex, Dictionary<string, object> expected)
         {
 #pragma warning disable CS0618
             // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
@@ -55,7 +56,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 cancellableBlockIndex
                 claimableBlockIndex
             }";
-            var queryResult = await ExecuteQueryAsync<StakeStateType>(query, source: new StakeStateType.StakeStateContext(stakeState, GetStatesMock, GetBalanceMock));
+            var queryResult = await ExecuteQueryAsync<StakeStateType>(query, source: new StakeStateType.StakeStateContext(stakeState, GetStatesMock, GetBalanceMock, blockIndex));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
         }
@@ -66,6 +67,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             {
                 new StakeState(Fixtures.StakeStateAddress, 0),
                 100,
+                0,
                 new Dictionary<string, object>
                 {
                     ["address"] = Fixtures.StakeStateAddress.ToString(),
@@ -80,6 +82,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             {
                 new StakeState(Fixtures.StakeStateAddress, 100),
                 100,
+                0,
                 new Dictionary<string, object>
                 {
                     ["address"] = Fixtures.StakeStateAddress.ToString(),
@@ -94,6 +97,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             {
                 new StakeState(Fixtures.StakeStateAddress, 100),
                 100,
+                0,
                 new Dictionary<string, object>
                 {
                     ["address"] = Fixtures.StakeStateAddress.ToString(),
@@ -108,6 +112,22 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             {
                 new StakeState(Fixtures.StakeStateAddress, 10, 50412, 201610, new StakeState.StakeAchievements()),
                 100,
+                0,
+                new Dictionary<string, object>
+                {
+                    ["address"] = Fixtures.StakeStateAddress.ToString(),
+                    ["deposit"] = "100.00",
+                    ["startedBlockIndex"] = 10,
+                    ["cancellableBlockIndex"] = 201610L,
+                    ["receivedBlockIndex"] = 50412,
+                    ["claimableBlockIndex"] = 100812L,
+                }
+            },
+            new object[]
+            {
+                new StakeState(Fixtures.StakeStateAddress, 10, 50412, 201610, new StakeState.StakeAchievements()),
+                100,
+                BlockPolicySource.V100290ObsoleteIndex,
                 new Dictionary<string, object>
                 {
                     ["address"] = Fixtures.StakeStateAddress.ToString(),
