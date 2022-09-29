@@ -553,30 +553,48 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             await BlockChain.MineBlock(recipientKey);
 
             var currency = new GoldCurrencyState((Dictionary)BlockChain.GetState(Addresses.GoldCurrency)).Currency;
-            var transferAsset = new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 10, 0), memo);
-            var tx = BlockChain.MakeTransaction(minerPrivateKey, new PolymorphicAction<ActionBase>[] { transferAsset });
+
+            Transaction<PolymorphicAction<ActionBase>> MakeTx(PolymorphicAction<ActionBase> action)
+            {
+                return BlockChain.MakeTransaction(minerPrivateKey,
+                    new PolymorphicAction<ActionBase>[] { action });
+            }
+            var txs = new[]
+            {
+                MakeTx(new TransferAsset0(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
+                MakeTx(new TransferAsset2(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
+                MakeTx(new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
+            };
             var block = await BlockChain.MineBlock(minerPrivateKey, append: false);
             BlockChain.Append(block);
-            Assert.NotNull(StandaloneContextFx.Store?.GetTxExecution(block.Hash, tx.Id));
+            foreach (var tx in txs)
+            {
+                Assert.NotNull(StandaloneContextFx.Store?.GetTxExecution(block.Hash, tx.Id));
+            }
 
             var blockHashHex = ByteUtil.Hex(block.Hash.ToByteArray());
             var result =
                 await ExecuteQueryAsync(
                     $"{{ transferNCGHistories(blockHash: \"{blockHashHex}\") {{ blockHash txId sender recipient amount memo }} }}");
             var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
-            Assert.Null(result.Errors);
-            Assert.Equal(new List<object>
+
+            ITransferAsset GetFirstCustomActionAsTransferAsset(Transaction<PolymorphicAction<ActionBase>> tx)
             {
-                new Dictionary<string, object?>
-                {
-                    ["blockHash"] = block.Hash.ToString(),
-                    ["txId"] = tx.Id.ToString(),
-                    ["sender"] = transferAsset.Sender.ToString(),
-                    ["recipient"] = transferAsset.Recipient.ToString(),
-                    ["amount"] = transferAsset.Amount.GetQuantityString(),
-                    ["memo"] = memo,
-                }
-            }, data["transferNCGHistories"]);
+                return (ITransferAsset)tx.CustomActions!.First().InnerAction;
+            }
+
+            Assert.Null(result.Errors);
+            var expected = block.Transactions.Select(tx => new Dictionary<string, object?>
+            {
+                ["blockHash"] = block.Hash.ToString(),
+                ["txId"] = tx.Id.ToString(),
+                ["sender"] = GetFirstCustomActionAsTransferAsset(tx).Sender.ToString(),
+                ["recipient"] = GetFirstCustomActionAsTransferAsset(tx).Recipient.ToString(),
+                ["amount"] = GetFirstCustomActionAsTransferAsset(tx).Amount.GetQuantityString(),
+                ["memo"] = memo,
+            }).ToList();
+            var actual = data["transferNCGHistories"];
+            Assert.Equal(expected, actual);
         }
 
         [Fact]
