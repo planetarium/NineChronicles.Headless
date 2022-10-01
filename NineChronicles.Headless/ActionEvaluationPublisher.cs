@@ -317,7 +317,7 @@ namespace NineChronicles.Headless
                             (RPC.Shared.Exceptions.RPCException code, string message) = tuple;
                             if (_clients.TryGetValue(clientAddress, out var clientTuple))
                             {
-                                await clientTuple.hub.ReportExceptionAsync((int) code, message);
+                                await clientTuple.hub.ReportExceptionAsync((int)code, message);
                             }
                         }
                         catch (Exception e)
