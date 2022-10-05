@@ -10,6 +10,7 @@ on:
       - previewnet
       - qa-*
       - 2022q3-worldboss
+      - v100302-full-state-hotfix
     tags:
       - v*
 
