@@ -31,9 +31,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public WorldBossScenarioTest()
         {
             _avatarAddress = new Address("4FcaCfCeC22717789Cb00b427b95B476BBAaA5b2");
-            _raiderStateAddress = new Address("Bd9a12559be0F746Cade6272b6ACb1F1426C8c5D");
+            _raiderStateAddress = Addresses.GetRaiderAddress(_avatarAddress, 1);
             _worldBossAddress = Addresses.GetWorldBossAddress(1);
-            _worldBossKillRewardRecordAddress = new Address("0xE9653E92a5169bFbA66a4CbC07780ED370986d98");
+            _worldBossKillRewardRecordAddress = Addresses.GetWorldBossKillRewardRecordAddress(_avatarAddress, 1);
             _stateContext = new StateContext(GetStatesMock, GetBalanceMock, 1L);
             _raiderState = new RaiderState
             {
@@ -75,7 +75,7 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
 }}";
             var addressQueryResult = await ExecuteQueryAsync<AddressQuery>(addressQuery);
             var addressData = (Dictionary<string, object>)((ExecutionNode)addressQueryResult.Data!).ToValue()!;
-            Assert.Equal("0xBd9a12559be0F746Cade6272b6ACb1F1426C8c5D", addressData["raiderAddress"]);
+            Assert.Equal("0xa316187bAC1fC6be9B943c8E19c6047DE12D236D", addressData["raiderAddress"]);
 
             var raiderAddress = stateExist ? addressData["raiderAddress"] : default;
             // Get RaiderState.
