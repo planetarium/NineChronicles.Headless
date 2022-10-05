@@ -31,7 +31,7 @@ namespace Libplanet.Headless
                     $"--peer '{peerInfo}', should have format <pubkey>,<host>,<port>");
             }
 
-            if (!(tokens[0].Length == 130 || tokens[0].Length == 96 || tokens[0].Length == 66))
+            if (!(tokens[0].Length == 130 || tokens[0].Length == 66))
             {
                 throw new PeerInvalidException(
                     $"--peer '{peerInfo}', a length of public key must be 130 or 66 in hexadecimal," +
