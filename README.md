@@ -165,16 +165,14 @@ planetariumhq/ninechronicles-headless:[<TAGNAME>] \
 #### 1. Build Docker image with the tag name in `[<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>]` format.
 
 ```
-$ docker build . --tag [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<TAGNAME>] --build-arg COMMIT=[<VERSION_SUFFIX>]
+$ docker build . --tag [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>]:[<TAGNAME>] --build-arg COMMIT=[<VERSION_SUFFIX>]
 ```
 - [Docker Build Guide](https://docs.docker.com/engine/reference/commandline/build/)
 
 #### 2. Push your Docker image to your Docker Hub account.
 
 ```
-$ docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<TAGNAME>]
-
-Usage: docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<TAGNAME>]
+$ docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>]:[<TAGNAME>]
 ```
 - [Docker Push Guide](https://docs.docker.com/engine/reference/commandline/push/)
 
