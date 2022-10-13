@@ -7,13 +7,12 @@
 
 - [Run](#run)
 - [Docker Build](#docker-build)
-  * [Command Line Options](#command-line-options)
   * [Format](#format)
 - [How to run NineChronicles Headless on AWS EC2 instance using Docker](#how-to-run-ninechronicles-headless-on-aws-ec2-instance-using-docker)
   * [On Your AWS EC2 Instance](#on-your-aws-ec2-instance)
-  * [Building Your Own Docker Image from Your Local](#building-your-own-docker-image-from-your-local)
+  * [Building Your Own Docker Image from Your Local Machine](#building-your-own-docker-image-from-your-local-machine)
 - [Nine Chronicles GraphQL API Documentation](#nine-chronicles-graphql-api-documentation)
-- [Create New Genesis Block](#create-new-genesis-block)
+- [Create A New Genesis Block](#create-a-new-genesis-block)
 
 ## Run
 
@@ -26,12 +25,15 @@ Usage: NineChronicles.Headless.Executable [--app-protocol-version <String>] [--g
 NineChronicles.Headless.Executable
 
 Commands:
+  account
   validation
   chain
   key
   apv
   action
+  state
   tx
+  market
   genesis
 
 Options:
@@ -104,46 +106,7 @@ A headless image can be created by running the command below in the directory wh
 ```
 $ docker build . -t <IMAGE_TAG> --build-arg COMMIT=<VERSION_SUFFIX>
 ```
-* Nine Chronicles Team uses <VERSION_SUFFIX> to build an image with the latest git commit and push to the [official Docker Hub repository](https://hub.docker.com/repository/docker/planetariumhq/ninechronicles-headless). However, if you want to build and push to your own Docker Hub account, <VERSION_SUFFIX> can be any value.
-
-### Command Line Options
-
-- `-H`, `--host`: Specifies the host name.
-- `-P`, `--port`: Specifies the port number.
-- `--swarm-private-key`: Specifies the private Key used in swarm.
-- `--miner-private-key`: Specifies the private Key used in mining.
-- `--no-miner`: Disables mining.
-- `--store-path`: Specifies the path for storing data.
-- `-I`, `--ice-server`: Specifies the TURN server info used for NAT Traversal. If there are multiple servers, they can be added by typing: `--ice-server serverA --ice-server serverB ...`.
-- `--peer`: Adds a peer and if there are multiple peers, they can be added by typing: `--peer peerA --peer peerB ...`.
-- `-G`, `--genesis-block-path`: Specifies the path of the genesis block.
-- `-V`, `--app-protocol-version`: Specifies the value of `Swarm<T>.AppProtocolVersion`.
-- `--rpc-server`: Starts with RPC server mode. Must specify `--rpc-listen-port` to use this mode.
-- `--rpc-listen-host`: Host name for RPC server mode.
-- `--rpc-listen-port`: Port number for RPC server mode.
-- `--graphql-server`: Turn on graphQL controller.
-- `--graphql-host`: Host name for graphQL controller.
-- `--graphql-port`: Port number for graphQL controller.
-- `--libplanet-node`: Run with formal Libplanet node. One of this or `graphql-server` must be set.
-- `--workers`: Number of workers to use in Swarm.
-- `--confirmations`: Specifies the number of required confirmations to recognize a block.
-- `--nonblock-renderer`: Uses non-blocking renderer, which prevents the blockchain & swarm from waiting slow rendering.  Turned off by default.
-- `--nonblock-renderer-queue`: The size of the queue used by the non-blocking renderer.  512 by default.  Ignored if `--nonblock-renderer` is turned off.
-- `--max-transactions`: Specifies the number of maximum transactions can be included in a single block. Unlimited if the value is less then or equal to 0.
-- `--network-type`: Choose one of `Main`, `Internal`, `Test`.  `Main` by defualt.
-- `--dev`: Flag to turn on the dev mode.
-- `--dev.block-interval`: Specifies the time interval between blocks by milliseconds in dev mode.
-- `--dev.reorg-interval`: Specifies the size of reorg interval in dev mode.
-- `--message-timeout`: Specifies the time limit that determines how old the latest message is received will publish `NodeException` to GraphQL subscriptions.
-- `--tip-timeout`: Specifies the time limit that determines how old the blockchain's tip is updated will publish `NodeException` to GraphQL subscriptions.
-- `--demand-buffer`: Specifies the number that determines how far behind the demand the tip of the chain will publish `NodeException` to GraphQL subscriptions.
-- `--miner-count`: Specifies the number of task(thread)s to use for mining.
-- `--skip-preload`: Skipping preloading when starting.
-- `--minimum-broadcast-target`: Minimum number of the peers to broadcast messages.
-- `--bucket-size`: Specifies the number of the peers can be stored in each bucket.
-- `--tx-quota-per-signer`: Specifies the number of maximum transactions can be included in stage per signer.
-- `--poll-interval`: Specifies the interval between block polling.
-- `--maximum-poll-peers`: Specifies the maximum number of peers to poll blocks.
+* Nine Chronicles Team uses `<VERSION_SUFFIX>` to build an image with the latest git commit and push to the [official Docker Hub repository](https://hub.docker.com/repository/docker/planetariumhq/ninechronicles-headless). However, if you want to build and push to your own Docker Hub account, the `<VERSION_SUFFIX>` can be any value.
 
 ### Format
 
@@ -158,28 +121,22 @@ Formatting for `PrivateKey` or `Peer` follows the format in [Nekoyume Project RE
 - Docker environment: [Docker Installation Guide](https://docs.docker.com/get-started/#set-up-your-docker-environment)
 - AWS EC2 instance: [AWS EC2 Guide](https://docs.aws.amazon.com/ec2/index.html)
 
-#### 1. Pull ninechronicles-headless Docker image to your AWS EC2 instance from the [official Docker Hub repository](https://hub.docker.com/repository/docker/planetariumhq/ninechronicles-headless).
+#### 1. Pull `planetariumhq/ninechronicles-headless` Docker image to your AWS EC2 instance from the [official Docker Hub repository](https://hub.docker.com/repository/docker/planetariumhq/ninechronicles-headless).
 
-* If you would like to build your own Docker image from your local, refer to [this section](#building-your-own-docker-image-from-your-local).
+- If you would like to build your own Docker image from your local machine, refer to [this section](#building-your-own-docker-image-from-your-local-machine).
 
 ```
-$ docker pull planetariumhq/ninechronicles-headless:latest
-
-Usage: docker pull [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<TAGNAME>]
+$ docker pull planetariumhq/ninechronicles-headless:[<TAGNAME>] (ex: v100300)
 ```
+- Please refer to the `docker` value in https://release.nine-chronicles.com/apv.json for the latest official Docker tag name.
 - [Docker Pull Guide](https://docs.docker.com/engine/reference/commandline/pull/)
 
-![Docker Pull](https://i.imgur.com/oLCULZr.png)
-
-#### 2. Create a Docker volume for blockchain data persistance
+#### 2. Create a Docker volume for blockchain data persistence
 
 ```
-$ docker volume create 9c-volume
-Usage: docker volume create [<VOLUME_NAME>]
+$ docker volume create [<VOLUME_NAME>] (ex: 9c-volume)
 ```
 - [Docker Volume Guide](https://docs.docker.com/engine/reference/commandline/volume_create/)
-
-![Docker Volume Create](https://i.imgur.com/ISgKeLc.png)
 
 #### 3. Run your Docker image with your Docker volume mounted (use -d for detached mode)
 
@@ -187,60 +144,37 @@ Usage: docker volume create [<VOLUME_NAME>]
 $ docker run \
 --detach \
 --volume 9c-volume:/app/data \
-planetariumhq/ninechronicles-headless:latest \
+planetariumhq/ninechronicles-headless:[<TAGNAME>] \
 <a href = "#run" title="NineChronicles Headless options">[NineChronicles Headless Options]</a>
 </pre>
 #### Note)
 
-* If you want to use the same headless options as your Nine Chronicles game client, refer to **`config.json`** under **`%localappdata%\Programs\Nine Chronicles\resources\app`**. Inside **`config.json`**, refer to the following properties for your headless options:
-  - `GeniesisBlockPath`
-  - `MinimumDifficulty`
-  - `StoreType`
-  - `AppProtocolVersion`
-  - `TrustedAppProtocolVersionSigners`
-  - `IceServerStrings`
-  - `PeerStrings`
-  - `NoTrustedStateValidators`
-  - `NoMiner`
-  - `Confirmations`
-  - `NonblockRenderer`
-  - `NonblockRendererQueue`
-  - `Workers`
-* If you are using an [Elastic IP](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html) on your AWS instance, you must include the IP as the `--host` option but do not need to include the `--ice-server` option.
-* For mining, make sure to include the `--miner-private-key` option with your private key. Also, include `--libplanet-node` to run the default libplanet node.
-
-![Docker Run](https://i.imgur.com/VlwFybj.png)
+- If you want to use the same headless options as your Nine Chronicles game client, please refer to the `headlessArgs` values in value in https://release.nine-chronicles.com/apv.json.
+- If you are using an [Elastic IP](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html) on your AWS instance, you can add the IP address in the `--host` option and not use the `--ice-server` option.
+- For mining, make sure to include the `--miner-private-key` option with your private key.
 
 - [Docker Volumes Usage](https://docs.docker.com/storage/volumes/)
 
-### Building Your Own Docker Image from Your Local
+### Building Your Own Docker Image from Your Local Machine
 
 #### Pre-requisites
 
 - Docker environment: [Docker Installation Guide](https://docs.docker.com/get-started/#set-up-your-docker-environment)
 - Docker Hub account: [Docker Hub Guide](https://docs.docker.com/docker-hub/)
 
-#### 1. Build Docker image with the tag name in [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] format.
+#### 1. Build Docker image with the tag name in `[<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>]` format.
 
 ```
-$ docker build . --tag 9c/9c-headless --build-arg COMMIT=9c-1
-
-Usage: docker build . --tag [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<TAGNAME>] --build-arg COMMIT=[<VERSION_SUFFIX>]
+$ docker build . --tag [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>]:[<TAGNAME>] --build-arg COMMIT=[<VERSION_SUFFIX>]
 ```
 - [Docker Build Guide](https://docs.docker.com/engine/reference/commandline/build/)
-
-![Docker Build](https://i.imgur.com/iz74t3J.png)
 
 #### 2. Push your Docker image to your Docker Hub account.
 
 ```
-$ docker push 9c/9c-headless:latest
-
-Usage: docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>] : [<TAGNAME>]
+$ docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>]:[<TAGNAME>]
 ```
 - [Docker Push Guide](https://docs.docker.com/engine/reference/commandline/push/)
-
-![Docker Push](https://i.imgur.com/NWUW9LS.png)
 
 ## Nine Chronicles GraphQL API Documentation
 
@@ -250,7 +184,7 @@ For more information on the GraphQL API, refer to the [NineChronicles Headless G
 
 ---
 
-## Create new genesis block
+## Create a new genesis block
 
 ### 1. (Optional) Create activation keys and PendingActivationState
 Activation key is the code for 9c account to register/activate into NineChronicles.  
@@ -295,7 +229,7 @@ After this step, you will get `genesis-block` file as output and another info in
 ### 4. Run Headless node with genesis block
 ```shell
 dotnet run --project ./NineChronicles.Headless.Executable/ \
-    -V=100260/6ec8E598962F1f475504F82fD5bF3410eAE58B9B/MEUCIQCG2yQNyXu3ovuUBNMEQiqx1vdo.FCMet9FoayFiIL89QIgXGRTU84nrcmLL4ud2j9ogrGt7ScmqaD97N.4rrtraXE=/ZHUxNjpXaW5kb3dzQmluYXJ5VXJsdTU2Omh0dHBzOi8vZG93bmxvYWQubmluZS1jaHJvbmljbGVzLmNvbS92MTAwMjYwL1dpbmRvd3MuemlwdTk6dGltZXN0YW1wdTEwOjIwMjItMDctMjhl \ 
+    -V=[APP PROTOCOL VERSION] \
     -G=[PATH/TO/GENESIS/BLOCK] \
     --store-type=memory \
     --store-path= [PATH/TO/BLOCK/STORAGE] \
