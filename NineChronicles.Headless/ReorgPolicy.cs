@@ -52,7 +52,7 @@ namespace NineChronicles.Headless
         public HashAlgorithmType GetHashAlgorithm(long blockIndex) =>
             HashAlgorithmType.Of<SHA256>();
 
-        public long GetMaxBlockBytes(long index) => long.MaxValue;
+        public long GetMaxTransactionsBytes(long index) => long.MaxValue;
 
         public int GetMinTransactionsPerBlock(long index) => 0;
 
