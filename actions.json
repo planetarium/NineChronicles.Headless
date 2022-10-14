@@ -1,0 +1,22 @@
+[
+    {
+        "\ufefftype_id": "\ufeffhack_and_slash_sweep5",
+        "\ufeffvalues": {
+            "\ufeffactionPoint": "\ufeff115",
+            "\ufeffapStoneCount": "\ufeff0",
+            "\ufeffavatarAddress": "0xcc2570cff8aea5f9d907552c95d452aded8818d9",
+            "\ufeffcostumes": [],
+            "\ufeffequipments": [
+                "0xa8932f444441ee428459a338dbba0083",
+                "0x0bdcdb4d7ae68949b23357840406f769",
+                "0xbcf13c65dcd3464e9278ea258c5e91cc",
+                "0x32c255a301faaf48899b9587c6d14248",
+                "0xb119c5e3906cc64f80a99908fd1fe106",
+                "0xbbc093ec7001b348a7a4407598941c87"
+            ],
+            "\ufeffid": "0xefd646d34fc5a34faeaf5abe26c4cdc1",
+            "\ufeffstageId": "\ufeff47",
+            "\ufeffworldId": "\ufeff1"
+        }
+    }
+]

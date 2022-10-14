@@ -1,18 +1,29 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using Bencodex;
 using Bencodex.Types;
 using Cocona;
 using Cocona.Help;
 using Libplanet;
 using Libplanet.Action;
+using System.Text.Json;
+using Bencodex.Json;
 using Libplanet.Assets;
+using Libplanet.Blocks;
+using Libplanet.Crypto;
+using Libplanet.Extensions.Cocona;
+using Libplanet.Store;
 using Nekoyume.Action;
 using Nekoyume.Model;
+using Newtonsoft.Json.Linq;
 using NineChronicles.Headless.Executable.IO;
+using NineChronicles.Headless.Executable.Store;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
@@ -366,6 +377,88 @@ namespace NineChronicles.Headless.Executable.Commands
                     File.WriteAllText(filePath, encoded);
                 }
 
+                return 0;
+            }
+            catch (Exception e)
+            {
+                _console.Error.WriteLine(e);
+                return -1;
+            }
+        }
+
+        [Command(Description = "Execute action and calculate next state")]
+        public int Execute(
+            [Argument("ACTIONS-PATH", Description = "A JSON file path of actions.")]
+            string actionsPath,
+            [Option("STORE-PATH", Description = "An absolute path of block storage.")]
+            string storePath,
+            [Option("BLOCK-INDEX", Description = "Target block height to run action. Tip as default.")]
+            int blockIndex = -1
+        )
+        {
+            try
+            {
+                // Read json file and parse actions.
+                // NOTE: https://github.com/planetarium/libplanet/blob/main/Libplanet/Action/ActionListJsonConverter.cs
+                //       If ActionListJsonConverter to be public, we can use it.
+                using var stream = new FileStream(actionsPath, FileMode.Open);
+                stream.Seek(0, SeekOrigin.Begin);
+                var bytes = new byte[stream.Length];
+                while (stream.Position < stream.Length)
+                {
+                    bytes[stream.Position] = (byte)stream.ReadByte();
+                }
+
+                var converter = new BencodexJsonConverter();
+                var actionsReader = new Utf8JsonReader(bytes);
+                var actionsValue = converter.Read(
+                    ref actionsReader,
+                    typeof(object),
+                    new JsonSerializerOptions());
+                if (actionsValue is not List actionsList)
+                {
+                    throw new CommandExitedException(
+                        $"The given actions file, {actionsPath} is not a list.",
+                        -1);
+                }
+
+                var typeToConvert = typeof(PolymorphicAction<ActionBase>);
+                var actions = actionsList.Select(actionValue =>
+                {
+                    var action = (PolymorphicAction<ActionBase>)Activator.CreateInstance(typeToConvert)!;
+                    action.LoadPlainValue(actionValue);
+                    var innerAction = action.InnerAction;
+                    _console.Out.WriteLine($"inner action type: {innerAction.GetType().FullName}");
+                    return action;
+                }).ToList();
+                // ~Read json file and parse actions.
+                // Load store.
+                if (!Directory.Exists(storePath))
+                {
+                    throw new CommandExitedException($"The given STORE-PATH, {storePath} does not found.", -1);
+                }
+
+                var store = StoreType.RocksDb.CreateStore(storePath);
+                if (store.GetCanonicalChainId() is not { } chainId)
+                {
+                    throw new CommandExitedException($"There is no canonical chain: {storePath}", -1);
+                }
+
+                var blockHash = store.IndexBlockHash(chainId, blockIndex) ??
+                                throw new CommandExitedException(
+                                    $"The given blockIndex {blockIndex} does not found", -1);
+                _console.Out.WriteLine($"block hash: {blockHash}");
+                var block = store.GetBlock<NCAction>(blockHash);
+                _console.Out.WriteLine($"block state root hash: {block.StateRootHash}");
+                // ~Load store.
+                // Execute actions.
+                // var actionContext = new Context
+                // foreach (var action in actions)
+                // {
+                //     action.Execute()
+                // }
+                // var state = new State(store, block.StateRootHash);
+                // ~Execute actions.
                 return 0;
             }
             catch (Exception e)
