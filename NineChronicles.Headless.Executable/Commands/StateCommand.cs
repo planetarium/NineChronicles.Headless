@@ -108,8 +108,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     store.GetBlock<NCAction>(blockHash);
                 var preEvalBlock = new PreEvaluationBlock<NCAction>(
                     block,
-                    block.Nonce,
-                    block.PreEvaluationHash
+                    block.Transactions
                 );
                 stderr.WriteLine(
                     "[{0}/{1}] Executing block #{2} {3}...",
