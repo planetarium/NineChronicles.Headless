@@ -231,7 +231,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockChain = StandaloneContextFx.BlockChain;
             for (int i = 0; i < 10; i++)
             {
-                blockChain!.Append(blockChain.ProposeBlock(userPrivateKey));
+                blockChain!.Append(blockChain.ProposeBlock(
+                    userPrivateKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
             }
 
             var queryWithoutOffset = @"query {
@@ -287,7 +288,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             for (int i = 0; i < 10; i++)
             {
-                BlockChain.Append(BlockChain.ProposeBlock(minerKey));
+                BlockChain.Append(BlockChain.ProposeBlock(
+                    minerKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
             }
             var query = $@"query {{
                 validation {{
@@ -494,11 +496,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ActivationKey.Create(privateKey, nonce);
             PolymorphicAction<ActionBase> action = new CreatePendingActivation(pendingActivation);
             blockChain.MakeTransaction(adminPrivateKey, new[] { action });
-            blockChain.Append(blockChain.ProposeBlock(adminPrivateKey));
+            blockChain.Append(blockChain.ProposeBlock(
+                adminPrivateKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
 
             action = activationKey.CreateActivateAccount(nonce);
             blockChain.MakeTransaction(userPrivateKey, new[] { action });
-            blockChain.Append(blockChain.ProposeBlock(adminPrivateKey));
+            blockChain.Append(blockChain.ProposeBlock(
+                adminPrivateKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
 
             queryResult = await ExecuteQueryAsync("query { activationStatus { activated } }");
             data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
@@ -529,7 +533,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 data
             );
 
-            blockChain!.Append(blockChain.ProposeBlock(userPrivateKey));
+            blockChain!.Append(blockChain.ProposeBlock(
+                userPrivateKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
 
             queryResult = await ExecuteQueryAsync(query);
             data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
@@ -551,13 +556,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             PrivateKey senderKey = minerPrivateKey, recipientKey = new PrivateKey();
             Address sender = senderKey.ToAddress(), recipient = recipientKey.ToAddress();
 
-            BlockChain.Append(BlockChain.ProposeBlock(senderKey));
-            BlockChain.Append(BlockChain.ProposeBlock(recipientKey));
+            BlockChain.Append(BlockChain.ProposeBlock(
+                senderKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
+            BlockChain.Append(BlockChain.ProposeBlock(
+                recipientKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
 
             var currency = new GoldCurrencyState((Dictionary)BlockChain.GetState(Addresses.GoldCurrency)).Currency;
             var transferAsset = new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 10, 0), memo);
             var tx = BlockChain.MakeTransaction(minerPrivateKey, new PolymorphicAction<ActionBase>[] { transferAsset });
-            var block = BlockChain.ProposeBlock(minerPrivateKey);
+            var block = BlockChain.ProposeBlock(
+                minerPrivateKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash));
             BlockChain.Append(block);
             Assert.NotNull(StandaloneContextFx.Store?.GetTxExecution(block.Hash, tx.Id));
 
@@ -667,7 +675,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockChain = StandaloneContextFx.BlockChain;
             var transaction = blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
             blockChain.StageTransaction(transaction);
-            blockChain.Append(blockChain.ProposeBlock(new PrivateKey()));
+            blockChain.Append(blockChain.ProposeBlock(
+                new PrivateKey(), lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
 
             string queryArgs = miner ? "" : $@"(address: ""{userAddress}"")";
             string query = $@"query {{
@@ -711,7 +720,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockChain = StandaloneContextFx.BlockChain;
             var transaction = blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
             blockChain.StageTransaction(transaction);
-            blockChain.Append(blockChain.ProposeBlock(new PrivateKey()));
+            blockChain.Append(blockChain.ProposeBlock(
+                new PrivateKey(), lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
 
             var avatarAddress = userAddress.Derive(
                 string.Format(

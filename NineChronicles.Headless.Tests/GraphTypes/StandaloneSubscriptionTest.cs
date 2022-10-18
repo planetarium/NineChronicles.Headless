@@ -39,7 +39,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             const int repeat = 10;
             foreach (long index in Enumerable.Range(1, repeat))
             {
-                BlockChain.Append(BlockChain.ProposeBlock(miner));
+                BlockChain.Append(BlockChain.ProposeBlock(
+                    miner, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
 
                 var result = await ExecuteSubscriptionQueryAsync("subscription { tipChanged { index hash } }");
 

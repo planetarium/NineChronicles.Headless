@@ -5,6 +5,7 @@ using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
+using Libplanet.Consensus;
 using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
 using Libplanet.KeyStore;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
+using Nekoyume.BlockChain.Policy;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common;
 using Serilog;
@@ -197,6 +199,24 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),
                 preloadStatusHandlerAction: isPreloadStart => { }
             );
+        }
+
+        protected BlockCommit? GenerateBlockCommit(long height, BlockHash hash)
+        {
+            return height != 0
+                ? new BlockCommit(
+                    height,
+                    0,
+                    hash,
+                    ImmutableArray<Vote>.Empty
+                        .Add(new VoteMetadata(
+                            height,
+                            0,
+                            hash,
+                            DateTimeOffset.UtcNow,
+                            ValidatorsPolicy.TestValidatorKey.PublicKey,
+                            VoteFlag.Commit).Sign(ValidatorsPolicy.TestValidatorKey)))
+                : (BlockCommit?)null;
         }
     }
 }

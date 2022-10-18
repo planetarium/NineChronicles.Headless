@@ -39,6 +39,7 @@ namespace NineChronicles.Headless.Executable.Tests
                 _genesisBlockPath,
                 noMiner: true,
                 host: "localhost",
+                consensusPort: 6000,
                 rpcServer: true,
                 rpcListenHost: "localhost",
                 rpcListenPort: 31234,
@@ -47,6 +48,7 @@ namespace NineChronicles.Headless.Executable.Tests
                 graphQLPort: 31238,
                 storePath: _storePath,
                 storeType: "rocksdb",
+                validatorStrings: new[] { new PrivateKey().PublicKey.ToString() },
                 skipPreload: true,
                 noCors: true,
                 cancellationToken: cancellationTokenSource.Token
