@@ -112,13 +112,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ActivationKey.Create(privateKey, nonce);
             NCAction action = new CreatePendingActivation(pendingActivation);
             BlockChain.MakeTransaction(AdminPrivateKey, new[] { action });
-            BlockChain.Append(BlockChain.ProposeBlock(AdminPrivateKey));
+            BlockChain.Append(BlockChain.ProposeBlock(
+                AdminPrivateKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
 
             var encodedActivationKey = activationKey.Encode();
             var queryResult = await ExecuteQueryAsync(
                 $"mutation {{ activationStatus {{ activateAccount(encodedActivationKey: \"{encodedActivationKey}\") }} }}");
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
-            BlockChain.Append(BlockChain.ProposeBlock(AdminPrivateKey));
+            BlockChain.Append(BlockChain.ProposeBlock(
+                AdminPrivateKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
 
             var result =
                 (bool)((Dictionary<string, object>)
@@ -146,8 +148,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             Address senderAddress = service.MinerPrivateKey!.ToAddress();
             var store = service.Store;
-            BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey));
-            BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey));
+            BlockChain.Append(BlockChain.ProposeBlock(
+                service.MinerPrivateKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
+            BlockChain.Append(BlockChain.ProposeBlock(
+                service.MinerPrivateKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
 
             // 10 + 10 (mining rewards)
             Assert.Equal(
@@ -198,7 +202,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
                 Assert.Equal(expectedResult, data);
 
-                BlockChain.Append(BlockChain.ProposeBlock(recipientKey));
+                BlockChain.Append(BlockChain.ProposeBlock(
+                    recipientKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
 
                 // 10 + 10 - 17.5(transfer)
                 Assert.Equal(
@@ -225,8 +230,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Address senderAddress = service.MinerPrivateKey!.ToAddress();
 
             var store = service.Store;
-            BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey));
-            BlockChain.Append(BlockChain.ProposeBlock(service.MinerPrivateKey));
+            BlockChain.Append(BlockChain.ProposeBlock(
+                service.MinerPrivateKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
+            BlockChain.Append(BlockChain.ProposeBlock(
+                service.MinerPrivateKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
 
             // 10 + 10 (mining rewards)
             Assert.Equal(
@@ -250,7 +257,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Null(result.Errors);
             Assert.Equal(expectedResult, data);
 
-            BlockChain.Append(BlockChain.ProposeBlock(recipientKey));
+            BlockChain.Append(BlockChain.ProposeBlock(
+                recipientKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
 
             // 10 + 10 - 17.5(transfer)
             Assert.Equal(
@@ -919,7 +927,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ActivationKey.Create(privateKey, nonce);
             NCAction action = new CreatePendingActivation(pendingActivation);
             BlockChain.MakeTransaction(AdminPrivateKey, new[] { action });
-            BlockChain.Append(BlockChain.ProposeBlock(AdminPrivateKey));
+            BlockChain.Append(BlockChain.ProposeBlock(
+                AdminPrivateKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
             var encodedActivationKey = activationKey.Encode();
             var actionCommand = new ActionCommand(new StandardConsole());
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
@@ -933,7 +942,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var queryResult = await ExecuteQueryAsync(
                 $"mutation {{ stageTx(payload: \"{output}\") }}");
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
-            BlockChain.Append(BlockChain.ProposeBlock(AdminPrivateKey));
+            BlockChain.Append(BlockChain.ProposeBlock(
+                AdminPrivateKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
 
             var result = (bool)data["stageTx"];
             Assert.True(result);
