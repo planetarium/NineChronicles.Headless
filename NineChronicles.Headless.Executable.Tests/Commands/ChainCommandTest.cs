@@ -12,6 +12,7 @@ using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
 using Libplanet.Extensions.Cocona;
+using Libplanet.Consensus;
 using Libplanet.Crypto;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
@@ -76,7 +77,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [Theory]
         [InlineData(StoreType.Default)]
         [InlineData(StoreType.RocksDb)]
-        public async Task Inspect(StoreType storeType)
+        public void Inspect(StoreType storeType)
         {
             Block<NCAction> genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock();
             IStore store = storeType.CreateStore(_storePath);
@@ -124,7 +125,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [Theory]
         [InlineData(StoreType.Default)]
         [InlineData(StoreType.RocksDb)]
-        public async Task Truncate(StoreType storeType)
+        public void Truncate(StoreType storeType)
         {
             Block<NCAction> genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock();
             IStore store = storeType.CreateStore(_storePath);
@@ -134,8 +135,18 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             store.AppendIndex(chainId, genesisBlock.Hash);
             var stateStore = new TrieStateStore(new RocksDBKeyValueStore(Path.Combine(_storePath, "states")));
 
+            PrivateKey validator = new PrivateKey();
+            var validators = new List<PublicKey> { validator.PublicKey };
+            BlockCommit GenerateBlockCommit(long height, BlockHash hash)
+            {
+                ImmutableArray<Vote> votes = ImmutableArray<Vote>.Empty
+                    .Add(new VoteMetadata(
+                        height, 0, hash, DateTimeOffset.UtcNow, validator.PublicKey, VoteFlag.Commit).Sign(validator));
+                return new BlockCommit(height, 0, hash, votes);
+            }
+
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
-            IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
+            IBlockPolicy<NCAction> blockPolicy = new BlockPolicy<NCAction>(getValidators: index => validators);
             BlockChain<NCAction> chain = new BlockChain<NCAction>(
                 blockPolicy,
                 stagePolicy,
@@ -157,7 +168,17 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             for (var i = 0; i < 2; i++)
             {
                 chain.MakeTransaction(minerKey, new NCAction[] { action });
-                chain.Append(chain.ProposeBlock(minerKey, DateTimeOffset.Now));
+                if (chain.Tip.Index < 1)
+                {
+                    chain.Append(chain.ProposeBlock(minerKey, DateTimeOffset.Now));
+                }
+                else
+                {
+                    chain.Append(chain.ProposeBlock(
+                        minerKey,
+                        DateTimeOffset.Now,
+                        lastCommit: GenerateBlockCommit(chain.Tip.Index, chain.Tip.Hash)));
+                }
             }
 
             var indexCountBeforeTruncate = store.CountIndex(chainId);
