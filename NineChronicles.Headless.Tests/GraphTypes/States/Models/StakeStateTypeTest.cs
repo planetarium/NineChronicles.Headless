@@ -19,7 +19,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
         [MemberData(nameof(Members))]
         public async Task Query(StakeState stakeState, long deposit, long blockIndex, Dictionary<string, object> expected)
         {
-            var goldCurrency = new Currency("NCG", 2, minter: null);
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            var goldCurrency = Currency.Legacy("NCG", 2, null);
+#pragma warning restore CS0618
 
             IValue? GetStateMock(Address address)
             {

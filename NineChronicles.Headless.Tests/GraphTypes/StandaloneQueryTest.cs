@@ -38,7 +38,7 @@ using Xunit.Abstractions;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
-    public class StandaloneQueryTest : GraphQLTestBase
+    public partial class StandaloneQueryTest : GraphQLTestBase
     {
         private readonly Dictionary<string, string> _sheets;
 
@@ -440,7 +440,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             ),
                             adminAddressState: new AdminState(adminAddress, 1500000),
                             activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-                            goldCurrencyState: new GoldCurrencyState(new Currency("NCG", 2, minter: null)),
+#pragma warning disable CS0618
+                            // Use of obsolete method Currency.Legacy():
+                            // https://github.com/planetarium/lib9c/discussions/1319
+                            goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
+#pragma warning restore CS0618
                             goldDistributions: new GoldDistribution[0],
                             tableSheets: _sheets,
                             pendingActivationStates: new PendingActivationState[]{ }
@@ -462,7 +466,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Port = null,
                 NoMiner = true,
                 Render = false,
-                Peers = ImmutableHashSet<Peer>.Empty,
+                Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty
             };
@@ -549,30 +553,48 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             await BlockChain.MineBlock(recipientKey);
 
             var currency = new GoldCurrencyState((Dictionary)BlockChain.GetState(Addresses.GoldCurrency)).Currency;
-            var transferAsset = new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 10, 0), memo);
-            var tx = BlockChain.MakeTransaction(minerPrivateKey, new PolymorphicAction<ActionBase>[] { transferAsset });
+
+            Transaction<PolymorphicAction<ActionBase>> MakeTx(PolymorphicAction<ActionBase> action)
+            {
+                return BlockChain.MakeTransaction(minerPrivateKey,
+                    new PolymorphicAction<ActionBase>[] { action });
+            }
+            var txs = new[]
+            {
+                MakeTx(new TransferAsset0(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
+                MakeTx(new TransferAsset2(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
+                MakeTx(new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
+            };
             var block = await BlockChain.MineBlock(minerPrivateKey, append: false);
             BlockChain.Append(block);
-            Assert.NotNull(StandaloneContextFx.Store?.GetTxExecution(block.Hash, tx.Id));
+            foreach (var tx in txs)
+            {
+                Assert.NotNull(StandaloneContextFx.Store?.GetTxExecution(block.Hash, tx.Id));
+            }
 
             var blockHashHex = ByteUtil.Hex(block.Hash.ToByteArray());
             var result =
                 await ExecuteQueryAsync(
                     $"{{ transferNCGHistories(blockHash: \"{blockHashHex}\") {{ blockHash txId sender recipient amount memo }} }}");
             var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
-            Assert.Null(result.Errors);
-            Assert.Equal(new List<object>
+
+            ITransferAsset GetFirstCustomActionAsTransferAsset(Transaction<PolymorphicAction<ActionBase>> tx)
             {
-                new Dictionary<string, object?>
-                {
-                    ["blockHash"] = block.Hash.ToString(),
-                    ["txId"] = tx.Id.ToString(),
-                    ["sender"] = transferAsset.Sender.ToString(),
-                    ["recipient"] = transferAsset.Recipient.ToString(),
-                    ["amount"] = transferAsset.Amount.GetQuantityString(),
-                    ["memo"] = memo,
-                }
-            }, data["transferNCGHistories"]);
+                return (ITransferAsset)tx.CustomActions!.First().InnerAction;
+            }
+
+            Assert.Null(result.Errors);
+            var expected = block.Transactions.Select(tx => new Dictionary<string, object?>
+            {
+                ["blockHash"] = block.Hash.ToString(),
+                ["txId"] = tx.Id.ToString(),
+                ["sender"] = GetFirstCustomActionAsTransferAsset(tx).Sender.ToString(),
+                ["recipient"] = GetFirstCustomActionAsTransferAsset(tx).Recipient.ToString(),
+                ["amount"] = GetFirstCustomActionAsTransferAsset(tx).Amount.GetQuantityString(),
+                ["memo"] = memo,
+            }).ToList();
+            var actual = data["transferNCGHistories"];
+            Assert.Equal(expected, actual);
         }
 
         [Fact]
@@ -756,7 +778,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             ),
                             adminAddressState: new AdminState(adminAddress, 1500000),
                             activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-                            goldCurrencyState: new GoldCurrencyState(new Currency("NCG", 2, minter: null)),
+#pragma warning disable CS0618
+                            // Use of obsolete method Currency.Legacy():
+                            // https://github.com/planetarium/lib9c/discussions/1319
+                            goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
+#pragma warning restore CS0618
                             goldDistributions: new GoldDistribution[0],
                             tableSheets: _sheets,
                             pendingActivationStates: pendingActivationStates.ToArray()
@@ -778,7 +804,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Port = null,
                 NoMiner = true,
                 Render = false,
-                Peers = ImmutableHashSet<Peer>.Empty,
+                Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty
             };
@@ -825,7 +851,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             ),
                             adminAddressState: new AdminState(adminAddress, 1500000),
                             activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-                            goldCurrencyState: new GoldCurrencyState(new Currency("NCG", 2, minter: null)),
+#pragma warning disable CS0618
+                            // Use of obsolete method Currency.Legacy():
+                            // https://github.com/planetarium/lib9c/discussions/1319
+                            goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
+#pragma warning restore CS0618
                             goldDistributions: new GoldDistribution[0],
                             tableSheets: _sheets,
                             pendingActivationStates: pendingActivationStates.ToArray()
@@ -848,7 +878,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Port = null,
                 NoMiner = true,
                 Render = false,
-                Peers = ImmutableHashSet<Peer>.Empty,
+                Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty
             };
@@ -888,7 +918,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             ),
                             adminAddressState: new AdminState(adminAddress, 1500000),
                             activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-                            goldCurrencyState: new GoldCurrencyState(new Currency("NCG", 2, minter: null)),
+#pragma warning disable CS0618
+                            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                            goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
+#pragma warning restore CS0618
                             goldDistributions: new GoldDistribution[0],
                             tableSheets: _sheets,
                             pendingActivationStates: pendingActivationStates.ToArray()
@@ -911,7 +944,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Port = null,
                 NoMiner = true,
                 Render = false,
-                Peers = ImmutableHashSet<Peer>.Empty,
+                Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty
             };
@@ -938,16 +971,25 @@ decimalPlaces
             var data = (Dictionary<string, object>)((Dictionary<string, object>)((Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!)["stateQuery"])["balance"];
             Assert.Equal("0", data["quantity"]);
             var currencyData = (Dictionary<string, object>)data["currency"];
-            var currency = new Currency((string)currencyData["ticker"], (byte)currencyData["decimalPlaces"],
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            var currency = Currency.Legacy((string)currencyData["ticker"], (byte)currencyData["decimalPlaces"],
                 minters: (IImmutableSet<Address>?)currencyData["minters"]);
+#pragma warning restore CS0618
             var crystal = CrystalCalculator.CRYSTAL;
-            Assert.Equal(0 * crystal, 0 * new Currency(crystal.Ticker, crystal.DecimalPlaces, crystal.Minters));
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            Assert.Equal(0 * crystal, 0 * Currency.Legacy(crystal.Ticker, crystal.DecimalPlaces, crystal.Minters));
+#pragma warning restore CS0618
             Assert.Equal(0 * CrystalCalculator.CRYSTAL, 0 * currency);
         }
 
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)
         {
-            var goldCurrency = new Currency("NCG", 2, minter: null);
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            var goldCurrency = Currency.Legacy("NCG", 2, null);
+#pragma warning restore CS0618
 
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
             Block<PolymorphicAction<ActionBase>> genesis =
@@ -982,7 +1024,7 @@ decimalPlaces
                 Port = null,
                 NoMiner = true,
                 Render = false,
-                Peers = ImmutableHashSet<Peer>.Empty,
+                Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty,
             };

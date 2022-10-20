@@ -115,7 +115,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
             var action = Assert.IsType<PrepareRewardAssets>(signedTx.CustomActions!.Single().InnerAction);
             Assert.Equal(rewardPoolAddress, action.RewardPoolAddress);
-            Assert.Equal(new Currency("CRYSTAL", 0, minters: null) * 100, action.Assets.Single());
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            Assert.Equal(Currency.Legacy("CRYSTAL", 0, null) * 100, action.Assets.Single());
+#pragma warning restore CS0618
             await StageTransaction(signedTx, hex);
         }
 

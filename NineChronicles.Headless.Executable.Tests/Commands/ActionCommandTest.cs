@@ -1,9 +1,9 @@
 using System;
 using System.IO;
+using System.Linq;
 using Bencodex;
 using Bencodex.Types;
 using Libplanet;
-using Libplanet.Assets;
 using Libplanet.Crypto;
 using Nekoyume.Action;
 using Nekoyume.Model;
@@ -57,6 +57,17 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             {
                 Assert.Contains("hexWithSlash seems invalid. [invalid_code]", _console.Error.ToString());
             }
+        }
+
+        [Theory]
+        [InlineData(false, 0, 192)]
+        [InlineData(false, 5_000_000, 192)]
+        [InlineData(true, 0, 192)]
+        [InlineData(true, 5_000_000, 67)]
+        public void List(bool excludeObsolete, long blockIndex, int expectedCommandCount)
+        {
+            var commandList = _command.List(excludeObsolete, blockIndex);
+            Assert.Equal(expectedCommandCount, commandList.Count());
         }
 
         [Fact]

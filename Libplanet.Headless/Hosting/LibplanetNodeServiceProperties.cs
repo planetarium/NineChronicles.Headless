@@ -30,7 +30,7 @@ namespace Libplanet.Headless.Hosting
 
         public Block<T> GenesisBlock { get; set; }
 
-        public IEnumerable<Peer> Peers { get; set; }
+        public IEnumerable<BoundPeer> Peers { get; set; }
 
         public bool NoMiner { get; set; }
 

@@ -41,17 +41,11 @@ namespace Libplanet.Headless
         public long CountIndex(Guid chainId) =>
             InternalStore.CountIndex(chainId);
 
-        public long CountTransactions() =>
-            InternalStore.CountTransactions();
-
         public bool DeleteBlock(BlockHash blockHash) =>
             InternalStore.DeleteBlock(blockHash);
 
         public void DeleteChainId(Guid chainId) =>
             InternalStore.DeleteChainId(chainId);
-
-        public bool DeleteTransaction(TxId txid) =>
-            InternalStore.DeleteTransaction(txid);
 
         public void ForkBlockIndexes(
             Guid sourceChainId,
@@ -103,9 +97,6 @@ namespace Libplanet.Headless
             int? limit = null
         ) =>
             InternalStore.IterateIndexes(chainId, offset, limit);
-
-        public IEnumerable<TxId> IterateTransactionIds() =>
-            InternalStore.IterateTransactionIds();
 
         public IEnumerable<Guid> ListChainIds() =>
             InternalStore.ListChainIds();
