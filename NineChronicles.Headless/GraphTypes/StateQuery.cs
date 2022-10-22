@@ -169,6 +169,21 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
+            StakeStateType.StakeStateContext? GetStakeState(StateContext ctx, Address agentAddress)
+            {
+                if (ctx.GetState(StakeState.DeriveAddress(agentAddress)) is Dictionary state)
+                {
+                    return new StakeStateType.StakeStateContext(
+                        new StakeState(state),
+                        ctx.AccountStateGetter,
+                        ctx.AccountBalanceGetter,
+                        ctx.BlockIndex
+                    );
+                }
+
+                return null;
+            }
+
             Field<StakeStateType>(
                 name: nameof(StakeState),
                 description: "State for staking.",
@@ -180,17 +195,26 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var address = context.GetArgument<Address>("address");
-                    if (context.Source.GetState(StakeState.DeriveAddress(address)) is Dictionary state)
-                    {
-                        return new StakeStateType.StakeStateContext(
-                            new StakeState(state),
-                            context.Source.AccountStateGetter,
-                            context.Source.AccountBalanceGetter,
-                            context.Source.BlockIndex
-                        );
-                    }
+                    return GetStakeState(context.Source, address);
+                }
+            );
 
-                    return null;
+            Field<NonNullGraphType<ListGraphType<StakeStateType>>>(
+                name: "StakeStates",
+                description: "Staking states having same order as addresses",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ListGraphType<AddressType>>>
+                    {
+                        Name = "addresses",
+                        Description = "Addresses of agent who staked."
+                    }
+                ),
+                resolve: context =>
+                {
+                    return context.GetArgument<List<Address>>("addresses")
+                        .AsParallel()
+                        .AsOrdered()
+                        .Select(address => GetStakeState(context.Source, address));
                 }
             );
 
