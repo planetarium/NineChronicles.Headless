@@ -1,7 +1,3 @@
-using Amazon;
-using Amazon.CognitoIdentity;
-using Amazon.Runtime;
-using Amazon.S3;
 using Cocona;
 using Cocona.Lite;
 using Destructurama;
@@ -167,15 +163,7 @@ namespace NineChronicles.Headless.Executable
             int? blockInterval = null,
             [Option("dev.reorg-interval",
                 Description = "The size of reorg interval. Works only when dev mode is on.")]
-            int? reorgInterval = null,
-            [Option(Description = "The Cognito identity for AWS CloudWatch logging.")]
-            string? awsCognitoIdentity = null,
-            [Option(Description = "The access key for AWS CloudWatch logging.")]
-            string? awsAccessKey = null,
-            [Option(Description = "The secret key for AWS CloudWatch logging.")]
-            string? awsSecretKey = null,
-            [Option(Description = "The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2).")]
-            string? awsRegion = null,
+            int reorgInterval = 0,
             [Option(Description =
                 "The lifetime of each transaction, which uses minute as its unit.")]
             int? txLifeTime = null,
@@ -240,8 +228,7 @@ namespace NineChronicles.Headless.Executable
                 minerPrivateKeyString, networkType, iceServerStrings, peerStrings, rpcServer, rpcListenHost,
                 rpcListenPort, rpcRemoteServer, rpcHttpServer, graphQLServer, graphQLHost, graphQLPort,
                 graphQLSecretTokenPath, noCors, nonblockRenderer, nonblockRendererQueue, strictRendering,
-                logActionRenders, isDev, blockInterval, reorgInterval, awsCognitoIdentity, awsAccessKey, awsSecretKey,
-                awsRegion, confirmations,
+                logActionRenders, isDev, blockInterval, reorgInterval, confirmations,
                 txLifeTime, messageTimeout, tipTimeout, demandBuffer, staticPeerStrings, skipPreload,
                 minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers
             );
@@ -253,48 +240,10 @@ namespace NineChronicles.Headless.Executable
                     o.InitializeSdk = false;
                 });
 #endif
-            bool useBasicAwsCredentials =
-                !(headlessConfig.AwsAccessKey is null) && !(headlessConfig.AwsSecretKey is null);
-            bool useCognitoCredentials = !(headlessConfig.AwsCognitoIdentity is null);
-            if (useBasicAwsCredentials && useCognitoCredentials)
-            {
-                const string message =
-                    "You must choose to use only one credential between basic credential " +
-                    "(i.e., --aws-access-key, --aws-secret-key) and " +
-                    "Cognito credential (i.e., --aws-cognito-identity).";
-                throw new CommandExitedException(message, -1);
-            }
-
             // Clean-up previous temporary log files.
             if (Directory.Exists("_logs"))
             {
                 Directory.Delete("_logs", true);
-            }
-
-            if (useBasicAwsCredentials ^ useCognitoCredentials && !(headlessConfig.AwsRegion is null))
-            {
-                RegionEndpoint regionEndpoint = RegionEndpoint.GetBySystemName(headlessConfig.AwsRegion);
-                AWSCredentials credentials = useCognitoCredentials
-                    ? (AWSCredentials)new CognitoAWSCredentials(headlessConfig.AwsCognitoIdentity, regionEndpoint)
-                    : (AWSCredentials)new BasicAWSCredentials(headlessConfig.AwsAccessKey, headlessConfig.AwsSecretKey);
-
-                var guid = LoadAWSSinkGuid();
-                if (guid is null)
-                {
-                    guid = Guid.NewGuid();
-                    StoreAWSSinkGuid(guid.Value);
-                }
-
-                loggerConf = loggerConf.WriteTo.AmazonS3(
-                    new AmazonS3Client(credentials, regionEndpoint),
-                    "_logs/log.json",
-                    "9c-headless-logs",
-                    formatter: new CompactJsonFormatter(),
-                    rollingInterval: Serilog.Sinks.AmazonS3.RollingInterval.Hour,
-                    batchingPeriod: TimeSpan.FromMinutes(10),
-                    batchSizeLimit: 10000,
-                    bucketPath: guid.ToString()
-                );
             }
 
             Log.Logger = loggerConf.CreateLogger();
@@ -439,38 +388,6 @@ namespace NineChronicles.Headless.Executable
                 throw;
             }
 #endif
-        }
-
-        private Guid? LoadAWSSinkGuid()
-        {
-            string path = AWSSinkGuidPath();
-            if (!File.Exists(path))
-            {
-                Console.Error.WriteLine($"AWSSink id doesn't exist. (path: {path})");
-                return null;
-            }
-
-            string guidString = File.ReadAllText(AWSSinkGuidPath());
-            if (Guid.TryParse(guidString, out Guid guid))
-            {
-                return guid;
-            }
-
-            Console.Error.WriteLine($"AWSSink id seems broken. (id: {guidString}");
-            return null;
-        }
-
-        private void StoreAWSSinkGuid(Guid guid)
-        {
-            File.WriteAllText(AWSSinkGuidPath(), guid.ToString());
-        }
-
-        private string AWSSinkGuidPath()
-        {
-            return Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "planetarium",
-                ".aws_sink_cloudwatch_guid");
         }
     }
 }
