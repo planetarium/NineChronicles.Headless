@@ -86,12 +86,6 @@ namespace NineChronicles.Headless.Executable
 
         public DevConfiguration Dev { get; } = new();
 
-        // AWS
-        public string? AwsCognitoIdentity { get; set; }
-        public string? AwsAccessKey { get; set; }
-        public string? AwsSecretKey { get; set; }
-        public string? AwsRegion { get; set; }
-
         // Settings
         public int Confirmations { get; set; }
         public int TxLifeTime { get; set; } = 1000;
@@ -140,10 +134,6 @@ namespace NineChronicles.Headless.Executable
             bool? isDev,
             int? blockInterval,
             int? reorgInterval,
-            string? awsCognitoIdentity,
-            string? awsAccessKey,
-            string? awsSecretKey,
-            string? awsRegion,
             int? confirmations,
             int? txLifeTime,
             int? messageTimeout,
@@ -192,10 +182,6 @@ namespace NineChronicles.Headless.Executable
             IsDev = isDev ?? IsDev;
             Dev.BlockInterval = blockInterval ?? Dev.BlockInterval;
             Dev.ReorgInterval = reorgInterval ?? Dev.ReorgInterval;
-            AwsCognitoIdentity = awsCognitoIdentity ?? AwsCognitoIdentity;
-            AwsAccessKey = awsAccessKey ?? AwsAccessKey;
-            AwsSecretKey = awsSecretKey ?? AwsSecretKey;
-            AwsRegion = awsRegion ?? AwsRegion;
             Confirmations = confirmations ?? Confirmations;
             TxLifeTime = txLifeTime ?? TxLifeTime;
             MessageTimeout = messageTimeout ?? MessageTimeout;
