@@ -463,6 +463,24 @@ namespace NineChronicles.Headless.GraphTypes
                     return context.Source.GetBalance(address, currency);
                 }
             );
+
+            Field<ListGraphType<NonNullGraphType<AddressType>>>(
+                "raiderList",
+                description: "raider address list by world boss season.",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "raiderListAddress"
+                }),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("raiderListAddress");
+                    if (context.Source.GetState(address) is List list)
+                    {
+                        return list.ToList(StateExtensions.ToAddress);
+                    }
+                    return null;
+                }
+            );
         }
     }
 }
