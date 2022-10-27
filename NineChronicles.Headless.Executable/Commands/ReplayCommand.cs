@@ -2,6 +2,7 @@ using System;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using Bencodex.Json;
 using Bencodex.Types;
@@ -24,7 +25,6 @@ namespace NineChronicles.Headless.Executable.Commands
 {
     public partial class ReplayCommand : CoconaLiteConsoleAppBase
     {
-        // private static readonly Codec _codec = new Codec();
         private readonly IConsole _console;
 
         public ReplayCommand(IConsole console)
@@ -46,9 +46,23 @@ namespace NineChronicles.Headless.Executable.Commands
             string storePath,
             [Option("BLOCK-INDEX", Description = "Target block height to evaluate tx. Tip as default. (Min: 1)" +
                                                  "If you set 100, using block 99 as previous state.")]
-            int blockIndex = 1
+            int blockIndex = 1,
+            [Option("VERBOSE", Description = "Verbose mode.")]
+            bool verbose = false,
+            [Option("OUTPUT-PATH", Description = "An absolute path of output file.")]
+            string? outputPath = null
         )
         {
+            FileStream? outputFs = null;
+            StreamWriter? outputSw = null;
+            if (outputPath is not null)
+            {
+                var fileName = Path.GetFileName(outputPath);
+                Directory.CreateDirectory(outputPath.Replace(fileName, string.Empty));
+                outputFs = new FileStream(outputPath, FileMode.Create);
+                outputSw = new StreamWriter(outputFs);
+            }
+
             try
             {
                 if (blockIndex < 1)
@@ -59,7 +73,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     );
                 }
 
-                // Read json file and parse to tx.
+                // Read json file and parse to transaction.
                 using var stream = new FileStream(txPath, FileMode.Open);
                 stream.Seek(0, SeekOrigin.Begin);
                 var bytes = new byte[stream.Length];
@@ -82,7 +96,9 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 var tx = new Transaction<NCAction>(txDict);
-                _console.Out.WriteLine($"tx id: {tx.Id}");
+                var msg = $"tx id: {tx.Id}";
+                _console.Out.WriteLine(msg);
+                outputSw?.WriteLine(msg);
 
                 // Load store and genesis block.
                 if (!Directory.Exists(storePath))
@@ -100,7 +116,12 @@ namespace NineChronicles.Headless.Executable.Commands
                                        throw new CommandExitedException(
                                            $"The given blockIndex {0} does not found", -1);
                 var genesisBlock = store.GetBlock<NCAction>(genesisBlockHash);
-                _console.Out.WriteLine($"genesis block hash: {genesisBlock.Hash}");
+                if (verbose)
+                {
+                    msg = $"genesis block hash: {genesisBlock.Hash}";
+                    _console.Out.WriteLine(msg);
+                    outputSw?.WriteLine(msg);
+                }
 
                 // Make BlockChain and blocks.
                 var policy = new BlockPolicy<NCAction>();
@@ -116,9 +137,16 @@ namespace NineChronicles.Headless.Executable.Commands
                     renderers: new[] { new BlockPolicySource(Logger.None).BlockRenderer });
 
                 var previousBlock = blockChain[blockIndex - 1];
-                _console.Out.WriteLine($"previous block({previousBlock.Index}) hash: {previousBlock.Hash}");
                 var targetBlock = blockChain[blockIndex];
-                _console.Out.WriteLine($"target block({targetBlock.Index}) hash: {targetBlock.Hash}");
+                if (verbose)
+                {
+                    msg = $"previous block({previousBlock.Index}) hash: {previousBlock.Hash}";
+                    _console.Out.WriteLine(msg);
+                    outputSw?.WriteLine(msg);
+                    msg = $"target block({targetBlock.Index}) hash: {targetBlock.Hash}";
+                    _console.Out.WriteLine(msg);
+                    outputSw?.WriteLine(msg);
+                }
 
                 // Evaluate tx.
                 IAccountStateDelta previousStates = new AccountStateDeltaImpl(
@@ -148,20 +176,54 @@ namespace NineChronicles.Headless.Executable.Commands
                 {
                     if (actionEvaluation.Exception is { } e)
                     {
-                        _console.Out.WriteLine($"action #{actionNum} exception: {e}");
+                        if (verbose)
+                        {
+                            msg = $"action #{actionNum} exception: {e}";
+                            _console.Out.WriteLine(msg);
+                            outputSw?.WriteLine(msg);
+                        }
+
+                        if (e is UnexpectedlyTerminatedActionException utae &&
+                            utae.InnerException is IncompleteBlockStatesException ibse)
+                        {
+                            msg = $"Block #{blockIndex - 1} of the blockchain store does not contain `state`." +
+                                  $" You can check your store like below.\n" +
+                                  $"  `dotnet run -- state check {blockIndex - 1} -s {storePath}`";
+                            _console.Out.WriteLine(msg);
+                            outputSw?.WriteLine(msg);
+                        }
+
                         continue;
                     }
 
                     if (actionEvaluation.Action is NCAction nca)
                     {
-                        _console.Out.WriteLine($"action #{actionNum} type: {nca.InnerAction.GetType().Name}");
+                        var type = nca.InnerAction.GetType();
+                        var actionType = ActionTypeAttribute.ValueOf(type);
+                        msg = $"- action #{actionNum}: {type.Name}(\"{actionType}\")";
+                        _console.Out.WriteLine(msg);
+                        outputSw?.WriteLine(msg);
                     }
 
                     var states = actionEvaluation.OutputStates;
                     var addressNum = 1;
                     foreach (var updatedAddress in states.UpdatedAddresses)
                     {
-                        _console.Out.WriteLine($"updated address #{addressNum}: {updatedAddress}");
+                        if (verbose)
+                        {
+                            var updatedState = states.GetState(updatedAddress);
+                            msg = $"- action #{actionNum} updated address #{addressNum}({updatedAddress}) beginning..";
+                            _console.Out.WriteLine(msg);
+                            outputSw?.WriteLine(msg);
+                            msg = $"{updatedState}";
+                            _console.Out.WriteLine(msg);
+                            outputSw?.WriteLine(msg);
+                            msg = $"- action #{actionNum} updated address #{addressNum}({updatedAddress}) end..";
+                            _console.Out.WriteLine(msg);
+                            outputSw?.WriteLine(msg);
+                            break;
+                        }
+
                         addressNum++;
                     }
 
@@ -173,7 +235,13 @@ namespace NineChronicles.Headless.Executable.Commands
             catch (Exception e)
             {
                 _console.Error.WriteLine(e);
+                outputSw?.WriteLine(Encoding.UTF8.GetBytes(e.ToString()));
                 return -1;
+            }
+            finally
+            {
+                outputSw?.Dispose();
+                outputFs?.Dispose();
             }
         }
     }
