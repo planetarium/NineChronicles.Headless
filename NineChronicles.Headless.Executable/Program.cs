@@ -33,6 +33,7 @@ namespace NineChronicles.Headless.Executable
     [HasSubCommands(typeof(NineChronicles.Headless.Executable.Commands.TxCommand), "tx")]
     [HasSubCommands(typeof(MarketCommand), "market")]
     [HasSubCommands(typeof(GenesisCommand), "genesis")]
+    [HasSubCommands(typeof(ReplayCommand), "replay")]
     public class Program : CoconaLiteConsoleAppBase
     {
         const string SentryDsn = "https://ceac97d4a7d34e7b95e4c445b9b5669e@o195672.ingest.sentry.io/5287621";
