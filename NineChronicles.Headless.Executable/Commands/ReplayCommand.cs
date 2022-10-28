@@ -197,6 +197,88 @@ namespace NineChronicles.Headless.Executable.Commands
             }
         }
 
+        [Command(Description = "Evaluate blocks and check state root hash")]
+        public int Blocks(
+            [Option('s', Description = "An absolute path of block storage.(rocksdb)")]
+            string storePath,
+            [Option('i', Description = "Target start block height. Tip as default. (Min: 1)")]
+            long startIndex = 1,
+            [Option('e', Description = "Target end block height. Tip as default. (Min: 1)" +
+                                       "If not set, same as START-INDEX.")]
+            long? endIndex = null,
+            [Option('v', Description = "Verbose mode.")]
+            bool verbose = false,
+            [Option('o', Description = "The path of output file.")]
+            string? outputPath = null)
+        {
+            var (outputFs, outputSw) =
+                GetOutputFileStream(outputPath, "replay-blocks-output.log");
+            var disposables = new List<IDisposable?> { outputFs, outputSw };
+            try
+            {
+                if (startIndex < 1)
+                {
+                    throw new CommandExitedException(
+                        "START-INDEX must be greater than or equal to 1.",
+                        -1
+                    );
+                }
+
+                if (!endIndex.HasValue)
+                {
+                    endIndex = startIndex;
+                }
+                else if (endIndex < startIndex)
+                {
+                    throw new CommandExitedException(
+                        "END-INDEX must be greater than or equal to START-INDEX.",
+                        -1
+                    );
+                }
+
+                if (verbose)
+                {
+                    var msg = $"Block protocol version(bpv): {BlockMetadata.CurrentProtocolVersion}";
+                    _console.Out.WriteLine(msg);
+                    outputSw?.WriteLine(msg);
+                }
+
+                var (store, stateStore, blockChain) = LoadBlockchain(storePath);
+                disposables.Add(store);
+                disposables.Add(stateStore);
+                for (var i = startIndex; i < endIndex + 1; i++)
+                {
+                    var block = blockChain[i];
+                    if (verbose)
+                    {
+                        var msg = $"- block #{block.Index}: bpv({block.ProtocolVersion})" +
+                                  $", hash({block.Hash}), state-root-hash({block.StateRootHash})";
+                        _console.Out.WriteLine(msg);
+                        outputSw?.WriteLine(msg);
+                    }
+
+                    blockChain.ExecuteActions(block);
+                }
+
+                return 0;
+            }
+            catch (Exception e)
+            {
+                _console.Error.WriteLine(e);
+                outputSw?.WriteLine(Encoding.UTF8.GetBytes(e.ToString()));
+                return -1;
+            }
+            finally
+            {
+                foreach (var disposable in disposables)
+                {
+                    disposable?.Dispose();
+                }
+
+                disposables.Clear();
+            }
+        }
+
         private static (FileStream? fs, StreamWriter? sw) GetOutputFileStream(
             string? outputPath,
             string defaultFileName)
