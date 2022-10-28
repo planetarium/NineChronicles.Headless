@@ -10,6 +10,7 @@ using Libplanet.Explorer.GraphTypes;
 using Libplanet.Tx;
 using Microsoft.Extensions.Configuration;
 using Nekoyume.Action;
+using Nekoyume.Helper;
 using Nekoyume.Model.State;
 using Serilog;
 using System;
@@ -154,17 +155,10 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "A string value of the value to be transferred.",
                         Name = "amount",
                     },
-                    new QueryArgument<NonNullGraphType<LongGraphType>>
+                    new QueryArgument<NonNullGraphType<CurrencyEnumType>>
                     {
-                        Description = "A sender's transaction counter. You can get it through nextTxNonce().",
-                        Name = "txNonce",
-                    },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Description = "A hex-encoded value for address of currency to be transferred. The default is the NCG's address.",
-                        // Convert address type to hex string for graphdocs
-                        DefaultValue = GoldCurrencyState.Address.ToHex(),
-                        Name = "currencyAddress"
+                        Description = "A currency type to be transferred.",
+                        Name = "currency",
                     },
                     new QueryArgument<StringGraphType>
                     {
@@ -190,18 +184,21 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     BlockChain<NCAction> blockChain = service.BlockChain;
-                    var currency = new GoldCurrencyState(
-                        (Dictionary)blockChain.GetState(new Address(context.GetArgument<string>("currencyAddress")))
-                    ).Currency;
+                    Currency currency = context.GetArgument<CurrencyEnum>("currency") switch
+                    {
+                        CurrencyEnum.NCG => new GoldCurrencyState(
+                            (Dictionary)standaloneContext.BlockChain!.GetState(GoldCurrencyState.Address)
+                        ).Currency,
+                        CurrencyEnum.CRYSTAL => CrystalCalculator.CRYSTAL,
+                        _ => throw new ExecutionError("Unsupported Currency type.")
+                    };
                     FungibleAssetValue amount =
                         FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
 
                     Address recipient = context.GetArgument<Address>("recipient");
                     string? memo = context.GetArgument<string?>("memo");
-                    Transaction<NCAction> tx = Transaction<NCAction>.Create(
-                        context.GetArgument<long>("txNonce"),
+                    Transaction<NCAction> tx = blockChain.MakeTransaction(
                         privateKey,
-                        blockChain.Genesis.Hash,
                         new NCAction[]
                         {
                             new TransferAsset(
