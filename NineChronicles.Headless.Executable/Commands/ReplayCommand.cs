@@ -131,15 +131,12 @@ namespace NineChronicles.Headless.Executable.Commands
                             outputSw?.WriteLine(msg);
                         }
 
-                        if (e is UnexpectedlyTerminatedActionException utae &&
-                            utae.InnerException is IncompleteBlockStatesException ibse)
-                        {
-                            msg = $"Block #{blockIndex - 1} of the blockchain store does not contain `state`." +
-                                  $" You can check your store like below.\n" +
-                                  $"  `dotnet run -- state check {blockIndex - 1} -s {storePath}`";
-                            _console.Out.WriteLine(msg);
-                            outputSw?.WriteLine(msg);
-                        }
+                        LoggingAboutIncompleteBlockStatesException(
+                            e,
+                            blockIndex - 1,
+                            storePath,
+                            outputSw,
+                            "Tip: ");
 
                         continue;
                     }
@@ -203,7 +200,7 @@ namespace NineChronicles.Headless.Executable.Commands
             [Option('i', Description = "Target start block height. Tip as default. (Min: 1)")]
             long startIndex = 1,
             [Option('e', Description = "Target end block height. Tip as default. (Min: 1)" +
-                                       "If not set, same as START-INDEX.")]
+                                       "If not set, same as argument \"-i\".")]
             long? endIndex = null,
             [Option('r', Description = "Repeat count. (Min: 1)" +
                                        "If not set, default is 1.")]
@@ -237,14 +234,15 @@ namespace NineChronicles.Headless.Executable.Commands
                         -1
                     );
                 }
-                
-                var msg = $"Replay blocks start from #{startIndex} to #{endIndex}.(repeat: {repeatCount})";
+
+                var msg = $"Replay blocks start from #{startIndex} to #{endIndex}." +
+                          $"(range: {endIndex - startIndex + 1}, repeat: {repeatCount})";
                 _console.Out.WriteLine(msg);
                 outputSw?.WriteLine(msg);
 
                 if (verbose)
                 {
-                    msg = $"Block protocol version(bpv): {BlockMetadata.CurrentProtocolVersion}";
+                    msg = $"Local block protocol version(bpv): {BlockMetadata.CurrentProtocolVersion}";
                     _console.Out.WriteLine(msg);
                     outputSw?.WriteLine(msg);
                 }
@@ -252,48 +250,43 @@ namespace NineChronicles.Headless.Executable.Commands
                 var (store, stateStore, blockChain) = LoadBlockchain(storePath);
                 disposables.Add(store);
                 disposables.Add(stateStore);
-                for (var i = startIndex; i < endIndex + 1; i++)
+                var currentBlockIndex = startIndex;
+                while (currentBlockIndex <= endIndex)
                 {
-                    var block = blockChain[i];
+                    var block = blockChain[currentBlockIndex++];
                     if (verbose)
                     {
                         msg = $"- block #{block.Index} evaluating start: bpv({block.ProtocolVersion})" +
-                                  $", hash({block.Hash}), state-root-hash({block.StateRootHash})";
+                              $", bloc-hash({block.Hash}), state-root-hash({block.StateRootHash})" +
+                              $", tx-count({block.Transactions.Count})";
                         _console.Out.WriteLine(msg);
                         outputSw?.WriteLine(msg);
                     }
 
-                    for (var j = 0; j < repeatCount; j++)
+                    for (var i = 0; i < repeatCount; i++)
                     {
                         if (verbose)
                         {
-                            if (j == 0)
-                            {
-                                msg = $"-- repeat #{j + 1}..";
-                                _console.Out.Write(msg);
-                                outputSw?.Write(msg);
-                            }
-                            else
-                            {
-                                msg = $" #{j + 1}..";
-                                _console.Out.Write(msg);
-                                outputSw?.Write(msg);
-                            }
+                            msg = $"-- repeat #{i + 1} / {repeatCount}";
+                            _console.Out.Write(msg);
+                            outputSw?.Write(msg);
                         }
 
                         try
                         {
-                            var actionEvaluations =
-                                blockChain.ExecuteActions(block);
+                            var actionEvaluations = blockChain.ExecuteActions(
+                                block,
+                                StateCompleterSet<NCAction>.Reject);
 
                             if (verbose)
                             {
-                                msg = actionEvaluations.Any(e => e.Exception is not null)
-                                    ? "(x)"
-                                    : "(o)";
-
-                                _console.Out.Write(msg);
-                                outputSw?.Write(msg);
+                                msg = "(o)";
+                                _console.Out.WriteLine(msg);
+                                outputSw?.WriteLine(msg);
+                                LoggingActionEvaluations(actionEvaluations, outputSw);
+                                msg = "- block #{block.Index} evaluating end successfully.";
+                                _console.Out.WriteLine(msg);
+                                outputSw?.WriteLine(msg);
                             }
                         }
                         catch (InvalidBlockStateRootHashException)
@@ -314,15 +307,7 @@ namespace NineChronicles.Headless.Executable.Commands
                             var actionEvaluations = actionEvaluator.Evaluate(
                                 block,
                                 StateCompleterSet<NCAction>.Reject);
-                            for (var k = 0; k < actionEvaluations.Count; k++)
-                            {
-                                var actionEvaluation = actionEvaluations[k];
-                                msg = actionEvaluation.Exception is null
-                                    ? $"--- action evaluation #{k} exception: null"
-                                    : $"--- action evaluation #{k} exception: {actionEvaluation.Exception}";
-                                _console.Out.WriteLine(msg);
-                                outputSw?.WriteLine(msg);
-                            }
+                            LoggingActionEvaluations(actionEvaluations, outputSw);
 
                             msg = $"- block #{block.Index} evaluating failed with ";
                             _console.Out.Write(msg);
@@ -337,20 +322,13 @@ namespace NineChronicles.Headless.Executable.Commands
                                 throw;
                             }
 
-                            _console.Out.Write("\n");
-                            outputSw?.Write("\n");
+                            _console.Out.Write("x\n");
+                            outputSw?.Write("x\n");
                             throw;
                         }
                     }
-
-                    if (verbose)
-                    {
-                        msg = $"\n- block #{block.Index} evaluating end successfully.";
-                        _console.Out.WriteLine(msg);
-                        outputSw?.WriteLine(msg);
-                    }
                 }
-                
+
                 msg = "Replay blocks end successfully.";
                 _console.Out.WriteLine(msg);
                 outputSw?.WriteLine(msg);
@@ -482,6 +460,60 @@ namespace NineChronicles.Headless.Executable.Commands
                 trieGetter: hash => stateStore.GetStateRoot(blockChain[hash].StateRootHash),
                 genesisHash: genesisBlockHash,
                 nativeTokenPredicate: policy.NativeTokens.Contains);
+        }
+
+        private void LoggingAboutIncompleteBlockStatesException(
+            Exception? e,
+            long blockIndex,
+            string storePath,
+            TextWriter? textWriter,
+            string prefix = "")
+        {
+            if (e is not UnexpectedlyTerminatedActionException
+                {
+                    InnerException: IncompleteBlockStatesException
+                })
+            {
+                return;
+            }
+
+            var msg = $"{prefix}Block #{blockIndex} of the blockchain store does not contain `state`." +
+                      $" You can check your store like below.\n" +
+                      $"  `dotnet run -- state check {blockIndex} -s {storePath}`";
+            _console.Out.WriteLine(msg);
+            textWriter?.WriteLine(msg);
+        }
+
+        private void LoggingActionEvaluations(
+            IReadOnlyList<ActionEvaluation> actionEvaluations,
+            TextWriter? textWriter)
+        {
+            for (var i = 0; i < actionEvaluations.Count; i++)
+            {
+                var actionEvaluation = actionEvaluations[i];
+                var actionType = actionEvaluation.Action is NCAction nca
+                    ? ActionTypeAttribute.ValueOf(nca.InnerAction.GetType())
+                    : actionEvaluation.Action.GetType().Name;
+                var prefix = $"--- action evaluation #{i + 1}";
+                var msg = prefix +
+                          $" tx-id({actionEvaluation.InputContext.TxId})" +
+                          $", action-type(\"{actionType}\")";
+                if (actionEvaluation.Exception is null)
+                {
+                    msg += ", no-exception";
+                    _console.Out.WriteLine(msg);
+                    textWriter?.WriteLine(msg);
+
+                    continue;
+                }
+
+                msg += ", exception below";
+                _console.Out.WriteLine(msg);
+                textWriter?.WriteLine(msg);
+                msg = $"---- {actionEvaluation.Exception}";
+                _console.Out.WriteLine(msg);
+                textWriter?.WriteLine(msg);
+            }
         }
     }
 }
