@@ -51,8 +51,7 @@ namespace NineChronicles.Headless.Executable.Commands
             [Option('v', Description = "Verbose mode.")]
             bool verbose = false,
             [Option('o', Description = "An path of output file.")]
-            string? outputPath = null
-        )
+            string outputPath = "")
         {
             var (outputFs, outputSw) =
                 GetOutputFileStream(outputPath, "replay-tx-output.log");
@@ -206,10 +205,13 @@ namespace NineChronicles.Headless.Executable.Commands
             [Option('e', Description = "Target end block height. Tip as default. (Min: 1)" +
                                        "If not set, same as START-INDEX.")]
             long? endIndex = null,
+            [Option('r', Description = "Repeat count. (Min: 1)" +
+                                       "If not set, default is 1.")]
+            int repeatCount = 1,
             [Option('v', Description = "Verbose mode.")]
             bool verbose = false,
             [Option('o', Description = "The path of output file.")]
-            string? outputPath = null)
+            string outputPath = "")
         {
             var (outputFs, outputSw) =
                 GetOutputFileStream(outputPath, "replay-blocks-output.log");
@@ -280,12 +282,12 @@ namespace NineChronicles.Headless.Executable.Commands
         }
 
         private static (FileStream? fs, StreamWriter? sw) GetOutputFileStream(
-            string? outputPath,
+            string outputPath,
             string defaultFileName)
         {
             FileStream? outputFs = null;
             StreamWriter? outputSw = null;
-            if (outputPath is null)
+            if (string.IsNullOrEmpty(outputPath))
             {
                 return (outputFs, outputSw);
             }
