@@ -60,7 +60,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<AddressType>>(
                 name: "raiderListAddress",
-                description: "raider address list by world boss season.",
+                description: "raider list address by world boss season.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
