@@ -215,7 +215,7 @@ namespace NineChronicles.Headless.Executable.Commands
         {
             var (outputFs, outputSw) =
                 GetOutputFileStream(outputPath, "replay-blocks-output.log");
-            var disposables = new List<IDisposable?> { outputFs, outputSw };
+            var disposables = new List<IDisposable?> { outputSw, outputFs };
             try
             {
                 if (startIndex < 1)
@@ -237,10 +237,14 @@ namespace NineChronicles.Headless.Executable.Commands
                         -1
                     );
                 }
+                
+                var msg = $"Replay blocks start from #{startIndex} to #{endIndex}.(repeat: {repeatCount})";
+                _console.Out.WriteLine(msg);
+                outputSw?.WriteLine(msg);
 
                 if (verbose)
                 {
-                    var msg = $"Block protocol version(bpv): {BlockMetadata.CurrentProtocolVersion}";
+                    msg = $"Block protocol version(bpv): {BlockMetadata.CurrentProtocolVersion}";
                     _console.Out.WriteLine(msg);
                     outputSw?.WriteLine(msg);
                 }
@@ -253,21 +257,113 @@ namespace NineChronicles.Headless.Executable.Commands
                     var block = blockChain[i];
                     if (verbose)
                     {
-                        var msg = $"- block #{block.Index}: bpv({block.ProtocolVersion})" +
+                        msg = $"- block #{block.Index} evaluating start: bpv({block.ProtocolVersion})" +
                                   $", hash({block.Hash}), state-root-hash({block.StateRootHash})";
                         _console.Out.WriteLine(msg);
                         outputSw?.WriteLine(msg);
                     }
 
-                    blockChain.ExecuteActions(block);
+                    for (var j = 0; j < repeatCount; j++)
+                    {
+                        if (verbose)
+                        {
+                            if (j == 0)
+                            {
+                                msg = $"-- repeat #{j + 1}..";
+                                _console.Out.Write(msg);
+                                outputSw?.Write(msg);
+                            }
+                            else
+                            {
+                                msg = $" #{j + 1}..";
+                                _console.Out.Write(msg);
+                                outputSw?.Write(msg);
+                            }
+                        }
+
+                        try
+                        {
+                            var actionEvaluations =
+                                blockChain.ExecuteActions(block);
+
+                            if (verbose)
+                            {
+                                msg = actionEvaluations.Any(e => e.Exception is not null)
+                                    ? "(x)"
+                                    : "(o)";
+
+                                _console.Out.Write(msg);
+                                outputSw?.Write(msg);
+                            }
+                        }
+                        catch (InvalidBlockStateRootHashException)
+                        {
+                            if (!verbose)
+                            {
+                                throw;
+                            }
+
+                            msg = "(x)";
+                            _console.Out.WriteLine(msg);
+                            outputSw?.WriteLine(msg);
+
+                            var actionEvaluator = GetActionEvaluator(
+                                blockChain,
+                                stateStore,
+                                blockChain.Genesis.Hash);
+                            var actionEvaluations = actionEvaluator.Evaluate(
+                                block,
+                                StateCompleterSet<NCAction>.Reject);
+                            for (var k = 0; k < actionEvaluations.Count; k++)
+                            {
+                                var actionEvaluation = actionEvaluations[k];
+                                msg = actionEvaluation.Exception is null
+                                    ? $"--- action evaluation #{k} exception: null"
+                                    : $"--- action evaluation #{k} exception: {actionEvaluation.Exception}";
+                                _console.Out.WriteLine(msg);
+                                outputSw?.WriteLine(msg);
+                            }
+
+                            msg = $"- block #{block.Index} evaluating failed with ";
+                            _console.Out.Write(msg);
+                            outputSw?.Write(msg);
+
+                            throw;
+                        }
+                        catch (Exception)
+                        {
+                            if (!verbose)
+                            {
+                                throw;
+                            }
+
+                            _console.Out.Write("\n");
+                            outputSw?.Write("\n");
+                            throw;
+                        }
+                    }
+
+                    if (verbose)
+                    {
+                        msg = $"\n- block #{block.Index} evaluating end successfully.";
+                        _console.Out.WriteLine(msg);
+                        outputSw?.WriteLine(msg);
+                    }
                 }
+                
+                msg = "Replay blocks end successfully.";
+                _console.Out.WriteLine(msg);
+                outputSw?.WriteLine(msg);
 
                 return 0;
             }
             catch (Exception e)
             {
                 _console.Error.WriteLine(e);
-                outputSw?.WriteLine(Encoding.UTF8.GetBytes(e.ToString()));
+                outputSw?.WriteLine(e);
+                var msg = "Replay blocks end with exception.";
+                _console.Out.WriteLine(msg);
+                outputSw?.WriteLine(msg);
                 return -1;
             }
             finally
@@ -372,6 +468,20 @@ namespace NineChronicles.Headless.Executable.Commands
             }
 
             return new Transaction<NCAction>(txDict);
+        }
+
+        private ActionEvaluator<NCAction> GetActionEvaluator(
+            BlockChain<NCAction> blockChain,
+            IStateStore stateStore,
+            BlockHash genesisBlockHash)
+        {
+            var policy = new BlockPolicySource(Logger.None).GetPolicy();
+            return new ActionEvaluator<NCAction>(
+                policy.BlockAction,
+                blockChainStates: blockChain,
+                trieGetter: hash => stateStore.GetStateRoot(blockChain[hash].StateRootHash),
+                genesisHash: genesisBlockHash,
+                nativeTokenPredicate: policy.NativeTokens.Contains);
         }
     }
 }
