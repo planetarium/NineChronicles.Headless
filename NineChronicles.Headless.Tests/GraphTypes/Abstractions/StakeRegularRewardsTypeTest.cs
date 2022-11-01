@@ -35,7 +35,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.Abstractions
             StakeRegularFixedRewardSheet.Row fixedRewardRow = Fixtures.TableSheetsFX.StakeRegularFixedRewardSheet[level]!;
             StakeRegularRewardSheet.RewardInfo[] rewards = rewardRow.Rewards.ToArray();
             StakeRegularFixedRewardSheet.RewardInfo[] bonusRewards = fixedRewardRow.Rewards.ToArray();
-            Assert.Equal(2, rewards.Length);
+            Assert.Equal(3, rewards.Length);
             Assert.Single(bonusRewards);
             var queryResult = await ExecuteQueryAsync<StakeRegularRewardsType>(
                 query,
@@ -57,6 +57,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes.Abstractions
                     {
                         ["itemId"] = rewards[1].ItemId,
                         ["rate"] = rewards[1].Rate,
+                    },
+                    new Dictionary<string, object>
+                    {
+                        ["itemId"] = rewards[2].ItemId,
+                        ["rate"] = rewards[2].Rate,
                     },
                 },
                 ["bonusRewards"] = new object[]
