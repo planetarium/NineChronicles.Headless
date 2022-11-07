@@ -27,13 +27,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "world boss season id."
                     }
                 ),
-                resolve: context =>
-                {
-                    var avatarAddress = context.GetArgument<Address>("avtarAddress");
-                    var raidId = context.GetArgument<int>("raidId");
-                    return Addresses.GetRaiderAddress(avatarAddress, raidId);
-                }
-            );
+                resolve: context => Addresses.GetRaiderAddress(context.GetArgument<Address>("avatarAddress"), context.GetArgument<int>("raidId")));
 
             Field<NonNullGraphType<AddressType>>(
                 name: "worldBossAddress",
@@ -45,12 +39,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "world boss season id."
                     }
                 ),
-                resolve: context =>
-                {
-                    var raidId = context.GetArgument<int>("raidId");
-                    return Addresses.GetWorldBossAddress(raidId);
-                }
-            );
+                resolve: context => Addresses.GetWorldBossAddress(context.GetArgument<int>("raidId")));
 
             Field<NonNullGraphType<AddressType>>(
                 name: "worldBossKillRewardRecordAddress",
@@ -67,13 +56,19 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "world boss season id."
                     }
                 ),
-                resolve: context =>
-                {
-                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
-                    var raidId = context.GetArgument<int>("raidId");
-                    return Addresses.GetWorldBossKillRewardRecordAddress(avatarAddress, raidId);
-                }
-            );
+                resolve: context => Addresses.GetWorldBossKillRewardRecordAddress(context.GetArgument<Address>("avatarAddress"), context.GetArgument<int>("raidId")));
+
+            Field<NonNullGraphType<AddressType>>(
+                name: "raiderListAddress",
+                description: "raider list address by world boss season.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "raidId",
+                        Description = "world boss season id."
+                    }
+                ),
+                resolve: context => Addresses.GetRaiderListAddress(context.GetArgument<int>("raidId")));
         }
     }
 }

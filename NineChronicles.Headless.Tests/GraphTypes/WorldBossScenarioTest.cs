@@ -7,7 +7,6 @@ using GraphQL.Execution;
 using Libplanet;
 using Libplanet.Assets;
 using Nekoyume;
-using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
@@ -23,6 +22,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         private readonly Address _raiderStateAddress;
         private readonly Address _worldBossAddress;
         private readonly Address _worldBossKillRewardRecordAddress;
+        private readonly Address _raiderListAddress;
         private readonly RaiderState _raiderState;
         private readonly StateContext _stateContext;
         private readonly WorldBossState _worldBossState;
@@ -31,9 +31,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public WorldBossScenarioTest()
         {
             _avatarAddress = new Address("4FcaCfCeC22717789Cb00b427b95B476BBAaA5b2");
-            _raiderStateAddress = new Address("Bd9a12559be0F746Cade6272b6ACb1F1426C8c5D");
+            _raiderStateAddress = Addresses.GetRaiderAddress(_avatarAddress, 1);
             _worldBossAddress = Addresses.GetWorldBossAddress(1);
-            _worldBossKillRewardRecordAddress = new Address("0xE9653E92a5169bFbA66a4CbC07780ED370986d98");
+            _worldBossKillRewardRecordAddress = Addresses.GetWorldBossKillRewardRecordAddress(_avatarAddress, 1);
+            _raiderListAddress = Addresses.GetRaiderListAddress(1);
             _stateContext = new StateContext(GetStatesMock, GetBalanceMock, 1L);
             _raiderState = new RaiderState
             {
@@ -75,7 +76,7 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
 }}";
             var addressQueryResult = await ExecuteQueryAsync<AddressQuery>(addressQuery);
             var addressData = (Dictionary<string, object>)((ExecutionNode)addressQueryResult.Data!).ToValue()!;
-            Assert.Equal("0xBd9a12559be0F746Cade6272b6ACb1F1426C8c5D", addressData["raiderAddress"]);
+            Assert.Equal("0xa316187bAC1fC6be9B943c8E19c6047DE12D236D", addressData["raiderAddress"]);
 
             var raiderAddress = stateExist ? addressData["raiderAddress"] : default;
             // Get RaiderState.
@@ -229,6 +230,40 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
                 Assert.Equal(expectedData, stateData);
             }
         }
+
+        [Theory]
+        [InlineData(true, 0L, false)]
+        [InlineData(false, 0L, false)]
+        [InlineData(true, 150L, true)]
+        [InlineData(false, 150L, true)]
+        public async Task RaiderList(bool stateExist, long blockIndex, bool prev)
+        {
+            int raidId = await GetRaidId(blockIndex, prev);
+            // Find address.
+            var addressQuery = $@"query {{ raiderListAddress(raidId: {raidId}) }}";
+            var addressQueryResult = await ExecuteQueryAsync<AddressQuery>(addressQuery);
+            var addressData = (Dictionary<string, object>)((ExecutionNode)addressQueryResult.Data!).ToValue()!;
+            Assert.Equal("0x40011eD48A8f6CFA779927B0867BFAa7Ac6d949b", addressData["raiderListAddress"]);
+            Assert.Equal(_raiderListAddress.ToString(), addressData["raiderListAddress"]);
+
+            var raiderListAddress = stateExist ? addressData["raiderListAddress"] : default;
+            // Get raider address list
+            var stateQuery = $@"query {{
+    raiderList(raiderListAddress: ""{raiderListAddress}"")
+}}";
+
+            var stateQueryResult = await ExecuteQueryAsync<StateQuery>(stateQuery, source: _stateContext);
+            var stateData =
+                ((Dictionary<string, object>)((ExecutionNode)stateQueryResult.Data!).ToValue()!)[
+                    "raiderList"];
+            Assert.Equal(!stateExist, stateData is null);
+            if (stateExist)
+            {
+                var result = (object[])stateData!;
+                var resultAddress = Assert.Single(result);
+                Assert.Equal(_raiderStateAddress.ToString(), resultAddress);
+            }
+        }
         private IValue? GetStateMock(Address address)
         {
             if (address.Equals(_raiderStateAddress))
@@ -252,6 +287,11 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
             if (address.Equals(_worldBossKillRewardRecordAddress))
             {
                 return _worldBossKillRewardRecord.Serialize();
+            }
+
+            if (address.Equals(_raiderListAddress))
+            {
+                return List.Empty.Add(_raiderStateAddress.Serialize());
             }
 
             return null;
