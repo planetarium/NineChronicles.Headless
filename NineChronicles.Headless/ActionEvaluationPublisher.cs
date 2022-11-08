@@ -82,7 +82,7 @@ namespace NineChronicles.Headless
             };
 
             GrpcChannel channel = GrpcChannel.ForAddress($"http://{_host}:{_port}", options);
-            Client client = await Client.CreateAsync(channel, clientAddress, _context);
+            Client client = await Client.CreateAsync(channel, clientAddress, _context, _sentryTraces);
             if (_clients.TryAdd(clientAddress, client))
             {
                 if (clientAddress == default)
@@ -95,8 +95,7 @@ namespace NineChronicles.Headless
                     _blockRenderer,
                     _actionRenderer,
                     _exceptionRenderer,
-                    _nodeStatusRenderer,
-                    _sentryTraces
+                    _nodeStatusRenderer
                 );
             }
             else
@@ -186,18 +185,26 @@ namespace NineChronicles.Headless
 
             public ImmutableHashSet<Address> TargetAddresses { get; set; }
 
-            private Client(IActionEvaluationHub hub, Address clientAddress, RpcContext context)
+            public readonly ConcurrentDictionary<string, ITransaction> SentryTraces;
+
+            private Client(
+                IActionEvaluationHub hub,
+                Address clientAddress,
+                RpcContext context,
+                ConcurrentDictionary<string, ITransaction> sentryTraces)
             {
                 _hub = hub;
                 _clientAddress = clientAddress;
                 _context = context;
                 TargetAddresses = ImmutableHashSet<Address>.Empty;
+                SentryTraces = sentryTraces;
             }
 
             public static async Task<Client> CreateAsync(
                 GrpcChannel channel,
                 Address clientAddress,
-                RpcContext context)
+                RpcContext context,
+                ConcurrentDictionary<string, ITransaction> sentryTraces)
             {
                 IActionEvaluationHub hub = await StreamingHubClient.ConnectAsync<IActionEvaluationHub, IActionEvaluationHubReceiver>(
                     channel,
@@ -205,15 +212,14 @@ namespace NineChronicles.Headless
                 );
                 await hub.JoinAsync(clientAddress.ToHex());
 
-                return new Client(hub, clientAddress, context);
+                return new Client(hub, clientAddress, context, sentryTraces);
             }
 
             public void Subscribe(
                 BlockRenderer blockRenderer,
                 ActionRenderer actionRenderer,
                 ExceptionRenderer exceptionRenderer,
-                NodeStatusRenderer nodeStatusRenderer,
-                ConcurrentDictionary<string, ITransaction> sentryTraces)
+                NodeStatusRenderer nodeStatusRenderer)
             {
                 _blockSubscribe = blockRenderer.BlockSubject
                     .SubscribeOn(NewThreadScheduler.Default)
@@ -362,7 +368,7 @@ namespace NineChronicles.Headless
                                 Log.Error(e, "[{ClientAddress}] Skip broadcasting render due to the unexpected exception", _clientAddress);
                             }
 
-                            sentryTraces.TryRemove(ev.TxId.ToString() ?? "", out var sentryTrace);
+                            SentryTraces.TryRemove(ev.TxId.ToString() ?? "", out var sentryTrace);
                             if (sentryTrace != null)
                             {
                                 var span = sentryTrace.GetLastActiveSpan();

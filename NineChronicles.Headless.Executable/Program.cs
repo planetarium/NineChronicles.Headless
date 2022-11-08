@@ -361,8 +361,7 @@ namespace NineChronicles.Headless.Executable
                     services.AddSingleton(_ => new ConcurrentDictionary<string, ITransaction>());
                 });
                 hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, standaloneContext);
-                if (headlessConfig.RpcServer)
-                {
+                if (headlessConfig.RpcServer) {
                     hostBuilder.UseNineChroniclesRPC(
                         NineChroniclesNodeServiceProperties
                             .GenerateRpcNodeServiceProperties(
