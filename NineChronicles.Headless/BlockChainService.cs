@@ -27,6 +27,7 @@ using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using NodeExceptionType = Libplanet.Headless.NodeExceptionType;
 using Libplanet.Headless;
 using Nekoyume.Model.State;
+using Sentry;
 
 namespace NineChronicles.Headless
 {
@@ -40,13 +41,15 @@ namespace NineChronicles.Headless
         private LibplanetNodeServiceProperties<NCAction> _libplanetNodeServiceProperties;
         private DelayedRenderer<NCAction> _delayedRenderer;
         private ActionEvaluationPublisher _publisher;
+        private ConcurrentDictionary<string, ITransaction> _sentryTraces;
+
         public BlockChainService(
             BlockChain<NCAction> blockChain,
             Swarm<NCAction> swarm,
             RpcContext context,
             LibplanetNodeServiceProperties<NCAction> libplanetNodeServiceProperties,
-            ActionEvaluationPublisher actionEvaluationPublisher
-        )
+            ActionEvaluationPublisher actionEvaluationPublisher,
+            ConcurrentDictionary<string, ITransaction> sentryTraces)
         {
             _blockChain = blockChain;
             _delayedRenderer = blockChain.GetDelayedRenderer();
@@ -55,6 +58,7 @@ namespace NineChronicles.Headless
             _codec = new Codec();
             _libplanetNodeServiceProperties = libplanetNodeServiceProperties;
             _publisher = actionEvaluationPublisher;
+            _sentryTraces = sentryTraces;
         }
 
         public UnaryResult<bool> PutTransaction(byte[] txBytes)
@@ -66,12 +70,20 @@ namespace NineChronicles.Headless
 
                 try
                 {
+                    var sentryTrace = SentrySdk.StartTransaction(
+                        tx.CustomActions[0]?.GetInnerActionTypeName() ?? "NoAction",
+                        "PutTransaction");
+                    sentryTrace.SetTag("TxId", tx.Id.ToString());
+                    var span = sentryTrace.StartChild("BroadcastTX");
+
                     tx.Validate();
                     Log.Debug("PutTransaction: (nonce: {nonce}, id: {id})", tx.Nonce, tx.Id);
                     Log.Debug("StagedTransactions: {txIds}", string.Join(", ", _blockChain.GetStagedTransactionIds()));
                     _blockChain.StageTransaction(tx);
                     _swarm.BroadcastTxs(new[] { tx });
 
+                    span.Finish();
+                    _sentryTraces.TryAdd(tx.Id.ToString(), sentryTrace);
                     return UnaryResult(true);
                 }
                 catch (InvalidTxException ite)

@@ -16,6 +16,7 @@ using Sentry;
 using Serilog;
 using Serilog.Formatting.Compact;
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
@@ -36,15 +37,12 @@ namespace NineChronicles.Headless.Executable
     [HasSubCommands(typeof(ReplayCommand), "replay")]
     public class Program : CoconaLiteConsoleAppBase
     {
-        const string SentryDsn = "https://ceac97d4a7d34e7b95e4c445b9b5669e@o195672.ingest.sentry.io/5287621";
+        const string SentryDsn = "https://625a444555a547e8822ee86d4f38f046@o195672.ingest.sentry.io/6197051";
 
         static async Task Main(string[] args)
         {
             // https://docs.microsoft.com/ko-kr/aspnet/core/grpc/troubleshoot?view=aspnetcore-6.0#call-insecure-grpc-services-with-net-core-client
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-#if SENTRY || ! DEBUG
-            using var _ = SentrySdk.Init(ConfigureSentryOptions);
-#endif
             await CoconaLiteApp.CreateHostBuilder()
                 .ConfigureServices(services =>
                 {
@@ -56,13 +54,6 @@ namespace NineChronicles.Headless.Executable
 
         static void ConfigureSentryOptions(SentryOptions o)
         {
-            o.SendDefaultPii = true;
-            o.Dsn = new Dsn(SentryDsn);
-            // TODO: o.Release 설정하면 좋을 것 같은데 빌드 버전 체계가 아직 없어서 어떻게 해야 할 지...
-            // https://docs.sentry.io/workflow/releases/?platform=csharp
-#if DEBUG
-            o.Debug = true;
-#endif
         }
 
         [PrimaryCommand]
@@ -189,6 +180,8 @@ namespace NineChronicles.Headless.Executable
             [Option("config", new[] { 'C' },
                 Description = "Absolute path of \"appsettings.json\" file to provide headless configurations.")]
             string? configPath = "appsettings.json",
+            [Option(Description = "Trace sample rate for sentry")]
+            double? sentryTraceSampleRate = null,
             [Ignore] CancellationToken? cancellationToken = null
         )
         {
@@ -209,7 +202,7 @@ namespace NineChronicles.Headless.Executable
             {
                 configurationBuilder.AddJsonFile(configPath);
             }
-
+            
             // Setup logger.
             var configuration = configurationBuilder.Build();
             var loggerConf = new LoggerConfiguration()
@@ -225,15 +218,28 @@ namespace NineChronicles.Headless.Executable
                 graphQLSecretTokenPath, noCors, nonblockRenderer, nonblockRendererQueue, strictRendering,
                 logActionRenders, confirmations,
                 txLifeTime, messageTimeout, tipTimeout, demandBuffer, staticPeerStrings, skipPreload,
-                minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers
+                minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers,
+                sentryTraceSampleRate
             );
 
-#if SENTRY || !DEBUG
+#if SENTRY || ! DEBUG
             loggerConf = loggerConf
                 .WriteTo.Sentry(o =>
                 {
                     o.InitializeSdk = false;
                 });
+            
+            using var _ = SentrySdk.Init(o =>
+            {
+                o.SendDefaultPii = true;
+                o.Dsn = SentryDsn;
+                // TODO: o.Release 설정하면 좋을 것 같은데 빌드 버전 체계가 아직 없어서 어떻게 해야 할 지...
+                // https://docs.sentry.io/workflow/releases/?platform=csharp
+                //o.Debug = true;
+                o.SampleRate = headlessConfig.SentryTraceSampleRate > 0 ? 
+                    (float)headlessConfig.SentryTraceSampleRate : 0.01f;
+                o.TracesSampleRate = headlessConfig.SentryTraceSampleRate;
+            });
 #endif
             // Clean-up previous temporary log files.
             if (Directory.Exists("_logs"))
@@ -345,7 +351,12 @@ namespace NineChronicles.Headless.Executable
                     MinerBlockInterval = minerBlockInterval,
                     TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner,
                 };
-                hostBuilder.ConfigureServices(services => { services.AddSingleton(_ => standaloneContext); });
+                hostBuilder.ConfigureServices(services =>
+                {
+                    services.AddSingleton(_ => standaloneContext);
+                    services.AddSingleton(_ => new ConcurrentDictionary<string, ITransaction>());
+                    services.AddSentry();
+                });
                 hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, standaloneContext);
                 if (headlessConfig.RpcServer)
                 {

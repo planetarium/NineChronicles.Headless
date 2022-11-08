@@ -25,6 +25,7 @@ using Microsoft.Extensions.Hosting;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.Shared.Hubs;
+using Sentry;
 using Serilog;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -43,6 +44,7 @@ namespace NineChronicles.Headless
         private readonly ConcurrentDictionary<Address, Client> _clients = new ConcurrentDictionary<Address, Client>();
 
         private RpcContext _context;
+        private ConcurrentDictionary<string, ITransaction> _sentryTraces;
 
         public ActionEvaluationPublisher(
             BlockRenderer blockRenderer,
@@ -51,8 +53,8 @@ namespace NineChronicles.Headless
             NodeStatusRenderer nodeStatusRenderer,
             string host,
             int port,
-            RpcContext context
-        )
+            RpcContext context,
+            ConcurrentDictionary<string, ITransaction> sentryTraces)
         {
             _blockRenderer = blockRenderer;
             _actionRenderer = actionRenderer;
@@ -61,6 +63,7 @@ namespace NineChronicles.Headless
             _host = host;
             _port = port;
             _context = context;
+            _sentryTraces = sentryTraces;
 
             ActionEvaluationHub.OnClientDisconnected += RemoveClient;
         }
@@ -347,6 +350,15 @@ namespace NineChronicles.Headless
                                 );
 
                                 await _hub.BroadcastRenderAsync(compressed);
+
+                                if (ev.TxId != null)
+                                {
+                                    _sentryTraces.TryRemove(ev.TxId?.ToString() ?? "", out var sentryTrace);
+                                    if (sentryTrace != null)
+                                    {
+                                        sentryTrace.Finish();
+                                    }
+                                }
                             }
                             catch (SerializationException se)
                             {
