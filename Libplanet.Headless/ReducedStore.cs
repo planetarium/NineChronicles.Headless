@@ -151,7 +151,7 @@ namespace Libplanet.Headless
         public void PruneOutdatedChains(bool noopWithoutCanon = false) =>
             InternalStore.PruneOutdatedChains(noopWithoutCanon);
 
-        public BlockCommit? GetLastCommit(long height) =>
+        public BlockCommit GetLastCommit(long height) =>
             InternalStore.GetLastCommit(height);
 
         public void PutLastCommit(BlockCommit lastCommit) =>
