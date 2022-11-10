@@ -215,7 +215,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             hash,
                             DateTimeOffset.UtcNow,
                             ValidatorsPolicy.TestValidatorKey.PublicKey,
-                            VoteFlag.Commit).Sign(ValidatorsPolicy.TestValidatorKey)))
+                            VoteFlag.PreCommit).Sign(ValidatorsPolicy.TestValidatorKey)))
                 : (BlockCommit?)null;
         }
     }

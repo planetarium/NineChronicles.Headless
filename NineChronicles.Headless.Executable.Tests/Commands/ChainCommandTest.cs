@@ -136,17 +136,17 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var stateStore = new TrieStateStore(new RocksDBKeyValueStore(Path.Combine(_storePath, "states")));
 
             PrivateKey validator = new PrivateKey();
-            var validators = new List<PublicKey> { validator.PublicKey };
+            var validators = new ValidatorSet(new List<PublicKey> { validator.PublicKey });
             BlockCommit GenerateBlockCommit(long height, BlockHash hash)
             {
                 ImmutableArray<Vote> votes = ImmutableArray<Vote>.Empty
                     .Add(new VoteMetadata(
-                        height, 0, hash, DateTimeOffset.UtcNow, validator.PublicKey, VoteFlag.Commit).Sign(validator));
+                        height, 0, hash, DateTimeOffset.UtcNow, validator.PublicKey, VoteFlag.PreCommit).Sign(validator));
                 return new BlockCommit(height, 0, hash, votes);
             }
 
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
-            IBlockPolicy<NCAction> blockPolicy = new BlockPolicy<NCAction>(getValidators: index => validators);
+            IBlockPolicy<NCAction> blockPolicy = new BlockPolicy<NCAction>(getValidatorSet: index => validators);
             BlockChain<NCAction> chain = new BlockChain<NCAction>(
                 blockPolicy,
                 stagePolicy,
