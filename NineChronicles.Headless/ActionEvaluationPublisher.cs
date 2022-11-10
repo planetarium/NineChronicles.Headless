@@ -103,7 +103,10 @@ namespace NineChronicles.Headless
             if (!_blockRenderDictionary.ContainsKey(clientAddress))
             {
                 _blockRenderDictionary[clientAddress] = true;
-                _blockRenderer.BlockSubject.SubscribeOn(NewThreadScheduler.Default).Subscribe(
+                _blockRenderer.BlockSubject
+                    .SubscribeOn(NewThreadScheduler.Default)
+                    .ObserveOn(NewThreadScheduler.Default)
+                    .Subscribe(
                     async pair =>
                     {
                         try
@@ -124,7 +127,10 @@ namespace NineChronicles.Headless
                     }
                 );
 
-                _blockRenderer.ReorgSubject.SubscribeOn(NewThreadScheduler.Default).Subscribe(
+                _blockRenderer.ReorgSubject
+                    .SubscribeOn(NewThreadScheduler.Default)
+                    .ObserveOn(NewThreadScheduler.Default)
+                    .Subscribe(
                     async ev =>
                     {
                         try
@@ -146,7 +152,10 @@ namespace NineChronicles.Headless
                     }
                 );
 
-                _blockRenderer.ReorgEndSubject.SubscribeOn(NewThreadScheduler.Default).Subscribe(
+                _blockRenderer.ReorgEndSubject
+                    .SubscribeOn(NewThreadScheduler.Default)
+                    .ObserveOn(NewThreadScheduler.Default)
+                    .Subscribe(
                     async ev =>
                     {
                         try
@@ -175,6 +184,7 @@ namespace NineChronicles.Headless
                 _actionRenderer.EveryRender<ActionBase>()
                     .Where(ev => ContainsAddressToBroadcast(ev, clientAddress))
                     .SubscribeOn(NewThreadScheduler.Default)
+                    .ObserveOn(NewThreadScheduler.Default)
                     .Subscribe(
                     async ev =>
                     {
@@ -253,6 +263,7 @@ namespace NineChronicles.Headless
                 _actionRenderer.EveryUnrender<ActionBase>()
                     .Where(ev => ContainsAddressToBroadcast(ev, clientAddress))
                     .SubscribeOn(NewThreadScheduler.Default)
+                    .ObserveOn(NewThreadScheduler.Default)
                     .Subscribe(
                     async ev =>
                     {
@@ -309,7 +320,10 @@ namespace NineChronicles.Headless
             if (!_exceptionRenderDictionary.ContainsKey(clientAddress))
             {
                 _exceptionRenderDictionary[clientAddress] = true;
-                _exceptionRenderer.EveryException().SubscribeOn(NewThreadScheduler.Default).Subscribe(
+                _exceptionRenderer.EveryException()
+                    .SubscribeOn(NewThreadScheduler.Default)
+                    .ObserveOn(NewThreadScheduler.Default)
+                    .Subscribe(
                     async tuple =>
                     {
                         try
@@ -332,7 +346,11 @@ namespace NineChronicles.Headless
             if (!_nodeStatusRenderDictionary.ContainsKey(clientAddress))
             {
                 _nodeStatusRenderDictionary[clientAddress] = true;
-                _nodeStatusRenderer.EveryChangedStatus().SubscribeOn(NewThreadScheduler.Default).Subscribe(
+                _nodeStatusRenderer
+                    .EveryChangedStatus()
+                    .SubscribeOn(NewThreadScheduler.Default)
+                    .ObserveOn(NewThreadScheduler.Default)
+                    .Subscribe(
                     async isPreloadStarted =>
                     {
                         try
