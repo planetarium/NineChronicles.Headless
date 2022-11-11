@@ -137,7 +137,10 @@ namespace NineChronicles.Headless.GraphTypes
                 Resolver = new FuncFieldResolver<DifferentAppProtocolVersionEncounter>(context =>
                     (DifferentAppProtocolVersionEncounter)context.Source!),
                 Subscriber = new EventStreamResolver<DifferentAppProtocolVersionEncounter>(context =>
-                    StandaloneContext.DifferentAppProtocolVersionEncounterSubject.AsObservable()),
+                    StandaloneContext.DifferentAppProtocolVersionEncounterSubject
+                        .Sample(standaloneContext.DifferentAppProtocolVersionEncounterInterval)
+                        .AsObservable()
+                    ),
             });
             AddField(new EventStreamFieldType
             {
