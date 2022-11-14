@@ -172,9 +172,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var apv1 = AppProtocolVersion.Sign(apvPrivateKey, 1);
             var apv2 = AppProtocolVersion.Sign(apvPrivateKey, 0);
             var peer = new BoundPeer(apvPrivateKey.PublicKey, new DnsEndPoint("0.0.0.0", 0));
-            StandaloneContextFx.DifferentAppProtocolVersionEncounterSubject.OnNext(
-                new DifferentAppProtocolVersionEncounter(peer, apv1, apv2)
-            );
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1));
+                StandaloneContextFx.DifferentAppProtocolVersionEncounterSubject.OnNext(
+                    new DifferentAppProtocolVersionEncounter(peer, apv1, apv2)
+                );
+            });
             var rawEvents = await stream.Take(1);
             var rawEvent = (Dictionary<string, object>)((ExecutionNode)rawEvents.Data!).ToValue()!;
             var differentAppProtocolVersionEncounter =
