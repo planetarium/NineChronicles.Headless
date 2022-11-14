@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Reactive.Subjects;
 using Libplanet;
@@ -22,8 +23,8 @@ namespace NineChronicles.Headless
         public bool IsMining { get; set; }
         public ReplaySubject<NodeStatusType> NodeStatusSubject { get; } = new ReplaySubject<NodeStatusType>();
         public ReplaySubject<PreloadState> PreloadStateSubject { get; } = new ReplaySubject<PreloadState>();
-        public ReplaySubject<DifferentAppProtocolVersionEncounter> DifferentAppProtocolVersionEncounterSubject { get; }
-            = new ReplaySubject<DifferentAppProtocolVersionEncounter>();
+        public Subject<DifferentAppProtocolVersionEncounter> DifferentAppProtocolVersionEncounterSubject { get; }
+            = new Subject<DifferentAppProtocolVersionEncounter>();
         public ReplaySubject<Notification> NotificationSubject { get; } = new ReplaySubject<Notification>(1);
         public ReplaySubject<NodeException> NodeExceptionSubject { get; } = new ReplaySubject<NodeException>();
         public ReplaySubject<MonsterCollectionState> MonsterCollectionStateSubject { get; } = new ReplaySubject<MonsterCollectionState>();
@@ -44,5 +45,7 @@ namespace NineChronicles.Headless
         };
 
         public IStore? Store { get; internal set; }
+
+        internal TimeSpan DifferentAppProtocolVersionEncounterInterval { get; set; } = TimeSpan.FromSeconds(30);
     }
 }

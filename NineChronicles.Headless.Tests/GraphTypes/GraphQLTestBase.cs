@@ -75,6 +75,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             StandaloneContextFx = new StandaloneContext
             {
                 KeyStore = keyStore,
+                DifferentAppProtocolVersionEncounterInterval = TimeSpan.FromSeconds(1),
             };
             ncService.ConfigureContext(StandaloneContextFx);
 
