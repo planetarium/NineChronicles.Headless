@@ -148,7 +148,9 @@ namespace NineChronicles.Headless.GraphTypes
                 Type = typeof(NonNullGraphType<NotificationType>),
                 Resolver = new FuncFieldResolver<Notification>(context => (context.Source as Notification)!),
                 Subscriber = new EventStreamResolver<Notification>(context =>
-                    StandaloneContext.NotificationSubject.AsObservable()),
+                    StandaloneContext.NotificationSubject
+                        .Sample(standaloneContext.NotificationInterval)
+                        .AsObservable()),
             });
             AddField(new EventStreamFieldType
             {
@@ -156,21 +158,29 @@ namespace NineChronicles.Headless.GraphTypes
                 Type = typeof(NonNullGraphType<NodeExceptionType>),
                 Resolver = new FuncFieldResolver<NodeException>(context => (context.Source as NodeException)!),
                 Subscriber = new EventStreamResolver<NodeException>(context =>
-                    StandaloneContext.NodeExceptionSubject.AsObservable()),
+                    StandaloneContext.NodeExceptionSubject
+                        .Sample(standaloneContext.NodeExceptionInterval)
+                        .AsObservable()),
             });
             AddField(new EventStreamFieldType
             {
                 Name = nameof(MonsterCollectionState),
                 Type = typeof(NonNullGraphType<MonsterCollectionStateType>),
                 Resolver = new FuncFieldResolver<MonsterCollectionState>(context => (context.Source as MonsterCollectionState)!),
-                Subscriber = new EventStreamResolver<MonsterCollectionState>(context => standaloneContext.MonsterCollectionStateSubject.AsObservable()),
+                Subscriber = new EventStreamResolver<MonsterCollectionState>(context =>
+                    standaloneContext.MonsterCollectionStateSubject
+                        .Sample(standaloneContext.MonsterCollectionStateInterval)
+                        .AsObservable()),
             });
             AddField(new EventStreamFieldType
             {
                 Name = nameof(MonsterCollectionStatus),
                 Type = typeof(NonNullGraphType<MonsterCollectionStatusType>),
                 Resolver = new FuncFieldResolver<MonsterCollectionStatus>(context => (context.Source as MonsterCollectionStatus)!),
-                Subscriber = new EventStreamResolver<MonsterCollectionStatus>(context => standaloneContext.MonsterCollectionStatusSubject.AsObservable()),
+                Subscriber = new EventStreamResolver<MonsterCollectionStatus>(context =>
+                    standaloneContext.MonsterCollectionStatusSubject
+                        .Sample(standaloneContext.MonsterCollectionStatusInterval)
+                        .AsObservable()),
             });
             AddField(new EventStreamFieldType
             {
