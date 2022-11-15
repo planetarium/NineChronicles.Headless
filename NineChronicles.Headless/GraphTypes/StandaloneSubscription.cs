@@ -23,6 +23,7 @@ using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States;
 using Libplanet.Blockchain;
+using Serilog;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -301,6 +302,10 @@ namespace NineChronicles.Headless.GraphTypes
                     $"{nameof(StandaloneContext.NineChroniclesNodeService)} is null.");
             }
 
+            var sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+            Log.Debug("StandaloneSubscription.RenderBlock started");
+
             BlockChain<PolymorphicAction<ActionBase>> blockChain = StandaloneContext.NineChroniclesNodeService.BlockChain;
             Currency currency =
                 new GoldCurrencyState(
@@ -312,6 +317,7 @@ namespace NineChronicles.Headless.GraphTypes
                 _tipHeader.Hash
             ).ToDotnetString();
             rewardSheet.Set(csv);
+            Log.Debug($"StandaloneSubscription.RenderBlock target addresses. (count: {StandaloneContext.AgentAddresses.Count})");
             foreach (var (address, subjects) in StandaloneContext.AgentAddresses)
             {
                 FungibleAssetValue agentBalance = blockChain.GetBalance(address, currency, _tipHeader.Hash);
@@ -340,6 +346,9 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 }
             }
+            
+            sw.Stop();
+            Log.Debug($"StandaloneSubscription.RenderBlock ended. elapsed: {sw.Elapsed}");
         }
 
         private void RenderMonsterCollectionStateSubject<T>(ActionBase.ActionEvaluation<T> eval)
