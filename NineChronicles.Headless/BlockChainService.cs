@@ -68,14 +68,16 @@ namespace NineChronicles.Headless
                 Transaction<PolymorphicAction<ActionBase>> tx =
                     Transaction<PolymorphicAction<ActionBase>>.Deserialize(txBytes);
 
+                var sentryTrace = SentrySdk.StartTransaction(
+                    tx.CustomActions[0].GetInnerActionTypeName() ?? "NoAction",
+                    "PutTransaction");
+                sentryTrace.SetTag("TxId", tx.Id.ToString());
+                var span = sentryTrace.StartChild(
+                    "BroadcastTX",
+                    $"Broadcast Transaction {tx.Id}");
+
                 try
                 {
-                    var sentryTrace = SentrySdk.StartTransaction(
-                        tx.CustomActions[0]?.GetInnerActionTypeName() ?? "NoAction",
-                        "PutTransaction");
-                    sentryTrace.SetTag("TxId", tx.Id.ToString());
-                    var span = sentryTrace.StartChild("BroadcastTX");
-
                     tx.Validate();
                     Log.Debug("PutTransaction: (nonce: {nonce}, id: {id})", tx.Nonce, tx.Id);
                     Log.Debug("StagedTransactions: {txIds}", string.Join(", ", _blockChain.GetStagedTransactionIds()));
@@ -83,12 +85,16 @@ namespace NineChronicles.Headless
                     _swarm.BroadcastTxs(new[] { tx });
 
                     span.Finish();
+                    sentryTrace.StartChild(
+                        "ExecuteAction",
+                        $"Execute Action {tx.CustomActions[0].GetInnerActionTypeName()} from tx {tx.Id}");
                     _sentryTraces.TryAdd(tx.Id.ToString(), sentryTrace);
                     return UnaryResult(true);
                 }
                 catch (InvalidTxException ite)
                 {
                     Log.Error(ite, $"{nameof(InvalidTxException)} occurred during {nameof(PutTransaction)}(). {{e}}", ite);
+                    sentryTrace.Finish(ite);
                     return UnaryResult(false);
                 }
             }

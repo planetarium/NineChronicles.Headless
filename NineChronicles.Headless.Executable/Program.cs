@@ -37,8 +37,6 @@ namespace NineChronicles.Headless.Executable
     [HasSubCommands(typeof(ReplayCommand), "replay")]
     public class Program : CoconaLiteConsoleAppBase
     {
-        const string SentryDsn = "https://625a444555a547e8822ee86d4f38f046@o195672.ingest.sentry.io/6197051";
-
         static async Task Main(string[] args)
         {
             // https://docs.microsoft.com/ko-kr/aspnet/core/grpc/troubleshoot?view=aspnetcore-6.0#call-insecure-grpc-services-with-net-core-client
@@ -180,6 +178,8 @@ namespace NineChronicles.Headless.Executable
             [Option("config", new[] { 'C' },
                 Description = "Absolute path of \"appsettings.json\" file to provide headless configurations.")]
             string? configPath = "appsettings.json",
+            [Option(Description = "Sentry DSN")]
+            string? sentryDsn = "",
             [Option(Description = "Trace sample rate for sentry")]
             double? sentryTraceSampleRate = null,
             [Ignore] CancellationToken? cancellationToken = null
@@ -219,7 +219,7 @@ namespace NineChronicles.Headless.Executable
                 logActionRenders, confirmations,
                 txLifeTime, messageTimeout, tipTimeout, demandBuffer, staticPeerStrings, skipPreload,
                 minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers,
-                sentryTraceSampleRate
+                sentryDsn, sentryTraceSampleRate
             );
 
 #if SENTRY || ! DEBUG
@@ -228,19 +228,23 @@ namespace NineChronicles.Headless.Executable
                 {
                     o.InitializeSdk = false;
                 });
-            
+
             using var _ = SentrySdk.Init(o =>
             {
                 o.SendDefaultPii = true;
-                o.Dsn = SentryDsn;
+                o.Dsn = headlessConfig.SentryDsn;
                 // TODO: o.Release 설정하면 좋을 것 같은데 빌드 버전 체계가 아직 없어서 어떻게 해야 할 지...
                 // https://docs.sentry.io/workflow/releases/?platform=csharp
                 //o.Debug = true;
-                o.SampleRate = headlessConfig.SentryTraceSampleRate > 0 ? 
-                    (float)headlessConfig.SentryTraceSampleRate : 0.01f;
+                o.SampleRate = headlessConfig.SentryTraceSampleRate > 0
+                    ? (float)headlessConfig.SentryTraceSampleRate
+                    : 0.01f;
                 o.TracesSampleRate = headlessConfig.SentryTraceSampleRate;
+                o.AddExceptionFilterForType<TimeoutException>();
+                o.AddExceptionFilterForType<IOException>();
             });
 #endif
+
             // Clean-up previous temporary log files.
             if (Directory.Exists("_logs"))
             {
@@ -355,7 +359,6 @@ namespace NineChronicles.Headless.Executable
                 {
                     services.AddSingleton(_ => standaloneContext);
                     services.AddSingleton(_ => new ConcurrentDictionary<string, ITransaction>());
-                    services.AddSentry();
                 });
                 hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, standaloneContext);
                 if (headlessConfig.RpcServer)

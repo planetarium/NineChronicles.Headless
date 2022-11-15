@@ -370,6 +370,14 @@ namespace NineChronicles.Headless
                                 // FIXME add logger as property
                                 Log.Error(e, "[{ClientAddress}] Skip broadcasting render due to the unexpected exception", _clientAddress);
                             }
+
+                            _sentryTraces.TryRemove(ev.TxId.ToString() ?? "", out var sentryTrace);
+                            if (sentryTrace != null)
+                            {
+                                var span = sentryTrace.GetLastActiveSpan();
+                                span?.Finish();
+                                sentryTrace.Finish();
+                            }
                         }
                     );
 

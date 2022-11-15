@@ -78,6 +78,8 @@ namespace NineChronicles.Headless.Executable
         public int TxQuotaPerSigner { get; set; } = 10;
         public int MaximumPollPeers { get; set; } = int.MaxValue;
 
+        public string SentryDsn { get; set; } = "";
+
         public double SentryTraceSampleRate { get; set; } = 0.1;
 
         public void Overwrite(
@@ -124,6 +126,7 @@ namespace NineChronicles.Headless.Executable
             string? chainTipStaleBehaviorType,
             int? txQuotaPerSigner,
             int? maximumPollPeers,
+            string? sentryDsn,
             double? sentryTraceSampleRate
         )
         {
@@ -171,6 +174,7 @@ namespace NineChronicles.Headless.Executable
             ChainTipStaleBehaviorType = chainTipStaleBehaviorType ?? ChainTipStaleBehaviorType;
             TxQuotaPerSigner = txQuotaPerSigner ?? TxQuotaPerSigner;
             MaximumPollPeers = maximumPollPeers ?? MaximumPollPeers;
+            SentryDsn = sentryDsn ?? SentryDsn;
             SentryTraceSampleRate = sentryTraceSampleRate ?? SentryTraceSampleRate;
         }
     }
