@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using GraphQL.Types;
 using Nekoyume.TableData;
@@ -13,9 +14,12 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Table
                 nameof(MonsterCollectionSheet.OrderedList),
                 resolve: context =>
                 {
-                    return context.Source.monsterCollectionSheet.OrderedList
-                        .Select(r => (r, context.Source.monsterCollectionRewardSheet))
-                        .ToList();
+                    return context.Source.monsterCollectionSheet.OrderedList?
+                               .Select(r => (r, context.Source.monsterCollectionRewardSheet))
+                               .ToList()
+                           ?? new List<(
+                               MonsterCollectionSheet.Row r,
+                               MonsterCollectionRewardSheet monsterCollectionRewardSheet)>();
                 });
         }
     }
