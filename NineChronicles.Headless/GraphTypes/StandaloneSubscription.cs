@@ -101,7 +101,9 @@ namespace NineChronicles.Headless.GraphTypes
             }
         }
 
-        private BlockHeader? _tipHeader = null;
+        private const int _blockRenderDegreeOfParallelism = 8;
+
+        private BlockHeader? _tipHeader;
 
         private ISubject<TipChanged> _subject = new ReplaySubject<TipChanged>();
 
@@ -295,7 +297,7 @@ namespace NineChronicles.Headless.GraphTypes
                     Hash = pair.NewTip.Hash,
                 }
             );
-            
+
             if (StandaloneContext.NineChroniclesNodeService is null)
             {
                 throw new InvalidOperationException(
@@ -318,37 +320,63 @@ namespace NineChronicles.Headless.GraphTypes
             ).ToDotnetString();
             rewardSheet.Set(csv);
             Log.Debug($"StandaloneSubscription.RenderBlock target addresses. (count: {StandaloneContext.AgentAddresses.Count})");
-            foreach (var (address, subjects) in StandaloneContext.AgentAddresses)
-            {
-                FungibleAssetValue agentBalance = blockChain.GetBalance(address, currency, _tipHeader.Hash);
-                subjects.balanceSubject.OnNext(agentBalance.GetQuantityString(true));
-                if (blockChain.GetState(address, _tipHeader.Hash) is Dictionary rawAgent)
+            StandaloneContext.AgentAddresses
+                .AsParallel()
+                .WithDegreeOfParallelism(_blockRenderDegreeOfParallelism)
+                .ForAll(kv =>
                 {
-                    AgentState agentState = new AgentState(rawAgent);
-                    Address deriveAddress =
-                        MonsterCollectionState.DeriveAddress(address, agentState.MonsterCollectionRound);
-                    if (agentState.avatarAddresses.Any() &&
-                        blockChain.GetState(deriveAddress, _tipHeader.Hash) is Dictionary collectDict)
-                    {
-                        var monsterCollectionState = new MonsterCollectionState(collectDict);
-                        List<MonsterCollectionRewardSheet.RewardInfo> rewards = monsterCollectionState.CalculateRewards(
-                            rewardSheet,
-                            _tipHeader.Index
-                        );
+                    Address address = kv.Key;
+                    (ReplaySubject<MonsterCollectionStatus> statusSubject, _, ReplaySubject<string> balanceSubject) =
+                        kv.Value;
+                    RenderForAgent(
+                        blockChain,
+                        _tipHeader,
+                        address,
+                        currency,
+                        statusSubject,
+                        balanceSubject,
+                        rewardSheet
+                    );
+                });
 
-                        var monsterCollectionStatus = new MonsterCollectionStatus(
-                            agentBalance,
-                            rewards,
-                            _tipHeader.Index,
-                            monsterCollectionState.IsLocked(_tipHeader.Index)
-                        );
-                        subjects.statusSubject.OnNext(monsterCollectionStatus);
-                    }
-                }
-            }
-            
             sw.Stop();
             Log.Debug($"StandaloneSubscription.RenderBlock ended. elapsed: {sw.Elapsed}");
+        }
+
+        private void RenderForAgent(
+            BlockChain<PolymorphicAction<ActionBase>> blockChain,
+            BlockHeader tipHeader,
+            Address address,
+            Currency currency,
+            ReplaySubject<MonsterCollectionStatus> statusSubject,
+            ReplaySubject<string> balanceSubject,
+            MonsterCollectionRewardSheet rewardSheet)
+        {
+            FungibleAssetValue agentBalance = blockChain.GetBalance(address, currency, tipHeader.Hash);
+            balanceSubject.OnNext(agentBalance.GetQuantityString(true));
+            if (blockChain.GetState(address, tipHeader.Hash) is Dictionary rawAgent)
+            {
+                AgentState agentState = new AgentState(rawAgent);
+                Address deriveAddress =
+                    MonsterCollectionState.DeriveAddress(address, agentState.MonsterCollectionRound);
+                if (agentState.avatarAddresses.Any() &&
+                    blockChain.GetState(deriveAddress, tipHeader.Hash) is Dictionary collectDict)
+                {
+                    var monsterCollectionState = new MonsterCollectionState(collectDict);
+                    List<MonsterCollectionRewardSheet.RewardInfo> rewards = monsterCollectionState.CalculateRewards(
+                        rewardSheet,
+                        tipHeader.Index
+                    );
+
+                    var monsterCollectionStatus = new MonsterCollectionStatus(
+                        agentBalance,
+                        rewards,
+                        tipHeader.Index,
+                        monsterCollectionState.IsLocked(tipHeader.Index)
+                    );
+                    statusSubject.OnNext(monsterCollectionStatus);
+                }
+            }
         }
 
         private void RenderMonsterCollectionStateSubject<T>(ActionBase.ActionEvaluation<T> eval)
