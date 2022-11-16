@@ -8,9 +8,9 @@ using Libplanet.Explorer.GraphTypes;
 using Libplanet.Headless;
 using Libplanet.Net;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Bencodex.Types;
@@ -22,7 +22,6 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States;
-using Serilog;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Renderers;
 
@@ -226,13 +225,20 @@ namespace NineChronicles.Headless.GraphTypes
             });
 
             BlockRenderer blockRenderer = standaloneContext.NineChroniclesNodeService!.BlockRenderer;
-            blockRenderer.BlockSubject.Subscribe(RenderBlock);
+            blockRenderer.BlockSubject
+                .ObserveOn(NewThreadScheduler.Default)
+                .Subscribe(RenderBlock);
 
             ActionRenderer actionRenderer = standaloneContext.NineChroniclesNodeService!.ActionRenderer;
-            actionRenderer.EveryRender<ActionBase>().Subscribe(RenderAction);
-            actionRenderer.EveryRender<MonsterCollect>().Subscribe(RenderMonsterCollectionStateSubject);
-            actionRenderer.EveryRender<CancelMonsterCollect>().Subscribe(RenderMonsterCollectionStateSubject);
-            actionRenderer.EveryRender<ClaimMonsterCollectionReward>().Subscribe(RenderMonsterCollectionStateSubject);
+            actionRenderer.EveryRender<MonsterCollect>()
+                .ObserveOn(NewThreadScheduler.Default)
+                .Subscribe(RenderMonsterCollectionStateSubject);
+            actionRenderer.EveryRender<CancelMonsterCollect>()
+                .ObserveOn(NewThreadScheduler.Default)
+                .Subscribe(RenderMonsterCollectionStateSubject);
+            actionRenderer.EveryRender<ClaimMonsterCollectionReward>()
+                .ObserveOn(NewThreadScheduler.Default)
+                .Subscribe(RenderMonsterCollectionStateSubject);
         }
 
         private IObservable<MonsterCollectionState> SubscribeMonsterCollectionState(IResolveEventStreamContext context)
@@ -332,20 +338,6 @@ namespace NineChronicles.Headless.GraphTypes
                         subjects.statusSubject.OnNext(monsterCollectionStatus);
                     }
                 }
-            }
-        }
-
-        private void RenderAction(ActionBase.ActionEvaluation<ActionBase> eval)
-        {
-            if (StandaloneContext.NineChroniclesNodeService is null)
-            {
-                throw new InvalidOperationException(
-                    $"{nameof(StandaloneContext.NineChroniclesNodeService)} is null.");
-            }
-
-            if (StandaloneContext.NineChroniclesNodeService.MinerPrivateKey is null)
-            {
-                Log.Information("PrivateKey is not set. please call SetPrivateKey() first");
             }
         }
 
