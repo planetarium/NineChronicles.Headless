@@ -349,11 +349,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Theory]
-        [InlineData(true, false, false, false)]
-        [InlineData(false, true, false, false)]
-        [InlineData(false, false, true, false)]
-        [InlineData(false, false, false, true)]
-        public async Task Raid(bool equipment, bool costume, bool food, bool payNcg)
+        [InlineData(true, false, false, false, false)]
+        [InlineData(false, true, false, false, false)]
+        [InlineData(false, false, true, false, false)]
+        [InlineData(false, false, false, true, false)]
+        [InlineData(false, false, false, false, true)]
+        public async Task Raid(bool equipment, bool costume, bool food, bool payNcg, bool rune)
         {
             var avatarAddress = new PrivateKey().ToAddress();
             var args = $"avatarAddress: \"{avatarAddress}\"";
@@ -375,7 +376,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             if (payNcg)
             {
-                args += $", payNcg: true";
+                args += ", payNcg: true";
+            }
+
+            if (rune)
+            {
+                args += ", runeSlotInfos: [{ slotIndex: 1, runeId: 2, level: 3 }]";
             }
 
             var query = $"{{ raid({args}) }}";
@@ -415,6 +421,18 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             else
             {
                 Assert.Empty(action.FoodIds);
+            }
+
+            if (rune)
+            {
+                var runeSlotInfo = Assert.Single(action.RuneInfos);
+                Assert.Equal(1, runeSlotInfo.SlotIndex);
+                Assert.Equal(2, runeSlotInfo.RuneId);
+                Assert.Equal(3, runeSlotInfo.Level);
+            }
+            else
+            {
+                Assert.Empty(action.RuneInfos);
             }
 
             Assert.Equal(payNcg, action.PayNcg);
