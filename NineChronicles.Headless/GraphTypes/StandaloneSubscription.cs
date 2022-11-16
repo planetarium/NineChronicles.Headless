@@ -23,7 +23,6 @@ using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States;
 using Libplanet.Blockchain;
-using Libplanet.Blockchain.Renderers;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -100,6 +99,8 @@ namespace NineChronicles.Headless.GraphTypes
                 });
             }
         }
+
+        private BlockHeader? _tipHeader = null;
 
         private ISubject<TipChanged> _subject = new ReplaySubject<TipChanged>();
 
@@ -285,12 +286,15 @@ namespace NineChronicles.Headless.GraphTypes
         }
         private void RenderBlock((Block<PolymorphicAction<ActionBase>> OldTip, Block<PolymorphicAction<ActionBase>> NewTip) pair)
         {
-            _subject.OnNext(new TipChanged
-            {
-                Index = pair.NewTip.Index,
-                Hash = pair.NewTip.Hash,
-            }
+            _tipHeader = pair.NewTip.Header;
+            _subject.OnNext(
+                new TipChanged
+                {
+                    Index = pair.NewTip.Index,
+                    Hash = pair.NewTip.Hash,
+                }
             );
+            
             if (StandaloneContext.NineChroniclesNodeService is null)
             {
                 throw new InvalidOperationException(
@@ -298,42 +302,39 @@ namespace NineChronicles.Headless.GraphTypes
             }
 
             BlockChain<PolymorphicAction<ActionBase>> blockChain = StandaloneContext.NineChroniclesNodeService.BlockChain;
-            DelayedRenderer<PolymorphicAction<ActionBase>>? delayedRenderer = blockChain.GetDelayedRenderer();
-            BlockHash? offset = delayedRenderer?.Tip?.Hash;
             Currency currency =
                 new GoldCurrencyState(
-                    (Dictionary)blockChain.GetState(Addresses.GoldCurrency, offset)
+                    (Dictionary)blockChain.GetState(Addresses.GoldCurrency, _tipHeader.Hash)
                 ).Currency;
             var rewardSheet = new MonsterCollectionRewardSheet();
             var csv = blockChain.GetState(
                 Addresses.GetSheetAddress<MonsterCollectionRewardSheet>(),
-                offset
+                _tipHeader.Hash
             ).ToDotnetString();
             rewardSheet.Set(csv);
             foreach (var (address, subjects) in StandaloneContext.AgentAddresses)
             {
-                FungibleAssetValue agentBalance = blockChain.GetBalance(address, currency, offset);
+                FungibleAssetValue agentBalance = blockChain.GetBalance(address, currency, _tipHeader.Hash);
                 subjects.balanceSubject.OnNext(agentBalance.GetQuantityString(true));
-                if (blockChain.GetState(address, offset) is Dictionary rawAgent)
+                if (blockChain.GetState(address, _tipHeader.Hash) is Dictionary rawAgent)
                 {
                     AgentState agentState = new AgentState(rawAgent);
                     Address deriveAddress =
                         MonsterCollectionState.DeriveAddress(address, agentState.MonsterCollectionRound);
-                    if (blockChain.GetState(deriveAddress, offset) is Dictionary collectDict &&
-                        agentState.avatarAddresses.Any())
+                    if (agentState.avatarAddresses.Any() &&
+                        blockChain.GetState(deriveAddress, _tipHeader.Hash) is Dictionary collectDict)
                     {
-                        long tipIndex = blockChain.Tip.Index;
                         var monsterCollectionState = new MonsterCollectionState(collectDict);
                         List<MonsterCollectionRewardSheet.RewardInfo> rewards = monsterCollectionState.CalculateRewards(
                             rewardSheet,
-                            tipIndex
+                            _tipHeader.Index
                         );
 
                         var monsterCollectionStatus = new MonsterCollectionStatus(
                             agentBalance,
                             rewards,
-                            tipIndex,
-                            monsterCollectionState.IsLocked(tipIndex)
+                            _tipHeader.Index,
+                            monsterCollectionState.IsLocked(_tipHeader.Index)
                         );
                         subjects.statusSubject.OnNext(monsterCollectionStatus);
                     }
@@ -350,11 +351,16 @@ namespace NineChronicles.Headless.GraphTypes
                     $"{nameof(NineChroniclesNodeService)} is null.");
             }
 
+            // Skip when error.
+            if (eval.Exception is { })
+            {
+                return;
+            }
+
             foreach (var (address, subjects) in StandaloneContext.AgentAddresses)
             {
                 if (eval.Signer.Equals(address) &&
-                    eval.Exception is null &&
-                    service.BlockChain.GetState(address) is Dictionary agentDict)
+                    service.BlockChain.GetState(address, _tipHeader?.Hash) is Dictionary agentDict)
                 {
                     var agentState = new AgentState(agentDict);
                     Address deriveAddress = MonsterCollectionState.DeriveAddress(address, agentState.MonsterCollectionRound);
