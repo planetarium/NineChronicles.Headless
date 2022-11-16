@@ -262,6 +262,12 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "refill ticket by NCG.",
                         DefaultValue = false,
                         Name = "payNcg",
+                    },
+                    new QueryArgument<ListGraphType<RuneSlotInfoInputType>>
+                    {
+                        Description = "list of rune slot",
+                        DefaultValue = new List<RuneSlotInfo>(),
+                        Name = "runeSlotInfos"
                     }
                 ),
                 resolve: context =>
@@ -271,6 +277,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var costumeIds = context.GetArgument<List<Guid>>("costumeIds");
                     var foodIds = context.GetArgument<List<Guid>>("foodIds");
                     var payNcg = context.GetArgument<bool>("payNcg");
+                    var runeSlotInfos = context.GetArgument<List<RuneSlotInfo>>("runeSlotInfos");
 
                     NCAction action = new Raid
                     {
@@ -278,7 +285,8 @@ namespace NineChronicles.Headless.GraphTypes
                         EquipmentIds = equipmentIds,
                         CostumeIds = costumeIds,
                         FoodIds = foodIds,
-                        PayNcg = payNcg
+                        PayNcg = payNcg,
+                        RuneInfos = runeSlotInfos,
                     };
                     return Encode(context, action);
                 }

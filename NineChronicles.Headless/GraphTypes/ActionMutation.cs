@@ -129,6 +129,12 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "consumableIds",
                         Description = "List of consumable id for use."
+                    },
+                    new QueryArgument<ListGraphType<RuneSlotInfoInputType>>
+                    {
+                        Name = "runeSlotInfos",
+                        DefaultValue = new List<RuneSlotInfo>(),
+                        Description = "List of rune slot info for equip."
                     }
                 ),
                 resolve: context =>
@@ -148,6 +154,7 @@ namespace NineChronicles.Headless.GraphTypes
                         List<Guid> costumeIds = context.GetArgument<List<Guid>>("costumeIds") ?? new List<Guid>();
                         List<Guid> equipmentIds = context.GetArgument<List<Guid>>("equipmentIds") ?? new List<Guid>();
                         List<Guid> consumableIds = context.GetArgument<List<Guid>>("consumableIds") ?? new List<Guid>();
+                        List<RuneSlotInfo> runeSlotInfos = context.GetArgument<List<RuneSlotInfo>>("runeSlotInfos");
 
                         var action = new HackAndSlash
                         {
@@ -157,6 +164,7 @@ namespace NineChronicles.Headless.GraphTypes
                             Costumes = costumeIds,
                             Equipments = equipmentIds,
                             Foods = consumableIds,
+                            RuneInfos = runeSlotInfos,
                         };
 
                         var actions = new NCAction[] { action };
