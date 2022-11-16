@@ -263,7 +263,7 @@ namespace NineChronicles.Headless.GraphTypes
                         DefaultValue = false,
                         Name = "payNcg",
                     },
-                    new QueryArgument<ListGraphType<RuneSlotInfoInputType>>
+                    new QueryArgument<ListGraphType<NonNullGraphType<RuneSlotInfoInputType>>>
                     {
                         Description = "list of rune slot",
                         DefaultValue = new List<RuneSlotInfo>(),

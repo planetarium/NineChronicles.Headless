@@ -8,7 +8,7 @@ using Nekoyume.Action;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    public class RuneSlotInfoInputType : InputObjectGraphType<RuneSlotInfoType>
+    public class RuneSlotInfoInputType : InputObjectGraphType<RuneSlotInfo>
     {
         public RuneSlotInfoInputType()
         {

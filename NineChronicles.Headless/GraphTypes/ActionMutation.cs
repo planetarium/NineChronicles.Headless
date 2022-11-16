@@ -130,7 +130,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Name = "consumableIds",
                         Description = "List of consumable id for use."
                     },
-                    new QueryArgument<ListGraphType<RuneSlotInfoInputType>>
+                    new QueryArgument<ListGraphType<NonNullGraphType<RuneSlotInfoInputType>>>
                     {
                         Name = "runeSlotInfos",
                         DefaultValue = new List<RuneSlotInfo>(),
