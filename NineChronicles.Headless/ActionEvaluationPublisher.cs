@@ -95,7 +95,8 @@ namespace NineChronicles.Headless
                     _blockRenderer,
                     _actionRenderer,
                     _exceptionRenderer,
-                    _nodeStatusRenderer
+                    _nodeStatusRenderer,
+                    _sentryTraces
                 );
             }
             else
@@ -196,8 +197,7 @@ namespace NineChronicles.Headless
             public static async Task<Client> CreateAsync(
                 GrpcChannel channel,
                 Address clientAddress,
-                RpcContext context
-            )
+                RpcContext context)
             {
                 IActionEvaluationHub hub = await StreamingHubClient.ConnectAsync<IActionEvaluationHub, IActionEvaluationHubReceiver>(
                     channel,
@@ -212,8 +212,8 @@ namespace NineChronicles.Headless
                 BlockRenderer blockRenderer,
                 ActionRenderer actionRenderer,
                 ExceptionRenderer exceptionRenderer,
-                NodeStatusRenderer nodeStatusRenderer
-            )
+                NodeStatusRenderer nodeStatusRenderer,
+                ConcurrentDictionary<string, ITransaction> sentryTraces)
             {
                 _blockSubscribe = blockRenderer.BlockSubject
                     .SubscribeOn(NewThreadScheduler.Default)
@@ -350,15 +350,6 @@ namespace NineChronicles.Headless
                                 );
 
                                 await _hub.BroadcastRenderAsync(compressed);
-
-                                if (ev.TxId != null)
-                                {
-                                    _sentryTraces.TryRemove(ev.TxId?.ToString() ?? "", out var sentryTrace);
-                                    if (sentryTrace != null)
-                                    {
-                                        sentryTrace.Finish();
-                                    }
-                                }
                             }
                             catch (SerializationException se)
                             {
@@ -371,7 +362,7 @@ namespace NineChronicles.Headless
                                 Log.Error(e, "[{ClientAddress}] Skip broadcasting render due to the unexpected exception", _clientAddress);
                             }
 
-                            _sentryTraces.TryRemove(ev.TxId.ToString() ?? "", out var sentryTrace);
+                            sentryTraces.TryRemove(ev.TxId.ToString() ?? "", out var sentryTrace);
                             if (sentryTrace != null)
                             {
                                 var span = sentryTrace.GetLastActiveSpan();
