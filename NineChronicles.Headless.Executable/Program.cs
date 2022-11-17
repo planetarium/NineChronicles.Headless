@@ -247,6 +247,12 @@ namespace NineChronicles.Headless.Executable
                 o.AddExceptionFilterForType<CommunicationFailException>();
                 o.AddExceptionFilterForType<InvalidBlockIndexException>();
             });
+
+            // Set global tag
+            SentrySdk.ConfigureScope(scope =>
+            {
+                scope.SetTag("host", headlessConfig.Host ?? "no-host");
+            });
 #endif
 
             // Clean-up previous temporary log files.
