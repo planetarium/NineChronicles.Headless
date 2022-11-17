@@ -204,7 +204,7 @@ namespace NineChronicles.Headless.Executable
             {
                 configurationBuilder.AddJsonFile(configPath);
             }
-            
+
             // Setup logger.
             var configuration = configurationBuilder.Build();
             var loggerConf = new LoggerConfiguration()
@@ -365,7 +365,8 @@ namespace NineChronicles.Headless.Executable
                     services.AddSingleton(_ => new ConcurrentDictionary<string, ITransaction>());
                 });
                 hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, standaloneContext);
-                if (headlessConfig.RpcServer) {
+                if (headlessConfig.RpcServer)
+                {
                     hostBuilder.UseNineChroniclesRPC(
                         NineChroniclesNodeServiceProperties
                             .GenerateRpcNodeServiceProperties(
