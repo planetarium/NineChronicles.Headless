@@ -21,6 +21,8 @@ using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Libplanet.Blocks;
+using Libplanet.Net.Transports;
 
 namespace NineChronicles.Headless.Executable
 {
@@ -242,6 +244,8 @@ namespace NineChronicles.Headless.Executable
                 o.TracesSampleRate = headlessConfig.SentryTraceSampleRate;
                 o.AddExceptionFilterForType<TimeoutException>();
                 o.AddExceptionFilterForType<IOException>();
+                o.AddExceptionFilterForType<CommunicationFailException>();
+                o.AddExceptionFilterForType<InvalidBlockIndexException>();
             });
 #endif
 

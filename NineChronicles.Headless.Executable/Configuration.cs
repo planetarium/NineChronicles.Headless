@@ -80,7 +80,7 @@ namespace NineChronicles.Headless.Executable
 
         public string SentryDsn { get; set; } = "";
 
-        public double SentryTraceSampleRate { get; set; } = 0.1;
+        public double SentryTraceSampleRate { get; set; } = 0.01;
 
         public void Overwrite(
             string? appProtocolVersionString,
