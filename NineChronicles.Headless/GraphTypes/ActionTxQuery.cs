@@ -31,8 +31,8 @@ namespace NineChronicles.Headless.GraphTypes
             Transaction<NCAction> unsignedTransaction =
                 Transaction<NCAction>.CreateUnsigned(
                     nonce: nonce,
-                    publicKey: publicKey, 
-                    genesisHash: blockChain.Genesis.Hash, 
+                    publicKey: publicKey,
+                    genesisHash: blockChain.Genesis.Hash,
                     customActions: new[] { action },
                     timestamp: timestamp
                 );
