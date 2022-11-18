@@ -166,6 +166,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<Libplanet.Explorer.Queries.ExplorerQuery<NCAction>>>(
                 name: "chainQuery",
+                deprecationReason: "Use /graphql/explorer",
                 resolve: context => new { }
             );
 
