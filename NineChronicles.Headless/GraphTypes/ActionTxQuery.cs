@@ -1,3 +1,4 @@
+using System;
 using GraphQL;
 using Libplanet;
 using Libplanet.Action;
@@ -26,8 +27,15 @@ namespace NineChronicles.Headless.GraphTypes
 
             Address signer = publicKey.ToAddress();
             long nonce = context.Parent!.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
+            DateTimeOffset? timestamp = context.Parent!.GetArgument<DateTimeOffset?>("timestamp");
             Transaction<NCAction> unsignedTransaction =
-                Transaction<NCAction>.CreateUnsigned(nonce, publicKey, blockChain.Genesis.Hash, new[] { action });
+                Transaction<NCAction>.CreateUnsigned(
+                    nonce: nonce,
+                    publicKey: publicKey, 
+                    genesisHash: blockChain.Genesis.Hash, 
+                    customActions: new[] { action },
+                    timestamp: timestamp
+                );
 
             return unsignedTransaction.Serialize(false);
         }
