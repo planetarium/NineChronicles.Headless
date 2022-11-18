@@ -368,7 +368,7 @@ namespace NineChronicles.Headless
                                 Log.Error(e, "[{ClientAddress}] Skip broadcasting render due to the unexpected exception", _clientAddress);
                             }
 
-                            if (SentryTraces.TryRemove(ev.TxId?.ToString() ?? "", out var sentryTrace))
+                            if (ev.TxId != null && SentryTraces.TryRemove(ev.TxId.ToString() ?? "", out var sentryTrace))
                             {
                                 var span = sentryTrace.GetLastActiveSpan();
                                 span?.Finish();

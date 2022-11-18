@@ -68,13 +68,15 @@ namespace NineChronicles.Headless
                 Transaction<PolymorphicAction<ActionBase>> tx =
                     Transaction<PolymorphicAction<ActionBase>>.Deserialize(txBytes);
 
+                var actionName = tx.CustomActions[0]?.GetInnerActionTypeName() ?? "NoAction";
+                var txId = tx.Id.ToString();
                 var sentryTrace = SentrySdk.StartTransaction(
-                    tx.CustomActions[0].GetInnerActionTypeName() ?? "NoAction",
+                    actionName,
                     "PutTransaction");
-                sentryTrace.SetTag("TxId", tx.Id.ToString());
+                sentryTrace.SetTag("TxId", txId);
                 var span = sentryTrace.StartChild(
                     "BroadcastTX",
-                    $"Broadcast Transaction {tx.Id}");
+                    $"Broadcast Transaction {txId}");
 
                 try
                 {
@@ -87,8 +89,8 @@ namespace NineChronicles.Headless
                     span.Finish();
                     sentryTrace.StartChild(
                         "ExecuteAction",
-                        $"Execute Action {tx.CustomActions[0].GetInnerActionTypeName()} from tx {tx.Id}");
-                    _sentryTraces.TryAdd(tx.Id.ToString(), sentryTrace);
+                        $"Execute Action {actionName} from tx {txId}");
+                    _sentryTraces.TryAdd(txId, sentryTrace);
                     return UnaryResult(true);
                 }
                 catch (InvalidTxException ite)

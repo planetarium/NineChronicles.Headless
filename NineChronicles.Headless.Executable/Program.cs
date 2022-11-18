@@ -19,6 +19,7 @@ using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Libplanet.Blocks;
@@ -235,9 +236,11 @@ namespace NineChronicles.Headless.Executable
             {
                 o.SendDefaultPii = true;
                 o.Dsn = headlessConfig.SentryDsn;
-                // TODO: o.Release 설정하면 좋을 것 같은데 빌드 버전 체계가 아직 없어서 어떻게 해야 할 지...
+                // TODO: We need to specify `o.Release` after deciding the version scheme.
                 // https://docs.sentry.io/workflow/releases/?platform=csharp
                 //o.Debug = true;
+                o.Release = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                    ?.InformationalVersion ?? "Unknown";
                 o.SampleRate = headlessConfig.SentryTraceSampleRate > 0
                     ? (float)headlessConfig.SentryTraceSampleRate
                     : 0.01f;
@@ -368,7 +371,7 @@ namespace NineChronicles.Headless.Executable
                 hostBuilder.ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => standaloneContext);
-                    services.AddSingleton(_ => new ConcurrentDictionary<string, ITransaction>());
+                    services.AddSingleton<ConcurrentDictionary<string, ITransaction>>();
                 });
                 hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, standaloneContext);
                 if (headlessConfig.RpcServer)
