@@ -157,6 +157,12 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: _ => context.AgentAddresses.Keys
             );
 
+            Field<IntGraphType>(
+                name: "subscriberAddressesCount",
+                description: "The number of a list of subscribers' address",
+                resolve: _ => context.AgentAddresses.Count
+            );
+
             Field<StringGraphType>(
                 name: "productVersion",
                 description: "A version of NineChronicles.Headless",
