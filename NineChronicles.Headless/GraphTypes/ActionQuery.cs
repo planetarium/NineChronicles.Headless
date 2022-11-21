@@ -10,9 +10,11 @@ using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
+using Nekoyume.Action.Factory;
 using Nekoyume.Helper;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
+using Log = Serilog.Log;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -344,6 +346,56 @@ namespace NineChronicles.Headless.GraphTypes
                         Assets = assets,
                         RewardPoolAddress = rewardPoolAddress,
                     };
+                    return Encode(context, action);
+                }
+            );
+
+            Field<NonNullGraphType<ByteStringType>>(
+                "runeEnhancement",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "The avatar address to receive staking rewards."
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "runeId",
+                        Description = "The ID of rune to make or enhance"
+                    },
+                    new QueryArgument<IntGraphType>
+                    {
+                        Name = "tryCount",
+                        Description = "The try count to create or enhance this rune."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var service = standaloneContext.NineChroniclesNodeService;
+                    if (service is null)
+                    {
+                        Log.Error($"{nameof(NineChroniclesNodeService)} is null.");
+                        return null;
+                    }
+
+                    var swarm = service.Swarm;
+                    if (!(swarm?.BlockChain is { } chain))
+                    {
+                        throw new InvalidOperationException($"{nameof(swarm.BlockChain)} is null.");
+                    }
+
+                    var tip = swarm.BlockChain.Tip.Index;
+
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+                    var runeId = context.GetArgument<int>("runeId");
+                    var tryCount = context.GetArgument<int?>("tryCount") ?? 1;
+
+                    NCAction action = RuneEnhancementFactory.RuneEnhancement(
+                        blockIndex: tip,
+                        avatarAddress: avatarAddress,
+                        runeId: runeId,
+                        tryCount: tryCount
+                    );
                     return Encode(context, action);
                 }
             );
