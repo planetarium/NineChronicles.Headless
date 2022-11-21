@@ -6,6 +6,7 @@ using Libplanet.Action;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Explorer.Interfaces;
 using Libplanet.Explorer.Queries;
+using Libplanet.Explorer.Schemas;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -58,6 +59,7 @@ namespace NineChronicles.Headless
         {
             services.AddLibplanetScalarTypes();
             services.AddBlockChainContext();
+            services.AddSingleton<LibplanetExplorerSchema<T>>();
 
             services.TryAddSingleton<ActionType<T>>();
             services.TryAddSingleton<BlockType<T>>();

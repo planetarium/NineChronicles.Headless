@@ -76,6 +76,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 KeyStore = keyStore,
                 DifferentAppProtocolVersionEncounterInterval = TimeSpan.FromSeconds(1),
+                NotificationInterval = TimeSpan.FromSeconds(1),
+                NodeExceptionInterval = TimeSpan.FromSeconds(1),
+                MonsterCollectionStateInterval = TimeSpan.FromSeconds(1),
+                MonsterCollectionStatusInterval = TimeSpan.FromSeconds(1),
             };
             ncService.ConfigureContext(StandaloneContextFx);
 

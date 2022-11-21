@@ -15,11 +15,8 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Table
                 resolve: context =>
                 {
                     return context.Source.monsterCollectionSheet.OrderedList?
-                               .Select(r => (r, context.Source.monsterCollectionRewardSheet))
-                               .ToList()
-                           ?? new List<(
-                               MonsterCollectionSheet.Row r,
-                               MonsterCollectionRewardSheet monsterCollectionRewardSheet)>();
+                        .Select(r => (r, context.Source.monsterCollectionRewardSheet))
+                        .ToList();
                 });
         }
     }
