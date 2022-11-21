@@ -121,6 +121,19 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 }
             );
+            Field<IntGraphType>(
+                name: "stagedTxIdsCount",
+                description: "The number of ids of staged transactions from the current node.",
+                resolve: fieldContext =>
+                {
+                    if (context.BlockChain is null)
+                    {
+                        throw new InvalidOperationException($"{nameof(context.BlockChain)} is null.");
+                    }
+
+                    return context.BlockChain.GetStagedTransactionIds().Count;
+                }
+            );
             Field<NonNullGraphType<BlockHeaderType>>(
                 name: "genesis",
                 description: "Block header of the genesis block from the current chain.",
