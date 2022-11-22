@@ -4,6 +4,7 @@ using GraphQL.Server;
 using GraphQL.Utilities;
 using Grpc.Core;
 using Grpc.Net.Client;
+using Libplanet.Explorer.Schemas;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -123,6 +124,7 @@ namespace NineChronicles.Headless
                     .AddWebSockets()
                     .AddDataLoader()
                     .AddGraphTypes(typeof(StandaloneSchema))
+                    .AddGraphTypes(typeof(LibplanetExplorerSchema<NCAction>))
                     .AddLibplanetExplorer<NCAction>()
                     .AddUserContextBuilder<UserContextBuilder>()
                     .AddGraphQLAuthorization(
@@ -187,6 +189,7 @@ namespace NineChronicles.Headless
                 app.UseWebSockets();
                 app.UseGraphQLWebSockets<StandaloneSchema>("/graphql");
                 app.UseGraphQL<StandaloneSchema>("/graphql");
+                app.UseGraphQL<LibplanetExplorerSchema<NCAction>>("/graphql/explorer");
 
                 // Prints 
                 app.UseMiddleware<GraphQLSchemaMiddleware<StandaloneSchema>>("/schema.graphql");
