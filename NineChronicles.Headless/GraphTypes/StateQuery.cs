@@ -481,6 +481,42 @@ namespace NineChronicles.Headless.GraphTypes
                     return null;
                 }
             );
+
+            Field<ListGraphType<NonNullGraphType<RuneListRowType>>>(
+                "runeList",
+                description: "rune list sheet.",
+                resolve: context =>
+                {
+                    var sheetAddress = Addresses.GetSheetAddress<RuneListSheet>();
+                    IValue? value = context.Source.GetState(sheetAddress);
+                    var sheet = new RuneListSheet();
+                    if (value is Text t)
+                    {
+                        sheet.Set(t);
+                    }
+
+                    return sheet.OrderedList;
+                }
+            );
+
+            Field<RuneStateType>(
+                nameof(RuneState),
+                description: "rune state by rune id.",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "runeStateAddress"
+                }),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("runeStateAddress");
+                    IValue? value = context.Source.GetState(address);
+                    if (value is List l)
+                    {
+                        return new RuneState(l);
+                    }
+
+                    return null;
+                });
         }
     }
 }
