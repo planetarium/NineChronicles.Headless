@@ -221,7 +221,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             string type = (Text)decoded[0];
             Assert.Equal(action.GetType().Name, type);
         }
-        
+
         [Theory]
         [InlineData(0, 0, -1)]
         [InlineData(1, 3, 0)]

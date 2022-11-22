@@ -65,7 +65,10 @@ namespace NineChronicles.Headless.Executable.Commands
                     nameof(MonsterCollect) => new MonsterCollect(),
                     nameof(ClaimMonsterCollectionReward) => new ClaimMonsterCollectionReward(),
                     nameof(Stake) => new Stake(),
+                    // FIXME: This `ClaimStakeReward` cases need to reduce to one case.
+                    nameof(ClaimStakeReward1) => new ClaimStakeReward1(),
                     nameof(ClaimStakeReward) => new ClaimStakeReward(),
+                    nameof(ClaimStakeReward3) => new ClaimStakeReward3(),
                     nameof(TransferAsset) => new TransferAsset(),
                     nameof(MigrateMonsterCollection) => new MigrateMonsterCollection(),
                     _ => throw new CommandExitedException($"Unsupported action type was passed '{type}'", 128)
