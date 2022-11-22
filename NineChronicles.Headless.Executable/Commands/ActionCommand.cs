@@ -11,6 +11,7 @@ using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
 using Nekoyume.Action;
+using Nekoyume.Action.Factory;
 using Nekoyume.Model;
 using NineChronicles.Headless.Executable.IO;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -308,12 +309,12 @@ namespace NineChronicles.Headless.Executable.Commands
             try
             {
                 Address avatarAddress = new Address(ByteUtil.ParseHex(encodedAddress));
-                Nekoyume.Action.ClaimStakeReward action = new ClaimStakeReward(avatarAddress);
+                IClaimStakeReward action = ClaimStakeRewardFactory.CreateByBlockIndex(0, avatarAddress);
 
                 byte[] raw = Codec.Encode(new List(
                     new[]
                     {
-                        (Text) nameof(Nekoyume.Action.ClaimStakeReward),
+                        (Text)"ClaimStakeReward",
                         action.PlainValue
                     }
                 ));

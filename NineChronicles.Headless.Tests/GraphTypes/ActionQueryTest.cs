@@ -3,11 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
-using GraphQL;
 using GraphQL.Execution;
 using Libplanet;
 using Libplanet.Action;
@@ -118,7 +116,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["claimStakeReward"]));
             Assert.IsType<Dictionary>(plainValue);
             var dictionary = (Dictionary)plainValue;
-            Assert.IsType<ClaimStakeReward>(DeserializeNCAction(dictionary).InnerAction);
+            Assert.IsAssignableFrom<IClaimStakeReward>(DeserializeNCAction(dictionary).InnerAction);
         }
 
         [Fact]

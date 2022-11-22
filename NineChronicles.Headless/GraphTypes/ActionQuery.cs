@@ -10,6 +10,7 @@ using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
+using Nekoyume.Action.Factory;
 using Nekoyume.Helper;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -46,9 +47,18 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "The avatar address to receive staking rewards."
                     }),
                 resolve: context =>
-                    Encode(context,
-                        (NCAction)new ClaimStakeReward(
-                            context.GetArgument<Address>("avatarAddress"))));
+                {
+                    if (!(standaloneContext.BlockChain is { } chain))
+                    {
+                        throw new InvalidOperationException("BlockChain not found in the context");
+                    }
+
+                    return Encode(context,
+                        (GameAction)ClaimStakeRewardFactory.CreateByBlockIndex(
+                            chain.Tip.Index,
+                            context.GetArgument<Address>("avatarAddress")));
+                }
+            );
             Field<NonNullGraphType<ByteStringType>>(
                 name: "migrateMonsterCollection",
                 arguments: new QueryArguments(

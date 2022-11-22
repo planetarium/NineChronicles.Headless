@@ -8,11 +8,13 @@ using Bencodex.Types;
 using Cocona;
 using CsvHelper;
 using Libplanet;
+using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Tx;
 using Nekoyume.Action;
+using Nekoyume.Action.Factory;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -65,7 +67,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     nameof(MonsterCollect) => new MonsterCollect(),
                     nameof(ClaimMonsterCollectionReward) => new ClaimMonsterCollectionReward(),
                     nameof(Stake) => new Stake(),
-                    nameof(ClaimStakeReward) => new ClaimStakeReward(),
+                    "ClaimStakeReward" => (ActionBase)ClaimStakeRewardFactory.CreateByBlockIndex(0, new Address()),
                     nameof(TransferAsset) => new TransferAsset(),
                     nameof(MigrateMonsterCollection) => new MigrateMonsterCollection(),
                     _ => throw new CommandExitedException($"Unsupported action type was passed '{type}'", 128)
