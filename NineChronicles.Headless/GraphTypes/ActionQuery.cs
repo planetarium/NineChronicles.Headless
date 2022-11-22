@@ -375,7 +375,7 @@ namespace NineChronicles.Headless.GraphTypes
                     if (service is null)
                     {
                         Log.Error($"{nameof(NineChroniclesNodeService)} is null.");
-                        return null;
+                        throw new InvalidOperationException($"{nameof(NineChroniclesNodeService)} is null.");
                     }
 
                     var swarm = service.Swarm;
@@ -384,7 +384,7 @@ namespace NineChronicles.Headless.GraphTypes
                         throw new InvalidOperationException($"{nameof(swarm.BlockChain)} is null.");
                     }
 
-                    var tip = swarm.BlockChain.Tip.Index;
+                    var tip = chain.Tip.Index;
 
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var runeId = context.GetArgument<int>("runeId");
