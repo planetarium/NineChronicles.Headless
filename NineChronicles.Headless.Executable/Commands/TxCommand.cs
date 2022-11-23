@@ -8,6 +8,7 @@ using Bencodex.Types;
 using Cocona;
 using CsvHelper;
 using Libplanet;
+using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
@@ -46,11 +47,7 @@ namespace NineChronicles.Headless.Executable.Commands
             string[] actions,
             [Option("bytes", new[] { 'b' },
                 Description = "Print raw bytes instead of base64.  No trailing LF appended.")]
-            bool bytes = false,
-            [Option("ACTION-VERSION", new[] { 'v' },
-                Description =
-                    "Target action version to create. This option is required only for ClaimStakeReward currently.")]
-            int? actionVersion = null
+            bool bytes = false
         )
         {
             List<NCAction> parsedActions = actions.Select(a =>
@@ -70,11 +67,10 @@ namespace NineChronicles.Headless.Executable.Commands
                     nameof(MonsterCollect) => new MonsterCollect(),
                     nameof(ClaimMonsterCollectionReward) => new ClaimMonsterCollectionReward(),
                     nameof(Stake) => new Stake(),
-                    // FIXME: How to set default action version? Can I use blockIndex instead of action version?
-                    "ClaimStakeReward" => (ActionBase)ClaimStakeRewardFactory.CreateByVersion(
-                        actionVersion ?? 2,
-                        new Address()
-                    ),
+                    // FIXME: This `ClaimStakeReward` cases need to reduce to one case.
+                    nameof(ClaimStakeReward1) => new ClaimStakeReward1(),
+                    nameof(ClaimStakeReward) => new ClaimStakeReward(),
+                    nameof(ClaimStakeReward3) => new ClaimStakeReward3(),
                     nameof(TransferAsset) => new TransferAsset(),
                     nameof(MigrateMonsterCollection) => new MigrateMonsterCollection(),
                     _ => throw new CommandExitedException($"Unsupported action type was passed '{type}'", 128)
