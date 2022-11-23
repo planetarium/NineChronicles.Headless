@@ -357,7 +357,7 @@ namespace NineChronicles.Headless.GraphTypes
                     },
                     new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<RecipientsInputType>>>>
                     {
-                        Description = "List of recipients.",
+                        Description = "List of tuples that recipients' address and asset amount to be sent",
                         Name = "recipients",
                     },
                     new QueryArgument<StringGraphType>
