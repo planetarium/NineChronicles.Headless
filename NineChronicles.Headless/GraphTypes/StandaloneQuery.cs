@@ -157,7 +157,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<NodeStatusType>>(
                 name: "nodeStatus",
-                resolve: _ => new NodeStatusType(standaloneContext)
+                resolve: _ => standaloneContext.NodeStatus
             );
 
             Field<NonNullGraphType<Libplanet.Explorer.Queries.ExplorerQuery<NCAction>>>(

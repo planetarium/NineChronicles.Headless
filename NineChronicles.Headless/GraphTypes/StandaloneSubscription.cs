@@ -130,8 +130,8 @@ namespace NineChronicles.Headless.GraphTypes
             {
                 Name = "nodeStatus",
                 Type = typeof(NodeStatusType),
-                Resolver = new FuncFieldResolver<NodeStatusType>(context => (context.Source as NodeStatusType)!),
-                Subscriber = new EventStreamResolver<NodeStatusType>(context => StandaloneContext.NodeStatusSubject.AsObservable()),
+                Resolver = new FuncFieldResolver<NodeStatus>(context => (context.Source as NodeStatus)!),
+                Subscriber = new EventStreamResolver<NodeStatus>(context => StandaloneContext.NodeStatusSubject.AsObservable()),
             });
             AddField(new EventStreamFieldType
             {
