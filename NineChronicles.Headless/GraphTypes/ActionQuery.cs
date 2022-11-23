@@ -394,14 +394,33 @@ namespace NineChronicles.Headless.GraphTypes
                     }),
                 resolve: context =>
                 {
+                    var index = context.GetArgument<int>("index");
+                    if (index < 0 || index > 2)
+                    {
+                        throw new ExecutionError(
+                            $"Invalid index({index}). It must be 0~2.");
+                    }
+
+                    var name = context.GetArgument<string>("name");
+                    if (name.Length < 2 || name.Length > 20)
+                    {
+                        throw new ExecutionError(
+                            $"Invalid name({name}). It must be 2~20 characters.");
+                    }
+
+                    var hair = context.GetArgument<int>("hair");
+                    var lens = context.GetArgument<int>("lens");
+                    var ear = context.GetArgument<int>("ear");
+                    var tail = context.GetArgument<int>("tail");
+
                     NCAction action = new CreateAvatar
                     {
-                        index = context.GetArgument<int>("index"),
-                        name = context.GetArgument<string>("name"),
-                        hair = context.GetArgument<int>("hair"),
-                        lens = context.GetArgument<int>("lens"),
-                        ear = context.GetArgument<int>("ear"),
-                        tail = context.GetArgument<int>("tail"),
+                        index = index,
+                        name = name,
+                        hair = hair,
+                        lens = lens,
+                        ear = ear,
+                        tail = tail,
                     };
                     return Encode(context, action);
                 });
