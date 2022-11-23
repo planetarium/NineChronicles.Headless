@@ -484,5 +484,30 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Assert.Equal(rewardPoolAddress, minter);
             }
         }
+
+        [Fact]
+        public async Task TransferAssets()
+        {
+            var sender = new PrivateKey().ToAddress();
+            var recipients = $"{{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 18, ticker: \"CRYSTAL\" }} }}, {{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 0, ticker: \"RUNE_FENRIR1\" }} }}";
+            var query = $"{{ transferAssets(sender: \"{sender}\", recipients: [{recipients}]) }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["transferAssets"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<TransferAssets>(polymorphicAction.InnerAction);
+
+            Assert.Equal(sender, action.Sender);
+            Assert.Equal(2, action.Recipients.Count);
+            Assert.All(action.Recipients, recipient => Assert.Equal(sender, recipient.recipient));
+            Assert.All(action.Recipients, recipient => Assert.Equal(100, recipient.amount.MajorUnit));
+            Assert.All(action.Recipients, recipient => Assert.Null(recipient.amount.Currency.Minters));
+            foreach (var (ticker, decimalPlaces) in new[] { ("CRYSTAL", 18), ("RUNE_FENRIR1", 0) })
+            {
+                var recipient = action.Recipients.First(r => r.amount.Currency.Ticker == ticker);
+                Assert.Equal(decimalPlaces, recipient.amount.Currency.DecimalPlaces);
+            }
+        }
     }
 }
