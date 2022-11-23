@@ -8,6 +8,7 @@ namespace NineChronicles.Headless.GraphTypes
     {
         CRYSTAL,
         NCG,
+        RUNESTONE,
     }
 
     public class CurrencyEnumType : EnumerationGraphType<CurrencyEnum>

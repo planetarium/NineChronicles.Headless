@@ -243,11 +243,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Theory]
-        [InlineData("NCG", true)]
-        [InlineData("NCG", false)]
-        [InlineData("CRYSTAL", true)]
-        [InlineData("CRYSTAL", false)]
-        public async Task TransferAsset(string currencyType, bool memo)
+        [InlineData("NCG", true, true)]
+        [InlineData("NCG", false, true)]
+        [InlineData("CRYSTAL", true, true)]
+        [InlineData("CRYSTAL", false, true)]
+        [InlineData("RUNESTONE", true, false)]
+        [InlineData("RUNESTONE", false, false)]
+        public async Task TransferAsset(
+            string currencyType,
+            bool memo,
+            bool errorsShouldBeNull)
         {
             var recipient = new PrivateKey().ToAddress();
             var sender = new PrivateKey().ToAddress();
@@ -256,8 +261,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 args += ", memo: \"memo\"";
             }
+
             var query = $"{{ transferAsset({args}) }}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            if (!errorsShouldBeNull)
+            {
+                Assert.NotNull(queryResult.Errors);
+                return;
+            }
+
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["transferAsset"]));
             Assert.IsType<Dictionary>(plainValue);
