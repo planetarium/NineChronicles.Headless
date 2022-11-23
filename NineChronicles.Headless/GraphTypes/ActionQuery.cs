@@ -347,6 +347,34 @@ namespace NineChronicles.Headless.GraphTypes
                     return Encode(context, action);
                 }
             );
+            Field<NonNullGraphType<ByteStringType>>(
+                "transferAssets",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Description = "Address of sender.",
+                        Name = "sender",
+                    },
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<RecipientsInputType>>>>
+                    {
+                        Description = "List of recipients.",
+                        Name = "recipients",
+                    },
+                    new QueryArgument<StringGraphType>
+                    {
+                        Description = "A 80-max length string to note.",
+                        Name = "memo",
+                    }
+                ),
+                resolve: context =>
+                {
+                    var sender = context.GetArgument<Address>("sender");
+                    var recipients = context.GetArgument<List<(Address recipient, FungibleAssetValue amount)>>("recipients");
+                    var memo = context.GetArgument<string?>("memo");
+                    NCAction action = new TransferAssets(sender, recipients, memo);
+                    return Encode(context, action);
+                }
+            );
         }
 
         internal virtual byte[] Encode(IResolveFieldContext context, NCAction action)
