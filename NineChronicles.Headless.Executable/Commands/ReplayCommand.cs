@@ -267,7 +267,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     {
                         if (verbose)
                         {
-                            msg = $"-- repeat #{i + 1} / {repeatCount}";
+                            msg = $"-- repeat {i + 1}/{repeatCount}..";
                             _console.Out.Write(msg);
                             outputSw?.Write(msg);
                         }
@@ -284,9 +284,6 @@ namespace NineChronicles.Headless.Executable.Commands
                                 _console.Out.WriteLine(msg);
                                 outputSw?.WriteLine(msg);
                                 LoggingActionEvaluations(actionEvaluations, outputSw);
-                                msg = "- block #{block.Index} evaluating end successfully.";
-                                _console.Out.WriteLine(msg);
-                                outputSw?.WriteLine(msg);
                             }
                         }
                         catch (InvalidBlockStateRootHashException)
@@ -488,13 +485,14 @@ namespace NineChronicles.Headless.Executable.Commands
             IReadOnlyList<ActionEvaluation> actionEvaluations,
             TextWriter? textWriter)
         {
-            for (var i = 0; i < actionEvaluations.Count; i++)
+            var count = actionEvaluations.Count;
+            for (var i = 0; i < count; i++)
             {
                 var actionEvaluation = actionEvaluations[i];
                 var actionType = actionEvaluation.Action is NCAction nca
                     ? ActionTypeAttribute.ValueOf(nca.InnerAction.GetType())
                     : actionEvaluation.Action.GetType().Name;
-                var prefix = $"--- action evaluation #{i + 1}";
+                var prefix = $"--- action evaluation {i + 1}/{count}:";
                 var msg = prefix +
                           $" tx-id({actionEvaluation.InputContext.TxId})" +
                           $", action-type(\"{actionType}\")";
