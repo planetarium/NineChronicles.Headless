@@ -315,7 +315,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 if (blockIndex.HasValue && actionVersion.HasValue)
                 {
                     throw new CommandExitedException(
-                        "You can't specify both block index and action version.",
+                        "You can't specify both block index and action version at the same time.",
                         -1);
                 }
 
@@ -327,8 +327,7 @@ namespace NineChronicles.Headless.Executable.Commands
                         blockIndex.Value,
                         avatarAddress);
                 }
-
-                if (actionVersion.HasValue)
+                else if (actionVersion.HasValue)
                 {
                     action = ClaimStakeRewardFactory.CreateByVersion(
                         actionVersion.Value,
