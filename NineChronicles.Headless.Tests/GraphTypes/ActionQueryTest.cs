@@ -72,7 +72,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             _standaloneContext = new StandaloneContext
             {
                 BlockChain = blockchain,
-                Store = store,
             };
         }
 

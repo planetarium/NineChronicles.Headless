@@ -16,7 +16,7 @@ namespace NineChronicles.Headless.GraphTypes
 {
     class TransactionHeadlessQuery : ObjectGraphType
     {
-        public TransactionHeadlessQuery(StandaloneContext standaloneContext)
+        public TransactionHeadlessQuery(StandaloneContext standaloneContext, IStore store)
         {
             Field<NonNullGraphType<LongGraphType>>(
                 name: "nextTxNonce",
@@ -148,12 +148,6 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
-
-                    if (!(standaloneContext.Store is IStore store))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.Store)} was not set yet!");
                     }
 
                     TxId txId = context.GetArgument<TxId>("txId");

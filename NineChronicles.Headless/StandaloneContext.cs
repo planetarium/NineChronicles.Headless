@@ -44,8 +44,6 @@ namespace NineChronicles.Headless
             IsMining = IsMining,
         };
 
-        public IStore? Store { get; internal set; }
-
         internal TimeSpan DifferentAppProtocolVersionEncounterInterval { get; set; } = TimeSpan.FromSeconds(30);
 
         internal TimeSpan NotificationInterval { get; set; } = TimeSpan.FromSeconds(30);

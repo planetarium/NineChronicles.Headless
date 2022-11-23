@@ -49,7 +49,6 @@ namespace NineChronicles.Headless.Tests.Controllers
             _standaloneContext = new StandaloneContext
             {
                 BlockChain = blockchain,
-                Store = store,
             };
             _configuration = new ConfigurationBuilder().AddInMemoryCollection().Build();
             _httpContextAccessor = new HttpContextAccessor();

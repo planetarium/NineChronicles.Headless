@@ -25,6 +25,7 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Lib9c.Tests;
+using Libplanet.Store;
 using Xunit.Abstractions;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -82,6 +83,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 MonsterCollectionStatusInterval = TimeSpan.FromSeconds(1),
             };
             ncService.ConfigureContext(StandaloneContextFx);
+            Store = ncService.Store;
 
             var configurationBuilder = new ConfigurationBuilder();
             var configuration = configurationBuilder.Build();
@@ -119,6 +121,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         protected BlockChain<NCAction> BlockChain =>
             StandaloneContextFx.BlockChain!;
+        
+        protected IStore Store
+        {
+            get;
+            private set;
+        }
 
         protected IKeyStore KeyStore =>
             StandaloneContextFx.KeyStore!;

@@ -316,12 +316,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         private Task<ExecutionResult> ExecuteAsync(string query)
         {
-            return GraphQLTestUtils.ExecuteQueryAsync<TransactionHeadlessQuery>(query, standaloneContext: new StandaloneContext
-            {
-                BlockChain = _blockChain,
-                Store = _store,
-                NineChroniclesNodeService = _service
-            });
+            return GraphQLTestUtils.ExecuteQueryAsync<TransactionHeadlessQuery>(query,
+                standaloneContext: new StandaloneContext
+                {
+                    BlockChain = _blockChain,
+                    NineChroniclesNodeService = _service
+                },
+                store: _store);
         }
     }
 }

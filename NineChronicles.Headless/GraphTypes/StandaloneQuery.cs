@@ -25,12 +25,13 @@ using Nekoyume.Model;
 using NineChronicles.Headless.GraphTypes.States;
 using Serilog;
 using Libplanet.Crypto;
+using Libplanet.Store;
 
 namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneQuery : ObjectGraphType
     {
-        public StandaloneQuery(StandaloneContext standaloneContext, IConfiguration configuration, ActionEvaluationPublisher publisher)
+        public StandaloneQuery(StandaloneContext standaloneContext, IConfiguration configuration, ActionEvaluationPublisher publisher, IStore store)
         {
             bool useSecretToken = configuration[GraphQLService.SecretTokenKey] is { };
 
@@ -105,11 +106,6 @@ namespace NineChronicles.Headless.GraphTypes
                 ), resolve: context =>
                 {
                     BlockHash blockHash = new BlockHash(context.GetArgument<byte[]>("blockHash"));
-
-                    if (!(standaloneContext.Store is { } store))
-                    {
-                        throw new InvalidOperationException();
-                    }
 
                     if (!(store.GetBlockDigest(blockHash) is { } digest))
                     {
@@ -349,7 +345,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<TransactionHeadlessQuery>>(
                 name: "transaction",
                 description: "Query for transaction.",
-                resolve: context => new TransactionHeadlessQuery(standaloneContext)
+                resolve: context => new TransactionHeadlessQuery(standaloneContext, store)
             );
 
             Field<NonNullGraphType<BooleanGraphType>>(

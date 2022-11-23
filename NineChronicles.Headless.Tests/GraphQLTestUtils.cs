@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Types;
+using Libplanet.Store;
 using Microsoft.Extensions.DependencyInjection;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -14,7 +15,8 @@ namespace NineChronicles.Headless.Tests
             string query,
             IDictionary<string, object>? userContext = null,
             object? source = null,
-            StandaloneContext? standaloneContext = null)
+            StandaloneContext? standaloneContext = null,
+            IStore? store = null)
             where TObjectGraphType : class, IObjectGraphType
         {
             var services = new ServiceCollection();
@@ -25,6 +27,11 @@ namespace NineChronicles.Headless.Tests
             }
 
             services.AddLibplanetExplorer<NCAction>();
+
+            if (store is not null)
+            {
+                services.AddSingleton(store);   
+            }
 
             var serviceProvider = services.BuildServiceProvider();
             return ExecuteQueryAsync<TObjectGraphType>(

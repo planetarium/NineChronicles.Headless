@@ -569,7 +569,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             BlockChain.Append(block);
             foreach (var tx in txs)
             {
-                Assert.NotNull(StandaloneContextFx.Store?.GetTxExecution(block.Hash, tx.Id));
+                Assert.NotNull(Store?.GetTxExecution(block.Hash, tx.Id));
             }
 
             var blockHashHex = ByteUtil.Hex(block.Hash.ToByteArray());
