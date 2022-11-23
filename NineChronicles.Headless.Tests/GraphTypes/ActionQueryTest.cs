@@ -3,11 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
-using GraphQL;
 using GraphQL.Execution;
 using Libplanet;
 using Libplanet.Action;
@@ -503,6 +502,76 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 var minter = Assert.Single(ncg.Currency.Minters!);
                 Assert.Equal(rewardPoolAddress, minter);
             }
+        }
+
+        [Theory]
+        [InlineData(-1, "ab", null, null, null, null, false)]
+        [InlineData(0, "ab", null, null, null, null, true)]
+        [InlineData(2, "ab", null, null, null, null, true)]
+        [InlineData(3, "ab", null, null, null, null, false)]
+        [InlineData(1, "", null, null, null, null, false)]
+        [InlineData(1, "a", null, null, null, null, false)]
+        [InlineData(1, "ab", null, null, null, null, true)]
+        [InlineData(1, "12345678901234567890", null, null, null, null, true)]
+        [InlineData(1, "123456789012345678901", null, null, null, null, false)]
+        [InlineData(1, "ab", 1, null, null, null, true)]
+        [InlineData(1, "ab", null, 1, null, null, true)]
+        [InlineData(1, "ab", null, null, 1, null, true)]
+        [InlineData(1, "ab", null, null, null, 1, true)]
+        [InlineData(1, "ab", 1, 1, 1, 1, true)]
+        public async Task CreateAvatar(
+            int index,
+            string name,
+            int? hair,
+            int? lens,
+            int? ear,
+            int? tail,
+            bool errorsShouldBeNull)
+        {
+            var sb = new StringBuilder();
+            sb.Append($"{{ createAvatar(index: {index}, name: \"{name}\"");
+            if (hair.HasValue)
+            {
+                sb.Append($", hair: {hair}");
+            }
+
+            if (lens.HasValue)
+            {
+                sb.Append($", lens: {lens}");
+            }
+
+            if (ear.HasValue)
+            {
+                sb.Append($", ear: {ear}");
+            }
+
+            if (tail.HasValue)
+            {
+                sb.Append($", tail: {tail}");
+            }
+
+            sb.Append(") }");
+            var query = sb.ToString();
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(
+                query,
+                standaloneContext: _standaloneContext);
+            if (!errorsShouldBeNull)
+            {
+                Assert.NotNull(queryResult.Errors);
+                return;
+            }
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["createAvatar"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<CreateAvatar>(polymorphicAction.InnerAction);
+            Assert.Equal(index, action.index);
+            Assert.Equal(name, action.name);
+            Assert.Equal(hair ?? 0, action.hair);
+            Assert.Equal(lens ?? 0, action.lens);
+            Assert.Equal(ear ?? 0, action.ear);
+            Assert.Equal(tail ?? 0, action.tail);
         }
     }
 }

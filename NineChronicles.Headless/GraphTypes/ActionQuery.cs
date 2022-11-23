@@ -355,6 +355,56 @@ namespace NineChronicles.Headless.GraphTypes
                     return Encode(context, action);
                 }
             );
+            Field<NonNullGraphType<ByteStringType>>(
+                "createAvatar",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "index",
+                        Description = "index of avatar in `AgentState.avatarAddresses`.(0~2)",
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "name",
+                        Description = "name of avatar.(2~20 characters)",
+                    },
+                    new QueryArgument<IntGraphType>
+                    {
+                        Name = "hair",
+                        Description = "hair index of avatar.",
+                        DefaultValue = 0,
+                    },
+                    new QueryArgument<IntGraphType>
+                    {
+                        Name = "lens",
+                        Description = "lens index of avatar.",
+                        DefaultValue = 0,
+                    },
+                    new QueryArgument<IntGraphType>
+                    {
+                        Name = "ear",
+                        Description = "ear index of avatar.",
+                        DefaultValue = 0,
+                    },
+                    new QueryArgument<IntGraphType>
+                    {
+                        Name = "tail",
+                        Description = "tail index of avatar.",
+                        DefaultValue = 0,
+                    }),
+                resolve: context =>
+                {
+                    NCAction action = new CreateAvatar
+                    {
+                        index = context.GetArgument<int>("index"),
+                        name = context.GetArgument<string>("name"),
+                        hair = context.GetArgument<int>("hair"),
+                        lens = context.GetArgument<int>("lens"),
+                        ear = context.GetArgument<int>("ear"),
+                        tail = context.GetArgument<int>("tail"),
+                    };
+                    return Encode(context, action);
+                });
         }
 
         internal virtual byte[] Encode(IResolveFieldContext context, NCAction action)
