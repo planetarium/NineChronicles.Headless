@@ -516,6 +516,26 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return null;
+                }
+            );
+
+            Field<RuneSlotStateType>(
+                nameof(RuneSlotState),
+                description: "rune slot state by battle type.",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "runeSlotStateAddress"
+                }),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("runeSlotStateAddress");
+                    IValue? value = context.Source.GetState(address);
+                    if (value is List l)
+                    {
+                        return new RuneSlotState(l);
+                    }
+
+                    return null;
                 });
         }
     }

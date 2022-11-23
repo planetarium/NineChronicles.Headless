@@ -4,8 +4,10 @@ using Libplanet;
 using Libplanet.Explorer.GraphTypes;
 using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
 using Nekoyume;
+using Nekoyume.Model.EnumType;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
+using NineChronicles.Headless.GraphTypes.States.Models.Table;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -87,6 +89,22 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 ),
                 resolve: context => RuneState.DeriveAddress(context.GetArgument<Address>("avatarAddress"), context.GetArgument<int>("runeId")));
+
+            Field<NonNullGraphType<AddressType>>(
+                name: "runeSlotStateAddress",
+                description: "runeSlotState address by battleType.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "address of avatar state."
+                    },
+                    new QueryArgument<NonNullGraphType<BattleTypeEnumType>>
+                    {
+                        Name = "battleType",
+                    }
+                ),
+                resolve: context => RuneSlotState.DeriveAddress(context.GetArgument<Address>("avatarAddress"), context.GetArgument<BattleType>("battleType")));
         }
     }
 }

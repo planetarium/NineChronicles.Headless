@@ -6,6 +6,7 @@ using GraphQL.Execution;
 using Libplanet;
 using Libplanet.Assets;
 using Nekoyume;
+using Nekoyume.Model.EnumType;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
@@ -29,7 +30,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Fact]
-        public async Task Find_Rune()
+        public async Task Find_Rune_And_Equip()
         {
             // Get RuneList.
             var runeListQuery = $@"query {{
@@ -74,8 +75,76 @@ runeState(runeStateAddress: ""{runeStateAddress}"") {{
                 ["runeId"] = runeId,
                 ["level"] = 1,
             }, runeState);
+
+            // Find RuneSlotState address.
+            var runeSlotStateAddressQuery = $@"query {{
+runeSlotStateAddress(avatarAddress: ""{_avatarAddress}"", battleType: RAID)
+}}";
+            var runeSlotStateAddressQueryResult = await ExecuteQueryAsync<AddressQuery>(runeSlotStateAddressQuery);
+            var runeSlotStateAddressData = (Dictionary<string, object>)((ExecutionNode)runeSlotStateAddressQueryResult.Data!).ToValue()!;
+            var runeSlotStateAddress = runeSlotStateAddressData["runeSlotStateAddress"];
+            Assert.Equal("0x92dE06F3E9D701C2740Ee850E0D6B35084F8B574", runeSlotStateAddress);
+
+            // Find RuneSlotState.
+            var runeSlotStateQuery = $@"query {{
+runeSlotState(runeSlotStateAddress: ""{runeSlotStateAddress}"") {{
+    battleType
+    slots {{
+        index
+        runeType
+        isLock
+        }}
+    }}
+}}";
+            var runeSlotStateQueryResult =
+                await ExecuteQueryAsync<StateQuery>(runeSlotStateQuery, source: _stateContext);
+            var runeSlotState = (Dictionary<string, object>)((Dictionary<string, object>)((ExecutionNode)runeSlotStateQueryResult.Data!)
+                .ToValue()!)["runeSlotState"];
+            Assert.Equal("RAID", runeSlotState["battleType"]);
+
+            var slots = (object[])runeSlotState["slots"];
+            var slot = slots
+                .First(i => ((Dictionary<string, object>)i)["runeType"] == rune["runeType"] && ((Dictionary<string, object>)i)["isLock"].Equals(false));
+            var index = ((Dictionary<string, object>)slot)["index"];
+            Assert.Equal(0, index);
+            Assert.Equal(6, slots.Length);
         }
 
+        [Theory]
+        [InlineData(BattleType.Adventure, "0x05Cd944B81a893Fa434A578665058BfC366e978e", "ADVENTURE")]
+        [InlineData(BattleType.Arena, "0x6DDAF8E11f2A1694f130bb1E6Fb136f5cBa0fEc8", "ARENA")]
+        [InlineData(BattleType.Raid, "0x92dE06F3E9D701C2740Ee850E0D6B35084F8B574", "RAID")]
+        public async Task Find_RuneSlot(BattleType battleType, string expectedAddress, string expectedType)
+        {
+            // Find address.
+            var addressQuery = $@"query {{
+runeSlotStateAddress(avatarAddress: ""{_avatarAddress}"", battleType: {battleType})
+}}";
+            var addressQueryResult = await ExecuteQueryAsync<AddressQuery>(addressQuery);
+            var addressData = (Dictionary<string, object>)((ExecutionNode)addressQueryResult.Data!).ToValue()!;
+            var runeSlotStateAddress = addressData["runeSlotStateAddress"];
+            Assert.Equal(expectedAddress, runeSlotStateAddress);
+
+            // Find RuneSlotState.
+            var stateQuery = $@"query {{
+runeSlotState(runeSlotStateAddress: ""{runeSlotStateAddress}"") {{
+    battleType
+    slots {{
+        index
+        runeType
+        isLock
+        }}
+    }}
+}}";
+            var stateQueryResult =
+                await ExecuteQueryAsync<StateQuery>(stateQuery, source: _stateContext);
+            var runeSlotState = (Dictionary<string, object>)((Dictionary<string, object>)((ExecutionNode)stateQueryResult.Data!)
+                .ToValue()!)["runeSlotState"];
+            Assert.Equal(expectedType, runeSlotState["battleType"]);
+
+            var slots = (object[])runeSlotState["slots"];
+            Assert.Equal(6, slots.Length);
+        }
         private IValue? GetStateMock(Address address)
         {
             if (address.Equals(_runeListSheetAddress))
@@ -94,6 +163,22 @@ runeState(runeStateAddress: ""{runeStateAddress}"") {{
                 runeState.LevelUp();
                 return runeState.Serialize();
             }
+
+            if (address.Equals(RuneSlotState.DeriveAddress(_avatarAddress, BattleType.Adventure)))
+            {
+                return new RuneSlotState(BattleType.Adventure).Serialize();
+            }
+
+            if (address.Equals(RuneSlotState.DeriveAddress(_avatarAddress, BattleType.Arena)))
+            {
+                return new RuneSlotState(BattleType.Arena).Serialize();
+            }
+
+            if (address.Equals(RuneSlotState.DeriveAddress(_avatarAddress, BattleType.Raid)))
+            {
+                return new RuneSlotState(BattleType.Raid).Serialize();
+            }
+
             return null;
         }
 
