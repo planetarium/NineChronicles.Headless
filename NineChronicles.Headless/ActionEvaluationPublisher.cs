@@ -315,6 +315,19 @@ namespace NineChronicles.Headless
                                                 .Select(tuple => new List(tuple.orderId.Serialize(), tuple.errorCode.Serialize()))
                                         );
                                     }
+
+                                    if (ev.Action is BattleGrandFinale grandFinale && ev.Exception is null)
+                                    {
+                                        if (grandFinale.ExtraMyArenaPlayerDigest is { } myDigest)
+                                        {
+                                            extra[nameof(BattleGrandFinale.ExtraMyArenaPlayerDigest)] = myDigest.Serialize();
+                                        }
+
+                                        if (grandFinale.ExtraEnemyArenaPlayerDigest is { } enemyDigest)
+                                        {
+                                            extra[nameof(BattleGrandFinale.ExtraEnemyArenaPlayerDigest)] = enemyDigest.Serialize();
+                                        }
+                                    }
                                 }
                                 var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputStates, ev.Exception, ev.PreviousStates, ev.RandomSeed, extra);
                                 var encoded = MessagePackSerializer.Serialize(eval);
