@@ -824,7 +824,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
 
             StandaloneContextFx.NineChroniclesNodeService = service;
-            
+
 
             // Error: empty payload
             var query = $"mutation {{ stageTx(payload: \"\") }}";
@@ -878,7 +878,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
 
             StandaloneContextFx.NineChroniclesNodeService = service;
-            
+
 
             // Error: empty payload
             var query = $"mutation {{ stageTxV2(payload: \"\") }}";

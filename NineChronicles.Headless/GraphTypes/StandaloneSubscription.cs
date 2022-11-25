@@ -103,14 +103,17 @@ namespace NineChronicles.Headless.GraphTypes
 
         private const int _blockRenderDegreeOfParallelism = 8;
 
+        private readonly BlockChain<PolymorphicAction<ActionBase>> _blockChain;
+
         private BlockHeader? _tipHeader;
 
         private ISubject<TipChanged> _subject = new ReplaySubject<TipChanged>();
 
         private StandaloneContext StandaloneContext { get; }
 
-        public StandaloneSubscription(StandaloneContext standaloneContext)
+        public StandaloneSubscription(StandaloneContext standaloneContext, BlockChain<PolymorphicAction<ActionBase>> blockChain)
         {
+            _blockChain = blockChain;
             StandaloneContext = standaloneContext;
             AddField(new EventStreamFieldType
             {
@@ -308,13 +311,12 @@ namespace NineChronicles.Headless.GraphTypes
             sw.Start();
             Log.Debug("StandaloneSubscription.RenderBlock started");
 
-            BlockChain<PolymorphicAction<ActionBase>> blockChain = StandaloneContext.NineChroniclesNodeService.BlockChain;
             Currency currency =
                 new GoldCurrencyState(
-                    (Dictionary)blockChain.GetState(Addresses.GoldCurrency, _tipHeader.Hash)
+                    (Dictionary)_blockChain.GetState(Addresses.GoldCurrency, _tipHeader.Hash)
                 ).Currency;
             var rewardSheet = new MonsterCollectionRewardSheet();
-            var csv = blockChain.GetState(
+            var csv = _blockChain.GetState(
                 Addresses.GetSheetAddress<MonsterCollectionRewardSheet>(),
                 _tipHeader.Hash
             ).ToDotnetString();
@@ -329,7 +331,7 @@ namespace NineChronicles.Headless.GraphTypes
                     (ReplaySubject<MonsterCollectionStatus> statusSubject, _, ReplaySubject<string> balanceSubject) =
                         kv.Value;
                     RenderForAgent(
-                        blockChain,
+                        _blockChain,
                         _tipHeader,
                         address,
                         currency,
@@ -397,7 +399,7 @@ namespace NineChronicles.Headless.GraphTypes
             foreach (var (address, subjects) in StandaloneContext.AgentAddresses)
             {
                 if (eval.Signer.Equals(address) &&
-                    service.BlockChain.GetState(address, _tipHeader?.Hash) is Dictionary agentDict)
+                    _blockChain.GetState(address, _tipHeader?.Hash) is Dictionary agentDict)
                 {
                     var agentState = new AgentState(agentDict);
                     Address deriveAddress = MonsterCollectionState.DeriveAddress(address, agentState.MonsterCollectionRound);

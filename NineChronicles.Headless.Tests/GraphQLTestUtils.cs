@@ -32,12 +32,12 @@ namespace NineChronicles.Headless.Tests
 
             if (store is not null)
             {
-                services.AddSingleton(store);   
+                services.AddSingleton(store);
             }
-            
+
             if (blockChain is not null)
             {
-                services.AddSingleton(blockChain);   
+                services.AddSingleton(blockChain);
             }
 
             var serviceProvider = services.BuildServiceProvider();

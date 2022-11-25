@@ -805,7 +805,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test);
             var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Test);
             StandaloneContextFx.NineChroniclesNodeService = service;
-            
+
 
             var code = activationKey.Encode();
             if (trim)
@@ -944,7 +944,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Test);
             StandaloneContextFx.NineChroniclesNodeService = service;
-            
+
 
             var query = $@"query {{ 
 stateQuery {{ balance(address: ""{adminAddress}"", currency: {{ decimalPlaces: 18, ticker: ""CRYSTAL"" }})

@@ -122,7 +122,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         protected StandaloneContext StandaloneContextFx { get; }
 
         protected BlockChain<NCAction> BlockChain { get; }
-        
+
         protected IStore Store
         {
             get;
