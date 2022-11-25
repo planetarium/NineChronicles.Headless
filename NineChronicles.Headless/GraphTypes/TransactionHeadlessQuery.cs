@@ -16,7 +16,7 @@ namespace NineChronicles.Headless.GraphTypes
 {
     class TransactionHeadlessQuery : ObjectGraphType
     {
-        public TransactionHeadlessQuery(StandaloneContext standaloneContext, IStore store)
+        public TransactionHeadlessQuery(StandaloneContext standaloneContext, IStore store, BlockChain<NCAction> blockChain)
         {
             Field<NonNullGraphType<LongGraphType>>(
                 name: "nextTxNonce",
@@ -25,12 +25,6 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
-
                     Address address = context.GetArgument<Address>("address");
                     return blockChain.GetNextTxNonce(address);
                 }
@@ -44,12 +38,6 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
-
                     var txId = context.GetArgument<TxId>("txId");
                     return blockChain.GetTransaction(txId);
                 }
@@ -77,12 +65,6 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
-
                     string plainValueString = context.GetArgument<string>("plainValue");
                     var plainValue = new Bencodex.Codec().Decode(System.Convert.FromBase64String(plainValueString));
 #pragma warning disable 612
@@ -144,12 +126,6 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
-
                     TxId txId = context.GetArgument<TxId>("txId");
                     if (!(store.GetFirstTxIdBlockHashIndex(txId) is { } txExecutedBlockHash))
                     {
@@ -200,12 +176,6 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
-
                     string plainValueString = context.GetArgument<string>("plainValue");
                     var plainValue = new Bencodex.Codec().Decode(ByteUtil.ParseHex(plainValueString));
 #pragma warning disable 612

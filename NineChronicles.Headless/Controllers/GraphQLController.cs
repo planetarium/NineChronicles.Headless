@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet;
+using Libplanet.Blockchain;
 using Libplanet.KeyStore;
 using Microsoft.AspNetCore.Mvc;
 using Nekoyume;
@@ -19,7 +20,7 @@ using Nekoyume.Model.Item;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Requests;
 using Serilog;
-
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Controllers
 {
@@ -28,6 +29,7 @@ namespace NineChronicles.Headless.Controllers
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IConfiguration _configuration;
+        private readonly BlockChain<NCAction> _blockChain;
 
         private ConcurrentDictionary<Address, long> NotificationRecords { get; }
             = new ConcurrentDictionary<Address, long>();
@@ -41,10 +43,11 @@ namespace NineChronicles.Headless.Controllers
 
         public const string RemoveSubscribeEndPoint = "/remove-subscribe";
 
-        public GraphQLController(StandaloneContext standaloneContext, IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
+        public GraphQLController(StandaloneContext standaloneContext, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, BlockChain<NCAction> blockChain)
         {
             _httpContextAccessor = httpContextAccessor;
             _configuration = configuration;
+            _blockChain = blockChain;
             StandaloneContext = standaloneContext;
         }
 
@@ -170,7 +173,7 @@ namespace NineChronicles.Headless.Controllers
             }
 
             IEnumerable<Address> playerAddresses = tuples.Select(tuple => tuple.Item2.Address);
-            var chain = StandaloneContext.BlockChain;
+            var chain = _blockChain;
             if (chain is null)
             {
                 throw new InvalidOperationException($"{nameof(chain)} is null.");

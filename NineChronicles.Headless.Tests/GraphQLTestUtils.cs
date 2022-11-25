@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Types;
+using Libplanet.Blockchain;
 using Libplanet.Store;
 using Microsoft.Extensions.DependencyInjection;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -16,7 +17,8 @@ namespace NineChronicles.Headless.Tests
             IDictionary<string, object>? userContext = null,
             object? source = null,
             StandaloneContext? standaloneContext = null,
-            IStore? store = null)
+            IStore? store = null,
+            BlockChain<NCAction>? blockChain = null)
             where TObjectGraphType : class, IObjectGraphType
         {
             var services = new ServiceCollection();
@@ -31,6 +33,11 @@ namespace NineChronicles.Headless.Tests
             if (store is not null)
             {
                 services.AddSingleton(store);   
+            }
+            
+            if (blockChain is not null)
+            {
+                services.AddSingleton(blockChain);   
             }
 
             var serviceProvider = services.BuildServiceProvider();

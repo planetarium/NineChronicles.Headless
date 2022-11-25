@@ -178,7 +178,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Null(result.Errors);
             Assert.Equal(expectedResult, data);
 
-            var anonymousTx = StandaloneContextFx.BlockChain!.MakeTransaction(
+            var anonymousTx = BlockChain.MakeTransaction(
                 new PrivateKey(),
                 new PolymorphicAction<ActionBase>[] { }
             );
@@ -198,7 +198,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Null(result.Errors);
             Assert.Equal(expectedResult, data);
 
-            var signerTx = StandaloneContextFx.BlockChain.MakeTransaction(
+            var signerTx = BlockChain.MakeTransaction(
                 privateKey,
                 new PolymorphicAction<ActionBase>[] { }
             );
@@ -232,9 +232,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var userAddress = userPrivateKey.ToAddress();
             var service = MakeMineChroniclesNodeService(userPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
-            var blockChain = StandaloneContextFx.BlockChain;
+            var blockChain = BlockChain;
             for (int i = 0; i < 10; i++)
             {
                 await blockChain!.MineBlock(userPrivateKey);
@@ -474,9 +473,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Test);
             StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
-            var blockChain = StandaloneContextFx.BlockChain!;
+            var blockChain = BlockChain;
 
             var queryResult = await ExecuteQueryAsync("query { activationStatus { activated } }");
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
@@ -513,9 +511,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var userAddress = userPrivateKey.ToAddress();
             var service = MakeMineChroniclesNodeService(userPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
-            var blockChain = StandaloneContextFx.BlockChain;
+            var blockChain = BlockChain;
             var query = $"query {{ goldBalance(address: \"{userAddress}\") }}";
             var queryResult = await ExecuteQueryAsync(query);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
@@ -604,7 +601,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var userAddress = userPrivateKey.ToAddress();
             var service = MakeMineChroniclesNodeService(userPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
             const string query = @"query {
                 minerAddress
             }";
@@ -628,7 +624,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var userAddress = userPrivateKey.ToAddress();
             var service = MakeMineChroniclesNodeService(userPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
             if (!miner)
             {
                 StandaloneContextFx.NineChroniclesNodeService.MinerPrivateKey = null;
@@ -666,7 +661,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var userAddress = userPrivateKey.ToAddress();
             var service = MakeMineChroniclesNodeService(userPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
             if (!miner)
             {
                 StandaloneContextFx.NineChroniclesNodeService.MinerPrivateKey = null;
@@ -680,7 +674,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 tail = 4,
                 name = "action",
             };
-            var blockChain = StandaloneContextFx.BlockChain;
+            var blockChain = BlockChain;
             var transaction = blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
             blockChain.StageTransaction(transaction);
             await blockChain.MineBlock(new PrivateKey());
@@ -714,7 +708,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var userAddress = userPrivateKey.ToAddress();
             var service = MakeMineChroniclesNodeService(userPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
             var action = new CreateAvatar2
             {
                 index = 0,
@@ -724,7 +717,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 tail = 4,
                 name = "action",
             };
-            var blockChain = StandaloneContextFx.BlockChain;
+            var blockChain = BlockChain;
             var transaction = blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
             blockChain.StageTransaction(transaction);
             await blockChain.MineBlock(new PrivateKey());
@@ -812,7 +805,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test);
             var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Test);
             StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
+            
 
             var code = activationKey.Encode();
             if (trim)
@@ -886,7 +879,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Test);
             StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
             var query = $"query {{ activationKeyNonce(invitationCode: \"{code}\") }}";
             var queryResult = await ExecuteQueryAsync(query);
@@ -952,7 +944,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Test);
             StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
+            
 
             var query = $@"query {{ 
 stateQuery {{ balance(address: ""{adminAddress}"", currency: {{ decimalPlaces: 18, ticker: ""CRYSTAL"" }})

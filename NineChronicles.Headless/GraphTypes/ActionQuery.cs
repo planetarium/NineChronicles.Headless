@@ -8,6 +8,7 @@ using GraphQL;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Assets;
+using Libplanet.Blockchain;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
 using Nekoyume.Action.Factory;
@@ -21,11 +22,13 @@ namespace NineChronicles.Headless.GraphTypes
     public class ActionQuery : ObjectGraphType
     {
         private static readonly Codec Codec = new Codec();
+        protected readonly BlockChain<NCAction> _blockChain;
         internal StandaloneContext standaloneContext { get; set; }
 
-        public ActionQuery(StandaloneContext standaloneContext)
+        public ActionQuery(StandaloneContext standaloneContext, BlockChain<NCAction> blockChain)
         {
             this.standaloneContext = standaloneContext;
+            _blockChain = blockChain;
 
             Field<ByteStringType>(
                 name: "stake",
@@ -48,14 +51,9 @@ namespace NineChronicles.Headless.GraphTypes
                     }),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is { } chain))
-                    {
-                        throw new InvalidOperationException("BlockChain not found in the context");
-                    }
-
                     return Encode(context,
                         (GameAction)ClaimStakeRewardFactory.CreateByBlockIndex(
-                            chain.Tip.Index,
+                            blockChain.Tip.Index,
                             context.GetArgument<Address>("avatarAddress")));
                 }
             );
@@ -189,7 +187,7 @@ namespace NineChronicles.Headless.GraphTypes
                     Currency currency = context.GetArgument<CurrencyEnum>("currency") switch
                     {
                         CurrencyEnum.NCG => new GoldCurrencyState(
-                            (Dictionary)standaloneContext.BlockChain!.GetState(GoldCurrencyState.Address)
+                            (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
                         ).Currency,
                         CurrencyEnum.CRYSTAL => CrystalCalculator.CRYSTAL,
                         _ => throw new ExecutionError("Unsupported Currency type.")

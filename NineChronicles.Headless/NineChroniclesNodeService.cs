@@ -379,7 +379,6 @@ namespace NineChronicles.Headless
         internal void ConfigureContext(StandaloneContext standaloneContext)
         {
             standaloneContext.NineChroniclesNodeService = this;
-            standaloneContext.BlockChain = Swarm.BlockChain;
             BootstrapEnded.WaitAsync().ContinueWith((task) =>
             {
                 standaloneContext.BootstrapEnded = true;

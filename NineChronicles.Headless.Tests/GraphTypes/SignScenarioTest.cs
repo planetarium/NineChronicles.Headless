@@ -141,7 +141,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         private async Task<object> GetAction(string actionName, string queryArgs)
         {
             var actionQuery = $"{{ {actionName}({queryArgs}) }}";
-            var actionQueryResult = await ExecuteQueryAsync<ActionQuery>(actionQuery, standaloneContext: StandaloneContextFx, store: Store);
+            var actionQueryResult = await ExecuteQueryAsync<ActionQuery>(actionQuery, standaloneContext: StandaloneContextFx, store: Store, blockChain: BlockChain);
             var actionData = (Dictionary<string, object>)((ExecutionNode)actionQueryResult.Data!).ToValue()!;
             return actionData[actionName];
         }
@@ -153,7 +153,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     nextTxNonce(address: ""{privateKey.ToAddress()}"")
                 }}";
             var nonceQueryResult =
-                await ExecuteQueryAsync<TransactionHeadlessQuery>(nonceQuery, standaloneContext: StandaloneContextFx, store: Store);
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(nonceQuery, standaloneContext: StandaloneContextFx, store: Store, blockChain: BlockChain);
             var nonce =
                 (long)((Dictionary<string, object>)((ExecutionNode)nonceQueryResult.Data!)
                     .ToValue()!)["nextTxNonce"];
@@ -175,7 +175,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     unsignedTransaction(publicKey: ""{hexedPublicKey}"", plainValue: ""{plainValue}"", nonce: {nonce})
                 }}";
             var unsignedQueryResult =
-                await ExecuteQueryAsync<TransactionHeadlessQuery>(unsignedQuery, standaloneContext: StandaloneContextFx, store: Store);
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(unsignedQuery, standaloneContext: StandaloneContextFx, store: Store, blockChain: BlockChain);
             var unsignedData =
                 (string)((Dictionary<string, object>)((ExecutionNode)unsignedQueryResult.Data!).ToValue()!)[
                     "unsignedTransaction"];
@@ -196,7 +196,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     signTransaction(unsignedTransaction: ""{unsignedData}"", signature: ""{signature}"")
                 }}";
             var signQueryResult =
-                await ExecuteQueryAsync<TransactionHeadlessQuery>(signQuery, standaloneContext: StandaloneContextFx, store: Store);
+                await ExecuteQueryAsync<TransactionHeadlessQuery>(signQuery, standaloneContext: StandaloneContextFx, store: Store, blockChain: BlockChain);
             var hex = (string)((Dictionary<string, object>)((ExecutionNode)signQueryResult.Data!).ToValue()!)[
                 "signTransaction"];
             byte[] result = ByteUtil.ParseHex(hex);
@@ -220,7 +220,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var txId =
                 (string)((Dictionary<string, object>)((ExecutionNode)stageTxResult.Data!).ToValue()!)["stageTransaction"];
             Assert.Equal(signedTx.Id.ToHex(), txId);
-            Assert.Contains(signedTx.Id, StandaloneContextFx.BlockChain!.GetStagedTransactionIds());
+            Assert.Contains(signedTx.Id, BlockChain!.GetStagedTransactionIds());
         }
     }
 }

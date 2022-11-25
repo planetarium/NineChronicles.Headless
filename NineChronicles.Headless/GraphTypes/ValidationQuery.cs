@@ -3,15 +3,17 @@ using System.Text.Json;
 using System.Threading;
 using GraphQL;
 using GraphQL.Types;
+using Libplanet.Blockchain;
 using Libplanet.Crypto;
 using Libplanet.Explorer.GraphTypes;
 using Serilog;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
     public class ValidationQuery : ObjectGraphType
     {
-        public ValidationQuery(StandaloneContext standaloneContext)
+        public ValidationQuery(StandaloneContext standaloneContext, BlockChain<NCAction> blockChain)
         {
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "metadata",
@@ -29,32 +31,12 @@ namespace NineChronicles.Headless.GraphTypes
                         Log.Debug($"Validating received raw: {raw}");
                         // FIXME: Thread.Sleep is temporary. Should be removed.
                         var timeSpent = 0;
-                        const int retryInterval = 1000;
-                        const int grace = 100 * 1000;
-                        while (standaloneContext.BlockChain is null)
-                        {
-                            Log.Debug(
-                                "Blockchain instance is null. Sleep {interval}ms...",
-                                retryInterval);
-                            Thread.Sleep(retryInterval);
-                            timeSpent += retryInterval;
-
-                            if (timeSpent < grace)
-                            {
-                                continue;
-                            }
-
-                            var msg = $"Blockchain instance is not initialized until {grace}ms.";
-                            Log.Debug(msg);
-                            throw new BlockChainInitializeException(msg);
-                        }
-
                         Log.Debug("Time until blockchain online: {time}ms", timeSpent);
 
                         var remoteIndex = JsonDocument.Parse(raw).RootElement.GetProperty("Index").GetInt32();
                         Log.Debug("Remote: {index1}, Local: {index2}",
-                            remoteIndex, standaloneContext.BlockChain.Tip.Index);
-                        var ret = remoteIndex > standaloneContext.BlockChain.Tip.Index;
+                            remoteIndex, blockChain.Tip.Index);
+                        var ret = remoteIndex > blockChain.Tip.Index;
                         return ret;
                     }
                     catch (JsonException je)

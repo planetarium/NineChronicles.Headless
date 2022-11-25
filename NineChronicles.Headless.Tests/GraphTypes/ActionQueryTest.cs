@@ -63,17 +63,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 },
                 privateKey: minerPrivateKey
             );
-            var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
+            BlockChain = new BlockChain<PolymorphicAction<ActionBase>>(
                 new BlockPolicy<PolymorphicAction<ActionBase>>(),
                 new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
                 store,
                 stateStore,
                 genesisBlock);
-            _standaloneContext = new StandaloneContext
-            {
-                BlockChain = blockchain,
-            };
+            _standaloneContext = new StandaloneContext();
         }
+
+        public BlockChain<NCAction> BlockChain { get; set; }
 
         [Theory]
         [ClassData(typeof(StakeFixture))]
@@ -84,7 +83,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 stake(amount: {amount})
             }}";
 
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext, blockChain: BlockChain);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             NCAction action = new Stake(amount);
             var expected = new Dictionary<string, object>()
@@ -110,7 +109,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 claimStakeReward(avatarAddress: ""{avatarAddress.ToString()}"")
             }}";
 
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext, blockChain: BlockChain);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["claimStakeReward"]));
             Assert.IsType<Dictionary>(plainValue);
@@ -127,7 +126,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 migrateMonsterCollection(avatarAddress: ""{avatarAddress.ToString()}"")
             }}";
 
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext, blockChain: BlockChain);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["migrateMonsterCollection"]));
             var dictionary = Assert.IsType<Dictionary>(plainValue);
@@ -171,7 +170,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 grinding({queryArgs})
             }}";
 
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext, blockChain: BlockChain);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["grinding"]));
             Assert.IsType<Dictionary>(plainValue);
@@ -193,7 +192,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 unlockEquipmentRecipe(avatarAddress: ""{avatarAddress.ToString()}"", recipeIds: [2, 3])
             }}";
 
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext, blockChain: BlockChain);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["unlockEquipmentRecipe"]));
             Assert.IsType<Dictionary>(plainValue);
@@ -220,7 +219,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 unlockWorld(avatarAddress: ""{avatarAddress.ToString()}"", worldIds: [2, 3])
             }}";
 
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext, blockChain: BlockChain);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["unlockWorld"]));
             Assert.IsType<Dictionary>(plainValue);
@@ -253,13 +252,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 args += ", memo: \"memo\"";
             }
             var query = $"{{ transferAsset({args}) }}";
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext, blockChain: BlockChain);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["transferAsset"]));
             Assert.IsType<Dictionary>(plainValue);
             var polymorphicAction = DeserializeNCAction(plainValue);
             var action = Assert.IsType<TransferAsset>(polymorphicAction.InnerAction);
-            var rawState = _standaloneContext.BlockChain!.GetState(Addresses.GoldCurrency);
+            var rawState = BlockChain.GetState(Addresses.GoldCurrency);
             var goldCurrencyState = new GoldCurrencyState((Dictionary)rawState);
             Currency currency = currencyType == "NCG" ? goldCurrencyState.Currency : CrystalCalculator.CRYSTAL;
 
@@ -300,7 +299,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             2,8,Championship,200000013,200000014,20,100000,50,20
             ";
             var query = $"{{ patchTableSheet(tableName: \"{tableName}\", tableCsv: \"\"\"{csv}\"\"\") }}";
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext, blockChain: BlockChain);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["patchTableSheet"]));
             Assert.IsType<Dictionary>(plainValue);
@@ -332,7 +331,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var tableName = "Sheet";
             var csv = "id";
             var query = $"{{ patchTableSheet(tableName: \"{tableName}\", tableCsv: \"\"\"{csv}\"\"\") }}";
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext, blockChain: BlockChain);
             var error = queryResult.Errors!.Single();
             Assert.Contains("Invalid tableName.", error.Message);
         }
@@ -376,7 +375,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }
 
             var query = $"{{ raid({args}) }}";
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext, blockChain: BlockChain);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["raid"]));
             Assert.IsType<Dictionary>(plainValue);
@@ -422,7 +421,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             var avatarAddress = new PrivateKey().ToAddress();
             var query = $"{{ claimRaidReward(avatarAddress: \"{avatarAddress}\") }}";
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext, blockChain: BlockChain);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["claimRaidReward"]));
             Assert.IsType<Dictionary>(plainValue);
@@ -437,7 +436,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             var avatarAddress = new PrivateKey().ToAddress();
             var query = $"{{ claimWorldBossKillReward(avatarAddress: \"{avatarAddress}\") }}";
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext, blockChain: BlockChain);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["claimWorldBossKillReward"]));
             Assert.IsType<Dictionary>(plainValue);
@@ -459,7 +458,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 assets += $", {{quantity: 100, decimalPlaces: 2, ticker: \"NCG\", minters: [\"{rewardPoolAddress}\"]}}";
             }
             var query = $"{{ prepareRewardAssets(rewardPoolAddress: \"{rewardPoolAddress}\", assets: [{assets}]) }}";
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext, blockChain: BlockChain);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["prepareRewardAssets"]));
             Assert.IsType<Dictionary>(plainValue);
@@ -490,7 +489,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var sender = new PrivateKey().ToAddress();
             var recipients = $"{{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 18, ticker: \"CRYSTAL\" }} }}, {{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 0, ticker: \"RUNE_FENRIR1\" }} }}";
             var query = $"{{ transferAssets(sender: \"{sender}\", recipients: [{recipients}]) }}";
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext, blockChain: BlockChain);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["transferAssets"]));
             Assert.IsType<Dictionary>(plainValue);

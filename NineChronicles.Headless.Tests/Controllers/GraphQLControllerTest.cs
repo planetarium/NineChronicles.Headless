@@ -34,27 +34,25 @@ namespace NineChronicles.Headless.Tests.Controllers
         private readonly StandaloneContext _standaloneContext;
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly BlockChain<PolymorphicAction<ActionBase>> _blockChain;
 
         public GraphQLControllerTest()
         {
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock();
-            var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
+            _blockChain = new BlockChain<PolymorphicAction<ActionBase>>(
                 new BlockPolicy<PolymorphicAction<ActionBase>>(),
                 new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
                 store,
                 stateStore,
                 genesisBlock);
-            _standaloneContext = new StandaloneContext
-            {
-                BlockChain = blockchain,
-            };
+            _standaloneContext = new StandaloneContext();
             _configuration = new ConfigurationBuilder().AddInMemoryCollection().Build();
             _httpContextAccessor = new HttpContextAccessor();
             _httpContextAccessor.HttpContext = new DefaultHttpContext();
             ConfigureNineChroniclesNodeService();
-            _controller = new GraphQLController(_standaloneContext, _httpContextAccessor, _configuration);
+            _controller = new GraphQLController(_standaloneContext, _httpContextAccessor, _configuration, _blockChain);
         }
 
         [Theory]
@@ -183,7 +181,7 @@ namespace NineChronicles.Headless.Tests.Controllers
                 new PrivateKey(),
                 new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
                 {
-                    GenesisBlock = _standaloneContext.BlockChain!.Genesis,
+                    GenesisBlock = _blockChain.Genesis,
                     StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                     AppProtocolVersion = AppProtocolVersion.Sign(new PrivateKey(), 0),
                     SwarmPrivateKey = new PrivateKey(),

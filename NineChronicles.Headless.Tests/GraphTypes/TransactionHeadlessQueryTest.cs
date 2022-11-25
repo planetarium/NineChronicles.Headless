@@ -319,10 +319,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             return GraphQLTestUtils.ExecuteQueryAsync<TransactionHeadlessQuery>(query,
                 standaloneContext: new StandaloneContext
                 {
-                    BlockChain = _blockChain,
                     NineChroniclesNodeService = _service
                 },
-                store: _store);
+                store: _store,
+                blockChain: _blockChain);
         }
     }
 }

@@ -84,6 +84,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             ncService.ConfigureContext(StandaloneContextFx);
             Store = ncService.Store;
+            BlockChain = ncService.BlockChain;
 
             var configurationBuilder = new ConfigurationBuilder();
             var configuration = configurationBuilder.Build();
@@ -105,6 +106,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             services.AddLibplanetExplorer<NCAction>();
             services.AddSingleton(ncService);
             services.AddSingleton(ncService.Store);
+            services.AddSingleton(ncService.BlockChain);
             ServiceProvider serviceProvider = services.BuildServiceProvider();
             Schema = new StandaloneSchema(serviceProvider);
 
@@ -119,8 +121,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         protected StandaloneContext StandaloneContextFx { get; }
 
-        protected BlockChain<NCAction> BlockChain =>
-            StandaloneContextFx.BlockChain!;
+        protected BlockChain<NCAction> BlockChain { get; }
         
         protected IStore Store
         {

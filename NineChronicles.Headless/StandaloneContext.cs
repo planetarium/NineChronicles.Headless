@@ -16,7 +16,6 @@ namespace NineChronicles.Headless
 {
     public class StandaloneContext
     {
-        public BlockChain<NineChroniclesActionType>? BlockChain { get; set; }
         public IKeyStore? KeyStore { get; set; }
         public bool BootstrapEnded { get; set; }
         public bool PreloadEnded { get; set; }

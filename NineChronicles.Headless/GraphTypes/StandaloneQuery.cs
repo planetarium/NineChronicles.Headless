@@ -31,7 +31,7 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneQuery : ObjectGraphType
     {
-        public StandaloneQuery(StandaloneContext standaloneContext, IConfiguration configuration, ActionEvaluationPublisher publisher, IStore store)
+        public StandaloneQuery(StandaloneContext standaloneContext, IConfiguration configuration, ActionEvaluationPublisher publisher, IStore store, BlockChain<NCAction> blockChain)
         {
             bool useSecretToken = configuration[GraphQLService.SecretTokenKey] is { };
 
@@ -46,21 +46,16 @@ namespace NineChronicles.Headless.GraphTypes
                     BlockHash? blockHash = context.GetArgument<byte[]>("hash") switch
                     {
                         byte[] bytes => new BlockHash(bytes),
-                        null => standaloneContext.BlockChain?.GetDelayedRenderer()?.Tip?.Hash,
+                        null => blockChain.GetDelayedRenderer()?.Tip?.Hash,
                     };
 
-                    if (!(standaloneContext.BlockChain is { } chain))
-                    {
-                        return null;
-                    }
-
                     return new StateContext(
-                        chain.ToAccountStateGetter(blockHash),
-                        chain.ToAccountBalanceGetter(blockHash),
+                        blockChain.ToAccountStateGetter(blockHash),
+                        blockChain.ToAccountBalanceGetter(blockHash),
                         blockHash switch
                         {
-                            BlockHash bh => chain[bh].Index,
-                            null => chain.Tip.Index,
+                            BlockHash bh => blockChain[bh].Index,
+                            null => blockChain.Tip.Index,
                         }
                     );
                 }
@@ -74,12 +69,6 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
-
                     var address = context.GetArgument<Address>("address");
                     var blockHashByteArray = context.GetArgument<byte[]>("hash");
                     var blockHash = blockHashByteArray is null
@@ -169,7 +158,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<ValidationQuery>>(
                 name: "validation",
                 description: "The validation method provider for Libplanet types.",
-                resolve: context => new ValidationQuery(standaloneContext));
+                resolve: context => new ValidationQuery(standaloneContext, blockChain));
 
             Field<NonNullGraphType<ActivationStatusQuery>>(
                     name: "activationStatus",
@@ -190,12 +179,6 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
-
                     Address address = context.GetArgument<Address>("address");
                     byte[] blockHashByteArray = context.GetArgument<byte[]>("hash");
                     var blockHash = blockHashByteArray is null
@@ -222,12 +205,6 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
-
                     Address address = context.GetArgument<Address>("address");
                     return blockChain.GetNextTxNonce(address);
                 }
@@ -243,12 +220,6 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
-
                     var txId = context.GetArgument<TxId>("txId");
                     return blockChain.GetTransaction(txId);
                 }
@@ -281,12 +252,6 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Get monster collection status by address.",
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
-
                     Address? address = context.GetArgument<Address?>("address");
                     Address agentAddress;
                     if (address is null)
@@ -345,7 +310,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<TransactionHeadlessQuery>>(
                 name: "transaction",
                 description: "Query for transaction.",
-                resolve: context => new TransactionHeadlessQuery(standaloneContext, store)
+                resolve: context => new TransactionHeadlessQuery(standaloneContext, store, blockChain)
             );
 
             Field<NonNullGraphType<BooleanGraphType>>(
@@ -358,12 +323,6 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
-
                     string invitationCode = context.GetArgument<string>("invitationCode");
                     ActivationKey activationKey = ActivationKey.Decode(invitationCode);
                     if (blockChain.GetState(activationKey.PendingAddress) is Dictionary dictionary)
@@ -392,12 +351,6 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is { } blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
-
                     ActivationKey activationKey;
                     try
                     {
@@ -427,7 +380,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<ActionQuery>>(
                 name: "actionQuery",
-                resolve: context => new ActionQuery(standaloneContext));
+                resolve: context => new ActionQuery(standaloneContext, blockChain));
 
             Field<NonNullGraphType<ActionTxQuery>>(
                 name: "actionTxQuery",
@@ -448,7 +401,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "The time this transaction is created.",
                     }
                 ),
-                resolve: context => new ActionTxQuery(standaloneContext));
+                resolve: context => new ActionTxQuery(standaloneContext, blockChain));
 
             Field<NonNullGraphType<AddressQuery>>(
                 name: "addressQuery",
