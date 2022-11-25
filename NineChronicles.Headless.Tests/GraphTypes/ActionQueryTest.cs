@@ -573,5 +573,37 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(ear ?? 0, action.ear);
             Assert.Equal(tail ?? 0, action.tail);
         }
+
+        [Theory]
+        [InlineData(0, 1, true)] // Actually this cannot be executed, but can build a query.
+        [InlineData(1001, 1, true)]
+        [InlineData(1001, null, true)]
+        [InlineData(1001, -1, false)]
+        public async Task RuneEnhancement(int runeId, int? tryCount, bool isSuccessCase)
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var args = $"avatarAddress: \"{avatarAddress}\", runeId: {runeId}";
+            if (tryCount is not null)
+            {
+                args += $" tryCount: {tryCount}";
+            }
+
+            var query = $"{{runeEnhancement({args})}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            if (!isSuccessCase)
+            {
+                Assert.NotNull(queryResult.Errors);
+                return;
+            }
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["runeEnhancement"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<RuneEnhancement>(polymorphicAction.InnerAction);
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            Assert.Equal(runeId, action.RuneId);
+            Assert.Equal(tryCount ?? 1, action.TryCount);
+        }
     }
 }
