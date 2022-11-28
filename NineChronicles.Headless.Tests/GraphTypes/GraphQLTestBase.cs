@@ -192,7 +192,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             return new LibplanetNodeService<T>(
                 properties,
-                blockPolicy: new BlockPolicy<T>(),
+                blockPolicy: new BlockPolicy<T>(
+                    getValidatorSet: idx => new ValidatorSet(new List<PublicKey>()
+                    {
+                        ValidatorsPolicy.TestValidatorKey.PublicKey,
+                    })),
                 stagePolicy: new VolatileStagePolicy<T>(),
                 renderers: new[] { new DummyRenderer<T>() },
                 preloadProgress: preloadProgress,

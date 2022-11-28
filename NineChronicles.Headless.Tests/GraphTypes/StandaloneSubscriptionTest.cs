@@ -11,11 +11,14 @@ using GraphQL.Execution;
 using GraphQL.NewtonsoftJson;
 using GraphQL.Subscription;
 using Libplanet;
+using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
+using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless;
+using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
@@ -39,8 +42,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             const int repeat = 10;
             foreach (long index in Enumerable.Range(1, repeat))
             {
-                BlockChain.Append(BlockChain.ProposeBlock(
-                    miner, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash)));
+                Block<PolymorphicAction<ActionBase>> block = BlockChain.ProposeBlock(
+                    miner,
+                    lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash));
+                BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash));
 
                 var result = await ExecuteSubscriptionQueryAsync("subscription { tipChanged { index hash } }");
 
@@ -86,7 +91,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new[] { seedNode.Swarm.AsPeer });
 
             var miner = new PrivateKey();
-            seedNode.BlockChain.Append(seedNode.BlockChain.ProposeBlock(miner));
+            Block<EmptyAction> block = seedNode.BlockChain.ProposeBlock(miner);
+            seedNode.BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash));
             var result = await ExecuteSubscriptionQueryAsync("subscription { preloadProgress { currentPhase totalPhase extra { type currentCount totalCount } } }");
             Assert.IsType<SubscriptionExecutionResult>(result);
 

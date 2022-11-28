@@ -11,11 +11,14 @@ using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
+using Libplanet.Blocks;
+using Libplanet.Consensus;
 using Libplanet.Crypto;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Libplanet.Tx;
 using Nekoyume.Action;
+using Nekoyume.BlockChain.Policy;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common;
 using Xunit;
@@ -35,7 +38,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             _store = new DefaultStore(null);
             _stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             _blockChain = new BlockChain<NCAction>(
-                new BlockPolicy<NCAction>(),
+                new BlockPolicy<NCAction>(getValidatorSet: idx => new ValidatorSet(new List<PublicKey>()
+                {
+                    ValidatorsPolicy.TestValidatorKey.PublicKey,
+                })),
                 new VolatileStagePolicy<NCAction>(),
                 _store,
                 _stateStore,
@@ -109,7 +115,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             var transaction = _blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
             _blockChain.StageTransaction(transaction);
-            _blockChain.Append(_blockChain.ProposeBlock(new PrivateKey()));
+            Block<NCAction> block = _blockChain.ProposeBlock(new PrivateKey());
+            _blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash));
             queryResult = await ExecuteAsync(string.Format(queryFormat, transaction.Id.ToString()));
             var tx = (Transaction<PolymorphicAction<ActionBase>>)((RootExecutionNode)queryResult.Data.GetValue()).SubFields![0].Result!;
 
@@ -296,7 +303,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var privateKey = new PrivateKey();
             var action = new DumbTransferAction(new Address(), new Address());
             Transaction<NCAction> tx = _blockChain.MakeTransaction(privateKey, new NCAction[] { action });
-            _blockChain.Append(_blockChain.ProposeBlock(new PrivateKey()));
+            Block<NCAction> block = _blockChain.ProposeBlock(new PrivateKey());
+            _blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash));
             var queryFormat = @"query {{
                 transactionResult(txId: ""{0}"") {{
                     blockHash
@@ -321,6 +329,24 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Store = _store,
                 NineChroniclesNodeService = _service
             });
+        }
+
+        private BlockCommit? GenerateBlockCommit(long height, BlockHash hash)
+        {
+            return height != 0
+                ? new BlockCommit(
+                    height,
+                    0,
+                    hash,
+                    ImmutableArray<Vote>.Empty
+                        .Add(new VoteMetadata(
+                            height,
+                            0,
+                            hash,
+                            DateTimeOffset.UtcNow,
+                            ValidatorsPolicy.TestValidatorKey.PublicKey,
+                            VoteFlag.PreCommit).Sign(ValidatorsPolicy.TestValidatorKey)))
+                : (BlockCommit?)null;
         }
     }
 }
