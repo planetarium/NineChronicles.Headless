@@ -10,7 +10,7 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class AddressQuery : ObjectGraphType
     {
-        public AddressQuery()
+        public AddressQuery(StandaloneContext standaloneContext)
         {
             Field<NonNullGraphType<AddressType>>(
                 name: "raiderAddress",
