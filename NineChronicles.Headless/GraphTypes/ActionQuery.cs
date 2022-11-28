@@ -424,6 +424,44 @@ namespace NineChronicles.Headless.GraphTypes
                     };
                     return Encode(context, action);
                 });
+            Field<NonNullGraphType<ByteStringType>>(
+                "runeEnhancement",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "The avatar address to enhance rune."
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "runeId",
+                        Description = "Rune ID to enhance."
+                    },
+                    new QueryArgument<IntGraphType>
+                    {
+                        Name = "tryCount",
+                        Description = "The try count to enhance rune"
+                    }
+                ),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+                    var runeId = context.GetArgument<int>("runeId");
+                    var tryCount = context.GetArgument<int?>("tryCount") ?? 1;
+                    if (tryCount <= 0)
+                    {
+                        throw new ExecutionError($"tryCount must be positive: {tryCount} is invalid.");
+                    }
+
+                    NCAction action = new RuneEnhancement
+                    {
+                        AvatarAddress = avatarAddress,
+                        RuneId = runeId,
+                        TryCount = tryCount
+                    };
+                    return Encode(context, action);
+                }
+            );
         }
 
         internal virtual byte[] Encode(IResolveFieldContext context, NCAction action)
