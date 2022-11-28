@@ -122,6 +122,22 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             await StageTransaction(signedTx, hex);
         }
 
+        [Fact]
+        public async Task SignTransaction_TransferAssets()
+        {
+            var privateKey = new PrivateKey();
+            var sender = privateKey.ToAddress();
+            // Create Action.
+            var args = $"sender: \"{sender}\", recipients: [{{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 18, ticker: \"CRYSTAL\" }} }}, {{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 0, ticker: \"RUNE_FENRIR1\" }} }}]";
+            object plainValue = await GetAction("transferAssets", args);
+
+            (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
+            var action = Assert.IsType<TransferAssets>(signedTx.CustomActions!.Single().InnerAction);
+            Assert.Equal(sender, action.Sender);
+            Assert.Equal(2, action.Recipients.Count);
+            await StageTransaction(signedTx, hex);
+        }
+
         private async Task<object> GetAction(string actionName, string queryArgs)
         {
             var actionQuery = $"{{ {actionName}({queryArgs}) }}";

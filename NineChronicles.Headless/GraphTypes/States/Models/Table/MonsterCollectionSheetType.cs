@@ -13,7 +13,7 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Table
                 nameof(MonsterCollectionSheet.OrderedList),
                 resolve: context =>
                 {
-                    return context.Source.monsterCollectionSheet.OrderedList
+                    return context.Source.monsterCollectionSheet.OrderedList?
                         .Select(r => (r, context.Source.monsterCollectionRewardSheet))
                         .ToList();
                 });

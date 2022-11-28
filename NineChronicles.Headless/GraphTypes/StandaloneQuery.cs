@@ -166,6 +166,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<Libplanet.Explorer.Queries.ExplorerQuery<NCAction>>>(
                 name: "chainQuery",
+                deprecationReason: "Use /graphql/explorer",
                 resolve: context => new { }
             );
 
@@ -444,6 +445,11 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "nonce",
                         Description = "The nonce for Transaction.",
+                    },
+                    new QueryArgument<DateTimeOffsetGraphType>
+                    {
+                        Name = "timestamp",
+                        Description = "The time this transaction is created.",
                     }
                 ),
                 resolve: context => new ActionTxQuery(standaloneContext));
