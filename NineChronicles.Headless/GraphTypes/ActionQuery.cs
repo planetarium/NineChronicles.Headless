@@ -381,6 +381,11 @@ namespace NineChronicles.Headless.GraphTypes
                     var sender = context.GetArgument<Address>("sender");
                     var recipients = context.GetArgument<List<(Address recipient, FungibleAssetValue amount)>>("recipients");
                     var memo = context.GetArgument<string?>("memo");
+                    if (recipients.Count > TransferAssets.RecipientsCapacity)
+                    {
+                        throw new ExecutionError($"recipients must be less than or equal {TransferAssets.RecipientsCapacity}.");
+                    }
+
                     NCAction action = new TransferAssets(sender, recipients, memo);
                     return Encode(context, action);
                 }
