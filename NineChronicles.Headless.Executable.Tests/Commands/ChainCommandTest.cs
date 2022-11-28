@@ -88,7 +88,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var stateStore = new TrieStateStore(new RocksDBKeyValueStore(Path.Combine(_storePath, "states")));
 
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<PolymorphicAction<ActionBase>>();
-            IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
+            IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetTestPolicy();
             BlockChain<NCAction> chain = new BlockChain<NCAction>(
                 blockPolicy,
                 stagePolicy,
@@ -108,7 +108,8 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
             var minerKey = new PrivateKey();
             chain.MakeTransaction(minerKey, new PolymorphicAction<ActionBase>[] { action });
-            chain.Append(chain.ProposeBlock(minerKey, DateTimeOffset.Now));
+            Block<PolymorphicAction<ActionBase>> block = chain.ProposeBlock(minerKey, DateTimeOffset.Now);
+            chain.Append(block, GenerateBlockCommit(block));
             store.Dispose();
             stateStore.Dispose();
 
@@ -135,15 +136,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             store.AppendIndex(chainId, genesisBlock.Hash);
             var stateStore = new TrieStateStore(new RocksDBKeyValueStore(Path.Combine(_storePath, "states")));
 
-            PrivateKey validator = new PrivateKey();
-            var validators = new ValidatorSet(new List<PublicKey> { validator.PublicKey });
-            BlockCommit GenerateBlockCommit(long height, BlockHash hash)
-            {
-                ImmutableArray<Vote> votes = ImmutableArray<Vote>.Empty
-                    .Add(new VoteMetadata(
-                        height, 0, hash, DateTimeOffset.UtcNow, validator.PublicKey, VoteFlag.PreCommit).Sign(validator));
-                return new BlockCommit(height, 0, hash, votes);
-            }
+            var validators = new ValidatorSet(new List<PublicKey> { ValidatorsPolicy.TestValidatorKey.PublicKey });
 
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
             IBlockPolicy<NCAction> blockPolicy = new BlockPolicy<NCAction>(getValidatorSet: index => validators);
@@ -170,14 +163,16 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 chain.MakeTransaction(minerKey, new NCAction[] { action });
                 if (chain.Tip.Index < 1)
                 {
-                    chain.Append(chain.ProposeBlock(minerKey, DateTimeOffset.Now));
+                    Block<NCAction> block = chain.ProposeBlock(minerKey, DateTimeOffset.Now);
+                    chain.Append(block, GenerateBlockCommit(block));
                 }
                 else
                 {
-                    chain.Append(chain.ProposeBlock(
+                    Block<NCAction> block = chain.ProposeBlock(
                         minerKey,
                         DateTimeOffset.Now,
-                        lastCommit: GenerateBlockCommit(chain.Tip.Index, chain.Tip.Hash)));
+                        lastCommit: GenerateBlockCommit(chain.Tip));
+                    chain.Append(block, GenerateBlockCommit(block));
                 }
             }
 
@@ -294,6 +289,24 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
                 new PrivateKey(ByteUtil.ParseHex(genesisConfig.PrivateKey))
             );
             return genesisBlock;
+        }
+
+        private BlockCommit? GenerateBlockCommit<T>(Block<T> block)
+            where T : IAction, new()
+        {
+            return block.Index != 0
+                ? new BlockCommit(
+                    block.Index,
+                    0,
+                    block.Hash,
+                    ImmutableArray<Vote>.Empty.Add(new VoteMetadata(
+                        block.Index,
+                        0,
+                        block.Hash,
+                        DateTimeOffset.UtcNow,
+                        ValidatorsPolicy.TestValidatorKey.PublicKey,
+                        VoteFlag.PreCommit).Sign(ValidatorsPolicy.TestValidatorKey)))
+                : null;
         }
 
         [Serializable]
