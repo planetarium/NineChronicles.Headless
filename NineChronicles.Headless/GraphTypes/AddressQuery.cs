@@ -1,10 +1,12 @@
+using System.Linq;
+using System.Runtime.CompilerServices;
+using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Explorer.GraphTypes;
-using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
 using Nekoyume;
-using NineChronicles.Headless.GraphTypes.States;
+using Nekoyume.Helper;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -27,7 +29,9 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "world boss season id."
                     }
                 ),
-                resolve: context => Addresses.GetRaiderAddress(context.GetArgument<Address>("avatarAddress"), context.GetArgument<int>("raidId")));
+                resolve: context => Addresses.GetRaiderAddress(
+                    context.GetArgument<Address>("avatarAddress"),
+                    context.GetArgument<int>("raidId")));
 
             Field<NonNullGraphType<AddressType>>(
                 name: "worldBossAddress",
@@ -39,7 +43,8 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "world boss season id."
                     }
                 ),
-                resolve: context => Addresses.GetWorldBossAddress(context.GetArgument<int>("raidId")));
+                resolve: context => Addresses.GetWorldBossAddress(
+                    context.GetArgument<int>("raidId")));
 
             Field<NonNullGraphType<AddressType>>(
                 name: "worldBossKillRewardRecordAddress",
@@ -56,7 +61,9 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "world boss season id."
                     }
                 ),
-                resolve: context => Addresses.GetWorldBossKillRewardRecordAddress(context.GetArgument<Address>("avatarAddress"), context.GetArgument<int>("raidId")));
+                resolve: context => Addresses.GetWorldBossKillRewardRecordAddress(
+                    context.GetArgument<Address>("avatarAddress"),
+                    context.GetArgument<int>("raidId")));
 
             Field<NonNullGraphType<AddressType>>(
                 name: "raiderListAddress",
@@ -68,7 +75,38 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "world boss season id."
                     }
                 ),
-                resolve: context => Addresses.GetRaiderListAddress(context.GetArgument<int>("raidId")));
+                resolve: context => Addresses.GetRaiderListAddress(
+                    context.GetArgument<int>("raidId")));
+
+            Field<ListGraphType<NonNullGraphType<AddressType>>>(
+                name: "currencyMintersAddress",
+                description: "currency minters address.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<CurrencyEnumType>>
+                    {
+                        Name = "currency",
+                        Description = "A currency type. " +
+                                      "see also: https://github.com/planetarium/NineChronicles.Headless/blob/main/NineChronicles.Headless/GraphTypes/CurrencyEnumType.cs",
+                    }),
+                resolve: context =>
+                {
+                    var currency = context.GetArgument<CurrencyEnum>("currency");
+                    switch (currency)
+                    {
+                        case CurrencyEnum.NCG:
+                            var blockchain = standaloneContext.BlockChain!;
+                            var goldCurrencyStateDict =
+                                (Dictionary)blockchain.GetState(Addresses.GoldCurrency);
+                            var currencyDict = (Dictionary)goldCurrencyStateDict["currency"];
+                            var mintersList = (List)currencyDict["minters"];
+                            return mintersList.Select(minterValue =>
+                                new Address(((Binary)minterValue).ByteArray));
+                        case CurrencyEnum.CRYSTAL:
+                            return CrystalCalculator.CRYSTAL.Minters?.ToList();
+                        default:
+                            throw new SwitchExpressionException(currency);
+                    }
+                });
         }
     }
 }
