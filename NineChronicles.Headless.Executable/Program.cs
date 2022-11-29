@@ -94,6 +94,9 @@ namespace NineChronicles.Headless.Executable
                 Description = "The private key used for mining blocks. " +
                               "Must not be null if you want to turn on mining with libplanet-node.")]
             string? minerPrivateKeyString = null,
+            [Option("miner.block-interval",
+                Description = "The miner's break time after mining a block. The unit is millisecond.")]
+            int? minerBlockIntervalMilliseconds = null,
             [Option(Description = "The type of storage to store blockchain data. " +
                                   "If not provided, \"LiteDB\" will be used as default. " +
                                   "Available type: [\"rocksdb\", \"memory\"]")]
@@ -217,7 +220,7 @@ namespace NineChronicles.Headless.Executable
             headlessConfig.Overwrite(
                 appProtocolVersionToken, trustedAppProtocolVersionSigners, genesisBlockPath, host, port,
                 swarmPrivateKeyString, workers, storeType, storePath, noReduceStore, noMiner, minerCount,
-                minerPrivateKeyString, networkType, iceServerStrings, peerStrings, rpcServer, rpcListenHost,
+                minerPrivateKeyString, minerBlockIntervalMilliseconds, networkType, iceServerStrings, peerStrings, rpcServer, rpcListenHost,
                 rpcListenPort, rpcRemoteServer, rpcHttpServer, graphQLServer, graphQLHost, graphQLPort,
                 graphQLSecretTokenPath, noCors, nonblockRenderer, nonblockRendererQueue, strictRendering,
                 logActionRenders, confirmations,
@@ -330,6 +333,7 @@ namespace NineChronicles.Headless.Executable
                 var minerPrivateKey = string.IsNullOrEmpty(headlessConfig.MinerPrivateKeyString)
                     ? null
                     : new PrivateKey(ByteUtil.ParseHex(headlessConfig.MinerPrivateKeyString));
+                TimeSpan minerBlockInterval = TimeSpan.FromMilliseconds(headlessConfig.MinerBlockIntervalMilliseconds);
                 var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
                 {
                     MinerPrivateKey = minerPrivateKey,
@@ -338,6 +342,7 @@ namespace NineChronicles.Headless.Executable
                     StrictRender = headlessConfig.StrictRendering,
                     TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime),
                     MinerCount = headlessConfig.MinerCount,
+                    MinerBlockInterval = minerBlockInterval,
                     TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner,
                 };
                 hostBuilder.ConfigureServices(services => { services.AddSingleton(_ => standaloneContext); });

@@ -37,6 +37,7 @@ namespace NineChronicles.Headless.Executable
         public bool NoMiner { get; set; }
         public int MinerCount { get; set; } = 1;
         public string? MinerPrivateKeyString { get; set; }
+        public int MinerBlockIntervalMilliseconds { get; set; }
 
         // Networking
         public NetworkType NetworkType { get; set; } = NetworkType.Main;
@@ -91,6 +92,7 @@ namespace NineChronicles.Headless.Executable
             bool? noMiner,
             int? minerCount,
             string? minerPrivateKeyString,
+            int? minerBlockIntervalMilliseconds,
             NetworkType? networkType,
             string[]? iceServerStrings,
             string[]? peerStrings,
@@ -136,6 +138,7 @@ namespace NineChronicles.Headless.Executable
             NoMiner = noMiner ?? NoMiner;
             MinerCount = minerCount ?? MinerCount;
             MinerPrivateKeyString = minerPrivateKeyString ?? MinerPrivateKeyString;
+            MinerBlockIntervalMilliseconds = minerBlockIntervalMilliseconds ?? MinerBlockIntervalMilliseconds;
             NetworkType = networkType ?? NetworkType;
             IceServerStrings = iceServerStrings ?? IceServerStrings;
             PeerStrings = peerStrings ?? PeerStrings;
