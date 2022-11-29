@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
-using System.Text;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL;
@@ -15,7 +13,6 @@ using Nekoyume.Action;
 using Nekoyume.Helper;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
-using Serilog;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -23,9 +20,12 @@ namespace NineChronicles.Headless.GraphTypes
     public class ActionQuery : ObjectGraphType
     {
         private static readonly Codec Codec = new Codec();
+        internal StandaloneContext standaloneContext { get; set; }
 
         public ActionQuery(StandaloneContext standaloneContext)
         {
+            this.standaloneContext = standaloneContext;
+
             Field<ByteStringType>(
                 name: "stake",
                 arguments: new QueryArguments(new QueryArgument<BigIntGraphType>
@@ -34,8 +34,8 @@ namespace NineChronicles.Headless.GraphTypes
                     Description = "An amount to stake.",
                 }),
                 resolve: context =>
-                    Codec.Encode(
-                    ((NCAction)new Stake(context.GetArgument<BigInteger>("amount"))).PlainValue));
+                    Encode(context,
+                    (NCAction)new Stake(context.GetArgument<BigInteger>("amount"))));
 
             Field<ByteStringType>(
                 name: "claimStakeReward",
@@ -46,9 +46,9 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "The avatar address to receive staking rewards."
                     }),
                 resolve: context =>
-                    Codec.Encode(
-                        ((NCAction)new ClaimStakeReward(
-                            context.GetArgument<Address>("avatarAddress"))).PlainValue));
+                    Encode(context,
+                        (NCAction)new ClaimStakeReward(
+                            context.GetArgument<Address>("avatarAddress"))));
             Field<NonNullGraphType<ByteStringType>>(
                 name: "migrateMonsterCollection",
                 arguments: new QueryArguments(
@@ -58,9 +58,9 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "The avatar address to receive monster collection rewards."
                     }),
                 resolve: context =>
-                    Codec.Encode(
-                        ((NCAction)new MigrateMonsterCollection(
-                            context.GetArgument<Address>("avatarAddress"))).PlainValue));
+                    Encode(context,
+                        (NCAction)new MigrateMonsterCollection(
+                            context.GetArgument<Address>("avatarAddress"))));
             Field<ByteStringType>(
                 name: "grinding",
                 arguments: new QueryArguments(
@@ -91,7 +91,7 @@ namespace NineChronicles.Headless.GraphTypes
                         EquipmentIds = equipmentIds,
                         ChargeAp = chargeAp,
                     };
-                    return Codec.Encode(action.PlainValue);
+                    return Encode(context, action);
                 });
             Field<ByteStringType>(
                 name: "unlockEquipmentRecipe",
@@ -116,7 +116,7 @@ namespace NineChronicles.Headless.GraphTypes
                         AvatarAddress = avatarAddress,
                         RecipeIds = recipeIds,
                     };
-                    return Codec.Encode(action.PlainValue);
+                    return Encode(context, action);
                 });
             Field<ByteStringType>(
                 name: "unlockWorld",
@@ -141,7 +141,7 @@ namespace NineChronicles.Headless.GraphTypes
                         AvatarAddress = avatarAddress,
                         WorldIds = worldIds,
                     };
-                    return Codec.Encode(action.PlainValue);
+                    return Encode(context, action);
                 });
             Field<ByteStringType>(
                 name: "transferAsset",
@@ -161,7 +161,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "A string value to be transferred.",
                         Name = "amount",
                     },
-                    new QueryArgument<NonNullGraphType<CurrencyType>>
+                    new QueryArgument<NonNullGraphType<CurrencyEnumType>>
                     {
                         Description = "A currency type to be transferred.",
                         Name = "currency",
@@ -187,7 +187,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var amount = FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
                     var memo = context.GetArgument<string?>("memo");
                     NCAction action = new TransferAsset(sender, recipient, amount, memo);
-                    return Codec.Encode(action.PlainValue);
+                    return Encode(context, action);
                 });
             Field<NonNullGraphType<ByteStringType>>(
                 name: "patchTableSheet",
@@ -228,9 +228,130 @@ namespace NineChronicles.Headless.GraphTypes
                         TableName = tableName,
                         TableCsv = tableCsv
                     };
-                    return Codec.Encode(action.PlainValue);
+                    return Encode(context, action);
                 }
             );
+            Field<NonNullGraphType<ByteStringType>>(
+                name: "raid",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Description = "address of avatar state.",
+                        Name = "avatarAddress",
+                    },
+                    new QueryArgument<ListGraphType<GuidGraphType>>
+                    {
+                        Description = "list of equipment id.",
+                        DefaultValue = new List<Guid>(),
+                        Name = "equipmentIds",
+                    },
+                    new QueryArgument<ListGraphType<GuidGraphType>>
+                    {
+                        Description = "list of costume id.",
+                        DefaultValue = new List<Guid>(),
+                        Name = "costumeIds",
+                    },
+                    new QueryArgument<ListGraphType<GuidGraphType>>
+                    {
+                        Description = "list of food id.",
+                        DefaultValue = new List<Guid>(),
+                        Name = "foodIds",
+                    },
+                    new QueryArgument<BooleanGraphType>
+                    {
+                        Description = "refill ticket by NCG.",
+                        DefaultValue = false,
+                        Name = "payNcg",
+                    }
+                ),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+                    var equipmentIds = context.GetArgument<List<Guid>>("equipmentIds");
+                    var costumeIds = context.GetArgument<List<Guid>>("costumeIds");
+                    var foodIds = context.GetArgument<List<Guid>>("foodIds");
+                    var payNcg = context.GetArgument<bool>("payNcg");
+
+                    NCAction action = new Raid
+                    {
+                        AvatarAddress = avatarAddress,
+                        EquipmentIds = equipmentIds,
+                        CostumeIds = costumeIds,
+                        FoodIds = foodIds,
+                        PayNcg = payNcg
+                    };
+                    return Encode(context, action);
+                }
+            );
+            Field<NonNullGraphType<ByteStringType>>(
+                "claimRaidReward",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "address of avatar state to receive reward."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+
+                    NCAction action = new ClaimRaidReward(avatarAddress);
+                    return Encode(context, action);
+                }
+            );
+            Field<NonNullGraphType<ByteStringType>>(
+                "claimWorldBossKillReward",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "address of avatar state to receive reward."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+
+                    NCAction action = new ClaimWordBossKillReward
+                    {
+                        AvatarAddress = avatarAddress,
+                    };
+                    return Encode(context, action);
+                }
+            );
+            Field<NonNullGraphType<ByteStringType>>(
+                "prepareRewardAssets",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "rewardPoolAddress",
+                        Description = "address of reward pool for charge reward."
+                    },
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<FungibleAssetValueInputType>>>>
+                    {
+                        Name = "assets",
+                        Description = "list of FungibleAssetValue for charge reward."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var assets = context.GetArgument<List<FungibleAssetValue>>("assets");
+                    var rewardPoolAddress = context.GetArgument<Address>("rewardPoolAddress");
+
+                    NCAction action = new PrepareRewardAssets
+                    {
+                        Assets = assets,
+                        RewardPoolAddress = rewardPoolAddress,
+                    };
+                    return Encode(context, action);
+                }
+            );
+        }
+
+        internal virtual byte[] Encode(IResolveFieldContext context, NCAction action)
+        {
+            return Codec.Encode(action.PlainValue);
         }
     }
 }

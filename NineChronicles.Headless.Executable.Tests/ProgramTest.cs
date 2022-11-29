@@ -19,6 +19,8 @@ namespace NineChronicles.Headless.Executable.Tests
         private readonly string _apvString;
         private readonly string _genesisBlockPath;
         private readonly string _storePath;
+        private readonly ushort _rpcPort;
+        private readonly ushort _graphqlPort;
 
         public ProgramTest()
         {
@@ -27,6 +29,9 @@ namespace NineChronicles.Headless.Executable.Tests
 
             _genesisBlockPath = "https://9c-test.s3.ap-northeast-2.amazonaws.com/genesis-block-9c-main";
             _storePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+
+            _rpcPort = 41234;
+            _graphqlPort = 41238;
         }
 
         [Fact]
@@ -42,10 +47,10 @@ namespace NineChronicles.Headless.Executable.Tests
                 consensusPort: 6000,
                 rpcServer: true,
                 rpcListenHost: "localhost",
-                rpcListenPort: 31234,
+                rpcListenPort: _rpcPort,
                 graphQLServer: true,
                 graphQLHost: "localhost",
-                graphQLPort: 31238,
+                graphQLPort: _graphqlPort,
                 storePath: _storePath,
                 storeType: "rocksdb",
                 validatorStrings: new[] { new PrivateKey().PublicKey.ToString() },
@@ -65,13 +70,13 @@ namespace NineChronicles.Headless.Executable.Tests
                 var content = new StringContent(queryString);
                 content.Headers.ContentLength = queryString.Length;
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                var response = await client.PostAsync("http://localhost:31238/graphql", content);
+                var response = await client.PostAsync($"http://localhost:{_graphqlPort}/graphql", content);
                 var responseString = await response.Content.ReadAsStringAsync();
                 Assert.Equal(HttpStatusCode.OK, response.StatusCode);
                 Assert.Contains("\"data\":{\"chainQuery\":{\"blockQuery\":{\"block\":{\"hash\":\"4582250d0da33b06779a8475d283d5dd210c683b9b999d74d03fac4f58fa6bce\"}}}}", responseString);
 
                 var channel = new Channel(
-                    "localhost:31234",
+                    $"localhost:{_rpcPort}",
                     ChannelCredentials.Insecure,
                     new[]
                     {

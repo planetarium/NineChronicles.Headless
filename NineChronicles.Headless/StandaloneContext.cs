@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Reactive.Subjects;
 using Libplanet;
@@ -21,12 +22,12 @@ namespace NineChronicles.Headless
         public bool PreloadEnded { get; set; }
         public ReplaySubject<NodeStatusType> NodeStatusSubject { get; } = new ReplaySubject<NodeStatusType>();
         public ReplaySubject<PreloadState> PreloadStateSubject { get; } = new ReplaySubject<PreloadState>();
-        public ReplaySubject<DifferentAppProtocolVersionEncounter> DifferentAppProtocolVersionEncounterSubject { get; }
-            = new ReplaySubject<DifferentAppProtocolVersionEncounter>();
-        public ReplaySubject<Notification> NotificationSubject { get; } = new ReplaySubject<Notification>(1);
-        public ReplaySubject<NodeException> NodeExceptionSubject { get; } = new ReplaySubject<NodeException>();
-        public ReplaySubject<MonsterCollectionState> MonsterCollectionStateSubject { get; } = new ReplaySubject<MonsterCollectionState>();
-        public ReplaySubject<MonsterCollectionStatus> MonsterCollectionStatusSubject { get; } = new ReplaySubject<MonsterCollectionStatus>();
+        public Subject<DifferentAppProtocolVersionEncounter> DifferentAppProtocolVersionEncounterSubject { get; }
+            = new Subject<DifferentAppProtocolVersionEncounter>();
+        public Subject<Notification> NotificationSubject { get; } = new Subject<Notification>();
+        public Subject<NodeException> NodeExceptionSubject { get; } = new Subject<NodeException>();
+        public Subject<MonsterCollectionState> MonsterCollectionStateSubject { get; } = new Subject<MonsterCollectionState>();
+        public Subject<MonsterCollectionStatus> MonsterCollectionStatusSubject { get; } = new Subject<MonsterCollectionStatus>();
         public NineChroniclesNodeService? NineChroniclesNodeService { get; set; }
 
         public ConcurrentDictionary<Address,
@@ -42,5 +43,15 @@ namespace NineChronicles.Headless
         };
 
         public IStore? Store { get; internal set; }
+
+        internal TimeSpan DifferentAppProtocolVersionEncounterInterval { get; set; } = TimeSpan.FromSeconds(30);
+
+        internal TimeSpan NotificationInterval { get; set; } = TimeSpan.FromSeconds(30);
+
+        internal TimeSpan NodeExceptionInterval { get; set; } = TimeSpan.FromSeconds(30);
+
+        internal TimeSpan MonsterCollectionStateInterval { get; set; } = TimeSpan.FromSeconds(30);
+
+        internal TimeSpan MonsterCollectionStatusInterval { get; set; } = TimeSpan.FromSeconds(30);
     }
 }

@@ -20,8 +20,10 @@ using Libplanet.Crypto;
 using Libplanet.KeyStore;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
+using Libplanet.Tx;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Helper;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -32,7 +34,7 @@ using Xunit.Abstractions;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
-    public class StandaloneQueryTest : GraphQLTestBase
+    public partial class StandaloneQueryTest : GraphQLTestBase
     {
         private readonly Dictionary<string, string> _sheets;
 
@@ -576,31 +578,50 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash));
 
             var currency = new GoldCurrencyState((Dictionary)BlockChain.GetState(Addresses.GoldCurrency)).Currency;
-            var transferAsset = new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 10, 0), memo);
-            var tx = BlockChain.MakeTransaction(minerPrivateKey, new PolymorphicAction<ActionBase>[] { transferAsset });
+            Transaction<PolymorphicAction<ActionBase>> MakeTx(PolymorphicAction<ActionBase> action)
+            {
+                return BlockChain.MakeTransaction(minerPrivateKey,
+                    new PolymorphicAction<ActionBase>[] { action });
+            }
+            var txs = new[]
+            {
+                MakeTx(new TransferAsset0(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
+                MakeTx(new TransferAsset2(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
+                MakeTx(new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
+            };
+
             block = BlockChain.ProposeBlock(
                 minerPrivateKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash));
             BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash));
-            Assert.NotNull(StandaloneContextFx.Store?.GetTxExecution(block.Hash, tx.Id));
+
+            foreach (var tx in txs)
+            {
+                Assert.NotNull(StandaloneContextFx.Store?.GetTxExecution(block.Hash, tx.Id));
+            }
 
             var blockHashHex = ByteUtil.Hex(block.Hash.ToByteArray());
             var result =
                 await ExecuteQueryAsync(
                     $"{{ transferNCGHistories(blockHash: \"{blockHashHex}\") {{ blockHash txId sender recipient amount memo }} }}");
             var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
-            Assert.Null(result.Errors);
-            Assert.Equal(new List<object>
+
+            ITransferAsset GetFirstCustomActionAsTransferAsset(Transaction<PolymorphicAction<ActionBase>> tx)
             {
-                new Dictionary<string, object?>
-                {
-                    ["blockHash"] = block.Hash.ToString(),
-                    ["txId"] = tx.Id.ToString(),
-                    ["sender"] = transferAsset.Sender.ToString(),
-                    ["recipient"] = transferAsset.Recipient.ToString(),
-                    ["amount"] = transferAsset.Amount.GetQuantityString(),
-                    ["memo"] = memo,
-                }
-            }, data["transferNCGHistories"]);
+                return (ITransferAsset)tx.CustomActions!.First().InnerAction;
+            }
+
+            Assert.Null(result.Errors);
+            var expected = block.Transactions.Select(tx => new Dictionary<string, object?>
+            {
+                ["blockHash"] = block.Hash.ToString(),
+                ["txId"] = tx.Id.ToString(),
+                ["sender"] = GetFirstCustomActionAsTransferAsset(tx).Sender.ToString(),
+                ["recipient"] = GetFirstCustomActionAsTransferAsset(tx).Recipient.ToString(),
+                ["amount"] = GetFirstCustomActionAsTransferAsset(tx).Amount.GetQuantityString(),
+                ["memo"] = memo,
+            }).ToList();
+            var actual = data["transferNCGHistories"];
+            Assert.Equal(expected, actual);
         }
 
         [Fact]
@@ -922,6 +943,94 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(msg, queryResult.Errors!.First().Message);
 
         }
+
+        [Fact]
+        public async Task Balance()
+        {
+            var adminPrivateKey = new PrivateKey();
+            var adminAddress = adminPrivateKey.ToAddress();
+            var activatedAccounts = ImmutableHashSet<Address>.Empty;
+            var pendingActivationStates = new List<PendingActivationState>();
+
+            Block<PolymorphicAction<ActionBase>> genesis =
+                BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
+                    new PolymorphicAction<ActionBase>[]
+                    {
+                        new InitializeStates(
+                            rankingState: new RankingState0(),
+                            shopState: new ShopState(),
+                            gameConfigState: new GameConfigState(),
+                            redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                                .Add("address", RedeemCodeState.Address.Serialize())
+                                .Add("map", Bencodex.Types.Dictionary.Empty)
+                            ),
+                            adminAddressState: new AdminState(adminAddress, 1500000),
+                            activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
+#pragma warning disable CS0618
+                            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                            goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
+#pragma warning restore CS0618
+                            goldDistributions: new GoldDistribution[0],
+                            tableSheets: _sheets,
+                            pendingActivationStates: pendingActivationStates.ToArray()
+                        ),
+                    }
+                );
+
+            var apvPrivateKey = new PrivateKey();
+            var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
+
+            var userPrivateKey = new PrivateKey();
+            var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+            {
+                Host = System.Net.IPAddress.Loopback.ToString(),
+                AppProtocolVersion = apv,
+                GenesisBlock = genesis,
+                StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
+                StoreStatesCacheSize = 2,
+                SwarmPrivateKey = new PrivateKey(),
+                Port = null,
+                NoMiner = true,
+                Render = false,
+                Peers = ImmutableHashSet<BoundPeer>.Empty,
+                TrustedAppProtocolVersionSigners = null,
+            };
+            var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
+
+            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Test);
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
+
+            var query = $@"query {{
+stateQuery {{ balance(address: ""{adminAddress}"", currency: {{ decimalPlaces: 18, ticker: ""CRYSTAL"" }})
+{{
+quantity
+currency {{
+ticker
+minters
+decimalPlaces
+}}
+}}
+}}
+}}";
+            var queryResult = await ExecuteQueryAsync(query);
+            Assert.Null(queryResult.Errors);
+            var data = (Dictionary<string, object>)((Dictionary<string, object>)((Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!)["stateQuery"])["balance"];
+            Assert.Equal("0", data["quantity"]);
+            var currencyData = (Dictionary<string, object>)data["currency"];
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            var currency = Currency.Legacy((string)currencyData["ticker"], (byte)currencyData["decimalPlaces"],
+                minters: (IImmutableSet<Address>?)currencyData["minters"]);
+#pragma warning restore CS0618
+            var crystal = CrystalCalculator.CRYSTAL;
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            Assert.Equal(0 * crystal, 0 * Currency.Legacy(crystal.Ticker, crystal.DecimalPlaces, crystal.Minters));
+#pragma warning restore CS0618
+            Assert.Equal(0 * CrystalCalculator.CRYSTAL, 0 * currency);
+        }
+
         private NineChroniclesNodeService MakeMineChroniclesNodeService(PrivateKey privateKey)
         {
 #pragma warning disable CS0618

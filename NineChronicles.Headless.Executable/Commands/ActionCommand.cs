@@ -1,11 +1,14 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
-using System.Numerics;
+using System.Linq;
+using System.Reflection;
 using Bencodex;
 using Bencodex.Types;
 using Cocona;
+using Cocona.Help;
 using Libplanet;
+using Libplanet.Action;
 using Libplanet.Assets;
 using Nekoyume.Action;
 using Nekoyume.Model;
@@ -24,11 +27,20 @@ namespace NineChronicles.Headless.Executable.Commands
             _console = console;
         }
 
+        [PrimaryCommand]
+        public void Help([FromService] ICoconaHelpMessageBuilder helpMessageBuilder)
+        {
+            _console.Error.WriteLine(helpMessageBuilder.BuildAndRenderForCurrentContext());
+        }
+
         [Command(Description = "Create ActivateAccount action.")]
         public int ActivateAccount(
-            [Argument("INVITATION-CODE", Description = "An invitation code.")] string invitationCode,
-            [Argument("NONCE", Description = "A hex-encoded nonce for activation.")] string nonceEncoded,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null
+            [Argument("INVITATION-CODE", Description = "An invitation code.")]
+            string invitationCode,
+            [Argument("NONCE", Description = "A hex-encoded nonce for activation.")]
+            string nonceEncoded,
+            [Argument("PATH", Description = "A file path of base64 encoded action.")]
+            string? filePath = null
         )
         {
             try
@@ -64,10 +76,58 @@ namespace NineChronicles.Headless.Executable.Commands
             }
         }
 
+        [Command(Description = "Lists all actions' type ids.")]
+        public IOrderedEnumerable<string?> List(
+            [Option(
+                Description = "If true, filter obsoleted actions since the --block-index option."
+            )]
+            bool excludeObsolete = false,
+            [Option(
+                Description = "The current block index to filter obsoleted actions."
+            )]
+            long blockIndex = 0
+        )
+        {
+            Type baseType = typeof(Nekoyume.Action.ActionBase);
+            Type attrType = typeof(ActionTypeAttribute);
+            Type obsoleteType = typeof(ActionObsoleteAttribute);
+
+            bool IsTarget(Type type)
+            {
+                return baseType.IsAssignableFrom(type) &&
+                       type.IsDefined(attrType) &&
+                       ActionTypeAttribute.ValueOf(type) is { } &&
+                       (
+                           !excludeObsolete ||
+                           !type.IsDefined(obsoleteType) ||
+                           type
+                               .GetCustomAttributes()
+                               .OfType<ActionObsoleteAttribute>()
+                               .Select(attr => attr.ObsoleteIndex)
+                               .FirstOrDefault() > blockIndex
+                       );
+            }
+
+            var assembly = baseType.Assembly;
+            var typeIds = assembly.GetTypes()
+                .Where(IsTarget)
+                .Select(type => ActionTypeAttribute.ValueOf(type))
+                .OrderBy(type => type);
+
+            foreach (string? typeId in typeIds)
+            {
+                _console.Out.WriteLine(typeId);
+            }
+
+            return typeIds;
+        }
+
+
         [Command(Description = "Create MonsterCollect action.")]
         public int MonsterCollect(
             [Range(0, 7)] int level,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null
+            [Argument("PATH", Description = "A file path of base64 encoded action.")]
+            string? filePath = null
         )
         {
             try
@@ -105,8 +165,10 @@ namespace NineChronicles.Headless.Executable.Commands
 
         [Command(Description = "Create ClaimMonsterCollectionReward action.")]
         public int ClaimMonsterCollectionReward(
-            [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")] string encodedAddress,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null
+            [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")]
+            string encodedAddress,
+            [Argument("PATH", Description = "A file path of base64 encoded action.")]
+            string? filePath = null
         )
         {
             try
@@ -145,11 +207,16 @@ namespace NineChronicles.Headless.Executable.Commands
 
         [Command(Description = "Create TransferAsset action.")]
         public int TransferAsset(
-            [Argument("SENDER-ADDRESS", Description = "A hex-encoded sender address.")] string senderAddress,
-            [Argument("RECIPIENT-ADDRESS", Description = "A hex-encoded recipient address.")] string recipientAddress,
-            [Argument("AMOUNT", Description = "The amount of asset to transfer.")] string amount,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null,
-            [Argument("MEMO", Description = "A memo of asset transfer")] string? memo = null
+            [Argument("SENDER-ADDRESS", Description = "A hex-encoded sender address.")]
+            string senderAddress,
+            [Argument("RECIPIENT-ADDRESS", Description = "A hex-encoded recipient address.")]
+            string recipientAddress,
+            [Argument("AMOUNT", Description = "The amount of asset to transfer.")]
+            string amount,
+            [Argument("PATH", Description = "A file path of base64 encoded action.")]
+            string? filePath = null,
+            [Argument("MEMO", Description = "A memo of asset transfer")]
+            string? memo = null
         )
         {
             try
@@ -184,7 +251,6 @@ namespace NineChronicles.Headless.Executable.Commands
                 else
                 {
                     File.WriteAllText(filePath, encoded);
-                    Console.Write(encoded);
                 }
                 return 0;
             }
@@ -198,7 +264,8 @@ namespace NineChronicles.Headless.Executable.Commands
         [Command(Description = "Create Stake action.")]
         public int Stake(
             long amount,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null
+            [Argument("PATH", Description = "A file path of base64 encoded action.")]
+            string? filePath = null
         )
         {
             try
@@ -232,8 +299,10 @@ namespace NineChronicles.Headless.Executable.Commands
 
         [Command(Description = "Create ClaimStakeReward action.")]
         public int ClaimStakeReward(
-            [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")] string encodedAddress,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null
+            [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")]
+            string encodedAddress,
+            [Argument("PATH", Description = "A file path of base64 encoded action.")]
+            string? filePath = null
         )
         {
             try
@@ -269,8 +338,10 @@ namespace NineChronicles.Headless.Executable.Commands
 
         [Command(Description = "Create MigrateMonsterCollection action.")]
         public int MigrateMonsterCollection(
-            [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")] string encodedAddress,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")] string? filePath = null
+            [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")]
+            string encodedAddress,
+            [Argument("PATH", Description = "A file path of base64 encoded action.")]
+            string? filePath = null
         )
         {
             try

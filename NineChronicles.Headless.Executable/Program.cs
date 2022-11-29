@@ -1,7 +1,3 @@
-using Amazon;
-using Amazon.CognitoIdentity;
-using Amazon.Runtime;
-using Amazon.S3;
 using Cocona;
 using Cocona.Lite;
 using Destructurama;
@@ -21,18 +17,23 @@ using Serilog;
 using Serilog.Formatting.Compact;
 using System;
 using System.IO;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace NineChronicles.Headless.Executable
 {
+    [HasSubCommands(typeof(AccountCommand), "account")]
     [HasSubCommands(typeof(ValidationCommand), "validation")]
     [HasSubCommands(typeof(ChainCommand), "chain")]
     [HasSubCommands(typeof(NineChronicles.Headless.Executable.Commands.KeyCommand), "key")]
     [HasSubCommands(typeof(ApvCommand), "apv")]
     [HasSubCommands(typeof(ActionCommand), "action")]
+    [HasSubCommands(typeof(StateCommand), "state")]
     [HasSubCommands(typeof(NineChronicles.Headless.Executable.Commands.TxCommand), "tx")]
+    [HasSubCommands(typeof(MarketCommand), "market")]
     [HasSubCommands(typeof(GenesisCommand), "genesis")]
+    [HasSubCommands(typeof(ReplayCommand), "replay")]
     public class Program : CoconaLiteConsoleAppBase
     {
         const string SentryDsn = "https://ceac97d4a7d34e7b95e4c445b9b5669e@o195672.ingest.sentry.io/5287621";
@@ -68,10 +69,10 @@ namespace NineChronicles.Headless.Executable
         public async Task Run(
             [Option("app-protocol-version", new[] { 'V' },
                 Description = "App protocol version token.")]
-            string appProtocolVersionToken,
+            string? appProtocolVersionToken = null,
             [Option('G',
                 Description = "Genesis block path of blockchain. Blockchain is recognized by its genesis block.")]
-            string genesisBlockPath,
+            string? genesisBlockPath = null,
             [Option('H',
                 Description = "Hostname of this node for another nodes to access. " +
                               "This is not listening host like 0.0.0.0")]
@@ -91,11 +92,11 @@ namespace NineChronicles.Headless.Executable
                               "Cannot be null.")]
             string? consensusPrivateKeyString = null,
             [Option("workers", Description = "Number of workers to use in Swarm")]
-            int workers = 5,
+            int? workers = null,
             [Option(Description = "Disable block mining.")]
-            bool noMiner = false,
+            bool? noMiner = null,
             [Option("miner-count", Description = "The number of miner task(thread).")]
-            int minerCount = 1,
+            int? minerCount = null,
             [Option("miner-private-key",
                 Description = "The private key used for mining blocks. " +
                               "Must not be null if you want to turn on mining with libplanet-node.")]
@@ -108,7 +109,7 @@ namespace NineChronicles.Headless.Executable
                                   "This value is required if you use persistent storage e.g. \"rocksdb\"")]
             string? storePath = null,
             [Option(Description = "Do not reduce storage. Enabling this option will use enormous disk spaces.")]
-            bool noReduceStore = false,
+            bool? noReduceStore = null,
             [Option("ice-server", new[] { 'I', },
                 Description = "ICE server to NAT traverse.")]
             string[]? iceServerStrings = null,
@@ -117,22 +118,24 @@ namespace NineChronicles.Headless.Executable
             [Option("trusted-app-protocol-version-signer", new[] { 'T' },
                 Description = "Trustworthy signers who claim new app protocol versions")]
             string[]? trustedAppProtocolVersionSigners = null,
-            [Option(Description = "Run RPC server?")]
-            bool rpcServer = false,
+            [Option(Description =
+                "Use this option if you want to make unity clients to communicate with this server with RPC")]
+            bool? rpcServer = null,
             [Option(Description = "RPC listen host")]
-            string rpcListenHost = "0.0.0.0",
+            string? rpcListenHost = null,
             [Option(Description = "RPC listen port")]
             int? rpcListenPort = null,
             [Option(Description = "Do a role as RPC remote server?" +
                                   " If you enable this option, multiple Unity clients can connect to your RPC server.")]
-            bool rpcRemoteServer = false,
+            bool? rpcRemoteServer = null,
             [Option(Description = "If you enable this option with \"rpcRemoteServer\" option at the same time, " +
                                   "RPC server will use HTTP/1, not gRPC.")]
-            bool rpcHttpServer = false,
-            [Option("graphql-server", Description = "Run GraphQL server?")]
-            bool graphQLServer = false,
+            bool? rpcHttpServer = null,
+            [Option("graphql-server",
+                Description = "Use this option if you want to enable GraphQL server to enable querying data.")]
+            bool? graphQLServer = null,
             [Option("graphql-host", Description = "GraphQL listen host")]
-            string graphQLHost = "0.0.0.0",
+            string? graphQLHost = null,
             [Option("graphql-port", Description = "GraphQL listen port")]
             int? graphQLPort = null,
             [Option("graphql-secret-token-path",
@@ -141,23 +144,23 @@ namespace NineChronicles.Headless.Executable
                               "you should use this option and take it into headers.")]
             string? graphQLSecretTokenPath = null,
             [Option(Description = "Run without CORS policy.")]
-            bool noCors = false,
+            bool? noCors = null,
             [Option("confirmations",
                 Description = "The number of required confirmations to recognize a block."
             )]
-            int confirmations = 0,
+            int? confirmations = null,
             [Option("nonblock-renderer",
                 Description = "Uses non-blocking renderer, which prevents the blockchain & " +
                               "swarm from waiting slow rendering. Turned off by default.")]
-            bool nonblockRenderer = false,
+            bool? nonblockRenderer = null,
             [Option("nonblock-renderer-queue",
                 Description = "The size of the queue used by the non-blocking renderer. " +
                               "Ignored if --nonblock-renderer is turned off.")]
-            int nonblockRendererQueue = 512,
+            int? nonblockRendererQueue = null,
             [Option("strict-rendering", Description = "Flag to turn on validating action renderer.")]
-            bool strictRendering = false,
+            bool? strictRendering = null,
             [Option(Description = "Log action renders besides block renders. --rpc-server implies this.")]
-            bool logActionRenders = false,
+            bool? logActionRenders = null,
             [Option("network-type", Description = "Network type.")]
             NetworkType networkType = NetworkType.Main,
             [Option(
@@ -165,22 +168,14 @@ namespace NineChronicles.Headless.Executable
                 Description =
                     "The time interval between blocks. It's unit is milliseconds.  10000 (ms) by default.")]
             int blockInterval = 10000,
-            [Option(Description = "The Cognito identity for AWS CloudWatch logging.")]
-            string? awsCognitoIdentity = null,
-            [Option(Description = "The access key for AWS CloudWatch logging.")]
-            string? awsAccessKey = null,
-            [Option(Description = "The secret key for AWS CloudWatch logging.")]
-            string? awsSecretKey = null,
-            [Option(Description = "The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2).")]
-            string? awsRegion = null,
             [Option(Description =
                 "The lifetime of each transaction, which uses minute as its unit.")]
-            int txLifeTime = 180,
+            int? txLifeTime = null,
             [Option(Description =
                 "The grace period for new messages, which uses second as its unit.")]
-            int messageTimeout = 60,
+            int? messageTimeout = null,
             [Option(Description = "The grace period for tip update, which uses second as its unit.")]
-            int tipTimeout = 60,
+            int? tipTimeout = null,
             [Option(Description = "A number of block size that determines how far behind the demand " +
                                   "the tip of the chain will publish `NodeException` to GraphQL subscriptions.")]
             int demandBuffer = 1150,
@@ -191,16 +186,16 @@ namespace NineChronicles.Headless.Executable
                 Description = "A list of peers that joining the block consensus.")]
             string[]? consensusPeerStrings = null,
             [Option(Description = "Run node without preloading.")]
-            bool skipPreload = false,
+            bool? skipPreload = null,
             [Option(Description = "Minimum number of peers to broadcast message.")]
-            int minimumBroadcastTarget = 10,
+            int? minimumBroadcastTarget = null,
             [Option(Description = "Number of the peers can be stored in each bucket.")]
-            int bucketSize = 16,
+            int? bucketSize = null,
             [Option(Description = "Determines behavior when the chain's tip is stale. \"reboot\" and \"preload\" " +
                                   "is available and \"reboot\" option is selected by default.")]
-            string chainTipStaleBehaviorType = "reboot",
+            string? chainTipStaleBehaviorType = null,
             [Option(Description = "The number of maximum transactions can be included in stage per signer.")]
-            int txQuotaPerSigner = 10,
+            int? txQuotaPerSigner = null,
             [Option(Description = "The maximum number of peers to poll blocks. int.MaxValue by default.")]
             int maximumPollPeers = int.MaxValue,
             [Option("validator",
@@ -208,6 +203,7 @@ namespace NineChronicles.Headless.Executable
                     "List of validator's public key strings. " +
                     "If null is given, value in policy will be used.  null by default.")]
             string[]? validatorStrings = null,
+            string? configPath = "appsettings.json",
             [Ignore]
             CancellationToken? cancellationToken = null
         )
@@ -216,13 +212,38 @@ namespace NineChronicles.Headless.Executable
             try
             {
 #endif
+            var configurationBuilder = new ConfigurationBuilder();
+            if (Uri.IsWellFormedUriString(configPath, UriKind.Absolute))
+            {
+                HttpClient client = new HttpClient();
+                HttpResponseMessage resp = await client.GetAsync(configPath);
+                resp.EnsureSuccessStatusCode();
+                Stream body = await resp.Content.ReadAsStreamAsync();
+                configurationBuilder.AddJsonStream(body);
+            }
+            else
+            {
+                configurationBuilder.AddJsonFile(configPath);
+            }
 
             // Setup logger.
-            var configurationBuilder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
             var configuration = configurationBuilder.Build();
             var loggerConf = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
                 .Destructure.UsingAttributes();
+            var headlessConfig = new Configuration();
+            configuration.Bind("Headless", headlessConfig);
+            headlessConfig.Overwrite(
+                appProtocolVersionToken, trustedAppProtocolVersionSigners, genesisBlockPath, host, port, consensusPort,
+                swarmPrivateKeyString, consensusPrivateKeyString, workers, storeType, storePath, noReduceStore, noMiner, minerCount,
+                minerPrivateKeyString, networkType, iceServerStrings, peerStrings, rpcServer, rpcListenHost,
+                rpcListenPort, rpcRemoteServer, rpcHttpServer, graphQLServer, graphQLHost, graphQLPort,
+                graphQLSecretTokenPath, noCors, nonblockRenderer, nonblockRendererQueue, strictRendering,
+                logActionRenders, blockInterval, confirmations,
+                txLifeTime, messageTimeout, tipTimeout, demandBuffer, consensusSeedStrings, consensusPeerStrings, skipPreload,
+                minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers, validatorStrings
+            );
+
 #if SENTRY || !DEBUG
             loggerConf = loggerConf
                 .WriteTo.Sentry(o =>
@@ -230,52 +251,15 @@ namespace NineChronicles.Headless.Executable
                     o.InitializeSdk = false;
                 });
 #endif
-            bool useBasicAwsCredentials = !(awsAccessKey is null) && !(awsSecretKey is null);
-            bool useCognitoCredentials = !(awsCognitoIdentity is null);
-            if (useBasicAwsCredentials && useCognitoCredentials)
-            {
-                const string message =
-                    "You must choose to use only one credential between basic credential " +
-                    "(i.e., --aws-access-key, --aws-secret-key) and " +
-                    "Cognito credential (i.e., --aws-cognito-identity).";
-                throw new CommandExitedException(message, -1);
-            }
-
             // Clean-up previous temporary log files.
             if (Directory.Exists("_logs"))
             {
                 Directory.Delete("_logs", true);
             }
 
-            if (useBasicAwsCredentials ^ useCognitoCredentials && !(awsRegion is null))
-            {
-                RegionEndpoint regionEndpoint = RegionEndpoint.GetBySystemName(awsRegion);
-                AWSCredentials credentials = useCognitoCredentials
-                    ? (AWSCredentials)new CognitoAWSCredentials(awsCognitoIdentity, regionEndpoint)
-                    : (AWSCredentials)new BasicAWSCredentials(awsAccessKey, awsSecretKey);
-
-                var guid = LoadAWSSinkGuid();
-                if (guid is null)
-                {
-                    guid = Guid.NewGuid();
-                    StoreAWSSinkGuid(guid.Value);
-                }
-
-                loggerConf = loggerConf.WriteTo.AmazonS3(
-                    new AmazonS3Client(credentials, regionEndpoint),
-                    "_logs/log.json",
-                    "9c-headless-logs",
-                    formatter: new CompactJsonFormatter(),
-                    rollingInterval: Serilog.Sinks.AmazonS3.RollingInterval.Hour,
-                    batchingPeriod: TimeSpan.FromMinutes(10),
-                    batchSizeLimit: 10000,
-                    bucketPath: guid.ToString()
-                );
-            }
-
             Log.Logger = loggerConf.CreateLogger();
 
-            if (!noMiner && minerPrivateKeyString is null)
+            if (!headlessConfig.NoMiner && headlessConfig.MinerPrivateKeyString is null)
             {
                 throw new CommandExitedException(
                     "--miner-private-key must be present to turn on mining at libplanet node.",
@@ -292,26 +276,28 @@ namespace NineChronicles.Headless.Executable
                     KeyStore = Web3KeyStore.DefaultKeyStore,
                 };
 
-                if (graphQLServer)
+                if (headlessConfig.GraphQLServer)
                 {
                     string? secretToken = null;
-                    if (graphQLSecretTokenPath is { })
+                    if (headlessConfig.GraphQLSecretTokenPath is { })
                     {
                         var buffer = new byte[40];
                         new SecureRandom().NextBytes(buffer);
                         secretToken = Convert.ToBase64String(buffer);
-                        await File.WriteAllTextAsync(graphQLSecretTokenPath, secretToken);
+                        await File.WriteAllTextAsync(headlessConfig.GraphQLSecretTokenPath, secretToken);
                     }
+
                     var graphQLNodeServiceProperties = new GraphQLNodeServiceProperties
                     {
-                        GraphQLServer = graphQLServer,
-                        GraphQLListenHost = graphQLHost,
-                        GraphQLListenPort = graphQLPort,
+                        GraphQLServer = headlessConfig.GraphQLServer,
+                        GraphQLListenHost = headlessConfig.GraphQLHost,
+                        GraphQLListenPort = headlessConfig.GraphQLPort,
                         SecretToken = secretToken,
-                        NoCors = noCors,
-                        UseMagicOnion = rpcServer,
-                        HttpOptions = rpcServer && rpcHttpServer
-                            ? new GraphQLNodeServiceProperties.MagicOnionHttpOptions($"{rpcListenHost}:{rpcListenPort}")
+                        NoCors = headlessConfig.NoCors,
+                        UseMagicOnion = headlessConfig.RpcServer,
+                        HttpOptions = headlessConfig.RpcServer && headlessConfig.RpcHttpServer == true
+                            ? new GraphQLNodeServiceProperties.MagicOnionHttpOptions(
+                                $"{headlessConfig.RpcListenHost}:{headlessConfig.RpcListenPort}")
                             : (GraphQLNodeServiceProperties.MagicOnionHttpOptions?)null,
                     };
 
@@ -321,73 +307,74 @@ namespace NineChronicles.Headless.Executable
 
                 var properties = NineChroniclesNodeServiceProperties
                     .GenerateLibplanetNodeServiceProperties(
-                        appProtocolVersionToken,
-                        genesisBlockPath,
-                        host,
-                        port,
-                        consensusPort,
-                        swarmPrivateKeyString,
-                        consensusPrivateKeyString,
-                        minerPrivateKeyString,
-                        storeType,
-                        storePath,
-                        noReduceStore,
-                        100,
-                        iceServerStrings,
-                        peerStrings,
-                        trustedAppProtocolVersionSigners,
-                        noMiner,
-                        workers: workers,
-                        confirmations: confirmations,
-                        nonblockRenderer: nonblockRenderer,
-                        nonblockRendererQueue: nonblockRendererQueue,
-                        messageTimeout: messageTimeout,
-                        tipTimeout: tipTimeout,
-                        demandBuffer: demandBuffer,
-                        consensusSeedStrings: consensusSeedStrings,
-                        consensusPeerStrings: consensusPeerStrings,
-                        preload: !skipPreload,
-                        minimumBroadcastTarget: minimumBroadcastTarget,
-                        bucketSize: bucketSize,
-                        chainTipStaleBehaviorType: chainTipStaleBehaviorType,
-                        maximumPollPeers: maximumPollPeers,
+                        headlessConfig.AppProtocolVersionString,
+                        headlessConfig.GenesisBlockPath,
+                        headlessConfig.Host,
+                        headlessConfig.Port,
+                        headlessConfig.ConsensusPort,
+                        headlessConfig.SwarmPrivateKeyString,
+                        headlessConfig.ConsensusPrivateKeyString,
+                        headlessConfig.MinerPrivateKeyString,
+                        headlessConfig.StoreType,
+                        headlessConfig.StorePath,
+                        headlessConfig.NoReduceStore,
+                        headlessConfig.StoreStateCacheSize,
+                        headlessConfig.IceServerStrings,
+                        headlessConfig.PeerStrings,
+                        headlessConfig.TrustedAppProtocolVersionSignerStrings,
+                        headlessConfig.NoMiner,
+                        workers: headlessConfig.Workers,
+                        confirmations: headlessConfig.Confirmations,
+                        nonblockRenderer: headlessConfig.NonblockRenderer,
+                        nonblockRendererQueue: headlessConfig.NonblockRendererQueue,
+                        messageTimeout: headlessConfig.MessageTimeout,
+                        tipTimeout: headlessConfig.TipTimeout,
+                        demandBuffer: headlessConfig.DemandBuffer,
+                        consensusSeedStrings: headlessConfig.ConsensusSeedStrings,
+                        consensusPeerStrings: headlessConfig.ConsensusPeerStrings,
+                        preload: !headlessConfig.SkipPreload,
+                        minimumBroadcastTarget: headlessConfig.MinimumBroadcastTarget,
+                        bucketSize: headlessConfig.BucketSize,
+                        chainTipStaleBehaviorType: headlessConfig.ChainTipStaleBehaviorType,
+                        maximumPollPeers: headlessConfig.MaximumPollPeers,
                         blockInterval: blockInterval,
-                        validatorStrings: validatorStrings
+                        validatorStrings: headlessConfig.ValidatorStrings
                     );
 
-                if (rpcServer)
+                if (headlessConfig.RpcServer)
                 {
                     properties.Render = true;
                     properties.LogActionRenders = true;
                 }
 
-                if (logActionRenders)
+                if (headlessConfig.LogActionRenders == true)
                 {
                     properties.LogActionRenders = true;
                 }
 
-                var minerPrivateKey = string.IsNullOrEmpty(minerPrivateKeyString)
+                var minerPrivateKey = string.IsNullOrEmpty(headlessConfig.MinerPrivateKeyString)
                     ? null
-                    : new PrivateKey(ByteUtil.ParseHex(minerPrivateKeyString));
+                    : new PrivateKey(ByteUtil.ParseHex(headlessConfig.MinerPrivateKeyString));
                 var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
                 {
                     MinerPrivateKey = minerPrivateKey,
                     Libplanet = properties,
-                    NetworkType = networkType,
-                    StrictRender = strictRendering,
-                    TxLifeTime = TimeSpan.FromMinutes(txLifeTime),
-                    TxQuotaPerSigner = txQuotaPerSigner
+                    NetworkType = headlessConfig.NetworkType,
+                    StrictRender = headlessConfig.StrictRendering,
+                    TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime),
+                    TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner,
                 };
-                hostBuilder.ConfigureServices(services =>
-                {
-                    services.AddSingleton(_ => standaloneContext);
-                });
+                hostBuilder.ConfigureServices(services => { services.AddSingleton(_ => standaloneContext); });
                 hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, standaloneContext);
-                if (rpcServer)
+                if (headlessConfig.RpcServer)
                 {
                     hostBuilder.UseNineChroniclesRPC(
                         NineChroniclesNodeServiceProperties
-                        .GenerateRpcNodeServiceProperties(rpcListenHost, rpcListenPort, rpcRemoteServer)
+                            .GenerateRpcNodeServiceProperties(
+                                headlessConfig.RpcListenHost,
+                                headlessConfig.RpcListenPort,
+                                headlessConfig.RpcRemoteServer == true
+                            )
                     );
                 }
 
@@ -414,38 +401,6 @@ namespace NineChronicles.Headless.Executable
                 throw;
             }
 #endif
-        }
-
-        private Guid? LoadAWSSinkGuid()
-        {
-            string path = AWSSinkGuidPath();
-            if (!File.Exists(path))
-            {
-                Console.Error.WriteLine($"AWSSink id doesn't exist. (path: {path})");
-                return null;
-            }
-
-            string guidString = File.ReadAllText(AWSSinkGuidPath());
-            if (Guid.TryParse(guidString, out Guid guid))
-            {
-                return guid;
-            }
-
-            Console.Error.WriteLine($"AWSSink id seems broken. (id: {guidString}");
-            return null;
-        }
-
-        private void StoreAWSSinkGuid(Guid guid)
-        {
-            File.WriteAllText(AWSSinkGuidPath(), guid.ToString());
-        }
-
-        private string AWSSinkGuidPath()
-        {
-            return Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "planetarium",
-                ".aws_sink_cloudwatch_guid");
         }
     }
 }
