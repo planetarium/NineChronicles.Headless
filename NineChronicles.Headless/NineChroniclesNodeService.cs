@@ -77,6 +77,7 @@ namespace NineChronicles.Headless
             LibplanetNodeServiceProperties<NCAction> properties,
             IBlockPolicy<NCAction> blockPolicy,
             NetworkType networkType,
+            TimeSpan? minerBlockInterval = null,
             Progress<PreloadState>? preloadProgress = null,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false,
@@ -162,6 +163,7 @@ namespace NineChronicles.Headless
                                         .Range(0, minerCount)
                                         .Select(_ => miner.MineBlockAsync(cancellationToken));
                                     await Task.WhenAll(miners);
+                                    await Task.Delay(minerBlockInterval ?? TimeSpan.Zero);
                                 }
                                 else
                                 {
@@ -258,6 +260,7 @@ namespace NineChronicles.Headless
                 properties.Libplanet,
                 blockPolicy,
                 properties.NetworkType,
+                properties.MinerBlockInterval,
                 preloadProgress: progress,
                 ignoreBootstrapFailure: properties.IgnoreBootstrapFailure,
                 ignorePreloadFailure: properties.IgnorePreloadFailure,
