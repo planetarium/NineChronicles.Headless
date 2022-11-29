@@ -6,12 +6,6 @@ namespace NineChronicles.Headless.Executable
 {
     public class Configuration
     {
-        public class DevConfiguration
-        {
-            public int BlockInterval { get; set; } = 100;
-            public int ReorgInterval { get; set; } = 100;
-        }
-
         public string? AppProtocolVersionString { get; set; }
 
         public string[]? TrustedAppProtocolVersionSignerStrings { get; set; }
@@ -69,23 +63,6 @@ namespace NineChronicles.Headless.Executable
         public bool StrictRendering { get; set; }
         public bool? LogActionRenders { get; set; }
 
-        // Development
-        public bool IsDev { get; set; }
-
-        public int BlockInterval
-        {
-            get => Dev.BlockInterval;
-            set => Dev.BlockInterval = value;
-        }
-
-        public int ReorgInterval
-        {
-            get => Dev.ReorgInterval;
-            set => Dev.ReorgInterval = value;
-        }
-
-        public DevConfiguration Dev { get; } = new();
-
         // Settings
         public int Confirmations { get; set; }
         public int TxLifeTime { get; set; } = 1000;
@@ -131,9 +108,6 @@ namespace NineChronicles.Headless.Executable
             int? nonblockRendererQueue,
             bool? strictRendering,
             bool? logActionRenders,
-            bool? isDev,
-            int? blockInterval,
-            int? reorgInterval,
             int? confirmations,
             int? txLifeTime,
             int? messageTimeout,
@@ -179,9 +153,6 @@ namespace NineChronicles.Headless.Executable
             NonblockRendererQueue = nonblockRendererQueue ?? NonblockRendererQueue;
             StrictRendering = strictRendering ?? StrictRendering;
             LogActionRenders = logActionRenders ?? LogActionRenders;
-            IsDev = isDev ?? IsDev;
-            Dev.BlockInterval = blockInterval ?? Dev.BlockInterval;
-            Dev.ReorgInterval = reorgInterval ?? Dev.ReorgInterval;
             Confirmations = confirmations ?? Confirmations;
             TxLifeTime = txLifeTime ?? TxLifeTime;
             MessageTimeout = messageTimeout ?? MessageTimeout;

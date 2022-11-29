@@ -156,15 +156,6 @@ namespace NineChronicles.Headless.Executable
             bool? logActionRenders = null,
             [Option("network-type", Description = "Network type.")]
             NetworkType? networkType = null,
-            [Option("dev", Description = "Flag to turn on the dev mode. false by default.")]
-            bool? isDev = null,
-            [Option("dev.block-interval",
-                Description = "The time interval between blocks. It's unit is milliseconds. " +
-                              "Works only when dev mode is on.")]
-            int? blockInterval = null,
-            [Option("dev.reorg-interval",
-                Description = "The size of reorg interval. Works only when dev mode is on.")]
-            int reorgInterval = 0,
             [Option(Description =
                 "The lifetime of each transaction, which uses minute as its unit.")]
             int? txLifeTime = null,
@@ -229,7 +220,7 @@ namespace NineChronicles.Headless.Executable
                 minerPrivateKeyString, networkType, iceServerStrings, peerStrings, rpcServer, rpcListenHost,
                 rpcListenPort, rpcRemoteServer, rpcHttpServer, graphQLServer, graphQLHost, graphQLPort,
                 graphQLSecretTokenPath, noCors, nonblockRenderer, nonblockRendererQueue, strictRendering,
-                logActionRenders, isDev, blockInterval, reorgInterval, confirmations,
+                logActionRenders, confirmations,
                 txLifeTime, messageTimeout, tipTimeout, demandBuffer, staticPeerStrings, skipPreload,
                 minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers
             );
@@ -344,10 +335,7 @@ namespace NineChronicles.Headless.Executable
                     MinerPrivateKey = minerPrivateKey,
                     Libplanet = properties,
                     NetworkType = headlessConfig.NetworkType,
-                    Dev = headlessConfig.IsDev,
                     StrictRender = headlessConfig.StrictRendering,
-                    BlockInterval = headlessConfig.Dev.BlockInterval,
-                    ReorgInterval = headlessConfig.Dev.ReorgInterval,
                     TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime),
                     MinerCount = headlessConfig.MinerCount,
                     TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner,
