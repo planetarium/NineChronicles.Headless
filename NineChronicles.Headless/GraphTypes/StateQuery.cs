@@ -5,9 +5,11 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
+using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Extensions;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -40,7 +42,8 @@ namespace NineChronicles.Headless.GraphTypes
                         return new AvatarStateType.AvatarStateContext(
                             context.Source.AccountStateGetter.GetAvatarState(address),
                             context.Source.AccountStateGetter,
-                            context.Source.AccountBalanceGetter);
+                            context.Source.AccountBalanceGetter,
+                            context.Source.BlockIndex);
                     }
                     catch (InvalidAddressException)
                     {
@@ -157,13 +160,29 @@ namespace NineChronicles.Headless.GraphTypes
                         return new AgentStateType.AgentStateContext(
                             new AgentState(state),
                             context.Source.AccountStateGetter,
-                            context.Source.AccountBalanceGetter
+                            context.Source.AccountBalanceGetter,
+                            context.Source.BlockIndex
                         );
                     }
 
                     return null;
                 }
             );
+
+            StakeStateType.StakeStateContext? GetStakeState(StateContext ctx, Address agentAddress)
+            {
+                if (ctx.GetState(StakeState.DeriveAddress(agentAddress)) is Dictionary state)
+                {
+                    return new StakeStateType.StakeStateContext(
+                        new StakeState(state),
+                        ctx.AccountStateGetter,
+                        ctx.AccountBalanceGetter,
+                        ctx.BlockIndex
+                    );
+                }
+
+                return null;
+            }
 
             Field<StakeStateType>(
                 name: nameof(StakeState),
@@ -176,16 +195,26 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var address = context.GetArgument<Address>("address");
-                    if (context.Source.GetState(StakeState.DeriveAddress(address)) is Dictionary state)
-                    {
-                        return new StakeStateType.StakeStateContext(
-                            new StakeState(state),
-                            context.Source.AccountStateGetter,
-                            context.Source.AccountBalanceGetter
-                        );
-                    }
+                    return GetStakeState(context.Source, address);
+                }
+            );
 
-                    return null;
+            Field<NonNullGraphType<ListGraphType<StakeStateType>>>(
+                name: "StakeStates",
+                description: "Staking states having same order as addresses",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ListGraphType<AddressType>>>
+                    {
+                        Name = "addresses",
+                        Description = "Addresses of agent who staked."
+                    }
+                ),
+                resolve: context =>
+                {
+                    return context.GetArgument<List<Address>>("addresses")
+                        .AsParallel()
+                        .AsOrdered()
+                        .Select(address => GetStakeState(context.Source, address));
                 }
             );
 
@@ -320,6 +349,135 @@ namespace NineChronicles.Headless.GraphTypes
                         return rawWorldIds.ToList(StateExtensions.ToInteger);
                     }
 
+                    return null;
+                }
+            );
+
+            Field<RaiderStateType>(
+                name: "raiderState",
+                description: "world boss season user information.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "raiderAddress",
+                        Description = "address of world boss season."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var raiderAddress = context.GetArgument<Address>("raiderAddress");
+                    if (context.Source.GetState(raiderAddress) is List list)
+                    {
+                        return new RaiderState(list);
+                    }
+
+                    return null;
+                }
+            );
+
+            Field<NonNullGraphType<IntGraphType>>(
+                "raidId",
+                description: "world boss season id by block index.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<LongGraphType>>
+                    {
+                        Name = "blockIndex"
+                    },
+                    new QueryArgument<BooleanGraphType>
+                    {
+                        Name = "prev",
+                        Description = "find previous raid id.",
+                        DefaultValue = false
+                    }
+                ),
+                resolve: context =>
+                {
+                    var blockIndex = context.GetArgument<long>("blockIndex");
+                    var prev = context.GetArgument<bool>("prev");
+                    var sheet = new WorldBossListSheet();
+                    var address = Addresses.GetSheetAddress<WorldBossListSheet>();
+                    if (context.Source.GetState(address) is Text text)
+                    {
+                        sheet.Set(text);
+                    }
+
+                    return prev
+                        ? sheet.FindPreviousRaidIdByBlockIndex(blockIndex)
+                        : sheet.FindRaidIdByBlockIndex(blockIndex);
+                }
+            );
+
+            Field<WorldBossStateType>(
+                "worldBossState",
+                description: "world boss season boss information.",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "bossAddress"
+                }),
+                resolve: context =>
+                {
+                    var bossAddress = context.GetArgument<Address>("bossAddress");
+                    if (context.Source.GetState(bossAddress) is List list)
+                    {
+                        return new WorldBossState(list);
+                    }
+
+                    return null;
+                }
+            );
+
+            Field<WorldBossKillRewardRecordType>(
+                "worldBossKillRewardRecord",
+                description: "user boss kill reward record by world boss season.",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "worldBossKillRewardRecordAddress"
+                }),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("worldBossKillRewardRecordAddress");
+                    if (context.Source.GetState(address) is List list)
+                    {
+                        return new WorldBossKillRewardRecord(list);
+                    }
+                    return null;
+                }
+            );
+
+            Field<NonNullGraphType<FungibleAssetValueWithCurrencyType>>("balance",
+                description: "asset balance by currency.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "address"
+                    },
+                    new QueryArgument<NonNullGraphType<CurrencyInputType>>
+                    {
+                        Name = "currency"
+                    }
+                ),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("address");
+                    var currency = context.GetArgument<Currency>("currency");
+                    return context.Source.GetBalance(address, currency);
+                }
+            );
+
+            Field<ListGraphType<NonNullGraphType<AddressType>>>(
+                "raiderList",
+                description: "raider address list by world boss season.",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "raiderListAddress"
+                }),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("raiderListAddress");
+                    if (context.Source.GetState(address) is List list)
+                    {
+                        return list.ToList(StateExtensions.ToAddress);
+                    }
                     return null;
                 }
             );

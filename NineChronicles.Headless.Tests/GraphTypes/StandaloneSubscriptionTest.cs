@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Net;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Security.Cryptography;
@@ -170,10 +171,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var apvPrivateKey = new PrivateKey();
             var apv1 = AppProtocolVersion.Sign(apvPrivateKey, 1);
             var apv2 = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var peer = new Peer(apvPrivateKey.PublicKey);
-            StandaloneContextFx.DifferentAppProtocolVersionEncounterSubject.OnNext(
-                new DifferentAppProtocolVersionEncounter(peer, apv1, apv2)
-            );
+            var peer = new BoundPeer(apvPrivateKey.PublicKey, new DnsEndPoint("0.0.0.0", 0));
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1));
+                StandaloneContextFx.DifferentAppProtocolVersionEncounterSubject.OnNext(
+                    new DifferentAppProtocolVersionEncounter(peer, apv1, apv2)
+                );
+            });
             var rawEvents = await stream.Take(1);
             var rawEvent = (Dictionary<string, object>)((ExecutionNode)rawEvents.Data!).ToValue()!;
             var differentAppProtocolVersionEncounter =
@@ -218,7 +223,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             const Libplanet.Headless.NodeExceptionType code = (Libplanet.Headless.NodeExceptionType)0x01;
             const string message = "This is test message.";
-            StandaloneContextFx.NodeExceptionSubject.OnNext(new NodeException(code, message));
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1));
+                StandaloneContextFx.NodeExceptionSubject.OnNext(new NodeException(code, message));
+            });
             var rawEvents = await stream.Take(1);
             var rawEvent = (Dictionary<string, object>)((ExecutionNode)rawEvents.Data!).ToValue()!;
             var nodeException =
@@ -248,7 +257,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.NotNull(stream);
 
             MonsterCollectionState monsterCollectionState = new MonsterCollectionState(default, 1, 2, Fixtures.TableSheetsFX.MonsterCollectionRewardSheet);
-            StandaloneContextFx.MonsterCollectionStateSubject.OnNext(monsterCollectionState);
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1));
+                StandaloneContextFx.MonsterCollectionStateSubject.OnNext(monsterCollectionState);
+            });
             ExecutionResult rawEvents = await stream.Take(1);
             var rawEvent = (Dictionary<string, object>)((ExecutionNode)rawEvents.Data!).ToValue()!;
             Dictionary<string, object> subject =
@@ -292,19 +305,26 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             IObservable<ExecutionResult> stream = subscribeResult.Streams!.Values.First();
             Assert.NotNull(stream);
 
-            Currency currency = new Currency("NCG", 2, minter: null);
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            Currency currency = Currency.Legacy("NCG", 2, null);
+#pragma warning restore CS0618
             FungibleAssetValue fungibleAssetValue = new FungibleAssetValue(currency, major, minor);
-            StandaloneContextFx.MonsterCollectionStatusSubject.OnNext(
-                new MonsterCollectionStatus(
-                    fungibleAssetValue,
-                    new List<MonsterCollectionRewardSheet.RewardInfo>
-                    {
-                        new MonsterCollectionRewardSheet.RewardInfo("1", "1")
-                    },
-                    tipIndex,
-                    lockup
-                )
-            );
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1));
+                StandaloneContextFx.MonsterCollectionStatusSubject.OnNext(
+                    new MonsterCollectionStatus(
+                        fungibleAssetValue,
+                        new List<MonsterCollectionRewardSheet.RewardInfo>
+                        {
+                            new MonsterCollectionRewardSheet.RewardInfo("1", "1")
+                        },
+                        tipIndex,
+                        lockup
+                    )
+                );
+            });
             ExecutionResult rawEvents = await stream.Take(1);
             var data = (MonsterCollectionStatus)((RootExecutionNode)rawEvents.Data.GetValue()).SubFields![0].Result!;
             Dictionary<string, object> expected = new Dictionary<string, object>
@@ -411,7 +431,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.NotNull(stream);
             Assert.NotEmpty(StandaloneContextFx.AgentAddresses);
 
-            Currency currency = new Currency("NCG", 2, minter: null);
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            Currency currency = Currency.Legacy("NCG", 2, null);
+#pragma warning restore CS0618
             FungibleAssetValue fungibleAssetValue = new FungibleAssetValue(currency, major, minor);
             StandaloneContextFx.AgentAddresses[address].statusSubject.OnNext(
                 new MonsterCollectionStatus(
@@ -478,7 +501,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.NotNull(stream);
             Assert.NotEmpty(StandaloneContextFx.AgentAddresses);
 
-            Currency currency = new Currency("NCG", 2, minter: null);
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            Currency currency = Currency.Legacy("NCG", 2, null);
+#pragma warning restore CS0618
             FungibleAssetValue fungibleAssetValue = new FungibleAssetValue(currency, major, minor);
             StandaloneContextFx.AgentAddresses[address].balanceSubject.OnNext(fungibleAssetValue.GetQuantityString(true));
             ExecutionResult rawEvents = await stream.Take(1);

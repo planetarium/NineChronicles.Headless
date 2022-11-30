@@ -24,6 +24,7 @@ using Libplanet.Headless;
 using Nekoyume.Model;
 using NineChronicles.Headless.GraphTypes.States;
 using Serilog;
+using Libplanet.Crypto;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -54,7 +55,12 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return new StateContext(
                         chain.ToAccountStateGetter(blockHash),
-                        chain.ToAccountBalanceGetter(blockHash)
+                        chain.ToAccountBalanceGetter(blockHash),
+                        blockHash switch
+                        {
+                            BlockHash bh => chain[bh].Index,
+                            null => chain.Tip.Index,
+                        }
                     );
                 }
             );
@@ -117,12 +123,12 @@ namespace NineChronicles.Headless.GraphTypes
                         .Select(store.GetTransaction<NCAction>);
                     var filteredTransactions = txs.Where(tx =>
                         tx.CustomActions!.Count == 1 &&
-                        tx.CustomActions.First().InnerAction is TransferAsset transferAsset &&
+                        tx.CustomActions.First().InnerAction is ITransferAsset transferAsset &&
                         (!recipient.HasValue || transferAsset.Recipient == recipient) &&
                         transferAsset.Amount.Currency.Ticker == "NCG" &&
                         store.GetTxExecution(blockHash, tx.Id) is TxSuccess);
 
-                    TransferNCGHistory ToTransferNCGHistory(TxSuccess txSuccess, string memo)
+                    TransferNCGHistory ToTransferNCGHistory(TxSuccess txSuccess, string? memo)
                     {
                         var rawTransferNcgHistories = txSuccess.FungibleAssetsDelta.Select(pair =>
                                 (pair.Key, pair.Value.Values.First(fav => fav.Currency.Ticker == "NCG")))
@@ -142,13 +148,14 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var histories = filteredTransactions.Select(tx =>
                         ToTransferNCGHistory((TxSuccess)store.GetTxExecution(blockHash, tx.Id),
-                            ((TransferAsset)tx.CustomActions!.Single().InnerAction).Memo));
+                            ((ITransferAsset)tx.CustomActions!.Single().InnerAction).Memo));
 
                     return histories;
                 });
 
             Field<KeyStoreType>(
                 name: "keyStore",
+                deprecationReason: "Use `planet key` command instead.  https://www.npmjs.com/package/@planetarium/cli",
                 resolve: context => standaloneContext.KeyStore
             ).AuthorizeWithLocalPolicyIf(useSecretToken);
 
@@ -424,6 +431,27 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<ActionQuery>>(
                 name: "actionQuery",
                 resolve: context => new ActionQuery(standaloneContext));
+
+            Field<NonNullGraphType<ActionTxQuery>>(
+                name: "actionTxQuery",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "publicKey",
+                        Description = "The hexadecimal string of public key for Transaction.",
+                    },
+                    new QueryArgument<LongGraphType>
+                    {
+                        Name = "nonce",
+                        Description = "The nonce for Transaction.",
+                    }
+                ),
+                resolve: context => new ActionTxQuery(standaloneContext));
+
+            Field<NonNullGraphType<AddressQuery>>(
+                name: "addressQuery",
+                description: "Query to get derived address.",
+                resolve: context => new AddressQuery());
         }
     }
 }

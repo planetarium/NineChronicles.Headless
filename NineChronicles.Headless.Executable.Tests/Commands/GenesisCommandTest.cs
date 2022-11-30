@@ -29,12 +29,11 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         }
 
         [Theory]
-        [InlineData(true, true, false, false)]
-        [InlineData(true, true, true, false)]
-        [InlineData(true, false, false, false)]
-        [InlineData(false, true, false, true)]
-        [InlineData(false, false, false, true)]
-        public void Mine(bool tablePathExist, bool goldDistributionExist, bool actionsExist, bool exc)
+        [InlineData(true, true, false)]
+        [InlineData(true, false, false)]
+        [InlineData(false, true, true)]
+        [InlineData(false, false, true)]
+        public void Mine(bool tablePathExist, bool goldDistributionExist, bool exc)
         {
             var config = new Dictionary<string, object>();
 
