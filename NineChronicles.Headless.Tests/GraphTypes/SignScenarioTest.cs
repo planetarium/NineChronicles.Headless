@@ -24,14 +24,14 @@ using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
-    public class ScenarioTest : GraphQLTestBase
+    public class SignScenarioTest : GraphQLTestBase
     {
-        public ScenarioTest(ITestOutputHelper output) : base(output)
+        public SignScenarioTest(ITestOutputHelper output) : base(output)
         {
         }
 
         [Fact]
-        public async Task SignTransaction()
+        public async Task SignTransaction_TransferAsset()
         {
             var privateKey = new PrivateKey();
             var privateKey2 = new PrivateKey();
@@ -40,11 +40,98 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             // Create Action.
             var args = $"recipient: \"{recipient}\", sender: \"{sender}\", amount: \"17.5\", currency: CRYSTAL";
-            var actionQuery = $"{{ transferAsset({args}) }}";
+            object plainValue = await GetAction("transferAsset", args);
+
+            (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
+            var action = Assert.IsType<TransferAsset>(signedTx.CustomActions!.Single().InnerAction);
+            Assert.Equal(recipient, action.Recipient);
+            Assert.Equal(sender, action.Sender);
+            Assert.Equal(FungibleAssetValue.Parse(CrystalCalculator.CRYSTAL, "17.5"), action.Amount);
+            await StageTransaction(signedTx, hex);
+        }
+
+        [Fact]
+        public async Task SignTransaction_Raid()
+        {
+            var privateKey = new PrivateKey();
+            var avatarAddress = privateKey.ToAddress();
+            var guid = Guid.NewGuid();
+            string ids = $"[\"{guid}\"]";
+
+            // Create Action.
+            var args = $"avatarAddress: \"{avatarAddress}\", equipmentIds: {ids}, costumeIds: {ids}, foodIds: {ids}, payNcg: true";
+            object plainValue = await GetAction("raid", args);
+
+            (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
+            var action = Assert.IsType<Raid>(signedTx.CustomActions!.Single().InnerAction);
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            Guid equipmentId = Assert.Single(action.EquipmentIds);
+            Guid costumeId = Assert.Single(action.CostumeIds);
+            Guid foodId = Assert.Single(action.FoodIds);
+            Assert.All(new[] { equipmentId, costumeId, foodId }, id => Assert.Equal(guid, id));
+            Assert.True(action.PayNcg);
+            await StageTransaction(signedTx, hex);
+        }
+
+        [Fact]
+        public async Task SignTransaction_ClaimRaidReward()
+        {
+            var privateKey = new PrivateKey();
+            var avatarAddress = privateKey.ToAddress();
+            // Create Action.
+            var args = $"avatarAddress: \"{avatarAddress}\"";
+            object plainValue = await GetAction("claimRaidReward", args);
+
+            (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
+            var action = Assert.IsType<ClaimRaidReward>(signedTx.CustomActions!.Single().InnerAction);
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            await StageTransaction(signedTx, hex);
+        }
+
+        [Fact]
+        public async Task SignTransaction_ClaimWorldBossKillReward()
+        {
+            var privateKey = new PrivateKey();
+            var avatarAddress = privateKey.ToAddress();
+            // Create Action.
+            var args = $"avatarAddress: \"{avatarAddress}\"";
+            object plainValue = await GetAction("claimWorldBossKillReward", args);
+
+            (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
+            var action = Assert.IsType<ClaimWordBossKillReward>(signedTx.CustomActions!.Single().InnerAction);
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            await StageTransaction(signedTx, hex);
+        }
+
+        [Fact]
+        public async Task SignTransaction_PrepareRewardAssets()
+        {
+            var privateKey = new PrivateKey();
+            var rewardPoolAddress = privateKey.ToAddress();
+            // Create Action.
+            var args = $"rewardPoolAddress: \"{rewardPoolAddress}\", assets:[{{ quantity: 100, decimalPlaces: 0, ticker: \"CRYSTAL\" }}]";
+            object plainValue = await GetAction("prepareRewardAssets", args);
+
+            (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
+            var action = Assert.IsType<PrepareRewardAssets>(signedTx.CustomActions!.Single().InnerAction);
+            Assert.Equal(rewardPoolAddress, action.RewardPoolAddress);
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            Assert.Equal(Currency.Legacy("CRYSTAL", 0, null) * 100, action.Assets.Single());
+#pragma warning restore CS0618
+            await StageTransaction(signedTx, hex);
+        }
+
+        private async Task<object> GetAction(string actionName, string queryArgs)
+        {
+            var actionQuery = $"{{ {actionName}({queryArgs}) }}";
             var actionQueryResult = await ExecuteQueryAsync<ActionQuery>(actionQuery, standaloneContext: StandaloneContextFx);
             var actionData = (Dictionary<string, object>)((ExecutionNode)actionQueryResult.Data!).ToValue()!;
-            var plainValue = actionData["transferAsset"];
+            return actionData[actionName];
+        }
 
+        private async Task<(Transaction<NCAction>, string)> GetSignedTransaction(PrivateKey privateKey, object plainValue)
+        {
             // Get Nonce.
             var nonceQuery = $@"query {{
                     nextTxNonce(address: ""{privateKey.ToAddress()}"")
@@ -106,12 +193,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(unsignedTx.Timestamp, signedTx.Timestamp);
             Assert.Single(unsignedTx.CustomActions!);
             Assert.Single(signedTx.CustomActions!);
-            Assert.IsType<TransferAsset>(signedTx.CustomActions!.Single().InnerAction);
-            var action = Assert.IsType<TransferAsset>(signedTx.CustomActions!.Single().InnerAction);
-            Assert.Equal(recipient, action.Recipient);
-            Assert.Equal(sender, action.Sender);
-            Assert.Equal(FungibleAssetValue.Parse(CrystalCalculator.CRYSTAL, "17.5"), action.Amount);
+            return (signedTx, hex);
+        }
 
+        private async Task StageTransaction(Transaction<NCAction> signedTx, string hex)
+        {
             // Staging Transaction.
             var stageTxMutation = $"mutation {{ stageTransaction(payload: \"{hex}\") }}";
             var stageTxResult = await ExecuteQueryAsync(stageTxMutation);

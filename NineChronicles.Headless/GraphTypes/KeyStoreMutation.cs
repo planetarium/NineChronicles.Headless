@@ -13,6 +13,8 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public KeyStoreMutation()
         {
+            DeprecationReason = "Use `planet key` command instead.  https://www.npmjs.com/package/@planetarium/cli";
+
             Field<NonNullGraphType<PrivateKeyType>>("createPrivateKey",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>
