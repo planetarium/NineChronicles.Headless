@@ -104,7 +104,8 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 Foods = new List<Guid>(),
                 WorldId = 1,
                 StageId = 1,
-                AvatarAddress = default
+                AvatarAddress = default,
+                RuneInfos = new List<RuneSlotInfo>(),
             };
 
             var minerKey = new PrivateKey();
@@ -152,7 +153,8 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 Foods = new List<Guid>(),
                 WorldId = 1,
                 StageId = 1,
-                AvatarAddress = default
+                AvatarAddress = default,
+                RuneInfos = new List<RuneSlotInfo>(),
             };
 
             var minerKey = new PrivateKey();
