@@ -166,7 +166,7 @@ namespace NineChronicles.Headless
             }
         }
 
-        private class Client : IAsyncDisposable
+        private sealed class Client : IAsyncDisposable
         {
             private readonly IActionEvaluationHub _hub;
             private readonly RpcContext _context;

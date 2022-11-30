@@ -44,7 +44,7 @@ namespace NineChronicles.Headless.GraphTypes
 
         class PreloadStateType : ObjectGraphType<PreloadState>
         {
-            private class PreloadStateExtra
+            private sealed class PreloadStateExtra
             {
                 public string Type { get; }
                 public long CurrentCount { get; }
@@ -58,7 +58,7 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             }
 
-            private class PreloadStateExtraType : ObjectGraphType<PreloadStateExtra>
+            private sealed class PreloadStateExtraType : ObjectGraphType<PreloadStateExtra>
             {
                 public PreloadStateExtraType()
                 {
