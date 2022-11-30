@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL;
@@ -24,7 +25,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 }
             }";
             var ri = new MonsterCollectionRewardSheet.RewardInfo("1", "1");
-            var result = new MonsterCollectionResult(default, default, new List<MonsterCollectionRewardSheet.RewardInfo>
+            var result = new MonsterCollectionResult(Guid.Empty, default, new List<MonsterCollectionRewardSheet.RewardInfo>
             {
                 ri
             });

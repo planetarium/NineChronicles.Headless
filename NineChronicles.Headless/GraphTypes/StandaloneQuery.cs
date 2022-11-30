@@ -310,7 +310,9 @@ namespace NineChronicles.Headless.GraphTypes
 
 
                     BlockHash? offset = blockChain.GetDelayedRenderer()?.Tip?.Hash;
+#pragma warning disable S3247
                     if (blockChain.GetState(agentAddress, offset) is Dictionary agentDict)
+#pragma warning restore S3247
                     {
                         AgentState agentState = new AgentState(agentDict);
                         Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
