@@ -552,6 +552,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }
         }
 
+        [Theory]
         [InlineData(-1, "ab", null, null, null, null, false)]
         [InlineData(0, "ab", null, null, null, null, true)]
         [InlineData(2, "ab", null, null, null, null, true)]
