@@ -14,9 +14,6 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<IntGraphType>>(
                 nameof(RuneSlotInfo.RuneId),
                 resolve: context => context.Source.RuneId);
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(RuneSlotInfo.Level),
-                resolve: context => context.Source.Level);
         }
     }
 }

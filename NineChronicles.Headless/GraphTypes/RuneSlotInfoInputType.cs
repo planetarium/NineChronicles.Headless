@@ -22,7 +22,7 @@ namespace NineChronicles.Headless.GraphTypes
             int slotIndex = (int)value["slotIndex"]!;
             int runeId = (int)value["runeId"]!;
             int level = (int)value["level"]!;
-            return new RuneSlotInfo(slotIndex: slotIndex, runeId: runeId, level: level);
+            return new RuneSlotInfo(slotIndex: slotIndex, runeId: runeId);
         }
     }
 }
