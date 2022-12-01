@@ -21,6 +21,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,6 +30,7 @@ using StrictRenderer =
     Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer<Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>>;
 using Libplanet.Blocks;
 using Libplanet;
+using Libplanet.Action;
 using Libplanet.Assets;
 
 namespace NineChronicles.Headless
@@ -105,6 +107,20 @@ namespace NineChronicles.Headless
                     exc.Message.Split("\n")[0]
                 )
             );
+
+            IActionTypeLoader MakeStaticActionTypeLoader() => new StaticActionTypeLoader(
+                Assembly.GetEntryAssembly() is { } entryAssembly
+                    ? new[] { typeof(NCAction).Assembly, entryAssembly }
+                    : new[] { typeof(NCAction).Assembly },
+                typeof(NCAction)
+            );
+
+            IActionTypeLoader actionTypeLoader = properties.DynamicActionTypeLoader is { } actionTypeLoaderConfiguration
+                ? new DynamicActionTypeLoader(actionTypeLoaderConfiguration.BasePath,
+                    actionTypeLoaderConfiguration.AssemblyFileName,
+                    actionTypeLoaderConfiguration.HardForks.OrderBy(pair => pair.SinceBlockIndex))
+                : MakeStaticActionTypeLoader();
+
             if (Properties.Render)
             {
                 renderers.Add(blockPolicySource.BlockRenderer);
@@ -143,7 +159,7 @@ namespace NineChronicles.Headless
                 PrivateKey privateKey,
                 CancellationToken cancellationToken)
             {
-                var miner = new Miner(chain, swarm, privateKey);
+                var miner = new Miner(chain, swarm, privateKey, actionTypeLoader);
                 Log.Debug("Miner called.");
                 while (!cancellationToken.IsCancellationRequested)
                 {

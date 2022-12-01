@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
@@ -145,13 +146,38 @@ namespace Libplanet.Headless.Hosting
                 });
             }
 
+            var blockChainStates = new BlockChainStates<T>(Store, StateStore);
+
+            IActionTypeLoader MakeStaticActionTypeLoader() => new StaticActionTypeLoader(
+                Assembly.GetEntryAssembly() is { } entryAssembly
+                    ? new[] { typeof(T).Assembly, entryAssembly }
+                    : new[] { typeof(T).Assembly },
+                typeof(T)
+            );
+
+            IActionTypeLoader actionTypeLoader = properties.DynamicActionTypeLoader is { } actionTypeLoaderConfiguration
+                ? new DynamicActionTypeLoader(actionTypeLoaderConfiguration.BasePath,
+                    actionTypeLoaderConfiguration.AssemblyFileName,
+                    actionTypeLoaderConfiguration.HardForks.OrderBy(pair => pair.SinceBlockIndex))
+                : MakeStaticActionTypeLoader();
             BlockChain = new BlockChain<T>(
                 policy: blockPolicy,
                 store: Store,
                 stagePolicy: stagePolicy,
                 stateStore: StateStore,
                 genesisBlock: genesisBlock,
-                renderers: renderers
+                renderers: renderers,
+                blockChainStates: blockChainStates,
+                actionEvaluator: new ActionEvaluator<T>(
+                    blockPolicy.BlockAction,
+                    blockChainStates: blockChainStates,
+                    trieGetter: hash => StateStore.GetStateRoot(
+                        Store.GetBlockDigest(hash)?.StateRootHash
+                    ),
+                    genesisHash: genesisBlock.Hash,
+                    nativeTokenPredicate: blockPolicy.NativeTokens.Contains,
+                    actionTypeLoader: actionTypeLoader
+                )
             );
 
             _obsoletedChainIds = chainIds.Where(chainId => chainId != BlockChain.Id).ToList();
