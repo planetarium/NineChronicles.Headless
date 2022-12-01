@@ -333,15 +333,12 @@ namespace NineChronicles.Headless.Executable.Commands
                     -1);
             }
 
-            _console.Out.WriteLine("Counting keys in states store.");
-            var totalKeyCount = stateKeyValueStore.ListKeys().Count();
-            _console.Out.WriteLine($"Pruning States Start. Total Number of State Keys: {totalKeyCount}");
+            _console.Out.WriteLine($"Pruning States Start.");
             var start = DateTimeOffset.Now;
             stateStore.CopyStates(ImmutableHashSet<HashDigest<SHA256>>.Empty
                 .Add(snapshotTipStateRootHash), newStateStore);
-            var prunedKeyCount = totalKeyCount - newStateKeyValueStore.ListKeys().Count();
             var end = DateTimeOffset.Now;
-            _console.Out.WriteLine($"Pruning States Done. Pruned {prunedKeyCount} out of {totalKeyCount} keys.Time Taken: {end - start:g}");
+            _console.Out.WriteLine($"Pruning States Done.Time Taken: {end - start:g}");
             store.Dispose();
             stateStore.Dispose();
             newStateStore.Dispose();

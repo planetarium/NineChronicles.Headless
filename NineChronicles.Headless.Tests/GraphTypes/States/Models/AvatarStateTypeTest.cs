@@ -47,7 +47,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
 
                         return arr;
                     },
-                    (_, _) => new FungibleAssetValue()));
+                    (_, _) => new FungibleAssetValue(),
+                    0));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
         }

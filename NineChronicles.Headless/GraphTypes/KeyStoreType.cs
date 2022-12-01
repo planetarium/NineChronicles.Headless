@@ -14,6 +14,8 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public KeyStoreType()
         {
+            DeprecationReason = "Use `planet key` command instead.  https://www.npmjs.com/package/@planetarium/cli";
+
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<ProtectedPrivateKeyType>>>>(
                 name: "protectedPrivateKeys",
                 resolve: context => context.Source.List().Select(t => t.Item2));
