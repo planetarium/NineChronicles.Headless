@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Runtime.CompilerServices;
 using Bencodex.Types;
 using GraphQL;
@@ -7,6 +6,7 @@ using Libplanet;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Helper;
+using Nekoyume.Model.State;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -97,12 +97,10 @@ namespace NineChronicles.Headless.GraphTypes
                             var blockchain = standaloneContext.BlockChain!;
                             var goldCurrencyStateDict =
                                 (Dictionary)blockchain.GetState(Addresses.GoldCurrency);
-                            var currencyDict = (Dictionary)goldCurrencyStateDict["currency"];
-                            var mintersList = (List)currencyDict["minters"];
-                            return mintersList.Select(minterValue =>
-                                new Address(((Binary)minterValue).ByteArray));
+                            var goldCurrencyState = new GoldCurrencyState(goldCurrencyStateDict);
+                            return goldCurrencyState.Currency.Minters;
                         case CurrencyEnum.CRYSTAL:
-                            return CrystalCalculator.CRYSTAL.Minters?.ToList();
+                            return CrystalCalculator.CRYSTAL.Minters;
                         default:
                             throw new SwitchExpressionException(currency);
                     }
