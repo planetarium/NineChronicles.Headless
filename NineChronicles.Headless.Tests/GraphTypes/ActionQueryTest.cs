@@ -429,7 +429,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 var runeSlotInfo = Assert.Single(action.RuneInfos);
                 Assert.Equal(1, runeSlotInfo.SlotIndex);
                 Assert.Equal(2, runeSlotInfo.RuneId);
-                Assert.Equal(3, runeSlotInfo.Level);
             }
             else
             {

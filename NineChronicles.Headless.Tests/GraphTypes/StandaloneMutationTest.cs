@@ -371,7 +371,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             if (runeSlotInfos.Any())
             {
-                queryArgs += $", runeSlotInfos: [{string.Join(",", runeSlotInfos.Select(r => $"{{slotIndex: {r.SlotIndex}, runeId: {r.RuneId}, level: {r.Level}}}"))}]";
+                queryArgs += $", runeSlotInfos: [{string.Join(",", runeSlotInfos.Select(r => $"{{slotIndex: {r.SlotIndex}, runeId: {r.RuneId}}}"))}]";
             }
             var query = @$"mutation {{ action {{ hackAndSlash({queryArgs}) }} }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
@@ -402,7 +402,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 var runeSlotInfo = runeSlotInfos[i];
                 Assert.Equal(i, runeSlotInfo.SlotIndex);
                 Assert.Equal(i + 1, runeSlotInfo.RuneId);
-                Assert.Equal(i + 2, runeSlotInfo.Level);
             }
         }
 
@@ -440,8 +439,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 },
                 new List<RuneSlotInfo>
                 {
-                    new(0, 1, 2),
-                    new(1, 2, 3),
+                    new(0, 1),
+                    new(1, 2),
                 },
             },
         };
