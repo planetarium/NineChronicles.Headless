@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -18,6 +19,7 @@ using Libplanet.Store.Trie;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Helper;
+using Nekoyume.Model;
 using Nekoyume.Model.EnumType;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -116,7 +118,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["claimStakeReward"]));
             Assert.IsType<Dictionary>(plainValue);
             var dictionary = (Dictionary)plainValue;
-            Assert.IsType<ClaimStakeReward>(DeserializeNCAction(dictionary).InnerAction);
+            Assert.IsAssignableFrom<IClaimStakeReward>(DeserializeNCAction(dictionary).InnerAction);
         }
 
         [Fact]
@@ -482,6 +484,53 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Assert.Equal(2, ncg.Currency.DecimalPlaces);
                 var minter = Assert.Single(ncg.Currency.Minters!);
                 Assert.Equal(rewardPoolAddress, minter);
+            }
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task TransferAssets(bool exc)
+        {
+            var sender = new PrivateKey().ToAddress();
+            var recipients =
+                $"{{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 18, ticker: \"CRYSTAL\" }} }}, {{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 0, ticker: \"RUNE_FENRIR1\" }} }}";
+            if (exc)
+            {
+                var count = 0;
+                while (count < Nekoyume.Action.TransferAssets.RecipientsCapacity)
+                {
+                    recipients += $", {{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 18, ticker: \"CRYSTAL\" }} }}, {{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 0, ticker: \"RUNE_FENRIR1\" }} }}";
+                    count++;
+                }
+            }
+            var query = $"{{ transferAssets(sender: \"{sender}\", recipients: [{recipients}]) }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+
+            if (exc)
+            {
+                var error = Assert.Single(queryResult.Errors!);
+                Assert.Contains($"recipients must be less than or equal {Nekoyume.Action.TransferAssets.RecipientsCapacity}.", error.Message);
+            }
+            else
+            {
+                Assert.Null(queryResult.Errors);
+                var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+                var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["transferAssets"]));
+                Assert.IsType<Dictionary>(plainValue);
+                var polymorphicAction = DeserializeNCAction(plainValue);
+                var action = Assert.IsType<TransferAssets>(polymorphicAction.InnerAction);
+
+                Assert.Equal(sender, action.Sender);
+                Assert.Equal(2, action.Recipients.Count);
+                Assert.All(action.Recipients, recipient => Assert.Equal(sender, recipient.recipient));
+                Assert.All(action.Recipients, recipient => Assert.Equal(100, recipient.amount.MajorUnit));
+                Assert.All(action.Recipients, recipient => Assert.Null(recipient.amount.Currency.Minters));
+                foreach (var (ticker, decimalPlaces) in new[] { ("CRYSTAL", 18), ("RUNE_FENRIR1", 0) })
+                {
+                    var recipient = action.Recipients.First(r => r.amount.Currency.Ticker == ticker);
+                    Assert.Equal(decimalPlaces, recipient.amount.Currency.DecimalPlaces);
+                }
             }
         }
     }
