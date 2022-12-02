@@ -9,6 +9,7 @@ on:
       - development
       - previewnet
       - qa-*
+      - pbft
       - 2022q3-worldboss
     tags:
       - v*
