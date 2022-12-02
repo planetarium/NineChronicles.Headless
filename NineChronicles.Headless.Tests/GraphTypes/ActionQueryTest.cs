@@ -336,7 +336,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var tableName = "Sheet";
             var csv = "id";
             var query = $"{{ patchTableSheet(tableName: \"{tableName}\", tableCsv: \"\"\"{csv}\"\"\") }}";
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(
+                query,
+                standaloneContext: _standaloneContext,
+                allowErrors: true);
             var error = queryResult.Errors!.Single();
             Assert.Contains("Invalid tableName.", error.Message);
         }
@@ -523,7 +526,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }
             }
             var query = $"{{ transferAssets(sender: \"{sender}\", recipients: [{recipients}]) }}";
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(
+                query,
+                standaloneContext: _standaloneContext,
+                allowErrors: exc);
 
             if (exc)
             {
@@ -602,7 +608,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var query = sb.ToString();
             var queryResult = await ExecuteQueryAsync<ActionQuery>(
                 query,
-                standaloneContext: _standaloneContext);
+                standaloneContext: _standaloneContext,
+                allowErrors: !errorsShouldBeNull);
             if (!errorsShouldBeNull)
             {
                 Assert.NotNull(queryResult.Errors);
@@ -637,7 +644,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }
 
             var query = $"{{runeEnhancement({args})}}";
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(
+                query,
+                standaloneContext: _standaloneContext,
+                allowErrors: !isSuccessCase);
             if (!isSuccessCase)
             {
                 Assert.NotNull(queryResult.Errors);

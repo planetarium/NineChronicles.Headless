@@ -8,18 +8,15 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
     {
         public InventoryItemType()
         {
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(Inventory.Item.count),
-                description: "A count of item",
-                resolve: context => context.Source.count);
-            Field<NonNullGraphType<IntGraphType>>(
-                "Id",
-                description: "An Id of item",
-                resolve: context => context.Source.item.Id);
-            Field<NonNullGraphType<ItemTypeEnumType>>(
-                "itemType",
-                description: "An ItemType of item",
-                resolve: context => context.Source.item.ItemType);
+            Field<NonNullGraphType<IntGraphType>>(nameof(Inventory.Item.count))
+                .Description("A count of item")
+                .Resolve(context => context.Source.count);
+            Field<NonNullGraphType<IntGraphType>>("Id")
+                .Description("An Id of item")
+                .Resolve(context => context.Source.item.Id);
+            Field<NonNullGraphType<ItemTypeEnumType>>("itemType")
+                .Description("An ItemType of item")
+                .Resolve(context => context.Source.item.ItemType);
         }
     }
 }

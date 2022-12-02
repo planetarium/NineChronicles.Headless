@@ -8,21 +8,15 @@ namespace NineChronicles.Headless.GraphTypes
         public MonsterCollectionStatusType()
         {
             Field<NonNullGraphType<FungibleAssetValueType>>(
-                nameof(MonsterCollectionStatus.FungibleAssetValue),
-                resolve: context => context.Source.FungibleAssetValue
-            );
+                nameof(MonsterCollectionStatus.FungibleAssetValue))
+                .Resolve(context => context.Source.FungibleAssetValue);
             Field<ListGraphType<MonsterCollectionRewardInfoType>>(
-                nameof(MonsterCollectionStatus.RewardInfos),
-                resolve: context => context.Source.RewardInfos
-            );
-            Field<NonNullGraphType<LongGraphType>>(
-                nameof(MonsterCollectionStatus.TipIndex),
-                resolve: context => context.Source.TipIndex
-            );
-            Field<NonNullGraphType<BooleanGraphType>>(
-                nameof(MonsterCollectionStatus.Lockup),
-                resolve: context => context.Source.Lockup
-            );
+                nameof(MonsterCollectionStatus.RewardInfos))
+                .Resolve(context => context.Source.RewardInfos);
+            Field<NonNullGraphType<LongGraphType>>(nameof(MonsterCollectionStatus.TipIndex))
+                .Resolve(context => context.Source.TipIndex);
+            Field<NonNullGraphType<BooleanGraphType>>(nameof(MonsterCollectionStatus.Lockup))
+                .Resolve(context => context.Source.Lockup);
         }
     }
 }

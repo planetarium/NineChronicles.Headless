@@ -10,8 +10,8 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Table
         public MonsterCollectionSheetType()
         {
             Field<ListGraphType<MonsterCollectionRowType>>(
-                nameof(MonsterCollectionSheet.OrderedList),
-                resolve: context =>
+                nameof(MonsterCollectionSheet.OrderedList))
+                .Resolve(context =>
                 {
                     return context.Source.monsterCollectionSheet.OrderedList?
                         .Select(r => (r, context.Source.monsterCollectionRewardSheet))

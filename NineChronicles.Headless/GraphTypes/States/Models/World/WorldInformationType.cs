@@ -8,30 +8,15 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.World
     {
         public WorldInformationType()
         {
-            Field<NonNullGraphType<BooleanGraphType>>(
-                nameof(WorldInformation.IsStageCleared),
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "stageId",
-                    }),
-                resolve: context => context.Source.IsStageCleared(context.GetArgument<int>("stageId")));
-            Field<NonNullGraphType<BooleanGraphType>>(
-                nameof(WorldInformation.IsWorldUnlocked),
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "worldId",
-                    }),
-                resolve: context => context.Source.IsWorldUnlocked(context.GetArgument<int>("worldId")));
-            Field<NonNullGraphType<WorldType>>(
-                "world",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "worldId",
-                    }),
-                resolve: context =>
+            Field<NonNullGraphType<BooleanGraphType>>(nameof(WorldInformation.IsStageCleared))
+                .Argument<int>("stageId", false)
+                .Resolve(context => context.Source.IsStageCleared(context.GetArgument<int>("stageId")));
+            Field<NonNullGraphType<BooleanGraphType>>(nameof(WorldInformation.IsWorldUnlocked))
+                .Argument<int>("worldId", false)
+                .Resolve(context => context.Source.IsWorldUnlocked(context.GetArgument<int>("worldId")));
+            Field<NonNullGraphType<WorldType>>("world")
+                .Argument<int>("worldId", false)
+                .Resolve(context =>
                 {
                     int worldId = context.GetArgument<int>("worldId");
                     return context.Source.TryGetWorld(

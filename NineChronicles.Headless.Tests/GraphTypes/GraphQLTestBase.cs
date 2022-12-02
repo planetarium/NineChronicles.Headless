@@ -21,10 +21,11 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Lib9c.Tests;
+using Libplanet.Explorer.Schemas;
+using Xunit;
 using Xunit.Abstractions;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -125,23 +126,19 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         protected IDocumentExecuter DocumentExecutor { get; }
 
-        protected SubscriptionDocumentExecuter SubscriptionDocumentExecuter { get; } = new SubscriptionDocumentExecuter();
+        protected async Task<ExecutionResult> ExecuteQueryAsync(string query, bool allowErrors = false)
+        {
+            ExecutionResult result = await DocumentExecutor.ExecuteAsync(new ExecutionOptions
+            {
+                Query = query,
+                Schema = Schema,
+            });
+            if (!allowErrors)
+            {
+                Assert.Null(result.Errors);
+            }
 
-        protected Task<ExecutionResult> ExecuteQueryAsync(string query)
-        {
-            return DocumentExecutor.ExecuteAsync(new ExecutionOptions
-            {
-                Query = query,
-                Schema = Schema,
-            });
-        }
-        protected Task<ExecutionResult> ExecuteSubscriptionQueryAsync(string query)
-        {
-            return SubscriptionDocumentExecuter.ExecuteAsync(new ExecutionOptions
-            {
-                Query = query,
-                Schema = Schema,
-            });
+            return result;
         }
         protected async Task<Task> StartAsync<T>(
             Swarm<T> swarm,

@@ -1,5 +1,5 @@
-using GraphQL.Language.AST;
 using GraphQL.Types;
+using GraphQLParser.AST;
 using Libplanet;
 using Libplanet.Tx;
 using System;
@@ -37,14 +37,7 @@ namespace NineChronicles.Headless.GraphTypes
             }
         }
 
-        public override object? ParseLiteral(IValue value)
-        {
-            if (value is StringValue)
-            {
-                return ParseValue(value.Value);
-            }
-
-            return null;
-        }
+        public override object? ParseLiteral(GraphQLValue? value) =>
+            value is GraphQLStringValue v ? ParseValue((string)v.Value) : null;
     }
 }

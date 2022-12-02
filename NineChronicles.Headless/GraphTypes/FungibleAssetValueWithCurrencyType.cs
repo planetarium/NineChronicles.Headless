@@ -8,20 +8,12 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public FungibleAssetValueWithCurrencyType()
         {
-            Field<NonNullGraphType<CurrencyType>>(
-                nameof(FungibleAssetValue.Currency),
-                resolve: context => context.Source.Currency
-            );
-            Field<NonNullGraphType<StringGraphType>>(
-                name: "quantity",
-                arguments: new QueryArguments(
-                    new QueryArgument<BooleanGraphType>
-                    {
-                        Name = "minerUnit",
-                        DefaultValue = false
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<CurrencyType>>(nameof(FungibleAssetValue.Currency))
+                .Resolve(context => context.Source.Currency);
+            Field<NonNullGraphType<StringGraphType>>("quantity")
+                // sic; not minorUnit.  This was a typo, but fixing it would be a breaking change:
+                .Argument<bool?>("minerUnit", true, arg => arg.DefaultValue = false)
+                .Resolve(context =>
                 {
                     var minorUnit = context.GetArgument<bool>("minerUnit");
                     return context.Source.GetQuantityString(minorUnit);

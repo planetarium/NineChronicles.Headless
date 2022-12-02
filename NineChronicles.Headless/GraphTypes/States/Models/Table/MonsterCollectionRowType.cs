@@ -8,17 +8,13 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Table
     {
         public MonsterCollectionRowType()
         {
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(MonsterCollectionSheet.Row.Level),
-                resolve: context => context.Source.row.Level
-            );
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(MonsterCollectionSheet.Row.RequiredGold),
-                resolve: context => context.Source.row.RequiredGold
-            );
+            Field<NonNullGraphType<IntGraphType>>(nameof(MonsterCollectionSheet.Row.Level))
+                .Resolve(context => context.Source.row.Level);
+            Field<NonNullGraphType<IntGraphType>>(nameof(MonsterCollectionSheet.Row.RequiredGold))
+                .Resolve(context => context.Source.row.RequiredGold);
             Field<NonNullGraphType<ListGraphType<MonsterCollectionRewardInfoType>>>(
-                nameof(MonsterCollectionRewardSheet.Row.Rewards),
-                resolve: context =>
+                nameof(MonsterCollectionRewardSheet.Row.Rewards))
+                .Resolve(context =>
                 {
                     if (context.Source.monsterCollectionRewardSheet.ContainsKey(context.Source.row.Level))
                     {
@@ -26,8 +22,7 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Table
                     }
 
                     return null;
-                }
-            );
+                });
         }
     }
 }

@@ -8,9 +8,8 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Table
         public CrystalMonsterCollectionMultiplierSheetType()
         {
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<CrystalMonsterCollectionMultiplierRowType>>>>(
-                nameof(CrystalMonsterCollectionMultiplierSheet.OrderedList),
-                resolve: context => context.Source.OrderedList
-            );
+                nameof(CrystalMonsterCollectionMultiplierSheet.OrderedList))
+                .Resolve(context => context.Source.OrderedList);
         }
     }
 }

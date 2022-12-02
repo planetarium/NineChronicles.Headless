@@ -7,15 +7,12 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public ArenaRecordType()
         {
-            Field<IntGraphType>(
-                nameof(ArenaInfo.Record.Win),
-                resolve: context => context.Source.Win);
-            Field<IntGraphType>(
-                nameof(ArenaInfo.Record.Lose),
-                resolve: context => context.Source.Lose);
-            Field<IntGraphType>(
-                nameof(ArenaInfo.Record.Draw),
-                resolve: context => context.Source.Draw);
+            Field<IntGraphType>(nameof(ArenaInfo.Record.Win))
+                .Resolve(context => context.Source.Win);
+            Field<IntGraphType>(nameof(ArenaInfo.Record.Lose))
+                .Resolve(context => context.Source.Lose);
+            Field<IntGraphType>(nameof(ArenaInfo.Record.Draw))
+                .Resolve(context => context.Source.Draw);
         }
     }
 }

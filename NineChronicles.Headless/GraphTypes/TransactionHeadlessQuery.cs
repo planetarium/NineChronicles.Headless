@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet.Blockchain;
@@ -18,12 +19,9 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public TransactionHeadlessQuery(StandaloneContext standaloneContext)
         {
-            Field<NonNullGraphType<LongGraphType>>(
-                name: "nextTxNonce",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "Target address to query" }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<LongGraphType>>("nextTxNonce")
+                .Argument<Address>("address", false, "Target address to query")
+                .Resolve(context =>
                 {
                     if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
                     {
@@ -33,16 +31,11 @@ namespace NineChronicles.Headless.GraphTypes
 
                     Address address = context.GetArgument<Address>("address");
                     return blockChain.GetNextTxNonce(address);
-                }
-            );
+                });
 
-            Field<TransactionType<NCAction>>(
-                name: "getTx",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<TxIdType>>
-                    { Name = "txId", Description = "transaction id." }
-                ),
-                resolve: context =>
+            Field<TransactionType<NCAction>>("getTx")
+                .Argument<TxId>("txId", false, "Target transaction ID to query")
+                .Resolve(context =>
                 {
                     if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
                     {
@@ -51,31 +44,22 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     var txId = context.GetArgument<TxId>("txId");
-                    return blockChain.GetTransaction(txId);
-                }
-            );
-
-            Field<NonNullGraphType<StringGraphType>>(
-                name: "createUnsignedTx",
-                deprecationReason: "API update with action query. use unsignedTransaction",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    try
                     {
-                        Name = "publicKey",
-                        Description = "The base64-encoded public key for Transaction.",
-                    },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "plainValue",
-                        Description = "The base64-encoded plain value of action for Transaction.",
-                    },
-                    new QueryArgument<LongGraphType>
-                    {
-                        Name = "nonce",
-                        Description = "The nonce for Transaction.",
+                        return blockChain.GetTransaction(txId);
                     }
-                ),
-                resolve: context =>
+                    catch (KeyNotFoundException)
+                    {
+                        return null;
+                    }
+                });
+
+            Field<NonNullGraphType<StringGraphType>>("createUnsignedTx")
+                .DeprecationReason("API update with action query. use unsignedTransaction")
+                .Argument<string>("publicKey", false, "The base64-encoded public key for Transaction.")
+                .Argument<string>("plainValue", false, "The base64-encoded plain value of action for Transaction.")
+                .Argument<long>("nonce", true, "The nonce for Transaction.")
+                .Resolve(context =>
                 {
                     if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
                     {
@@ -98,22 +82,17 @@ namespace NineChronicles.Headless.GraphTypes
                     return Convert.ToBase64String(unsignedTransaction.Serialize(false));
                 });
 
-            Field<NonNullGraphType<StringGraphType>>(
-                name: "attachSignature",
-                deprecationReason: "Use signTransaction",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "unsignedTransaction",
-                        Description = "The base64-encoded unsigned transaction to attach the given signature."
-                    },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "signature",
-                        Description = "The base64-encoded signature of the given unsigned transaction."
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<StringGraphType>>("attachSignature")
+                .DeprecationReason("Use signTransaction")
+                .Argument<string>(
+                    "unsignedTransaction",
+                    false,
+                    "The base64-encoded unsigned transaction to attach the given signature.")
+                .Argument<string>(
+                    "signature",
+                    false,
+                    "The base64-encoded signature of the given unsigned transaction.")
+                .Resolve(context =>
                 {
                     byte[] signature = Convert.FromBase64String(context.GetArgument<string>("signature"));
                     Transaction<NCAction> unsignedTransaction =
@@ -136,13 +115,9 @@ namespace NineChronicles.Headless.GraphTypes
                     return Convert.ToBase64String(signedTransaction.Serialize(true));
                 });
 
-            Field<NonNullGraphType<TxResultType>>(
-                name: "transactionResult",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<TxIdType>>
-                    { Name = "txId", Description = "transaction id." }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<TxResultType>>("transactionResult")
+                .Argument<TxId>("txId", false, "transaction id.")
+                .Resolve(context =>
                 {
                     if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
                     {
@@ -182,29 +157,22 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         return new TxResult(TxStatus.INVALID, null, null, null, null, null, null, null);
                     }
-                }
-            );
+                });
 
-            Field<NonNullGraphType<ByteStringType>>(
-                name: "unsignedTransaction",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "publicKey",
-                        Description = "The hexadecimal string of public key for Transaction.",
-                    },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "plainValue",
-                        Description = "The hexadecimal string of plain value for Action.",
-                    },
-                    new QueryArgument<LongGraphType>
-                    {
-                        Name = "nonce",
-                        Description = "The nonce for Transaction.",
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<ByteStringType>>("unsignedTransaction")
+                .Argument<string>(
+                    "publicKey",
+                    false,
+                    "The hexadecimal string of public key for Transaction.")
+                .Argument<string>(
+                    "plainValue",
+                    false,
+                    "The hexadecimal string of plain value for Action.")
+                .Argument<long?>(
+                    "nonce",
+                    true,
+                    "The nonce for Transaction.")
+                .Resolve(context =>
                 {
                     if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
                     {
@@ -227,21 +195,16 @@ namespace NineChronicles.Headless.GraphTypes
                     return unsignedTransaction.Serialize(false);
                 });
 
-            Field<NonNullGraphType<ByteStringType>>(
-                name: "signTransaction",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "unsignedTransaction",
-                        Description = "The hexadecimal string of unsigned transaction to attach the given signature."
-                    },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "signature",
-                        Description = "The hexadecimal string of signature of the given unsigned transaction."
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<ByteStringType>>("signTransaction")
+                .Argument<string>(
+                    "unsignedTransaction",
+                    false,
+                    "The hexadecimal string of unsigned transaction to attach the given signature.")
+                .Argument<string>(
+                    "signature",
+                    false,
+                    "The hexadecimal string of signature of the given unsigned transaction.")
+                .Resolve(context =>
                 {
                     byte[] signature = ByteUtil.ParseHex(context.GetArgument<string>("signature"));
                     Transaction<NCAction> unsignedTransaction =
@@ -263,8 +226,7 @@ namespace NineChronicles.Headless.GraphTypes
                     signedTransaction.Validate();
 
                     return signedTransaction.Serialize(true);
-                }
-            );
+                });
         }
     }
 }

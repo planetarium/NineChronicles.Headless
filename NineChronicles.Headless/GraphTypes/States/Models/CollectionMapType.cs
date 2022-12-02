@@ -10,8 +10,8 @@ namespace NineChronicles.Headless.GraphTypes.States.Models
         {
             Field<NonNullGraphType<IntGraphType>>(nameof(CollectionMap.Count));
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<ListGraphType<IntGraphType>>>>>(
-                "pairs",
-                resolve: context => context.Source.Keys.Select(k => new[] { k, context.Source[k], }));
+                "pairs")
+                .Resolve(context => context.Source.Keys.Select(k => new[] { k, context.Source[k], }));
         }
     }
 }

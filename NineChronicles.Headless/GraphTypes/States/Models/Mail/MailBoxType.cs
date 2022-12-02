@@ -8,7 +8,8 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Mail
         public MailBoxType()
         {
             Field<NonNullGraphType<IntGraphType>>(nameof(MailBox.Count));
-            Field<NonNullGraphType<ListGraphType<NonNullGraphType<MailType>>>>("mails", resolve: context => context.Source);
+            Field<NonNullGraphType<ListGraphType<NonNullGraphType<MailType>>>>("mails")
+                .Resolve(context => context.Source);
         }
     }
 }

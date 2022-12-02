@@ -7,10 +7,8 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
     {
         public ItemUsableType() : base()
         {
-            Field<NonNullGraphType<GuidGraphType>>(
-                nameof(ItemUsable.ItemId),
-                description: "Guid of item."
-            );
+            Field<NonNullGraphType<GuidGraphType>>(nameof(ItemUsable.ItemId))
+                .Description("Guid of item.");
         }
     }
 }

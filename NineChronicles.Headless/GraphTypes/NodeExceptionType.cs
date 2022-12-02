@@ -7,14 +7,12 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public NodeExceptionType()
         {
-            Field<NonNullGraphType<IntGraphType>>(
-                name: "code",
-                description: "The code of NodeException.",
-                resolve: context => context.Source.Code);
-            Field<NonNullGraphType<StringGraphType>>(
-                name: "message",
-                description: "The message of NodeException.",
-                resolve: context => context.Source.Message);
+            Field<NonNullGraphType<IntGraphType>>("code")
+                .Description("The code of NodeException.")
+                .Resolve(context => context.Source.Code);
+            Field<NonNullGraphType<StringGraphType>>("message")
+                .Description("The message of NodeException.")
+                .Resolve(context => context.Source.Message);
         }
     }
 }

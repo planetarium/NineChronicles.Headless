@@ -16,12 +16,12 @@ namespace NineChronicles.Headless
             _standaloneContext = standaloneContext;
         }
 
-        public Task<IDictionary<string, object?>> BuildUserContext(HttpContext httpContext)
+        public ValueTask<IDictionary<string, object?>?> BuildUserContextAsync(HttpContext httpContext, object? payload)
         {
-            return new ValueTask<IDictionary<string, object?>>(new Dictionary<string, object?>
+            return new ValueTask<IDictionary<string, object?>?>(new Dictionary<string, object?>
             {
                 [nameof(IBlockChainContext<NCAction>.Store)] = _standaloneContext.Store,
-            }).AsTask();
+            });
         }
     }
 }

@@ -88,7 +88,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     expiredBlockIndex
                 }}
             }}";
-            var queryResult = await ExecuteQueryAsync<ShardedShopStateV2Type>(query, source: _state);
+            var queryResult = await ExecuteQueryAsync<ShardedShopStateV2Type>(
+                query,
+                source: _state,
+                allowErrors: true);
             Assert.Null(queryResult.Data);
             Assert.NotNull(queryResult.Errors);
             Assert.Single(queryResult.Errors!);

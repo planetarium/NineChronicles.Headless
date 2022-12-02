@@ -31,13 +31,9 @@ namespace NineChronicles.Headless.GraphTypes
         {
             bool useSecretToken = configuration[GraphQLService.SecretTokenKey] is { };
 
-            Field<NonNullGraphType<StateQuery>>(name: "stateQuery", arguments: new QueryArguments(
-                new QueryArgument<ByteStringType>
-                {
-                    Name = "hash",
-                    Description = "Offset block hash for query.",
-                }),
-                resolve: context =>
+            Field<NonNullGraphType<StateQuery>>("stateQuery")
+                .Argument<byte[]?>("hash", true, "Offset block hash for query.")
+                .Resolve(context =>
                 {
                     BlockHash? blockHash = context.GetArgument<byte[]>("hash") switch
                     {
@@ -59,16 +55,12 @@ namespace NineChronicles.Headless.GraphTypes
                             null => chain.Tip.Index,
                         }
                     );
-                }
-            );
+                });
 
-            Field<ByteStringType>(
-                name: "state",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "The address of state to fetch from the chain." },
-                    new QueryArgument<ByteStringType> { Name = "hash", Description = "The hash of the block used to fetch state from chain." }
-                ),
-                resolve: context =>
+            Field<ByteStringType>("state")
+                .Argument<Address>("address", false, "The address of state to fetch from the chain.")
+                .Argument<byte[]?>("hash", true, "The hash of the block used to fetch state from chain.")
+                .Resolve(context =>
                 {
                     if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
                     {
@@ -85,21 +77,13 @@ namespace NineChronicles.Headless.GraphTypes
                     var state = blockChain.GetState(address, blockHash);
 
                     return new Codec().Encode(state);
-                }
-            );
+                });
 
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<TransferNCGHistoryType>>>>(
-                "transferNCGHistories",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<ByteStringType>>
-                    {
-                        Name = "blockHash"
-                    },
-                    new QueryArgument<AddressType>
-                    {
-                        Name = "recipient"
-                    }
-                ), resolve: context =>
+                "transferNCGHistories")
+                .Argument<NonNullGraphType<ByteStringType>>("blockHash")
+                .Argument<Address>("recipient", true)
+                .Resolve(context =>
                 {
                     BlockHash blockHash = new BlockHash(context.GetArgument<byte[]>("blockHash"));
 
@@ -150,46 +134,35 @@ namespace NineChronicles.Headless.GraphTypes
                     return histories;
                 });
 
-            Field<KeyStoreType>(
-                name: "keyStore",
-                deprecationReason: "Use `planet key` command instead.  https://www.npmjs.com/package/@planetarium/cli",
-                resolve: context => standaloneContext.KeyStore
-            ).AuthorizeWithLocalPolicyIf(useSecretToken);
-
-            Field<NonNullGraphType<NodeStatusType>>(
-                name: "nodeStatus",
-                resolve: _ => new NodeStatusType(standaloneContext)
-            );
-
-            Field<NonNullGraphType<Libplanet.Explorer.Queries.ExplorerQuery<NCAction>>>(
-                name: "chainQuery",
-                deprecationReason: "Use /graphql/explorer",
-                resolve: context => new { }
-            );
-
-            Field<NonNullGraphType<ValidationQuery>>(
-                name: "validation",
-                description: "The validation method provider for Libplanet types.",
-                resolve: context => new ValidationQuery(standaloneContext));
-
-            Field<NonNullGraphType<ActivationStatusQuery>>(
-                    name: "activationStatus",
-                    description: "Check if the provided address is activated.",
-                    resolve: context => new ActivationStatusQuery(standaloneContext))
+            Field<KeyStoreType>("keyStore")
+                .DeprecationReason("Use `planet key` command instead.  https://www.npmjs.com/package/@planetarium/cli")
+                .Resolve(context => standaloneContext.KeyStore)
                 .AuthorizeWithLocalPolicyIf(useSecretToken);
 
-            Field<NonNullGraphType<PeerChainStateQuery>>(
-                name: "peerChainState",
-                description: "Get the peer's block chain state",
-                resolve: context => new PeerChainStateQuery(standaloneContext));
+            Field<NonNullGraphType<NodeStatusType>>("nodeStatus")
+                .Resolve(_ => standaloneContext);
 
-            Field<NonNullGraphType<StringGraphType>>(
-                name: "goldBalance",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "Target address to query" },
-                    new QueryArgument<ByteStringType> { Name = "hash", Description = "Offset block hash for query." }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<Libplanet.Explorer.Queries.ExplorerQuery<NCAction>>>("chainQuery")
+                .DeprecationReason("Use /graphql/explorer")
+                .Resolve(_ => new { });
+
+            Field<NonNullGraphType<ValidationQuery>>("validation")
+                .Description("The validation method provider for Libplanet types.")
+                .Resolve(context => new ValidationQuery(standaloneContext));
+
+            Field<NonNullGraphType<ActivationStatusQuery>>("activationStatus")
+                .Description("Check if the provided address is activated.")
+                .Resolve(context => new ActivationStatusQuery(standaloneContext))
+                .AuthorizeWithLocalPolicyIf(useSecretToken);
+
+            Field<NonNullGraphType<PeerChainStateQuery>>("peerChainState")
+                .Description("Get the peer's block chain state")
+                .Resolve(context => new PeerChainStateQuery(standaloneContext));
+
+            Field<NonNullGraphType<StringGraphType>>("goldBalance")
+                .Argument<Address>("address", false, "Target address to query")
+                .Argument<byte[]?>("hash", true, "Offset block hash for query.")
+                .Resolve(context =>
                 {
                     if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
                     {
@@ -211,17 +184,14 @@ namespace NineChronicles.Headless.GraphTypes
                         currency,
                         blockHash
                     ).GetQuantityString();
-                }
-            );
+                });
 
-            Field<NonNullGraphType<LongGraphType>>(
-                name: "nextTxNonce",
-                deprecationReason: "The root query is not the best place for nextTxNonce so it was moved. " +
-                                   "Use transaction.nextTxNonce()",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "Target address to query" }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<LongGraphType>>("nextTxNonce")
+                .DeprecationReason(
+                    "The root query is not the best place for nextTxNonce so it was moved. " +
+                        "Use transaction.nextTxNonce()")
+                .Argument<Address>("address", false, "Target address to query")
+                .Resolve(context =>
                 {
                     if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
                     {
@@ -231,18 +201,14 @@ namespace NineChronicles.Headless.GraphTypes
 
                     Address address = context.GetArgument<Address>("address");
                     return blockChain.GetNextTxNonce(address);
-                }
-            );
+                });
 
-            Field<TransactionType<NCAction>>(
-                name: "getTx",
-                deprecationReason: "The root query is not the best place for getTx so it was moved. " +
-                                   "Use transaction.getTx()",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<TxIdType>>
-                    { Name = "txId", Description = "transaction id." }
-                ),
-                resolve: context =>
+            Field<TransactionType<NCAction>>("getTx")
+                .DeprecationReason(
+                    "The root query is not the best place for getTx so it was moved. " +
+                        "Use transaction.getTx()")
+                .Argument<TxId>("txId", false, "transaction id.")
+                .Resolve(context =>
                 {
                     if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
                     {
@@ -252,13 +218,11 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var txId = context.GetArgument<TxId>("txId");
                     return blockChain.GetTransaction(txId);
-                }
-            );
+                });
 
-            Field<AddressType>(
-                name: "minerAddress",
-                description: "Address of current node.",
-                resolve: context =>
+            Field<AddressType>("minerAddress")
+                .Description("Address of current node.")
+                .Resolve(context =>
                 {
                     if (standaloneContext.NineChroniclesNodeService?.MinerPrivateKey is null)
                     {
@@ -269,18 +233,10 @@ namespace NineChronicles.Headless.GraphTypes
                     return standaloneContext.NineChroniclesNodeService.MinerPrivateKey.ToAddress();
                 });
 
-            Field<MonsterCollectionStatusType>(
-                name: nameof(MonsterCollectionStatus),
-                arguments: new QueryArguments(
-                    new QueryArgument<AddressType>
-                    {
-                        Name = "address",
-                        Description = "agent address.",
-                        DefaultValue = null
-                    }
-                ),
-                description: "Get monster collection status by address.",
-                resolve: context =>
+            Field<MonsterCollectionStatusType>(nameof(MonsterCollectionStatus))
+                .Argument<Address>("address", true, "agent address", a => a.DefaultValue = null)
+                .Description("Get monster collection status by address.")
+                .Resolve(context =>
                 {
                     if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
                     {
@@ -345,21 +301,13 @@ namespace NineChronicles.Headless.GraphTypes
                         $"{nameof(AgentState)} Address: {agentAddress} is null.");
                 });
 
-            Field<NonNullGraphType<TransactionHeadlessQuery>>(
-                name: "transaction",
-                description: "Query for transaction.",
-                resolve: context => new TransactionHeadlessQuery(standaloneContext)
-            );
+            Field<NonNullGraphType<TransactionHeadlessQuery>>("transaction")
+                .Description("Query for transaction.")
+                .Resolve(_ => new TransactionHeadlessQuery(standaloneContext));
 
-            Field<NonNullGraphType<BooleanGraphType>>(
-                name: "activated",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "invitationCode"
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<BooleanGraphType>>("activated")
+                .Argument<string>("invitationCode", false)
+                .Resolve(context =>
                 {
                     if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
                     {
@@ -382,18 +330,11 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return true;
-                }
-            );
+                });
 
-            Field<NonNullGraphType<StringGraphType>>(
-                name: "activationKeyNonce",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "invitationCode"
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<StringGraphType>>("activationKeyNonce")
+                .Argument<string>("invitationCode", false)
+                .Resolve(context =>
                 {
                     if (!(standaloneContext.BlockChain is { } blockChain))
                     {
@@ -419,44 +360,33 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     throw new ExecutionError("invitationCode is invalid.");
-                }
-            );
+                });
 
-            Field<NonNullGraphType<RpcInformationQuery>>(
-                name: "rpcInformation",
-                description: "Query for rpc mode information.",
-                resolve: context => new RpcInformationQuery(publisher)
-            );
+            Field<NonNullGraphType<RpcInformationQuery>>("rpcInformation")
+                .Description("Query for rpc mode information.")
+                .Resolve(_ => new RpcInformationQuery(publisher));
 
-            Field<NonNullGraphType<ActionQuery>>(
-                name: "actionQuery",
-                resolve: context => new ActionQuery(standaloneContext));
+            Field<NonNullGraphType<ActionQuery>>("actionQuery")
+                .Resolve(_ => new ActionQuery(standaloneContext));
 
-            Field<NonNullGraphType<ActionTxQuery>>(
-                name: "actionTxQuery",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "publicKey",
-                        Description = "The hexadecimal string of public key for Transaction.",
-                    },
-                    new QueryArgument<LongGraphType>
-                    {
-                        Name = "nonce",
-                        Description = "The nonce for Transaction.",
-                    },
-                    new QueryArgument<DateTimeOffsetGraphType>
-                    {
-                        Name = "timestamp",
-                        Description = "The time this transaction is created.",
-                    }
-                ),
-                resolve: context => new ActionTxQuery(standaloneContext));
+            Field<NonNullGraphType<ActionTxQuery>>("actionTxQuery")
+                .Argument<string>(
+                    "publicKey",
+                    false,
+                    "The hexadecimal string of public key for Transaction.")
+                .Argument<long?>(
+                    "nonce",
+                    true,
+                    "The nonce for Transaction.")
+                .Argument<DateTimeOffset?>(
+                    "timestamp",
+                    true,
+                    "The time this transaction is created.")
+                .Resolve(_ => new ActionTxQuery(standaloneContext));
 
-            Field<NonNullGraphType<AddressQuery>>(
-                name: "addressQuery",
-                description: "Query to get derived address.",
-                resolve: context => new AddressQuery(standaloneContext));
+            Field<NonNullGraphType<AddressQuery>>("addressQuery")
+                .Description("Query to get derived address.")
+                .Resolve(_ => new AddressQuery(standaloneContext));
         }
     }
 }

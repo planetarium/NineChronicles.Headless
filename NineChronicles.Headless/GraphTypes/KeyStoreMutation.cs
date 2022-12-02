@@ -15,17 +15,10 @@ namespace NineChronicles.Headless.GraphTypes
         {
             DeprecationReason = "Use `planet key` command instead.  https://www.npmjs.com/package/@planetarium/cli";
 
-            Field<NonNullGraphType<PrivateKeyType>>("createPrivateKey",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "passphrase",
-                    },
-                    new QueryArgument<ByteStringType>
-                    {
-                        Name = "privateKey",
-                    }),
-                resolve: context =>
+            Field<NonNullGraphType<PrivateKeyType>>("createPrivateKey")
+                .Argument<string>("passphrase", false)
+                .Argument<ByteStringType>("privateKey")
+                .Resolve(context =>
                 {
                     var keyStore = context.Source;
                     var passphrase = context.GetArgument<string>("passphrase");
@@ -38,13 +31,9 @@ namespace NineChronicles.Headless.GraphTypes
                     return privateKey;
                 });
 
-            Field<NonNullGraphType<ProtectedPrivateKeyType>>("revokePrivateKey",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "address",
-                    }),
-                resolve: context =>
+            Field<NonNullGraphType<ProtectedPrivateKeyType>>("revokePrivateKey")
+                .Argument<Address>("address", false)
+                .Resolve(context =>
                 {
                     var keyStore = context.Source;
                     var address = context.GetArgument<Address>("address");

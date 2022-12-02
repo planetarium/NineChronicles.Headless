@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
@@ -26,7 +25,6 @@ using Serilog;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using NodeExceptionType = Libplanet.Headless.NodeExceptionType;
 using Libplanet.Headless;
-using Nekoyume.Model.State;
 
 namespace NineChronicles.Headless
 {

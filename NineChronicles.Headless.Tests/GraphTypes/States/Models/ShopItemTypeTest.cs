@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GraphQL.Execution;
-using GraphQL.NewtonsoftJson;
 using Nekoyume.Model.Item;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
 using Xunit;

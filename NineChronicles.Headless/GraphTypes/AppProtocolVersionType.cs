@@ -11,18 +11,14 @@ namespace NineChronicles.Headless.GraphTypes
 
         public AppProtocolVersionType()
         {
-            Field<NonNullGraphType<IntGraphType>>(
-                name: "version",
-                resolve: context => context.Source.Version);
-            Field<NonNullGraphType<AddressType>>(
-                name: "signer",
-                resolve: context => context.Source.Signer);
-            Field<NonNullGraphType<ByteStringType>>(
-                name: "signature",
-                resolve: context => context.Source.Signature.ToBuilder().ToArray());
-            Field<ByteStringType>(
-                name: "extra",
-                resolve: context => _codec.Encode(context.Source.Extra));
+            Field<NonNullGraphType<IntGraphType>>("version")
+                .Resolve(context => context.Source.Version);
+            Field<NonNullGraphType<AddressType>>("signer")
+                .Resolve(context => context.Source.Signer);
+            Field<NonNullGraphType<ByteStringType>>("signature")
+                .Resolve(context => context.Source.Signature.ToBuilder().ToArray());
+            Field<ByteStringType>("extra")
+                .Resolve(context => _codec.Encode(context.Source.Extra));
         }
     }
 }

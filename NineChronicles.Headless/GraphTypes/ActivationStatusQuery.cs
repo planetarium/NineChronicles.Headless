@@ -15,9 +15,8 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public ActivationStatusQuery(StandaloneContext standaloneContext)
         {
-            Field<NonNullGraphType<BooleanGraphType>>(
-                name: "activated",
-                resolve: context =>
+            Field<NonNullGraphType<BooleanGraphType>>("activated")
+                .Resolve(context =>
                 {
                     var service = standaloneContext.NineChroniclesNodeService;
 
@@ -67,18 +66,11 @@ namespace NineChronicles.Headless.GraphTypes
                         Log.Error(msg, e);
                         return false;
                     }
-                }
-            );
+                });
 
-            Field<NonNullGraphType<BooleanGraphType>>(
-                name: "addressActivated",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "address"
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<BooleanGraphType>>("addressActivated")
+                .Argument<Address>("address", false)
+                .Resolve(context =>
                 {
                     var service = standaloneContext.NineChroniclesNodeService;
 
@@ -123,8 +115,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Log.Error(msg, e);
                         return false;
                     }
-                }
-            );
+                });
         }
     }
 }

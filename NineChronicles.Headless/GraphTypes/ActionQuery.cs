@@ -27,26 +27,15 @@ namespace NineChronicles.Headless.GraphTypes
         {
             this.standaloneContext = standaloneContext;
 
-            Field<ByteStringType>(
-                name: "stake",
-                arguments: new QueryArguments(new QueryArgument<BigIntGraphType>
-                {
-                    Name = "amount",
-                    Description = "An amount to stake.",
-                }),
-                resolve: context => Encode(
+            Field<ByteStringType>("stake")
+                .Argument<BigInteger>("amount", true, "An amount to stake.")
+                .Resolve(context => Encode(
                     context,
                     (NCAction)new Stake(context.GetArgument<BigInteger>("amount"))));
 
-            Field<ByteStringType>(
-                name: "claimStakeReward",
-                arguments: new QueryArguments(
-                    new QueryArgument<AddressType>
-                    {
-                        Name = "avatarAddress",
-                        Description = "The avatar address to receive staking rewards."
-                    }),
-                resolve: context =>
+            Field<ByteStringType>("claimStakeReward")
+                .Argument<Address?>("avatarAddress", true, "The avatar address to receive staking rewards.")
+                .Resolve(context =>
                 {
                     if (!(standaloneContext.BlockChain is { } chain))
                     {
@@ -58,40 +47,29 @@ namespace NineChronicles.Headless.GraphTypes
                         (GameAction)ClaimStakeRewardFactory.CreateByBlockIndex(
                             chain.Tip.Index,
                             context.GetArgument<Address>("avatarAddress")));
-                }
-            );
-            Field<NonNullGraphType<ByteStringType>>(
-                name: "migrateMonsterCollection",
-                arguments: new QueryArguments(
-                    new QueryArgument<AddressType>
-                    {
-                        Name = "avatarAddress",
-                        Description = "The avatar address to receive monster collection rewards."
-                    }),
-                resolve: context => Encode(
-                    context,
-                    (NCAction)new MigrateMonsterCollection(
-                        context.GetArgument<Address>("avatarAddress"))));
-            Field<ByteStringType>(
-                name: "grinding",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "avatarAddress",
-                        Description = "Address of avatar.",
-                    },
-                    new QueryArgument<NonNullGraphType<ListGraphType<GuidGraphType>>>
-                    {
-                        Name = "equipmentIds",
-                        Description = "List of equipment ItemId.",
-                    },
-                    new QueryArgument<BooleanGraphType>
-                    {
-                        Name = "chargeAp",
-                        Description = "Flag to Charge Action Point.",
-                    }
-                ),
-                resolve: context =>
+                });
+            Field<NonNullGraphType<ByteStringType>>("migrateMonsterCollection")
+                .Argument<Address?>(
+                    "avatarAddress",
+                    true,
+                    "The avatar address to receive monster collection rewards.")
+                .Resolve(context =>
+                    Encode(context,
+                        (NCAction)new MigrateMonsterCollection(
+                            context.GetArgument<Address>("avatarAddress"))));
+            Field<ByteStringType>("grinding")
+                .Argument<Address>(
+                    "avatarAddress",
+                    false,
+                    "Address of avatar.")
+                .Argument<NonNullGraphType<ListGraphType<GuidGraphType>>>(
+                    "equipmentIds",
+                    "List of equipment ItemId.")
+                .Argument<bool?>(
+                    "chargeAp",
+                    true,
+                    "Flag to Charge Action Point.")
+                .Resolve(context =>
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var equipmentIds = context.GetArgument<List<Guid>>("equipmentIds");
@@ -104,21 +82,12 @@ namespace NineChronicles.Headless.GraphTypes
                     };
                     return Encode(context, action);
                 });
-            Field<ByteStringType>(
-                name: "unlockEquipmentRecipe",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "avatarAddress",
-                        Description = "Address of avatar.",
-                    },
-                    new QueryArgument<NonNullGraphType<ListGraphType<IntGraphType>>>
-                    {
-                        Name = "recipeIds",
-                        Description = "List of EquipmentRecipeSheet row ids to unlock.",
-                    }
-                ),
-                resolve: context =>
+            Field<ByteStringType>("unlockEquipmentRecipe")
+                .Argument<Address>("avatarAddress", false, "Address of avatar.")
+                .Argument<NonNullGraphType<ListGraphType<IntGraphType>>>(
+                    "recipeIds",
+                    "List of EquipmentRecipeSheet row ids to unlock.")
+                .Resolve(context =>
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var recipeIds = context.GetArgument<List<int>>("recipeIds");
@@ -129,21 +98,12 @@ namespace NineChronicles.Headless.GraphTypes
                     };
                     return Encode(context, action);
                 });
-            Field<ByteStringType>(
-                name: "unlockWorld",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "avatarAddress",
-                        Description = "Address of avatar.",
-                    },
-                    new QueryArgument<NonNullGraphType<ListGraphType<IntGraphType>>>
-                    {
-                        Name = "worldIds",
-                        Description = "List of WorldUnlockSheet row world_id_to_unlock.",
-                    }
-                ),
-                resolve: context =>
+            Field<ByteStringType>("unlockWorld")
+                .Argument<Address>("avatarAddress", false, "Address of avatar.")
+                .Argument<NonNullGraphType<ListGraphType<IntGraphType>>>(
+                    "worldIds",
+                    "List of WorldUnlockSheet row world_id_to_unlock.")
+                .Resolve(context =>
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var worldIds = context.GetArgument<List<int>>("worldIds");
@@ -154,36 +114,13 @@ namespace NineChronicles.Headless.GraphTypes
                     };
                     return Encode(context, action);
                 });
-            Field<ByteStringType>(
-                name: "transferAsset",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Description = "Address of sender.",
-                        Name = "sender",
-                    },
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Description = "Address of recipient.",
-                        Name = "recipient",
-                    },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Description = "A string value to be transferred.",
-                        Name = "amount",
-                    },
-                    new QueryArgument<NonNullGraphType<CurrencyEnumType>>
-                    {
-                        Description = "A currency type to be transferred.",
-                        Name = "currency",
-                    },
-                    new QueryArgument<StringGraphType>
-                    {
-                        Description = "A 80-max length string to note.",
-                        Name = "memo",
-                    }
-                ),
-                resolve: context =>
+            Field<ByteStringType>("transferAsset")
+                .Argument<Address>("sender", false, "Address of sender.")
+                .Argument<Address>("recipient", false, "Address of recipient.")
+                .Argument<string>("amount", false, "A string value to be transferred.")
+                .Argument<NonNullGraphType<CurrencyEnumType>>("currency", "A currency type to be transferred.")
+                .Argument<string?>("memo", true, "A 80-max length string to note.")
+                .Resolve(context =>
                 {
                     var sender = context.GetArgument<Address>("sender");
                     var recipient = context.GetArgument<Address>("recipient");
@@ -200,21 +137,10 @@ namespace NineChronicles.Headless.GraphTypes
                     NCAction action = new TransferAsset(sender, recipient, amount, memo);
                     return Encode(context, action);
                 });
-            Field<NonNullGraphType<ByteStringType>>(
-                name: "patchTableSheet",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Description = "name of table sheet.",
-                        Name = "tableName",
-                    },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Description = "table data.",
-                        Name = "tableCsv",
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<ByteStringType>>("patchTableSheet")
+                .Argument<string>("tableName", false, "name of table sheet.")
+                .Argument<string>("tableCsv", false, "table data.")
+                .Resolve(context =>
                 {
                     var tableName = context.GetArgument<string>("tableName");
                     var tableCsv = context.GetArgument<string>("tableCsv");
@@ -240,48 +166,31 @@ namespace NineChronicles.Headless.GraphTypes
                         TableCsv = tableCsv
                     };
                     return Encode(context, action);
-                }
-            );
-            Field<NonNullGraphType<ByteStringType>>(
-                name: "raid",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Description = "address of avatar state.",
-                        Name = "avatarAddress",
-                    },
-                    new QueryArgument<ListGraphType<GuidGraphType>>
-                    {
-                        Description = "list of equipment id.",
-                        DefaultValue = new List<Guid>(),
-                        Name = "equipmentIds",
-                    },
-                    new QueryArgument<ListGraphType<GuidGraphType>>
-                    {
-                        Description = "list of costume id.",
-                        DefaultValue = new List<Guid>(),
-                        Name = "costumeIds",
-                    },
-                    new QueryArgument<ListGraphType<GuidGraphType>>
-                    {
-                        Description = "list of food id.",
-                        DefaultValue = new List<Guid>(),
-                        Name = "foodIds",
-                    },
-                    new QueryArgument<BooleanGraphType>
-                    {
-                        Description = "refill ticket by NCG.",
-                        DefaultValue = false,
-                        Name = "payNcg",
-                    },
-                    new QueryArgument<ListGraphType<NonNullGraphType<RuneSlotInfoInputType>>>
-                    {
-                        Description = "list of rune slot",
-                        DefaultValue = new List<RuneSlotInfo>(),
-                        Name = "runeSlotInfos"
-                    }
-                ),
-                resolve: context =>
+                });
+            Field<NonNullGraphType<ByteStringType>>("raid")
+                .Argument<Address>("avatarAddress", false, "address of avatar state.")
+                .Argument<ListGraphType<GuidGraphType>>(
+                    "equipmentIds",
+                    "list of equipment id.",
+                    arg => arg.DefaultValue = new List<Guid>())
+                .Argument<ListGraphType<GuidGraphType>>(
+                    "costumeIds",
+                    "list of costume id.",
+                    arg => arg.DefaultValue = new List<Guid>())
+                .Argument<ListGraphType<GuidGraphType>>(
+                    "foodIds",
+                    "list of food id.",
+                    arg => arg.DefaultValue = new List<Guid>())
+                .Argument<bool?>(
+                    "payNcg",
+                    true,
+                    "refill ticket by NCG.",
+                    arg => arg.DefaultValue = false)
+                .Argument<ListGraphType<NonNullGraphType<RuneSlotInfoInputType>>>(
+                    "runeSlotInfos",
+                    "list of rune slot",
+                    arg => arg.DefaultValue = new List<RuneSlotInfo>())
+                .Resolve(context =>
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var equipmentIds = context.GetArgument<List<Guid>>("equipmentIds");
@@ -300,35 +209,25 @@ namespace NineChronicles.Headless.GraphTypes
                         RuneInfos = runeSlotInfos,
                     };
                     return Encode(context, action);
-                }
-            );
-            Field<NonNullGraphType<ByteStringType>>(
-                "claimRaidReward",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "avatarAddress",
-                        Description = "address of avatar state to receive reward."
-                    }
-                ),
-                resolve: context =>
+                });
+            Field<NonNullGraphType<ByteStringType>>("claimRaidReward")
+                .Argument<Address>(
+                    "avatarAddress",
+                    false,
+                    "address of avatar state to receive reward.")
+                .Resolve(context =>
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
 
                     NCAction action = new ClaimRaidReward(avatarAddress);
                     return Encode(context, action);
-                }
-            );
-            Field<NonNullGraphType<ByteStringType>>(
-                "claimWorldBossKillReward",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "avatarAddress",
-                        Description = "address of avatar state to receive reward."
-                    }
-                ),
-                resolve: context =>
+                });
+            Field<NonNullGraphType<ByteStringType>>("claimWorldBossKillReward")
+                .Argument<Address>(
+                    "avatarAddress",
+                    false,
+                    "address of avatar state to receive reward.")
+                .Resolve(context =>
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
 
@@ -337,23 +236,16 @@ namespace NineChronicles.Headless.GraphTypes
                         AvatarAddress = avatarAddress,
                     };
                     return Encode(context, action);
-                }
-            );
-            Field<NonNullGraphType<ByteStringType>>(
-                "prepareRewardAssets",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "rewardPoolAddress",
-                        Description = "address of reward pool for charge reward."
-                    },
-                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<FungibleAssetValueInputType>>>>
-                    {
-                        Name = "assets",
-                        Description = "list of FungibleAssetValue for charge reward."
-                    }
-                ),
-                resolve: context =>
+                });
+            Field<NonNullGraphType<ByteStringType>>("prepareRewardAssets")
+                .Argument<Address>(
+                    "rewardPoolAddress",
+                    false,
+                    "address of reward pool for charge reward.")
+                .Argument<NonNullGraphType<ListGraphType<NonNullGraphType<FungibleAssetValueInputType>>>>(
+                    "assets",
+                    "list of FungibleAssetValue for charge reward.")
+                .Resolve(context =>
                 {
                     var assets = context.GetArgument<List<FungibleAssetValue>>("assets");
                     var rewardPoolAddress = context.GetArgument<Address>("rewardPoolAddress");
@@ -364,28 +256,17 @@ namespace NineChronicles.Headless.GraphTypes
                         RewardPoolAddress = rewardPoolAddress,
                     };
                     return Encode(context, action);
-                }
-            );
-            Field<NonNullGraphType<ByteStringType>>(
-                "transferAssets",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Description = "Address of sender.",
-                        Name = "sender",
-                    },
-                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<RecipientsInputType>>>>
-                    {
-                        Description = "List of tuples that recipients' address and asset amount to be sent",
-                        Name = "recipients",
-                    },
-                    new QueryArgument<StringGraphType>
-                    {
-                        Description = "A 80-max length string to note.",
-                        Name = "memo",
-                    }
-                ),
-                resolve: context =>
+                });
+            Field<NonNullGraphType<ByteStringType>>("transferAssets")
+                .Argument<Address>("sender", false, "Address of sender.")
+                .Argument<NonNullGraphType<ListGraphType<NonNullGraphType<RecipientsInputType>>>>(
+                    "recipients",
+                    "List of tuples that recipients' address and asset amount to be sent")
+                .Argument<string?>(
+                    "memo",
+                    true,
+                    "A 80-max length string to note.")
+                .Resolve(context =>
                 {
                     var sender = context.GetArgument<Address>("sender");
                     var recipients =
@@ -401,44 +282,36 @@ namespace NineChronicles.Headless.GraphTypes
                     return Encode(context, action);
                 }
             );
-            Field<NonNullGraphType<ByteStringType>>(
-                "createAvatar",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "index",
-                        Description = "index of avatar in `AgentState.avatarAddresses`.(0~2)",
-                    },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "name",
-                        Description = "name of avatar.(2~20 characters)",
-                    },
-                    new QueryArgument<IntGraphType>
-                    {
-                        Name = "hair",
-                        Description = "hair index of avatar.",
-                        DefaultValue = 0,
-                    },
-                    new QueryArgument<IntGraphType>
-                    {
-                        Name = "lens",
-                        Description = "lens index of avatar.",
-                        DefaultValue = 0,
-                    },
-                    new QueryArgument<IntGraphType>
-                    {
-                        Name = "ear",
-                        Description = "ear index of avatar.",
-                        DefaultValue = 0,
-                    },
-                    new QueryArgument<IntGraphType>
-                    {
-                        Name = "tail",
-                        Description = "tail index of avatar.",
-                        DefaultValue = 0,
-                    }),
-                resolve: context =>
+            Field<NonNullGraphType<ByteStringType>>("createAvatar")
+                .Argument<int>(
+                    "index",
+                    false,
+                    "index of avatar in `AgentState.avatarAddresses`.(0~2)")
+                .Argument<string>(
+                    "name",
+                    false,
+                    "name of avatar.(2~20 characters)")
+                .Argument<int>(
+                    "hair",
+                    false,
+                    "hair index of avatar.",
+                    arg => arg.DefaultValue = 0)
+                .Argument<int>(
+                    "lens",
+                    false,
+                    "lens index of avatar.",
+                    arg => arg.DefaultValue = 0)
+                .Argument<int>(
+                    "ear",
+                    false,
+                    "ear index of avatar.",
+                    arg => arg.DefaultValue = 0)
+                .Argument<int>(
+                    "tail",
+                    false,
+                    "tail index of avatar.",
+                    arg => arg.DefaultValue = 0)
+                .Resolve(context =>
                 {
                     var index = context.GetArgument<int>("index");
                     if (index < 0 || index > 2)
@@ -470,30 +343,25 @@ namespace NineChronicles.Headless.GraphTypes
                     };
                     return Encode(context, action);
                 });
-            Field<NonNullGraphType<ByteStringType>>(
-                "runeEnhancement",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "avatarAddress",
-                        Description = "The avatar address to enhance rune."
-                    },
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "runeId",
-                        Description = "Rune ID to enhance."
-                    },
-                    new QueryArgument<IntGraphType>
-                    {
-                        Name = "tryCount",
-                        Description = "The try count to enhance rune"
-
-                    }),
-                resolve: context =>
+            Field<NonNullGraphType<ByteStringType>>("runeEnhancement")
+                .Argument<Address>(
+                    "avatarAddress",
+                    false,
+                    "The avatar address to enhance rune.")
+                .Argument<int>(
+                    "runeId",
+                    false,
+                    "Rune ID to enhance.")
+                .Argument<int>(
+                    "tryCount",
+                    false,
+                    "The try count to enhance rune",
+                    arg => arg.DefaultValue = 1)
+                .Resolve(context =>
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var runeId = context.GetArgument<int>("runeId");
-                    var tryCount = context.GetArgument<int?>("tryCount") ?? 1;
+                    var tryCount = context.GetArgument<int>("tryCount");
                     if (tryCount <= 0)
                     {
                         throw new ExecutionError($"tryCount must be positive: {tryCount} is invalid.");

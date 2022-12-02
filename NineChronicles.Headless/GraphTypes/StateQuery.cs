@@ -26,15 +26,10 @@ namespace NineChronicles.Headless.GraphTypes
         public StateQuery()
         {
             Name = "StateQuery";
-            Field<AvatarStateType>(
-                name: "avatar",
-                description: "State for avatar.",
-                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
-                {
-                    Name = "avatarAddress",
-                    Description = "Address of avatar."
-                }),
-                resolve: context =>
+            Field<AvatarStateType>("avatar")
+                .Description("State for avatar.")
+                .Argument<Address>("avatarAddress", false, "Address of avatar.")
+                .Resolve(context =>
                 {
                     var address = context.GetArgument<Address>("avatarAddress");
                     try
@@ -50,16 +45,10 @@ namespace NineChronicles.Headless.GraphTypes
                         throw new InvalidOperationException($"The state {address} doesn't exists");
                     }
                 });
-            Field<RankingMapStateType>(
-                name: "rankingMap",
-                description: "State for avatar EXP record.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "index",
-                        Description = "RankingMapState index. 0 ~ 99"
-                    }),
-                resolve: context =>
+            Field<RankingMapStateType>("rankingMap")
+                .Description("State for avatar EXP record.")
+                .Argument<int>("index", false, "RankingMapState index. 0 ~ 99")
+                .Resolve(context =>
                 {
                     var index = context.GetArgument<int>("index");
                     if (context.Source.GetState(RankingState.Derive(index)) is { } state)
@@ -69,28 +58,24 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return null;
                 });
-            Field<ShopStateType>(
-                name: "shop",
-                description: "State for shop.",
-                deprecationReason: "Shop is migrated to ShardedShop and not using now. Use shardedShop() instead.",
-                resolve: context => context.Source.GetState(Addresses.Shop) is { } state
+            Field<ShopStateType>("shop")
+                .Description("State for shop.")
+                .DeprecationReason(
+                    "Shop is migrated to ShardedShop and not using now.  " +
+                        "Use shardedShop() instead.")
+                .Resolve(context => context.Source.GetState(Addresses.Shop) is { } state
                     ? new ShopState((Dictionary)state)
                     : null);
-            Field<ShardedShopStateV2Type>(
-                name: "shardedShop",
-                description: "State for sharded shop.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<ItemSubTypeEnumType>>
-                    {
-                        Name = "itemSubType",
-                        Description = "ItemSubType for shard. see from https://github.com/planetarium/lib9c/blob/main/Lib9c/Model/Item/ItemType.cs#L13"
-                    },
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "nonce",
-                        Description = "Nonce for shard. It's not considered if itemSubtype is kind of costume or title. 0 ~ 15"
-                    }),
-                resolve: context =>
+            Field<ShardedShopStateV2Type>("shardedShop")
+                .Description("State for sharded shop.")
+                .Argument<NonNullGraphType<ItemSubTypeEnumType>>(
+                    "itemSubType",
+                    "ItemSubType for shard. see from https://github.com/planetarium/lib9c/blob/main/Lib9c/Model/Item/ItemType.cs#L13")
+                .Argument<int>(
+                    "nonce",
+                    false,
+                    "Nonce for shard. It's not considered if itemSubtype is kind of costume or title. 0 ~ 15")
+                .Resolve(context =>
                 {
                     var subType = context.GetArgument<ItemSubType>("itemSubType");
                     var nonce = context.GetArgument<int>("nonce").ToString("X").ToLower();
@@ -102,16 +87,13 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return null;
                 });
-            Field<WeeklyArenaStateType>(
-                name: "weeklyArena",
-                description: "State for weekly arena.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "index",
-                        Description = "WeeklyArenaState index. It increases every 56,000 blocks."
-                    }),
-                resolve: context =>
+            Field<WeeklyArenaStateType>("weeklyArena")
+                .Description("State for weekly arena.")
+                .Argument<int>(
+                    "index",
+                    false,
+                    "WeeklyArenaState index. It increases every 56,000 blocks.")
+                .Resolve(context =>
                 {
                     var index = context.GetArgument<int>("index");
                     var arenaAddress = WeeklyArenaState.DeriveAddress(index);
@@ -144,15 +126,10 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return null;
                 });
-            Field<AgentStateType>(
-                name: "agent",
-                description: "State for agent.",
-                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
-                {
-                    Name = "address",
-                    Description = "Address of agent."
-                }),
-                resolve: context =>
+            Field<AgentStateType>("agent")
+                .Description("State for agent.")
+                .Argument<Address>("address", false, "Address of agent.")
+                .Resolve(context =>
                 {
                     var address = context.GetArgument<Address>("address");
                     if (context.Source.GetState(address) is Dictionary state)
@@ -166,8 +143,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return null;
-                }
-            );
+                });
 
             StakeStateType.StakeStateContext? GetStakeState(StateContext ctx, Address agentAddress)
             {
@@ -184,51 +160,32 @@ namespace NineChronicles.Headless.GraphTypes
                 return null;
             }
 
-            Field<StakeStateType>(
-                name: nameof(StakeState),
-                description: "State for staking.",
-                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
-                {
-                    Name = "address",
-                    Description = "Address of agent who staked."
-                }),
-                resolve: context =>
+            Field<StakeStateType>(nameof(StakeState))
+                .Description("State for staking.")
+                .Argument<Address>("address", false, "Address of agent who staked.")
+                .Resolve(context =>
                 {
                     var address = context.GetArgument<Address>("address");
                     return GetStakeState(context.Source, address);
-                }
-            );
+                });
 
-            Field<NonNullGraphType<ListGraphType<StakeStateType>>>(
-                name: "StakeStates",
-                description: "Staking states having same order as addresses",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<ListGraphType<AddressType>>>
-                    {
-                        Name = "addresses",
-                        Description = "Addresses of agent who staked."
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<ListGraphType<StakeStateType>>>("StakeStates")
+                .Description("Staking states having same order as addresses")
+                .Argument<NonNullGraphType<ListGraphType<AddressType>>>(
+                    "addresses",
+                    "Addresses of agents who staked.")
+                .Resolve(context =>
                 {
                     return context.GetArgument<List<Address>>("addresses")
                         .AsParallel()
                         .AsOrdered()
                         .Select(address => GetStakeState(context.Source, address));
-                }
-            );
+                });
 
-            Field<MonsterCollectionStateType>(
-                nameof(MonsterCollectionState),
-                description: "State for monster collection.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "agentAddress",
-                        Description = "Address of agent."
-                    }
-                ),
-                resolve: context =>
+            Field<MonsterCollectionStateType>(nameof(MonsterCollectionState))
+                .Description("State for monster collection.")
+                .Argument<Address>("agentAddress", false, "Address of agent.")
+                .Resolve(context =>
                 {
                     var agentAddress = context.GetArgument<Address>("agentAddress");
                     if (!(context.Source.GetState(agentAddress) is Dictionary value))
@@ -243,12 +200,10 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return null;
-                }
-            );
+                });
 
-            Field<MonsterCollectionSheetType>(
-                nameof(MonsterCollectionSheet),
-                resolve: context =>
+            Field<MonsterCollectionSheetType>(nameof(MonsterCollectionSheet))
+                .Resolve(context =>
                 {
                     var sheetAddress = Addresses.GetSheetAddress<MonsterCollectionSheet>();
                     var rewardSheetAddress = Addresses.GetSheetAddress<MonsterCollectionRewardSheet>();
@@ -268,12 +223,10 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return null;
-                }
-            );
+                });
 
-            Field<StakeRewardsType>(
-                "stakeRewards",
-                resolve: context =>
+            Field<StakeRewardsType>("stakeRewards")
+                .Resolve(context =>
                 {
                     var sheetAddress = Addresses.GetSheetAddress<StakeRegularRewardSheet>();
                     var fixedSheetAddress = Addresses.GetSheetAddress<StakeRegularFixedRewardSheet>();
@@ -290,12 +243,11 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return null;
-                }
-            );
+                });
 
             Field<CrystalMonsterCollectionMultiplierSheetType>(
-                name: nameof(CrystalMonsterCollectionMultiplierSheet),
-                resolve: context =>
+                nameof(CrystalMonsterCollectionMultiplierSheet))
+                .Resolve(context =>
                 {
                     var sheetAddress = Addresses.GetSheetAddress<CrystalMonsterCollectionMultiplierSheet>();
                     IValue? sheetValue = context.Source.GetState(sheetAddress);
@@ -309,15 +261,10 @@ namespace NineChronicles.Headless.GraphTypes
                     return null;
                 });
 
-            Field<ListGraphType<IntGraphType>>(
-                "unlockedRecipeIds",
-                description: "List of unlocked equipment recipe sheet row ids.",
-                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
-                {
-                    Name = "avatarAddress",
-                    Description = "Address of avatar."
-                }),
-                resolve: context =>
+            Field<ListGraphType<IntGraphType>>("unlockedRecipeIds")
+                .Description("List of unlocked equipment recipe sheet row ids.")
+                .Argument<Address>("avatarAddress", false, "Address of avatar.")
+                .Resolve(context =>
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var address = avatarAddress.Derive("recipe_ids");
@@ -328,18 +275,12 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return null;
-                }
-            );
+                });
 
-            Field<ListGraphType<IntGraphType>>(
-                "unlockedWorldIds",
-                description: "List of unlocked world sheet row ids.",
-                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
-                {
-                    Name = "avatarAddress",
-                    Description = "Address of avatar."
-                }),
-                resolve: context =>
+            Field<ListGraphType<IntGraphType>>("unlockedWorldIds")
+                .Description("List of unlocked world sheet row ids.")
+                .Argument<Address>("avatarAddress", false, "Address of avatar.")
+                .Resolve(context =>
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var address = avatarAddress.Derive("world_ids");
@@ -350,20 +291,12 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return null;
-                }
-            );
+                });
 
-            Field<RaiderStateType>(
-                name: "raiderState",
-                description: "world boss season user information.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "raiderAddress",
-                        Description = "address of world boss season."
-                    }
-                ),
-                resolve: context =>
+            Field<RaiderStateType>("raiderState")
+                .Description("world boss season user information.")
+                .Argument<Address>("raiderAddress", false, "address of world boss season.")
+                .Resolve(context =>
                 {
                     var raiderAddress = context.GetArgument<Address>("raiderAddress");
                     if (context.Source.GetState(raiderAddress) is List list)
@@ -372,25 +305,17 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return null;
-                }
-            );
+                });
 
-            Field<NonNullGraphType<IntGraphType>>(
-                "raidId",
-                description: "world boss season id by block index.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<LongGraphType>>
-                    {
-                        Name = "blockIndex"
-                    },
-                    new QueryArgument<BooleanGraphType>
-                    {
-                        Name = "prev",
-                        Description = "find previous raid id.",
-                        DefaultValue = false
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<IntGraphType>>("raidId")
+                .Description("world boss season id by block index.")
+                .Argument<long>("blockIndex", false)
+                .Argument<bool?>(
+                    "prev",
+                    true,
+                    "find previous raid id.",
+                    arg => arg.DefaultValue = false)
+                .Resolve(context =>
                 {
                     var blockIndex = context.GetArgument<long>("blockIndex");
                     var prev = context.GetArgument<bool>("prev");
@@ -404,17 +329,12 @@ namespace NineChronicles.Headless.GraphTypes
                     return prev
                         ? sheet.FindPreviousRaidIdByBlockIndex(blockIndex)
                         : sheet.FindRaidIdByBlockIndex(blockIndex);
-                }
-            );
+                });
 
-            Field<WorldBossStateType>(
-                "worldBossState",
-                description: "world boss season boss information.",
-                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
-                {
-                    Name = "bossAddress"
-                }),
-                resolve: context =>
+            Field<WorldBossStateType>("worldBossState")
+                .Description("world boss season boss information.")
+                .Argument<Address>("bossAddress", false)
+                .Resolve(context =>
                 {
                     var bossAddress = context.GetArgument<Address>("bossAddress");
                     if (context.Source.GetState(bossAddress) is List list)
@@ -423,17 +343,12 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return null;
-                }
-            );
+                });
 
-            Field<WorldBossKillRewardRecordType>(
-                "worldBossKillRewardRecord",
-                description: "user boss kill reward record by world boss season.",
-                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
-                {
-                    Name = "worldBossKillRewardRecordAddress"
-                }),
-                resolve: context =>
+            Field<WorldBossKillRewardRecordType>("worldBossKillRewardRecord")
+                .Description("user boss kill reward record by world boss season.")
+                .Argument<Address>("worldBossKillRewardRecordAddress", false)
+                .Resolve(context =>
                 {
                     var address = context.GetArgument<Address>("worldBossKillRewardRecordAddress");
                     if (context.Source.GetState(address) is List list)
@@ -441,37 +356,23 @@ namespace NineChronicles.Headless.GraphTypes
                         return new WorldBossKillRewardRecord(list);
                     }
                     return null;
-                }
-            );
+                });
 
-            Field<NonNullGraphType<FungibleAssetValueWithCurrencyType>>("balance",
-                description: "asset balance by currency.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "address"
-                    },
-                    new QueryArgument<NonNullGraphType<CurrencyInputType>>
-                    {
-                        Name = "currency"
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<FungibleAssetValueWithCurrencyType>>("balance")
+                .Description("asset balance by currency.")
+                .Argument<Address>("address", false)
+                .Argument<NonNullGraphType<CurrencyInputType>>("currency")
+                .Resolve(context =>
                 {
                     var address = context.GetArgument<Address>("address");
                     var currency = context.GetArgument<Currency>("currency");
                     return context.Source.GetBalance(address, currency);
-                }
-            );
+                });
 
-            Field<ListGraphType<NonNullGraphType<AddressType>>>(
-                "raiderList",
-                description: "raider address list by world boss season.",
-                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
-                {
-                    Name = "raiderListAddress"
-                }),
-                resolve: context =>
+            Field<ListGraphType<NonNullGraphType<AddressType>>>("raiderList")
+                .Description("raider address list by world boss season.")
+                .Argument<Address>("raiderListAddress", false)
+                .Resolve(context =>
                 {
                     var address = context.GetArgument<Address>("raiderListAddress");
                     if (context.Source.GetState(address) is List list)
@@ -479,8 +380,7 @@ namespace NineChronicles.Headless.GraphTypes
                         return list.ToList(StateExtensions.ToAddress);
                     }
                     return null;
-                }
-            );
+                });
         }
     }
 }

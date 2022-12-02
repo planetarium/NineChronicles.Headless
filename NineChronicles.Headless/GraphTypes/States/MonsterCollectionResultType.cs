@@ -9,13 +9,11 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public MonsterCollectionResultType()
         {
-            Field<NonNullGraphType<AddressType>>(
-                nameof(MonsterCollectionResult.avatarAddress),
-                resolve: context => context.Source.avatarAddress);
+            Field<NonNullGraphType<AddressType>>(nameof(MonsterCollectionResult.avatarAddress))
+                .Resolve(context => context.Source.avatarAddress);
 
-            Field<NonNullGraphType<ListGraphType<MonsterCollectionRewardInfoType>>>(
-                nameof(MonsterCollectionResult.rewards),
-                resolve: context => context.Source.rewards);
+            Field<NonNullGraphType<ListGraphType<MonsterCollectionRewardInfoType>>>(nameof(MonsterCollectionResult.rewards))
+                .Resolve(context => context.Source.rewards);
         }
     }
 }

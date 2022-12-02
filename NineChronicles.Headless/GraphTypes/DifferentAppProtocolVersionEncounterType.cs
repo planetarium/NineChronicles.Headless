@@ -7,15 +7,12 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public DifferentAppProtocolVersionEncounterType()
         {
-            Field<NonNullGraphType<StringGraphType>>(
-                name: "peer",
-                resolve: context => context.Source.Peer.ToString());
-            Field<NonNullGraphType<AppProtocolVersionType>>(
-                name: "peerVersion",
-                resolve: context => context.Source.PeerVersion);
-            Field<NonNullGraphType<AppProtocolVersionType>>(
-                name: "localVersion",
-                resolve: context => context.Source.LocalVersion);
+            Field<NonNullGraphType<StringGraphType>>("peer")
+                .Resolve(context => context.Source.Peer.ToString());
+            Field<NonNullGraphType<AppProtocolVersionType>>("peerVersion")
+                .Resolve(context => context.Source.PeerVersion);
+            Field<NonNullGraphType<AppProtocolVersionType>>("localVersion")
+                .Resolve(context => context.Source.LocalVersion);
         }
     }
 }

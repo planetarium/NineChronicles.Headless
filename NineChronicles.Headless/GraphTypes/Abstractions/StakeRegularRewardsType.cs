@@ -8,22 +8,16 @@ namespace NineChronicles.Headless.GraphTypes.Abstractions
     {
         public StakeRegularRewardsType()
         {
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(StakeRegularRewardSheet.Row.Level),
-                resolve: context => context.Source.Level
-            );
-            Field<NonNullGraphType<LongGraphType>>(
-                nameof(StakeRegularRewardSheet.Row.RequiredGold),
-                resolve: context => context.Source.RequiredGold
-            );
+            Field<NonNullGraphType<IntGraphType>>(nameof(StakeRegularRewardSheet.Row.Level))
+                .Resolve(context => context.Source.Level);
+            Field<NonNullGraphType<LongGraphType>>(nameof(StakeRegularRewardSheet.Row.RequiredGold))
+                .Resolve(context => context.Source.RequiredGold);
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<StakeRegularRewardInfoType>>>>(
-                nameof(StakeRegularRewardSheet.Row.Rewards),
-                resolve: context => context.Source.Rewards
-            );
+                nameof(StakeRegularRewardSheet.Row.Rewards))
+                .Resolve(context => context.Source.Rewards);
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<StakeRegularFixedRewardInfoType>>>>(
-                "bonusRewards",
-                resolve: context => context.Source.BonusRewards
-            );
+                "bonusRewards")
+                .Resolve(context => context.Source.BonusRewards);
         }
     }
 }

@@ -8,8 +8,8 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Quest
         public QuestListType()
         {
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<IntGraphType>>>>(
-                nameof(QuestList.completedQuestIds),
-                resolve: context => context.Source.completedQuestIds);
+                nameof(QuestList.completedQuestIds))
+                .Resolve(context => context.Source.completedQuestIds);
         }
     }
 }

@@ -13,25 +13,15 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public ShardedShopStateV2Type()
         {
-            Field<NonNullGraphType<AddressType>>(
-                nameof(ShardedShopStateV2.address),
-                description: "Address of sharded shop.",
-                resolve: context => context.Source.address);
+            Field<NonNullGraphType<AddressType>>(nameof(ShardedShopStateV2.address))
+                .Description("Address of sharded shop.")
+                .Resolve(context => context.Source.address);
             Field<NonNullGraphType<ListGraphType<OrderDigestType>>>(
-                nameof(ShardedShopStateV2.OrderDigestList),
-                description: "List of OrderDigest.",
-                arguments: new QueryArguments(
-                    new QueryArgument<IntGraphType>
-                    {
-                        Name = "id",
-                        Description = "Filter for item id."
-                    },
-                    new QueryArgument<IntGraphType>
-                    {
-                        Name = "maximumPrice",
-                        Description = "Filter for item maximum price."
-                    }),
-                resolve: context =>
+                nameof(ShardedShopStateV2.OrderDigestList))
+                .Description("List of OrderDigest.")
+                .Argument<int?>("id", true, "Filter for item id.")
+                .Argument<int?>("maximumPrice", true, "Filter for item maximum price.")
+                .Resolve(context =>
                 {
                     IEnumerable<OrderDigest> orderDigestList = context.Source.OrderDigestList;
                     if (context.GetArgument<int?>("id") is int id)
@@ -44,8 +34,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                             .Where(si => si.Price <= maximumPrice * si.Price.Currency);
                     }
                     return orderDigestList.ToList();
-                }
-            );
+                });
         }
     }
 }

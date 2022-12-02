@@ -28,30 +28,24 @@ namespace NineChronicles.Headless.GraphTypes.States
 
         public AvatarStateType()
         {
-            Field<NonNullGraphType<AddressType>>(
-                nameof(AvatarState.address),
-                description: "Address of avatar.",
-                resolve: context => context.Source.AvatarState.address);
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(AvatarState.blockIndex),
-                description: "Block index at the latest executed action.",
-                resolve: context => context.Source.AvatarState.blockIndex);
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(AvatarState.characterId),
-                description: "Character ID from CharacterSheet.",
-                resolve: context => context.Source.AvatarState.characterId);
-            Field<NonNullGraphType<LongGraphType>>(
-                nameof(AvatarState.dailyRewardReceivedIndex),
-                description: "Block index at the DailyReward execution.",
-                resolve: context => context.Source.AvatarState.dailyRewardReceivedIndex);
-            Field<NonNullGraphType<AddressType>>(
-                nameof(AvatarState.agentAddress),
-                description: "Address of agent.",
-                resolve: context => context.Source.AvatarState.agentAddress);
-            Field<NonNullGraphType<IntGraphType>>(
-                "index",
-                description: "The index of this avatar state among its agent's avatar addresses.",
-                resolve: context =>
+            Field<NonNullGraphType<AddressType>>(nameof(AvatarState.address))
+                .Description("Address of avatar.")
+                .Resolve(context => context.Source.AvatarState.address);
+            Field<NonNullGraphType<IntGraphType>>(nameof(AvatarState.blockIndex))
+                .Description("Block index at the latest executed action.")
+                .Resolve(context => context.Source.AvatarState.blockIndex);
+            Field<NonNullGraphType<IntGraphType>>(nameof(AvatarState.characterId))
+                .Description("Character ID from CharacterSheet.")
+                .Resolve(context => context.Source.AvatarState.characterId);
+            Field<NonNullGraphType<LongGraphType>>(nameof(AvatarState.dailyRewardReceivedIndex))
+                .Description("Block index at the DailyReward execution.")
+                .Resolve(context => context.Source.AvatarState.dailyRewardReceivedIndex);
+            Field<NonNullGraphType<AddressType>>(nameof(AvatarState.agentAddress))
+                .Description("Address of agent.")
+                .Resolve(context => context.Source.AvatarState.agentAddress);
+            Field<NonNullGraphType<IntGraphType>>("index")
+                .Description("The index of this avatar state among its agent's avatar addresses.")
+                .Resolve(context =>
                 {
                     if (!(context.Source.GetState(context.Source.AvatarState.agentAddress) is Dictionary dictionary))
                     {
@@ -63,81 +57,64 @@ namespace NineChronicles.Headless.GraphTypes.States
                         .First(x => x.Value.Equals(context.Source.AvatarState.address))
                         .Key;
                 });
-            Field<NonNullGraphType<LongGraphType>>(
-                nameof(AvatarState.updatedAt),
-                description: "Block index at the latest executed action.",
-                resolve: context => context.Source.AvatarState.updatedAt);
+            Field<NonNullGraphType<LongGraphType>>(nameof(AvatarState.updatedAt))
+                .Description("Block index at the latest executed action.")
+                .Resolve(context => context.Source.AvatarState.updatedAt);
 
-            Field<NonNullGraphType<StringGraphType>>(
-                nameof(AvatarState.name),
-                description: "Avatar name.",
-                resolve: context => context.Source.AvatarState.name);
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(AvatarState.exp),
-                description: "Avatar total EXP.",
-                resolve: context => context.Source.AvatarState.exp);
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(AvatarState.level),
-                description: "Avatar Level.",
-                resolve: context => context.Source.AvatarState.level);
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(AvatarState.actionPoint),
-                description: "Current ActionPoint.",
-                resolve: context => context.Source.AvatarState.actionPoint);
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(AvatarState.ear),
-                description: "Index of ear color.",
-                resolve: context => context.Source.AvatarState.ear);
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(AvatarState.hair),
-                description: "Index of hair color.",
-                resolve: context => context.Source.AvatarState.hair);
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(AvatarState.lens),
-                description: "Index of eye color.",
-                resolve: context => context.Source.AvatarState.lens);
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(AvatarState.tail),
-                description: "Index of tail color.",
-                resolve: context => context.Source.AvatarState.tail);
+            Field<NonNullGraphType<StringGraphType>>(nameof(AvatarState.name))
+                .Description("Avatar name.")
+                .Resolve(context => context.Source.AvatarState.name);
+            Field<NonNullGraphType<IntGraphType>>(nameof(AvatarState.exp))
+                .Description("Avatar total EXP.")
+                .Resolve(context => context.Source.AvatarState.exp);
+            Field<NonNullGraphType<IntGraphType>>(nameof(AvatarState.level))
+                .Description("Avatar Level.")
+                .Resolve(context => context.Source.AvatarState.level);
+            Field<NonNullGraphType<IntGraphType>>(nameof(AvatarState.actionPoint))
+                .Description("Current ActionPoint.")
+                .Resolve(context => context.Source.AvatarState.actionPoint);
+            Field<NonNullGraphType<IntGraphType>>(nameof(AvatarState.ear))
+                .Description("Index of ear color.")
+                .Resolve(context => context.Source.AvatarState.ear);
+            Field<NonNullGraphType<IntGraphType>>(nameof(AvatarState.hair))
+                .Description("Index of hair color.")
+                .Resolve(context => context.Source.AvatarState.hair);
+            Field<NonNullGraphType<IntGraphType>>(nameof(AvatarState.lens))
+                .Description("Index of eye color.")
+                .Resolve(context => context.Source.AvatarState.lens);
+            Field<NonNullGraphType<IntGraphType>>(nameof(AvatarState.tail))
+                .Description("Index of tail color.")
+                .Resolve(context => context.Source.AvatarState.tail);
 
-            Field<NonNullGraphType<InventoryType>>(
-                nameof(AvatarState.inventory),
-                description: "Avatar inventory.",
-                resolve: context => context.Source.AvatarState.inventory);
+            Field<NonNullGraphType<InventoryType>>(nameof(AvatarState.inventory))
+                .Description("Avatar inventory.")
+                .Resolve(context => context.Source.AvatarState.inventory);
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>(
-                nameof(AvatarState.combinationSlotAddresses),
-                description: "Address list of combination slot.",
-                resolve: context => context.Source.AvatarState.combinationSlotAddresses);
-            Field<NonNullGraphType<CollectionMapType>>(
-                nameof(AvatarState.itemMap),
-                description: "List of acquired item ID.",
-                resolve: context => context.Source.AvatarState.itemMap);
-            Field<NonNullGraphType<CollectionMapType>>(
-                nameof(AvatarState.eventMap),
-                description: "List of quest event ID.",
-                resolve: context => context.Source.AvatarState.eventMap);
-            Field<NonNullGraphType<CollectionMapType>>(
-                nameof(AvatarState.monsterMap),
-                description: "List of defeated monster ID.",
-                resolve: context => context.Source.AvatarState.monsterMap);
-            Field<NonNullGraphType<CollectionMapType>>(
-                nameof(AvatarState.stageMap),
-                description: "List of cleared stage ID.",
-                resolve: context => context.Source.AvatarState.stageMap);
+                nameof(AvatarState.combinationSlotAddresses))
+                .Description("Address list of combination slot.")
+                .Resolve(context => context.Source.AvatarState.combinationSlotAddresses);
+            Field<NonNullGraphType<CollectionMapType>>(nameof(AvatarState.itemMap))
+                .Description("List of acquired item ID.")
+                .Resolve(context => context.Source.AvatarState.itemMap);
+            Field<NonNullGraphType<CollectionMapType>>(nameof(AvatarState.eventMap))
+                .Description("List of quest event ID.")
+                .Resolve(context => context.Source.AvatarState.eventMap);
+            Field<NonNullGraphType<CollectionMapType>>(nameof(AvatarState.monsterMap))
+                .Description("List of defeated monster ID.")
+                .Resolve(context => context.Source.AvatarState.monsterMap);
+            Field<NonNullGraphType<CollectionMapType>>(nameof(AvatarState.stageMap))
+                .Description("List of cleared stage ID.")
+                .Resolve(context => context.Source.AvatarState.stageMap);
 
-            Field<NonNullGraphType<QuestListType>>(
-                nameof(AvatarState.questList),
-                description: "List of quest.",
-                resolve: context => context.Source.AvatarState.questList);
-            Field<NonNullGraphType<MailBoxType>>(
-                nameof(AvatarState.mailBox),
-                description: "List of mail.",
-                resolve: context => context.Source.AvatarState.mailBox);
-            Field<NonNullGraphType<WorldInformationType>>(
-                nameof(AvatarState.worldInformation),
-                description: "World & Stage information.",
-                resolve: context => context.Source.AvatarState.worldInformation);
+            Field<NonNullGraphType<QuestListType>>(nameof(AvatarState.questList))
+                .Description("List of quest.")
+                .Resolve(context => context.Source.AvatarState.questList);
+            Field<NonNullGraphType<MailBoxType>>(nameof(AvatarState.mailBox))
+                .Description("List of mail.")
+                .Resolve(context => context.Source.AvatarState.mailBox);
+            Field<NonNullGraphType<WorldInformationType>>(nameof(AvatarState.worldInformation))
+                .Description("World & Stage information.")
+                .Resolve(context => context.Source.AvatarState.worldInformation);
         }
     }
 }

@@ -25,10 +25,7 @@ namespace NineChronicles.Headless.Tests.Middleware
         {
             public Fruit()
             {
-                Field<NonNullGraphType<StringGraphType>>(
-                    name: "fruit",
-                    resolve: _ => "fruit"
-                );
+                Field<NonNullGraphType<StringGraphType>>("fruit").Resolve(_ => "fruit");
             }
         }
 

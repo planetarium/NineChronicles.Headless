@@ -7,12 +7,10 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public FungibleAssetValueType()
         {
-            Field<NonNullGraphType<StringGraphType>>(
-                nameof(FungibleAssetValue.Currency),
-                resolve: context => context.Source.Currency.Ticker);
-            Field<NonNullGraphType<StringGraphType>>(
-                name: "quantity",
-                resolve: context => context.Source.GetQuantityString(true));
+            Field<NonNullGraphType<StringGraphType>>(nameof(FungibleAssetValue.Currency))
+                .Resolve(context => context.Source.Currency.Ticker);
+            Field<NonNullGraphType<StringGraphType>>("quantity")
+                .Resolve(context => context.Source.GetQuantityString(true));
         }
     }
 }

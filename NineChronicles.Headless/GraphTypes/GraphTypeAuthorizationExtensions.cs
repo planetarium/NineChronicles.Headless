@@ -1,12 +1,14 @@
 using GraphQL;
-using GraphQL.Server.Authorization.AspNetCore;
-using GraphQL.Types;
+using GraphQL.Builders;
 
 namespace NineChronicles.Headless.GraphTypes
 {
     public static class GraphTypeAuthorizationExtensions
     {
-        public static FieldType AuthorizeWithLocalPolicyIf(this FieldType fieldType, bool condition) =>
-            condition ? fieldType.AuthorizeWith(GraphQLService.LocalPolicyKey) : fieldType;
+        public static FieldBuilder<TSourceType, TReturnType> AuthorizeWithLocalPolicyIf<TSourceType, TReturnType>(
+            this FieldBuilder<TSourceType, TReturnType> builder,
+            bool condition
+        ) =>
+            condition ? builder.AuthorizeWithPolicy(GraphQLService.LocalPolicyKey) : builder;
     }
 }

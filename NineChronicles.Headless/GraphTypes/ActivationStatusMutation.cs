@@ -13,13 +13,9 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public ActivationStatusMutation(NineChroniclesNodeService service)
         {
-            Field<NonNullGraphType<BooleanGraphType>>("activateAccount",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "encodedActivationKey",
-                    }),
-                resolve: context =>
+            Field<NonNullGraphType<BooleanGraphType>>("activateAccount")
+                .Argument<string>("encodedActivationKey", false)
+                .Resolve(context =>
                 {
                     try
                     {

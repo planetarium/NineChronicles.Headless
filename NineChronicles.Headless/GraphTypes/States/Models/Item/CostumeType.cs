@@ -7,14 +7,10 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
     {
         public CostumeType()
         {
-            Field<NonNullGraphType<GuidGraphType>>(
-                nameof(Costume.ItemId),
-                description: "Guid of costume."
-            );
-            Field<NonNullGraphType<BooleanGraphType>>(
-                nameof(Costume.Equipped),
-                description: "Status of Avatar equipped."
-            );
+            Field<NonNullGraphType<GuidGraphType>>(nameof(Costume.ItemId))
+                .Description("Guid of costume.");
+            Field<NonNullGraphType<BooleanGraphType>>(nameof(Costume.Equipped))
+                .Description("Status of Avatar equipped.");
         }
     }
 }

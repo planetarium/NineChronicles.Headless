@@ -35,14 +35,12 @@ namespace NineChronicles.Headless.GraphTypes.States
 
         public AgentStateType()
         {
-            Field<NonNullGraphType<AddressType>>(
-                nameof(AgentState.address),
-                description: "Address of agent.",
-                resolve: context => context.Source.AgentAddress);
-            Field<ListGraphType<NonNullGraphType<AvatarStateType>>>(
-                "avatarStates",
-                description: "List of avatar.",
-                resolve: context =>
+            Field<NonNullGraphType<AddressType>>(nameof(AgentState.address))
+                .Description("Address of agent.")
+                .Resolve(context => context.Source.AgentAddress);
+            Field<ListGraphType<NonNullGraphType<AvatarStateType>>>("avatarStates")
+                .Description("List of avatar.")
+                .Resolve(context =>
                 {
                     IReadOnlyList<Address> avatarAddresses = context.Source.GetAvatarAddresses();
                     return context.Source.AccountStateGetter.GetAvatarStates(avatarAddresses).Select(
@@ -52,10 +50,9 @@ namespace NineChronicles.Headless.GraphTypes.States
                             context.Source.AccountBalanceGetter,
                             context.Source.BlockIndex));
                 });
-            Field<NonNullGraphType<StringGraphType>>(
-                "gold",
-                description: "Current NCG.",
-                resolve: context =>
+            Field<NonNullGraphType<StringGraphType>>("gold")
+                .Description("Current NCG.")
+                .Resolve(context =>
                 {
                     Currency currency = new GoldCurrencyState(
                         (Dictionary)context.Source.GetState(GoldCurrencyState.Address)!
@@ -66,15 +63,12 @@ namespace NineChronicles.Headless.GraphTypes.States
                         currency
                     ).GetQuantityString(true);
                 });
-            Field<NonNullGraphType<LongGraphType>>(
-                nameof(AgentState.MonsterCollectionRound),
-                description: "Monster collection round of agent.",
-                resolve: context => context.Source.AgentState.MonsterCollectionRound
-            );
-            Field<NonNullGraphType<LongGraphType>>(
-                "monsterCollectionLevel",
-                description: "Current monster collection level.",
-                resolve: context =>
+            Field<NonNullGraphType<LongGraphType>>(nameof(AgentState.MonsterCollectionRound))
+                .Description("Monster collection round of agent.")
+                .Resolve(context => context.Source.AgentState.MonsterCollectionRound);
+            Field<NonNullGraphType<LongGraphType>>("monsterCollectionLevel")
+                .Description("Current monster collection level.")
+                .Resolve(context =>
                 {
                     Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
                         context.Source.AgentAddress,
@@ -88,9 +82,8 @@ namespace NineChronicles.Headless.GraphTypes.States
                     return 0;
                 });
 
-            Field<NonNullGraphType<BooleanGraphType>>(
-                "hasTradedItem",
-                resolve: context =>
+            Field<NonNullGraphType<BooleanGraphType>>("hasTradedItem")
+                .Resolve(context =>
                 {
                     IReadOnlyList<Address> avatarAddresses = context.Source.GetAvatarAddresses();
                     var addresses = new Address[avatarAddresses.Count * 2];
@@ -124,15 +117,14 @@ namespace NineChronicles.Headless.GraphTypes.States
                     }
 
                     return false;
-                }
-            );
-            Field<NonNullGraphType<StringGraphType>>(
-                "crystal",
-                description: "Current CRYSTAL.",
-                resolve: context => context.Source.GetBalance(
-                    context.Source.AgentAddress,
-                    CrystalCalculator.CRYSTAL
-                ).GetQuantityString(true));
+                });
+            Field<NonNullGraphType<StringGraphType>>("crystal")
+                .Description("Current CRYSTAL.")
+                .Resolve(context =>
+                    context.Source.GetBalance(
+                        context.Source.AgentAddress,
+                        CrystalCalculator.CRYSTAL
+                    ).GetQuantityString(true));
         }
 
         private static bool IsTradeQuestCompleted(QuestList questList)

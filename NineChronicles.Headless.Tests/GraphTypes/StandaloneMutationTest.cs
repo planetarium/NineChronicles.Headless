@@ -167,7 +167,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }
 
             var query = $"mutation {{ transfer({args}) }}";
-            ExecutionResult result = await ExecuteQueryAsync(query);
+            ExecutionResult result = await ExecuteQueryAsync(query, allowErrors: error);
             var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
 
             if (error)
@@ -394,9 +394,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(worldId, action.WorldId);
             Assert.Equal(stageId, action.StageId);
-            Assert.Equal(costumeIds, action.Costumes);
-            Assert.Equal(equipmentIds, action.Equipments);
-            Assert.Equal(consumableIds, action.Foods);
+            Assert.Equal(costumeIds.OrderBy(id => id), action.Costumes.OrderBy(id => id));
+            Assert.Equal(equipmentIds.OrderBy(id => id), action.Equipments.OrderBy(id => id));
+            Assert.Equal(consumableIds.OrderBy(id => id), action.Foods.OrderBy(id => id));
             for (int i = 0; i < action.RuneInfos.Count; i++)
             {
                 var runeSlotInfo = runeSlotInfos[i];
@@ -824,8 +824,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
             // Error: empty payload
-            var query = $"mutation {{ stageTx(payload: \"\") }}";
-            ExecutionResult result = await ExecuteQueryAsync(query);
+            var query = "mutation { stageTx(payload: \"\") }";
+            ExecutionResult result = await ExecuteQueryAsync(query, allowErrors: true);
             var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             Assert.NotNull(result.Errors);
             Assert.Equal(
@@ -879,7 +879,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             // Error: empty payload
             var query = $"mutation {{ stageTxV2(payload: \"\") }}";
-            ExecutionResult result = await ExecuteQueryAsync(query);
+            ExecutionResult result = await ExecuteQueryAsync(query, allowErrors: true);
             Assert.NotNull(result.Errors);
             Assert.Null(result.Data!);
             Transaction<PolymorphicAction<ActionBase>> tx =

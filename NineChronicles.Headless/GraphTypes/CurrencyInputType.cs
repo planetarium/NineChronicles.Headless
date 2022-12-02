@@ -8,7 +8,7 @@ using Libplanet.Explorer.GraphTypes;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    public class CurrencyInputType : InputObjectGraphType<CurrencyType>
+    public class CurrencyInputType : InputObjectGraphType<Currency>
     {
         public CurrencyInputType()
         {

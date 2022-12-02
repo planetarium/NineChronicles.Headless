@@ -10,25 +10,18 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public PublicKeyType()
         {
-            Field<NonNullGraphType<ByteStringType>>(
-                name: "hex",
-                description: "A representation of public-key with hexadecimal format.",
-                arguments: new QueryArguments(
-                    new QueryArgument<BooleanGraphType>
-                    {
-                        Name = "compress",
-                        Description = "A flag to determine whether to compress public-key."
-                    }),
-                resolve: context =>
+            Field<NonNullGraphType<ByteStringType>>("hex")
+                .Description("A representation of public-key with hexadecimal format.")
+                .Argument<bool?>("compress", true, "A flag to determine whether to compress public-key.")
+                .Resolve(context =>
                 {
                     var compress = context.GetArgument<bool>("compress");
                     return context.Source.Format(compress);
                 });
 
-            Field<NonNullGraphType<AddressType>>(
-                name: "address",
-                description: "An address derived from the public-key.",
-                resolve: context => context.Source.ToAddress());
+            Field<NonNullGraphType<AddressType>>("address")
+                .Description("An address derived from the public-key.")
+                .Resolve(context => context.Source.ToAddress());
         }
     }
 }

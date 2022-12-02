@@ -27,33 +27,28 @@ namespace NineChronicles.Headless.GraphTypes
         {
             if (configuration[GraphQLService.SecretTokenKey] is { })
             {
-                this.AuthorizeWith(GraphQLService.LocalPolicyKey);
+                this.AuthorizeWithPolicy(GraphQLService.LocalPolicyKey);
             }
 
-            Field<KeyStoreMutation>(
-                name: "keyStore",
-                deprecationReason: "Use `planet key` command instead.  https://www.npmjs.com/package/@planetarium/cli",
-                resolve: context => standaloneContext.KeyStore);
+            Field<KeyStoreMutation>("keyStore")
+                .DeprecationReason(
+                    "Use `planet key` command instead.  https://www.npmjs.com/package/@planetarium/cli")
+                .Resolve(context => standaloneContext.KeyStore);
 
-            Field<ActivationStatusMutation>(
-                name: "activationStatus",
-                resolve: _ => new ActivationStatusMutation(nodeService));
+            Field<ActivationStatusMutation>("activationStatus")
+                .Resolve(_ => new ActivationStatusMutation(nodeService));
 
-            Field<ActionMutation>(
-                name: "action",
-                resolve: _ => new ActionMutation(nodeService));
+            Field<ActionMutation>("action")
+                .Resolve(_ => new ActionMutation(nodeService));
 
-            Field<NonNullGraphType<BooleanGraphType>>(
-                name: "stageTx",
-                description: "Add a new transaction to staging",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "payload",
-                        Description = "The base64-encoded bytes for new transaction."
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<BooleanGraphType>>("stageTx")
+                .DeprecationReason("API update with action query. use stageTransaction mutation")
+                .Description("Add a new transaction to staging")
+                .Argument<string>(
+                    "payload",
+                    false,
+                    "The base64-encoded bytes for new transaction.")
+                .Resolve(context =>
                 {
                     try
                     {
@@ -88,21 +83,16 @@ namespace NineChronicles.Headless.GraphTypes
                         context.Errors.Add(new ExecutionError("An unexpected exception occurred.", e));
                         return false;
                     }
-                }
-            );
+                });
 
-            Field<NonNullGraphType<TxIdType>>(
-                name: "stageTxV2",
-                deprecationReason: "API update with action query. use stageTransaction mutation",
-                description: "Add a new transaction to staging and return TxId",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "payload",
-                        Description = "The base64-encoded bytes for new transaction."
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<TxIdType>>("stageTxV2")
+                .DeprecationReason("API update with action query. use stageTransaction mutation")
+                .Description("Add a new transaction to staging and return TxId")
+                .Argument<string>(
+                    "payload",
+                    false,
+                    "The base64-encoded bytes for new transaction.")
+                .Resolve(context =>
                 {
                     try
                     {
@@ -138,41 +128,32 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         throw new ExecutionError("An unexpected exception occurred.", e);
                     }
-                }
-            );
+                });
 
-            Field<TxIdType>(
-                name: "transfer",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Description = "A hex-encoded value for address of recipient.",
-                        Name = "recipient",
-                    },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Description = "A string value of the value to be transferred.",
-                        Name = "amount",
-                    },
-                    new QueryArgument<NonNullGraphType<LongGraphType>>
-                    {
-                        Description = "A sender's transaction counter. You can get it through nextTxNonce().",
-                        Name = "txNonce",
-                    },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Description = "A hex-encoded value for address of currency to be transferred. The default is the NCG's address.",
-                        // Convert address type to hex string for graphdocs
-                        DefaultValue = GoldCurrencyState.Address.ToHex(),
-                        Name = "currencyAddress"
-                    },
-                    new QueryArgument<StringGraphType>
-                    {
-                        Description = "A 80-max length string to note.",
-                        Name = "memo",
-                    }
-                ),
-                resolve: context =>
+            Field<TxIdType>("transfer")
+                .Argument<Address>(
+                    "recipient",
+                    false,
+                    "A hex-encoded value for address of recipient.")
+                .Argument<string>(
+                    "amount",
+                    false,
+                    "A string value of the value to be transferred.")
+                .Argument<long>(
+                    "txNonce",
+                    false,
+                    "A sender's transaction counter. You can get it through nextTxNonce().")
+                .Argument<string>(
+                    "currencyAddress",
+                    false,
+                    "A hex-encoded value for address of currency to be transferred. The default is the NCG's address.",
+                    // Convert address type to hex string for graphdocs
+                    arg => arg.DefaultValue = GoldCurrencyState.Address.ToHex())
+                .Argument<string?>(
+                    "memo",
+                    true,
+                    "A 80-max length string to note.")
+                .Resolve(context =>
                 {
                     if (!(standaloneContext.NineChroniclesNodeService is { } service))
                     {
@@ -214,23 +195,14 @@ namespace NineChronicles.Headless.GraphTypes
                     );
                     blockChain.StageTransaction(tx);
                     return tx.Id;
-                }
-            );
+                });
 
-            Field<TxIdType>(
-                deprecationReason: "Incorrect remittance may occur when using transferGold() to the same address consecutively. Use transfer() instead.",
-                name: "transferGold",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "recipient",
-                    },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "amount"
-                    }
-                ),
-                resolve: context =>
+            Field<TxIdType>("transferGold")
+                .DeprecationReason(
+                    "Incorrect remittance may occur when using transferGold() to the same address consecutively. Use transfer() instead.")
+                .Argument<Address>("recipient", false)
+                .Argument<string>("amount", false)
+                .Resolve(context =>
                 {
                     if (!(standaloneContext.NineChroniclesNodeService is { } service))
                     {
@@ -268,20 +240,15 @@ namespace NineChronicles.Headless.GraphTypes
                         }
                     );
                     return tx.Id;
-                }
-            );
+                });
 
-            Field<NonNullGraphType<TxIdType>>(
-                name: "stageTransaction",
-                description: "Add a new transaction to staging and return TxId",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "payload",
-                        Description = "The hexadecimal string of the transaction to stage."
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<TxIdType>>("stageTransaction")
+                .Description("Add a new transaction to staging and return TxId")
+                .Argument<string>(
+                    "payload",
+                    false,
+                    "The hexadecimal string of the transaction to stage.")
+                .Resolve(context =>
                 {
                     try
                     {
@@ -317,8 +284,7 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         throw new ExecutionError("An unexpected exception occurred.", e);
                     }
-                }
-            );
+                });
         }
     }
 }

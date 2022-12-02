@@ -16,19 +16,17 @@
     <ProjectReference Include="..\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="GraphQL.Server.Authorization.AspNetCore" Version="5.1.1" />
-    <PackageReference Include="GraphQL.Server.Transports.AspNetCore" Version="5.1.1" />
-    <PackageReference Include="GraphQL.Server.Transports.AspNetCore.SystemTextJson" Version="5.1.1" />
-    <PackageReference Include="GraphQL.Server.Transports.Subscriptions.WebSockets" Version="5.1.1" />
-    <PackageReference Include="GraphQL.Server.Ui.Playground" Version="5.1.1" />
-    <PackageReference Include="GraphQL.SystemTextJson" Version="4.7.1" />
+    <PackageReference Include="GraphQL" Version="7.1.1" />
+    <PackageReference Include="GraphQL.Server.Authorization.AspNetCore" Version="7.1.1" />
+    <PackageReference Include="GraphQL.Server.Transports.AspNetCore" Version="7.1.1" />
+    <PackageReference Include="GraphQL.Server.Ui.Playground" Version="7.1.1" />
+    <PackageReference Include="GraphQL.SystemTextJson" Version="7.1.1" />
     <PackageReference Include="MagicOnion" Version="4.3.1" />
     <PackageReference Include="MagicOnion.Abstractions" Version="4.5.2" />
     <PackageReference Include="MagicOnion.Server" Version="4.3.1" />
     <PackageReference Include="MagicOnion.Server.HttpGateway" Version="4.3.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
-    <PackageReference Include="GraphQL" Version="4.7.1" />
     <PackageReference Include="SonarAnalyzer.CSharp" Version="8.49.0.57237">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

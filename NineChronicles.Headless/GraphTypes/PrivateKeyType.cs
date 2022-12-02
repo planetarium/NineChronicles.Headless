@@ -9,14 +9,12 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public PrivateKeyType()
         {
-            Field<NonNullGraphType<ByteStringType>>(
-                name: "hex",
-                description: "A representation of private-key with hexadecimal format.",
-                resolve: context => context.Source.ToByteArray());
+            Field<NonNullGraphType<ByteStringType>>("hex")
+                .Description("A representation of private-key with hexadecimal format.")
+                .Resolve(context => context.Source.ToByteArray());
 
-            Field<NonNullGraphType<PublicKeyType>>(
-                name: nameof(PrivateKey.PublicKey),
-                description: "A public-key derived from the private-key.");
+            Field<NonNullGraphType<PublicKeyType>>(nameof(PrivateKey.PublicKey))
+                .Description("A public-key derived from the private-key.");
         }
     }
 }

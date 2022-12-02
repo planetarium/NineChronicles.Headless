@@ -13,15 +13,9 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public ValidationQuery(StandaloneContext standaloneContext)
         {
-            Field<NonNullGraphType<BooleanGraphType>>(
-                name: "metadata",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "raw",
-                        Description = "The raw value of json metadata."
-                    }),
-                resolve: context =>
+            Field<NonNullGraphType<BooleanGraphType>>("metadata")
+                .Argument<string>("raw", false, "The raw value of json metadata.")
+                .Resolve(context =>
                 {
                     var raw = context.GetArgument<string>("raw");
                     try
@@ -68,18 +62,13 @@ namespace NineChronicles.Headless.GraphTypes
                         Log.Warning(e, msg + " {e}", e);
                         throw new ExecutionError(msg, e);
                     }
-                }
-            );
+                });
 
-            Field<NonNullGraphType<BooleanGraphType>>(
-                name: "privateKey",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<ByteStringType>>
-                    {
-                        Name = "hex",
-                        Description = "The raw value of private-key, presented as hexadecimal."
-                    }),
-                resolve: context =>
+            Field<NonNullGraphType<BooleanGraphType>>("privateKey")
+                .Argument<NonNullGraphType<ByteStringType>>(
+                    "hex",
+                    "The raw value of private-key, presented as hexadecimal.")
+                .Resolve(context =>
                 {
                     try
                     {
@@ -91,18 +80,13 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         return false;
                     }
-                }
-            );
+                });
 
-            Field<NonNullGraphType<BooleanGraphType>>(
-                name: "publicKey",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<ByteStringType>>
-                    {
-                        Name = "hex",
-                        Description = "The raw value of public-key, presented as hexadecimal."
-                    }),
-                resolve: context =>
+            Field<NonNullGraphType<BooleanGraphType>>("publicKey")
+                .Argument<NonNullGraphType<ByteStringType>>(
+                    "hex",
+                    "The raw value of public-key, presented as hexadecimal.")
+                .Resolve(context =>
                 {
                     try
                     {
@@ -118,8 +102,7 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         return false;
                     }
-                }
-            );
+                });
         }
     }
 }

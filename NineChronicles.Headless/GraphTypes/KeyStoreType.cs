@@ -17,16 +17,14 @@ namespace NineChronicles.Headless.GraphTypes
             DeprecationReason = "Use `planet key` command instead.  https://www.npmjs.com/package/@planetarium/cli";
 
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<ProtectedPrivateKeyType>>>>(
-                name: "protectedPrivateKeys",
-                resolve: context => context.Source.List().Select(t => t.Item2));
+                "protectedPrivateKeys")
+                .Resolve(context => context.Source.List().Select(t => t.Item2));
 
             // TODO: description을 적어야 합니다.
-            Field<NonNullGraphType<ByteStringType>>(
-                name: "decryptedPrivateKey",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "address" },
-                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "passphrase" }),
-                resolve: context =>
+            Field<NonNullGraphType<ByteStringType>>("decryptedPrivateKey")
+                .Argument<Address>("address", false)
+                .Argument<string>("passphrase", false)
+                .Resolve(context =>
                 {
                     var keyStore = context.Source;
 
@@ -45,19 +43,14 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         return null;
                     }
-                }
-            );
+                });
 
-            Field<NonNullGraphType<PrivateKeyType>>(
-                name: "privateKey",
-                description: "An API to provide conversion to public-key, address.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<ByteStringType>>
-                    {
-                        Name = "hex",
-                        Description = "A representation of public-key with hexadecimal format."
-                    }),
-                resolve: context =>
+            Field<NonNullGraphType<PrivateKeyType>>("privateKey")
+                .Description("An API to provide conversion to public-key, address.")
+                .Argument<NonNullGraphType<ByteStringType>>(
+                    "hex",
+                    "A representation of public-key with hexadecimal format.")
+                .Resolve(context =>
                 {
                     var privateKeyBytes = context.GetArgument<byte[]>("hex");
                     var privateKey = new PrivateKey(privateKeyBytes);

@@ -8,28 +8,22 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
     {
         public OrderDigestType()
         {
-            Field<NonNullGraphType<AddressType>>(
-                nameof(OrderDigest.SellerAgentAddress),
-                description: "Address of seller agent.",
-                resolve: context => context.Source.SellerAgentAddress);
-            Field<NonNullGraphType<StringGraphType>>(
-                nameof(OrderDigest.Price),
-                description: "Order price.",
-                resolve: context => context.Source.Price.ToString());
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(OrderDigest.CombatPoint),
-                resolve: context => context.Source.CombatPoint);
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(OrderDigest.Level),
-                resolve: context => context.Source.Level);
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(OrderDigest.ItemId),
-                description: "Id of item.",
-                resolve: context => context.Source.ItemId);
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(OrderDigest.ItemCount),
-                description: "Count of item.",
-                resolve: context => context.Source.ItemCount);
+            Field<NonNullGraphType<AddressType>>(nameof(OrderDigest.SellerAgentAddress))
+                .Description("Address of seller agent.")
+                .Resolve(context => context.Source.SellerAgentAddress);
+            Field<NonNullGraphType<StringGraphType>>(nameof(OrderDigest.Price))
+                .Description("Order price.")
+                .Resolve(context => context.Source.Price.ToString());
+            Field<NonNullGraphType<IntGraphType>>(nameof(OrderDigest.CombatPoint))
+                .Resolve(context => context.Source.CombatPoint);
+            Field<NonNullGraphType<IntGraphType>>(nameof(OrderDigest.Level))
+                .Resolve(context => context.Source.Level);
+            Field<NonNullGraphType<IntGraphType>>(nameof(OrderDigest.ItemId))
+                .Description("Id of item.")
+                .Resolve(context => context.Source.ItemId);
+            Field<NonNullGraphType<IntGraphType>>(nameof(OrderDigest.ItemCount))
+                .Description("Count of item.")
+                .Resolve(context => context.Source.ItemCount);
         }
     }
 }

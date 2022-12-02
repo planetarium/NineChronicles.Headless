@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using GraphQL.Server;
-using GraphQL.Utilities;
+using System.Threading.Tasks;
+using GraphQL;
 using Grpc.Core;
 using Grpc.Net.Client;
 using Libplanet.Explorer.Schemas;
@@ -14,7 +14,6 @@ using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Middleware;
 using NineChronicles.Headless.Properties;
-using Serilog;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless
@@ -110,31 +109,27 @@ namespace NineChronicles.Headless
                 services.AddHealthChecks();
 
                 services.AddControllers();
-                services.AddGraphQL(
-                        (options, provider) =>
+                services
+                    .AddGraphQL(builder => builder
+                        .AddLibplanetExplorerSchema<NCAction>()
+                        .AddGraphTypes(typeof(StandaloneSchema).Assembly)
+                        .AddUserContextBuilder<UserContextBuilder>()
+                        .AddAuthorizationRule()
+                        .ConfigureExecutionOptions(options =>
                         {
                             options.EnableMetrics = true;
                             options.UnhandledExceptionDelegate = context =>
                             {
                                 Console.Error.WriteLine(context.Exception.ToString());
                                 Console.Error.WriteLine(context.ErrorMessage);
+                                return new Task(() => { });
                             };
-                        })
-                    .AddSystemTextJson()
-                    .AddWebSockets()
-                    .AddDataLoader()
-                    .AddGraphTypes(typeof(StandaloneSchema))
-                    .AddGraphTypes(typeof(LibplanetExplorerSchema<NCAction>))
-                    .AddLibplanetExplorer<NCAction>()
-                    .AddUserContextBuilder<UserContextBuilder>()
-                    .AddGraphQLAuthorization(
-                        options => options.AddPolicy(
+                        }))
+                    .AddAuthorization(options =>
+                        options.AddPolicy(
                             LocalPolicyKey,
-                            p =>
-                                p.RequireClaim(
-                                    "role",
-                                    "Admin")));
-                services.AddGraphTypes();
+                            p => p.RequireClaim("role", "Admin")))
+                    .AddGraphTypes();
             }
 
             public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -187,7 +182,6 @@ namespace NineChronicles.Headless
 
                 // WebSocket으로 운영합니다.
                 app.UseWebSockets();
-                app.UseGraphQLWebSockets<StandaloneSchema>("/graphql");
                 app.UseGraphQL<StandaloneSchema>("/graphql");
                 app.UseGraphQL<LibplanetExplorerSchema<NCAction>>("/graphql/explorer");
 

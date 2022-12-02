@@ -1,6 +1,5 @@
 using GraphQL;
 using GraphQL.Resolvers;
-using GraphQL.Subscription;
 using GraphQL.Types;
 using Lib9c.Renderer;
 using Libplanet.Blocks;
@@ -29,20 +28,23 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneSubscription : ObjectGraphType
     {
-        class TipChanged : ObjectGraphType<TipChanged>
+        public class Tip
         {
             public long Index { get; set; }
-
             public BlockHash Hash { get; set; }
+        }
 
+        public class TipChanged : ObjectGraphType<Tip>
+        {
             public TipChanged()
             {
                 Field<NonNullGraphType<LongGraphType>>(nameof(Index));
-                Field<ByteStringType>("hash", resolve: context => context.Source.Hash.ToByteArray());
+                Field<ByteStringType>("hash")
+                    .Resolve(context => context.Source.Hash.ToByteArray());
             }
         }
 
-        class PreloadStateType : ObjectGraphType<PreloadState>
+        public class PreloadStateType : ObjectGraphType<PreloadState>
         {
             private sealed class PreloadStateExtra
             {
@@ -70,9 +72,11 @@ namespace NineChronicles.Headless.GraphTypes
 
             public PreloadStateType()
             {
-                Field<NonNullGraphType<LongGraphType>>(name: "currentPhase", resolve: context => context.Source.CurrentPhase);
-                Field<NonNullGraphType<LongGraphType>>(name: "totalPhase", resolve: context => PreloadState.TotalPhase);
-                Field<NonNullGraphType<PreloadStateExtraType>>(name: "extra", resolve: context =>
+                Field<NonNullGraphType<LongGraphType>>("currentPhase")
+                    .Resolve(context => context.Source.CurrentPhase);
+                Field<NonNullGraphType<LongGraphType>>("totalPhase")
+                    .Resolve(context => PreloadState.TotalPhase);
+                Field<NonNullGraphType<PreloadStateExtraType>>("extra").Resolve(context =>
                 {
                     var preloadState = context.Source;
                     return preloadState switch
@@ -105,128 +109,57 @@ namespace NineChronicles.Headless.GraphTypes
 
         private BlockHeader? _tipHeader;
 
-        private ISubject<TipChanged> _subject = new ReplaySubject<TipChanged>();
+        private ISubject<Tip> _subject = new ReplaySubject<Tip>();
 
         private StandaloneContext StandaloneContext { get; }
 
         public StandaloneSubscription(StandaloneContext standaloneContext)
         {
             StandaloneContext = standaloneContext;
-            AddField(new EventStreamFieldType
-            {
-                Name = "tipChanged",
-                Type = typeof(TipChanged),
-                Resolver = new FuncFieldResolver<TipChanged>(ResolveTipChanged),
-                Subscriber = new EventStreamResolver<TipChanged>(SubscribeTipChanged),
-            });
-            AddField(new EventStreamFieldType
-            {
-                Name = "preloadProgress",
-                Type = typeof(PreloadStateType),
-                Resolver = new FuncFieldResolver<PreloadState>(context => (context.Source as PreloadState)!),
-                Subscriber = new EventStreamResolver<PreloadState>(context => StandaloneContext.PreloadStateSubject.AsObservable()),
-            });
-            AddField(new EventStreamFieldType
-            {
-                Name = "nodeStatus",
-                Type = typeof(NodeStatusType),
-                Resolver = new FuncFieldResolver<NodeStatusType>(context => (context.Source as NodeStatusType)!),
-                Subscriber = new EventStreamResolver<NodeStatusType>(context => StandaloneContext.NodeStatusSubject.AsObservable()),
-            });
-            AddField(new EventStreamFieldType
-            {
-                Name = "differentAppProtocolVersionEncounter",
-                Type = typeof(NonNullGraphType<DifferentAppProtocolVersionEncounterType>),
-                Resolver = new FuncFieldResolver<DifferentAppProtocolVersionEncounter>(context =>
-                    (DifferentAppProtocolVersionEncounter)context.Source!),
-                Subscriber = new EventStreamResolver<DifferentAppProtocolVersionEncounter>(context =>
+            Field<Tip>("tipChanged")
+                .Resolve(ResolveTipChanged)
+                .ResolveStream(SubscribeTipChanged);
+            Field<PreloadState>("preloadProgress")
+                .ResolveStream(_ => StandaloneContext.PreloadStateSubject.AsObservable());
+            Field<StandaloneContext>("nodeStatus")
+                .Resolve(_ => StandaloneContext)
+                .ResolveStream(_ => StandaloneContext.NodeStatusSubject.AsObservable());
+            Field<DifferentAppProtocolVersionEncounter>(
+                "differentAppProtocolVersionEncounter")
+                .ResolveStream(_ =>
                     StandaloneContext.DifferentAppProtocolVersionEncounterSubject
                         .Sample(standaloneContext.DifferentAppProtocolVersionEncounterInterval)
                         .AsObservable()
-                    ),
-            });
-            AddField(new EventStreamFieldType
-            {
-                Name = "notification",
-                Type = typeof(NonNullGraphType<NotificationType>),
-                Resolver = new FuncFieldResolver<Notification>(context => (context.Source as Notification)!),
-                Subscriber = new EventStreamResolver<Notification>(context =>
+                );
+            Field<Notification>("notification")
+                .ResolveStream(_ =>
                     StandaloneContext.NotificationSubject
-                        .Sample(standaloneContext.NotificationInterval)
-                        .AsObservable()),
-            });
-            AddField(new EventStreamFieldType
-            {
-                Name = "nodeException",
-                Type = typeof(NonNullGraphType<NodeExceptionType>),
-                Resolver = new FuncFieldResolver<NodeException>(context => (context.Source as NodeException)!),
-                Subscriber = new EventStreamResolver<NodeException>(context =>
+                        .Sample(StandaloneContext.NotificationInterval)
+                        .AsObservable());
+            Field<NodeException>("nodeException")
+                .ResolveStream(_ =>
                     StandaloneContext.NodeExceptionSubject
                         .Sample(standaloneContext.NodeExceptionInterval)
-                        .AsObservable()),
-            });
-            AddField(new EventStreamFieldType
-            {
-                Name = nameof(MonsterCollectionState),
-                Type = typeof(NonNullGraphType<MonsterCollectionStateType>),
-                Resolver = new FuncFieldResolver<MonsterCollectionState>(context => (context.Source as MonsterCollectionState)!),
-                Subscriber = new EventStreamResolver<MonsterCollectionState>(context =>
-                    standaloneContext.MonsterCollectionStateSubject
+                        .AsObservable());
+            Field<MonsterCollectionState>(nameof(MonsterCollectionState))
+                .ResolveStream(_ =>
+                    StandaloneContext.MonsterCollectionStateSubject
                         .Sample(standaloneContext.MonsterCollectionStateInterval)
-                        .AsObservable()),
-            });
-            AddField(new EventStreamFieldType
-            {
-                Name = nameof(MonsterCollectionStatus),
-                Type = typeof(NonNullGraphType<MonsterCollectionStatusType>),
-                Resolver = new FuncFieldResolver<MonsterCollectionStatus>(context => (context.Source as MonsterCollectionStatus)!),
-                Subscriber = new EventStreamResolver<MonsterCollectionStatus>(context =>
-                    standaloneContext.MonsterCollectionStatusSubject
+                        .AsObservable());
+            Field<MonsterCollectionStatus>(nameof(MonsterCollectionStatus))
+                .ResolveStream(_ =>
+                    StandaloneContext.MonsterCollectionStatusSubject
                         .Sample(standaloneContext.MonsterCollectionStatusInterval)
-                        .AsObservable()),
-            });
-            AddField(new EventStreamFieldType
-            {
-                Name = $"{nameof(MonsterCollectionStatus)}ByAgent",
-                Arguments = new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Description = "A hex-encoded address of agent.",
-                        Name = "address",
-                    }
-                ),
-                Type = typeof(NonNullGraphType<MonsterCollectionStatusType>),
-                Resolver = new FuncFieldResolver<MonsterCollectionStatus>(context => (context.Source as MonsterCollectionStatus)!),
-                Subscriber = new EventStreamResolver<MonsterCollectionStatus>(SubscribeMonsterCollectionStatus),
-            });
-            AddField(new EventStreamFieldType
-            {
-                Name = $"{nameof(MonsterCollectionState)}ByAgent",
-                Arguments = new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Description = "A hex-encoded address of agent.",
-                        Name = "address",
-                    }
-                ),
-                Type = typeof(NonNullGraphType<MonsterCollectionStateType>),
-                Resolver = new FuncFieldResolver<MonsterCollectionState>(context => (context.Source as MonsterCollectionState)!),
-                Subscriber = new EventStreamResolver<MonsterCollectionState>(SubscribeMonsterCollectionState),
-            });
-            AddField(new EventStreamFieldType
-            {
-                Name = "BalanceByAgent",
-                Arguments = new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Description = "A hex-encoded address of agent.",
-                        Name = "address",
-                    }
-                ),
-                Type = typeof(NonNullGraphType<StringGraphType>),
-                Resolver = new FuncFieldResolver<string>(context => (string)context.Source!),
-                Subscriber = new EventStreamResolver<string>(SubscribeBalance),
-            });
+                        .AsObservable());
+            Field<MonsterCollectionStatus>($"{nameof(MonsterCollectionStatus)}ByAgent")
+                .Argument<Address>("address", false, "A hex-encoded address of agent.")
+                .ResolveStream(SubscribeMonsterCollectionStatus);
+            Field<MonsterCollectionState>($"{nameof(MonsterCollectionState)}ByAgent")
+                .Argument<Address>("address", false, "A hex-encoded address of agent.")
+                .ResolveStream(SubscribeMonsterCollectionState);
+            Field<string>("BalanceByAgent")
+                .Argument<Address>("address", false, "A hex-encoded address of agent.")
+                .ResolveStream(SubscribeBalance);
 
             BlockRenderer blockRenderer = standaloneContext.NineChroniclesNodeService!.BlockRenderer;
             blockRenderer.BlockSubject
@@ -245,7 +178,7 @@ namespace NineChronicles.Headless.GraphTypes
                 .Subscribe(RenderMonsterCollectionStateSubject);
         }
 
-        private IObservable<MonsterCollectionState> SubscribeMonsterCollectionState(IResolveEventStreamContext context)
+        private IObservable<MonsterCollectionState> SubscribeMonsterCollectionState(IResolveFieldContext context)
         {
             var address = context.GetArgument<Address>("address");
 
@@ -256,7 +189,7 @@ namespace NineChronicles.Headless.GraphTypes
             return subjects.stateSubject.AsObservable();
         }
 
-        private IObservable<MonsterCollectionStatus> SubscribeMonsterCollectionStatus(IResolveEventStreamContext context)
+        private IObservable<MonsterCollectionStatus> SubscribeMonsterCollectionStatus(IResolveFieldContext context)
         {
             var address = context.GetArgument<Address>("address");
 
@@ -267,7 +200,7 @@ namespace NineChronicles.Headless.GraphTypes
             return subjects.statusSubject.AsObservable();
         }
 
-        private IObservable<string> SubscribeBalance(IResolveEventStreamContext context)
+        private IObservable<string> SubscribeBalance(IResolveFieldContext context)
         {
             var address = context.GetArgument<Address>("address");
 
@@ -278,12 +211,12 @@ namespace NineChronicles.Headless.GraphTypes
             return subjects.balanceSubject.AsObservable();
         }
 
-        private TipChanged ResolveTipChanged(IResolveFieldContext context)
+        private Tip ResolveTipChanged(IResolveFieldContext context)
         {
-            return context.Source as TipChanged ?? throw new InvalidOperationException();
+            return context.Source as Tip ?? throw new InvalidOperationException();
         }
 
-        private IObservable<TipChanged> SubscribeTipChanged(IResolveEventStreamContext context)
+        private IObservable<Tip> SubscribeTipChanged(IResolveFieldContext context)
         {
             return _subject.AsObservable();
         }
@@ -291,7 +224,7 @@ namespace NineChronicles.Headless.GraphTypes
         {
             _tipHeader = pair.NewTip.Header;
             _subject.OnNext(
-                new TipChanged
+                new Tip
                 {
                     Index = pair.NewTip.Index,
                     Hash = pair.NewTip.Hash,

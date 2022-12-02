@@ -2,8 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL;
+using GraphQL.DI;
 using GraphQL.Types;
+using Libplanet.Explorer.Schemas;
 using Microsoft.Extensions.DependencyInjection;
+using NineChronicles.Headless.GraphTypes;
+using Xunit;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests
@@ -14,7 +18,8 @@ namespace NineChronicles.Headless.Tests
             string query,
             IDictionary<string, object>? userContext = null,
             object? source = null,
-            StandaloneContext? standaloneContext = null)
+            StandaloneContext? standaloneContext = null,
+            bool allowErrors = false)
             where TObjectGraphType : class, IObjectGraphType
         {
             var services = new ServiceCollection();
@@ -31,28 +36,39 @@ namespace NineChronicles.Headless.Tests
                 serviceProvider,
                 query,
                 userContext,
-                source);
+                source,
+                allowErrors);
         }
 
-        public static Task<ExecutionResult> ExecuteQueryAsync<TObjectGraphType>(
+        public static async Task<ExecutionResult> ExecuteQueryAsync<TObjectGraphType>(
             IServiceProvider serviceProvider,
             string query,
             IDictionary<string, object>? userContext = null,
-            object? source = null)
+            object? source = null,
+            bool allowErrors = false)
             where TObjectGraphType : IObjectGraphType
         {
             var graphType = (IObjectGraphType)serviceProvider.GetService(typeof(TObjectGraphType))!;
             var documentExecutor = new DocumentExecuter();
-            return documentExecutor.ExecuteAsync(new ExecutionOptions
+            var result = await documentExecutor.ExecuteAsync(new ExecutionOptions
             {
                 Query = query,
-                Schema = new Schema
+                Schema = new Schema(new DefaultServiceProvider(), StandaloneSchema.Configurations)
                 {
                     Query = graphType,
                 },
                 UserContext = userContext!,
                 Root = source,
             });
+            if (!allowErrors && result.Errors is { } errors)
+            {
+                Assert.True(
+                    false,
+                    $"The query failed with the following errors:\n\t{string.Join("\n\t", errors)}\n\nQuery:\n{query}"
+                );
+            }
+
+            return result;
         }
     }
 }

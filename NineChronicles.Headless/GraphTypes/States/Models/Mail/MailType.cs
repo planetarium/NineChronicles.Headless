@@ -6,15 +6,13 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Mail
     {
         public MailType()
         {
-            Field<NonNullGraphType<GuidGraphType>>(
-                nameof(Nekoyume.Model.Mail.Mail.id),
-                resolve: context => context.Source.id);
+            Field<NonNullGraphType<GuidGraphType>>(nameof(Nekoyume.Model.Mail.Mail.id))
+                .Resolve(context => context.Source.id);
             Field<NonNullGraphType<LongGraphType>>(
-                nameof(Nekoyume.Model.Mail.Mail.requiredBlockIndex),
-                resolve: context => context.Source.requiredBlockIndex);
-            Field<NonNullGraphType<LongGraphType>>(
-                nameof(Nekoyume.Model.Mail.Mail.blockIndex),
-                resolve: context => context.Source.blockIndex);
+                nameof(Nekoyume.Model.Mail.Mail.requiredBlockIndex))
+                .Resolve(context => context.Source.requiredBlockIndex);
+            Field<NonNullGraphType<LongGraphType>>(nameof(Nekoyume.Model.Mail.Mail.blockIndex))
+                .Resolve(context => context.Source.blockIndex);
         }
     }
 }

@@ -28,33 +28,28 @@ namespace NineChronicles.Headless.GraphTypes.States
 
         public StakeStateType()
         {
-            Field<NonNullGraphType<AddressType>>(
-                nameof(StakeState.address),
-                description: "The address of current state.",
-                resolve: context => context.Source.StakeState.address);
-            Field<NonNullGraphType<StringGraphType>>(
-                "deposit",
-                description: "The staked amount.",
-                resolve: context => context.Source.AccountBalanceGetter(
+            Field<NonNullGraphType<AddressType>>(nameof(StakeState.address))
+                .Description("The address of current state.")
+                .Resolve(context => context.Source.StakeState.address);
+            Field<NonNullGraphType<StringGraphType>>("deposit")
+                .Description("The staked amount.")
+                .Resolve(context =>
+                    context.Source.AccountBalanceGetter(
                         context.Source.StakeState.address,
                         new GoldCurrencyState((Dictionary)context.Source.GetState(GoldCurrencyState.Address)!).Currency)
                     .GetQuantityString(true));
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(StakeState.StartedBlockIndex),
-                description: "The block index the user started to stake.",
-                resolve: context => context.Source.StakeState.StartedBlockIndex);
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(StakeState.ReceivedBlockIndex),
-                description: "The block index the user received rewards.",
-                resolve: context => context.Source.StakeState.ReceivedBlockIndex);
-            Field<NonNullGraphType<LongGraphType>>(
-                nameof(StakeState.CancellableBlockIndex),
-                description: "The block index the user can cancel the staking.",
-                resolve: context => context.Source.StakeState.CancellableBlockIndex);
-            Field<NonNullGraphType<LongGraphType>>(
-                "claimableBlockIndex",
-                description: "The block index the user can claim rewards.",
-                resolve: context =>
+            Field<NonNullGraphType<IntGraphType>>(nameof(StakeState.StartedBlockIndex))
+                .Description("The block index the user started to stake.")
+                .Resolve(context => context.Source.StakeState.StartedBlockIndex);
+            Field<NonNullGraphType<IntGraphType>>(nameof(StakeState.ReceivedBlockIndex))
+                .Description("The block index the user received rewards.")
+                .Resolve(context => context.Source.StakeState.ReceivedBlockIndex);
+            Field<NonNullGraphType<LongGraphType>>(nameof(StakeState.CancellableBlockIndex))
+                .Description("The block index the user can cancel the staking.")
+                .Resolve(context => context.Source.StakeState.CancellableBlockIndex);
+            Field<NonNullGraphType<LongGraphType>>("claimableBlockIndex")
+                .Description("The block index the user can claim rewards.")
+                .Resolve(context =>
                 {
                     var stakeState = context.Source.StakeState;
                     if (context.Source.BlockIndex >= BlockPolicySource.V100290ObsoleteIndex)
@@ -75,10 +70,9 @@ namespace NineChronicles.Headless.GraphTypes.States
 
                     return Math.Max(stakeState.StartedBlockIndex, stakeState.ReceivedBlockIndex) + StakeState.RewardInterval;
                 });
-            Field<NonNullGraphType<StakeAchievementsType>>(
-                nameof(StakeState.Achievements),
-                description: "The staking achievements.",
-                resolve: context => context.Source.StakeState.Achievements);
+            Field<NonNullGraphType<StakeAchievementsType>>(nameof(StakeState.Achievements))
+                .Description("The staking achievements.")
+                .Resolve(context => context.Source.StakeState.Achievements);
         }
     }
 }

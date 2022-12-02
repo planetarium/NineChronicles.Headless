@@ -9,28 +9,22 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public MonsterCollectionStateType()
         {
-            Field<NonNullGraphType<AddressType>>(
-                nameof(MonsterCollectionState.address),
-                resolve: context => context.Source.address);
-            Field<NonNullGraphType<LongGraphType>>(
-                nameof(MonsterCollectionState.Level),
-                resolve: context => context.Source.Level);
-            Field<NonNullGraphType<LongGraphType>>(
-                nameof(MonsterCollectionState.ExpiredBlockIndex),
-                resolve: context => context.Source.ExpiredBlockIndex);
-            Field<NonNullGraphType<LongGraphType>>(
-                nameof(MonsterCollectionState.StartedBlockIndex),
-                resolve: context => context.Source.StartedBlockIndex);
-            Field<NonNullGraphType<LongGraphType>>(
-                nameof(MonsterCollectionState.ReceivedBlockIndex),
-                resolve: context => context.Source.ReceivedBlockIndex);
-            Field<NonNullGraphType<LongGraphType>>(
-                nameof(MonsterCollectionState.RewardLevel),
-                resolve: context => context.Source.RewardLevel);
-            Field<NonNullGraphType<LongGraphType>>(
-                "claimableBlockIndex",
-                resolve: context => Math.Max(context.Source.ReceivedBlockIndex, context.Source.StartedBlockIndex) +
-                                    MonsterCollectionState.RewardInterval);
+            Field<NonNullGraphType<AddressType>>(nameof(MonsterCollectionState.address))
+                .Resolve(context => context.Source.address);
+            Field<NonNullGraphType<LongGraphType>>(nameof(MonsterCollectionState.Level))
+                .Resolve(context => context.Source.Level);
+            Field<NonNullGraphType<LongGraphType>>(nameof(MonsterCollectionState.ExpiredBlockIndex))
+                .Resolve(context => context.Source.ExpiredBlockIndex);
+            Field<NonNullGraphType<LongGraphType>>(nameof(MonsterCollectionState.StartedBlockIndex))
+                .Resolve(context => context.Source.StartedBlockIndex);
+            Field<NonNullGraphType<LongGraphType>>(nameof(MonsterCollectionState.ReceivedBlockIndex))
+                .Resolve(context => context.Source.ReceivedBlockIndex);
+            Field<NonNullGraphType<LongGraphType>>(nameof(MonsterCollectionState.RewardLevel))
+                .Resolve(context => context.Source.RewardLevel);
+            Field<NonNullGraphType<LongGraphType>>("claimableBlockIndex")
+                .Resolve(context =>
+                    Math.Max(context.Source.ReceivedBlockIndex, context.Source.StartedBlockIndex) +
+                        MonsterCollectionState.RewardInterval);
         }
     }
 }

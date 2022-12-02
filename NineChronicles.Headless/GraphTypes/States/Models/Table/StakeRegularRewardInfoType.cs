@@ -8,16 +8,14 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Table
         public StakeRegularRewardInfoType()
         {
             Field<NonNullGraphType<IntGraphType>>(
-                nameof(StakeRegularRewardSheet.RewardInfo.ItemId),
-                resolve: context => context.Source.ItemId
-            );
+                nameof(StakeRegularRewardSheet.RewardInfo.ItemId))
+                .Resolve(context => context.Source.ItemId);
             Field<NonNullGraphType<IntGraphType>>(
-                nameof(StakeRegularRewardSheet.RewardInfo.Rate),
-                resolve: context => context.Source.Rate
-            );
+                nameof(StakeRegularRewardSheet.RewardInfo.Rate))
+                .Resolve(context => context.Source.Rate);
             Field<NonNullGraphType<StakeRewardEnumType>>(
-                nameof(StakeRegularRewardSheet.RewardInfo.Type),
-                resolve: context => context.Source.Type);
+                nameof(StakeRegularRewardSheet.RewardInfo.Type))
+                .Resolve(context => context.Source.Type);
         }
     }
 }

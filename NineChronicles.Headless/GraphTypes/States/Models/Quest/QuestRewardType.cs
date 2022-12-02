@@ -9,8 +9,9 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Quest
         public QuestRewardType()
         {
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<ListGraphType<NonNullGraphType<IntGraphType>>>>>>(
-                nameof(QuestReward.ItemMap),
-                resolve: context => context.Source.ItemMap.Select(pair => new[] { pair.Key, pair.Value }));
+                nameof(QuestReward.ItemMap))
+                .Resolve(context =>
+                    context.Source.ItemMap.Select(pair => new[] { pair.Key, pair.Value }));
         }
     }
 }

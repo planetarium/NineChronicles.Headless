@@ -10,8 +10,8 @@ namespace NineChronicles.Headless.GraphTypes.Abstractions
         public StakeRewardsType()
         {
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<StakeRegularRewardsType>>>>(
-                nameof(MonsterCollectionSheet.OrderedList),
-                resolve: context =>
+                nameof(MonsterCollectionSheet.OrderedList))
+                .Resolve(context =>
                 {
                     var rows =
                         new List<(

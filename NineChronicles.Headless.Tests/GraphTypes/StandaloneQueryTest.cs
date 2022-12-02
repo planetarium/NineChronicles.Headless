@@ -5,14 +5,11 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
-using GraphQL;
 using GraphQL.Execution;
-using GraphQL.NewtonsoftJson;
 using Lib9c.Tests;
 using Libplanet;
 using Libplanet.Action;
@@ -31,7 +28,6 @@ using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.Properties;
-using NineChronicles.Headless.Tests.Common;
 using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
 using Xunit.Abstractions;
@@ -650,7 +646,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     }}
                 }}
             }}";
-            var queryResult = await ExecuteQueryAsync(query);
+            var queryResult = await ExecuteQueryAsync(query, allowErrors: true);
             Assert.NotNull(queryResult.Errors);
             Assert.Single(queryResult.Errors!);
             Assert.Equal($"{nameof(AgentState)} Address: {userAddress} is null.", queryResult.Errors!.First().Message);
@@ -698,7 +694,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     }}
                 }}
             }}";
-            var queryResult = await ExecuteQueryAsync(query);
+            var queryResult = await ExecuteQueryAsync(query, allowErrors: true);
             Assert.NotNull(queryResult.Errors);
             Assert.Single(queryResult.Errors!);
             Assert.Equal(
@@ -889,7 +885,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
             var query = $"query {{ activationKeyNonce(invitationCode: \"{code}\") }}";
-            var queryResult = await ExecuteQueryAsync(query);
+            var queryResult = await ExecuteQueryAsync(query, allowErrors: true);
             Assert.NotNull(queryResult.Errors);
             Assert.Single(queryResult.Errors!);
             Assert.Equal(msg, queryResult.Errors!.First().Message);

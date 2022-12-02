@@ -129,7 +129,9 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
             var addressData = (Dictionary<string, object>)((ExecutionNode)addressQueryResult.Data!).ToValue()!;
             Assert.Equal("0xa316187bAC1fC6be9B943c8E19c6047DE12D236D", addressData["raiderAddress"]);
 
-            var raiderAddress = stateExist ? addressData["raiderAddress"] : default;
+            var raiderAddress = stateExist
+                ? addressData["raiderAddress"]
+                : "0x0000000000000000000000000000000000000000";
             // Get RaiderState.
             var stateQuery = $@"query {{
     raiderState(raiderAddress: ""{raiderAddress}"") {{
@@ -196,7 +198,9 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
                 standaloneContext: _standaloneContext);
             var addressData = (Dictionary<string, object>)((ExecutionNode)addressQueryResult.Data!).ToValue()!;
             Assert.Equal(expectedAddress.ToString(), addressData["worldBossAddress"]);
-            var worldBossAddress = stateExist ? addressData["worldBossAddress"] : default;
+            var worldBossAddress = stateExist
+                ? addressData["worldBossAddress"]
+                : "0x0000000000000000000000000000000000000000";
 
             // Get RaiderState.
             var stateQuery = $@"query {{
@@ -248,7 +252,9 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
             var addressData = (Dictionary<string, object>)((ExecutionNode)addressQueryResult.Data!).ToValue()!;
             Assert.Equal("0xE9653E92a5169bFbA66a4CbC07780ED370986d98", addressData["worldBossKillRewardRecordAddress"]);
 
-            var worldBossKillRewardRecordAddress = stateExist ? addressData["worldBossKillRewardRecordAddress"] : default;
+            var worldBossKillRewardRecordAddress = stateExist
+                ? addressData["worldBossKillRewardRecordAddress"]
+                : "0x0000000000000000000000000000000000000000";
             // Get WorldBossKillRewardRecord.
             var stateQuery = $@"query {{
     worldBossKillRewardRecord(worldBossKillRewardRecordAddress: ""{worldBossKillRewardRecordAddress}"") {{        
@@ -303,7 +309,9 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
             Assert.Equal("0x40011eD48A8f6CFA779927B0867BFAa7Ac6d949b", addressData["raiderListAddress"]);
             Assert.Equal(_raiderListAddress.ToString(), addressData["raiderListAddress"]);
 
-            var raiderListAddress = stateExist ? addressData["raiderListAddress"] : default;
+            var raiderListAddress = stateExist
+                ? addressData["raiderListAddress"]
+                : "0x0000000000000000000000000000000000000000";
             // Get raider address list
             var stateQuery = $@"query {{
     raiderList(raiderListAddress: ""{raiderListAddress}"")

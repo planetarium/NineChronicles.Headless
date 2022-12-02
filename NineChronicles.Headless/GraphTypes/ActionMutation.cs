@@ -20,41 +20,15 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public ActionMutation(NineChroniclesNodeService service)
         {
-            Field<NonNullGraphType<TxIdType>>("createAvatar",
-                description: "Create new avatar.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "avatarName",
-                        Description = "Avatar name."
-                    },
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "avatarIndex",
-                        Description = "The index of character slot. 0 ~ 2"
-                    },
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "hairIndex",
-                        Description = "The index of character hair color. 0 ~ 8"
-                    },
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "lensIndex",
-                        Description = "The index of character eye color. 0 ~ 8"
-                    },
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "earIndex",
-                        Description = "The index of character ear color. 0 ~ 8"
-                    },
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "tailIndex",
-                        Description = "The index of character tail color. 0 ~ 8"
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<TxIdType>>("createAvatar")
+                .Description("Create new avatar.")
+                .Argument<string>("avatarName", false, "Avatar name.")
+                .Argument<int>("avatarIndex", false, "The index of character slot. 0 ~ 2")
+                .Argument<int>("hairIndex", false, "The index of character hair color. 0 ~ 8")
+                .Argument<int>("lensIndex", false, "The index of character eye color. 0 ~ 8")
+                .Argument<int>("earIndex", false, "The index of character ear color. 0 ~ 8")
+                .Argument<int>("tailIndex", false, "The index of character tail color. 0 ~ 8")
+                .Resolve(context =>
                 {
                     try
                     {
@@ -97,47 +71,25 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 });
 
-            Field<NonNullGraphType<TxIdType>>("hackAndSlash",
-                description: "Start stage to get material.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "avatarAddress",
-                        Description = "Avatar address."
-                    },
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "worldId",
-                        Description = "World ID containing the stage ID."
-                    },
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "stageId",
-                        Description = "Stage ID."
-                    },
-                    new QueryArgument<ListGraphType<GuidGraphType>>
-                    {
-                        Name = "costumeIds",
-                        Description = "List of costume id for equip."
-                    },
-                    new QueryArgument<ListGraphType<GuidGraphType>>
-                    {
-                        Name = "equipmentIds",
-                        Description = "List of equipment id for equip."
-                    },
-                    new QueryArgument<ListGraphType<GuidGraphType>>
-                    {
-                        Name = "consumableIds",
-                        Description = "List of consumable id for use."
-                    },
-                    new QueryArgument<ListGraphType<NonNullGraphType<RuneSlotInfoInputType>>>
-                    {
-                        Name = "runeSlotInfos",
-                        DefaultValue = new List<RuneSlotInfo>(),
-                        Description = "List of rune slot info for equip."
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<TxIdType>>("hackAndSlash")
+                .Description("Start stage to get material.")
+                .Argument<Address>("avatarAddress", false, "Avatar address.")
+                .Argument<int>("worldId", false, "World ID containing the stage ID.")
+                .Argument<int>("stageId", false, "Stage ID.")
+                .Argument<ListGraphType<GuidGraphType>>(
+                    "costumeIds",
+                    "List of costume id for equip.")
+                .Argument<ListGraphType<GuidGraphType>>(
+                    "equipmentIds",
+                    "List of equipment id for equip.")
+                .Argument<ListGraphType<GuidGraphType>>(
+                    "consumableIds",
+                    "List of consumable id for use.")
+                .Argument<ListGraphType<NonNullGraphType<RuneSlotInfoInputType>>>(
+                    "runeSlotInfos",
+                    "List of rune slot info for equip.",
+                    arg => arg.DefaultValue = new List<RuneSlotInfo>())
+                .Resolve(context =>
                 {
                     try
                     {
@@ -180,31 +132,25 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 });
 
-            Field<NonNullGraphType<TxIdType>>("combinationEquipment",
-                description: "Combine new equipment.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "avatarAddress",
-                        Description = "Avatar address to create equipment."
-                    },
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "recipeId",
-                        Description = "EquipmentRecipe ID from EquipmentRecipeSheet."
-                    },
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "slotIndex",
-                        Description = "The empty combination slot index to combine equipment. 0 ~ 3"
-                    },
-                    new QueryArgument<IntGraphType>
-                    {
-                        Name = "subRecipeId",
-                        Description = "EquipmentSubRecipe ID from EquipmentSubRecipeSheet."
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<TxIdType>>("combinationEquipment")
+                .Description("Combine new equipment.")
+                .Argument<Address>(
+                    "avatarAddress",
+                    false,
+                    "Avatar address to create equipment.")
+                .Argument<int>(
+                    "recipeId",
+                    false,
+                    "EquipmentRecipe ID from EquipmentRecipeSheet.")
+                .Argument<int>(
+                    "slotIndex",
+                    false,
+                    "The empty combination slot index to combine equipment. 0 ~ 3")
+                .Argument<int?>(
+                    "subRecipeId",
+                    true,
+                    "EquipmentSubRecipe ID from EquipmentSubRecipeSheet.")
+                .Resolve(context =>
                 {
                     try
                     {
@@ -240,31 +186,25 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 });
 
-            Field<NonNullGraphType<TxIdType>>("itemEnhancement",
-                description: "Upgrade equipment.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "avatarAddress",
-                        Description = "Avatar address to upgrade equipment."
-                    },
-                    new QueryArgument<NonNullGraphType<GuidGraphType>>
-                    {
-                        Name = "itemId",
-                        Description = "Equipment Guid for upgrade."
-                    },
-                    new QueryArgument<NonNullGraphType<GuidGraphType>>
-                    {
-                        Name = "materialId",
-                        Description = "Material Guid for equipment upgrade."
-                    },
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "slotIndex",
-                        Description = "The empty combination slot index to upgrade equipment. 0 ~ 3"
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<TxIdType>>("itemEnhancement")
+                .Description("Upgrade equipment.")
+                .Argument<Address>(
+                    "avatarAddress",
+                    false,
+                    "Avatar address to upgrade equipment.")
+                .Argument<Guid>(
+                    "itemId",
+                    false,
+                    "Equipment Guid for upgrade.")
+                .Argument<Guid>(
+                    "materialId",
+                    false,
+                    "Material Guid for equipment upgrade.")
+                .Argument<int>(
+                    "slotIndex",
+                    false,
+                    "The empty combination slot index to upgrade equipment. 0 ~ 3")
+                .Resolve(context =>
                 {
                     try
                     {
@@ -304,16 +244,13 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 });
 
-            Field<NonNullGraphType<TxIdType>>("dailyReward",
-                description: "Get daily reward.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "avatarAddress",
-                        Description = "Avatar address to receive reward."
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<TxIdType>>("dailyReward")
+                .Description("Get daily reward.")
+                .Argument<Address>(
+                    "avatarAddress",
+                    false,
+                    "Avatar address to receive reward.")
+                .Resolve(context =>
                 {
                     try
                     {
@@ -346,16 +283,13 @@ namespace NineChronicles.Headless.GraphTypes
                         throw;
                     }
                 });
-            Field<NonNullGraphType<TxIdType>>("chargeActionPoint",
-                description: "Charge Action Points using Material.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "avatarAddress",
-                        Description = "Avatar to use potion."
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<TxIdType>>("chargeActionPoint")
+                .Description("Charge Action Points using Material.")
+                .Argument<Address>(
+                    "avatarAddress",
+                    false,
+                    "Avatar to use potion.")
+                .Resolve(context =>
                 {
                     try
                     {
@@ -389,26 +323,21 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 });
 
-            Field<NonNullGraphType<TxIdType>>("combinationConsumable",
-                description: "Combine new Consumable.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "avatarAddress",
-                        Description = "Avatar address to combine consumable."
-                    },
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "recipeId",
-                        Description = "ConsumableRecipe ID from ConsumableRecipeSheet."
-                    },
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "slotIndex",
-                        Description = "The empty combination slot index to combine consumable. 0 ~ 3"
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<TxIdType>>("combinationConsumable")
+                .Description("Combine new Consumable.")
+                .Argument<Address>(
+                    "avatarAddress",
+                    false,
+                    "Avatar address to combine consumable.")
+                .Argument<int>(
+                    "recipeId",
+                    false,
+                    "ConsumableRecipe ID from ConsumableRecipeSheet.")
+                .Argument<int>(
+                    "slotIndex",
+                    false,
+                    "The empty combination slot index to combine consumable. 0 ~ 3")
+                .Resolve(context =>
                 {
                     try
                     {
@@ -439,19 +368,15 @@ namespace NineChronicles.Headless.GraphTypes
                         context.Errors.Add(new ExecutionError(msg, e));
                         throw;
                     }
-                }
-            );
+                });
 
-            Field<NonNullGraphType<TxIdType>>(nameof(MonsterCollect),
-                description: "Start monster collect.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "level",
-                        Description = "The monster collection level.(1 ~ 7)"
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<TxIdType>>(nameof(MonsterCollect))
+                .Description("Start monster collect.")
+                .Argument<int>(
+                    "level",
+                    false,
+                    "The monster collection level.(1 ~ 7)")
+                .Resolve(context =>
                 {
                     try
                     {
@@ -482,19 +407,15 @@ namespace NineChronicles.Headless.GraphTypes
                         context.Errors.Add(new ExecutionError(msg, e));
                         throw;
                     }
-                }
-            );
+                });
 
-            Field<NonNullGraphType<TxIdType>>(nameof(ClaimMonsterCollectionReward),
-                description: "Get monster collection reward.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "avatarAddress",
-                        Description = "Address of avatar for get reward."
-                    }
-                ),
-                resolve: context =>
+            Field<NonNullGraphType<TxIdType>>(nameof(ClaimMonsterCollectionReward))
+                .Description("Get monster collection reward.")
+                .Argument<Address>(
+                    "avatarAddress",
+                    false,
+                    "Address of avatar for get reward.")
+                .Resolve(context =>
                 {
                     try
                     {
@@ -529,8 +450,7 @@ namespace NineChronicles.Headless.GraphTypes
                         context.Errors.Add(new ExecutionError(msg, e));
                         throw;
                     }
-                }
-            );
+                });
         }
     }
 }

@@ -8,18 +8,12 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public CurrencyType()
         {
-            Field<NonNullGraphType<StringGraphType>>(
-                nameof(Currency.Ticker),
-                resolve: context => context.Source.Ticker
-            );
-            Field<NonNullGraphType<ByteGraphType>>(
-                nameof(Currency.DecimalPlaces),
-                resolve: context => context.Source.DecimalPlaces
-            );
-            Field<ListGraphType<AddressType>>(
-                nameof(Currency.Minters),
-                resolve: context => context.Source.Minters
-            );
+            Field<NonNullGraphType<StringGraphType>>(nameof(Currency.Ticker))
+                .Resolve(context => context.Source.Ticker);
+            Field<NonNullGraphType<ByteGraphType>>(nameof(Currency.DecimalPlaces))
+                .Resolve(context => context.Source.DecimalPlaces);
+            Field<ListGraphType<AddressType>>(nameof(Currency.Minters))
+                .Resolve(context => context.Source.Minters);
         }
     }
 }

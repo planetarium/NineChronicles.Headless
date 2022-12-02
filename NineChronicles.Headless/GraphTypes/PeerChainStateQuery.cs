@@ -10,10 +10,10 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public PeerChainStateQuery(StandaloneContext standaloneContext)
         {
-            Field<NonNullGraphType<ListGraphType<StringGraphType>>>(
-                name: "state",
-                description: "Summary of other peers connected to this node. It consists of address, chain height, and total difficulty.",
-                resolve: context =>
+            Field<NonNullGraphType<ListGraphType<StringGraphType>>>("state")
+                .Description(
+                    "Summary of other peers connected to this node. It consists of address, chain height, and total difficulty.")
+                .Resolve(context =>
                 {
                     var service = standaloneContext.NineChroniclesNodeService;
                     if (service is null)
@@ -42,8 +42,7 @@ namespace NineChronicles.Headless.GraphTypes
                     chainStates.AddRange(peerChainState);
 
                     return chainStates;
-                }
-            );
+                });
         }
     }
 }

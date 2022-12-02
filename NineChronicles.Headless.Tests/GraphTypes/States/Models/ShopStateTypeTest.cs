@@ -109,7 +109,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     }}
                 }}
             }}";
-            var queryResult = await ExecuteQueryAsync<ShopStateType>(query, source: new ShopState());
+            var queryResult = await ExecuteQueryAsync<ShopStateType>(
+                query,
+                source: new ShopState(),
+                allowErrors: true);
             Assert.Null(queryResult.Data);
             Assert.NotNull(queryResult.Errors);
             Assert.Single(queryResult.Errors!);

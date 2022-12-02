@@ -6,15 +6,13 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public NotificationType()
         {
-            Field<NonNullGraphType<NotificationEnumType>>(
-                name: "type",
-                description: "The type of Notification.",
-                resolve: context => context.Source.Type);
+            Field<NonNullGraphType<NotificationEnumType>>("type")
+                .Description("The type of Notification.")
+                .Resolve(context => context.Source.Type);
 
-            Field<StringGraphType>(
-                name: "message",
-                description: "The message of Notification.",
-                resolve: context => context.Source.Message);
+            Field<StringGraphType>("message")
+                .Description("The message of Notification.")
+                .Resolve(context => context.Source.Message);
         }
     }
 }

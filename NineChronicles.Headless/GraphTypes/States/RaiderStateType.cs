@@ -8,76 +8,48 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public RaiderStateType()
         {
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(RaiderState.TotalScore),
-                description: "season total score.",
-                resolve: context => context.Source.TotalScore
-            );
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(RaiderState.HighScore),
-                description: "season high score.",
-                resolve: context => context.Source.HighScore
-            );
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(RaiderState.TotalChallengeCount),
-                description: "season total challenge count.",
-                resolve: context => context.Source.TotalChallengeCount
-            );
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(RaiderState.RemainChallengeCount),
-                description: "remain challenge count before refill.",
-                resolve: context => context.Source.RemainChallengeCount
-            );
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(RaiderState.LatestRewardRank),
-                description: "latest reward claimed season rank.",
-                resolve: context => context.Source.LatestRewardRank
-            );
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(RaiderState.PurchaseCount),
-                description: "challenge ticket purchase count.",
-                resolve: context => context.Source.PurchaseCount
-            );
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(RaiderState.Cp),
-                description: "combat point of avatar state.",
-                resolve: context => context.Source.Cp
-            );
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(RaiderState.Level),
-                description: "level of avatar state.",
-                resolve: context => context.Source.Level
-            );
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(RaiderState.IconId),
-                description: "icon id for ranking portrait.",
-                resolve: context => context.Source.IconId
-            );
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(RaiderState.LatestBossLevel),
-                description: "latest challenge boss level.",
-                resolve: context => context.Source.LatestBossLevel
-            );
-            Field<NonNullGraphType<LongGraphType>>(
-                nameof(RaiderState.ClaimedBlockIndex),
-                description: "rank reward claimed block index.",
-                resolve: context => context.Source.ClaimedBlockIndex
-            );
-            Field<NonNullGraphType<LongGraphType>>(
-                nameof(RaiderState.RefillBlockIndex),
-                description: "ticket refilled block index.",
-                resolve: context => context.Source.RefillBlockIndex
-            );
-            Field<NonNullGraphType<AddressType>>(
-                nameof(RaiderState.AvatarAddress),
-                description: "address of avatar state.",
-                resolve: context => context.Source.AvatarAddress
-            );
-            Field<NonNullGraphType<StringGraphType>>(
-                nameof(RaiderState.AvatarName),
-                description: "name of avatar state.",
-                resolve: context => context.Source.AvatarName
-            );
+            Field<NonNullGraphType<IntGraphType>>(nameof(RaiderState.TotalScore))
+                .Description("season total score.")
+                .Resolve(context => context.Source.TotalScore);
+            Field<NonNullGraphType<IntGraphType>>(nameof(RaiderState.HighScore))
+                .Description("season high score.")
+                .Resolve(context => context.Source.HighScore);
+            Field<NonNullGraphType<IntGraphType>>(nameof(RaiderState.TotalChallengeCount))
+                .Description("season total challenge count.")
+                .Resolve(context => context.Source.TotalChallengeCount);
+            Field<NonNullGraphType<IntGraphType>>(nameof(RaiderState.RemainChallengeCount))
+                .Description("remain challenge count before refill.")
+                .Resolve(context => context.Source.RemainChallengeCount);
+            Field<NonNullGraphType<IntGraphType>>(nameof(RaiderState.LatestRewardRank))
+                .Description("latest reward claimed season rank.")
+                .Resolve(context => context.Source.LatestRewardRank);
+            Field<NonNullGraphType<IntGraphType>>(nameof(RaiderState.PurchaseCount))
+                .Description("challenge ticket purchase count.")
+                .Resolve(context => context.Source.PurchaseCount);
+            Field<NonNullGraphType<IntGraphType>>(nameof(RaiderState.Cp))
+                .Description("combat point of avatar state.")
+                .Resolve(context => context.Source.Cp);
+            Field<NonNullGraphType<IntGraphType>>(nameof(RaiderState.Level))
+                .Description("level of avatar state.")
+                .Resolve(context => context.Source.Level);
+            Field<NonNullGraphType<IntGraphType>>(nameof(RaiderState.IconId))
+                .Description("icon id for ranking portrait.")
+                .Resolve(context => context.Source.IconId);
+            Field<NonNullGraphType<IntGraphType>>(nameof(RaiderState.LatestBossLevel))
+                .Description("latest challenge boss level.")
+                .Resolve(context => context.Source.LatestBossLevel);
+            Field<NonNullGraphType<LongGraphType>>(nameof(RaiderState.ClaimedBlockIndex))
+                .Description("rank reward claimed block index.")
+                .Resolve(context => context.Source.ClaimedBlockIndex);
+            Field<NonNullGraphType<LongGraphType>>(nameof(RaiderState.RefillBlockIndex))
+                .Description("ticket refilled block index.")
+                .Resolve(context => context.Source.RefillBlockIndex);
+            Field<NonNullGraphType<AddressType>>(nameof(RaiderState.AvatarAddress))
+                .Description("address of avatar state.")
+                .Resolve(context => context.Source.AvatarAddress);
+            Field<NonNullGraphType<StringGraphType>>(nameof(RaiderState.AvatarName))
+                .Description("name of avatar state.")
+                .Resolve(context => context.Source.AvatarName);
         }
     }
 }

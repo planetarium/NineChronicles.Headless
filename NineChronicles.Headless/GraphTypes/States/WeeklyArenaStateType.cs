@@ -8,15 +8,13 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public WeeklyArenaStateType()
         {
-            Field<NonNullGraphType<AddressType>>(
-                nameof(WeeklyArenaState.address),
-                resolve: context => context.Source.address);
-            Field<NonNullGraphType<BooleanGraphType>>(
-                nameof(WeeklyArenaState.Ended),
-                resolve: context => context.Source.Ended);
+            Field<NonNullGraphType<AddressType>>(nameof(WeeklyArenaState.address))
+                .Resolve(context => context.Source.address);
+            Field<NonNullGraphType<BooleanGraphType>>(nameof(WeeklyArenaState.Ended))
+                .Resolve(context => context.Source.Ended);
             Field<NonNullGraphType<ListGraphType<ArenaInfoType>>>(
-                nameof(WeeklyArenaState.OrderedArenaInfos),
-                resolve: context => context.Source.OrderedArenaInfos);
+                nameof(WeeklyArenaState.OrderedArenaInfos))
+                .Resolve(context => context.Source.OrderedArenaInfos);
         }
     }
 }

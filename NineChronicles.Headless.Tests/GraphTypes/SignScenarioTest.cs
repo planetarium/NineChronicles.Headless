@@ -155,6 +155,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }}";
             var nonceQueryResult =
                 await ExecuteQueryAsync<TransactionHeadlessQuery>(nonceQuery, standaloneContext: StandaloneContextFx);
+            Assert.Null(nonceQueryResult.Errors);
             var nonce =
                 (long)((Dictionary<string, object>)((ExecutionNode)nonceQueryResult.Data!)
                     .ToValue()!)["nextTxNonce"];

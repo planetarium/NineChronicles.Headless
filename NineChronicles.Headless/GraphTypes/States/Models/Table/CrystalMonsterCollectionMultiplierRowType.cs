@@ -8,14 +8,12 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Table
         public CrystalMonsterCollectionMultiplierRowType()
         {
             Field<NonNullGraphType<IntGraphType>>(
-                nameof(CrystalMonsterCollectionMultiplierSheet.Row.Level),
-                resolve: context => context.Source.Level
-            );
+                nameof(CrystalMonsterCollectionMultiplierSheet.Row.Level))
+                .Resolve(context => context.Source.Level);
 
             Field<NonNullGraphType<IntGraphType>>(
-                nameof(CrystalMonsterCollectionMultiplierSheet.Row.Multiplier),
-                resolve: context => context.Source.Multiplier
-            );
+                nameof(CrystalMonsterCollectionMultiplierSheet.Row.Multiplier))
+                .Resolve(context => context.Source.Multiplier);
         }
     }
 }

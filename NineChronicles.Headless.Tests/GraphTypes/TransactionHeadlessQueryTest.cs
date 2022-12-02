@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Security.Cryptography;
 using Bencodex;
 using GraphQL;
 using GraphQL.Execution;
-using GraphQL.NewtonsoftJson;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blockchain;
@@ -112,7 +110,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             _blockChain.StageTransaction(transaction);
             await _blockChain.MineBlock(new PrivateKey());
             queryResult = await ExecuteAsync(string.Format(queryFormat, transaction.Id.ToString()));
-            var tx = (Transaction<PolymorphicAction<ActionBase>>)((RootExecutionNode)queryResult.Data.GetValue()).SubFields![0].Result!;
+            var tx = (Transaction<PolymorphicAction<ActionBase>>)((RootExecutionNode)queryResult.Data!).SubFields![0].Result!;
 
             Assert.Equal(tx.Id, transaction.Id);
             Assert.Equal(tx.Nonce, transaction.Nonce);
@@ -179,7 +177,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var queryFormat = @"query {{
                 createUnsignedTx(publicKey: ""{0}"", plainValue: ""{1}"")
             }}";
-            var result = await ExecuteAsync(string.Format(queryFormat, publicKey, plainValue));
+            var result = await ExecuteAsync(string.Format(queryFormat, publicKey, plainValue), allowErrors: true);
             Assert.NotNull(result.Errors);
         }
 
@@ -236,7 +234,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var query = @$"query {{
                 attachSignature(unsignedTransaction: ""{unsignedTransaction}"", signature: ""{signature}"")
             }}";
-            var result = await ExecuteAsync(query);
+            var result = await ExecuteAsync(query, allowErrors: true);
             Assert.NotNull(result.Errors);
         }
 
@@ -314,14 +312,18 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal("SUCCESS", txStatus);
         }
 
-        private Task<ExecutionResult> ExecuteAsync(string query)
+        private Task<ExecutionResult> ExecuteAsync(string query, bool allowErrors = false)
         {
-            return GraphQLTestUtils.ExecuteQueryAsync<TransactionHeadlessQuery>(query, standaloneContext: new StandaloneContext
-            {
-                BlockChain = _blockChain,
-                Store = _store,
-                NineChroniclesNodeService = _service
-            });
+            return GraphQLTestUtils.ExecuteQueryAsync<TransactionHeadlessQuery>(
+                query,
+                standaloneContext: new StandaloneContext
+                {
+                    BlockChain = _blockChain,
+                    Store = _store,
+                    NineChroniclesNodeService = _service
+                },
+                allowErrors: allowErrors
+            );
         }
     }
 }

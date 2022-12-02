@@ -8,12 +8,10 @@ namespace NineChronicles.Headless.GraphTypes.States.Models
     {
         public SkillType()
         {
-            Field<NonNullGraphType<IntGraphType>>(
-                "id",
-                resolve: context => context.Source.SkillRow.Id);
-            Field<NonNullGraphType<ElementalTypeEnumType>>(
-                "elementalType",
-                resolve: context => context.Source.SkillRow.ElementalType);
+            Field<NonNullGraphType<IntGraphType>>("id")
+                .Resolve(context => context.Source.SkillRow.Id);
+            Field<NonNullGraphType<ElementalTypeEnumType>>("elementalType")
+                .Resolve(context => context.Source.SkillRow.ElementalType);
             Field<NonNullGraphType<IntGraphType>>(nameof(Skill.Power));
             Field<NonNullGraphType<IntGraphType>>(nameof(Skill.Chance));
         }
