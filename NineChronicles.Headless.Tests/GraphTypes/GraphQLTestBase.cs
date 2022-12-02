@@ -22,7 +22,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Lib9c.Tests;
@@ -97,7 +96,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 "",
                 0,
                 new RpcContext(),
-                new ConcurrentDictionary<string, ITransaction>()
+                new ConcurrentDictionary<string, Sentry.ITransaction>()
             );
             services.AddSingleton(publisher);
             services.AddSingleton(StandaloneContextFx);
