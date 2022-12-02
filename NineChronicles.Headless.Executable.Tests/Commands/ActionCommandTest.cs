@@ -6,6 +6,7 @@ using Bencodex.Types;
 using Libplanet;
 using Libplanet.Crypto;
 using Nekoyume.Action;
+using Nekoyume.Action.Factory;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.Executable.Commands;
@@ -60,10 +61,10 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         }
 
         [Theory]
-        [InlineData(false, 0, 195)]
-        [InlineData(false, 5_000_000, 195)]
-        [InlineData(true, 0, 195)]
-        [InlineData(true, 5_000_000, 70)]
+        [InlineData(false, 0, 198)]
+        [InlineData(false, 5_000_000, 198)]
+        [InlineData(true, 0, 198)]
+        [InlineData(true, 5_000_000, 73)]
         public void List(bool excludeObsolete, long blockIndex, int expectedCommandCount)
         {
             var commandList = _command.List(excludeObsolete, blockIndex);
@@ -193,6 +194,65 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             else
             {
                 Assert.Contains("System.FormatException: Could not find any recognizable digits.", _console.Error.ToString());
+            }
+        }
+
+        [Theory]
+        [InlineData(0L, typeof(ClaimStakeReward))]
+        [InlineData(Nekoyume.Action.ClaimStakeReward.ObsoletedIndex - 1, typeof(ClaimStakeReward))]
+        [InlineData(Nekoyume.Action.ClaimStakeReward.ObsoletedIndex, typeof(ClaimStakeReward))]
+        [InlineData(Nekoyume.Action.ClaimStakeReward.ObsoletedIndex + 1, typeof(ClaimStakeReward3))]
+        [InlineData(long.MaxValue, typeof(ClaimStakeReward3))]
+        public void ClaimStakeRewardWithBlockIndex(long blockIndex, Type expectedActionType)
+        {
+            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+            var addr = new PrivateKey().ToAddress();
+            var resultCode = _command.ClaimStakeReward(
+                addr.ToHex(),
+                filePath,
+                blockIndex: blockIndex);
+            Assert.Equal(0, resultCode);
+
+            var rawAction = Convert.FromBase64String(File.ReadAllText(filePath));
+            var decoded = (List)_codec.Decode(rawAction);
+            var plainValue = Assert.IsType<Dictionary>(decoded[1]);
+            var action = ClaimStakeRewardFactory.CreateByBlockIndex(blockIndex, addr);
+            action.LoadPlainValue(plainValue);
+            string type = (Text)decoded[0];
+            Assert.Equal(action.GetType().Name, type);
+        }
+
+        [Theory]
+        [InlineData(0, 0, -1)]
+        [InlineData(1, 3, 0)]
+        [InlineData(4, 4, -1)]
+        public void ClaimStakeRewardWithActionVersion(
+            int actionVersionMin,
+            int actionVersionMax,
+            int expectedCode)
+        {
+            for (var i = actionVersionMin; i < actionVersionMax + 1; i++)
+            {
+                var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+                var addr = new PrivateKey().ToAddress();
+                var resultCode = _command.ClaimStakeReward(
+                    addr.ToHex(),
+                    filePath,
+                    actionVersion: i);
+                Assert.Equal(expectedCode, resultCode);
+
+                if (expectedCode < 0)
+                {
+                    continue;
+                }
+
+                var rawAction = Convert.FromBase64String(File.ReadAllText(filePath));
+                var decoded = (List)_codec.Decode(rawAction);
+                var plainValue = Assert.IsType<Dictionary>(decoded[1]);
+                var action = ClaimStakeRewardFactory.CreateByVersion(i, addr);
+                action.LoadPlainValue(plainValue);
+                string type = (Text)decoded[0];
+                Assert.Equal(action.GetType().Name, type);
             }
         }
 
