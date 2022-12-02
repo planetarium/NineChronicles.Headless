@@ -10,6 +10,7 @@ using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
+using Nekoyume.Action.Factory;
 using Nekoyume.Helper;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -46,9 +47,18 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "The avatar address to receive staking rewards."
                     }),
                 resolve: context =>
-                    Encode(context,
-                        (NCAction)new ClaimStakeReward(
-                            context.GetArgument<Address>("avatarAddress"))));
+                {
+                    if (!(standaloneContext.BlockChain is { } chain))
+                    {
+                        throw new InvalidOperationException("BlockChain not found in the context");
+                    }
+
+                    return Encode(context,
+                        (GameAction)ClaimStakeRewardFactory.CreateByBlockIndex(
+                            chain.Tip.Index,
+                            context.GetArgument<Address>("avatarAddress")));
+                }
+            );
             Field<NonNullGraphType<ByteStringType>>(
                 name: "migrateMonsterCollection",
                 arguments: new QueryArguments(
@@ -344,6 +354,39 @@ namespace NineChronicles.Headless.GraphTypes
                         Assets = assets,
                         RewardPoolAddress = rewardPoolAddress,
                     };
+                    return Encode(context, action);
+                }
+            );
+            Field<NonNullGraphType<ByteStringType>>(
+                "transferAssets",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Description = "Address of sender.",
+                        Name = "sender",
+                    },
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<RecipientsInputType>>>>
+                    {
+                        Description = "List of tuples that recipients' address and asset amount to be sent",
+                        Name = "recipients",
+                    },
+                    new QueryArgument<StringGraphType>
+                    {
+                        Description = "A 80-max length string to note.",
+                        Name = "memo",
+                    }
+                ),
+                resolve: context =>
+                {
+                    var sender = context.GetArgument<Address>("sender");
+                    var recipients = context.GetArgument<List<(Address recipient, FungibleAssetValue amount)>>("recipients");
+                    var memo = context.GetArgument<string?>("memo");
+                    if (recipients.Count > TransferAssets.RecipientsCapacity)
+                    {
+                        throw new ExecutionError($"recipients must be less than or equal {TransferAssets.RecipientsCapacity}.");
+                    }
+
+                    NCAction action = new TransferAssets(sender, recipients, memo);
                     return Encode(context, action);
                 }
             );
