@@ -125,6 +125,14 @@ cp appsettings.json appsettings.local.json
 dotnet run --project NineChronicles.Headless.Executable -C appsettings.local.json --store-type={YOUR_OWN_STORE_PATH}
 ```
 
+#### Caveat
+APVs can be changed as Nine Chronicles deploys new version.  
+You have to fit your APV sting to current on-chain version string.  
+You can get APV strings at the following places:
+- mainnet: [Official released config.json](https://release.nine-chronicles.com/9c-launcher-config.json) - `AppProtocolVersion`
+- internal: [Internal network config](https://github.com/planetarium/9c-k8s-config/blob/main/9c-internal/configmap-versions.yaml) - `APP_PROTOCOL_VERSION`
+- previewnet: [Previewnet config](https://github.com/planetarium/9c-k8s-config/blob/main/9c-previewnet/configmap-versions.yaml) - `APP_PROTOCOL_VERSION`
+
 ## Docker Build
 
 A headless image can be created by running the command below in the directory where the solution is located.
