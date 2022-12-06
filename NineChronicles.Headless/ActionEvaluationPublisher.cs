@@ -19,6 +19,7 @@ using Lib9c.Renderer;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blocks;
+using Libplanet.Tx;
 using MagicOnion.Client;
 using MessagePack;
 using Microsoft.Extensions.Hosting;
@@ -368,7 +369,7 @@ namespace NineChronicles.Headless
                                 Log.Error(e, "[{ClientAddress}] Skip broadcasting render due to the unexpected exception", _clientAddress);
                             }
 
-                            if (ev.TxId != null && SentryTraces.TryRemove(ev.TxId.ToString() ?? "", out var sentryTrace))
+                            if (ev.TxId is TxId txId && SentryTraces.TryRemove(txId.ToString() ?? "", out var sentryTrace))
                             {
                                 var span = sentryTrace.GetLastActiveSpan();
                                 span?.Finish();
