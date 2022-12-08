@@ -552,6 +552,30 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }
         }
 
+        [Fact]
+        public async Task ActivateAccount()
+        {
+            var activationSeed = new PrivateKey();
+            var pendingAddress = activationSeed.PublicKey.ToAddress();
+            var nonce = pendingAddress.ToByteArray();
+            var signature = activationSeed.Sign(nonce);
+
+            var query = "{{ activateAccount(" +
+                        $"pendingAddress: \"{pendingAddress.ToString().Substring(2)}\", " +
+                        $"signature: \"{ByteUtil.Hex(signature)}\"" +
+                        ") }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["activateAccount"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<ActivateAccount>(polymorphicAction.InnerAction);
+
+            Assert.Equal(pendingAddress, action.PendingAddress.ToString());
+            Assert.Equal(signature, action.Signature);
+        }
+
         [Theory]
         [InlineData(-1, "ab", null, null, null, null, false)]
         [InlineData(0, "ab", null, null, null, null, true)]

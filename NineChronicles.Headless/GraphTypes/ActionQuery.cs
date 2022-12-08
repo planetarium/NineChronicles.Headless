@@ -402,6 +402,28 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
             Field<NonNullGraphType<ByteStringType>>(
+                "activateAccount",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "pendingAddress",
+                        Description = "Pending address in activation code"
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "signature",
+                        Description = "Signature of nonce in pending address."
+                    }
+                    ),
+                resolve: context =>
+                {
+                    var pendingAddress = context.GetArgument<Address>("pendingAddress");
+                    byte[] signature = ByteUtil.ParseHex(context.GetArgument<string>("signature"));
+                    NCAction action = new ActivateAccount(pendingAddress, signature);
+                    return Encode(context, action);
+                }
+            );
+            Field<NonNullGraphType<ByteStringType>>(
                 "createAvatar",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<IntGraphType>>
