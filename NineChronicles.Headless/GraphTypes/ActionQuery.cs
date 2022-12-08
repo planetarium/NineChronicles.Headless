@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Text.RegularExpressions;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL;
@@ -9,6 +10,7 @@ using GraphQL.Types;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
+using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Action.Factory;
 using Nekoyume.Helper;
@@ -504,6 +506,36 @@ namespace NineChronicles.Headless.GraphTypes
                         AvatarAddress = avatarAddress,
                         RuneId = runeId,
                         TryCount = tryCount
+                    };
+                    return Encode(context, action);
+                });
+            Field<NonNullGraphType<ByteStringType>>(
+                "changeAvatarName",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "targetAvatarAddr",
+                        Description = "The avatar address to change name."
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "name",
+                        Description = "The name to change.(2~20 characters only numbers and alphabets)"
+                    }),
+                resolve: context =>
+                {
+                    var targetAvatarAddr = context.GetArgument<Address>("targetAvatarAddr");
+                    var name = context.GetArgument<string>("name");
+                    if (!Regex.IsMatch(name, GameConfig.AvatarNickNamePattern))
+                    {
+                        throw new ExecutionError(
+                            $"Invalid name({name}): 2~20 characters only numbers and alphabets.");
+                    }
+
+                    var action = new ChangeAvatarName
+                    {
+                        TargetAvatarAddr = targetAvatarAddr,
+                        Name = name,
                     };
                     return Encode(context, action);
                 });

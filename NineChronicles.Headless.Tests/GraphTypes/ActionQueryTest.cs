@@ -653,5 +653,51 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(runeId, action.RuneId);
             Assert.Equal(tryCount ?? 1, action.TryCount);
         }
+
+        [Theory]
+        [InlineData("", false)]
+        [InlineData("J", false)]
+        [InlineData("JJ", true)]
+        [InlineData("J ", false)]
+        [InlineData("J!", false)]
+        [InlineData("01234567890123456789", true)]
+        [InlineData("012345678901234567890", false)]
+        public async Task ChangeAvatarName(
+            string name,
+            bool errorsShouldBeNull)
+        {
+            // Make a query.
+            var targetAvatarAddr = new PrivateKey().ToAddress();
+            var query = $@"{{
+                changeAvatarName(
+                    targetAvatarAddr: ""{targetAvatarAddr}"",
+                    name: ""{name}""
+                )
+            }}";
+
+            // Execute the query.
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(
+                query,
+                standaloneContext: _standaloneContext);
+
+            // Assert.
+            if (errorsShouldBeNull)
+            {
+                Assert.Null(queryResult.Errors);
+            }
+            else
+            {
+                Assert.NotNull(queryResult.Errors);
+                return;
+            }
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["changeAvatarName"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<ChangeAvatarName>(polymorphicAction.InnerAction);
+            Assert.Equal(targetAvatarAddr, action.TargetAvatarAddr);
+            Assert.Equal(name, action.Name);
+        }
     }
 }
