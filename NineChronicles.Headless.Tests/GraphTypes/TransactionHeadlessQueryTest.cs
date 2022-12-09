@@ -304,7 +304,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task TransactionResultIsSuccess()
         {
             var privateKey = new PrivateKey();
-            var action = new DumbTransferAction(new Address(), new Address());
+            // Because `AddActivatedAccount` doesn't need any prerequisites.
+            var action = new AddActivatedAccount(default);
             Transaction<NCAction> tx = _blockChain.MakeTransaction(privateKey, new NCAction[] { action });
             Block<NCAction> block = _blockChain.ProposeBlock(_proposer);
             _blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, _proposer));
