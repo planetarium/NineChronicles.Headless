@@ -185,7 +185,7 @@ namespace NineChronicles.Headless.Executable
             TipTimeout = tipTimeout ?? TipTimeout;
             DemandBuffer = demandBuffer ?? DemandBuffer;
             ConsensusSeedStrings = consensusSeedStrings ?? ConsensusSeedStrings;
-            ConsensusPeerStrings = consensusPeerStrings ?? consensusPeerStrings;
+            ConsensusPeerStrings = consensusPeerStrings ?? ConsensusPeerStrings;
             SkipPreload = skipPreload ?? SkipPreload;
             MinimumBroadcastTarget = minimumBroadcastTarget ?? MinimumBroadcastTarget;
             BucketSize = bucketSize ?? BucketSize;
