@@ -394,9 +394,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(worldId, action.WorldId);
             Assert.Equal(stageId, action.StageId);
-            Assert.Equal(costumeIds, action.Costumes);
-            Assert.Equal(equipmentIds, action.Equipments);
-            Assert.Equal(consumableIds, action.Foods);
+            Assert.Equal(costumeIds.ToHashSet(), action.Costumes.ToHashSet());
+            Assert.Equal(equipmentIds.ToHashSet(), action.Equipments.ToHashSet());
+            Assert.Equal(consumableIds.ToHashSet(), action.Foods.ToHashSet());
             for (int i = 0; i < action.RuneInfos.Count; i++)
             {
                 var runeSlotInfo = runeSlotInfos[i];
