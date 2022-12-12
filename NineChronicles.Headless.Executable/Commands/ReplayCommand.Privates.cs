@@ -10,6 +10,8 @@ using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blocks;
+using Libplanet.Consensus;
+using Libplanet.Crypto;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Libplanet.Tx;
@@ -21,7 +23,7 @@ namespace NineChronicles.Headless.Executable.Commands
     public partial class ReplayCommand : CoconaLiteConsoleAppBase
     {
         /// <summary>
-        /// Almost duplicate https://github.com/planetarium/libplanet/blob/main/Libplanet/Action/AccountStateDeltaImpl.cs
+        /// Almost duplicate https://github.com/planetarium/libplanet/blob/main/Libplanet/Action/AccountStateDeltaImpl.cs.
         /// </summary>
         private class AccountStateDeltaImpl : IAccountStateDelta
         {
@@ -53,11 +55,15 @@ namespace NineChronicles.Headless.Executable.Commands
 
             protected TotalSupplyGetter TotalSupplyGetter { get; set; }
 
+            protected ValidatorSetGetter ValidatorSetGetter { get; set; }
+
             protected IImmutableDictionary<Address, IValue> UpdatedStates { get; set; }
 
             protected IImmutableDictionary<(Address, Currency), BigInteger> UpdatedFungibles { get; set; }
 
             protected IImmutableDictionary<Currency, BigInteger> UpdatedTotalSupply { get; set; }
+
+            protected ValidatorSet? UpdatedValidatorSet { get; set; } = null;
 
             protected Address Signer { get; set; }
 
@@ -65,11 +71,13 @@ namespace NineChronicles.Headless.Executable.Commands
                 AccountStateGetter stateGetter,
                 AccountBalanceGetter balanceGetter,
                 TotalSupplyGetter totalSupplyGetter,
+                ValidatorSetGetter validatorSetGetter,
                 Address signer)
             {
                 StateGetter = stateGetter;
                 BalanceGetter = balanceGetter;
                 TotalSupplyGetter = totalSupplyGetter;
+                ValidatorSetGetter = validatorSetGetter;
                 UpdatedStates = ImmutableDictionary<Address, IValue>.Empty;
                 UpdatedFungibles = ImmutableDictionary<(Address, Currency), BigInteger>.Empty;
                 UpdatedTotalSupply = ImmutableDictionary<Currency, BigInteger>.Empty;
@@ -264,6 +272,42 @@ namespace NineChronicles.Headless.Executable.Commands
                 );
             }
 
+            public IAccountStateDelta SetValidator(PublicKey validatorKey, BigInteger power)
+            {
+                var validator = new Validator(validatorKey, power);
+                var validators = GetValidatorSet().Validators.Remove(validator);
+
+                if (power.Sign < 0)
+                {
+                    throw new ArgumentException("The power cannot be negative");
+                }
+                else if (power.Sign == 0)
+                {
+                    return UpdateValidatorSet(new ValidatorSet(validators.ToList()));
+                }
+
+                return UpdateValidatorSet(new ValidatorSet(validators.Add(validator).ToList()));
+            }
+
+            public ValidatorSet GetValidatorSet() =>
+                UpdatedValidatorSet ?? ValidatorSetGetter();
+
+            public AccountStateDeltaImpl UpdateValidatorSet(
+                ValidatorSet updatedValidatorSet
+            ) =>
+                new AccountStateDeltaImpl(
+                    StateGetter,
+                    BalanceGetter,
+                    TotalSupplyGetter,
+                    ValidatorSetGetter,
+                    Signer)
+                {
+                    UpdatedStates = UpdatedStates,
+                    UpdatedFungibles = UpdatedFungibles,
+                    UpdatedTotalSupply = UpdatedTotalSupply,
+                    UpdatedValidatorSet = updatedValidatorSet,
+                };
+
             public IImmutableDictionary<Address, IValue?> GetUpdatedStates() =>
                 StateUpdatedAddresses.Select(address =>
                     new KeyValuePair<Address, IValue?>(
@@ -323,6 +367,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     StateGetter,
                     BalanceGetter,
                     TotalSupplyGetter,
+                    ValidatorSetGetter,
                     Signer)
                 {
                     UpdatedStates = updatedStates,
@@ -338,6 +383,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     StateGetter,
                     BalanceGetter,
                     TotalSupplyGetter,
+                    ValidatorSetGetter,
                     Signer)
                 {
                     UpdatedStates = UpdatedStates,
@@ -365,7 +411,7 @@ namespace NineChronicles.Headless.Executable.Commands
         }
 
         /// <summary>
-        /// Almost duplicate https://github.com/planetarium/libplanet/blob/main/Libplanet/Action/ActionContext.cs
+        /// Almost duplicate https://github.com/planetarium/libplanet/blob/main/Libplanet/Action/ActionContext.cs.
         /// </summary>
         private class ActionContext : IActionContext
         {
@@ -514,7 +560,7 @@ namespace NineChronicles.Headless.Executable.Commands
         }
 
         /// <summary>
-        /// Almost duplicate https://github.com/planetarium/libplanet/blob/main/Libplanet/Action/ActionEvaluator.cs#L286
+        /// Almost duplicate https://github.com/planetarium/libplanet/blob/main/Libplanet/Action/ActionEvaluator.cs#L286.
         /// </summary>
         private static IEnumerable<ActionEvaluation> EvaluateActions(
             BlockHash? genesisHash,
