@@ -77,13 +77,11 @@ namespace NineChronicles.Headless
             LibplanetNodeServiceProperties<NCAction> properties,
             IBlockPolicy<NCAction> blockPolicy,
             NetworkType networkType,
+            TimeSpan? minerBlockInterval = null,
             Progress<PreloadState>? preloadProgress = null,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false,
             bool strictRendering = false,
-            bool isDev = false,
-            int blockInterval = 10000,
-            int reorgInterval = 0,
             TimeSpan txLifeTime = default,
             int minerCount = 1,
             int txQuotaPerSigner = 10
@@ -94,15 +92,7 @@ namespace NineChronicles.Headless
 
             LogEventLevel logLevel = LogEventLevel.Debug;
             var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
-            // Policies for dev mode.
-            IBlockPolicy<NCAction>? easyPolicy = null;
-            IBlockPolicy<NCAction>? hardPolicy = null;
             IStagePolicy<NCAction> stagePolicy = new StagePolicy(txLifeTime, txQuotaPerSigner);
-            if (isDev)
-            {
-                easyPolicy = new ReorgPolicy(new RewardGold(), 1, ImmutableHashSet<Currency>.Empty);
-                hardPolicy = new ReorgPolicy(new RewardGold(), 2, ImmutableHashSet<Currency>.Empty);
-            }
 
             BlockRenderer = blockPolicySource.BlockRenderer;
             ActionRenderer = blockPolicySource.ActionRenderer;
@@ -173,6 +163,7 @@ namespace NineChronicles.Headless
                                         .Range(0, minerCount)
                                         .Select(_ => miner.MineBlockAsync(cancellationToken));
                                     await Task.WhenAll(miners);
+                                    await Task.Delay(minerBlockInterval ?? TimeSpan.Zero);
                                 }
                                 else
                                 {
@@ -204,77 +195,25 @@ namespace NineChronicles.Headless
                 }
             }
 
-            async Task devMinerLoopAction(
-                Swarm<NCAction> mainSwarm,
-                Swarm<NCAction> subSwarm,
-                PrivateKey privateKey,
-                CancellationToken cancellationToken)
-            {
-                var miner = new ReorgMiner(mainSwarm, subSwarm, privateKey, reorgInterval);
-                Log.Debug("Miner called.");
-                while (!cancellationToken.IsCancellationRequested)
+            NodeService = new LibplanetNodeService<NCAction>(
+                Properties,
+                blockPolicy,
+                stagePolicy,
+                renderers,
+                minerLoopAction,
+                preloadProgress,
+                (code, msg) =>
                 {
-                    try
-                    {
-                        if (mainSwarm.Running)
-                        {
-                            Log.Debug("Start mining.");
-                            await miner.MineBlockAsync(cancellationToken);
-                            await Task.Delay(blockInterval, cancellationToken);
-                        }
-                        else
-                        {
-                            await Task.Delay(1000, cancellationToken);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "Exception occurred.");
-                    }
-                }
-            }
-
-            if (isDev)
-            {
-                NodeService = new DevLibplanetNodeService<NCAction>(
-                    Properties,
-                    easyPolicy,
-                    hardPolicy,
-                    stagePolicy,
-                    renderers,
-                    devMinerLoopAction,
-                    preloadProgress,
-                    (code, msg) =>
-                    {
-                        ExceptionRenderer.RenderException(code, msg);
-                        Log.Error(msg);
-                    },
-                    isPreloadStarted => { NodeStatusRenderer.PreloadStatus(isPreloadStarted); },
-                    ignoreBootstrapFailure
-                );
-            }
-            else
-            {
-                NodeService = new LibplanetNodeService<NCAction>(
-                    Properties,
-                    blockPolicy,
-                    stagePolicy,
-                    renderers,
-                    minerLoopAction,
-                    preloadProgress,
-                    (code, msg) =>
-                    {
-                        ExceptionRenderer.RenderException(code, msg);
-                        Log.Error(msg);
-                    },
-                    isPreloadStarted =>
-                    {
-                        NodeStatusRenderer.PreloadStatus(isPreloadStarted);
-                    },
-                    ignoreBootstrapFailure,
-                    ignorePreloadFailure
-                );
-            }
+                    ExceptionRenderer.RenderException(code, msg);
+                    Log.Error(msg);
+                },
+                isPreloadStarted =>
+                {
+                    NodeStatusRenderer.PreloadStatus(isPreloadStarted);
+                },
+                ignoreBootstrapFailure,
+                ignorePreloadFailure
+            );
 
             strictRenderer.BlockChain = NodeService.BlockChain ?? throw new Exception("BlockChain is null.");
         }
@@ -321,13 +260,11 @@ namespace NineChronicles.Headless
                 properties.Libplanet,
                 blockPolicy,
                 properties.NetworkType,
+                properties.MinerBlockInterval,
                 preloadProgress: progress,
                 ignoreBootstrapFailure: properties.IgnoreBootstrapFailure,
                 ignorePreloadFailure: properties.IgnorePreloadFailure,
                 strictRendering: properties.StrictRender,
-                isDev: properties.Dev,
-                blockInterval: properties.BlockInterval,
-                reorgInterval: properties.ReorgInterval,
                 txLifeTime: properties.TxLifeTime,
                 minerCount: properties.MinerCount,
                 txQuotaPerSigner: properties.TxQuotaPerSigner

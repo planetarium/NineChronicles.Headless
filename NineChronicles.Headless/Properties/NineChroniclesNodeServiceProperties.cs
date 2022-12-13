@@ -40,6 +40,8 @@ namespace NineChronicles.Headless.Properties
 
         public int MinerCount { get; set; }
 
+        public TimeSpan MinerBlockInterval { get; set; } = TimeSpan.Zero;
+
         public int TxQuotaPerSigner { get; set; }
 
 

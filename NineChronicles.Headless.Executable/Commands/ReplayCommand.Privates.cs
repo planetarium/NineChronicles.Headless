@@ -367,7 +367,7 @@ namespace NineChronicles.Headless.Executable.Commands
         /// <summary>
         /// Almost duplicate https://github.com/planetarium/libplanet/blob/main/Libplanet/Action/ActionContext.cs
         /// </summary>
-        private class ActionContext : IActionContext
+        private sealed class ActionContext : IActionContext
         {
             private readonly int _randomSeed;
             private readonly ITrie? _previousBlockStatesTrie;
@@ -502,7 +502,7 @@ namespace NineChronicles.Headless.Executable.Commands
             }
         }
 
-        private class Random : System.Random, IRandom
+        private sealed class Random : System.Random, IRandom
         {
             public Random(int seed)
                 : base(seed)

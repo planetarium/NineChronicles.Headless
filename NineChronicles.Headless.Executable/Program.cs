@@ -94,6 +94,9 @@ namespace NineChronicles.Headless.Executable
                 Description = "The private key used for mining blocks. " +
                               "Must not be null if you want to turn on mining with libplanet-node.")]
             string? minerPrivateKeyString = null,
+            [Option("miner.block-interval",
+                Description = "The miner's break time after mining a block. The unit is millisecond.")]
+            int? minerBlockIntervalMilliseconds = null,
             [Option(Description = "The type of storage to store blockchain data. " +
                                   "If not provided, \"LiteDB\" will be used as default. " +
                                   "Available type: [\"rocksdb\", \"memory\"]")]
@@ -156,15 +159,6 @@ namespace NineChronicles.Headless.Executable
             bool? logActionRenders = null,
             [Option("network-type", Description = "Network type.")]
             NetworkType? networkType = null,
-            [Option("dev", Description = "Flag to turn on the dev mode. false by default.")]
-            bool? isDev = null,
-            [Option("dev.block-interval",
-                Description = "The time interval between blocks. It's unit is milliseconds. " +
-                              "Works only when dev mode is on.")]
-            int? blockInterval = null,
-            [Option("dev.reorg-interval",
-                Description = "The size of reorg interval. Works only when dev mode is on.")]
-            int reorgInterval = 0,
             [Option(Description =
                 "The lifetime of each transaction, which uses minute as its unit.")]
             int? txLifeTime = null,
@@ -226,10 +220,10 @@ namespace NineChronicles.Headless.Executable
             headlessConfig.Overwrite(
                 appProtocolVersionToken, trustedAppProtocolVersionSigners, genesisBlockPath, host, port,
                 swarmPrivateKeyString, workers, storeType, storePath, noReduceStore, noMiner, minerCount,
-                minerPrivateKeyString, networkType, iceServerStrings, peerStrings, rpcServer, rpcListenHost,
+                minerPrivateKeyString, minerBlockIntervalMilliseconds, networkType, iceServerStrings, peerStrings, rpcServer, rpcListenHost,
                 rpcListenPort, rpcRemoteServer, rpcHttpServer, graphQLServer, graphQLHost, graphQLPort,
                 graphQLSecretTokenPath, noCors, nonblockRenderer, nonblockRendererQueue, strictRendering,
-                logActionRenders, isDev, blockInterval, reorgInterval, confirmations,
+                logActionRenders, confirmations,
                 txLifeTime, messageTimeout, tipTimeout, demandBuffer, staticPeerStrings, skipPreload,
                 minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers
             );
@@ -339,17 +333,16 @@ namespace NineChronicles.Headless.Executable
                 var minerPrivateKey = string.IsNullOrEmpty(headlessConfig.MinerPrivateKeyString)
                     ? null
                     : new PrivateKey(ByteUtil.ParseHex(headlessConfig.MinerPrivateKeyString));
+                TimeSpan minerBlockInterval = TimeSpan.FromMilliseconds(headlessConfig.MinerBlockIntervalMilliseconds);
                 var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
                 {
                     MinerPrivateKey = minerPrivateKey,
                     Libplanet = properties,
                     NetworkType = headlessConfig.NetworkType,
-                    Dev = headlessConfig.IsDev,
                     StrictRender = headlessConfig.StrictRendering,
-                    BlockInterval = headlessConfig.Dev.BlockInterval,
-                    ReorgInterval = headlessConfig.Dev.ReorgInterval,
                     TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime),
                     MinerCount = headlessConfig.MinerCount,
+                    MinerBlockInterval = minerBlockInterval,
                     TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner,
                 };
                 hostBuilder.ConfigureServices(services => { services.AddSingleton(_ => standaloneContext); });
