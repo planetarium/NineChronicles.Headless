@@ -35,10 +35,18 @@ namespace NineChronicles.Headless.Tests.GraphTypes
     {
         private readonly Codec _codec;
         private readonly StandaloneContext _standaloneContext;
+        private readonly PrivateKey _activationCodeSeed;
+        private readonly ActivationKey _activationKey;
+        private readonly byte[] _nonce;
 
         public ActionQueryTest()
         {
             _codec = new Codec();
+            _activationCodeSeed = new PrivateKey();
+            _nonce = new byte[16];
+            new Random().NextBytes(_nonce);
+            (_activationKey, PendingActivationState pending) = ActivationKey.Create(_activationCodeSeed, _nonce);
+
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             var minerPrivateKey = new PrivateKey();
@@ -61,7 +69,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 #pragma warning restore CS0618
                         goldDistributions: Array.Empty<GoldDistribution>(),
                         tableSheets: new Dictionary<string, string>(),
-                        pendingActivationStates: new PendingActivationState[]{ }
+                        pendingActivationStates: new[] { pending }
                     ),
                 },
                 privateKey: minerPrivateKey
@@ -555,16 +563,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task ActivateAccount()
         {
-            var activationSeed = new PrivateKey();
-            var pendingAddress = activationSeed.PublicKey.ToAddress();
-            var nonce = pendingAddress.ToByteArray();
-            var signature = activationSeed.Sign(nonce);
+            var activationCode =
+                $"{ByteUtil.Hex(_activationKey.PrivateKey.ToByteArray())}/{_activationKey.PendingAddress.ToString().Substring(2)}";
+            var signature = new PrivateKey(ByteUtil.ParseHex(activationCode.Split("/")[0])).Sign(_nonce);
 
-            var query = "{{ activateAccount(" +
-                        $"pendingAddress: \"{pendingAddress.ToString().Substring(2)}\", " +
-                        $"signature: \"{ByteUtil.Hex(signature)}\"" +
-                        ") }}";
+            var query = $"{{ activateAccount(activationCode: \"{activationCode}\") }}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+
             Assert.Null(queryResult.Errors);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["activateAccount"]));
@@ -572,7 +577,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var polymorphicAction = DeserializeNCAction(plainValue);
             var action = Assert.IsType<ActivateAccount>(polymorphicAction.InnerAction);
 
-            Assert.Equal(pendingAddress, action.PendingAddress.ToString());
             Assert.Equal(signature, action.Signature);
         }
 

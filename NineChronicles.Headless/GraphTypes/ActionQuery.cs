@@ -12,6 +12,7 @@ using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
 using Nekoyume.Action.Factory;
 using Nekoyume.Helper;
+using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -404,23 +405,25 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<ByteStringType>>(
                 "activateAccount",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "pendingAddress",
-                        Description = "Pending address in activation code"
-                    },
                     new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
-                        Name = "signature",
-                        Description = "Signature of nonce in pending address."
+                        Name = "activationCode",
+                        Description = "Activation code that you've get."
                     }
                     ),
                 resolve: context =>
                 {
-                    var pendingAddress = context.GetArgument<Address>("pendingAddress");
-                    byte[] signature = ByteUtil.ParseHex(context.GetArgument<string>("signature"));
-                    NCAction action = new ActivateAccount(pendingAddress, signature);
-                    return Encode(context, action);
+                    var activationCode = context.GetArgument<string>("activationCode");
+                    var activationKey = ActivationKey.Decode(activationCode);
+                    if (standaloneContext.BlockChain!.GetState(activationKey.PendingAddress) is Dictionary dictionary)
+                    {
+                        var pending = new PendingActivationState(dictionary);
+                        var action = activationKey.CreateActivateAccount(pending.Nonce);
+                        pending.Verify(action);
+                        var pa = new NCAction(action);
+                        return Encode(context, pa);
+                    }
+                    throw new InvalidOperationException("BlockChain not found in the context");
                 }
             );
             Field<NonNullGraphType<ByteStringType>>(
