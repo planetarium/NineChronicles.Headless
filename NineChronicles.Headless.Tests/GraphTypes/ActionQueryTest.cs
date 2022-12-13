@@ -563,9 +563,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task ActivateAccount()
         {
-            var activationCode =
-                $"{ByteUtil.Hex(_activationKey.PrivateKey.ToByteArray())}/{_activationKey.PendingAddress.ToString().Substring(2)}";
-            var signature = new PrivateKey(ByteUtil.ParseHex(activationCode.Split("/")[0])).Sign(_nonce);
+            var activationCode = _activationKey.Encode();
+            var signature = _activationKey.PrivateKey.Sign(_nonce);
 
             var query = $"{{ activateAccount(activationCode: \"{activationCode}\") }}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);

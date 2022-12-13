@@ -410,7 +410,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Name = "activationCode",
                         Description = "Activation code that you've get."
                     }
-                    ),
+                ),
                 resolve: context =>
                 {
                     var activationCode = context.GetArgument<string>("activationCode");
@@ -419,10 +419,15 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         var pending = new PendingActivationState(dictionary);
                         var action = activationKey.CreateActivateAccount(pending.Nonce);
-                        pending.Verify(action);
-                        var pa = new NCAction(action);
-                        return Encode(context, pa);
+                        if (pending.Verify(action))
+                        {
+                            var pa = new NCAction(action);
+                            return Encode(context, pa);
+                        }
+
+                        throw new ExecutionError("Failed to verify activateAccount action.");
                     }
+
                     throw new InvalidOperationException("BlockChain not found in the context");
                 }
             );
