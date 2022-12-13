@@ -41,7 +41,7 @@ namespace NineChronicles.Headless
         private LibplanetNodeServiceProperties<NCAction> _libplanetNodeServiceProperties;
         private DelayedRenderer<NCAction> _delayedRenderer;
         private ActionEvaluationPublisher _publisher;
-        private ConcurrentDictionary<string, ITransaction> _sentryTraces;
+        private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
 
         public BlockChainService(
             BlockChain<NCAction> blockChain,
@@ -49,7 +49,7 @@ namespace NineChronicles.Headless
             RpcContext context,
             LibplanetNodeServiceProperties<NCAction> libplanetNodeServiceProperties,
             ActionEvaluationPublisher actionEvaluationPublisher,
-            ConcurrentDictionary<string, ITransaction> sentryTraces)
+            ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces)
         {
             _blockChain = blockChain;
             _delayedRenderer = blockChain.GetDelayedRenderer();

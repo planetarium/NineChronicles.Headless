@@ -67,9 +67,6 @@ namespace Libplanet.Headless
         public long? GetBlockIndex(BlockHash blockHash) =>
             InternalStore.GetBlockIndex(blockHash);
 
-        public DateTimeOffset? GetBlockPerceivedTime(BlockHash blockHash) =>
-            InternalStore.GetBlockPerceivedTime(blockHash);
-
         public Guid? GetCanonicalChainId() =>
             InternalStore.GetCanonicalChainId();
 
@@ -125,9 +122,6 @@ namespace Libplanet.Headless
 
         public void PutTxExecution(TxFailure txFailure) =>
             InternalStore.PutTxExecution(txFailure);
-
-        public void SetBlockPerceivedTime(BlockHash blockHash, DateTimeOffset perceivedTime) =>
-            InternalStore.SetBlockPerceivedTime(blockHash, perceivedTime);
 
         public void SetCanonicalChainId(Guid chainId) =>
             InternalStore.SetCanonicalChainId(chainId);

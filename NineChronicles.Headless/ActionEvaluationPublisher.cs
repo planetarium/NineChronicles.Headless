@@ -45,7 +45,7 @@ namespace NineChronicles.Headless
         private readonly ConcurrentDictionary<Address, Client> _clients = new ConcurrentDictionary<Address, Client>();
 
         private RpcContext _context;
-        private ConcurrentDictionary<string, ITransaction> _sentryTraces;
+        private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
 
         public ActionEvaluationPublisher(
             BlockRenderer blockRenderer,
@@ -55,7 +55,7 @@ namespace NineChronicles.Headless
             string host,
             int port,
             RpcContext context,
-            ConcurrentDictionary<string, ITransaction> sentryTraces)
+            ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces)
         {
             _blockRenderer = blockRenderer;
             _actionRenderer = actionRenderer;
@@ -186,13 +186,13 @@ namespace NineChronicles.Headless
 
             public ImmutableHashSet<Address> TargetAddresses { get; set; }
 
-            public readonly ConcurrentDictionary<string, ITransaction> SentryTraces;
+            public readonly ConcurrentDictionary<string, Sentry.ITransaction> SentryTraces;
 
             private Client(
                 IActionEvaluationHub hub,
                 Address clientAddress,
                 RpcContext context,
-                ConcurrentDictionary<string, ITransaction> sentryTraces)
+                ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces)
             {
                 _hub = hub;
                 _clientAddress = clientAddress;
@@ -205,7 +205,7 @@ namespace NineChronicles.Headless
                 GrpcChannel channel,
                 Address clientAddress,
                 RpcContext context,
-                ConcurrentDictionary<string, ITransaction> sentryTraces)
+                ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces)
             {
                 IActionEvaluationHub hub = await StreamingHubClient.ConnectAsync<IActionEvaluationHub, IActionEvaluationHubReceiver>(
                     channel,
