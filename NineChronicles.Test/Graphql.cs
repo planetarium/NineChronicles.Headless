@@ -2,6 +2,7 @@ using GraphQL;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.SystemTextJson;
 using Libplanet;
+using Libplanet.Crypto;
 using NineChronicles.Test.Type;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -26,6 +27,19 @@ public static class Graphql
         var resp = await Client.SendQueryAsync<T>(new GraphQLRequest(query));
         // var response = ToObject<T>(resp.Data);
         return (resp.Errors is null, resp.Data, resp.Errors);
+    }
+
+    public static async Task<(bool, string)> Action(PrivateKey pk, string queryBody)
+    {
+        var nonce = GetNextTxNonce(pk.ToAddress());
+        var actionTxQuery = $@"query {{ actionTxQuery(
+            publicKey: ""{pk.PublicKey}"", nonce: {nonce}
+        ) {queryBody} }}";
+        (bool success, ActionTxQueryResponseType data, GraphQLError[]? errors) =
+            await Query<ActionTxQueryResponseType>(actionTxQuery);
+        var tx = ByteUtil.ParseHex(data.ActionTxQuery.ActivateAccount);
+        var signature = pk.Sign(tx);
+        return await Stage(tx, signature);
     }
 
     public static async Task<(bool, string)> Stage(byte[] tx, byte[] signature)
