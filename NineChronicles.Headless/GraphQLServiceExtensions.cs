@@ -43,6 +43,7 @@ namespace NineChronicles.Headless
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.BencodexValueType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.FungibleAssetValueType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.CurrencyType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.BoundPeerType>();
 
             return services;
         }
