@@ -368,7 +368,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             int stageId,
             List<Guid> costumeIds,
             List<Guid> equipmentIds,
-            List<Guid> consumableIds
+            List<Guid> consumableIds,
+            List<RuneSlotInfo> runeSlotInfos
         )
         {
             var playerPrivateKey = new PrivateKey();
@@ -389,6 +390,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             if (consumableIds.Any())
             {
                 queryArgs += $", consumableIds: [{string.Join(",", consumableIds.Select(r => string.Format($"\"{r}\"")))}]";
+            }
+
+            if (runeSlotInfos.Any())
+            {
+                queryArgs += $", runeSlotInfos: [{string.Join(",", runeSlotInfos.Select(r => $"{{slotIndex: {r.SlotIndex}, runeId: {r.RuneId}}}"))}]";
             }
             var query = @$"mutation {{ action {{ hackAndSlash({queryArgs}) }} }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
@@ -414,6 +420,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(costumeIds, action.Costumes);
             Assert.Equal(equipmentIds, action.Equipments);
             Assert.Equal(consumableIds, action.Foods);
+            for (int i = 0; i < action.RuneInfos.Count; i++)
+            {
+                var runeSlotInfo = runeSlotInfos[i];
+                Assert.Equal(i, runeSlotInfo.SlotIndex);
+                Assert.Equal(i + 1, runeSlotInfo.RuneId);
+            }
         }
 
         public static IEnumerable<object?[]> HackAndSlashMember => new List<object?[]>
@@ -425,7 +437,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 2,
                 new List<Guid>(),
                 new List<Guid>(),
-                new List<Guid>()
+                new List<Guid>(),
+                new List<RuneSlotInfo>(),
             },
             new object?[]
             {
@@ -446,28 +459,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     Guid.NewGuid(),
                     Guid.NewGuid(),
                     Guid.NewGuid(),
-                }
-            },
-            new object?[]
-            {
-                new Address(),
-                2,
-                3,
-                new List<Guid>
-                {
-                    Guid.NewGuid(),
                 },
-                new List<Guid>
+                new List<RuneSlotInfo>
                 {
-                    Guid.NewGuid(),
-                    Guid.NewGuid(),
+                    new(0, 1),
+                    new(1, 2),
                 },
-                new List<Guid>
-                {
-                    Guid.NewGuid(),
-                    Guid.NewGuid(),
-                    Guid.NewGuid(),
-                }
             },
         };
 

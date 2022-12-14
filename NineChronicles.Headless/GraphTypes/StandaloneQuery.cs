@@ -19,12 +19,9 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
-using Libplanet.Blockchain.Renderers;
 using Libplanet.Headless;
 using Nekoyume.Model;
 using NineChronicles.Headless.GraphTypes.States;
-using Serilog;
-using Libplanet.Crypto;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -310,7 +307,9 @@ namespace NineChronicles.Headless.GraphTypes
 
 
                     BlockHash? offset = blockChain.GetDelayedRenderer()?.Tip?.Hash;
+#pragma warning disable S3247
                     if (blockChain.GetState(agentAddress, offset) is Dictionary agentDict)
+#pragma warning restore S3247
                     {
                         AgentState agentState = new AgentState(agentDict);
                         Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
@@ -457,7 +456,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<AddressQuery>>(
                 name: "addressQuery",
                 description: "Query to get derived address.",
-                resolve: context => new AddressQuery());
+                resolve: context => new AddressQuery(standaloneContext));
         }
     }
 }

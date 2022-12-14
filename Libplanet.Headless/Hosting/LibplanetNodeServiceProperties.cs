@@ -83,7 +83,5 @@ namespace Libplanet.Headless.Hosting
         public string ChainTipStaleBehavior { get; set; } = "reboot";
 
         public int MaximumPollPeers { get; set; } = int.MaxValue;
-
-        public int BlockInterval { get; set; }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -5,14 +6,22 @@ using System.Threading.Tasks;
 using Bencodex.Types;
 using GraphQL.Execution;
 using Libplanet;
+using Libplanet.Action;
 using Libplanet.Assets;
+using Libplanet.Blockchain;
+using Libplanet.Blockchain.Policies;
+using Libplanet.Crypto;
+using Libplanet.Store;
+using Libplanet.Store.Trie;
 using Nekoyume;
+using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.GraphTypes.States;
 using Xunit;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -27,6 +36,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         private readonly StateContext _stateContext;
         private readonly WorldBossState _worldBossState;
         private readonly WorldBossKillRewardRecord _worldBossKillRewardRecord;
+        private readonly StandaloneContext _standaloneContext;
 
         public WorldBossScenarioTest()
         {
@@ -59,6 +69,45 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 [1] = true,
                 [2] = false,
             };
+            var store = new DefaultStore(null);
+            var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
+            var minerPrivateKey = new PrivateKey();
+            var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
+                new PolymorphicAction<ActionBase>[]
+                {
+                    new InitializeStates(
+                        rankingState: new RankingState0(),
+                        shopState: new ShopState(),
+                        gameConfigState: new GameConfigState(),
+                        redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                            .Add("address", RedeemCodeState.Address.Serialize())
+                            .Add("map", Bencodex.Types.Dictionary.Empty)
+                        ),
+                        adminAddressState: new AdminState(new PrivateKey().ToAddress(), 1500000),
+                        activatedAccountsState: new ActivatedAccountsState(),
+#pragma warning disable CS0618
+                        // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                        goldCurrencyState:
+                        new GoldCurrencyState(Currency.Legacy("NCG", 2, minerPrivateKey.ToAddress())),
+#pragma warning restore CS0618
+                        goldDistributions: Array.Empty<GoldDistribution>(),
+                        tableSheets: new Dictionary<string, string>(),
+                        pendingActivationStates: new PendingActivationState[] { }
+                    ),
+                },
+                privateKey: minerPrivateKey
+            );
+            var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
+                new BlockPolicy<PolymorphicAction<ActionBase>>(),
+                new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
+                store,
+                stateStore,
+                genesisBlock);
+            _standaloneContext = new StandaloneContext
+            {
+                BlockChain = blockchain,
+                Store = store,
+            };
         }
 
         [Theory]
@@ -74,7 +123,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var addressQuery = $@"query {{
 raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
 }}";
-            var addressQueryResult = await ExecuteQueryAsync<AddressQuery>(addressQuery);
+            var addressQueryResult = await ExecuteQueryAsync<AddressQuery>(
+                addressQuery,
+                standaloneContext: _standaloneContext);
             var addressData = (Dictionary<string, object>)((ExecutionNode)addressQueryResult.Data!).ToValue()!;
             Assert.Equal("0xa316187bAC1fC6be9B943c8E19c6047DE12D236D", addressData["raiderAddress"]);
 
@@ -140,7 +191,9 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
 
             // Find address.
             var addressQuery = $@"query {{ worldBossAddress(raidId: {raidId}) }}";
-            var addressQueryResult = await ExecuteQueryAsync<AddressQuery>(addressQuery);
+            var addressQueryResult = await ExecuteQueryAsync<AddressQuery>(
+                addressQuery,
+                standaloneContext: _standaloneContext);
             var addressData = (Dictionary<string, object>)((ExecutionNode)addressQueryResult.Data!).ToValue()!;
             Assert.Equal(expectedAddress.ToString(), addressData["worldBossAddress"]);
             var worldBossAddress = stateExist ? addressData["worldBossAddress"] : default;
@@ -189,14 +242,16 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
             var addressQuery = $@"query {{
 worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
 }}";
-            var addressQueryResult = await ExecuteQueryAsync<AddressQuery>(addressQuery);
+            var addressQueryResult = await ExecuteQueryAsync<AddressQuery>(
+                addressQuery,
+                standaloneContext: _standaloneContext);
             var addressData = (Dictionary<string, object>)((ExecutionNode)addressQueryResult.Data!).ToValue()!;
             Assert.Equal("0xE9653E92a5169bFbA66a4CbC07780ED370986d98", addressData["worldBossKillRewardRecordAddress"]);
 
             var worldBossKillRewardRecordAddress = stateExist ? addressData["worldBossKillRewardRecordAddress"] : default;
             // Get WorldBossKillRewardRecord.
             var stateQuery = $@"query {{
-    worldBossKillRewardRecord(worldBossKillRewardRecordAddress: ""{worldBossKillRewardRecordAddress}"") {{        
+    worldBossKillRewardRecord(worldBossKillRewardRecordAddress: ""{worldBossKillRewardRecordAddress}"") {{
         map {{
             bossLevel
             claimed
@@ -241,7 +296,9 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
             int raidId = await GetRaidId(blockIndex, prev);
             // Find address.
             var addressQuery = $@"query {{ raiderListAddress(raidId: {raidId}) }}";
-            var addressQueryResult = await ExecuteQueryAsync<AddressQuery>(addressQuery);
+            var addressQueryResult = await ExecuteQueryAsync<AddressQuery>(
+                addressQuery,
+                standaloneContext: _standaloneContext);
             var addressData = (Dictionary<string, object>)((ExecutionNode)addressQueryResult.Data!).ToValue()!;
             Assert.Equal("0x40011eD48A8f6CFA779927B0867BFAa7Ac6d949b", addressData["raiderListAddress"]);
             Assert.Equal(_raiderListAddress.ToString(), addressData["raiderListAddress"]);

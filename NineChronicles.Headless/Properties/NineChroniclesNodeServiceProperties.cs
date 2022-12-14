@@ -67,7 +67,6 @@ namespace NineChronicles.Headless.Properties
                 int bucketSize = 16,
                 string chainTipStaleBehaviorType = "reboot",
                 int maximumPollPeers = int.MaxValue,
-                int blockInterval = 10000,
                 string[]? validatorStrings = null)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
@@ -126,7 +125,6 @@ namespace NineChronicles.Headless.Properties
                 BucketSize = bucketSize,
                 ChainTipStaleBehavior = chainTipStaleBehaviorType,
                 MaximumPollPeers = maximumPollPeers,
-                BlockInterval = blockInterval,
                 Validators = validators,
             };
         }

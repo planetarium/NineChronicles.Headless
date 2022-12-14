@@ -55,7 +55,7 @@ namespace NineChronicles.Headless.Tests
             for (var index = 0; index < TableSheetsFX.EquipmentItemSheet.OrderedList.Count; index++)
             {
                 var row = TableSheetsFX.EquipmentItemSheet.OrderedList[index];
-                var equipment = ItemFactory.CreateItemUsable(row, default, 0);
+                var equipment = ItemFactory.CreateItemUsable(row, Guid.Empty, 0);
                 var shopItem = new ShopItem(UserAddress, AvatarAddress, Guid.NewGuid(), index * CurrencyFX, equipment);
                 shopState.Register(shopItem);
             }
@@ -63,7 +63,7 @@ namespace NineChronicles.Headless.Tests
             for (var i = 0; i < TableSheetsFX.CostumeItemSheet.OrderedList.Count; i++)
             {
                 var row = TableSheetsFX.CostumeItemSheet.OrderedList[i];
-                var equipment = ItemFactory.CreateCostume(row, default);
+                var equipment = ItemFactory.CreateCostume(row, Guid.Empty);
                 var shopItem = new ShopItem(UserAddress, AvatarAddress, Guid.NewGuid(), i * CurrencyFX, equipment);
                 shopState.Register(shopItem);
             }
