@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet\Libplanet.csproj" />
+      <ProjectReference Include="..\NineChronicles.Headless\NineChronicles.Headless.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="GraphQL" Version="4.7.1" />
+      <PackageReference Include="GraphQL.Client" Version="5.1.0" />
+      <PackageReference Include="GraphQL.Client.Serializer.SystemTextJson" Version="5.1.0" />
+    </ItemGroup>
+
+</Project>
