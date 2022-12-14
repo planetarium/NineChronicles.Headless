@@ -36,24 +36,7 @@ public static class Address
             Console.WriteLine($"{item.index + 1}: {item.value.Item2.Address.ToString()}");
         }
 
-        Console.WriteLine();
-
-        bool usable = false;
-        int index = -1;
-        while (!usable)
-        {
-            var selectedIndex = Console.ReadLine();
-            usable = int.TryParse(selectedIndex, out index);
-            if (!usable)
-            {
-                Console.WriteLine("Please input number.");
-            }
-            else if (index > keystore.List().Count())
-            {
-                Console.WriteLine($"{index} is not on the list. Please set right one: ");
-                usable = false;
-            }
-        }
+        var index = Util.Select(keystore.List());
 
         if (index == 0)
         {
