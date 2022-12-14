@@ -31,7 +31,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             var minerPrivateKey = new PrivateKey(MinerPrivateKeyHex);
-            var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
+            var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
                 new PolymorphicAction<ActionBase>[]
                 {
                     new InitializeStates(

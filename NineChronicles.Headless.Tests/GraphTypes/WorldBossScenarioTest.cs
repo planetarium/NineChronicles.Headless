@@ -72,7 +72,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             var minerPrivateKey = new PrivateKey();
-            var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
+            var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
                 new PolymorphicAction<ActionBase>[]
                 {
                     new InitializeStates(
@@ -251,7 +251,7 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
             var worldBossKillRewardRecordAddress = stateExist ? addressData["worldBossKillRewardRecordAddress"] : default;
             // Get WorldBossKillRewardRecord.
             var stateQuery = $@"query {{
-    worldBossKillRewardRecord(worldBossKillRewardRecordAddress: ""{worldBossKillRewardRecordAddress}"") {{        
+    worldBossKillRewardRecord(worldBossKillRewardRecordAddress: ""{worldBossKillRewardRecordAddress}"") {{
         map {{
             bossLevel
             claimed
