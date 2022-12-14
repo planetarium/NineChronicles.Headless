@@ -60,6 +60,18 @@ public static class Graphql
         return (success, result.stageTransaction);
     }
 
+    public static async Task<string> WaitTxMining(string txId)
+    {
+        Console.WriteLine("Waiting for block mining...");
+        string txResult = await TxResult(txId);
+        while (txResult == "STAGING")
+        {
+            txResult = await TxResult(txId);
+        }
+
+        return txResult;
+    }
+
     public static async Task<long> GetNextTxNonce(Libplanet.Address address)
     {
         var query = $@"query {{
