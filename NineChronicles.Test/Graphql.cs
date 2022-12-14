@@ -52,7 +52,8 @@ public static class Graphql
                 )
             }}
         }}";
-        (bool success, TransactionResponseType data, GraphQLError[]? errors) = await Query<TransactionResponseType>(signTxQuery);
+        (bool success, TransactionResponseType data, GraphQLError[]? errors) =
+            await Query<TransactionResponseType>(signTxQuery);
         var stageQuery = $@"mutation {{
             stageTransaction(payload: ""{data.Transaction.SignTransaction}"")
         }}";
@@ -79,7 +80,8 @@ public static class Graphql
                 nextTxNonce(address: ""{address}"")
             }}
         }}";
-        (bool success, TransactionResponseType data, GraphQLError[]? errors) = await Query<TransactionResponseType>(query);
+        (bool success, TransactionResponseType data, GraphQLError[]? errors) =
+            await Query<TransactionResponseType>(query);
         return data.Transaction.NextTxNonce;
     }
 
