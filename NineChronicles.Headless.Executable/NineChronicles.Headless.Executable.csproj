@@ -13,8 +13,11 @@
   <ItemGroup>
     <PackageReference Include="Cocona.Lite" Version="2.0.*" />
     <PackageReference Include="Destructurama.Attributed" Version="2.0.0" />
-    <PackageReference Include="Sentry.Serilog" Version="2.1.*" />
-    <PackageReference Include="Serilog.Expressions" Version="3.4.1" />
+    <PackageReference Include="Sentry.Serilog" Version="3.23.0" />
+    <PackageReference Include="Sentry" Version="3.23.0" />
+    <PackageReference Include="Sentry.AspNetCore.Grpc" Version="3.22.0" />
+    <PackageReference Include="Sentry.DiagnosticSource" Version="3.22.0" />
+    <PackageReference Include="Serilog.Expressions" Version="1.1.1" />
     <PackageReference Include="Serilog.Formatting.Compact" Version="1.1.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
@@ -39,7 +42,16 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="appsettings.development.json">
+    <None Update="appsettings.mainnet.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.internal.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.previewnet.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.local.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

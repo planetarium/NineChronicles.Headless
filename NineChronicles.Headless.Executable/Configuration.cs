@@ -78,6 +78,10 @@ namespace NineChronicles.Headless.Executable
         public int TxQuotaPerSigner { get; set; } = 10;
         public int MaximumPollPeers { get; set; } = int.MaxValue;
 
+        public string SentryDsn { get; set; } = "";
+
+        public double SentryTraceSampleRate { get; set; } = 0.01;
+
         public void Overwrite(
             string? appProtocolVersionString,
             string[]? trustedAppProtocolVersionSignerStrings,
@@ -121,7 +125,9 @@ namespace NineChronicles.Headless.Executable
             int? bucketSize,
             string? chainTipStaleBehaviorType,
             int? txQuotaPerSigner,
-            int? maximumPollPeers
+            int? maximumPollPeers,
+            string? sentryDsn,
+            double? sentryTraceSampleRate
         )
         {
             AppProtocolVersionString = appProtocolVersionString ?? AppProtocolVersionString;
@@ -168,6 +174,8 @@ namespace NineChronicles.Headless.Executable
             ChainTipStaleBehaviorType = chainTipStaleBehaviorType ?? ChainTipStaleBehaviorType;
             TxQuotaPerSigner = txQuotaPerSigner ?? TxQuotaPerSigner;
             MaximumPollPeers = maximumPollPeers ?? MaximumPollPeers;
+            SentryDsn = sentryDsn ?? SentryDsn;
+            SentryTraceSampleRate = sentryTraceSampleRate ?? SentryTraceSampleRate;
         }
     }
 }

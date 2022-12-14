@@ -16,10 +16,15 @@ using Sentry;
 using Serilog;
 using Serilog.Formatting.Compact;
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+// import necessary for sentry exception filters
+using Libplanet.Blocks;
+using Libplanet.Net.Transports;
 
 namespace NineChronicles.Headless.Executable
 {
@@ -36,15 +41,10 @@ namespace NineChronicles.Headless.Executable
     [HasSubCommands(typeof(ReplayCommand), "replay")]
     public class Program : CoconaLiteConsoleAppBase
     {
-        const string SentryDsn = "https://ceac97d4a7d34e7b95e4c445b9b5669e@o195672.ingest.sentry.io/5287621";
-
         static async Task Main(string[] args)
         {
             // https://docs.microsoft.com/ko-kr/aspnet/core/grpc/troubleshoot?view=aspnetcore-6.0#call-insecure-grpc-services-with-net-core-client
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-#if SENTRY || ! DEBUG
-            using var _ = SentrySdk.Init(ConfigureSentryOptions);
-#endif
             await CoconaLiteApp.CreateHostBuilder()
                 .ConfigureServices(services =>
                 {
@@ -56,13 +56,6 @@ namespace NineChronicles.Headless.Executable
 
         static void ConfigureSentryOptions(SentryOptions o)
         {
-            o.SendDefaultPii = true;
-            o.Dsn = new Dsn(SentryDsn);
-            // TODO: o.Release 설정하면 좋을 것 같은데 빌드 버전 체계가 아직 없어서 어떻게 해야 할 지...
-            // https://docs.sentry.io/workflow/releases/?platform=csharp
-#if DEBUG
-            o.Debug = true;
-#endif
         }
 
         [PrimaryCommand]
@@ -189,6 +182,10 @@ namespace NineChronicles.Headless.Executable
             [Option("config", new[] { 'C' },
                 Description = "Absolute path of \"appsettings.json\" file to provide headless configurations.")]
             string? configPath = "appsettings.json",
+            [Option(Description = "Sentry DSN")]
+            string? sentryDsn = "",
+            [Option(Description = "Trace sample rate for sentry")]
+            double? sentryTraceSampleRate = null,
             [Ignore] CancellationToken? cancellationToken = null
         )
         {
@@ -225,16 +222,43 @@ namespace NineChronicles.Headless.Executable
                 graphQLSecretTokenPath, noCors, nonblockRenderer, nonblockRendererQueue, strictRendering,
                 logActionRenders, confirmations,
                 txLifeTime, messageTimeout, tipTimeout, demandBuffer, staticPeerStrings, skipPreload,
-                minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers
+                minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers,
+                sentryDsn, sentryTraceSampleRate
             );
 
-#if SENTRY || !DEBUG
+#if SENTRY || ! DEBUG
             loggerConf = loggerConf
                 .WriteTo.Sentry(o =>
                 {
                     o.InitializeSdk = false;
                 });
+
+            using var _ = SentrySdk.Init(o =>
+            {
+                o.SendDefaultPii = true;
+                o.Dsn = headlessConfig.SentryDsn;
+                // TODO: We need to specify `o.Release` after deciding the version scheme.
+                // https://docs.sentry.io/workflow/releases/?platform=csharp
+                //o.Debug = true;
+                o.Release = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                    ?.InformationalVersion ?? "Unknown";
+                o.SampleRate = headlessConfig.SentryTraceSampleRate > 0
+                    ? (float)headlessConfig.SentryTraceSampleRate
+                    : 0.01f;
+                o.TracesSampleRate = headlessConfig.SentryTraceSampleRate;
+                o.AddExceptionFilterForType<TimeoutException>();
+                o.AddExceptionFilterForType<IOException>();
+                o.AddExceptionFilterForType<CommunicationFailException>();
+                o.AddExceptionFilterForType<InvalidBlockIndexException>();
+            });
+
+            // Set global tag
+            SentrySdk.ConfigureScope(scope =>
+            {
+                scope.SetTag("host", headlessConfig.Host ?? "no-host");
+            });
 #endif
+
             // Clean-up previous temporary log files.
             if (Directory.Exists("_logs"))
             {
@@ -345,7 +369,11 @@ namespace NineChronicles.Headless.Executable
                     MinerBlockInterval = minerBlockInterval,
                     TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner,
                 };
-                hostBuilder.ConfigureServices(services => { services.AddSingleton(_ => standaloneContext); });
+                hostBuilder.ConfigureServices(services =>
+                {
+                    services.AddSingleton(_ => standaloneContext);
+                    services.AddSingleton<ConcurrentDictionary<string, ITransaction>>();
+                });
                 hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, standaloneContext);
                 if (headlessConfig.RpcServer)
                 {

@@ -112,6 +112,10 @@ namespace NineChronicles.Headless.Executable.Commands
                     _console.Out.WriteLine("Admin address not provided. Give admin privilege to initialMinter");
                     adminState = new AdminState(initialMinter.ToAddress(), config.Value.ValidUntil);
                 }
+                else
+                {
+                    adminState = new AdminState(new Address(config.Value.Address), config.Value.ValidUntil);
+                }
             }
             else
             {

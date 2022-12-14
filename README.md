@@ -86,18 +86,52 @@ Options:
   --chain-tip-stale-behavior-type <String>                 Determines behavior when the chain's tip is stale. "reboot" and "preload" is available and "reboot" option is selected by default.
   --tx-quota-per-signer <Int32>                            The number of maximum transactions can be included in stage per signer.
   --maximum-poll-peers <Int32>                             The maximum number of peers to poll blocks. int.MaxValue by default.
-  -C, --config <String>                                    Absolute path of "appsettings.json" file to provide headless configurations. (Default: appsettings.json)
+  -C, --config <String>                                    Path of "appsettings.json" file to provide headless configurations. (Default: appsettings.json)
   -h, --help                                               Show help message
   --version                                                Show version
 ```
 
-### Use `appsettings.json` to provide CLI options
+### Use `appsettings.{network}.json` to provide CLI options
 
 You can provide headless CLI options using file, `appsettings.json`. You'll find the default file at [here](NineChronicles.Headless.Executable/appsettings.json).  
 The path of `appsettings.json` can be either local file storage or URL.  
 Refer full configuration fields from [this file](NineChronicles.Headless.Executable/Configuration.cs), set your options into `appsettings.json` under `Headless` section.  
 You can also run headless server with previous way; You don't need to change anything if you don't want to.  
 In case that the same option is provided from both `appsetting.json` and CLI option, the CLI option value is used instead from `appsettings.json`.  
+
+The default `appsettings.json` is an example for your own appsettings file.  
+`appsettings.{network}.json` are runnable appsettings file and you can run local node for each network using following command:
+```shell
+dotnet run --project NineChronicles.Headless.Executable -C appsettings.{network}.json --store-type={YOUR_OWN_STORE_PATH}
+```
+- appsettings.mainnet.json
+  - This makes your node to connect to the Nine Chronicles mainnet (production).
+- appsettings.internal.json
+  - This makes your node to connect to the Nine Chronicles internal network, which is test before release new version.  
+  - Internal network is kind of hard-fork of mainnet at some point to test new version.
+  - You CANNOT use mainnet storage for internal headless node.
+- appsettings.previewnet.json
+  - This makes your node to connect to the Nine Chronicles preview network to show feature preview.
+  - This network is totally different network from genesis block.
+  - Previewnet can be restarted from genesis block without any announcement to prepare next feature.
+
+Please make sure the store in the path you provided must save right data for the network to connect.  
+You cannot share data from any of those networks.
+
+If you want to run your own isolated local network, please copy `appsettings.json` to `appsettings.local.json` and edit the contents.  
+```shell
+cp appsettings.json appsettings.local.json
+# Edit contents of appsettings.local.json
+dotnet run --project NineChronicles.Headless.Executable -C appsettings.local.json --store-type={YOUR_OWN_STORE_PATH}
+```
+
+#### Caveat
+APVs can be changed as Nine Chronicles deploys new version.  
+You have to fit your APV sting to current on-chain version string.  
+You can get APV strings at the following places:
+- mainnet: [Official released config.json](https://release.nine-chronicles.com/9c-launcher-config.json) - `AppProtocolVersion`
+- internal: [Internal network config](https://github.com/planetarium/9c-k8s-config/blob/main/9c-internal/configmap-versions.yaml) - `APP_PROTOCOL_VERSION`
+- previewnet: [Previewnet config](https://github.com/planetarium/9c-k8s-config/blob/main/9c-previewnet/configmap-versions.yaml) - `APP_PROTOCOL_VERSION`
 
 ## Docker Build
 

@@ -18,13 +18,14 @@ using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common;
 using Serilog;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Lib9c.Tests;
+using Sentry;
 using Xunit.Abstractions;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -94,7 +95,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ncService.NodeStatusRenderer,
                 "",
                 0,
-                new RpcContext()
+                new RpcContext(),
+                new ConcurrentDictionary<string, Sentry.ITransaction>()
             );
             services.AddSingleton(publisher);
             services.AddSingleton(StandaloneContextFx);
