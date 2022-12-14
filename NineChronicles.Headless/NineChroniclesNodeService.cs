@@ -159,7 +159,7 @@ namespace NineChronicles.Headless
                             {
                                 if (bp.IsAllowedToMine(privateKey.ToAddress(), chain.Count))
                                 {
-                                    IEnumerable<Task<Block<NCAction>>> miners = Enumerable
+                                    IEnumerable<Task<Block<NCAction>?>> miners = Enumerable
                                         .Range(0, minerCount)
                                         .Select(_ => miner.MineBlockAsync(cancellationToken));
                                     await Task.WhenAll(miners);
