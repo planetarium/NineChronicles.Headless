@@ -1,11 +1,32 @@
+using GraphQL;
+using Libplanet;
 using Libplanet.Crypto;
 using Libplanet.KeyStore;
+using NineChronicles.Test.Type;
 
 namespace NineChronicles.Test;
 
 public static class Address
 {
-    public static PrivateKey GetKey()
+    public static async Task<string> ActivateAccount(PrivateKey pk, string activationCode)
+    {
+        var actionTxQuery = $@"query {{
+            actionTxQuery(
+                publicKey: ""{pk.PublicKey}"",
+                nonce: 0
+            ) {{
+                activateAccount (activationCode: ""{activationCode}"")
+            }}
+        }}";
+        (bool success, ActionTxQueryResponseType data, GraphQLError[]? errors) = await Graphql.Query<ActionTxQueryResponseType>(actionTxQuery);
+        var tx = ByteUtil.ParseHex(data.ActionTxQuery.ActivateAccount);
+        var signature = pk.Sign(tx);
+        (bool stageResult, string txId) = await Graphql.Stage(tx, signature);
+        Console.WriteLine($"Account activation success: {stageResult} :: TxID {txId}");
+        return txId;
+    }
+
+    public static async Task<PrivateKey> GetKey()
     {
         var keystore = Web3KeyStore.DefaultKeyStore;
         Console.WriteLine("Pick your 9c address to test action:");
@@ -54,7 +75,7 @@ public static class Address
 
             var ppk = ProtectedPrivateKey.Protect(pk, passphrase);
             keystore.Add(ppk);
-            Console.WriteLine("New key generated.");
+            Console.WriteLine("New address generated.");
             Console.WriteLine($"Your address is: {ppk.Address} . Now preparing account to do action...");
             return pk;
         }
