@@ -59,7 +59,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             string ids = $"[\"{guid}\"]";
 
             // Create Action.
-            var args = $"avatarAddress: \"{avatarAddress}\", equipmentIds: {ids}, costumeIds: {ids}, foodIds: {ids}, payNcg: true";
+            var args = $"avatarAddress: \"{avatarAddress}\", equipmentIds: {ids}, costumeIds: {ids}, foodIds: {ids}, payNcg: true, runeSlotInfos: [{{ slotIndex: 1, runeId: 2 }}]";
             object plainValue = await GetAction("raid", args);
 
             (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
@@ -70,6 +70,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Guid foodId = Assert.Single(action.FoodIds);
             Assert.All(new[] { equipmentId, costumeId, foodId }, id => Assert.Equal(guid, id));
             Assert.True(action.PayNcg);
+            Assert.Single(action.RuneInfos);
             await StageTransaction(signedTx, hex);
         }
 

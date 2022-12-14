@@ -101,6 +101,9 @@ namespace NineChronicles.Headless.Executable
                 Description = "The private key used for mining blocks. " +
                               "Must not be null if you want to turn on mining with libplanet-node.")]
             string? minerPrivateKeyString = null,
+            [Option("miner.block-interval",
+                Description = "The miner's break time after mining a block. The unit is millisecond.")]
+            int? minerBlockIntervalMilliseconds = null,
             [Option(Description = "The type of storage to store blockchain data. " +
                                   "If not provided, \"LiteDB\" will be used as default. " +
                                   "Available type: [\"rocksdb\", \"memory\"]")]
@@ -163,11 +166,6 @@ namespace NineChronicles.Headless.Executable
             bool? logActionRenders = null,
             [Option("network-type", Description = "Network type.")]
             NetworkType networkType = NetworkType.Main,
-            [Option(
-                "block-interval",
-                Description =
-                    "The time interval between blocks. It's unit is milliseconds.  10000 (ms) by default.")]
-            int blockInterval = 10000,
             [Option(Description =
                 "The lifetime of each transaction, which uses minute as its unit.")]
             int? txLifeTime = null,
@@ -239,7 +237,7 @@ namespace NineChronicles.Headless.Executable
                 minerPrivateKeyString, networkType, iceServerStrings, peerStrings, rpcServer, rpcListenHost,
                 rpcListenPort, rpcRemoteServer, rpcHttpServer, graphQLServer, graphQLHost, graphQLPort,
                 graphQLSecretTokenPath, noCors, nonblockRenderer, nonblockRendererQueue, strictRendering,
-                logActionRenders, blockInterval, confirmations,
+                logActionRenders, confirmations,
                 txLifeTime, messageTimeout, tipTimeout, demandBuffer, consensusSeedStrings, consensusPeerStrings, skipPreload,
                 minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers, validatorStrings
             );
@@ -337,7 +335,6 @@ namespace NineChronicles.Headless.Executable
                         bucketSize: headlessConfig.BucketSize,
                         chainTipStaleBehaviorType: headlessConfig.ChainTipStaleBehaviorType,
                         maximumPollPeers: headlessConfig.MaximumPollPeers,
-                        blockInterval: blockInterval,
                         validatorStrings: headlessConfig.ValidatorStrings
                     );
 

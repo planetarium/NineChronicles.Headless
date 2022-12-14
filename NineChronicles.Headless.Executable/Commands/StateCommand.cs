@@ -339,7 +339,7 @@ namespace NineChronicles.Headless.Executable.Commands
             return path;
         }
 
-        private class MemoryKeyValueStore : IKeyValueStore
+        private sealed class MemoryKeyValueStore : IKeyValueStore
         {
             private readonly ConcurrentDictionary<KeyBytes, byte[]> _dictionary;
             private readonly string _dumpPath;

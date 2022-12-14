@@ -6,7 +6,7 @@ namespace NineChronicles.Headless.GraphTypes.States
 {
     public class WorldBossKillRewardRecordType : ObjectGraphType<WorldBossKillRewardRecord>
     {
-        private class WorldBossKillRewardRecordMapType : ObjectGraphType<KeyValuePair<int, bool>>
+        private sealed class WorldBossKillRewardRecordMapType : ObjectGraphType<KeyValuePair<int, bool>>
         {
             public WorldBossKillRewardRecordMapType()
             {
