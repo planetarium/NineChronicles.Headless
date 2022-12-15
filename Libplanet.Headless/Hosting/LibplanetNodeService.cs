@@ -169,7 +169,12 @@ namespace Libplanet.Headless.Hosting
                 renderers: renderers,
                 blockChainStates: blockChainStates,
                 actionEvaluator: new ActionEvaluator<T>(
-                    blockPolicy.BlockAction,
+                    blockHeader =>
+                    {
+                        var blockActionType = actionTypeLoader.LoadAllActionTypes(blockHeader)
+                            .First(t => t.FullName == "Nekoyume.Action.RewardGold");
+                        return (IAction)Activator.CreateInstance(blockActionType);
+                    },
                     blockChainStates: blockChainStates,
                     trieGetter: hash => StateStore.GetStateRoot(
                         Store.GetBlockDigest(hash)?.StateRootHash
