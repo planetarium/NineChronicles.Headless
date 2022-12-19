@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Numerics;
 using System.Net;
 using System.Reactive.Linq;
 using System.Threading;
@@ -12,6 +13,7 @@ using GraphQL.NewtonsoftJson;
 using GraphQL.Subscription;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Action.Sys;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blocks;
@@ -19,6 +21,7 @@ using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless;
 using Nekoyume.Action;
+using Nekoyume.BlockChain.Policy;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
@@ -37,15 +40,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task SubscribeTipChangedEvent()
         {
-            var miner = new PrivateKey();
-
             const int repeat = 10;
             foreach (long index in Enumerable.Range(1, repeat))
             {
                 Block<PolymorphicAction<ActionBase>> block = BlockChain.ProposeBlock(
-                    miner,
-                    lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash));
-                BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash));
+                    ProposerPrivateKey,
+                    lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
+                BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
 
                 var result = await ExecuteSubscriptionQueryAsync("subscription { tipChanged { index hash } }");
 
@@ -71,8 +72,17 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var genesisBlock = BlockChain<EmptyAction>.ProposeGenesisBlock();
-
+            var genesisBlock = BlockChain<EmptyAction>.ProposeGenesisBlock(
+                systemActions: new IAction[]
+                {
+                    new SetValidator(ValidatorAdminPolicy.TestValidatorAdminKey.PublicKey, BigInteger.One),
+                    new SetValidator(apvPrivateKey.PublicKey, BigInteger.One)
+                },
+                privateKey: ValidatorAdminPolicy.TestValidatorAdminKey);
+            var validators = new List<PrivateKey>
+            {
+                ValidatorAdminPolicy.TestValidatorAdminKey, apvPrivateKey
+            }.OrderBy(x => x.ToAddress()).ToList();
             // 에러로 인하여 NineChroniclesNodeService 를 사용할 수 없습니다. https://git.io/JfS0M
             // 따라서 LibplanetNodeService로 비슷한 환경을 맞춥니다.
             // 1. 노드를 생성합니다.
@@ -90,9 +100,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }),
                 new[] { seedNode.Swarm.AsPeer });
 
-            var miner = new PrivateKey();
-            Block<EmptyAction> block = seedNode.BlockChain.ProposeBlock(miner);
-            seedNode.BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash));
+            Block<EmptyAction> block = seedNode.BlockChain.ProposeBlock(ProposerPrivateKey);
+            seedNode.BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, validators));
             var result = await ExecuteSubscriptionQueryAsync("subscription { preloadProgress { currentPhase totalPhase extra { type currentCount totalCount } } }");
             Assert.IsType<SubscriptionExecutionResult>(result);
 

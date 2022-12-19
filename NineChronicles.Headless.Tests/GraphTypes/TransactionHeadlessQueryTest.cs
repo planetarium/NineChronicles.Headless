@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Bencodex;
 using GraphQL;
@@ -9,6 +10,7 @@ using GraphQL.Execution;
 using GraphQL.NewtonsoftJson;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Action.Sys;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
@@ -32,20 +34,21 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         private readonly IStore _store;
         private readonly IStateStore _stateStore;
         private readonly NineChroniclesNodeService _service;
+        private readonly PrivateKey _proposer = new PrivateKey();
 
         public TransactionHeadlessQueryTest()
         {
             _store = new DefaultStore(null);
             _stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             _blockChain = new BlockChain<NCAction>(
-                new BlockPolicy<NCAction>(getValidatorSet: idx => new ValidatorSet(new List<PublicKey>()
-                {
-                    ValidatorsPolicy.TestValidatorKey.PublicKey,
-                })),
+                NineChroniclesNodeService.GetTestBlockPolicy(),
                 new VolatileStagePolicy<NCAction>(),
                 _store,
                 _stateStore,
-                BlockChain<NCAction>.ProposeGenesisBlock());
+                BlockChain<NCAction>.ProposeGenesisBlock(
+                    systemActions: new IAction[] { new SetValidator(_proposer.PublicKey, BigInteger.One) },
+                    blockAction: NineChroniclesNodeService.GetTestBlockPolicy().BlockAction,
+                    privateKey: ValidatorAdminPolicy.TestValidatorAdminKey));
             _service = ServiceBuilder.CreateNineChroniclesNodeService(_blockChain.Genesis, new PrivateKey());
         }
 
@@ -115,8 +118,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             var transaction = _blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
             _blockChain.StageTransaction(transaction);
-            Block<NCAction> block = _blockChain.ProposeBlock(new PrivateKey());
-            _blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash));
+            Block<NCAction> block = _blockChain.ProposeBlock(_proposer);
+            _blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, _proposer));
             queryResult = await ExecuteAsync(string.Format(queryFormat, transaction.Id.ToString()));
             var tx = (Transaction<PolymorphicAction<ActionBase>>)((RootExecutionNode)queryResult.Data.GetValue()).SubFields![0].Result!;
 
@@ -303,8 +306,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var privateKey = new PrivateKey();
             var action = new DumbTransferAction(new Address(), new Address());
             Transaction<NCAction> tx = _blockChain.MakeTransaction(privateKey, new NCAction[] { action });
-            Block<NCAction> block = _blockChain.ProposeBlock(new PrivateKey());
-            _blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash));
+            Block<NCAction> block = _blockChain.ProposeBlock(_proposer);
+            _blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, _proposer));
             var queryFormat = @"query {{
                 transactionResult(txId: ""{0}"") {{
                     blockHash
@@ -331,7 +334,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             });
         }
 
-        private BlockCommit? GenerateBlockCommit(long height, BlockHash hash)
+        private BlockCommit? GenerateBlockCommit(long height, BlockHash hash, PrivateKey validator)
         {
             return height != 0
                 ? new BlockCommit(
@@ -344,8 +347,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             0,
                             hash,
                             DateTimeOffset.UtcNow,
-                            ValidatorsPolicy.TestValidatorKey.PublicKey,
-                            VoteFlag.PreCommit).Sign(ValidatorsPolicy.TestValidatorKey)))
+                            validator.PublicKey,
+                            VoteFlag.PreCommit).Sign(validator)))
                 : (BlockCommit?)null;
         }
     }

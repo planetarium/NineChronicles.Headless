@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text.Json;
 using Bencodex;
 using Bencodex.Types;
@@ -122,11 +123,13 @@ namespace NineChronicles.Headless.Executable.Commands
         }
 
         private void ProcessExtra(ExtraConfig? config,
-            out List<PendingActivationState> pendingActivationStates
+            out List<PendingActivationState> pendingActivationStates,
+            out List<(PublicKey, BigInteger)> initialValidatorSet
         )
         {
             _console.Out.WriteLine("\nProcessing extra data for genesis...");
             pendingActivationStates = new List<PendingActivationState>();
+            initialValidatorSet = new List<(PublicKey, BigInteger)>();
 
             if (config is null)
             {
@@ -144,6 +147,14 @@ namespace NineChronicles.Headless.Executable.Commands
                     pa => new PendingActivationState(pa.Nonce, new PublicKey(pa.PublicKey))
                 ).ToList();
             }
+
+            if (config.Value.InitialValidatorSet is null)
+            {
+                return;
+            }
+
+            initialValidatorSet = config.Value.InitialValidatorSet.Select(
+                item => (new PublicKey(ByteUtil.ParseHex(item.Item1)), new BigInteger(item.Item2))).ToList();
         }
 
         [Command(Description = "Mine a new genesis block")]
@@ -167,7 +178,9 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 ProcessAdmin(genesisConfig.Admin, initialMinter, out var adminState);
 
-                ProcessExtra(genesisConfig.Extra, out List<PendingActivationState> pendingActivationStates);
+                ProcessExtra(genesisConfig.Extra,
+                    out var pendingActivationStates,
+                    out var initialValidatorSet);
 
                 // Mine genesis block
                 _console.Out.WriteLine("\nMining genesis block...\n");
@@ -289,6 +302,8 @@ namespace NineChronicles.Headless.Executable.Commands
             /// See <a href="https://github.com/planetarium/lib9c/blob/development/.Lib9c.Tools/SubCommand/Tx.cs">Tx.cs</a> to create activation key.
             /// </value>
             public string? PendingActivationStatePath { get; set; }
+
+            public List<(string, int)>? InitialValidatorSet { get; set; }
         }
 
         /// <summary>
