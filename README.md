@@ -225,8 +225,8 @@ Activation key is the code for 9c account to register/activate into NineChronicl
 You can create activation key whenever you want later, so you can just skip this step.
 
 ```shell
-dotnet run --project ./.Lib9c.Tools tx create-activation-keys 10 > ActivationKeys.csv  # Change [10] to your number of new activation keys
-dotnet run --project ./.Lib9c.Tools tx create-pending-activations ActivationKeys.csv > PendingActivation
+dotnet run --project NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj -- tx create-activation-keys 10 > ActivationKeys.csv  # Change [10] to your number of new activation keys
+dotnet run --project NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj -- tx create-pending-activations ActivationKeys.csv > PendingActivation
 ```
 
 ### 2. Create config file for genesis block
