@@ -1080,7 +1080,7 @@ decimalPlaces
                             tableSheets: _sheets,
                             pendingActivationStates: new PendingActivationState[]{ }
                         ),
-                    }, 
+                    },
                     blockAction: blockPolicy.BlockAction,
                     systemActions: new IAction[]
                     {

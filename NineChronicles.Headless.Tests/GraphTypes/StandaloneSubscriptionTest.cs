@@ -76,7 +76,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 systemActions: new IAction[]
                 {
                     new SetValidator(ValidatorAdminPolicy.TestValidatorAdminKey.PublicKey, BigInteger.One),
-                    new SetValidator(apvPrivateKey.PublicKey, BigInteger.One) 
+                    new SetValidator(apvPrivateKey.PublicKey, BigInteger.One)
                 },
                 privateKey: ValidatorAdminPolicy.TestValidatorAdminKey);
             var validators = new List<PrivateKey>

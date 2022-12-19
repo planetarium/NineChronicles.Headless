@@ -166,7 +166,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 RuneInfos = new List<RuneSlotInfo>(),
             };
 
-            
+
             for (var i = 0; i < 2; i++)
             {
                 chain.MakeTransaction(proposer, new NCAction[] { action });

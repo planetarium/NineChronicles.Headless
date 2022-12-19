@@ -179,7 +179,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 ProcessAdmin(genesisConfig.Admin, initialMinter, out var adminState);
 
                 ProcessExtra(genesisConfig.Extra,
-                    out var pendingActivationStates, 
+                    out var pendingActivationStates,
                     out var initialValidatorSet);
 
                 // Mine genesis block

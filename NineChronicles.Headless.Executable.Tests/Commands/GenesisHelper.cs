@@ -84,9 +84,9 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
                 ImmutableHashSet<Address>.Empty,
                 genesisValidatorSet ?? new Dictionary<PublicKey, BigInteger>
                 {
-                    { 
+                    {
                         ValidatorAdminPolicy.TestValidatorAdminKey.PublicKey,
-                        BigInteger.One 
+                        BigInteger.One
                     }
                 },
                 genesisConfig.ActivationKeyCount != 0,
