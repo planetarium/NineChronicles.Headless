@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.Properties;
@@ -14,6 +15,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Nekoyume.Action;
+using Sentry;
 
 namespace NineChronicles.Headless
 {
@@ -51,7 +53,8 @@ namespace NineChronicles.Headless
                         context.NineChroniclesNodeService!.NodeStatusRenderer,
                         IPAddress.Loopback.ToString(),
                         0,
-                        rpcContext
+                        rpcContext,
+                        provider.GetRequiredService<ConcurrentDictionary<string, ITransaction>>()
                     );
                 });
             });
@@ -86,7 +89,8 @@ namespace NineChronicles.Headless
                             ctx.NineChroniclesNodeService!.NodeStatusRenderer,
                             IPAddress.Loopback.ToString(),
                             properties.RpcListenPort,
-                            context
+                            context,
+                            provider.GetRequiredService<ConcurrentDictionary<string, ITransaction>>()
                         );
                     });
                     var resolver = MessagePack.Resolvers.CompositeResolver.Create(
