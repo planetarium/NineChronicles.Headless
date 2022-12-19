@@ -128,7 +128,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         protected PrivateKey ProposerPrivateKey { get; } = new PrivateKey();
 
-        protected List<PrivateKey> GenesisValidators {
+        protected List<PrivateKey> GenesisValidators
+        {
             get => new List<PrivateKey>
             {
                 ValidatorAdminPolicy.TestValidatorAdminKey, ProposerPrivateKey

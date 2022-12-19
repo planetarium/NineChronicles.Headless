@@ -164,7 +164,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 AvatarAddress = default
             };
 
-            
+
             for (var i = 0; i < 2; i++)
             {
                 chain.MakeTransaction(proposer, new NCAction[] { action });
