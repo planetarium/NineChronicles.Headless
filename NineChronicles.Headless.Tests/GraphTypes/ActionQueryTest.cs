@@ -680,5 +680,102 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(runeId, action.RuneId);
             Assert.Equal(tryCount ?? 1, action.TryCount);
         }
+
+        [Theory]
+        [InlineData(null, null, 0, 0)]
+        [InlineData(null, 100, 0, 100)]
+        [InlineData(100, null, 100, 0)]
+        [InlineData(100, 10, 100, 10)]
+        public async Task FaucetCurrency(int? faucetNcg, int? faucetCrystal, int expectedNcg, int expectedCrystal)
+        {
+            var agentAddress = new PrivateKey().ToAddress();
+            var args = $"agentAddress: \"{agentAddress}\"";
+            if (!(faucetNcg is null))
+            {
+                args += $", faucetNcg: {faucetNcg}";
+            }
+
+            if (!(faucetCrystal is null))
+            {
+                args += $", faucetCrystal: {faucetCrystal}";
+            }
+
+            var query = $"{{faucetCurrency({args})}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["faucetCurrency"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<FaucetCurrency>(polymorphicAction.InnerAction);
+            Assert.Equal(agentAddress, action.AgentAddress);
+            Assert.Equal(expectedNcg, action.FaucetNcg);
+            Assert.Equal(expectedCrystal, action.FaucetCrystal);
+        }
+
+        private class FaucetRuneInfoGenerator : IEnumerable<object[]>
+        {
+            private readonly List<object[]> _data = new List<object[]>
+            {
+                new object[]
+                {
+                    new List<FaucetRuneInfo>
+                    {
+                        new(10001, 10),
+                    },
+                },
+                new object[]
+                {
+                    new List<FaucetRuneInfo>
+                    {
+                        new(10001, 10),
+                        new(30001, 10),
+                    },
+                },
+                new object[]
+                {
+                    new List<FaucetRuneInfo>
+                    {
+                        new(10001, 10),
+                        new(10002, 10),
+                        new(30001, 10),
+                    },
+                },
+            };
+
+            public IEnumerator<object[]> GetEnumerator() => _data.GetEnumerator();
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        }
+
+        [Theory]
+        [ClassData(typeof(FaucetRuneInfoGenerator))]
+        public async Task FaucetRune(List<FaucetRuneInfo> faucetRuneInfos)
+        {
+            Address avatarAddress = new PrivateKey().ToAddress();
+            var runeInfos = string.Empty;
+            foreach (var faucetRuneInfo in faucetRuneInfos)
+            {
+                runeInfos += $"{{runeId: {faucetRuneInfo.RuneId}, amount: {faucetRuneInfo.Amount}}}";
+            }
+
+            var query = $"{{faucetRune (avatarAddress: \"{avatarAddress}\", faucetRuneInfos: [{runeInfos}])}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["faucetRune"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<FaucetRune>(polymorphicAction.InnerAction);
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            for (var i = 0; i < faucetRuneInfos.Count; i++)
+            {
+                // Assert.Equal(faucetRuneInfos[i], action.FaucetRuneInfos[i]);
+                Assert.Equal(faucetRuneInfos[i].RuneId, action.FaucetRuneInfos[i].RuneId);
+                Assert.Equal(faucetRuneInfos[i].Amount, action.FaucetRuneInfos[i].Amount);
+            }
+        }
     }
 }
