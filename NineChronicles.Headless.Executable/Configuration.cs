@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using Libplanet;
+using Libplanet.Crypto;
 using NineChronicles.Headless.Properties;
 
 namespace NineChronicles.Headless.Executable
@@ -137,7 +139,7 @@ namespace NineChronicles.Headless.Executable
             Host = host ?? Host;
             Port = port ?? Port;
             ConsensusPort = consensusPort ?? ConsensusPort;
-            SwarmPrivateKeyString = swarmPrivateKeyString ?? SwarmPrivateKeyString;
+            SwarmPrivateKeyString = swarmPrivateKeyString ?? SwarmPrivateKeyString ?? ByteUtil.Hex(new PrivateKey().ToByteArray());
             ConsensusPrivateKeyString = consensusPrivateKeyString ?? ConsensusPrivateKeyString;
             Workers = workers ?? Workers;
             StoreType = storeType ?? StoreType;

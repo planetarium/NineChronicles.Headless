@@ -20,6 +20,7 @@ using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using RollingInterval = Serilog.Sinks.AmazonS3.RollingInterval;
 
 namespace NineChronicles.Headless.Executable
 {
@@ -226,9 +227,13 @@ namespace NineChronicles.Headless.Executable
 
             // Setup logger.
             var configuration = configurationBuilder.Build();
+            var credentialConfig = new CredentialConfig();
+            configuration.Bind("Credential", credentialConfig);
             var loggerConf = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
                 .Destructure.UsingAttributes();
+
+
             var headlessConfig = new Configuration();
             configuration.Bind("Headless", headlessConfig);
             headlessConfig.Overwrite(
@@ -241,6 +246,22 @@ namespace NineChronicles.Headless.Executable
                 txLifeTime, messageTimeout, tipTimeout, demandBuffer, consensusSeedStrings, consensusPeerStrings, skipPreload,
                 minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers, validatorStrings
             );
+
+            if (credentialConfig.AwsAccessKeyId is not null && credentialConfig.AwsSecretAccessKey is not null)
+            {
+                loggerConf = loggerConf.WriteTo.AmazonS3(
+                    formatter: new CompactJsonFormatter(),
+                    path: "log.json",
+                    bucketName: "9c-pbft-logs",
+                    bucketPath: headlessConfig.SwarmPrivateKeyString == null
+                        ? "UnknownSwarmKey"
+                        : new PrivateKey(headlessConfig.SwarmPrivateKeyString).ToAddress().ToString(),
+                    rollingInterval: RollingInterval.Hour,
+                    serviceUrl: "https://s3.us-east-2.amazonaws.com",
+                    awsAccessKeyId: credentialConfig.AwsAccessKeyId,
+                    awsSecretAccessKey: credentialConfig.AwsSecretAccessKey
+                );
+            }
 
 #if SENTRY || !DEBUG
             loggerConf = loggerConf
