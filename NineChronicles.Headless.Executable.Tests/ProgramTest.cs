@@ -27,7 +27,7 @@ namespace NineChronicles.Headless.Executable.Tests
             var privateKey = new PrivateKey();
             _apvString = AppProtocolVersion.Sign(privateKey, 1000).Token;
 
-            _genesisBlockPath = "https://9c-test.s3.ap-northeast-2.amazonaws.com/genesis-block-9c-main";
+            _genesisBlockPath = "https://release.nine-chronicles.com/genesis-block-9c-main";
             _storePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
             _rpcPort = 41234;
