@@ -17,6 +17,10 @@ using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
+// #if LIB9C_DEV_EXTENSIONS
+using NineChronicles.Test.GraphType;
+
+// #endif
 namespace NineChronicles.Headless.GraphTypes
 {
     public class ActionQuery : ObjectGraphType
@@ -537,7 +541,12 @@ namespace NineChronicles.Headless.GraphTypes
                     };
                     return Encode(context, action);
                 });
+
+// #if LIB9C_DEV_EXTENSIONS || UNITY_EDITOR
+            this.ApplyTestActionQuery();
+// #endif
         }
+
 
         internal virtual byte[] Encode(IResolveFieldContext context, NCAction action)
         {
