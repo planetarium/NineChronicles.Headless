@@ -124,12 +124,12 @@ namespace NineChronicles.Headless.Executable.Commands
 
         private void ProcessExtra(ExtraConfig? config,
             out List<PendingActivationState> pendingActivationStates,
-            out List<(PublicKey, BigInteger)> initialValidatorSet
+            out List<Validator> initialValidatorSet
         )
         {
             _console.Out.WriteLine("\nProcessing extra data for genesis...");
             pendingActivationStates = new List<PendingActivationState>();
-            initialValidatorSet = new List<(PublicKey, BigInteger)>();
+            initialValidatorSet = new List<Validator>();
 
             if (config is null)
             {
@@ -153,8 +153,10 @@ namespace NineChronicles.Headless.Executable.Commands
                 return;
             }
 
-            initialValidatorSet = config.Value.InitialValidatorSet.Select(
-                item => (new PublicKey(ByteUtil.ParseHex(item.Item1)), new BigInteger(item.Item2))).ToList();
+            initialValidatorSet = config.Value.InitialValidatorSet.ToList();
+            var str = initialValidatorSet.Aggregate(string.Empty,
+                (s, v) => s + "PublicKey: " + v.PublicKey + ", Power: " + v.Power + "\n");
+            _console.Out.WriteLine($"Initial validator set: {str}");
         }
 
         [Command(Description = "Mine a new genesis block")]
@@ -189,7 +191,10 @@ namespace NineChronicles.Headless.Executable.Commands
                     goldDistributions: initialDepositList.ToArray(),
                     pendingActivationStates: pendingActivationStates.ToArray(),
                     adminState: adminState,
-                    privateKey: initialMinter
+                    privateKey: initialMinter,
+                    initialValidators: initialValidatorSet.ToDictionary(
+                        item => new PublicKey(ByteUtil.ParseHex(item.PublicKey)),
+                        item => new BigInteger(item.Power))
                 );
 
                 Lib9cUtils.ExportBlock(block, "genesis-block");
@@ -303,7 +308,15 @@ namespace NineChronicles.Headless.Executable.Commands
             /// </value>
             public string? PendingActivationStatePath { get; set; }
 
-            public List<(string, int)>? InitialValidatorSet { get; set; }
+            public List<Validator>? InitialValidatorSet { get; set; }
+        }
+
+        [Serializable]
+        private struct Validator
+        {
+            public string PublicKey { get; set; }
+
+            public int Power { get; set; }
         }
 
         /// <summary>
