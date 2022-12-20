@@ -227,14 +227,15 @@ namespace NineChronicles.Headless.Executable
 
             // Setup logger.
             var configuration = configurationBuilder.Build();
+            var credentialConfig = new CredentialConfig();
+            configuration.Bind("Credential", credentialConfig);
             var loggerConf = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
                 .Destructure.UsingAttributes();
 
+
             var headlessConfig = new Configuration();
-            var credentialConfig = new CredentialConfig();
             configuration.Bind("Headless", headlessConfig);
-            configuration.Bind("Credential", credentialConfig);
             headlessConfig.Overwrite(
                 appProtocolVersionToken, trustedAppProtocolVersionSigners, genesisBlockPath, host, port, consensusPort,
                 swarmPrivateKeyString, consensusPrivateKeyString, workers, storeType, storePath, noReduceStore, noMiner, minerCount,
@@ -245,6 +246,22 @@ namespace NineChronicles.Headless.Executable
                 txLifeTime, messageTimeout, tipTimeout, demandBuffer, consensusSeedStrings, consensusPeerStrings, skipPreload,
                 minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers, validatorStrings
             );
+
+            if (credentialConfig.AwsAccessKeyId is not null && credentialConfig.AwsSecretAccessKey is not null)
+            {
+                loggerConf = loggerConf.WriteTo.AmazonS3(
+                    formatter: new CompactJsonFormatter(),
+                    path: "log.json",
+                    bucketName: "9c-pbft-logs",
+                    bucketPath: headlessConfig.SwarmPrivateKeyString == null
+                        ? "UnknownSwarmKey"
+                        : new PrivateKey(headlessConfig.SwarmPrivateKeyString).ToAddress().ToString(),
+                    rollingInterval: RollingInterval.Hour,
+                    serviceUrl: "https://s3.us-east-2.amazonaws.com",
+                    awsAccessKeyId: credentialConfig.AwsAccessKeyId,
+                    awsSecretAccessKey: credentialConfig.AwsSecretAccessKey
+                );
+            }
 
 #if SENTRY || !DEBUG
             loggerConf = loggerConf
@@ -259,18 +276,7 @@ namespace NineChronicles.Headless.Executable
                 Directory.Delete("_logs", true);
             }
 
-            Log.Logger = loggerConf.WriteTo.AmazonS3(
-                formatter: new CompactJsonFormatter(),
-                path: "log.json",
-                bucketName: "9c-pbft-logs",
-                bucketPath: headlessConfig.SwarmPrivateKeyString == null
-                    ? "UnknownSwarmKey"
-                    : new PrivateKey(headlessConfig.SwarmPrivateKeyString).ToAddress().ToString(),
-                rollingInterval: RollingInterval.Hour,
-                serviceUrl: "https://s3.us-east-2.amazonaws.com",
-                awsAccessKeyId: credentialConfig.AwsAccessKeyId,
-                awsSecretAccessKey: credentialConfig.AwsSecretAccessKey
-            ).CreateLogger();
+            Log.Logger = loggerConf.CreateLogger();
 
             if (!headlessConfig.NoMiner && headlessConfig.MinerPrivateKeyString is null)
             {
