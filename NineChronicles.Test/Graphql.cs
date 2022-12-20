@@ -29,17 +29,13 @@ public static class Graphql
         return (resp.Errors is null, resp.Data, resp.Errors);
     }
 
-    public static async Task<(bool, string)> Action(PrivateKey pk, string queryBody)
+    public static async Task<(bool, ActionTxQueryResponseType, GraphQLError[]?)> Action(PrivateKey pk, string queryBody)
     {
-        var nonce = GetNextTxNonce(pk.ToAddress());
+        var nonce = await GetNextTxNonce(pk.ToAddress());
         var actionTxQuery = $@"query {{ actionTxQuery(
             publicKey: ""{pk.PublicKey}"", nonce: {nonce}
-        ) {queryBody} }}";
-        (bool success, ActionTxQueryResponseType data, GraphQLError[]? errors) =
-            await Query<ActionTxQueryResponseType>(actionTxQuery);
-        var tx = ByteUtil.ParseHex(data.ActionTxQuery.ActivateAccount);
-        var signature = pk.Sign(tx);
-        return await Stage(tx, signature);
+        ) {{ {queryBody} }} }}";
+        return await Query<ActionTxQueryResponseType>(actionTxQuery);
     }
 
     public static async Task<(bool, string)> Stage(byte[] tx, byte[] signature)
@@ -67,6 +63,7 @@ public static class Graphql
         string txResult = await TxResult(txId);
         while (txResult == "STAGING")
         {
+            Thread.Sleep(1000);
             txResult = await TxResult(txId);
         }
 

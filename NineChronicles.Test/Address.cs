@@ -1,15 +1,32 @@
+using GraphQL;
+using Libplanet;
 using Libplanet.Crypto;
 using Libplanet.KeyStore;
+using NineChronicles.Test.Type;
 
 namespace NineChronicles.Test;
 
 public static class Address
 {
-    public static async Task<string> ActivateAccount(PrivateKey pk, string activationCode)
+    public static async Task<string?> ActivateAccount(PrivateKey pk, string activationCode)
     {
-        var query = $" activateAccount (activationCode: \"{activationCode}\") }}";
-        (bool result, string txId) = await Graphql.Action(pk, query);
+        var query = $"activateAccount (activationCode: \"{activationCode}\")";
+        (bool success, ActionTxQueryResponseType data, GraphQLError[]? errors) = await Graphql.Action(pk, query);
+        if (!success)
+        {
+            Console.WriteLine(errors);
+            return null;
+        }
+
+        var tx = ByteUtil.ParseHex(data.ActionTxQuery.ActivateAccount);
+        var signature = pk.Sign(tx);
+        (bool result, string txId) = await Graphql.Stage(tx, signature);
         Console.WriteLine($"Account activation: {result} :: TxID {txId}");
+        if (!result)
+        {
+            return null;
+        }
+
         return txId;
     }
 

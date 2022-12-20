@@ -1,4 +1,5 @@
 ﻿using Libplanet;
+using Libplanet.Crypto;
 
 namespace NineChronicles.Test;
 
@@ -11,7 +12,12 @@ class Program
         {
             Console.WriteLine("Account activation required. Please input activation code");
             var activationCode = Console.ReadLine();
-            string txId = await Address.ActivateAccount(pk, activationCode!);
+            string? txId = await Address.ActivateAccount(pk, activationCode!);
+            if (txId is null)
+            {
+                return;
+            }
+
             string txResult = await Graphql.WaitTxMining(txId);
             if (txResult == "SUCCESS")
             {

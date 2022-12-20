@@ -43,7 +43,21 @@ public class Avatar
             index: {index},
             name: ""avatar{index}""
         )";
-        (bool success, string txId) = await Graphql.Action(pk, query);
+        (bool success, ActionTxQueryResponseType data, GraphQLError[]? erros) = await Graphql.Action(pk, query);
+        if (!success)
+        {
+            Console.WriteLine($"createAvatar Action failed. Try again later. :: {erros}");
+        }
+
+        var tx = ByteUtil.ParseHex(data.ActionTxQuery.CreateAvatar);
+        var signature = pk.Sign(tx);
+        (bool result, string txId) = await Graphql.Stage(tx, signature);
+        if (!result)
+        {
+            Console.WriteLine("Create avatar action stage failed");
+            return null;
+        }
+
         string txResult = await Graphql.WaitTxMining(txId);
         if (txResult == "SUCCESS")
         {

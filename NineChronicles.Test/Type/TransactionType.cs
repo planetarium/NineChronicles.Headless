@@ -1,6 +1,3 @@
-using Libplanet.Explorer.GraphTypes;
-using Nekoyume.BlockChain.Policy;
-
 namespace NineChronicles.Test.Type;
 
 public class TransactionResponseType

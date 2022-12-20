@@ -19,6 +19,17 @@ public class AgentType
     public long monsterCollectionRound { get; set; }
     public long monsterCollectionLevel { get; set; }
     public bool hasTradeItem { get; set; }
+
+    public override string ToString()
+    {
+        return $@"Agent Address: {address}
+Gold(NCG): {Gold}
+Crystal: {Crystal}
+Avatar: [
+{AvatarStates}
+]
+";
+    }
 }
 
 public class AvatarStateType
@@ -38,6 +49,7 @@ public class AvatarStateType
     public int Hair { get; set; }
     public int Lens { get; set; }
     public int Tail { get; set; }
+
     // // Inventory
     public Libplanet.Address[] CombinationSlotAddresses { get; set; }
     // // ItemMap
@@ -47,4 +59,14 @@ public class AvatarStateType
     // // QuestList
     // // MailBox
     // // WorldInformation
+
+    public override string ToString()
+    {
+        return $@"Avatar #{Index} : {Name}({Address})
+Lvl. {Level} (Exp {Exp})
+Action Point: {ActionPoint}
+DailyReward: {DailyRewardReceivedIndex} / Current Block {BlockIndex}
+Outfit: Ear {Ear} | Hair {Hair} | Lens {Lens} | Tail {Tail}
+";
+    }
 }

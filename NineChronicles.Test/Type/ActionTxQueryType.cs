@@ -1,6 +1,3 @@
-using System.Security.Cryptography.X509Certificates;
-using Libplanet;
-
 namespace NineChronicles.Test.Type;
 
 public class ActionTxQueryResponseType
@@ -10,5 +7,6 @@ public class ActionTxQueryResponseType
 
 public class ActionTxQueryType
 {
-    public string ActivateAccount  { get; set; }
+    public string ActivateAccount { get; set; }
+    public string CreateAvatar { get; set; }
 }

@@ -8,8 +8,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet.Explorer\Libplanet.Explorer.csproj" />
       <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet\Libplanet.csproj" />
-      <ProjectReference Include="..\NineChronicles.Headless\NineChronicles.Headless.csproj" />
+      <ProjectReference Include="..\Lib9c\Lib9c.DevExtensions\Lib9c.DevExtensions.csproj" />
+      <ProjectReference Include="..\Lib9c\Lib9c\Lib9c.csproj" />
     </ItemGroup>
 
     <ItemGroup>
