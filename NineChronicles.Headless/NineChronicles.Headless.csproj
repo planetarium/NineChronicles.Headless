@@ -4,6 +4,9 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CodeAnalysisRuleSet>..\NineChronicles.Headless.Common.ruleset</CodeAnalysisRuleSet>
     <Nullable>enable</Nullable>
+      <PreBuildEvent Condition="$(DefineConstants.Contains('LIB9C_DEV_EXTENSIONS'))">
+          dotnet build ../Lib9c/Lib9c.csproj /p:DefineConstants="LIB9C_DEV_EXTENSINOS" /t:Rebuild
+      </PreBuildEvent>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lib9c\Lib9c.MessagePack\Lib9c.MessagePack.csproj" />
@@ -14,6 +17,8 @@
     <ProjectReference Include="..\Lib9c\Libplanet.Crypto.Secp256k1\Libplanet.Crypto.Secp256k1.csproj" />
     <ProjectReference Include="..\Libplanet.Headless\Libplanet.Headless.csproj" />
     <ProjectReference Include="..\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared.csproj" />
+<!--    <ProjectReference Condition="$(DefineConstants.Contains('LIB9C_DEV_EXTENSIONS'))" Include="..\NineChronicles.Test\NineChronicles.Test.csproj" />-->
+    <ProjectReference Include="..\NineChronicles.Test\NineChronicles.Test.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="GraphQL.Server.Authorization.AspNetCore" Version="5.1.1" />

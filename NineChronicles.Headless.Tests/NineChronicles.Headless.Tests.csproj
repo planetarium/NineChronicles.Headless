@@ -9,6 +9,10 @@
     <NoWarn>$(NoWarn);CS8602;CS8604</NoWarn>
     <CodeAnalysisRuleSet>..\NineChronicles.Headless.Common.ruleset</CodeAnalysisRuleSet>
     <Nullable>enable</Nullable>
+    <PreBuildEvent>
+        dotnet build $(SolutionDir)/NineChronicles.Headless/NineChronicles.Headless.csproj /p:DefineConstants="LIB9C_DEV_EXTENSINOS" /t:Rebuild
+    </PreBuildEvent>
+    <DefineConstants>LIB9C_DEV_EXTENSIONS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
