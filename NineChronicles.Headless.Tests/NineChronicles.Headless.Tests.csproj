@@ -30,6 +30,7 @@
     <ProjectReference Include="..\NineChronicles.Headless.Executable.Tests\NineChronicles.Headless.Executable.Tests.csproj" />
     <ProjectReference Include="..\NineChronicles.Headless.Executable\NineChronicles.Headless.Executable.csproj" />
     <ProjectReference Include="..\NineChronicles.Headless\NineChronicles.Headless.csproj" />
+    <ProjectReference Include="..\NineChronicles.Headless.DevExtensions\NineChronicles.Headless.DevExtensions.csproj" />
     <ProjectReference Include="..\Lib9c\.Lib9c.Tests\Lib9c.Tests.csproj" />
   </ItemGroup>
 

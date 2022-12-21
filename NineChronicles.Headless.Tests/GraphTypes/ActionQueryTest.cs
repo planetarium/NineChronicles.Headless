@@ -348,14 +348,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var error = queryResult.Errors!.Single();
             Assert.Contains("Invalid tableName.", error.Message);
         }
-        private NCAction DeserializeNCAction(IValue value)
-        {
-#pragma warning disable CS0612
-            NCAction action = new NCAction();
-#pragma warning restore CS0612
-            action.LoadPlainValue(value);
-            return action;
-        }
 
         [Theory]
         [InlineData(true, false, false, false, false)]
