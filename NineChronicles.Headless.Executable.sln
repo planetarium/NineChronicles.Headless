@@ -50,6 +50,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lib9c.Tests", "Lib9c\.Lib9c
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NineChronicles.Headless.DevExtensions", "NineChronicles.Headless.DevExtensions\NineChronicles.Headless.DevExtensions.csproj", "{2B477479-D99C-43C2-BE3A-6CBE90739FC4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NineChronicles.Headless.DevExtensions.Tests", "NineChronicles.Headless.DevExtensions.Tests\NineChronicles.Headless.DevExtensions.Tests.csproj", "{A6CCF88A-FA01-468E-9D2F-9386F7B0D2A2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -312,6 +314,18 @@ Global
 		{2B477479-D99C-43C2-BE3A-6CBE90739FC4}.Release|x64.Build.0 = Release|Any CPU
 		{2B477479-D99C-43C2-BE3A-6CBE90739FC4}.Release|x86.ActiveCfg = Release|Any CPU
 		{2B477479-D99C-43C2-BE3A-6CBE90739FC4}.Release|x86.Build.0 = Release|Any CPU
+		{A6CCF88A-FA01-468E-9D2F-9386F7B0D2A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6CCF88A-FA01-468E-9D2F-9386F7B0D2A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6CCF88A-FA01-468E-9D2F-9386F7B0D2A2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A6CCF88A-FA01-468E-9D2F-9386F7B0D2A2}.Debug|x64.Build.0 = Debug|Any CPU
+		{A6CCF88A-FA01-468E-9D2F-9386F7B0D2A2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A6CCF88A-FA01-468E-9D2F-9386F7B0D2A2}.Debug|x86.Build.0 = Debug|Any CPU
+		{A6CCF88A-FA01-468E-9D2F-9386F7B0D2A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6CCF88A-FA01-468E-9D2F-9386F7B0D2A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6CCF88A-FA01-468E-9D2F-9386F7B0D2A2}.Release|x64.ActiveCfg = Release|Any CPU
+		{A6CCF88A-FA01-468E-9D2F-9386F7B0D2A2}.Release|x64.Build.0 = Release|Any CPU
+		{A6CCF88A-FA01-468E-9D2F-9386F7B0D2A2}.Release|x86.ActiveCfg = Release|Any CPU
+		{A6CCF88A-FA01-468E-9D2F-9386F7B0D2A2}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
