@@ -2,26 +2,32 @@
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
-        <LangVersion>8.0</LangVersion>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
-    <PropertyGroup Condition="
-      '$([System.Runtime.InteropServices.RuntimeInformation]::
-        OSArchitecture.ToString())' == 'Arm64' ">
+    <PropertyGroup Condition="&#xA;      '$([System.Runtime.InteropServices.RuntimeInformation]::&#xA;        OSArchitecture.ToString())' == 'Arm64' ">
         <TargetFramework>net6.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0"/>
-        <PackageReference Include="NUnit" Version="3.13.3"/>
-        <PackageReference Include="NUnit3TestAdapter" Version="4.2.1"/>
-        <PackageReference Include="NUnit.Analyzers" Version="3.3.0"/>
-        <PackageReference Include="coverlet.collector" Version="3.1.2"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.49.0.57237">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="xunit" Version="2.4.1" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3" />
+        <PackageReference Include="coverlet.collector" Version="3.2.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\NineChronicles.Headless.DevExtensions\NineChronicles.Headless.DevExtensions.csproj"/>
+        <ProjectReference Include="..\NineChronicles.Headless.DevExtensions\NineChronicles.Headless.DevExtensions.csproj" />
+        <ProjectReference Include="..\NineChronicles.Headless\NineChronicles.Headless.csproj" />
+        <ProjectReference Include="..\NineChronicles.Headless.Tests\NineChronicles.Headless.Tests.csproj" />
     </ItemGroup>
 
 </Project>
