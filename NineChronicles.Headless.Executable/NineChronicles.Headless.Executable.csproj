@@ -21,6 +21,7 @@
   <ItemGroup>
     <PackageReference Include="Cocona.Lite" Version="2.1.*" />
     <PackageReference Include="Destructurama.Attributed" Version="2.0.0" />
+    <PackageReference Include="JsonSchema.Net" Version="4.0.0-beta2" />
     <PackageReference Include="Sentry.Serilog" Version="3.23.0" />
     <PackageReference Include="Sentry" Version="3.23.0" />
     <PackageReference Include="Sentry.AspNetCore.Grpc" Version="3.22.0" />

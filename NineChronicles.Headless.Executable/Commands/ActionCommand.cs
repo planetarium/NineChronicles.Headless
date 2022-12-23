@@ -1,18 +1,24 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using Bencodex;
 using Bencodex.Types;
 using Cocona;
 using Cocona.Help;
+using Json.Schema;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
 using Nekoyume.Action;
+using Nekoyume.Action.Coupons;
 using Nekoyume.Action.Factory;
 using Nekoyume.Model;
+using Nekoyume.Model.Coupons;
 using NineChronicles.Headless.Executable.IO;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -58,6 +64,145 @@ namespace NineChronicles.Headless.Executable.Commands
                 );
 
                 byte[] raw = Codec.Encode(list);
+                string encoded = Convert.ToBase64String(raw);
+                if (filePath is null)
+                {
+                    _console.Out.Write(encoded);
+                }
+                else
+                {
+                    File.WriteAllText(filePath, encoded);
+                }
+
+                return 0;
+            }
+            catch (Exception e)
+            {
+                _console.Error.WriteLine(e);
+                return -1;
+            }
+        }
+
+        [Command(Description = "Create IssueCoupons action.")]
+        public int IssueCoupons(
+            [Argument("DATAFILE-PATH", Description = "The path of the json file that contains the coupon specs.")]
+            string dataFilePath,
+            [Argument("PATH", Description = "A file path of base64 encoded action.")]
+            string? filePath = null
+        )
+        {
+            // TODO: might want to have the schema in a separate file and provide a URI as its $id.
+            const string issueCouponsDataSchema = @"{
+              ""$schema"": ""https://json-schema.org/draft/2019-09/schema"",
+              ""title"": ""IssueCouponData"",
+              ""type"": ""object"",
+              ""required"": [
+                ""recipient"",
+                ""couponSpecs""
+              ],
+              ""properties"": {
+                ""recipient"": {
+                  ""type"": ""string"",
+                  ""description"": ""The address of the agent that will receive the coupons.""
+                },
+                ""couponSpecs"": {
+                  ""type"": ""array"",
+                  ""description"": ""The array containing the specification of coupons to be issued."",
+                  ""items"": {
+                    ""$ref"": ""#/$defs/couponSpec""
+                  }
+                }
+              },
+              ""$defs"": {
+                ""couponSpec"": {
+                  ""type"": ""object"",
+                  ""description"": ""Specification of a coupon instance."",
+                  ""required"": [
+                    ""rewardItemList"",
+                    ""count""
+                  ],
+                  ""properties"": {
+                    ""rewardItemList"": {
+                      ""type"": ""array"",
+                      ""description"": ""The list of items that will be given to the avatar once redeemed."",
+                      ""items"": {
+                        ""$ref"": ""#/$defs/rewardItemSpec""
+                      }
+                    },
+                    ""count"": {
+                      ""description"": ""How many coupon instances of this spec will be issued."",
+                      ""type"": ""integer""
+                    }
+                  }
+                },
+                ""rewardItemSpec"": {
+                  ""type"": ""object"",
+                  ""description"": ""A specification of an item that will be given, paired with the count of item that will be given."",
+                  ""required"": [
+                    ""id"",
+                    ""count""
+                  ],
+                  ""properties"": {
+                    ""id"": {
+                      ""description"": ""The internal numeric identifier of the item."",
+                      ""type"": ""integer""
+                    },
+                    ""count"": {
+                      ""description"": ""The count of this item to be given."",
+                      ""type"": ""integer""
+                    }
+                  }
+                }
+              }
+            }";
+
+            JsonSchema schema = JsonSchema.FromText(issueCouponsDataSchema);
+
+            var issueCouponsData = JsonDocument.Parse(File.ReadAllText(dataFilePath));
+            var options = EvaluationOptions.Default;
+            options.OutputFormat = OutputFormat.List;
+            var validation = schema.Evaluate(issueCouponsData, options);
+
+            if (!validation.IsValid)
+            {
+                _console.Error.WriteLine(
+                    "Failed to validate json data file. The errors are as follows:\n\n"
+                    + string.Join("\n",
+                        validation.Details
+                            .Where(r => r.HasErrors)
+                            .Select(r =>
+                                $"at {r.InstanceLocation}:\n"
+                                + $"\t{string.Join("\n", r.Errors!.Select(err => $"{err.Key} : {err.Value}"))}\n\n")));
+                return -1;
+            }
+
+            try
+            {
+                var rewards = issueCouponsData.RootElement.GetProperty("couponSpecs")
+                    .EnumerateArray()
+                    .Select(el =>
+                        new KeyValuePair<RewardSet, uint>(
+                            new RewardSet(
+                                el.GetProperty("rewardItemList")
+                                    .EnumerateArray()
+                                    .Select(el =>
+                                            new KeyValuePair<int, uint>(
+                                                el.GetProperty("id").GetInt32(),
+                                                el.GetProperty("count").GetUInt32()))
+                                    .ToImmutableDictionary()),
+                            el.GetProperty("count").GetUInt32()))
+                    .ToImmutableDictionary();
+                Nekoyume.Action.Coupons.IssueCoupons action = new IssueCoupons(
+                    rewards,
+                    new Address(issueCouponsData.RootElement.GetProperty("recipient").GetString()!));
+
+                byte[] raw = Codec.Encode(new List(
+                    new[]
+                    {
+                        (Text) nameof(Nekoyume.Action.Coupons.IssueCoupons),
+                        action.PlainValue
+                    }
+                ));
                 string encoded = Convert.ToBase64String(raw);
                 if (filePath is null)
                 {
