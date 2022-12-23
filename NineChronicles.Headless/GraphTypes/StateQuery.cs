@@ -4,12 +4,14 @@ using System.Linq;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
+using Lib9c;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Extensions;
+using Nekoyume.Model.Coupons;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -481,6 +483,23 @@ namespace NineChronicles.Headless.GraphTypes
                     return null;
                 }
             );
+
+            Field<ListGraphType<CouponType>>(
+                name: "couponWallet",
+                description: "The coupon wallet of an agent.",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "agentAddress",
+                    Description = "Address of the agent holding the coupons."
+                }),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("agentAddress");
+                    return context.Source.GetState(address.Derive(SerializeKeys.CouponWalletKey))
+                        is Bencodex.Types.List couponWallet
+                        ? couponWallet.Select(serializedCoupon => new Coupon(serializedCoupon)).ToList()
+                        : new List<Coupon>();
+                });
         }
     }
 }
