@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Reactive.Subjects;
 using Libplanet;
-using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.KeyStore;
 using Libplanet.Net;
@@ -44,7 +43,7 @@ namespace NineChronicles.Headless
             IsMining = IsMining,
         };
 
-        public IStore? Store { get; internal set; }
+        public IStore? Store { get; set; }
 
         internal TimeSpan DifferentAppProtocolVersionEncounterInterval { get; set; } = TimeSpan.FromSeconds(30);
 
