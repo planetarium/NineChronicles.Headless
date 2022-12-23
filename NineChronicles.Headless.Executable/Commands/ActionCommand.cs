@@ -222,6 +222,113 @@ namespace NineChronicles.Headless.Executable.Commands
             }
         }
 
+        [Command(Description = "Create TransferCoupons action.")]
+        public int TransferCoupons(
+            [Argument("DATAFILE-PATH", Description = "The path of the json file that contains the transfer specs.")]
+            string dataFilePath,
+            [Argument("PATH", Description = "A file path of base64 encoded action.")]
+            string? filePath = null
+        )
+        {
+            // TODO: might want to have the schema in a separate file and provide a URI as its $id.
+            const string transferCouponsDataSchema = @"{
+              ""$schema"": ""https://json-schema.org/draft/2019-09/schema"",
+              ""title"": ""TransferCouponData"",
+              ""type"": ""array"",
+              ""items"": {
+                ""$ref"": ""#/$defs/depositSpec""
+              },
+              ""$defs"": {
+                ""depositSpec"": {
+                  ""description"": ""Coupon GUIDs to transfer paired with the recipient address."",
+                  ""type"": ""object"",
+                  ""required"": [
+                    ""recipient"",
+                    ""coupons""
+                  ],
+                  ""properties"": {
+                    ""recipient"": {
+                      ""description"": ""Address of the recipient to receive the coupons."",
+                      ""type"": ""string""
+                    },
+                    ""coupons"": {
+                      ""description"": ""Coupon GUIDs to transfer."",
+                      ""type"": ""array"",
+                      ""items"": {
+                        ""type"": ""string""
+                      }
+                    }
+                  }
+                }
+              }
+            }";
+
+            JsonSchema schema = JsonSchema.FromText(transferCouponsDataSchema);
+
+            var transferCouponsData = JsonDocument.Parse(File.ReadAllText(dataFilePath));
+            var options = EvaluationOptions.Default;
+            options.OutputFormat = OutputFormat.List;
+            var validation = schema.Evaluate(transferCouponsData, options);
+
+            if (!validation.IsValid)
+            {
+                _console.Error.WriteLine(
+                    "Failed to validate json data file. The errors are as follows:\n\n"
+                    + string.Join("\n",
+                        validation.Details
+                            .Where(r => r.HasErrors)
+                            .Select(r =>
+                                $"at {r.InstanceLocation}:\n"
+                                + $"\t{string.Join("\n", r.Errors!.Select(err => $"{err.Key} : {err.Value}"))}\n\n")));
+                return -1;
+            }
+
+            try
+            {
+                var couponsPerRecipient = ImmutableDictionary<Address, IImmutableSet<Guid>>.Empty;
+                foreach (var el in transferCouponsData.RootElement.EnumerateArray())
+                {
+                    var recipient = new Address(el.GetProperty("recipient").GetString()!);
+                    var coupons = el.GetProperty("coupons")
+                        .EnumerateArray()
+                        .Select(el => el.GetGuid())
+                        .ToImmutableHashSet();
+                    if (couponsPerRecipient.TryGetValue(recipient, out var couponSet))
+                    {
+                        coupons = coupons.Union(couponSet);
+                    }
+
+                    couponsPerRecipient = couponsPerRecipient.SetItem(recipient, coupons);
+                }
+
+                Nekoyume.Action.Coupons.TransferCoupons action = new TransferCoupons(couponsPerRecipient);
+
+                byte[] raw = Codec.Encode(new List(
+                    new[]
+                    {
+                        (Text) nameof(Nekoyume.Action.Coupons.TransferCoupons),
+                        action.PlainValue
+                    }
+                ));
+                string encoded = Convert.ToBase64String(raw);
+                if (filePath is null)
+                {
+                    _console.Out.Write(encoded);
+                }
+                else
+                {
+                    File.WriteAllText(filePath, encoded);
+                }
+
+                return 0;
+            }
+            catch (Exception e)
+            {
+                _console.Error.WriteLine(e);
+                return -1;
+            }
+        }
+
         [Command(Description = "Lists all actions' type ids.")]
         public IOrderedEnumerable<string?> List(
             [Option(
