@@ -65,7 +65,11 @@ public class ActionQueryTest
             store,
             stateStore,
             genesisBlock);
-        _standaloneContext = new StandaloneContext(blockChain: blockchain, store: store);
+        _standaloneContext = new StandaloneContext
+        {
+            BlockChain = blockchain,
+            Store = store
+        };
     }
 
     [Theory]
