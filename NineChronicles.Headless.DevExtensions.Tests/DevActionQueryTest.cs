@@ -18,7 +18,7 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.DevExtensions.GraphTypes;
 using Xunit;
-using static NineChronicles.Headless.Tests.GraphQLTestUtils;
+using static NineChronicles.Headless.DevExtensions.Tests.GraphQLTestUtils;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.DevExtensions.Tests
