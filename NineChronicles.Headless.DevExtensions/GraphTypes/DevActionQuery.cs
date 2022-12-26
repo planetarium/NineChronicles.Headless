@@ -9,13 +9,13 @@ using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.DevExtensions.GraphTypes;
 
-public static class TestActionQuery
+public class DevActionQuery: ObjectGraphType
 {
     private static readonly Codec Codec = new Codec();
 
-    public static void ApplyTestActionQuery(this ObjectGraphType actionQuery)
+    public DevActionQuery()
     {
-        actionQuery.Field<NonNullGraphType<ByteStringType>>(
+        Field<NonNullGraphType<ByteStringType>>(
             "faucetCurrency",
             arguments: new QueryArguments(
                 new QueryArgument<NonNullGraphType<AddressType>>
@@ -49,7 +49,7 @@ public static class TestActionQuery
             }
         );
 
-        actionQuery.Field<NonNullGraphType<ByteStringType>>(
+        Field<NonNullGraphType<ByteStringType>>(
             "faucetRune",
             arguments: new QueryArguments(
                 new QueryArgument<NonNullGraphType<AddressType>>

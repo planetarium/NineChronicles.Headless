@@ -16,7 +16,7 @@ using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
-using NineChronicles.Headless.GraphTypes;
+using NineChronicles.Headless.DevExtensions.GraphTypes;
 using Xunit;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -92,7 +92,7 @@ public class ActionQueryTest
         }
 
         var query = $"{{faucetCurrency({args})}}";
-        var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+        var queryResult = await ExecuteQueryAsync<DevActionQuery>(query, standaloneContext: _standaloneContext);
         Assert.Null(queryResult.Errors);
 
         var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
@@ -152,7 +152,7 @@ public class ActionQueryTest
         }
 
         var query = $"{{faucetRune (avatarAddress: \"{avatarAddress}\", faucetRuneInfos: [{runeInfos}])}}";
-        var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+        var queryResult = await ExecuteQueryAsync<DevActionQuery>(query, standaloneContext: _standaloneContext);
         Assert.Null(queryResult.Errors);
 
         var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
