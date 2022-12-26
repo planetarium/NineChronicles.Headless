@@ -5,16 +5,20 @@ using GraphQL.Types;
 using Lib9c.DevExtensions.Action;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+using TestNCAction = Libplanet.Action.PolymorphicAction<Lib9c.DevExtensions.Action.TestActionBase>;
 
 namespace NineChronicles.Headless.DevExtensions.GraphTypes;
 
-public class DevActionQuery: ObjectGraphType
+public class DevActionQuery : ObjectGraphType
 {
     private static readonly Codec Codec = new Codec();
 
-    public DevActionQuery()
+    internal StandaloneContext StandaloneContext { get; set; }
+
+    public DevActionQuery(StandaloneContext standaloneContext)
     {
+        StandaloneContext = standaloneContext;
+
         Field<NonNullGraphType<ByteStringType>>(
             "faucetCurrency",
             arguments: new QueryArguments(
@@ -39,7 +43,7 @@ public class DevActionQuery: ObjectGraphType
                 var agentAddress = context.GetArgument<Libplanet.Address>("agentAddress");
                 var faucetNcg = context.GetArgument<int>("faucetNcg");
                 var faucetCrystal = context.GetArgument<int>("faucetCrystal");
-                NCAction action = new FaucetCurrency
+                TestNCAction action = new FaucetCurrency
                 {
                     AgentAddress = agentAddress,
                     FaucetNcg = faucetNcg,
@@ -68,7 +72,7 @@ public class DevActionQuery: ObjectGraphType
             {
                 var avatarAddress = context.GetArgument<Libplanet.Address>("avatarAddress");
                 var faucetRuneInfos = context.GetArgument<List<FaucetRuneInfo>>("faucetRuneInfos");
-                NCAction action = new FaucetRune
+                TestNCAction action = new FaucetRune
                 {
                     AvatarAddress = avatarAddress,
                     FaucetRuneInfos = faucetRuneInfos
@@ -78,7 +82,7 @@ public class DevActionQuery: ObjectGraphType
         );
     }
 
-    internal static byte[] Encode(IResolveFieldContext context, NCAction action)
+    internal static byte[] Encode(IResolveFieldContext context, TestNCAction action)
     {
         return Codec.Encode(action.PlainValue);
     }
