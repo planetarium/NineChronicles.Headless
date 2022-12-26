@@ -54,5 +54,17 @@ namespace NineChronicles.Headless
         internal TimeSpan MonsterCollectionStateInterval { get; set; } = TimeSpan.FromSeconds(30);
 
         internal TimeSpan MonsterCollectionStatusInterval { get; set; } = TimeSpan.FromSeconds(30);
+
+        public StandaloneContext()
+        {
+        }
+
+        public StandaloneContext(
+            BlockChain<NineChroniclesActionType>? blockChain,
+            IStore? store)
+        {
+            BlockChain = blockChain;
+            Store = store;
+        }
     }
 }
