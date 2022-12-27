@@ -169,21 +169,13 @@ namespace NineChronicles.Headless.GraphTypes
             {
                 Name = nameof(MonsterCollectionState),
                 Type = typeof(NonNullGraphType<MonsterCollectionStateType>),
-                Resolver = new FuncFieldResolver<MonsterCollectionState>(context => (context.Source as MonsterCollectionState)!),
-                Subscriber = new EventStreamResolver<MonsterCollectionState>(context =>
-                    standaloneContext.MonsterCollectionStateSubject
-                        .Sample(standaloneContext.MonsterCollectionStateInterval)
-                        .AsObservable()),
+                Resolver = new FuncFieldResolver<MonsterCollectionState>(context => (context.Source as MonsterCollectionState)!)
             });
             AddField(new EventStreamFieldType
             {
                 Name = nameof(MonsterCollectionStatus),
                 Type = typeof(NonNullGraphType<MonsterCollectionStatusType>),
                 Resolver = new FuncFieldResolver<MonsterCollectionStatus>(context => (context.Source as MonsterCollectionStatus)!),
-                Subscriber = new EventStreamResolver<MonsterCollectionStatus>(context =>
-                    standaloneContext.MonsterCollectionStatusSubject
-                        .Sample(standaloneContext.MonsterCollectionStatusInterval)
-                        .AsObservable()),
             });
             AddField(new EventStreamFieldType
             {
