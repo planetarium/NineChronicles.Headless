@@ -167,46 +167,6 @@ namespace NineChronicles.Headless.GraphTypes
             });
             AddField(new EventStreamFieldType
             {
-                Name = nameof(MonsterCollectionState),
-                Type = typeof(NonNullGraphType<MonsterCollectionStateType>),
-                Resolver = new FuncFieldResolver<MonsterCollectionState>(context => (context.Source as MonsterCollectionState)!)
-            });
-            AddField(new EventStreamFieldType
-            {
-                Name = nameof(MonsterCollectionStatus),
-                Type = typeof(NonNullGraphType<MonsterCollectionStatusType>),
-                Resolver = new FuncFieldResolver<MonsterCollectionStatus>(context => (context.Source as MonsterCollectionStatus)!),
-            });
-            AddField(new EventStreamFieldType
-            {
-                Name = $"{nameof(MonsterCollectionStatus)}ByAgent",
-                Arguments = new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Description = "A hex-encoded address of agent.",
-                        Name = "address",
-                    }
-                ),
-                Type = typeof(NonNullGraphType<MonsterCollectionStatusType>),
-                Resolver = new FuncFieldResolver<MonsterCollectionStatus>(context => (context.Source as MonsterCollectionStatus)!),
-                Subscriber = new EventStreamResolver<MonsterCollectionStatus>(SubscribeMonsterCollectionStatus),
-            });
-            AddField(new EventStreamFieldType
-            {
-                Name = $"{nameof(MonsterCollectionState)}ByAgent",
-                Arguments = new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Description = "A hex-encoded address of agent.",
-                        Name = "address",
-                    }
-                ),
-                Type = typeof(NonNullGraphType<MonsterCollectionStateType>),
-                Resolver = new FuncFieldResolver<MonsterCollectionState>(context => (context.Source as MonsterCollectionState)!),
-                Subscriber = new EventStreamResolver<MonsterCollectionState>(SubscribeMonsterCollectionState),
-            });
-            AddField(new EventStreamFieldType
-            {
                 Name = "BalanceByAgent",
                 Arguments = new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
