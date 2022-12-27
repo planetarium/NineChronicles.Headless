@@ -262,7 +262,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             chain.ExecuteActions(chain.Tip);
             var indexCountBeforeSnapshot = store.CountIndex(chainId);
             const int blockEpochUnitSeconds = 86400;
-            var blockEpoch = (int) (chain.Tip.Timestamp.ToUnixTimeSeconds() / blockEpochUnitSeconds);
+            var blockEpoch = (int)(chain.Tip.Timestamp.ToUnixTimeSeconds() / blockEpochUnitSeconds);
             var genesisBlockEpoch = blockEpoch - 1;
             var genesisHash = chain.Genesis.Hash;
             store.Dispose();
@@ -281,7 +281,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var tipHashAfterSnapshot = storeAfterSnapshot.IndexBlockHash(chainId, -1);
             var expectedGenesisPartitionSnapshotPath = Path.Combine(Path.GetTempPath(), "test", "partition", $"snapshot-{genesisBlockEpoch}-{genesisBlockEpoch}.zip");
             var expectedGenesisMetadataPath = Path.Combine(Path.GetTempPath(), "test", "metadata", $"snapshot-{genesisBlockEpoch}-{genesisBlockEpoch}.json");
-            var expectedFullSnapshotPath = Path.Combine(Path.GetTempPath(), "test", "full", $"{genesisHash}-snapshot-{tipHashAfterSnapshot}.zip"); 
+            var expectedFullSnapshotPath = Path.Combine(Path.GetTempPath(), "test", "full", $"{genesisHash}-snapshot-{tipHashAfterSnapshot}.zip");
             storeAfterSnapshot.Dispose();
 
             Assert.True(File.Exists(expectedGenesisPartitionSnapshotPath));

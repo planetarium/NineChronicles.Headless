@@ -377,7 +377,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 // If store changed epoch unit seconds, this will be changed too
                 const int blockEpochUnitSeconds = 86400;
                 const int txEpochUnitSeconds = 86400;
-                
+
                 string defaultStorePath = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     "planetarium",
@@ -414,7 +414,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 var stateHashesPath = Path.Combine(storePath, "state_hashes");
 
                 var staleDirectories =
-                new [] { mainPath, statePath, stateRefPath, stateHashesPath};
+                new[] { mainPath, statePath, stateRefPath, stateHashesPath };
 #pragma warning disable S3267
                 foreach (var staleDirectory in staleDirectories)
                 {
@@ -445,7 +445,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 var genesisHash = store.IterateIndexes(chainId, 0, 1).First();
-                var tipHash = store.IndexBlockHash(chainId, -1) 
+                var tipHash = store.IndexBlockHash(chainId, -1)
                     ?? throw new CommandExitedException("The given chain seems empty.", -1);
                 if (!(store.GetBlockIndex(tipHash) is { } tipIndex))
                 {
@@ -495,9 +495,9 @@ namespace NineChronicles.Headless.Executable.Commands
                 var stringData = $"CopyStates Done. Time Taken: {(end - start).Minutes} min";
                 _console.Out.WriteLine(stringData);
 
-                var latestBlockEpoch = (int) (tip.Timestamp.ToUnixTimeSeconds() / blockEpochUnitSeconds);
+                var latestBlockEpoch = (int)(tip.Timestamp.ToUnixTimeSeconds() / blockEpochUnitSeconds);
                 var latestBlockWithTx = tip;
-                while(!latestBlockWithTx.Transactions.Any())
+                while (!latestBlockWithTx.Transactions.Any())
                 {
                     if (latestBlockWithTx.PreviousHash is { } newHash)
                     {
@@ -506,7 +506,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 var txTimeSecond = latestBlockWithTx.Transactions.Max(tx => tx.Timestamp.ToUnixTimeSeconds());
-                var latestTxEpoch = (int) (txTimeSecond / txEpochUnitSeconds);
+                var latestTxEpoch = (int)(txTimeSecond / txEpochUnitSeconds);
 
                 store.Dispose();
                 stateStore.Dispose();
@@ -602,7 +602,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     stringData = $"Clone State Directory Done. Time Taken: {(end - start).Minutes} min";
                     _console.Out.WriteLine(stringData);
                 }
-                
+
                 if (snapshotType is SnapshotType.Full or SnapshotType.All)
                 {
                     _console.Out.WriteLine("Create Full ZipFile Start.");
@@ -825,7 +825,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     .Where(x => Path.GetExtension(x) == ".json")
                     .OrderByDescending(File.GetLastWriteTime)
                     .First();
-                var jsonObject = JObject.Parse(File.ReadAllText(previousMetadata)); 
+                var jsonObject = JObject.Parse(File.ReadAllText(previousMetadata));
                 return (int)jsonObject[epochType]!;
             }
             catch (InvalidOperationException e)
@@ -876,7 +876,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 _console.Out.WriteLine(ex.Message);
             }
         }
-        
+
         private void CleanEpoch(string path, int epochLimit)
         {
             string[] directories = Directory.GetDirectories(
