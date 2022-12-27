@@ -4,7 +4,7 @@ using GraphQL;
 using GraphQL.Types;
 using Lib9c.DevExtensions.Action;
 using Libplanet.Explorer.GraphTypes;
-using Nekoyume.Action;
+using Nekoyume.Model.Faucet;
 using TestNCAction = Libplanet.Action.PolymorphicAction<Lib9c.DevExtensions.Action.TestActionBase>;
 
 namespace NineChronicles.Headless.DevExtensions.GraphTypes;

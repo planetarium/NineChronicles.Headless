@@ -15,6 +15,7 @@ using Libplanet.Crypto;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Nekoyume.Action;
+using Nekoyume.Model.Faucet;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.DevExtensions.GraphTypes;
 using Xunit;
