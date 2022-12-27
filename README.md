@@ -20,7 +20,12 @@
 $ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
 
 Usage: NineChronicles.Headless.Executable [command]
-Usage: NineChronicles.Headless.Executable [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <UInt16>] [--swarm-private-key <String>] [--workers <Int32>] [--no-miner] [--miner-count <Int32>] [--miner-private-key <String>] [--store-type <String>] [--store-path <String>] [--no-reduce-store] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Int32>] [--rpc-remote-server] [--rpc-http-server] [--graphql-server] [--graphql-host <String>] [--graphql-port <Int32>] [--graphql-secret-token-path <String>] [--no-cors] [--confirmations <Int32>] [--nonblock-renderer] [--nonblock-renderer-queue <Int32>] [--strict-rendering] [--log-action-renders] [--network-type <NetworkType>] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--static-peer <String>...] [--skip-preload] [--minimum-broadcast-target <Int32>] [--bucket-size <Int32>] [--chain-tip-stale-behavior-type <String>] [--tx-quota-per-signer <Int32>] [--maximum-poll-peers <Int32>] [--config <String>] [--help] [--version]
+Usage: NineChronicles.Headless.Executable [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <UInt16>] [--swarm-private-key <String>] [--workers <Int32>] [--no-miner] [--miner-count <Int32>]
+[--miner-private-key <String>] [--miner.block-interval <Int32>] [--store-type <String>] [--store-path <String>] [--no-reduce-store] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...]
+[--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Int32>] [--rpc-remote-server] [--rpc-http-server] [--graphql-server] [--graphql-host <String>] [--graphql-port <Int32>] [--graphql-secret-token-path <String>] [--no-cor
+s] [--confirmations <Int32>] [--nonblock-renderer] [--nonblock-renderer-queue <Int32>] [--strict-rendering] [--log-action-renders] [--network-type <NetworkType>] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <I
+nt32>] [--demand-buffer <Int32>] [--static-peer <String>...] [--skip-preload] [--minimum-broadcast-target <Int32>] [--bucket-size <Int32>] [--chain-tip-stale-behavior-type <String>] [--tx-quota-per-signer <Int32>] [--maximum-poll-pe
+ers <Int32>] [--config <String>] [--sentry-dsn <String>] [--sentry-trace-sample-rate <Double>] [--help] [--version]
 
 NineChronicles.Headless.Executable
 
@@ -35,6 +40,7 @@ Commands:
   tx
   market
   genesis
+  replay
 
 Options:
   -V, --app-protocol-version <String>                      App protocol version token.
@@ -46,6 +52,7 @@ Options:
   --no-miner                                               Disable block mining.
   --miner-count <Int32>                                    The number of miner task(thread).
   --miner-private-key <String>                             The private key used for mining blocks. Must not be null if you want to turn on mining with libplanet-node.
+  --miner.block-interval <Int32>                           The miner's break time after mining a block. The unit is millisecond.
   --store-type <String>                                    The type of storage to store blockchain data. If not provided, "LiteDB" will be used as default. Available type: ["rocksdb", "memory"]
   --store-path <String>                                    Path of storage. This value is required if you use persistent storage e.g. "rocksdb"
   --no-reduce-store                                        Do not reduce storage. Enabling this option will use enormous disk spaces.
@@ -68,13 +75,6 @@ Options:
   --strict-rendering                                       Flag to turn on validating action renderer.
   --log-action-renders                                     Log action renders besides block renders. --rpc-server implies this.
   --network-type <NetworkType>                             Network type. (Allowed values: Main, Internal, Permanent, Test, Default)
-  --dev                                                    Flag to turn on the dev mode. false by default.
-  --dev.block-interval <Int32>                             The time interval between blocks. It's unit is milliseconds. Works only when dev mode is on.
-  --dev.reorg-interval <Int32>                             The size of reorg interval. Works only when dev mode is on.
-  --aws-cognito-identity <String>                          The Cognito identity for AWS CloudWatch logging.
-  --aws-access-key <String>                                The access key for AWS CloudWatch logging.
-  --aws-secret-key <String>                                The secret key for AWS CloudWatch logging.
-  --aws-region <String>                                    The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2).
   --tx-life-time <Int32>                                   The lifetime of each transaction, which uses minute as its unit.
   --message-timeout <Int32>                                The grace period for new messages, which uses second as its unit.
   --tip-timeout <Int32>                                    The grace period for tip update, which uses second as its unit.
@@ -86,7 +86,9 @@ Options:
   --chain-tip-stale-behavior-type <String>                 Determines behavior when the chain's tip is stale. "reboot" and "preload" is available and "reboot" option is selected by default.
   --tx-quota-per-signer <Int32>                            The number of maximum transactions can be included in stage per signer.
   --maximum-poll-peers <Int32>                             The maximum number of peers to poll blocks. int.MaxValue by default.
-  -C, --config <String>                                    Path of "appsettings.json" file to provide headless configurations. (Default: appsettings.json)
+  -C, --config <String>                                    Absolute path of "appsettings.json" file to provide headless configurations. (Default: appsettings.json)
+  --sentry-dsn <String>                                    Sentry DSN
+  --sentry-trace-sample-rate <Double>                      Trace sample rate for sentry
   -h, --help                                               Show help message
   --version                                                Show version
 ```
