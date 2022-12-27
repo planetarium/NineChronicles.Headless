@@ -255,7 +255,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     -1);
             }
 
-            var tip = store.GetBlock<Utils.DummyAction>(tipHash);
+            var tip = store.GetBlock<NCAction>(tipHash);
             var snapshotTipIndex = Math.Max(tipIndex - (blocksBefore + 1), 0);
             BlockHash snapshotTipHash;
 
@@ -436,7 +436,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(statesPath);
                 IKeyValueStore newStateKeyValueStore = new RocksDBKeyValueStore(newStatesPath);
                 TrieStateStore stateStore = new TrieStateStore(stateKeyValueStore);
-                var newStateStore = new TrieStateStore(newStateKeyValueStore);
+                TrieStateStore newStateStore = new TrieStateStore(newStateKeyValueStore);
 
                 var canonicalChainId = store.GetCanonicalChainId();
                 if (!(canonicalChainId is { } chainId))
@@ -454,7 +454,7 @@ namespace NineChronicles.Headless.Executable.Commands
                         -1);
                 }
 
-                Block<Utils.DummyAction> tip = store.GetBlock<Utils.DummyAction>(tipHash);
+                Block<NCAction> tip = store.GetBlock<NCAction>(tipHash);
                 var snapshotTipIndex = Math.Max(tipIndex - (blockBefore + 1), 0);
                 BlockHash snapshotTipHash;
 
@@ -470,7 +470,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     }
 
                     snapshotTipHash = hash;
-                } while (!stateStore.ContainsStateRoot(store.GetBlock<Utils.DummyAction>(snapshotTipHash).StateRootHash));
+                } while (!stateStore.ContainsStateRoot(store.GetBlock<NCAction>(snapshotTipHash).StateRootHash));
 
                 var forkedId = Guid.NewGuid();
 
@@ -496,7 +496,15 @@ namespace NineChronicles.Headless.Executable.Commands
                 _console.Out.WriteLine(stringData);
 
                 var latestBlockEpoch = (int) (tip.Timestamp.ToUnixTimeSeconds() / blockEpochUnitSeconds);
-                var latestBlockWithTx = GetLatestBlockWithTransaction(tip, store);
+                var latestBlockWithTx = tip;
+                while(!latestBlockWithTx.Transactions.Any())
+                {
+                    if (latestBlockWithTx.PreviousHash is { } newHash)
+                    {
+                        latestBlockWithTx = store.GetBlock<NCAction>(newHash);
+                    }
+                }
+
                 var txTimeSecond = latestBlockWithTx.Transactions.Max(tx => tx.Timestamp.ToUnixTimeSeconds());
                 var latestTxEpoch = (int) (txTimeSecond / txEpochUnitSeconds);
 
@@ -827,20 +835,6 @@ namespace NineChronicles.Headless.Executable.Commands
             }
         }
 
-        private Block<T> GetLatestBlockWithTransaction<T>(Block<T> tip, IStore store)
-            where T : Utils.DummyAction, new()
-        {
-            var block = tip;
-            while(!block.Transactions.Any())
-            {
-                if (block.PreviousHash is { } newHash)
-                {
-                    block = store.GetBlock<T>(newHash);
-                }
-            }
-            return block;
-        }
-
         private void CopyDirectory(string sourceDir, string destinationDir, bool recursive)
         {
             try
@@ -933,17 +927,17 @@ namespace NineChronicles.Headless.Executable.Commands
             Guid src,
             Guid dest,
             BlockHash branchPointHash,
-            Block<Utils.DummyAction> tip,
+            Block<NCAction> tip,
             IStore store)
         {
             store.ForkBlockIndexes(src, dest, branchPointHash);
             store.ForkTxNonces(src, dest);
 
             for (
-                Block<Utils.DummyAction> block = tip;
+                Block<NCAction> block = tip;
                 block.PreviousHash is { } hash
                 && !block.Hash.Equals(branchPointHash);
-                block = store.GetBlock<Utils.DummyAction>(hash))
+                block = store.GetBlock<NCAction>(hash))
             {
                 IEnumerable<(Address, int)> signers = block
                     .Transactions
