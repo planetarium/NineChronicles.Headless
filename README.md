@@ -133,6 +133,16 @@ You can get APV strings at the following places:
 - internal: [Internal network config](https://github.com/planetarium/9c-k8s-config/blob/main/9c-internal/configmap-versions.yaml) - `APP_PROTOCOL_VERSION`
 - previewnet: [Previewnet config](https://github.com/planetarium/9c-k8s-config/blob/main/9c-previewnet/configmap-versions.yaml) - `APP_PROTOCOL_VERSION`
 
+### Build with dev/test actions
+Lib9c has several test-only actions. This will not be deployed to mainnet but you can run your own headless server with this test actions.  
+Add `/p:ExtraDefineConstants=TEST_9C` when you build NineChronicles.Headless.Executable project.  
+To do this, you should execute `build` command and `run` command separately.  
+```shell
+dotnet build NineChronicles.Headless.Executable /p:ExtraDefineConstants=TEST_9C
+dotnet run --no-build --procjet NineChronicles.Headless.Executable -C appsettings.local.json
+```
+You can run this local headless to attach mainnet, but you cannot stage dev action tx to mainnet because the miner will not accept test actions.
+
 ## Docker Build
 
 A headless image can be created by running the command below in the directory where the solution is located.
