@@ -4,6 +4,11 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CodeAnalysisRuleSet>..\NineChronicles.Headless.Common.ruleset</CodeAnalysisRuleSet>
     <Nullable>enable</Nullable>
+    <PreBuildEvent Condition="$(ExtraDefineConstants.Contains('TEST_9C'))">
+        echo "TEST_9C: Build NineChronicles.Headless with test actions"
+        dotnet build $(MSBuildThisFileDirectory)..\Lib9c\Lib9c\Lib9c.csproj /p:ExtraDefineConstants=TSET_9C /t:Rebuild
+    </PreBuildEvent>
+      <DefineConstants Condition="$(ExtraDefineConstants.Contains('TEST_9C'))">$(DefineConstants);TEST_9C</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lib9c\Lib9c.MessagePack\Lib9c.MessagePack.csproj" />
@@ -14,7 +19,6 @@
     <ProjectReference Include="..\Lib9c\Libplanet.Crypto.Secp256k1\Libplanet.Crypto.Secp256k1.csproj" />
     <ProjectReference Include="..\Libplanet.Headless\Libplanet.Headless.csproj" />
     <ProjectReference Include="..\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared.csproj" />
-    <ProjectReference Include="..\NineChronicles.Headless.DevExtensions\NineChronicles.Headless.DevExtensions.csproj"/>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="GraphQL.Server.Authorization.AspNetCore" Version="5.1.1" />

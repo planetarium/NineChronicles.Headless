@@ -11,13 +11,11 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-// using NineChronicles.Headless.DevExtensions.GraphTypes;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Middleware;
 using NineChronicles.Headless.Properties;
 using Serilog;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
-using TestNCAction = Libplanet.Action.PolymorphicAction<Lib9c.DevExtensions.Action.TestActionBase>;
 
 namespace NineChronicles.Headless
 {
@@ -128,10 +126,6 @@ namespace NineChronicles.Headless
                     .AddGraphTypes(typeof(StandaloneSchema))
                     .AddGraphTypes(typeof(LibplanetExplorerSchema<NCAction>))
                     .AddLibplanetExplorer<NCAction>()
-                    // Uncommenting this lines makes circular referencing prob.
-                    // .AddGraphTypes(typeof(DevStandaloneSchema))
-                    // .AddGraphTypes(typeof(LibplanetExplorerSchema<TestNCAction>))
-                    // .AddLibplanetExplorer<TestNCAction>()
                     .AddUserContextBuilder<UserContextBuilder>()
                     .AddGraphQLAuthorization(
                         options => options.AddPolicy(

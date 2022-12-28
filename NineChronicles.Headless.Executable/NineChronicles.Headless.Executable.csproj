@@ -8,6 +8,10 @@
     <CodeAnalysisRuleSet>..\NineChronicles.Headless.Common.ruleset</CodeAnalysisRuleSet>
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <Nullable>enable</Nullable>
+      <PreBuildEvent Condition="$(ExtraDefineConstants.Contains('TEST_9C'))">
+          echo "TEST_9C: Build NineChronicles.Headless.Executable with test actions"
+          dotnet build $(MSBuildThisFileDirectory)..\NineChronicles.Headless\NineChronicles.Headless.csproj /p:ExtraDefineConstants=TEST_9C /t:Rebuild
+      </PreBuildEvent>
   </PropertyGroup>
 
   <ItemGroup>

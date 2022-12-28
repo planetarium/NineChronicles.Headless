@@ -16,6 +16,9 @@ using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+#if TEST_9C
+using Nekoyume.Model.Faucet;
+#endif
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -537,6 +540,61 @@ namespace NineChronicles.Headless.GraphTypes
                     };
                     return Encode(context, action);
                 });
+
+#if TEST_9C
+            Field<NonNullGraphType<ByteStringType>>(
+                "faucetCurrency",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "agentAddress",
+                        Description = "9c Address to use faucet"
+                    },
+                    new QueryArgument<IntGraphType>
+                    {
+                        Name = "faucetNcg",
+                        Description = "Amount of NCG to get.",
+                    },
+                    new QueryArgument<IntGraphType>
+                    {
+                        Name = "faucetCrystal",
+                        Description = "Amount of Crystal to get.",
+                    }
+                ),
+                resolve: context =>
+                {
+                    var agentAddress = context.GetArgument<Libplanet.Address>("agentAddress");
+                    var faucetNcg = context.GetArgument<int>("faucetNcg");
+                    var faucetCrystal = context.GetArgument<int>("faucetCrystal");
+                    NCAction action = FaucetFactory.CreateFaucetCurrency(agentAddress, faucetNcg, faucetCrystal);
+                    return Encode(context, action);
+                }
+            );
+
+            Field<NonNullGraphType<ByteStringType>>(
+                "faucetRune",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "avatar Address to use faucet"
+                    },
+                    new QueryArgument<ListGraphType<NonNullGraphType<FaucetRuneInputType>>>
+                    {
+                        Name = "faucetRuneInfos",
+                        Description = "List of rune info to get: [{runeId: <int>, amount: <int>}].",
+                        DefaultValue = new List<FaucetRuneInfo>()
+                    }
+                ),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Libplanet.Address>("avatarAddress");
+                    var faucetRuneInfos = context.GetArgument<List<FaucetRuneInfo>>("faucetRuneInfos");
+                    NCAction action = FaucetFactory.CreateFaucetRune(avatarAddress, faucetRuneInfos);
+                    return Encode(context, action);
+                }
+            );
+#endif
         }
 
         internal virtual byte[] Encode(IResolveFieldContext context, NCAction action)
