@@ -169,7 +169,13 @@ namespace Libplanet.Headless.Hosting
                 renderers: renderers,
                 blockChainStates: blockChainStates,
                 actionEvaluator: new ActionEvaluator<T>(
-                    blockPolicy.BlockAction,
+                    blockHeader =>
+                    {
+                        var blockActionType = actionTypeLoader
+                            .LoadAllActionTypes(new ActionTypeLoaderContext(blockHeader.Index))
+                            .First(t => t.FullName == "Nekoyume.Action.RewardGold");
+                        return (IAction)Activator.CreateInstance(blockActionType);
+                    },
                     blockChainStates: blockChainStates,
                     trieGetter: hash => StateStore.GetStateRoot(
                         Store.GetBlockDigest(hash)?.StateRootHash
@@ -648,6 +654,17 @@ namespace Libplanet.Headless.Hosting
 
             (Store as IDisposable)?.Dispose();
             Log.Debug("Store disposed.");
+        }
+
+        // FIXME: Request libplanet provide default implementation.
+        private sealed class ActionTypeLoaderContext : IActionTypeLoaderContext
+        {
+            public ActionTypeLoaderContext(long index)
+            {
+                Index = index;
+            }
+
+            public long Index { get; }
         }
     }
 }
