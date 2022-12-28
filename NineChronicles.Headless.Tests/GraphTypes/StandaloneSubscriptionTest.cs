@@ -17,8 +17,8 @@ using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Crypto;
-using Libplanet.Net;
 using Libplanet.Headless;
+using Libplanet.Net;
 using Libplanet.Tx;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -96,8 +96,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             _ = service.StartAsync(cts.Token);
 
-            await service.PreloadEnded.WaitAsync(cts.Token);
-
             var subscribeResult = (SubscriptionExecutionResult)result;
             var stream = subscribeResult.Streams!.Values.FirstOrDefault();
 
@@ -105,30 +103,46 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             // BlockDownloadState      : 1
             // BlockVerificationState  : 1
             // ActionExecutionState    : 1
-            const int preloadStatesCount = 5;
             var preloadProgressRecords =
                 new List<(long currentPhase, long totalPhase, string type, long currentCount, long totalCount)>();
             var expectedPreloadProgress = new[]
             {
-                (1L, 5L, "BlockHashDownloadState", 0L, 0L),
                 (1L, 5L, "BlockHashDownloadState", 1L, 1L),
                 (2L, 5L, "BlockDownloadState", 1L, 1L),
                 (3L, 5L, "BlockVerificationState", 1L, 1L),
                 (5L, 5L, "ActionExecutionState", 1L, 1L),
             }.ToImmutableHashSet();
-            foreach (var index in Enumerable.Range(1, preloadStatesCount))
+            foreach (var index in Enumerable.Range(1, expectedPreloadProgress.Count() + 1))
             {
-                var rawEvents = await stream.Take(index);
+                var rawEvents = await stream.Take(1);
                 var events = (Dictionary<string, object>)((ExecutionNode)rawEvents.Data!).ToValue()!;
                 var preloadProgress = (Dictionary<string, object>)events["preloadProgress"];
                 var preloadProgressExtra = (Dictionary<string, object>)preloadProgress["extra"];
 
+                var extraType = (string)preloadProgressExtra["type"];
+                var extraCurrentCount = (long)preloadProgressExtra["currentCount"];
+                var extraTotalCount = (long)preloadProgressExtra["totalCount"];
+
+                if (
+                    extraType == "BlockHashDownloadState" &&
+                    extraCurrentCount == 0L &&
+                    extraTotalCount == 0L
+                )
+                {
+                    continue;
+                }
+
                 preloadProgressRecords.Add((
                     (long)preloadProgress["currentPhase"],
                     (long)preloadProgress["totalPhase"],
-                    (string)preloadProgressExtra["type"],
-                    (long)preloadProgressExtra["currentCount"],
-                    (long)preloadProgressExtra["totalCount"]));
+                    extraType,
+                    extraCurrentCount,
+                    extraTotalCount));
+
+                if (preloadProgressRecords.Count() == 4)
+                {
+                    break;
+                }
             }
 
             Assert.Equal(expectedPreloadProgress, preloadProgressRecords.ToImmutableHashSet());
