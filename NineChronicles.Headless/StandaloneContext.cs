@@ -26,8 +26,6 @@ namespace NineChronicles.Headless
             = new Subject<DifferentAppProtocolVersionEncounter>();
         public Subject<Notification> NotificationSubject { get; } = new Subject<Notification>();
         public Subject<NodeException> NodeExceptionSubject { get; } = new Subject<NodeException>();
-        public Subject<MonsterCollectionState> MonsterCollectionStateSubject { get; } = new Subject<MonsterCollectionState>();
-        public Subject<MonsterCollectionStatus> MonsterCollectionStatusSubject { get; } = new Subject<MonsterCollectionStatus>();
         public NineChroniclesNodeService? NineChroniclesNodeService { get; set; }
 
         public ConcurrentDictionary<Address,
