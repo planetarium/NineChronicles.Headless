@@ -5,15 +5,11 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
-using GraphQL;
 using GraphQL.Execution;
-using GraphQL.NewtonsoftJson;
-using Lib9c.Tests;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
@@ -31,7 +27,6 @@ using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.Properties;
-using NineChronicles.Headless.Tests.Common;
 using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
 using Xunit.Abstractions;
@@ -44,7 +39,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         public StandaloneQueryTest(ITestOutputHelper output) : base(output)
         {
-            _sheets = TableSheetsImporter.ImportSheets(Path.Join("..", "..", "..", "..", "Lib9c", "Lib9c", "TableCSV"));
+            _sheets = TableSheetsImporter.ImportSheets();
         }
 
         [Fact]

@@ -1,6 +1,4 @@
 using System;
-using System.IO;
-using Lib9c.DevExtensions.Model;
 using Lib9c.Model.Order;
 using Lib9c.Tests;
 using Libplanet;
@@ -24,12 +22,9 @@ namespace NineChronicles.Headless.Tests
 
         public static readonly Address StakeStateAddress = StakeState.DeriveAddress(UserAddress);
 
-        public static readonly TableSheets TableSheetsFX =
-            new TableSheets(
-                TableSheetsImporter.ImportSheets(
-                    Path.Join("..", "..", "..", "..", "Lib9c", "Lib9c", "TableCSV")));
+        public static readonly TableSheets TableSheetsFX = new(TableSheetsImporter.ImportSheets());
 
-        public static readonly AvatarState AvatarStateFX = new AvatarState(
+        public static readonly AvatarState AvatarStateFX = new(
             AvatarAddress,
             UserAddress,
             0,
