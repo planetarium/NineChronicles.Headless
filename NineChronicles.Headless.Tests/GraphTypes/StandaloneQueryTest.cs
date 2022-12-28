@@ -804,7 +804,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty
             };
 
-            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test, null);
+            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test);
             var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Test);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;

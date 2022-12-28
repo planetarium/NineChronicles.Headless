@@ -190,7 +190,7 @@ namespace NineChronicles.Headless.Tests.Controllers
                     SwarmPrivateKey = new PrivateKey(),
                     Host = IPAddress.Loopback.ToString(),
                 },
-                NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test, null),
+                NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test),
                 NetworkType.Test);
         }
     }
