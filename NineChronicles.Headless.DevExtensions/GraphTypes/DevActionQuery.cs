@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using Bencodex;
 using GraphQL;
 using GraphQL.Types;
-using Lib9c.DevExtensions.Action;
 using Libplanet.Explorer.GraphTypes;
+using Nekoyume.Action.Factory;
 using Nekoyume.Model.Faucet;
-using TestNCAction = Libplanet.Action.PolymorphicAction<Lib9c.DevExtensions.Action.TestActionBase>;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.DevExtensions.GraphTypes;
 
@@ -43,12 +43,7 @@ public class DevActionQuery : ObjectGraphType
                 var agentAddress = context.GetArgument<Libplanet.Address>("agentAddress");
                 var faucetNcg = context.GetArgument<int>("faucetNcg");
                 var faucetCrystal = context.GetArgument<int>("faucetCrystal");
-                TestNCAction action = new FaucetCurrency
-                {
-                    AgentAddress = agentAddress,
-                    FaucetNcg = faucetNcg,
-                    FaucetCrystal = faucetCrystal
-                };
+                NCAction action = FaucetFactory.CreateFaucetCurrency(agentAddress, faucetNcg, faucetCrystal);
                 return Encode(context, action);
             }
         );
@@ -72,17 +67,13 @@ public class DevActionQuery : ObjectGraphType
             {
                 var avatarAddress = context.GetArgument<Libplanet.Address>("avatarAddress");
                 var faucetRuneInfos = context.GetArgument<List<FaucetRuneInfo>>("faucetRuneInfos");
-                TestNCAction action = new FaucetRune
-                {
-                    AvatarAddress = avatarAddress,
-                    FaucetRuneInfos = faucetRuneInfos
-                };
+                NCAction action = FaucetFactory.CreateFaucetRune(avatarAddress, faucetRuneInfos);
                 return Encode(context, action);
             }
         );
     }
 
-    internal static byte[] Encode(IResolveFieldContext context, TestNCAction action)
+    internal static byte[] Encode(IResolveFieldContext context, NCAction action)
     {
         return Codec.Encode(action.PlainValue);
     }

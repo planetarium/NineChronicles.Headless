@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL.Execution;
-using Lib9c.DevExtensions.Action;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;

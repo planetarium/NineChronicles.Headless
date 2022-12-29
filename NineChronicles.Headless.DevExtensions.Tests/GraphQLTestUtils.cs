@@ -5,7 +5,7 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
-using TestNCAction = Libplanet.Action.PolymorphicAction<Lib9c.DevExtensions.Action.TestActionBase>;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.DevExtensions.Tests
 {
@@ -25,7 +25,7 @@ namespace NineChronicles.Headless.DevExtensions.Tests
                 services.AddSingleton(standaloneContext);
             }
 
-            services.AddLibplanetExplorer<TestNCAction>();
+            services.AddLibplanetExplorer<NCAction>();
 
             var serviceProvider = services.BuildServiceProvider();
             return ExecuteQueryAsync<TObjectGraphType>(
@@ -56,10 +56,10 @@ namespace NineChronicles.Headless.DevExtensions.Tests
             });
         }
         
-        public static  TestNCAction DeserializeNCAction(IValue value)
+        public static  NCAction DeserializeNCAction(IValue value)
         {
 #pragma warning disable CS0612
-            TestNCAction action = new TestNCAction();
+            NCAction action = new NCAction();
 #pragma warning restore CS0612
             action.LoadPlainValue(value);
             return action;
