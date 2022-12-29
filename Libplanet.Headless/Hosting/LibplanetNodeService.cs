@@ -148,10 +148,20 @@ namespace Libplanet.Headless.Hosting
 
             var blockChainStates = new BlockChainStates<T>(Store, StateStore);
 
+            Type UnwrapPolymorphicAction(Type type)
+            {
+                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(PolymorphicAction<>))
+                {
+                    return type.GetGenericArguments()[0];
+                }
+
+                return type;
+            }
+
             IActionTypeLoader MakeStaticActionTypeLoader() => new StaticActionTypeLoader(
                 Assembly.GetEntryAssembly() is { } entryAssembly
-                    ? new[] { typeof(T).Assembly, entryAssembly }
-                    : new[] { typeof(T).Assembly },
+                    ? new[] { UnwrapPolymorphicAction(typeof(T)).Assembly, entryAssembly }
+                    : new[] { UnwrapPolymorphicAction(typeof(T)).Assembly },
                 typeof(T)
             );
 
