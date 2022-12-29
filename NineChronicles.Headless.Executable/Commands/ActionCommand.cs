@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
 using Cocona;
@@ -26,6 +27,13 @@ namespace NineChronicles.Headless.Executable.Commands
 {
     public class ActionCommand : CoconaLiteConsoleAppBase
     {
+#pragma warning disable S1075
+        public const string IssueCouponDataSchemaUri =
+            "https://planetarium.github.io/json-schema/NineChronicles/2022-12/IssueCouponData.schema.json";
+        public const string TransferCouponDataSchemaUri =
+            "https://planetarium.github.io/json-schema/NineChronicles/2022-12/TransferCouponData.schema.json";
+#pragma warning restore S1075
+
         private static readonly Codec Codec = new Codec();
         private readonly IConsole _console;
 
@@ -84,84 +92,24 @@ namespace NineChronicles.Headless.Executable.Commands
         }
 
         [Command(Description = "Create IssueCoupons action.")]
-        public int IssueCoupons(
-            [Argument("DATAFILE-PATH", Description = "The path of the json file that contains the coupon specs.")]
+        public async ValueTask<int> IssueCoupons(
+            [Argument(
+                "DATAFILE-PATH",
+                Description = "The path of the json file that contains the coupon specs.  " +
+                    "It has to comply with the schema: " + IssueCouponDataSchemaUri)]
             string dataFilePath,
             [Argument("PATH", Description = "A file path of base64 encoded action.")]
             string? filePath = null
         )
         {
-            // TODO: might want to have the schema in a separate file and provide a URI as its $id.
-            const string issueCouponsDataSchema = @"{
-              ""$schema"": ""https://json-schema.org/draft/2019-09/schema"",
-              ""title"": ""IssueCouponData"",
-              ""type"": ""object"",
-              ""required"": [
-                ""recipient"",
-                ""couponSpecs""
-              ],
-              ""properties"": {
-                ""recipient"": {
-                  ""type"": ""string"",
-                  ""description"": ""The address of the agent that will receive the coupons.""
-                },
-                ""couponSpecs"": {
-                  ""type"": ""array"",
-                  ""description"": ""The array containing the specification of coupons to be issued."",
-                  ""items"": {
-                    ""$ref"": ""#/$defs/couponSpec""
-                  }
-                }
-              },
-              ""$defs"": {
-                ""couponSpec"": {
-                  ""type"": ""object"",
-                  ""description"": ""Specification of a coupon instance."",
-                  ""required"": [
-                    ""rewardItemList"",
-                    ""count""
-                  ],
-                  ""properties"": {
-                    ""rewardItemList"": {
-                      ""type"": ""array"",
-                      ""description"": ""The list of items that will be given to the avatar once redeemed."",
-                      ""items"": {
-                        ""$ref"": ""#/$defs/rewardItemSpec""
-                      }
-                    },
-                    ""count"": {
-                      ""description"": ""How many coupon instances of this spec will be issued."",
-                      ""type"": ""integer""
-                    }
-                  }
-                },
-                ""rewardItemSpec"": {
-                  ""type"": ""object"",
-                  ""description"": ""A specification of an item that will be given, paired with the count of item that will be given."",
-                  ""required"": [
-                    ""id"",
-                    ""count""
-                  ],
-                  ""properties"": {
-                    ""id"": {
-                      ""description"": ""The internal numeric identifier of the item."",
-                      ""type"": ""integer""
-                    },
-                    ""count"": {
-                      ""description"": ""The count of this item to be given."",
-                      ""type"": ""integer""
-                    }
-                  }
-                }
-              }
-            }";
+            JsonSchema schema = await JsonSchemaExtensions.FromUri(IssueCouponDataSchemaUri);
 
-            JsonSchema schema = JsonSchema.FromText(issueCouponsDataSchema);
-
-            var issueCouponsData = JsonDocument.Parse(File.ReadAllText(dataFilePath));
             var options = EvaluationOptions.Default;
             options.OutputFormat = OutputFormat.List;
-            var validation = schema.Evaluate(issueCouponsData, options);
+            var validation = schema.EvaluateFile(
+                dataFilePath,
+                out JsonDocument issueCouponsData,
+                options);
 
             if (!validation.IsValid)
             {
@@ -186,9 +134,9 @@ namespace NineChronicles.Headless.Executable.Commands
                                 el.GetProperty("rewardItemList")
                                     .EnumerateArray()
                                     .Select(el =>
-                                            new KeyValuePair<int, uint>(
-                                                el.GetProperty("id").GetInt32(),
-                                                el.GetProperty("count").GetUInt32()))
+                                        new KeyValuePair<int, uint>(
+                                            el.GetProperty("id").GetInt32(),
+                                            el.GetProperty("count").GetUInt32()))
                                     .ToImmutableDictionary()),
                             el.GetProperty("count").GetUInt32()))
                     .ToImmutableDictionary();
@@ -223,52 +171,24 @@ namespace NineChronicles.Headless.Executable.Commands
         }
 
         [Command(Description = "Create TransferCoupons action.")]
-        public int TransferCoupons(
-            [Argument("DATAFILE-PATH", Description = "The path of the json file that contains the transfer specs.")]
+        public async ValueTask<int> TransferCoupons(
+            [Argument(
+                "DATAFILE-PATH",
+                Description = "The path of the json file that contains the transfer specs.  " +
+                    "It has to comply with the schema: " + TransferCouponDataSchemaUri)]
             string dataFilePath,
             [Argument("PATH", Description = "A file path of base64 encoded action.")]
             string? filePath = null
         )
         {
-            // TODO: might want to have the schema in a separate file and provide a URI as its $id.
-            const string transferCouponsDataSchema = @"{
-              ""$schema"": ""https://json-schema.org/draft/2019-09/schema"",
-              ""title"": ""TransferCouponData"",
-              ""type"": ""array"",
-              ""items"": {
-                ""$ref"": ""#/$defs/depositSpec""
-              },
-              ""$defs"": {
-                ""depositSpec"": {
-                  ""description"": ""Coupon GUIDs to transfer paired with the recipient address."",
-                  ""type"": ""object"",
-                  ""required"": [
-                    ""recipient"",
-                    ""coupons""
-                  ],
-                  ""properties"": {
-                    ""recipient"": {
-                      ""description"": ""Address of the recipient to receive the coupons."",
-                      ""type"": ""string""
-                    },
-                    ""coupons"": {
-                      ""description"": ""Coupon GUIDs to transfer."",
-                      ""type"": ""array"",
-                      ""items"": {
-                        ""type"": ""string""
-                      }
-                    }
-                  }
-                }
-              }
-            }";
+            JsonSchema schema = await JsonSchemaExtensions.FromUri(TransferCouponDataSchemaUri);
 
-            JsonSchema schema = JsonSchema.FromText(transferCouponsDataSchema);
-
-            var transferCouponsData = JsonDocument.Parse(File.ReadAllText(dataFilePath));
             var options = EvaluationOptions.Default;
             options.OutputFormat = OutputFormat.List;
-            var validation = schema.Evaluate(transferCouponsData, options);
+            var validation = schema.EvaluateFile(
+                dataFilePath,
+                out JsonDocument transferCouponsData,
+                options);
 
             if (!validation.IsValid)
             {
