@@ -268,7 +268,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             store.Dispose();
             stateStore.Dispose();
             const string apv = "1";
-            var outputDirectory = Path.Combine(Path.GetTempPath(), "test");
+            var outputDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
             _command.Snapshot(
                 apv,
@@ -279,9 +279,9 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             IStore storeAfterSnapshot = storeType.CreateStore(_storePath);
             chainId = storeAfterSnapshot.GetCanonicalChainId() ?? new Guid();
             var tipHashAfterSnapshot = storeAfterSnapshot.IndexBlockHash(chainId, -1);
-            var expectedGenesisPartitionSnapshotPath = Path.Combine(Path.GetTempPath(), "test", "partition", $"snapshot-{genesisBlockEpoch}-{genesisBlockEpoch}.zip");
-            var expectedGenesisMetadataPath = Path.Combine(Path.GetTempPath(), "test", "metadata", $"snapshot-{genesisBlockEpoch}-{genesisBlockEpoch}.json");
-            var expectedFullSnapshotPath = Path.Combine(Path.GetTempPath(), "test", "full", $"{genesisHash}-snapshot-{tipHashAfterSnapshot}.zip");
+            var expectedGenesisPartitionSnapshotPath = Path.Combine(outputDirectory, "partition", $"snapshot-{genesisBlockEpoch}-{genesisBlockEpoch}.zip");
+            var expectedGenesisMetadataPath = Path.Combine(outputDirectory, "metadata", $"snapshot-{genesisBlockEpoch}-{genesisBlockEpoch}.json");
+            var expectedFullSnapshotPath = Path.Combine(outputDirectory, "full", $"{genesisHash}-snapshot-{tipHashAfterSnapshot}.zip");
             storeAfterSnapshot.Dispose();
 
             Assert.True(File.Exists(expectedGenesisPartitionSnapshotPath));
@@ -294,9 +294,9 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 _storePath,
                 1,
                 ChainCommand.SnapshotType.All);
-            var expectedPartitionSnapshotPath = Path.Combine(Path.GetTempPath(), "test", "partition", $"snapshot-{blockEpoch}-{blockEpoch}.zip");
-            var expectedStateSnapshotPath = Path.Combine(Path.GetTempPath(), "test", "state", "state_latest.zip");
-            var expectedMetadataPath = Path.Combine(Path.GetTempPath(), "test", "metadata", $"snapshot-{blockEpoch}-{blockEpoch}.json");
+            var expectedPartitionSnapshotPath = Path.Combine(outputDirectory, "partition", $"snapshot-{blockEpoch}-{blockEpoch}.zip");
+            var expectedStateSnapshotPath = Path.Combine(outputDirectory, "state", "state_latest.zip");
+            var expectedMetadataPath = Path.Combine(outputDirectory, "metadata", $"snapshot-{blockEpoch}-{blockEpoch}.json");
             storeAfterSnapshot = storeType.CreateStore(_storePath);
             chainId = storeAfterSnapshot.GetCanonicalChainId() ?? new Guid();
             var indexCountAfterSnapshot = storeAfterSnapshot.CountIndex(chainId);

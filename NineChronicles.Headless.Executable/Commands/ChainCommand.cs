@@ -384,17 +384,18 @@ namespace NineChronicles.Headless.Executable.Commands
                     "9c"
                 );
 
+                var metadataDirectory = Path.Combine(outputDirectory, "metadata");
+
                 Directory.CreateDirectory(outputDirectory);
                 Directory.CreateDirectory(Path.Combine(outputDirectory, "partition"));
                 Directory.CreateDirectory(Path.Combine(outputDirectory, "state"));
-                Directory.CreateDirectory(Path.Combine(outputDirectory, "metadata"));
+                Directory.CreateDirectory(metadataDirectory);
                 Directory.CreateDirectory(Path.Combine(outputDirectory, "full"));
 
                 outputDirectory = string.IsNullOrEmpty(outputDirectory)
                     ? Environment.CurrentDirectory
                     : outputDirectory;
 
-                var metadataDirectory = Path.Combine(outputDirectory, "metadata");
                 int currentMetadataBlockEpoch = GetMetaDataEpoch(metadataDirectory, "BlockEpoch");
                 int currentMetadataTxEpoch = GetMetaDataEpoch(metadataDirectory, "TxEpoch");
                 int previousMetadataBlockEpoch = GetMetaDataEpoch(metadataDirectory, "PreviousBlockEpoch");
