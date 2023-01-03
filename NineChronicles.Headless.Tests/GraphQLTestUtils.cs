@@ -1,14 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Bencodex.Types;
-using GraphQL;
-using GraphQL.Types;
-using Microsoft.Extensions.DependencyInjection;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
-
 namespace NineChronicles.Headless.Tests
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using Bencodex.Types;
+    using GraphQL;
+    using GraphQL.Types;
+    using Microsoft.Extensions.DependencyInjection;
+    using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+
     public static class GraphQLTestUtils
     {
         public static Task<ExecutionResult> ExecuteQueryAsync<TObjectGraphType>(
@@ -55,8 +55,8 @@ namespace NineChronicles.Headless.Tests
                 Root = source,
             });
         }
-        
-        public static  NCAction DeserializeNCAction(IValue value)
+
+        public static NCAction DeserializeNCAction(IValue value)
         {
 #pragma warning disable CS0612
             NCAction action = new NCAction();
