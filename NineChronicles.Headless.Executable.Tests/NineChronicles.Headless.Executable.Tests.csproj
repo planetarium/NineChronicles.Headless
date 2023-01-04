@@ -6,6 +6,8 @@
 
         <IsPackable>false</IsPackable>
         <Nullable>enable</Nullable>
+        <Configurations>Debug;Release</Configurations>
+        <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
 
     <ItemGroup>
@@ -18,8 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference
-            Include="..\NineChronicles.Headless.Executable\NineChronicles.Headless.Executable.csproj" />
+        <ProjectReference Include="..\NineChronicles.Headless.Executable\NineChronicles.Headless.Executable.csproj" />
     </ItemGroup>
 
 </Project>
