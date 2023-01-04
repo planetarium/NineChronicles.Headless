@@ -62,7 +62,7 @@ jobs:
           docker manifest push $DOCKER_REPO:git-${{ github.sha }}
 
   tag:
-    if: github.ref_type == 'tag' || github.events.inputs.imageTag != ''
+    if: github.ref_type == 'tag' || github.event.inputs.imageTag != ''
     runs-on: ubuntu-latest
     steps:
       - name: login
@@ -73,10 +73,10 @@ jobs:
       - name: push git tagged version
         run: |
           docker pull $DOCKER_REPO:git-${{ github.sha }}-amd64
-          if [[ -z ${{ github.events.inputs.imageTag }} ]]; then
-            export IMAGE_TAG=${{ github.events.inputs.imageTag }}
-          else
+          if [[ -z ${{ github.event.inputs.imageTag }} ]]; then
             export IMAGE_TAG=${{ github.ref_name }}
+          else
+            export IMAGE_TAG=${{ github.event.inputs.imageTag }}
           fi
 
           docker tag \
