@@ -62,7 +62,7 @@ jobs:
           docker manifest push $DOCKER_REPO:git-${{ github.sha }}
 
   tag:
-    if: github.ref_type == 'tag' || github.events.inputs.imageTag != ''
+    if: ${{ github.ref_type == 'tag' || github.events.inputs.imageTag != '' }}
     runs-on: ubuntu-latest
     steps:
       - name: login
