@@ -242,9 +242,7 @@ namespace NineChronicles.Headless.Executable
                 //o.Debug = true;
                 o.Release = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                     ?.InformationalVersion ?? "Unknown";
-                o.SampleRate = headlessConfig.SentryTraceSampleRate > 0
-                    ? (float)headlessConfig.SentryTraceSampleRate
-                    : 0.01f;
+                o.SampleRate = 0.01f;
                 o.TracesSampleRate = headlessConfig.SentryTraceSampleRate;
                 o.AddExceptionFilterForType<TimeoutException>();
                 o.AddExceptionFilterForType<IOException>();
