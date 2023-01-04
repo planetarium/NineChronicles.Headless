@@ -544,6 +544,10 @@ namespace NineChronicles.Headless.GraphTypes
             RegisterItemEnhancement();
             RegisterRapidCombination();
             RegisterCombinationConsumable();
+
+#if LIB9C_DEV_EXTENSIONS
+            RegisterFieldsForDevEx();
+#endif
         }
 
         internal virtual byte[] Encode(IResolveFieldContext context, NCAction action)
