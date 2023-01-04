@@ -12,6 +12,11 @@ on:
       - 2022q3-worldboss
     tags:
       - v*
+  workflow_dispatch:
+    inputs:
+      imageTag:
+        description: 'Custom docker image tag if needed'
+        default: ''
 
 env:
   DOCKER_REPO: planetariumhq/ninechronicles-headless
@@ -57,7 +62,7 @@ jobs:
           docker manifest push $DOCKER_REPO:git-${{ github.sha }}
 
   tag:
-    if: github.ref_type == 'tag'
+    if: github.ref_type == 'tag' || github.events.inputs.imageTag != ''
     runs-on: ubuntu-latest
     steps:
       - name: login
