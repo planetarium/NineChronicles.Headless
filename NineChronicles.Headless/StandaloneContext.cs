@@ -21,8 +21,8 @@ namespace NineChronicles.Headless
         public bool BootstrapEnded { get; set; }
         public bool PreloadEnded { get; set; }
         public bool IsMining { get; set; }
-        public ReplaySubject<NodeStatusType> NodeStatusSubject { get; } = new ReplaySubject<NodeStatusType>();
-        public ReplaySubject<PreloadState> PreloadStateSubject { get; } = new ReplaySubject<PreloadState>();
+        public Subject<NodeStatusType> NodeStatusSubject { get; } = new Subject<NodeStatusType>();
+        public Subject<PreloadState> PreloadStateSubject { get; } = new Subject<PreloadState>();
         public Subject<DifferentAppProtocolVersionEncounter> DifferentAppProtocolVersionEncounterSubject { get; }
             = new Subject<DifferentAppProtocolVersionEncounter>();
         public Subject<Notification> NotificationSubject { get; } = new Subject<Notification>();
