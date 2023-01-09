@@ -170,7 +170,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var properties = new LibplanetNodeServiceProperties<T>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
-                AppProtocolVersion = appProtocolVersion,
+                ApvOptions = new AppProtocolVersionOptions()
+                {
+                    AppProtocolVersion = appProtocolVersion,
+                    TrustedAppProtocolVersionSigners = ImmutableHashSet<PublicKey>.Empty.Add(appProtocolVersionSigner),
+                },
                 GenesisBlock = genesisBlock,
                 StoreStatesCacheSize = 2,
                 StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
@@ -179,7 +183,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 NoMiner = true,
                 Render = false,
                 Peers = peers ?? ImmutableHashSet<BoundPeer>.Empty,
-                TrustedAppProtocolVersionSigners = ImmutableHashSet<PublicKey>.Empty.Add(appProtocolVersionSigner),
                 StaticPeers = staticPeers ?? ImmutableHashSet<BoundPeer>.Empty,
             };
 

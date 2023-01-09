@@ -16,7 +16,7 @@ namespace Libplanet.Headless
     /// <list type="bullet">
     /// <item><description><see cref="PutTxExecution(TxSuccess)"/></description></item>
     /// </list>
-    /// </summary>
+    /// </summary>.
     public sealed class ReducedStore : IStore
     {
         public ReducedStore(IStore internalStore)
@@ -126,10 +126,6 @@ namespace Libplanet.Headless
 
         public void SetCanonicalChainId(Guid chainId) =>
             InternalStore.SetCanonicalChainId(chainId);
-
-        public Block<T> GetCanonicalGenesisBlock<T>()
-            where T : IAction, new() =>
-            InternalStore.GetCanonicalGenesisBlock<T>();
 
         public void PutTxIdBlockHashIndex(TxId txId, BlockHash blockHash) =>
             InternalStore.PutTxIdBlockHashIndex(txId, blockHash);

@@ -186,7 +186,10 @@ namespace NineChronicles.Headless.Tests.Controllers
                 {
                     GenesisBlock = _standaloneContext.BlockChain!.Genesis,
                     StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
-                    AppProtocolVersion = AppProtocolVersion.Sign(new PrivateKey(), 0),
+                    ApvOptions = new AppProtocolVersionOptions()
+                    {
+                        AppProtocolVersion = AppProtocolVersion.Sign(new PrivateKey(), 0),
+                    },
                     SwarmPrivateKey = new PrivateKey(),
                     Host = IPAddress.Loopback.ToString(),
                 },

@@ -23,7 +23,7 @@ namespace Libplanet.Headless.Tests.Hosting
             var service = new LibplanetNodeService<DummyAction>(
                 new LibplanetNodeServiceProperties<DummyAction>()
                 {
-                    AppProtocolVersion = new AppProtocolVersion(),
+                    ApvOptions = new AppProtocolVersionOptions(),
                     GenesisBlock = genesisBlock,
                     SwarmPrivateKey = new PrivateKey(),
                     StoreStatesCacheSize = 2,
@@ -50,7 +50,7 @@ namespace Libplanet.Headless.Tests.Hosting
                 var service = new LibplanetNodeService<DummyAction>(
                     new LibplanetNodeServiceProperties<DummyAction>()
                     {
-                        AppProtocolVersion = new AppProtocolVersion(),
+                        ApvOptions = new AppProtocolVersionOptions(),
                         SwarmPrivateKey = new PrivateKey(),
                         StoreStatesCacheSize = 2,
                         Host = IPAddress.Loopback.ToString(),

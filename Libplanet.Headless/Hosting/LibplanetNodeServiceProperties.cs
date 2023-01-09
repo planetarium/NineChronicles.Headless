@@ -36,11 +36,7 @@ namespace Libplanet.Headless.Hosting
 
         public IEnumerable<IceServer> IceServers { get; set; }
 
-        public AppProtocolVersion AppProtocolVersion { get; set; }
-
-        public ISet<PublicKey> TrustedAppProtocolVersionSigners { get; set; }
-
-        public DifferentAppProtocolVersionEncountered DifferentAppProtocolVersionEncountered { get; set; }
+        public AppProtocolVersionOptions ApvOptions { get; set; }
 
         public bool Render { get; set; }
 

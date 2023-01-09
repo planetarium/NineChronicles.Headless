@@ -169,13 +169,11 @@ namespace Libplanet.Headless.Hosting
             Swarm = new Swarm<T>(
                 BlockChain,
                 Properties.SwarmPrivateKey,
-                Properties.AppProtocolVersion,
-                trustedAppProtocolVersionSigners: Properties.TrustedAppProtocolVersionSigners,
+                Properties.ApvOptions,
                 host: Properties.Host,
                 listenPort: Properties.Port,
                 iceServers: shuffledIceServers,
                 workers: Properties.Workers,
-                differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered,
                 options: new SwarmOptions
                 {
                     BranchpointThreshold = 50,

@@ -238,7 +238,7 @@ namespace NineChronicles.Headless
                 throw new InvalidOperationException($"{nameof(properties.Libplanet)} is null.");
             }
 
-            properties.Libplanet.DifferentAppProtocolVersionEncountered =
+            properties.Libplanet.ApvOptions.DifferentAppProtocolVersionEncountered =
                 (BoundPeer peer, AppProtocolVersion peerVersion, AppProtocolVersion localVersion) =>
                 {
                     context.DifferentAppProtocolVersionEncounterSubject.OnNext(

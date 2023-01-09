@@ -30,7 +30,11 @@ namespace NineChronicles.Headless.Tests.Common
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
-                AppProtocolVersion = default,
+                ApvOptions = new AppProtocolVersionOptions()
+                {
+                    AppProtocolVersion = default,
+                    TrustedAppProtocolVersionSigners = null,
+                },
                 GenesisBlock = genesis,
                 StorePath = storePath,
                 StoreStatesCacheSize = 2,
@@ -40,7 +44,6 @@ namespace NineChronicles.Headless.Tests.Common
                 Render = false,
                 LogActionRenders = false,
                 Peers = ImmutableHashSet<BoundPeer>.Empty,
-                TrustedAppProtocolVersionSigners = null,
                 MessageTimeout = TimeSpan.FromMinutes(1),
                 TipTimeout = TimeSpan.FromMinutes(1),
                 DemandBuffer = 1150,

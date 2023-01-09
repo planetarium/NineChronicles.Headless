@@ -453,7 +453,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
-                AppProtocolVersion = apv,
+                ApvOptions = new AppProtocolVersionOptions()
+                {
+                    AppProtocolVersion = apv,
+                    TrustedAppProtocolVersionSigners = null,
+                },
                 GenesisBlock = genesis,
                 StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                 StoreStatesCacheSize = 2,
@@ -462,7 +466,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 NoMiner = true,
                 Render = false,
                 Peers = ImmutableHashSet<BoundPeer>.Empty,
-                TrustedAppProtocolVersionSigners = null,
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty
             };
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
@@ -791,7 +794,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
-                AppProtocolVersion = apv,
+                ApvOptions = new AppProtocolVersionOptions()
+                {
+                    AppProtocolVersion = apv,
+                    TrustedAppProtocolVersionSigners = null,
+                },
                 GenesisBlock = genesis,
                 StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                 StoreStatesCacheSize = 2,
@@ -800,7 +807,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 NoMiner = true,
                 Render = false,
                 Peers = ImmutableHashSet<BoundPeer>.Empty,
-                TrustedAppProtocolVersionSigners = null,
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty
             };
 
@@ -865,7 +871,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
-                AppProtocolVersion = apv,
+                ApvOptions = new AppProtocolVersionOptions()
+                {
+                    AppProtocolVersion = apv,
+                    TrustedAppProtocolVersionSigners = null,
+                },
                 GenesisBlock = genesis,
                 StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                 StoreStatesCacheSize = 2,
@@ -874,7 +884,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 NoMiner = true,
                 Render = false,
                 Peers = ImmutableHashSet<BoundPeer>.Empty,
-                TrustedAppProtocolVersionSigners = null,
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty
             };
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
@@ -931,7 +940,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
-                AppProtocolVersion = apv,
+                ApvOptions = new AppProtocolVersionOptions()
+                {
+                    AppProtocolVersion = apv,
+                    TrustedAppProtocolVersionSigners = null,
+                },
                 GenesisBlock = genesis,
                 StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                 StoreStatesCacheSize = 2,
@@ -940,7 +953,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 NoMiner = true,
                 Render = false,
                 Peers = ImmutableHashSet<BoundPeer>.Empty,
-                TrustedAppProtocolVersionSigners = null,
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty
             };
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
@@ -1011,7 +1023,11 @@ decimalPlaces
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
-                AppProtocolVersion = default,
+                ApvOptions = new AppProtocolVersionOptions()
+                {
+                    AppProtocolVersion = default,
+                    TrustedAppProtocolVersionSigners = null,
+                },
                 GenesisBlock = genesis,
                 StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                 StoreStatesCacheSize = 2,
@@ -1020,7 +1036,6 @@ decimalPlaces
                 NoMiner = true,
                 Render = false,
                 Peers = ImmutableHashSet<BoundPeer>.Empty,
-                TrustedAppProtocolVersionSigners = null,
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty,
             };
 
