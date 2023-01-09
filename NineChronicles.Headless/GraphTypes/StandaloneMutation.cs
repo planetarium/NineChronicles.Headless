@@ -3,6 +3,7 @@ using GraphQL;
 using GraphQL.Server.Authorization.AspNetCore;
 using GraphQL.Types;
 using Libplanet;
+using Libplanet.Action.Sys;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Crypto;
@@ -13,6 +14,7 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Serilog;
 using System;
+using System.Numerics;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -267,6 +269,56 @@ namespace NineChronicles.Headless.GraphTypes
                             ),
                         }
                     );
+                    return tx.Id;
+                }
+            );
+
+            Field<TxIdType>(
+                name: "setValidator",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Description = "A public key of validator to be set.",
+                        Name = "publicKey",
+                    },
+                    new QueryArgument<NonNullGraphType<BigIntGraphType>>
+                    {
+                        Description = "The target power of the validator to be set.",
+                        Name = "power",
+                    },
+                    new QueryArgument<NonNullGraphType<LongGraphType>>
+                    {
+                        Description = "The transaction counter. You can get it through nextTxNonce().",
+                        Name = "txNonce",
+                    }
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.NineChroniclesNodeService is { } service))
+                    {
+                        throw new InvalidOperationException($"{nameof(NineChroniclesNodeService)} is null.");
+                    }
+
+                    PrivateKey? privateKey = service.MinerPrivateKey;
+                    if (privateKey is null)
+                    {
+                        // FIXME We should cover this case on unittest.
+                        var msg = "No private key was loaded.";
+                        context.Errors.Add(new ExecutionError(msg));
+                        Log.Error(msg);
+                        return null;
+                    }
+
+                    BlockChain<NCAction> blockChain = service.BlockChain;
+                    PublicKey publicKey = new PublicKey(ByteUtil.ParseHex(context.GetArgument<string>("publicKey")));
+                    BigInteger power = context.GetArgument<BigInteger>("power");
+                    Transaction<NCAction> tx = Transaction<NCAction>.Create(
+                        context.GetArgument<long>("txNonce"),
+                        privateKey,
+                        blockChain.Genesis.Hash,
+                        new SetValidator(publicKey, power)
+                    );
+                    blockChain.StageTransaction(tx);
                     return tx.Id;
                 }
             );
