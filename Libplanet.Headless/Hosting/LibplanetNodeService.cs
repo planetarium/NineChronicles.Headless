@@ -183,8 +183,8 @@ namespace Libplanet.Headless.Hosting
                     {
                         var blockActionType = actionTypeLoader
                             .LoadAllActionTypes(new ActionTypeLoaderContext(blockHeader.Index))
-                            .First(t => t.FullName == "Nekoyume.Action.RewardGold");
-                        return (IAction)Activator.CreateInstance(blockActionType);
+                            .FirstOrDefault(t => t.FullName == "Nekoyume.Action.RewardGold");
+                        return blockActionType is { } t ? (IAction)Activator.CreateInstance(t) : null;
                     },
                     blockChainStates: blockChainStates,
                     trieGetter: hash => StateStore.GetStateRoot(
