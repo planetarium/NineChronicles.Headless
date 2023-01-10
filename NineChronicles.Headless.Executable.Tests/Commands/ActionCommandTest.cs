@@ -61,10 +61,10 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         }
 
         [Theory]
-        [InlineData(false, 0, 207)]
-        [InlineData(false, 5_000_000, 207)]
-        [InlineData(true, 0, 207)]
-        [InlineData(true, 5_000_000, 82)]
+        [InlineData(false, 0, 208)]
+        [InlineData(false, 5_000_000, 208)]
+        [InlineData(true, 0, 208)]
+        [InlineData(true, 5_000_000, 83)]
         public void List(bool excludeObsolete, long blockIndex, int expectedCommandCount)
         {
             var commandList = _command.List(excludeObsolete, blockIndex);
