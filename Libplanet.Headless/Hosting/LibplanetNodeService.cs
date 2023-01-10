@@ -173,7 +173,6 @@ namespace Libplanet.Headless.Hosting
                 host: Properties.Host,
                 listenPort: Properties.Port,
                 iceServers: shuffledIceServers,
-                workers: Properties.Workers,
                 options: new SwarmOptions
                 {
                     BranchpointThreshold = 50,
