@@ -166,16 +166,21 @@ namespace Libplanet.Headless.Hosting
                 shuffledIceServers = iceServers.OrderBy(x => rand.Next());
             }
 
+            var appProtocolVersionOptions = new AppProtocolVersionOptions
+            {
+                AppProtocolVersion = Properties.AppProtocolVersion,
+                TrustedAppProtocolVersionSigners =
+                    Properties.TrustedAppProtocolVersionSigners?.ToImmutableHashSet() ?? ImmutableHashSet<PublicKey>.Empty,
+                DifferentAppProtocolVersionEncountered = Properties.DifferentAppProtocolVersionEncountered,
+            };
+
             Swarm = new Swarm<T>(
                 BlockChain,
                 Properties.SwarmPrivateKey,
-                Properties.AppProtocolVersion,
-                trustedAppProtocolVersionSigners: Properties.TrustedAppProtocolVersionSigners,
+                appProtocolVersionOptions: appProtocolVersionOptions,
                 host: Properties.Host,
                 listenPort: Properties.Port,
                 iceServers: shuffledIceServers,
-                workers: Properties.Workers,
-                differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered,
                 options: new SwarmOptions
                 {
                     BranchpointThreshold = 50,

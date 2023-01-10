@@ -127,10 +127,6 @@ namespace Libplanet.Headless
         public void SetCanonicalChainId(Guid chainId) =>
             InternalStore.SetCanonicalChainId(chainId);
 
-        public Block<T> GetCanonicalGenesisBlock<T>()
-            where T : IAction, new() =>
-            InternalStore.GetCanonicalGenesisBlock<T>();
-
         public void PutTxIdBlockHashIndex(TxId txId, BlockHash blockHash) =>
             InternalStore.PutTxIdBlockHashIndex(txId, blockHash);
 
