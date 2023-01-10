@@ -107,6 +107,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new List<(long currentPhase, long totalPhase, string type, long currentCount, long totalCount)>();
             var expectedPreloadProgress = new[]
             {
+                (1L, 5L, "BlockHashDownloadState", 0L, 0L),
                 (1L, 5L, "BlockHashDownloadState", 1L, 1L),
                 (2L, 5L, "BlockDownloadState", 1L, 1L),
                 (3L, 5L, "BlockVerificationState", 1L, 1L),
@@ -114,35 +115,17 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }.ToImmutableHashSet();
             foreach (var index in Enumerable.Range(1, expectedPreloadProgress.Count() + 1))
             {
-                var rawEvents = await stream.Take(1);
+                var rawEvents = await stream.Take(index);
                 var events = (Dictionary<string, object>)((ExecutionNode)rawEvents.Data!).ToValue()!;
                 var preloadProgress = (Dictionary<string, object>)events["preloadProgress"];
                 var preloadProgressExtra = (Dictionary<string, object>)preloadProgress["extra"];
 
-                var extraType = (string)preloadProgressExtra["type"];
-                var extraCurrentCount = (long)preloadProgressExtra["currentCount"];
-                var extraTotalCount = (long)preloadProgressExtra["totalCount"];
-
-                if (
-                    extraType == "BlockHashDownloadState" &&
-                    extraCurrentCount == 0L &&
-                    extraTotalCount == 0L
-                )
-                {
-                    continue;
-                }
-
                 preloadProgressRecords.Add((
                     (long)preloadProgress["currentPhase"],
                     (long)preloadProgress["totalPhase"],
-                    extraType,
-                    extraCurrentCount,
-                    extraTotalCount));
-
-                if (preloadProgressRecords.Count() == 4)
-                {
-                    break;
-                }
+                    (string)preloadProgressExtra["type"],
+                    (long)preloadProgressExtra["currentCount"],
+                    (long)preloadProgressExtra["totalCount"]));
             }
 
             Assert.Equal(expectedPreloadProgress, preloadProgressRecords.ToImmutableHashSet());
