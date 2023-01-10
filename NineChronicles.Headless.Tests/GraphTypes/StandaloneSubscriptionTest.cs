@@ -96,6 +96,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             _ = service.StartAsync(cts.Token);
 
+            await service.PreloadEnded.WaitAsync(cts.Token);
+
             var subscribeResult = (SubscriptionExecutionResult)result;
             var stream = subscribeResult.Streams!.Values.FirstOrDefault();
 
