@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
@@ -145,13 +146,54 @@ namespace Libplanet.Headless.Hosting
                 });
             }
 
+            var blockChainStates = new BlockChainStates<T>(Store, StateStore);
+
+            Type UnwrapPolymorphicAction(Type type)
+            {
+                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(PolymorphicAction<>))
+                {
+                    return type.GetGenericArguments()[0];
+                }
+
+                return type;
+            }
+
+            IActionTypeLoader MakeStaticActionTypeLoader() => new StaticActionTypeLoader(
+                Assembly.GetEntryAssembly() is { } entryAssembly
+                    ? new[] { UnwrapPolymorphicAction(typeof(T)).Assembly, entryAssembly }
+                    : new[] { UnwrapPolymorphicAction(typeof(T)).Assembly },
+                typeof(T)
+            );
+
+            IActionTypeLoader actionTypeLoader = properties.DynamicActionTypeLoader is { } actionTypeLoaderConfiguration
+                ? new DynamicActionTypeLoader(actionTypeLoaderConfiguration.BasePath,
+                    actionTypeLoaderConfiguration.AssemblyFileName,
+                    actionTypeLoaderConfiguration.HardForks.OrderBy(pair => pair.SinceBlockIndex))
+                : MakeStaticActionTypeLoader();
             BlockChain = new BlockChain<T>(
                 policy: blockPolicy,
                 store: Store,
                 stagePolicy: stagePolicy,
                 stateStore: StateStore,
                 genesisBlock: genesisBlock,
-                renderers: renderers
+                renderers: renderers,
+                blockChainStates: blockChainStates,
+                actionEvaluator: new ActionEvaluator<T>(
+                    blockHeader =>
+                    {
+                        var blockActionType = actionTypeLoader
+                            .LoadAllActionTypes(new ActionTypeLoaderContext(blockHeader.Index))
+                            .FirstOrDefault(t => t.FullName == "Nekoyume.Action.RewardGold");
+                        return blockActionType is { } t ? (IAction)Activator.CreateInstance(t) : null;
+                    },
+                    blockChainStates: blockChainStates,
+                    trieGetter: hash => StateStore.GetStateRoot(
+                        Store.GetBlockDigest(hash)?.StateRootHash
+                    ),
+                    genesisHash: genesisBlock.Hash,
+                    nativeTokenPredicate: blockPolicy.NativeTokens.Contains,
+                    actionTypeLoader: actionTypeLoader
+                )
             );
 
             _obsoletedChainIds = chainIds.Where(chainId => chainId != BlockChain.Id).ToList();
@@ -622,6 +664,17 @@ namespace Libplanet.Headless.Hosting
 
             (Store as IDisposable)?.Dispose();
             Log.Debug("Store disposed.");
+        }
+
+        // FIXME: Request libplanet provide default implementation.
+        private sealed class ActionTypeLoaderContext : IActionTypeLoaderContext
+        {
+            public ActionTypeLoaderContext(long index)
+            {
+                Index = index;
+            }
+
+            public long Index { get; }
         }
     }
 }

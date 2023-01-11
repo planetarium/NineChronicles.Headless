@@ -338,7 +338,8 @@ namespace NineChronicles.Headless.Executable
                         minimumBroadcastTarget: headlessConfig.MinimumBroadcastTarget,
                         bucketSize: headlessConfig.BucketSize,
                         chainTipStaleBehaviorType: headlessConfig.ChainTipStaleBehaviorType,
-                        maximumPollPeers: headlessConfig.MaximumPollPeers
+                        maximumPollPeers: headlessConfig.MaximumPollPeers,
+                        dynamicActionTypeLoader: headlessConfig.DynamicActionTypeLoader
                     );
 
                 if (headlessConfig.RpcServer)

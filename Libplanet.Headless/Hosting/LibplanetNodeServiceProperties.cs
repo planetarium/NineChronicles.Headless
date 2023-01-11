@@ -73,5 +73,9 @@ namespace Libplanet.Headless.Hosting
         public string ChainTipStaleBehavior { get; set; } = "reboot";
 
         public int MaximumPollPeers { get; set; } = int.MaxValue;
+
+#nullable enable
+        public DynamicActionTypeLoaderConfiguration? DynamicActionTypeLoader { get; init; } = null;
+#nullable disable
     }
 }
