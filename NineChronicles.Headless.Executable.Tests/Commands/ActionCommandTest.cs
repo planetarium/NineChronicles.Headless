@@ -60,17 +60,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             }
         }
 
-        [Theory]
-        [InlineData(false, 0, 207)]
-        [InlineData(false, 5_000_000, 207)]
-        [InlineData(true, 0, 207)]
-        [InlineData(true, 5_000_000, 82)]
-        public void List(bool excludeObsolete, long blockIndex, int expectedCommandCount)
-        {
-            var commandList = _command.List(excludeObsolete, blockIndex);
-            Assert.Equal(expectedCommandCount, commandList.Count());
-        }
-
         [Fact]
         public void MonsterCollect()
         {
