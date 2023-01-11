@@ -10,6 +10,7 @@ on:
       - previewnet
       - qa-*
       - pbft
+      - pbft-diagnostic
       - 2022q3-worldboss
     tags:
       - v*
