@@ -10,6 +10,7 @@ on:
       - previewnet
       - qa-*
       - 2022q3-worldboss
+      - v100351-1-miner-ban-ignore
     tags:
       - v*
 
