@@ -115,7 +115,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 (3L, 5L, "BlockVerificationState", 1L, 1L),
                 (5L, 5L, "ActionExecutionState", 1L, 1L),
             }.ToImmutableHashSet();
-            foreach (var index in Enumerable.Range(1, expectedPreloadProgress.Count() + 1))
+            foreach (var index in Enumerable.Range(1, expectedPreloadProgress.Count()))
             {
                 var rawEvents = await stream.Take(index);
                 var events = (Dictionary<string, object>)((ExecutionNode)rawEvents.Data!).ToValue()!;

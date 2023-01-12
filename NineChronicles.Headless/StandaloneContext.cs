@@ -22,7 +22,7 @@ namespace NineChronicles.Headless
         public bool PreloadEnded { get; set; }
         public bool IsMining { get; set; }
         public ReplaySubject<NodeStatusType> NodeStatusSubject { get; } = new ReplaySubject<NodeStatusType>(1);
-        public ReplaySubject<PreloadState> PreloadStateSubject { get; } = new ReplaySubject<PreloadState>(1);
+        public ReplaySubject<PreloadState> PreloadStateSubject { get; } = new ReplaySubject<PreloadState>(5);
         public Subject<DifferentAppProtocolVersionEncounter> DifferentAppProtocolVersionEncounterSubject { get; }
             = new Subject<DifferentAppProtocolVersionEncounter>();
         public Subject<Notification> NotificationSubject { get; } = new Subject<Notification>();
