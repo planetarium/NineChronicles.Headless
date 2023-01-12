@@ -11,6 +11,7 @@ on:
       - qa-*
       - 2022q3-worldboss
       - v100351-1-miner-ban-ignore
+      - v100351-1-ban-stage-policy
     tags:
       - v*
 
