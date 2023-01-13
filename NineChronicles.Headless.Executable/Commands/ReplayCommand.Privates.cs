@@ -428,6 +428,11 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public bool BlockAction { get; }
 
+            public void PutLog(string log)
+            {
+                // NOTE: Not implemented yet. See also Lib9c.Tests.Action.ActionContext.PutLog().
+            }
+
             public bool IsNativeToken(Currency currency) =>
                 _nativeTokenPredicate is { } && _nativeTokenPredicate(currency);
 

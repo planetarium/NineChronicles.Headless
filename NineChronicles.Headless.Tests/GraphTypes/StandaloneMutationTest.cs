@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using GraphQL.Execution;
@@ -39,7 +38,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         public StandaloneMutationTest(ITestOutputHelper output) : base(output)
         {
-            _sheets = TableSheetsImporter.ImportSheets(Path.Join("..", "..", "..", "..", "Lib9c", "Lib9c", "TableCSV"));
+            _sheets = TableSheetsImporter.ImportSheets();
             _tableSheets = new TableSheets(_sheets);
         }
 

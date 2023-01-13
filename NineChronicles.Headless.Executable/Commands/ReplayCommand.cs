@@ -452,7 +452,7 @@ namespace NineChronicles.Headless.Executable.Commands
         {
             var policy = new BlockPolicySource(Logger.None).GetPolicy();
             return new ActionEvaluator<NCAction>(
-                policy.BlockAction,
+                _ => policy.BlockAction,
                 blockChainStates: blockChain,
                 trieGetter: hash => stateStore.GetStateRoot(blockChain[hash].StateRootHash),
                 genesisHash: genesisBlockHash,

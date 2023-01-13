@@ -115,7 +115,8 @@ namespace Libplanet.Headless
                 txSuccess.TxId,
                 updatedStates: ImmutableDictionary<Address, IValue>.Empty,
                 fungibleAssetsDelta: txSuccess.FungibleAssetsDelta,
-                updatedFungibleAssets: txSuccess.UpdatedFungibleAssets
+                updatedFungibleAssets: txSuccess.UpdatedFungibleAssets,
+                actionsLogsList: txSuccess.ActionsLogsList
             );
             InternalStore.PutTxExecution(reducedTxSuccess);
         }
@@ -125,10 +126,6 @@ namespace Libplanet.Headless
 
         public void SetCanonicalChainId(Guid chainId) =>
             InternalStore.SetCanonicalChainId(chainId);
-
-        public Block<T> GetCanonicalGenesisBlock<T>()
-            where T : IAction, new() =>
-            InternalStore.GetCanonicalGenesisBlock<T>();
 
         public void PutTxIdBlockHashIndex(TxId txId, BlockHash blockHash) =>
             InternalStore.PutTxIdBlockHashIndex(txId, blockHash);
