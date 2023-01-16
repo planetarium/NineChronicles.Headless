@@ -80,6 +80,7 @@ namespace Libplanet.Headless.Hosting
             Progress<PreloadState> preloadProgress,
             Action<RPCException, string> exceptionHandlerAction,
             Action<bool> preloadStatusHandlerAction,
+            IActionTypeLoader actionTypeLoader,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false
         )
@@ -148,28 +149,6 @@ namespace Libplanet.Headless.Hosting
 
             var blockChainStates = new BlockChainStates<T>(Store, StateStore);
 
-            Type UnwrapPolymorphicAction(Type type)
-            {
-                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(PolymorphicAction<>))
-                {
-                    return type.GetGenericArguments()[0];
-                }
-
-                return type;
-            }
-
-            IActionTypeLoader MakeStaticActionTypeLoader() => new StaticActionTypeLoader(
-                Assembly.GetEntryAssembly() is { } entryAssembly
-                    ? new[] { UnwrapPolymorphicAction(typeof(T)).Assembly, entryAssembly }
-                    : new[] { UnwrapPolymorphicAction(typeof(T)).Assembly },
-                typeof(T)
-            );
-
-            IActionTypeLoader actionTypeLoader = properties.DynamicActionTypeLoader is { } actionTypeLoaderConfiguration
-                ? new DynamicActionTypeLoader(actionTypeLoaderConfiguration.BasePath,
-                    actionTypeLoaderConfiguration.AssemblyFileName,
-                    actionTypeLoaderConfiguration.HardForks.OrderBy(pair => pair.SinceBlockIndex))
-                : MakeStaticActionTypeLoader();
             BlockChain = new BlockChain<T>(
                 policy: blockPolicy,
                 store: Store,

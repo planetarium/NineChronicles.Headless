@@ -79,6 +79,7 @@ namespace NineChronicles.Headless
             LibplanetNodeServiceProperties<NCAction> properties,
             IBlockPolicy<NCAction> blockPolicy,
             NetworkType networkType,
+            IActionTypeLoader actionTypeLoader,
             TimeSpan? minerBlockInterval = null,
             Progress<PreloadState>? preloadProgress = null,
             bool ignoreBootstrapFailure = false,
@@ -107,19 +108,6 @@ namespace NineChronicles.Headless
                     exc.Message.Split("\n")[0]
                 )
             );
-
-            IActionTypeLoader MakeStaticActionTypeLoader() => new StaticActionTypeLoader(
-                Assembly.GetEntryAssembly() is { } entryAssembly
-                    ? new[] { typeof(ActionBase).Assembly, entryAssembly }
-                    : new[] { typeof(ActionBase).Assembly },
-                typeof(ActionBase)
-            );
-
-            IActionTypeLoader actionTypeLoader = properties.DynamicActionTypeLoader is { } actionTypeLoaderConfiguration
-                ? new DynamicActionTypeLoader(actionTypeLoaderConfiguration.BasePath,
-                    actionTypeLoaderConfiguration.AssemblyFileName,
-                    actionTypeLoaderConfiguration.HardForks.OrderBy(pair => pair.SinceBlockIndex))
-                : MakeStaticActionTypeLoader();
 
             if (Properties.Render)
             {
@@ -227,6 +215,7 @@ namespace NineChronicles.Headless
                 {
                     NodeStatusRenderer.PreloadStatus(isPreloadStarted);
                 },
+                actionTypeLoader,
                 ignoreBootstrapFailure,
                 ignorePreloadFailure
             );
@@ -272,12 +261,13 @@ namespace NineChronicles.Headless
 
             var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(
                 properties.NetworkType,
-                properties.Libplanet.DynamicActionTypeLoader);
+                properties.ActionTypeLoader);
             var service = new NineChroniclesNodeService(
                 properties.MinerPrivateKey,
                 properties.Libplanet,
                 blockPolicy,
                 properties.NetworkType,
+                properties.ActionTypeLoader,
                 properties.MinerBlockInterval,
                 preloadProgress: progress,
                 ignoreBootstrapFailure: properties.IgnoreBootstrapFailure,
@@ -291,21 +281,8 @@ namespace NineChronicles.Headless
             return service;
         }
 
-        internal static IBlockPolicy<NCAction> GetBlockPolicy(NetworkType networkType, DynamicActionTypeLoaderConfiguration? dynamicActionTypeLoaderConfiguration = null)
+        internal static IBlockPolicy<NCAction> GetBlockPolicy(NetworkType networkType, IActionTypeLoader actionTypeLoader)
         {
-            IActionTypeLoader MakeStaticActionTypeLoader() => new StaticActionTypeLoader(
-                Assembly.GetEntryAssembly() is { } entryAssembly
-                    ? new[] { typeof(ActionBase).Assembly, entryAssembly }
-                    : new[] { typeof(ActionBase).Assembly },
-                typeof(ActionBase)
-            );
-
-            IActionTypeLoader actionTypeLoader = dynamicActionTypeLoaderConfiguration is { }
-                ? new DynamicActionTypeLoader(dynamicActionTypeLoaderConfiguration.BasePath,
-                    dynamicActionTypeLoaderConfiguration.AssemblyFileName,
-                    dynamicActionTypeLoaderConfiguration.HardForks.OrderBy(pair => pair.SinceBlockIndex))
-                : MakeStaticActionTypeLoader();
-
             var source = new BlockPolicySource(Log.Logger, LogEventLevel.Debug, actionTypeLoader);
             return networkType switch
             {

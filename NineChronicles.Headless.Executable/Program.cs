@@ -18,13 +18,17 @@ using Serilog.Formatting.Compact;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Libplanet.Action;
 // import necessary for sentry exception filters
 using Libplanet.Blocks;
+using Libplanet.Headless;
 using Libplanet.Net.Transports;
+using Nekoyume.Action;
 
 namespace NineChronicles.Headless.Executable
 {
@@ -335,8 +339,7 @@ namespace NineChronicles.Headless.Executable
                         minimumBroadcastTarget: headlessConfig.MinimumBroadcastTarget,
                         bucketSize: headlessConfig.BucketSize,
                         chainTipStaleBehaviorType: headlessConfig.ChainTipStaleBehaviorType,
-                        maximumPollPeers: headlessConfig.MaximumPollPeers,
-                        dynamicActionTypeLoader: headlessConfig.DynamicActionTypeLoader
+                        maximumPollPeers: headlessConfig.MaximumPollPeers
                     );
 
                 if (headlessConfig.RpcServer)
@@ -350,11 +353,24 @@ namespace NineChronicles.Headless.Executable
                     properties.LogActionRenders = true;
                 }
 
+                IActionTypeLoader MakeStaticActionTypeLoader() => new StaticActionTypeLoader(
+                    Assembly.GetEntryAssembly() is { } entryAssembly
+                        ? new[] { typeof(ActionBase).Assembly, entryAssembly }
+                        : new[] { typeof(ActionBase).Assembly },
+                    typeof(ActionBase)
+                );
+
+                IActionTypeLoader actionTypeLoader = headlessConfig.DynamicActionTypeLoader is { } actionTypeLoaderConfiguration
+                    ? new DynamicActionTypeLoader(actionTypeLoaderConfiguration.BasePath,
+                        actionTypeLoaderConfiguration.AssemblyFileName,
+                        actionTypeLoaderConfiguration.HardForks.OrderBy(pair => pair.SinceBlockIndex))
+                    : MakeStaticActionTypeLoader();
+
                 var minerPrivateKey = string.IsNullOrEmpty(headlessConfig.MinerPrivateKeyString)
                     ? null
                     : new PrivateKey(ByteUtil.ParseHex(headlessConfig.MinerPrivateKeyString));
                 TimeSpan minerBlockInterval = TimeSpan.FromMilliseconds(headlessConfig.MinerBlockIntervalMilliseconds);
-                var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
+                var nineChroniclesProperties = new NineChroniclesNodeServiceProperties(actionTypeLoader)
                 {
                     MinerPrivateKey = minerPrivateKey,
                     Libplanet = properties,
