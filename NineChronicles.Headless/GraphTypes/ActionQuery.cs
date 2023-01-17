@@ -19,7 +19,7 @@ using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    public class ActionQuery : ObjectGraphType
+    public partial class ActionQuery : ObjectGraphType
     {
         private static readonly Codec Codec = new Codec();
         internal StandaloneContext standaloneContext { get; set; }
@@ -537,6 +537,8 @@ namespace NineChronicles.Headless.GraphTypes
                     };
                     return Encode(context, action);
                 });
+
+            RegisterHackAndSlash();
         }
 
         internal virtual byte[] Encode(IResolveFieldContext context, NCAction action)

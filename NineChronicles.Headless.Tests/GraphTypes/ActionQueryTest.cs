@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -679,6 +678,89 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(runeId, action.RuneId);
             Assert.Equal(tryCount ?? 1, action.TryCount);
+        }
+
+        [Theory]
+        [InlineData(false, false, false, false, false)]
+        [InlineData(true, false, false, false, false)]
+        [InlineData(true, true, false, false, false)]
+        [InlineData(true, true, true, false, false)]
+        [InlineData(true, true, true, true, false)]
+        [InlineData(true, true, true, true, true)]
+        public async Task HackAndSlash(bool useCostume, bool useEquipment, bool useFood, bool useRune, bool useBuff)
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var worldId = 1;
+            var stageId = 1;
+            var costume = Guid.NewGuid();
+            var equipment = Guid.NewGuid();
+            var food = Guid.NewGuid();
+            var runeInfo = new RuneSlotInfo(0, 10001);
+            var stageBuffId = 1;
+
+            var args = $"avatarAddress: \"{avatarAddress}\", worldId: {worldId}, stageId: {stageId}";
+            if (useCostume)
+            {
+                args += $", costumeIds: [\"{costume}\"]";
+            }
+
+            if (useEquipment)
+            {
+                args += $", equipmentIds: [\"{equipment}\"]";
+            }
+
+            if (useFood)
+            {
+                args += $", consumableIds: [\"{food}\"]";
+            }
+
+            if (useRune)
+            {
+                args += $", runeSlotInfos: [{{slotIndex: {runeInfo.SlotIndex}, runeId: {runeInfo.RuneId}}}]";
+            }
+
+            if (useBuff)
+            {
+                args += $", stageBuffId: {stageBuffId}";
+            }
+
+            var query = $"{{hackAndSlash({args})}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["hackAndSlash"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<HackAndSlash>(polymorphicAction.InnerAction);
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            Assert.Equal(worldId, action.WorldId);
+            Assert.Equal(stageId, action.StageId);
+            if (useCostume)
+            {
+                Assert.Equal(costume, action.Costumes.First());
+            }
+
+            if (useEquipment)
+            {
+                Assert.Equal(equipment, action.Equipments.First());
+            }
+
+            if (useFood)
+            {
+                Assert.Equal(food, action.Foods.First());
+            }
+
+            if (useRune)
+            {
+                Assert.Equal(runeInfo.SlotIndex, action.RuneInfos.First().SlotIndex);
+                Assert.Equal(runeInfo.RuneId, action.RuneInfos.First().RuneId);
+            }
+
+            if (useBuff)
+            {
+                Assert.Equal(stageBuffId, action.StageBuffId);
+            }
         }
     }
 }
