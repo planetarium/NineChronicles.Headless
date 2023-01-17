@@ -360,11 +360,31 @@ namespace NineChronicles.Headless.Executable
                     typeof(ActionBase)
                 );
 
-                IActionTypeLoader actionTypeLoader = headlessConfig.DynamicActionTypeLoader is { } actionTypeLoaderConfiguration
-                    ? new DynamicActionTypeLoader(actionTypeLoaderConfiguration.BasePath,
-                        actionTypeLoaderConfiguration.AssemblyFileName,
-                        actionTypeLoaderConfiguration.HardForks.OrderBy(pair => pair.SinceBlockIndex))
-                    : MakeStaticActionTypeLoader();
+                IActionTypeLoader actionTypeLoader;
+                if (headlessConfig.ActionTypeLoader is { } actionTypeLoaderConfiguration)
+                {
+                    if (actionTypeLoaderConfiguration.DynamicActionTypeLoader is { } dynamicActionTypeLoaderConf)
+                    {
+                        actionTypeLoader = new DynamicActionTypeLoader(
+                            dynamicActionTypeLoaderConf.BasePath,
+                            dynamicActionTypeLoaderConf.AssemblyFileName,
+                            dynamicActionTypeLoaderConf.HardForks.OrderBy(pair => pair.SinceBlockIndex));
+                    }
+                    else if (actionTypeLoaderConfiguration.StaticActionTypeLoader is { } staticActionTypeLoaderConf)
+                    {
+                        var assemblies = staticActionTypeLoaderConf.Assemblies?.Select(x => Assembly.Load(File.ReadAllBytes(x))).ToHashSet()
+                            ?? throw new CommandExitedException(-1);
+                        actionTypeLoader = new StaticActionTypeLoader(assemblies);
+                    }
+                    else
+                    {
+                        actionTypeLoader = MakeStaticActionTypeLoader();
+                    }
+                }
+                else
+                {
+                    actionTypeLoader = MakeStaticActionTypeLoader();
+                }
 
                 var minerPrivateKey = string.IsNullOrEmpty(headlessConfig.MinerPrivateKeyString)
                     ? null
