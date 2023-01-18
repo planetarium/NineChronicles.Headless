@@ -215,14 +215,13 @@ namespace Libplanet.Headless.Hosting
                     Properties.TrustedAppProtocolVersionSigners?.ToImmutableHashSet() ?? ImmutableHashSet<PublicKey>.Empty,
                 DifferentAppProtocolVersionEncountered = Properties.DifferentAppProtocolVersionEncountered,
             };
+            var hostOptions = new Net.HostOptions(Properties.Host, shuffledIceServers, Properties.Port ?? default);
 
             Swarm = new Swarm<T>(
                 BlockChain,
                 Properties.SwarmPrivateKey,
                 appProtocolVersionOptions: appProtocolVersionOptions,
-                host: Properties.Host,
-                listenPort: Properties.Port,
-                iceServers: shuffledIceServers,
+                hostOptions: hostOptions,
                 options: new SwarmOptions
                 {
                     BranchpointThreshold = 50,
