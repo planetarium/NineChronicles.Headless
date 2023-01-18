@@ -101,6 +101,9 @@ namespace NineChronicles.Headless.Executable.Commands
                         currency,
                         previousBlock.Hash,
                         TotalSupplyStateCompleters<NCAction>.Reject),
+                    () => blockChain.GetValidatorSet(
+                        previousBlock.Hash,
+                        ValidatorSetStateCompleters<NCAction>.Reject),
                     tx.Signer);
                 var actions = tx.SystemAction is { } sa
                     ? ImmutableList.Create(sa)
