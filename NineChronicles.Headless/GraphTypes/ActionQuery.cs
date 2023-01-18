@@ -542,6 +542,7 @@ namespace NineChronicles.Headless.GraphTypes
             RegisterDailyReward();
             RegisterCombinationEquipment();
             RegisterItemEnhancement();
+            RegisterRapidCombination();
         }
 
         internal virtual byte[] Encode(IResolveFieldContext context, NCAction action)
