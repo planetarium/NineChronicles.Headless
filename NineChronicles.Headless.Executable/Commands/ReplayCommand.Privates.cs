@@ -11,7 +11,6 @@ using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blocks;
 using Libplanet.Consensus;
-using Libplanet.Crypto;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Libplanet.Tx;
@@ -68,14 +67,14 @@ namespace NineChronicles.Headless.Executable.Commands
             protected Address Signer { get; set; }
 
             public AccountStateDeltaImpl(
-                AccountStateGetter stateGetter,
-                AccountBalanceGetter balanceGetter,
+                AccountStateGetter accountStateGetter,
+                AccountBalanceGetter accountBalanceGetter,
                 TotalSupplyGetter totalSupplyGetter,
                 ValidatorSetGetter validatorSetGetter,
                 Address signer)
             {
-                StateGetter = stateGetter;
-                BalanceGetter = balanceGetter;
+                StateGetter = accountStateGetter;
+                BalanceGetter = accountBalanceGetter;
                 TotalSupplyGetter = totalSupplyGetter;
                 ValidatorSetGetter = validatorSetGetter;
                 UpdatedStates = ImmutableDictionary<Address, IValue>.Empty;
@@ -272,21 +271,13 @@ namespace NineChronicles.Headless.Executable.Commands
                 );
             }
 
-            public IAccountStateDelta SetValidator(PublicKey validatorKey, BigInteger power)
+            public IAccountStateDelta SetValidator(Validator validator)
             {
-                var validator = new Validator(validatorKey, power);
-                var validators = GetValidatorSet().Validators.Remove(validator);
-
-                if (power.Sign < 0)
-                {
-                    throw new ArgumentException("The power cannot be negative");
-                }
-                else if (power.Sign == 0)
-                {
-                    return UpdateValidatorSet(new ValidatorSet(validators.ToList()));
-                }
-
-                return UpdateValidatorSet(new ValidatorSet(validators.Add(validator).ToList()));
+                Log.Debug(
+                    "Update validator {PublicKey} {Power} to validator set",
+                    validator.PublicKey,
+                    validator.Power);
+                return UpdateValidatorSet(GetValidatorSet().Update(validator));
             }
 
             public ValidatorSet GetValidatorSet() =>
@@ -373,6 +364,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     UpdatedStates = updatedStates,
                     UpdatedFungibles = UpdatedFungibles,
                     UpdatedTotalSupply = UpdatedTotalSupply,
+                    UpdatedValidatorSet = UpdatedValidatorSet,
                 };
 
             protected virtual AccountStateDeltaImpl UpdateFungibleAssets(
@@ -389,6 +381,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     UpdatedStates = UpdatedStates,
                     UpdatedFungibles = updatedFungibleAssets,
                     UpdatedTotalSupply = updatedTotalSupply,
+                    UpdatedValidatorSet = UpdatedValidatorSet,
                 };
 
             protected virtual AccountStateDeltaImpl UpdateFungibleAssets(
@@ -408,6 +401,34 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public static string ToTotalSupplyKey(Currency currency) =>
                 "__" + ByteUtil.Hex(currency.Hash.ByteArray).ToLowerInvariant();
+
+            protected virtual AccountStateDeltaImpl UpdateValidatorSet(
+                ValidatorSet updatedValidatorSet
+            ) =>
+                new AccountStateDeltaImpl(
+                    StateGetter,
+                    BalanceGetter,
+                    TotalSupplyGetter,
+                    ValidatorSetGetter,
+                    Signer)
+                {
+                    UpdatedStates = UpdatedStates,
+                    UpdatedFungibles = UpdatedFungibles,
+                    UpdatedTotalSupply = UpdatedTotalSupply,
+                    UpdatedValidatorSet = updatedValidatorSet,
+                };
+
+            public virtual ValidatorSet GetValidatorSet() =>
+                UpdatedValidatorSet ?? ValidatorSetGetter();
+
+            public IAccountStateDelta SetValidator(Validator validator)
+            {
+                Log.Debug(
+                    "Update validator {PublicKey} {Power} to validator set",
+                    validator.PublicKey,
+                    validator.Power);
+                return UpdateValidatorSet(GetValidatorSet().Update(validator));
+            }
         }
 
         /// <summary>

@@ -187,16 +187,20 @@ namespace Libplanet.Headless.Hosting
                 nameof(ConsensusReactor<T>),
                 !(consensusReactorOption is null));
 
+            var appProtocolVersionOptions = new AppProtocolVersionOptions
+            {
+                AppProtocolVersion = Properties.AppProtocolVersion,
+                TrustedAppProtocolVersionSigners =
+                    Properties.TrustedAppProtocolVersionSigners?.ToImmutableHashSet() ?? ImmutableHashSet<PublicKey>.Empty,
+                DifferentAppProtocolVersionEncountered = Properties.DifferentAppProtocolVersionEncountered,
+            };
+            var hostOptions = new Net.HostOptions(Properties.Host, shuffledIceServers, Properties.Port ?? default);
+
             Swarm = new Swarm<T>(
                 BlockChain,
                 Properties.SwarmPrivateKey,
-                Properties.AppProtocolVersion,
-                trustedAppProtocolVersionSigners: Properties.TrustedAppProtocolVersionSigners,
-                host: Properties.Host,
-                listenPort: Properties.Port,
-                iceServers: shuffledIceServers,
-                workers: Properties.Workers,
-                differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered,
+                appProtocolVersionOptions: appProtocolVersionOptions,
+                hostOptions: hostOptions,
                 options: new SwarmOptions
                 {
                     BranchpointThreshold = 50,
