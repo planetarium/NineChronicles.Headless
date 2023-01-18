@@ -940,5 +940,27 @@ actionPoint: {actionPoint},
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(slotIndex, action.slotIndex);
         }
+
+        [Fact]
+        public async Task CombinationConsumable()
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var slotIndex = 0;
+            var recipeId = 1;
+
+            var query =
+                $"{{combinationConsumable(avatarAddress: \"{avatarAddress}\", slotIndex: {slotIndex}, recipeId: {recipeId})}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["combinationConsumable"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<CombinationConsumable>(polymorphicAction.InnerAction);
+            Assert.Equal(avatarAddress, action.avatarAddress);
+            Assert.Equal(slotIndex, action.slotIndex);
+            Assert.Equal(recipeId, action.recipeId);
+        }
     }
 }
