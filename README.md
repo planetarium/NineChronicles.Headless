@@ -20,7 +20,7 @@
 $ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
 
 Usage: NineChronicles.Headless.Executable [command]
-Usage: NineChronicles.Headless.Executable [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <UInt16>] [--swarm-private-key <String>] [--workers <Int32>] [--no-miner] [--miner-count <Int32>]
+Usage: NineChronicles.Headless.Executable [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <UInt16>] [--swarm-private-key <String>] [--no-miner] [--miner-count <Int32>]
 [--miner-private-key <String>] [--miner.block-interval <Int32>] [--store-type <String>] [--store-path <String>] [--no-reduce-store] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...]
 [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Int32>] [--rpc-remote-server] [--rpc-http-server] [--graphql-server] [--graphql-host <String>] [--graphql-port <Int32>] [--graphql-secret-token-path <String>] [--no-cor
 s] [--confirmations <Int32>] [--nonblock-renderer] [--nonblock-renderer-queue <Int32>] [--strict-rendering] [--log-action-renders] [--network-type <NetworkType>] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <I
@@ -48,7 +48,6 @@ Options:
   -H, --host <String>                                      Hostname of this node for another nodes to access. This is not listening host like 0.0.0.0
   -P, --port <UInt16>                                      Port of this node for another nodes to access.
   --swarm-private-key <String>                             The private key used for signing messages and to specify your node. If you leave this null, a randomly generated value will be used.
-  --workers <Int32>                                        Number of workers to use in Swarm
   --no-miner                                               Disable block mining.
   --miner-count <Int32>                                    The number of miner task(thread).
   --miner-private-key <String>                             The private key used for mining blocks. Must not be null if you want to turn on mining with libplanet-node.
@@ -95,13 +94,13 @@ Options:
 
 ### Use `appsettings.{network}.json` to provide CLI options
 
-You can provide headless CLI options using file, `appsettings.json`. You'll find the default file at [here](NineChronicles.Headless.Executable/appsettings.json).  
-The path of `appsettings.json` can be either local file storage or URL.  
-Refer full configuration fields from [this file](NineChronicles.Headless.Executable/Configuration.cs), set your options into `appsettings.json` under `Headless` section.  
-You can also run headless server with previous way; You don't need to change anything if you don't want to.  
-In case that the same option is provided from both `appsetting.json` and CLI option, the CLI option value is used instead from `appsettings.json`.  
+You can provide headless CLI options using file, `appsettings.json`. You'll find the default file at [here](NineChronicles.Headless.Executable/appsettings.json).
+The path of `appsettings.json` can be either local file storage or URL.
+Refer full configuration fields from [this file](NineChronicles.Headless.Executable/Configuration.cs), set your options into `appsettings.json` under `Headless` section.
+You can also run headless server with previous way; You don't need to change anything if you don't want to.
+In case that the same option is provided from both `appsetting.json` and CLI option, the CLI option value is used instead from `appsettings.json`.
 
-The default `appsettings.json` is an example for your own appsettings file.  
+The default `appsettings.json` is an example for your own appsettings file.
 `appsettings.{network}.json` are runnable appsettings file and you can run local node for each network using following command:
 ```shell
 dotnet run --project NineChronicles.Headless.Executable -C appsettings.{network}.json --store-type={YOUR_OWN_STORE_PATH}
@@ -109,7 +108,7 @@ dotnet run --project NineChronicles.Headless.Executable -C appsettings.{network}
 - appsettings.mainnet.json
   - This makes your node to connect to the Nine Chronicles mainnet (production).
 - appsettings.internal.json
-  - This makes your node to connect to the Nine Chronicles internal network, which is test before release new version.  
+  - This makes your node to connect to the Nine Chronicles internal network, which is test before release new version.
   - Internal network is kind of hard-fork of mainnet at some point to test new version.
   - You CANNOT use mainnet storage for internal headless node.
 - appsettings.previewnet.json
@@ -117,10 +116,10 @@ dotnet run --project NineChronicles.Headless.Executable -C appsettings.{network}
   - This network is totally different network from genesis block.
   - Previewnet can be restarted from genesis block without any announcement to prepare next feature.
 
-Please make sure the store in the path you provided must save right data for the network to connect.  
+Please make sure the store in the path you provided must save right data for the network to connect.
 You cannot share data from any of those networks.
 
-If you want to run your own isolated local network, please copy `appsettings.json` to `appsettings.local.json` and edit the contents.  
+If you want to run your own isolated local network, please copy `appsettings.json` to `appsettings.local.json` and edit the contents.
 ```shell
 cp appsettings.json appsettings.local.json
 # Edit contents of appsettings.local.json
@@ -128,8 +127,8 @@ dotnet run --project NineChronicles.Headless.Executable -C appsettings.local.jso
 ```
 
 #### Caveat
-APVs can be changed as Nine Chronicles deploys new version.  
-You have to fit your APV sting to current on-chain version string.  
+APVs can be changed as Nine Chronicles deploys new version.
+You have to fit your APV sting to current on-chain version string.
 You can get APV strings at the following places:
 - mainnet: [Official released config.json](https://release.nine-chronicles.com/9c-launcher-config.json) - `AppProtocolVersion`
 - internal: [Internal network config](https://github.com/planetarium/9c-k8s-config/blob/main/9c-internal/configmap-versions.yaml) - `APP_PROTOCOL_VERSION`
@@ -223,7 +222,7 @@ For more information on the GraphQL API, refer to the [NineChronicles Headless G
 ## Create a new genesis block
 
 ### 1. (Optional) Create activation keys and PendingActivationState
-Activation key is the code for 9c account to register/activate into NineChronicles.  
+Activation key is the code for 9c account to register/activate into NineChronicles.
 You can create activation key whenever you want later, so you can just skip this step.
 
 ```shell
@@ -269,7 +268,6 @@ dotnet run --project ./NineChronicles.Headless.Executable/ \
     -G=[PATH/TO/GENESIS/BLOCK] \
     --store-type=memory \
     --store-path= [PATH/TO/BLOCK/STORAGE] \
-    --workers=1000 \
     --host=localhost \
     --port=43210 \
     --miner-private-key=[PRIVATE_KEY_OF_BLOCK_MINER]

@@ -46,8 +46,6 @@ namespace Libplanet.Headless.Hosting
 
         public bool LogActionRenders { get; set; }
 
-        public int Workers { get; set; } = 5;
-
         public int Confirmations { get; set; } = 0;
 
         public bool NonblockRenderer { get; set; } = false;
