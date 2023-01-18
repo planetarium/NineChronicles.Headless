@@ -762,5 +762,79 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Assert.Equal(stageBuffId, action.StageBuffId);
             }
         }
+
+        [Theory]
+        [InlineData(false, false, false, false)]
+        [InlineData(true, false, false, false)]
+        [InlineData(true, true, false, false)]
+        [InlineData(true, true, true, false)]
+        [InlineData(true, true, true, true)]
+        public async Task HackAndSlashSweep(bool useCostume, bool useEquipment, bool useRune, bool useApStone)
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var worldId = 1;
+            var stageId = 1;
+            var costume = Guid.NewGuid();
+            var equipment = Guid.NewGuid();
+            var runeInfo = new RuneSlotInfo(0, 10001);
+            var actionPoint = 120;
+            var apStoneCount = 1;
+
+            var args = @$"
+avatarAddress: ""{avatarAddress}"", 
+worldId: {worldId}, 
+stageId: {stageId},
+actionPoint: {actionPoint},
+";
+            if (useApStone)
+            {
+                args += $", apStoneCount: {apStoneCount}";
+            }
+
+            if (useCostume)
+            {
+                args += $", costumeIds: [\"{costume}\"]";
+            }
+
+            if (useEquipment)
+            {
+                args += $", equipmentIds: [\"{equipment}\"]";
+            }
+
+            if (useRune)
+            {
+                args += $", runeSlotInfos: [{{slotIndex: {runeInfo.SlotIndex}, runeId: {runeInfo.RuneId}}}]";
+            }
+
+            var query = $"{{hackAndSlashSweep({args})}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["hackAndSlashSweep"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<HackAndSlashSweep>(polymorphicAction.InnerAction);
+            Assert.Equal(avatarAddress, action.avatarAddress);
+            Assert.Equal(worldId, action.worldId);
+            Assert.Equal(stageId, action.stageId);
+            Assert.Equal(actionPoint, action.actionPoint);
+            Assert.Equal(useApStone ? apStoneCount : 0, action.apStoneCount);
+            if (useCostume)
+            {
+                Assert.Equal(costume, action.costumes.First());
+            }
+
+            if (useEquipment)
+            {
+                Assert.Equal(equipment, action.equipments.First());
+            }
+
+            if (useRune)
+            {
+                Assert.Equal(runeInfo.SlotIndex, action.runeInfos.First().SlotIndex);
+                Assert.Equal(runeInfo.RuneId, action.runeInfos.First().RuneId);
+            }
+        }
     }
 }

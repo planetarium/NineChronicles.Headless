@@ -517,7 +517,6 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "tryCount",
                         Description = "The try count to enhance rune"
-
                     }),
                 resolve: context =>
                 {
@@ -539,6 +538,7 @@ namespace NineChronicles.Headless.GraphTypes
                 });
 
             RegisterHackAndSlash();
+            RegisterHackAndSlashSweep();
         }
 
         internal virtual byte[] Encode(IResolveFieldContext context, NCAction action)
