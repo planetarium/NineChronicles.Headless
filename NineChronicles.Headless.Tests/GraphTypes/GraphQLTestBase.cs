@@ -181,6 +181,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Peers = peers ?? ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = ImmutableHashSet<PublicKey>.Empty.Add(appProtocolVersionSigner),
                 StaticPeers = staticPeers ?? ImmutableHashSet<BoundPeer>.Empty,
+                IceServers = ImmutableList<IceServer>.Empty,
             };
 
             return new LibplanetNodeService<T>(
