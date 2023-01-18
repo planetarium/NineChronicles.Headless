@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive.Subjects;
@@ -189,6 +190,7 @@ namespace NineChronicles.Headless.Tests.Controllers
                     AppProtocolVersion = AppProtocolVersion.Sign(new PrivateKey(), 0),
                     SwarmPrivateKey = new PrivateKey(),
                     Host = IPAddress.Loopback.ToString(),
+                    IceServers = new List<IceServer>(),
                 },
                 NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test),
                 NetworkType.Test);
