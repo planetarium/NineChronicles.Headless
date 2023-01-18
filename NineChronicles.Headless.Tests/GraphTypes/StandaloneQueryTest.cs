@@ -463,7 +463,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Render = false,
                 Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
-                StaticPeers = ImmutableHashSet<BoundPeer>.Empty
+                StaticPeers = ImmutableHashSet<BoundPeer>.Empty,
+                IceServers = ImmutableList<IceServer>.Empty,
             };
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
 
@@ -801,7 +802,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Render = false,
                 Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
-                StaticPeers = ImmutableHashSet<BoundPeer>.Empty
+                StaticPeers = ImmutableHashSet<BoundPeer>.Empty,
+                IceServers = ImmutableList<IceServer>.Empty,
             };
 
             var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test);
@@ -875,7 +877,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Render = false,
                 Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
-                StaticPeers = ImmutableHashSet<BoundPeer>.Empty
+                StaticPeers = ImmutableHashSet<BoundPeer>.Empty,
+                IceServers = ImmutableList<IceServer>.Empty,
             };
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
 
@@ -941,7 +944,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Render = false,
                 Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
-                StaticPeers = ImmutableHashSet<BoundPeer>.Empty
+                StaticPeers = ImmutableHashSet<BoundPeer>.Empty,
+                IceServers = ImmutableList<IceServer>.Empty,
             };
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
 
@@ -949,7 +953,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
-            var query = $@"query {{ 
+            var query = $@"query {{
 stateQuery {{ balance(address: ""{adminAddress}"", currency: {{ decimalPlaces: 18, ticker: ""CRYSTAL"" }})
 {{
 quantity
@@ -959,7 +963,7 @@ minters
 decimalPlaces
 }}
 }}
-}} 
+}}
 }}";
             var queryResult = await ExecuteQueryAsync(query);
             Assert.Null(queryResult.Errors);
@@ -1022,6 +1026,7 @@ decimalPlaces
                 Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty,
+                IceServers = ImmutableList<IceServer>.Empty,
             };
 
             return new NineChroniclesNodeService(privateKey, properties, blockPolicy, NetworkType.Test);
