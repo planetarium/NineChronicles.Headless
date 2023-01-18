@@ -489,6 +489,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Render = false,
                 Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
+                IceServers = ImmutableList<IceServer>.Empty,
                 ConsensusSeeds = ImmutableList<BoundPeer>.Empty,
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
@@ -869,6 +870,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Render = false,
                 Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
+                IceServers = ImmutableList<IceServer>.Empty,
                 ConsensusSeeds = ImmutableList<BoundPeer>.Empty,
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
@@ -950,6 +952,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Render = false,
                 Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
+                IceServers = ImmutableList<IceServer>.Empty,
                 ConsensusSeeds = ImmutableList<BoundPeer>.Empty,
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
@@ -1017,6 +1020,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Render = false,
                 Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
+                IceServers = ImmutableList<IceServer>.Empty,
             };
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
 
@@ -1111,6 +1115,7 @@ decimalPlaces
                 Render = false,
                 Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
+                IceServers = ImmutableList<IceServer>.Empty,
                 ConsensusSeeds = ImmutableList<BoundPeer>.Empty,
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty,
             };

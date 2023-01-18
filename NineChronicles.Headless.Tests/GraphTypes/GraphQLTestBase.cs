@@ -213,6 +213,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Render = false,
                 Peers = peers ?? ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = ImmutableHashSet<PublicKey>.Empty.Add(appProtocolVersionSigner),
+                IceServers = ImmutableList<IceServer>.Empty,
                 ConsensusSeeds = consensusSeeds ?? ImmutableList<BoundPeer>.Empty,
                 ConsensusPeers = consensusPeers ?? ImmutableList<BoundPeer>.Empty,
             };

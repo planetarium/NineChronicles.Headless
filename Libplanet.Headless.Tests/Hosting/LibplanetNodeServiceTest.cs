@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet.Action;
 using Libplanet.Blockchain;
@@ -28,6 +29,7 @@ namespace Libplanet.Headless.Tests.Hosting
                     StoreStatesCacheSize = 2,
                     StorePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()),
                     Host = IPAddress.Loopback.ToString(),
+                    IceServers = new List<IceServer>(),
                 },
                 blockPolicy: new BlockPolicy<DummyAction>(),
                 stagePolicy: new VolatileStagePolicy<DummyAction>(),
@@ -59,6 +61,7 @@ namespace Libplanet.Headless.Tests.Hosting
                         },
                         StoreStatesCacheSize = 2,
                         Host = IPAddress.Loopback.ToString(),
+                        IceServers = new List<IceServer>(),
                     },
                     blockPolicy: new BlockPolicy<DummyAction>(),
                     stagePolicy: new VolatileStagePolicy<DummyAction>(),

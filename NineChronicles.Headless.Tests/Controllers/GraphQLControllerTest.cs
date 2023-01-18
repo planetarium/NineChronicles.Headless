@@ -163,6 +163,7 @@ namespace NineChronicles.Headless.Tests.Controllers
                         consensusKey.PublicKey,
                     },
                     Host = IPAddress.Loopback.ToString(),
+                    IceServers = new List<IceServer>(),
                 },
                 NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test),
                 NetworkType.Test);
