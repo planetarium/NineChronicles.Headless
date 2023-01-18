@@ -34,7 +34,7 @@ namespace Libplanet.Headless.Hosting
 
         public bool NoMiner { get; set; }
 
-        public IEnumerable<IceServer> IceServers { get; set; }
+        public IEnumerable<IceServer> IceServers { get; set; } = new List<IceServer>();
 
         public AppProtocolVersion AppProtocolVersion { get; set; }
 
