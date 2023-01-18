@@ -897,5 +897,29 @@ actionPoint: {actionPoint},
                 Assert.Null(action.subRecipeId);
             }
         }
+
+        [Fact]
+        public async Task ItemEnhantement()
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var slotIndex = 0;
+            var itemId = Guid.NewGuid();
+            var materialId = Guid.NewGuid();
+
+            var query = $"{{itemEnhancement(avatarAddress: \"{avatarAddress}\", slotIndex: {slotIndex}, " +
+                        $"itemId: \"{itemId}\", materialId: \"{materialId}\")}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["itemEnhancement"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<ItemEnhancement>(polymorphicAction.InnerAction);
+            Assert.Equal(avatarAddress, action.avatarAddress);
+            Assert.Equal(slotIndex, action.slotIndex);
+            Assert.Equal(itemId, action.itemId);
+            Assert.Equal(materialId, action.materialId);
+        }
     }
 }
