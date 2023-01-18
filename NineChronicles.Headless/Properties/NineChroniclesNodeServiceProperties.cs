@@ -106,7 +106,6 @@ namespace NineChronicles.Headless.Properties
                 NoReduceStore = noReduceStore,
                 StoreStatesCacheSize = storeStateCacheSize,
                 Render = render,
-                Workers = workers,
                 Confirmations = Math.Max(confirmations, 0),
                 NonblockRenderer = nonblockRenderer,
                 NonblockRendererQueue = Math.Max(nonblockRendererQueue, 1),

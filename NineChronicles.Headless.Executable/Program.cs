@@ -77,8 +77,6 @@ namespace NineChronicles.Headless.Executable
                 Description = "The private key used for signing messages and to specify your node. " +
                               "If you leave this null, a randomly generated value will be used.")]
             string? swarmPrivateKeyString = null,
-            [Option("workers", Description = "Number of workers to use in Swarm")]
-            int? workers = null,
             [Option(Description = "Disable block mining.")]
             bool? noMiner = null,
             [Option("miner-count", Description = "The number of miner task(thread).")]
@@ -216,7 +214,7 @@ namespace NineChronicles.Headless.Executable
             configuration.Bind("Headless", headlessConfig);
             headlessConfig.Overwrite(
                 appProtocolVersionToken, trustedAppProtocolVersionSigners, genesisBlockPath, host, port,
-                swarmPrivateKeyString, workers, storeType, storePath, noReduceStore, noMiner, minerCount,
+                swarmPrivateKeyString, storeType, storePath, noReduceStore, noMiner, minerCount,
                 minerPrivateKeyString, minerBlockIntervalMilliseconds, networkType, iceServerStrings, peerStrings, rpcServer, rpcListenHost,
                 rpcListenPort, rpcRemoteServer, rpcHttpServer, graphQLServer, graphQLHost, graphQLPort,
                 graphQLSecretTokenPath, noCors, nonblockRenderer, nonblockRendererQueue, strictRendering,
@@ -326,7 +324,6 @@ namespace NineChronicles.Headless.Executable
                         headlessConfig.PeerStrings,
                         headlessConfig.TrustedAppProtocolVersionSignerStrings,
                         headlessConfig.NoMiner,
-                        workers: headlessConfig.Workers,
                         confirmations: headlessConfig.Confirmations,
                         nonblockRenderer: headlessConfig.NonblockRenderer,
                         nonblockRendererQueue: headlessConfig.NonblockRendererQueue,

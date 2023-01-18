@@ -17,8 +17,6 @@ namespace NineChronicles.Headless.Executable
 
         public string? SwarmPrivateKeyString { get; set; }
 
-        public int Workers { get; set; } = 5;
-
         // Storage
         public string? StoreType { get; set; }
 
@@ -91,7 +89,6 @@ namespace NineChronicles.Headless.Executable
             string? host,
             ushort? port,
             string? swarmPrivateKeyString,
-            int? workers,
             string? storeType,
             string? storePath,
             bool? noReduceStore,
@@ -139,7 +136,6 @@ namespace NineChronicles.Headless.Executable
             Host = host ?? Host;
             Port = port ?? Port;
             SwarmPrivateKeyString = swarmPrivateKeyString ?? SwarmPrivateKeyString;
-            Workers = workers ?? Workers;
             StoreType = storeType ?? StoreType;
             StorePath = storePath ?? StorePath;
             NoReduceStore = noReduceStore ?? NoReduceStore;
