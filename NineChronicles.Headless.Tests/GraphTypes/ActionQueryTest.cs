@@ -852,5 +852,50 @@ actionPoint: {actionPoint},
             var action = Assert.IsType<DailyReward>(polymorphicAction.InnerAction);
             Assert.Equal(avatarAddress, action.avatarAddress);
         }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task CombinationEquipment(bool useSubRecipe)
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var slotIndex = 0;
+            var recipeId = 1;
+            var subRecipeId = 10;
+            var payByCrystalValue = "false";
+            var payByCrystal = false;
+            var useHammerPointValue = "false";
+            var useHammerPoint = false;
+
+            var args =
+                $"avatarAddress: \"{avatarAddress}\", slotIndex: {slotIndex}, recipeId: {recipeId}, payByCrystal: {payByCrystalValue}, useHammerPoint: {useHammerPointValue}";
+            if (useSubRecipe)
+            {
+                args += $", subRecipeId: {subRecipeId}";
+            }
+
+            var query = $"{{combinationEquipment({args})}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["combinationEquipment"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<CombinationEquipment>(polymorphicAction.InnerAction);
+            Assert.Equal(avatarAddress, action.avatarAddress);
+            Assert.Equal(slotIndex, action.slotIndex);
+            Assert.Equal(recipeId, action.recipeId);
+            Assert.Equal(payByCrystal, action.payByCrystal);
+            Assert.Equal(useHammerPoint, action.useHammerPoint);
+            if (useSubRecipe)
+            {
+                Assert.Equal(subRecipeId, action.subRecipeId);
+            }
+            else
+            {
+                Assert.Null(action.subRecipeId);
+            }
+        }
     }
 }
