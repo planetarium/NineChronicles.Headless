@@ -836,5 +836,21 @@ actionPoint: {actionPoint},
                 Assert.Equal(runeInfo.RuneId, action.runeInfos.First().RuneId);
             }
         }
+
+        [Fact]
+        public async Task DailyReward()
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var query = $"{{dailyReward(avatarAddress: \"{avatarAddress}\")}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["dailyReward"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<DailyReward>(polymorphicAction.InnerAction);
+            Assert.Equal(avatarAddress, action.avatarAddress);
+        }
     }
 }

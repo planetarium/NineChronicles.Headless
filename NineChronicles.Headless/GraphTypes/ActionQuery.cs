@@ -539,6 +539,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             RegisterHackAndSlash();
             RegisterHackAndSlashSweep();
+            RegisterDailyReward();
         }
 
         internal virtual byte[] Encode(IResolveFieldContext context, NCAction action)
