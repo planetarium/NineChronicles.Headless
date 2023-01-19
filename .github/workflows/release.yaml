@@ -6,11 +6,17 @@ on:
     - v*
 
 jobs:
-  build:
-    name: build
+  release:
+    name: release
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@main
+      with:
+        submodules: true
+    - name: Git Sumbodule Update
+      run: |
+        git submodule update --init --recursive
+        git submodule update --recursive --remote
     - uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 6.0.x

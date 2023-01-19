@@ -35,13 +35,14 @@ while ! "$(dirname "$0")/github-release.sh" info \
         --user "$github_user" \
         --repo "$github_repo" \
         --tag "$tag" \
-        --name "$solution $tag" \
-        --description ""
+        --name "$tag" \
+        --description "" || true
+    trial=$((trial + 1))
     if [[ "$trial" -gt 5 ]]; then break; fi
 done
 
 for rid in "${rids[@]}"; do
-    for exec_path in "./Release"/*-"$tag-$rid".*; do
+    for exec_path in "./Release"/*"-$rid".*; do
         "$(dirname "$0")/github-release.sh" upload \
             --user "$github_user" \
             --repo "$github_repo" \
