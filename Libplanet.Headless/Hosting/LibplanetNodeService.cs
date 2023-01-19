@@ -142,14 +142,46 @@ namespace Libplanet.Headless.Hosting
                 });
             }
 
+            Log.Debug("Initializing {BlockChain}", nameof(BlockChain<T>));
             BlockChain = new BlockChain<T>(
                 policy: blockPolicy,
                 store: Store,
                 stagePolicy: stagePolicy,
                 stateStore: StateStore,
                 genesisBlock: genesisBlock,
-                renderers: renderers
-            );
+                renderers: renderers);
+
+            Log.Debug("Extracting block commits from chain");
+            var tipIndex = BlockChain.Tip.Index;
+            var startIndex = 5_468_000L;    // From validators policy.
+            Log.Debug("Tip index is {Index}", tipIndex);
+            if (startIndex < tipIndex)
+            {
+                string docPath = "_commits.log";
+                using (StreamWriter outputFile = new StreamWriter(docPath))
+                {
+                    for (long i = startIndex; i < tipIndex; i++)
+                    {
+                        Log.Debug("Fetching block commit #{Height}", i);
+                        var blockCommit = BlockChain.GetBlockCommit(i);
+                        if (blockCommit is BlockCommit b)
+                        {
+                            Log.Debug("Fetched block commit #{Height}: {BlockCommit}",
+                                b.Height,
+                                b.ToString());
+                            outputFile.WriteLine(b.ToString());
+                            Log.Debug(
+                                "Wrote block commit #{Height} to file {Path}",
+                                i,
+                                docPath);
+                        }
+                        else
+                        {
+                            Log.Debug("Block commit #{Height} is null", i);
+                        }
+                    }
+                }
+            }
 
             _obsoletedChainIds = chainIds.Where(chainId => chainId != BlockChain.Id).ToList();
 
