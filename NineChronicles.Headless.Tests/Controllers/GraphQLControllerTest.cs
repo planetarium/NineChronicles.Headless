@@ -24,6 +24,7 @@ using NineChronicles.Headless.Controllers;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Properties;
 using NineChronicles.Headless.Requests;
+using NineChronicles.Headless.Tests.Common;
 using Xunit;
 using IPAddress = System.Net.IPAddress;
 
@@ -192,8 +193,9 @@ namespace NineChronicles.Headless.Tests.Controllers
                     Host = IPAddress.Loopback.ToString(),
                     IceServers = new List<IceServer>(),
                 },
-                NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test),
-                NetworkType.Test);
+                NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test, StaticActionTypeLoaderSingleton.Instance),
+                NetworkType.Test,
+                StaticActionTypeLoaderSingleton.Instance);
         }
     }
 }

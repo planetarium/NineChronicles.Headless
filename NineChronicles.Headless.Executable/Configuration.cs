@@ -76,7 +76,7 @@ namespace NineChronicles.Headless.Executable
         public string ChainTipStaleBehaviorType { get; set; } = "reboot";
         public int TxQuotaPerSigner { get; set; } = 10;
         public int MaximumPollPeers { get; set; } = int.MaxValue;
-        public DynamicActionTypeLoaderConfiguration? DynamicActionTypeLoader { get; set; } = null;
+        public ActionTypeLoaderConfiguration? ActionTypeLoader { get; set; } = null;
 
         public string SentryDsn { get; set; } = "";
 
