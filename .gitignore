@@ -461,3 +461,6 @@ modules.xml
 
 # local headless appsettings
 appsettings.local.json
+
+# For action
+!.github/bin/
