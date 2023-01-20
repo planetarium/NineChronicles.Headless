@@ -6,6 +6,7 @@ using Libplanet;
 using Libplanet.Action.Sys;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
+using Libplanet.Consensus;
 using Libplanet.Crypto;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Tx;
@@ -316,7 +317,7 @@ namespace NineChronicles.Headless.GraphTypes
                         context.GetArgument<long>("txNonce"),
                         privateKey,
                         blockChain.Genesis.Hash,
-                        new SetValidator(publicKey, power)
+                        new SetValidator(new Validator(publicKey, power))
                     );
                     blockChain.StageTransaction(tx);
                     return tx.Id;
