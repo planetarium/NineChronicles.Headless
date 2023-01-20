@@ -10,4 +10,3 @@ if [[ ! -f /tmp/github-release ]]; then
 fi
 
 /tmp/github-release "$@"
- 
