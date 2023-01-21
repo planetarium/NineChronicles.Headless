@@ -7,7 +7,7 @@ using Libplanet.Store;
 
 namespace NineChronicles.Headless.Executable.Store
 {
-    public static class IStoreExtensions
+    public static class StoreExtensions
     {
         public static Block<T> GetGenesisBlock<T>(
             this IStore store)

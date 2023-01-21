@@ -11,11 +11,11 @@ using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Tests.Store
 {
-    public class IStoreExtensionsTest : IDisposable
+    public class StoreExtensionsTest : IDisposable
     {
         private readonly string _storePath;
 
-        public IStoreExtensionsTest()
+        public StoreExtensionsTest()
         {
             _storePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         }
