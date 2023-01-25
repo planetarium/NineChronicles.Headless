@@ -91,13 +91,13 @@ namespace NineChronicles.Headless
                         "ExecuteAction",
                         $"Execute Action {actionName} from tx {txId}");
                     _sentryTraces.TryAdd(txId, sentryTrace);
-                    return UnaryResult(true);
+                    return new UnaryResult<bool>(true);
                 }
                 catch (InvalidTxException ite)
                 {
                     Log.Error(ite, $"{nameof(InvalidTxException)} occurred during {nameof(PutTransaction)}(). {{e}}", ite);
                     sentryTrace.Finish(ite);
-                    return UnaryResult(false);
+                    return new UnaryResult<bool>(false);
                 }
             }
             catch (Exception e)
@@ -114,7 +114,7 @@ namespace NineChronicles.Headless
             IValue state = _blockChain.GetState(address, hash);
             // FIXME: Null과 null 구분해서 반환해야 할 듯
             byte[] encoded = _codec.Encode(state ?? new Null());
-            return UnaryResult(encoded);
+            return new UnaryResult<byte[]>(encoded);
         }
 
         public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStates(IEnumerable<byte[]> addressBytesList, byte[] blockHashBytes)
@@ -165,14 +165,14 @@ namespace NineChronicles.Headless
                 }
               )
             );
-            return UnaryResult(encoded);
+            return new UnaryResult<byte[]>(encoded);
         }
 
         public UnaryResult<byte[]> GetTip()
         {
             Bencodex.Types.Dictionary headerDict = _blockChain.Tip.MarshalBlock();
             byte[] headerBytes = Codec.Encode(headerDict);
-            return UnaryResult(headerBytes);
+            return new UnaryResult<byte[]>(headerBytes);
         }
 
         public UnaryResult<long> GetNextTxNonce(byte[] addressBytes)
@@ -180,7 +180,7 @@ namespace NineChronicles.Headless
             var address = new Address(addressBytes);
             var nonce = _blockChain.GetNextTxNonce(address);
             Log.Debug("GetNextTxNonce: {nonce}", nonce);
-            return UnaryResult(nonce);
+            return new UnaryResult<long>(nonce);
         }
 
         public UnaryResult<bool> SetAddressesToSubscribe(byte[] addressBytes, IEnumerable<byte[]> addressesBytes)
@@ -197,7 +197,7 @@ namespace NineChronicles.Headless
                     "Subscribed addresses: {addresses}",
                     string.Join(", ", _context.AddressesToSubscribe));
             }
-            return UnaryResult(true);
+            return new UnaryResult<bool>(true);
         }
 
         public UnaryResult<bool> IsTransactionStaged(byte[] txidBytes)
@@ -208,7 +208,7 @@ namespace NineChronicles.Headless
                 "Transaction {id} is {1}.",
                 id,
                 isStaged ? "staged" : "not staged");
-            return UnaryResult(isStaged);
+            return new UnaryResult<bool>(isStaged);
         }
 
         public UnaryResult<bool> ReportException(string code, string message)
@@ -227,21 +227,21 @@ namespace NineChronicles.Headless
                     break;
             }
 
-            return UnaryResult(true);
+            return new UnaryResult<bool>(true);
         }
 
         public UnaryResult<bool> AddClient(byte[] addressBytes)
         {
             var address = new Address(addressBytes);
             _publisher.AddClient(address).Wait();
-            return UnaryResult(true);
+            return new UnaryResult<bool>(true);
         }
 
         public UnaryResult<bool> RemoveClient(byte[] addressBytes)
         {
             var address = new Address(addressBytes);
             _publisher.RemoveClient(address).Wait();
-            return UnaryResult(true);
+            return new UnaryResult<bool>(true);
         }
     }
 }
