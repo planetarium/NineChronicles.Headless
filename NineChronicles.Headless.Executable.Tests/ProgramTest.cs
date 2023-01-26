@@ -73,7 +73,7 @@ namespace NineChronicles.Headless.Executable.Tests
                 var response = await client.PostAsync($"http://localhost:{_graphqlPort}/graphql", content);
                 var responseString = await response.Content.ReadAsStringAsync();
                 Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-                Assert.Contains("\"data\":{\"chainQuery\":{\"blockQuery\":{\"block\":{\"hash\":\"e027e0845cfb73fee198e6005c5fbfed19e383a963eca3872e4afd1f6bd4a543\"}}}}", responseString);
+                Assert.Contains("\"data\":{\"chainQuery\":{\"blockQuery\":{\"block\":{\"hash\":\"6154bfbc534a3a3d663c99b9e71045fda3707b9d5a15747af8f7799fc0d04969\"}}}}", responseString);
 
                 var channel = new Channel(
                     $"localhost:{_rpcPort}",
@@ -88,7 +88,7 @@ namespace NineChronicles.Headless.Executable.Tests
 
                 var service = MagicOnionClient.Create<IBlockChainService>(channel, Array.Empty<IClientFilter>())
                     .WithCancellationToken(channel.ShutdownToken);
-                Assert.Equal(4284249, (await service.GetTip()).Length);
+                Assert.Equal(4484993, (await service.GetTip()).Length);
             }
             finally
             {

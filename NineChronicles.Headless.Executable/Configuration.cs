@@ -20,8 +20,6 @@ namespace NineChronicles.Headless.Executable
         public string? SwarmPrivateKeyString { get; set; }
         public string? ConsensusPrivateKeyString { get; set; }
 
-        public int Workers { get; set; } = 5;
-
         // Storage
         public string? StoreType { get; set; }
 
@@ -92,7 +90,6 @@ namespace NineChronicles.Headless.Executable
             ushort? consensusPort,
             string? swarmPrivateKeyString,
             string? consensusPrivateKeyString,
-            int? workers,
             string? storeType,
             string? storePath,
             bool? noReduceStore,
@@ -141,7 +138,6 @@ namespace NineChronicles.Headless.Executable
             ConsensusPort = consensusPort ?? ConsensusPort;
             SwarmPrivateKeyString = swarmPrivateKeyString ?? SwarmPrivateKeyString ?? ByteUtil.Hex(new PrivateKey().ToByteArray());
             ConsensusPrivateKeyString = consensusPrivateKeyString ?? ConsensusPrivateKeyString;
-            Workers = workers ?? Workers;
             StoreType = storeType ?? StoreType;
             StorePath = storePath ?? StorePath;
             NoReduceStore = noReduceStore ?? NoReduceStore;
