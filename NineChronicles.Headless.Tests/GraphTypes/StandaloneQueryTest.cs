@@ -18,6 +18,7 @@ using Libplanet.Action.Sys;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blocks;
+using Libplanet.Consensus;
 using Libplanet.Crypto;
 using Libplanet.KeyStore;
 using Libplanet.Net;
@@ -459,8 +460,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     },
                     systemActions: new IAction[]
                     {
-                        new SetValidator(ValidatorAdminPolicy.TestValidatorAdminKey.PublicKey, BigInteger.One),
-                        new SetValidator(ProposerPrivateKey.PublicKey, BigInteger.One)
+                        new SetValidator(new Libplanet.Consensus.Validator(ValidatorAdminPolicy.TestValidatorAdminKey.PublicKey, BigInteger.One)),
+                        new SetValidator(new Libplanet.Consensus.Validator(ProposerPrivateKey.PublicKey, BigInteger.One))
                     },
                     privateKey: ValidatorAdminPolicy.TestValidatorAdminKey
                 );
@@ -1084,8 +1085,8 @@ decimalPlaces
                     blockAction: blockPolicy.BlockAction,
                     systemActions: new IAction[]
                     {
-                        new SetValidator(ValidatorAdminPolicy.TestValidatorAdminKey.PublicKey, BigInteger.One),
-                        new SetValidator(privateKey.PublicKey, BigInteger.One)
+                        new SetValidator(new Libplanet.Consensus.Validator(ValidatorAdminPolicy.TestValidatorAdminKey.PublicKey, BigInteger.One)),
+                        new SetValidator(new Libplanet.Consensus.Validator(privateKey.PublicKey, BigInteger.One))
                     },
                     privateKey: ValidatorAdminPolicy.TestValidatorAdminKey
                 );

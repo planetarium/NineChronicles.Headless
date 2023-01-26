@@ -1047,8 +1047,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }, blockAction: ServiceBuilder.BlockPolicy.BlockAction,
             systemActions: new IAction[]
             {
-                new SetValidator(ValidatorAdminPolicy.TestValidatorAdminKey.PublicKey, BigInteger.One),
-                new SetValidator(ProposerPrivateKey.PublicKey, BigInteger.One)
+                new SetValidator(new Validator(ValidatorAdminPolicy.TestValidatorAdminKey.PublicKey, BigInteger.One)),
+                new SetValidator(new Validator(ProposerPrivateKey.PublicKey, BigInteger.One))
             },
             privateKey: ValidatorAdminPolicy.TestValidatorAdminKey
         );

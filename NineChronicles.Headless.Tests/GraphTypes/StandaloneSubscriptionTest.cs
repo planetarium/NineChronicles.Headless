@@ -17,6 +17,7 @@ using Libplanet.Action.Sys;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blocks;
+using Libplanet.Consensus;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless;
@@ -75,8 +76,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var genesisBlock = BlockChain<EmptyAction>.ProposeGenesisBlock(
                 systemActions: new IAction[]
                 {
-                    new SetValidator(ValidatorAdminPolicy.TestValidatorAdminKey.PublicKey, BigInteger.One),
-                    new SetValidator(apvPrivateKey.PublicKey, BigInteger.One)
+                    new SetValidator(new Validator(ValidatorAdminPolicy.TestValidatorAdminKey.PublicKey, BigInteger.One)),
+                    new SetValidator(new Validator(apvPrivateKey.PublicKey, BigInteger.One))
                 },
                 privateKey: ValidatorAdminPolicy.TestValidatorAdminKey);
             var validators = new List<PrivateKey>

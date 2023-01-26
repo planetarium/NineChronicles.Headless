@@ -271,34 +271,6 @@ namespace NineChronicles.Headless.Executable.Commands
                 );
             }
 
-            public IAccountStateDelta SetValidator(Validator validator)
-            {
-                Log.Debug(
-                    "Update validator {PublicKey} {Power} to validator set",
-                    validator.PublicKey,
-                    validator.Power);
-                return UpdateValidatorSet(GetValidatorSet().Update(validator));
-            }
-
-            public ValidatorSet GetValidatorSet() =>
-                UpdatedValidatorSet ?? ValidatorSetGetter();
-
-            public AccountStateDeltaImpl UpdateValidatorSet(
-                ValidatorSet updatedValidatorSet
-            ) =>
-                new AccountStateDeltaImpl(
-                    StateGetter,
-                    BalanceGetter,
-                    TotalSupplyGetter,
-                    ValidatorSetGetter,
-                    Signer)
-                {
-                    UpdatedStates = UpdatedStates,
-                    UpdatedFungibles = UpdatedFungibles,
-                    UpdatedTotalSupply = UpdatedTotalSupply,
-                    UpdatedValidatorSet = updatedValidatorSet,
-                };
-
             public IImmutableDictionary<Address, IValue?> GetUpdatedStates() =>
                 StateUpdatedAddresses.Select(address =>
                     new KeyValuePair<Address, IValue?>(
@@ -494,6 +466,11 @@ namespace NineChronicles.Headless.Executable.Commands
                         .Hash;
 
             public bool BlockAction { get; }
+
+            public void PutLog(string log)
+            {
+                // NOTE: Not implemented yet. See also Lib9c.Tests.Action.ActionContext.PutLog().
+            }
 
             public bool IsNativeToken(Currency currency) =>
                 _nativeTokenPredicate is { } && _nativeTokenPredicate(currency);
