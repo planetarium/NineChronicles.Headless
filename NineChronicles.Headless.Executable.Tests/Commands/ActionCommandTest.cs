@@ -206,6 +206,8 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var decoded = (List)_codec.Decode(rawAction);
             var plainValue = Assert.IsType<Dictionary>(decoded[1]);
             var action = ClaimStakeRewardFactory.CreateByBlockIndex(blockIndex, addr);
+            Assert.NotNull(action);
+            Assert.Equal(action.GetType(), expectedActionType);
             action.LoadPlainValue(plainValue);
             string type = (Text)decoded[0];
             Assert.Equal(action.GetType().Name, type);
