@@ -39,7 +39,7 @@ public partial class ActionQuery
                 {
                     avatarAddress = avatarAddress,
                     slotIndex = slotIndex,
-                    recipeId = recipeId
+                    recipeId = recipeId,
                 };
                 return Encode(context, action);
             }
