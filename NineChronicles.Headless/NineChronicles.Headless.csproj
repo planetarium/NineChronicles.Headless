@@ -4,11 +4,11 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CodeAnalysisRuleSet>..\NineChronicles.Headless.Common.ruleset</CodeAnalysisRuleSet>
     <Nullable>enable</Nullable>
-    <Configurations>Debug;Release;Debug DevEx</Configurations>
+    <Configurations>Debug;Release;DevEx</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug DevEx' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'DevEx' ">
     <DebugSymbols Condition=" '$(DebugSymbols)' == '' ">true</DebugSymbols>
     <Optimize Condition=" '$(Optimize)' == '' ">false</Optimize>
     <DefineConstants>$(DefineConstants);TRACE;LIB9C_DEV_EXTENSIONS</DefineConstants>
