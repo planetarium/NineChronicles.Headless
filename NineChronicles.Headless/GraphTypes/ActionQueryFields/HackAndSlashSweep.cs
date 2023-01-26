@@ -70,7 +70,7 @@ public partial class ActionQuery
                     List<RuneSlotInfo> runeSlotInfos =
                         context.GetArgument<List<RuneSlotInfo>?>("runeSlotInfos") ?? new List<RuneSlotInfo>();
                     int actionPoint = context.GetArgument<int>("actionPoint");
-                    int? apStoneCount = context.GetArgument<int?>("apStoneCount") ?? 0;
+                    int apStoneCount = context.GetArgument<int?>("apStoneCount") ?? 0;
 
                     NCAction action = new HackAndSlashSweep
                     {
@@ -81,7 +81,7 @@ public partial class ActionQuery
                         equipments = equipmentIds,
                         runeInfos = runeSlotInfos,
                         actionPoint = actionPoint,
-                        apStoneCount = apStoneCount ?? 0,
+                        apStoneCount = apStoneCount,
                     };
                     return Encode(context, action);
                 }
