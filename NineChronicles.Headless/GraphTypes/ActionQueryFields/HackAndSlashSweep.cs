@@ -87,7 +87,7 @@ public partial class ActionQuery
                 }
                 catch (Exception e)
                 {
-                    var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                    var msg = $"Unexpected exception occurred during {typeof(HackAndSlashSweep)}: {e}";
                     context.Errors.Add(new ExecutionError(msg, e));
                     throw;
                 }
