@@ -39,9 +39,10 @@ namespace NineChronicles.Headless.Tests.Controllers
         {
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock();
+            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
+                blockAction: NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test).BlockAction);
             var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
-                new BlockPolicy<PolymorphicAction<ActionBase>>(),
+                NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test),
                 new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
                 store,
                 stateStore,
@@ -162,6 +163,7 @@ namespace NineChronicles.Headless.Tests.Controllers
                         consensusKey.PublicKey,
                     },
                     Host = IPAddress.Loopback.ToString(),
+                    IceServers = new List<IceServer>(),
                 },
                 NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test),
                 NetworkType.Test);

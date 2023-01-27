@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Action.Sys;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
@@ -79,7 +81,11 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [InlineData(StoreType.RocksDb)]
         public void Inspect(StoreType storeType)
         {
-            Block<NCAction> genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock();
+            var proposer = new PrivateKey();
+            Block<NCAction> genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
+                systemActions: new IAction[] {
+                    new SetValidator(new Validator(proposer.PublicKey, BigInteger.One)) },
+                privateKey: ValidatorAdminPolicy.TestValidatorAdminKey);
             IStore store = storeType.CreateStore(_storePath);
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
@@ -107,10 +113,9 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 RuneInfos = new List<RuneSlotInfo>(),
             };
 
-            var minerKey = new PrivateKey();
-            chain.MakeTransaction(minerKey, new PolymorphicAction<ActionBase>[] { action });
-            Block<PolymorphicAction<ActionBase>> block = chain.ProposeBlock(minerKey, DateTimeOffset.Now);
-            chain.Append(block, GenerateBlockCommit(block));
+            chain.MakeTransaction(proposer, new PolymorphicAction<ActionBase>[] { action });
+            Block<PolymorphicAction<ActionBase>> block = chain.ProposeBlock(proposer, DateTimeOffset.Now);
+            chain.Append(block, GenerateBlockCommit(block, proposer));
             store.Dispose();
             stateStore.Dispose();
 
@@ -129,7 +134,11 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [InlineData(StoreType.RocksDb)]
         public void Truncate(StoreType storeType)
         {
-            Block<NCAction> genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock();
+            var proposer = new PrivateKey();
+            Block<NCAction> genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
+                systemActions: new IAction[] {
+                    new SetValidator(new Validator(proposer.PublicKey, BigInteger.One)) },
+                privateKey: ValidatorAdminPolicy.TestValidatorAdminKey);
             IStore store = storeType.CreateStore(_storePath);
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
@@ -137,10 +146,8 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             store.AppendIndex(chainId, genesisBlock.Hash);
             var stateStore = new TrieStateStore(new RocksDBKeyValueStore(Path.Combine(_storePath, "states")));
 
-            var validators = new ValidatorSet(new List<PublicKey> { ValidatorsPolicy.TestValidatorKey.PublicKey });
-
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
-            IBlockPolicy<NCAction> blockPolicy = new BlockPolicy<NCAction>(getValidatorSet: index => validators);
+            IBlockPolicy<NCAction> blockPolicy = new BlockPolicy<NCAction>();
             BlockChain<NCAction> chain = new BlockChain<NCAction>(
                 blockPolicy,
                 stagePolicy,
@@ -159,22 +166,22 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 RuneInfos = new List<RuneSlotInfo>(),
             };
 
-            var minerKey = new PrivateKey();
+
             for (var i = 0; i < 2; i++)
             {
-                chain.MakeTransaction(minerKey, new NCAction[] { action });
+                chain.MakeTransaction(proposer, new NCAction[] { action });
                 if (chain.Tip.Index < 1)
                 {
-                    Block<NCAction> block = chain.ProposeBlock(minerKey, DateTimeOffset.Now);
-                    chain.Append(block, GenerateBlockCommit(block));
+                    Block<NCAction> block = chain.ProposeBlock(proposer, DateTimeOffset.Now);
+                    chain.Append(block, GenerateBlockCommit(block, proposer));
                 }
                 else
                 {
                     Block<NCAction> block = chain.ProposeBlock(
-                        minerKey,
+                        proposer,
                         DateTimeOffset.Now,
-                        lastCommit: GenerateBlockCommit(chain.Tip));
-                    chain.Append(block, GenerateBlockCommit(block));
+                        lastCommit: GenerateBlockCommit(chain.Tip, proposer));
+                    chain.Append(block, GenerateBlockCommit(block, proposer));
                 }
             }
 
@@ -244,7 +251,7 @@ F9A15F870701268Bd7bBeA6502eB15F4997f32f9,100,1,100000
 Fb90278C67f9b266eA309E6AE8463042f5461449,3000,3600,13600
 Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
 ");
-            var privateKey = new PrivateKey();
+            var privateKey = ValidatorAdminPolicy.TestValidatorAdminKey;
             goldDistributionPath = goldDistributionPath.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             var config = new Dictionary<string, object>
             {
@@ -286,6 +293,12 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
                 adminState,
                 authorizedMinersState,
                 ImmutableHashSet<Address>.Empty,
+                new Dictionary<PublicKey, BigInteger>
+                {
+                    {
+                        ValidatorAdminPolicy.TestValidatorAdminKey.PublicKey, BigInteger.One
+                    }
+                },
                 genesisConfig.ActivationKeyCount != 0,
                 null,
                 new PrivateKey(ByteUtil.ParseHex(genesisConfig.PrivateKey))
@@ -293,7 +306,7 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
             return genesisBlock;
         }
 
-        private BlockCommit? GenerateBlockCommit<T>(Block<T> block)
+        private BlockCommit? GenerateBlockCommit<T>(Block<T> block, PrivateKey validator)
             where T : IAction, new()
         {
             return block.Index != 0
@@ -306,8 +319,8 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
                         0,
                         block.Hash,
                         DateTimeOffset.UtcNow,
-                        ValidatorsPolicy.TestValidatorKey.PublicKey,
-                        VoteFlag.PreCommit).Sign(ValidatorsPolicy.TestValidatorKey)))
+                        validator.PublicKey,
+                        VoteFlag.PreCommit).Sign(validator)))
                 : null;
         }
 

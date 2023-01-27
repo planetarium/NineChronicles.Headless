@@ -27,7 +27,7 @@ namespace NineChronicles.Headless.Executable.Tests
             var privateKey = new PrivateKey();
             _apvString = AppProtocolVersion.Sign(privateKey, 1000).Token;
 
-            _genesisBlockPath = "https://release.nine-chronicles.com/genesis-block-9c-main";
+            _genesisBlockPath = "https://s3.us-east-2.amazonaws.com/9c-test.planetarium-dev.com/genesis-block-pbft-dynamic-validator";
             _storePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
             _rpcPort = 41234;
@@ -73,7 +73,7 @@ namespace NineChronicles.Headless.Executable.Tests
                 var response = await client.PostAsync($"http://localhost:{_graphqlPort}/graphql", content);
                 var responseString = await response.Content.ReadAsStringAsync();
                 Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-                Assert.Contains("\"data\":{\"chainQuery\":{\"blockQuery\":{\"block\":{\"hash\":\"4582250d0da33b06779a8475d283d5dd210c683b9b999d74d03fac4f58fa6bce\"}}}}", responseString);
+                Assert.Contains("\"data\":{\"chainQuery\":{\"blockQuery\":{\"block\":{\"hash\":\"6154bfbc534a3a3d663c99b9e71045fda3707b9d5a15747af8f7799fc0d04969\"}}}}", responseString);
 
                 var channel = new Channel(
                     $"localhost:{_rpcPort}",
@@ -88,7 +88,7 @@ namespace NineChronicles.Headless.Executable.Tests
 
                 var service = MagicOnionClient.Create<IBlockChainService>(channel, Array.Empty<IClientFilter>())
                     .WithCancellationToken(channel.ShutdownToken);
-                Assert.Equal(11085612, (await service.GetTip()).Length);
+                Assert.Equal(4484993, (await service.GetTip()).Length);
             }
             finally
             {
