@@ -112,6 +112,13 @@ namespace NineChronicles.Headless.GraphTypes
         public StandaloneSubscription(StandaloneContext standaloneContext)
         {
             StandaloneContext = standaloneContext;
+            if (standaloneContext.NineChroniclesNodeService != null)
+            {
+                Field<NonNullGraphType<AvatarSubscription>>(
+                    name: nameof(AvatarSubscription),
+                    resolve: context => new AvatarSubscription(standaloneContext.NineChroniclesNodeService)
+                    );
+            }
             AddField(new EventStreamFieldType
             {
                 Name = "tipChanged",
