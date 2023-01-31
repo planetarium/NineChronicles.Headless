@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,6 +54,15 @@ namespace NineChronicles.Headless.Tests
                 UserContext = userContext!,
                 Root = source,
             });
+        }
+
+        public static NCAction DeserializeNCAction(IValue value)
+        {
+#pragma warning disable CS0612
+            NCAction action = new NCAction();
+#pragma warning restore CS0612
+            action.LoadPlainValue(value);
+            return action;
         }
     }
 }
