@@ -34,7 +34,7 @@ namespace NineChronicles.Headless
 
         public const string MagicOnionTargetKey = "magicOnionTarget";
 
-        private static GraphQLNodeServiceProperties GraphQlNodeServiceProperties { get; set; } = null!;
+        private static GraphQLNodeServiceProperties? GraphQlNodeServiceProperties { get; set; }
 
         public GraphQLService(GraphQLNodeServiceProperties properties)
         {
@@ -43,7 +43,7 @@ namespace NineChronicles.Headless
 
         public IHostBuilder Configure(IHostBuilder hostBuilder)
         {
-            var listenHost = GraphQlNodeServiceProperties.GraphQLListenHost;
+            var listenHost = GraphQlNodeServiceProperties!.GraphQLListenHost;
             var listenPort = GraphQlNodeServiceProperties.GraphQLListenPort;
 
             return hostBuilder.ConfigureWebHostDefaults(builder =>
@@ -96,7 +96,7 @@ namespace NineChronicles.Headless
 
             public void ConfigureServices(IServiceCollection services)
             {
-                if (GraphQlNodeServiceProperties.IpRateLimitOptions != null)
+                if (GraphQlNodeServiceProperties?.IpRateLimitOptions != null)
                 {
                     services.AddOptions();
                     services.AddMemoryCache();
@@ -170,7 +170,7 @@ namespace NineChronicles.Headless
 
                 app.UseRouting();
                 app.UseAuthorization();
-                if (GraphQlNodeServiceProperties.IpRateLimitOptions != null)
+                if (GraphQlNodeServiceProperties?.IpRateLimitOptions != null)
                 {
                     app.UseIpRateLimiting();
                     app.UseMvc();
