@@ -10,11 +10,7 @@ namespace NineChronicles.Headless.GraphTypes.ActionQueryFieldTypes
 {
     public class PetEnhancementFieldType : ActionQueryFieldType
     {
-        private StandaloneContext _standaloneContext;
-
-        public PetEnhancementFieldType(
-            StandaloneContext standaloneContext,
-            Func<IResolveFieldContext, NCAction, byte[]> encoder) :
+        public PetEnhancementFieldType(Func<IResolveFieldContext, NCAction, byte[]> encoder) :
             base(
                 "petEnhancement",
                 "This query returns the action `PetEnhancement`.",
@@ -36,9 +32,6 @@ namespace NineChronicles.Headless.GraphTypes.ActionQueryFieldTypes
                     }),
                 encoder)
         {
-            _standaloneContext = standaloneContext ?? throw new ArgumentNullException(
-                nameof(standaloneContext),
-                "StandaloneContext is required.");
         }
 
         public override object? Resolve(IResolveFieldContext context)

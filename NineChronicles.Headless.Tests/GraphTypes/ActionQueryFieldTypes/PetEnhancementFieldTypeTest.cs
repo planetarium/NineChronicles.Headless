@@ -15,17 +15,7 @@ public class PetEnhancementFieldTypeTest
     [Fact]
     public void Constructor()
     {
-        var ft = new PetEnhancementFieldType(
-            new StandaloneContext(),
-            ActionQueryFieldTypeTest.Encode);
-    }
-
-    [Fact]
-    public void Constructor_Throw_ArgumentNullException()
-    {
-        Assert.Throws<ArgumentNullException>(() => new PetEnhancementFieldType(
-            null,
-            ActionQueryFieldTypeTest.Encode));
+        var ft = new PetEnhancementFieldType(ActionQueryFieldTypeTest.Encode);
     }
 
     [Theory]
@@ -54,9 +44,7 @@ public class PetEnhancementFieldTypeTest
             Errors = new ExecutionErrors(),
             Extensions = new Dictionary<string, object?>(),
         };
-        var ft = new PetEnhancementFieldType(
-            new StandaloneContext(),
-            ActionQueryFieldTypeTest.Encode);
+        var ft = new PetEnhancementFieldType(ActionQueryFieldTypeTest.Encode);
         var resolve = ft.Resolve(context);
         var bytes = Assert.IsType<byte[]>(resolve);
         var ncAction = ActionQueryFieldTypeTest.Decode(bytes);

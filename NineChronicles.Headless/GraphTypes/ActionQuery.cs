@@ -546,7 +546,7 @@ namespace NineChronicles.Headless.GraphTypes
             RegisterRapidCombination();
             RegisterCombinationConsumable();
 
-            base.AddField(new PetEnhancementFieldType(standaloneContext, Encode));
+            base.AddField(new PetEnhancementFieldType(Encode));
 
 #if LIB9C_DEV_EXTENSIONS
             RegisterFieldsForDevEx();
