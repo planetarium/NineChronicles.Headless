@@ -139,6 +139,7 @@ namespace NineChronicles.Headless.Tests.Controllers
             {
                 _standaloneContext.AgentAddresses[address] = (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(), new ReplaySubject<string>());
             }
+
             Assert.Equal(exist, _standaloneContext.AgentAddresses.Any());
             _controller.RemoveSubscribe(new AddressRequest
             {

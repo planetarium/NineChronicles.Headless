@@ -19,7 +19,8 @@ public class MaterialsToUseInputType : InputObjectGraphType<MaterialsToUseType>
 
     public override object ParseDictionary(IDictionary<string, object?> value)
     {
-        return new MaterialsToUseType {
+        return new MaterialsToUseType
+        {
             MaterialId = (int)value["materialId"]!,
             Quantity = (int)value["quantity"]!
         };
