@@ -1,10 +1,12 @@
 using System.Collections.Generic;
+using System.Linq;
 using Bencodex;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
+using NineChronicles.Headless.GraphTypes.Input;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -14,7 +16,7 @@ namespace NineChronicles.Headless.GraphTypes
         private static readonly Codec Codec = new Codec();
         internal StandaloneContext standaloneContext { get; set; }
 
-        public CraftQuery(): this(new StandaloneContext())
+        public CraftQuery() : this(new StandaloneContext())
         {
         }
 
@@ -79,26 +81,33 @@ namespace NineChronicles.Headless.GraphTypes
                     },
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
-                        Name = "eventConsumableItemRecipeId",
+                        Name = "eventMaterialItemRecipeId",
                         Description = "Recipe ID of event item to craft",
                     },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<MaterialsToUseInputType>>>>
                     {
                         Name = "materialsToUse",
-                        Description = "{`materialId`: `materialCount`} to craft item"
+                        Description = "Materials to be used to craft"
                     }
                 ),
                 resolve: context =>
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var eventScheduleId = context.GetArgument<int>("eventScheduleId");
-                    var eventConsumableItemRecipeId = context.GetArgument<int>("eventConsumableItemRecipeId");
-                    var materialsToUse = context.GetArgument<Dictionary<int, int>>("materialsToUse");
+                    var eventMaterialItemRecipeId = context.GetArgument<int>("eventMaterialItemRecipeId");
+                    var materialsToUseList = context.GetArgument<List<MaterialsToUseType>>("materialsToUse");
+                    var materialsToUse = materialsToUseList.Aggregate(new Dictionary<int, int>(),
+                        (dict, material) =>
+                        {
+                            dict.TryAdd(material.MaterialId, material.Quantity);
+                            return dict;
+                        }
+                    );
                     NCAction action = new EventMaterialItemCrafts
                     {
                         AvatarAddress = avatarAddress,
                         EventScheduleId = eventScheduleId,
-                        EventMaterialItemRecipeId = eventConsumableItemRecipeId,
+                        EventMaterialItemRecipeId = eventMaterialItemRecipeId,
                         MaterialsToUse = materialsToUse,
                     };
                     return Encode(context, action);
