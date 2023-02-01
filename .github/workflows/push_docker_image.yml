@@ -10,6 +10,7 @@ on:
       - previewnet
       - qa-*
       - 2022q3-worldboss
+      - open-telemetry
     tags:
       - v*
   workflow_dispatch:
