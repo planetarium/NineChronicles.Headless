@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using AspNetCoreRateLimit;
 using GraphQL.Server;
 using GraphQL.Utilities;
 using Grpc.Core;
@@ -33,7 +34,7 @@ namespace NineChronicles.Headless
 
         public const string MagicOnionTargetKey = "magicOnionTarget";
 
-        private GraphQLNodeServiceProperties GraphQlNodeServiceProperties { get; }
+        private static GraphQLNodeServiceProperties GraphQlNodeServiceProperties { get; set; } = null!;
 
         public GraphQLService(GraphQLNodeServiceProperties properties)
         {
@@ -95,6 +96,16 @@ namespace NineChronicles.Headless
 
             public void ConfigureServices(IServiceCollection services)
             {
+                if (GraphQlNodeServiceProperties.IpRateLimitOptions != null)
+                {
+                    services.AddOptions();
+                    services.AddMemoryCache();
+                    services.Configure<IpRateLimitOptions>(GraphQlNodeServiceProperties.IpRateLimitOptions);
+                    services.AddInMemoryRateLimiting();
+                    services.AddMvc();
+                    services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+                }
+
                 if (!(Configuration[NoCorsKey] is null))
                 {
                     services.AddCors(
@@ -159,6 +170,12 @@ namespace NineChronicles.Headless
 
                 app.UseRouting();
                 app.UseAuthorization();
+                if (GraphQlNodeServiceProperties.IpRateLimitOptions != null)
+                {
+                    app.UseIpRateLimiting();
+                    app.UseMvc();
+                }
+
                 app.UseEndpoints(endpoints =>
                 {
                     endpoints.MapControllers();

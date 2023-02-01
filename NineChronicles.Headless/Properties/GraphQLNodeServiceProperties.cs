@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Configuration;
+
 namespace NineChronicles.Headless.Properties
 {
     public class GraphQLNodeServiceProperties
@@ -25,5 +27,7 @@ namespace NineChronicles.Headless.Properties
 
             public string Target { get; }
         }
+
+        public IConfigurationSection? IpRateLimitOptions { get; set; }
     }
 }

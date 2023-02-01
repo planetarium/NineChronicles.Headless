@@ -188,7 +188,9 @@ namespace NineChronicles.Headless.Executable
             string? sentryDsn = "",
             [Option(Description = "Trace sample rate for sentry")]
             double? sentryTraceSampleRate = null,
-            [Ignore] CancellationToken? cancellationToken = null
+            [Ignore] CancellationToken? cancellationToken = null,
+            [Option(Description = "Enable rate limiting to control rate of requests.")]
+            bool? rateLimit = null
         )
         {
 #if SENTRY || ! DEBUG
@@ -202,11 +204,13 @@ namespace NineChronicles.Headless.Executable
                 HttpResponseMessage resp = await client.GetAsync(configPath);
                 resp.EnsureSuccessStatusCode();
                 Stream body = await resp.Content.ReadAsStreamAsync();
-                configurationBuilder.AddJsonStream(body);
+                configurationBuilder.AddJsonStream(body)
+                    .AddEnvironmentVariables();
             }
             else
             {
-                configurationBuilder.AddJsonFile(configPath);
+                configurationBuilder.AddJsonFile(configPath)
+                    .AddEnvironmentVariables();
             }
 
             // Setup logger.
@@ -307,6 +311,7 @@ namespace NineChronicles.Headless.Executable
                             ? new GraphQLNodeServiceProperties.MagicOnionHttpOptions(
                                 $"{headlessConfig.RpcListenHost}:{headlessConfig.RpcListenPort}")
                             : (GraphQLNodeServiceProperties.MagicOnionHttpOptions?)null,
+                        IpRateLimitOptions = rateLimit == true ? configuration.GetSection("IpRateLimiting") : null,
                     };
 
                     var graphQLService = new GraphQLService(graphQLNodeServiceProperties);
