@@ -15,6 +15,7 @@ using Nekoyume.Helper;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
+using NineChronicles.Headless.GraphTypes.ActionQueryFieldTypes;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -544,6 +545,8 @@ namespace NineChronicles.Headless.GraphTypes
             RegisterItemEnhancement();
             RegisterRapidCombination();
             RegisterCombinationConsumable();
+
+            base.AddField(new PetEnhancementFieldType(standaloneContext, Encode));
 
 #if LIB9C_DEV_EXTENSIONS
             RegisterFieldsForDevEx();
