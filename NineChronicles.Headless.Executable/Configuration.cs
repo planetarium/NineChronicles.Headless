@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Libplanet;
 using Libplanet.Crypto;
+using Libplanet.Headless;
 using NineChronicles.Headless.Properties;
 
 namespace NineChronicles.Headless.Executable
@@ -131,7 +132,7 @@ namespace NineChronicles.Headless.Executable
             string? chainTipStaleBehaviorType,
             int? txQuotaPerSigner,
             int? maximumPollPeers,
-            string[]? validatorStrings
+            string[]? validatorStrings,
             string? sentryDsn,
             double? sentryTraceSampleRate
         )

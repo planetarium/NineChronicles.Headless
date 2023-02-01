@@ -374,7 +374,7 @@ namespace NineChronicles.Headless.Executable
                         bucketSize: headlessConfig.BucketSize,
                         chainTipStaleBehaviorType: headlessConfig.ChainTipStaleBehaviorType,
                         maximumPollPeers: headlessConfig.MaximumPollPeers,
-                        validatorStrings: headlessConfig.ValidatorStrings
+                        validatorStrings: headlessConfig.ValidatorStrings,
                         dynamicActionTypeLoader: headlessConfig.DynamicActionTypeLoader
                     );
 

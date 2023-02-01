@@ -273,11 +273,15 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 RuneInfos = new List<RuneSlotInfo>(),
             };
 
-            var minerKey = new PrivateKey();
+            var proposer = new PrivateKey();
             for (var i = 0; i < 2; i++)
             {
-                chain.MakeTransaction(minerKey, new NCAction[] { action });
-                await chain.MineBlock(minerKey, DateTimeOffset.Now);
+                chain.MakeTransaction(proposer, new NCAction[] { action });
+                Block<NCAction> block = chain.ProposeBlock(
+                    proposer,
+                    DateTimeOffset.Now,
+                    lastCommit: GenerateBlockCommit(chain.Tip, proposer));
+                chain.Append(block, GenerateBlockCommit(block, proposer));
             }
 
             chain.ExecuteActions(chain.Tip);
