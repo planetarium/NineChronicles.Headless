@@ -42,7 +42,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         public StandaloneMutationTest(ITestOutputHelper output) : base(output)
         {
-            _sheets = TableSheetsImporter.ImportSheets(Path.Join("..", "..", "..", "..", "Lib9c", "Lib9c", "TableCSV"));
+            _sheets = TableSheetsImporter.ImportSheets();
             _tableSheets = new TableSheets(_sheets);
         }
 
@@ -315,7 +315,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.DoesNotContain(
                 new Validator(newValidator, BigInteger.One), BlockChain.GetValidatorSet().Validators);
 
-            var query = $"mutation {{ setValidator(publicKey: \"{newValidator}\", power: 1, txNonce: 3) }}";
+            var query = $"mutation {{ setValidator(" +
+                $"publicKey: \"{newValidator}\", " +
+                $"power: 1, " +
+                $"txNonce: {BlockChain.GetNextTxNonce(ValidatorAdminPolicy.TestValidatorAdminKey.ToAddress())}" +
+                $") }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
             var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
 
@@ -334,7 +338,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
             BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
 
-            // 10 + 10 - 17.5(transfer)
             Assert.Contains(
                 new Validator(newValidator, BigInteger.One), BlockChain.GetValidatorSet().Validators);
         }

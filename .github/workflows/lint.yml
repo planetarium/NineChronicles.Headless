@@ -6,10 +6,25 @@ jobs:
     format:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v3
             - name: Setup .NET Core
-              uses: actions/setup-dotnet@v1
+              uses: actions/setup-dotnet@v3
               with:
                   dotnet-version: 6.0.*
             - name: dotnet format
               run: dotnet format --exclude Lib9c --exclude NineChronicles.RPC.Shared -v=d --no-restore --verify-no-changes
+    validate-appsettings-json:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - name: Install ajv-cli
+              run: yarn global add ajv-cli
+            - name: Validate appsettings.*.json
+              working-directory: NineChronicles.Headless.Executable
+              run: |
+                set -evx
+
+                FILES=(appsettings.mainnet.json appsettings.internal.json appsettings.previewnet.json appsettings.json)
+                for file in ${FILES[@]}; do
+                  ajv validate -s appsettings-schema.json -d "$file"
+                done

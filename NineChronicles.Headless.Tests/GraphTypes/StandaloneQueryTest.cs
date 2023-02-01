@@ -44,7 +44,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         public StandaloneQueryTest(ITestOutputHelper output) : base(output)
         {
-            _sheets = TableSheetsImporter.ImportSheets(Path.Join("..", "..", "..", "..", "Lib9c", "Lib9c", "TableCSV"));
+            _sheets = TableSheetsImporter.ImportSheets();
         }
 
         [Fact]

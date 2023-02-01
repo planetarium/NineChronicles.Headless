@@ -12,6 +12,7 @@ using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
 using Nekoyume.Action.Factory;
 using Nekoyume.Helper;
+using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -399,6 +400,35 @@ namespace NineChronicles.Headless.GraphTypes
 
                     NCAction action = new TransferAssets(sender, recipients, memo);
                     return Encode(context, action);
+                }
+            );
+            Field<NonNullGraphType<ByteStringType>>(
+                "activateAccount",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "activationCode",
+                        Description = "Activation code that you've get."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var activationCode = context.GetArgument<string>("activationCode");
+                    var activationKey = ActivationKey.Decode(activationCode);
+                    if (standaloneContext.BlockChain!.GetState(activationKey.PendingAddress) is Dictionary dictionary)
+                    {
+                        var pending = new PendingActivationState(dictionary);
+                        var action = activationKey.CreateActivateAccount(pending.Nonce);
+                        if (pending.Verify(action))
+                        {
+                            var pa = new NCAction(action);
+                            return Encode(context, pa);
+                        }
+
+                        throw new ExecutionError("Failed to verify activateAccount action.");
+                    }
+
+                    throw new InvalidOperationException("BlockChain not found in the context");
                 }
             );
             Field<NonNullGraphType<ByteStringType>>(

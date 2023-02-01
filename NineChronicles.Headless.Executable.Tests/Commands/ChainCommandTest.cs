@@ -241,6 +241,97 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             Assert.Equal(prevStatesCount, outputStatesCount);
         }
 
+        [Theory]
+        [InlineData(StoreType.RocksDb)]
+        public async Task Snapshot(StoreType storeType)
+        {
+            IStore store = storeType.CreateStore(_storePath);
+            var statesPath = Path.Combine(_storePath, "states");
+            Guid chainId = Guid.NewGuid();
+            store.SetCanonicalChainId(chainId);
+            var genesisBlock = MineGenesisBlock();
+            store.PutBlock(genesisBlock);
+            store.AppendIndex(chainId, genesisBlock.Hash);
+            var stateKeyValueStore = new RocksDBKeyValueStore(statesPath);
+            var stateStore = new TrieStateStore(stateKeyValueStore);
+            IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
+            IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
+            BlockChain<NCAction> chain = new BlockChain<NCAction>(
+                blockPolicy,
+                stagePolicy,
+                store,
+                stateStore,
+                genesisBlock);
+            var action = new HackAndSlash
+            {
+                Costumes = new List<Guid>(),
+                Equipments = new List<Guid>(),
+                Foods = new List<Guid>(),
+                WorldId = 1,
+                StageId = 1,
+                AvatarAddress = default,
+                RuneInfos = new List<RuneSlotInfo>(),
+            };
+
+            var minerKey = new PrivateKey();
+            for (var i = 0; i < 2; i++)
+            {
+                chain.MakeTransaction(minerKey, new NCAction[] { action });
+                await chain.MineBlock(minerKey, DateTimeOffset.Now);
+            }
+
+            chain.ExecuteActions(chain.Tip);
+            var indexCountBeforeSnapshot = store.CountIndex(chainId);
+            const int blockEpochUnitSeconds = 86400;
+            var blockEpoch = (int)(chain.Tip.Timestamp.ToUnixTimeSeconds() / blockEpochUnitSeconds);
+            var genesisBlockEpoch = blockEpoch - 1;
+            var genesisHash = chain.Genesis.Hash;
+            store.Dispose();
+            stateStore.Dispose();
+            const string apv = "1";
+            var outputDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+
+            _command.Snapshot(
+                apv,
+                outputDirectory,
+                _storePath,
+                1,
+                ChainCommand.SnapshotType.All);
+            IStore storeAfterSnapshot = storeType.CreateStore(_storePath);
+            chainId = storeAfterSnapshot.GetCanonicalChainId() ?? new Guid();
+            var tipHashAfterSnapshot = storeAfterSnapshot.IndexBlockHash(chainId, -1);
+            var expectedGenesisPartitionSnapshotPath = Path.Combine(outputDirectory, "partition", $"snapshot-{genesisBlockEpoch}-{genesisBlockEpoch}.zip");
+            var expectedGenesisMetadataPath = Path.Combine(outputDirectory, "metadata", $"snapshot-{genesisBlockEpoch}-{genesisBlockEpoch}.json");
+            var expectedFullSnapshotPath = Path.Combine(outputDirectory, "full", $"{genesisHash}-snapshot-{tipHashAfterSnapshot}.zip");
+            storeAfterSnapshot.Dispose();
+
+            Assert.True(File.Exists(expectedGenesisPartitionSnapshotPath));
+            Assert.True(File.Exists(expectedGenesisMetadataPath));
+            Assert.True(File.Exists(expectedFullSnapshotPath));
+
+            _command.Snapshot(
+                apv,
+                outputDirectory,
+                _storePath,
+                1,
+                ChainCommand.SnapshotType.All);
+            var expectedPartitionSnapshotPath = Path.Combine(outputDirectory, "partition", $"snapshot-{blockEpoch}-{blockEpoch}.zip");
+            var expectedStateSnapshotPath = Path.Combine(outputDirectory, "state", "state_latest.zip");
+            var expectedMetadataPath = Path.Combine(outputDirectory, "metadata", $"snapshot-{blockEpoch}-{blockEpoch}.json");
+            storeAfterSnapshot = storeType.CreateStore(_storePath);
+            chainId = storeAfterSnapshot.GetCanonicalChainId() ?? new Guid();
+            var indexCountAfterSnapshot = storeAfterSnapshot.CountIndex(chainId);
+            storeAfterSnapshot.Dispose();
+
+            Assert.True(File.Exists(expectedPartitionSnapshotPath));
+            Assert.True(File.Exists(expectedStateSnapshotPath));
+            Assert.True(File.Exists(expectedMetadataPath));
+            Assert.Equal(3, indexCountBeforeSnapshot);
+            Assert.Equal(2, indexCountAfterSnapshot);
+
+            Directory.Delete(outputDirectory, true);
+        }
+
         private Block<NCAction> MineGenesisBlock()
         {
             Dictionary<string, string> tableSheets = Lib9cUtils.ImportSheets("../../../../Lib9c/Lib9c/TableCSV");

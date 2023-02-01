@@ -21,6 +21,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,6 +30,7 @@ using StrictRenderer =
     Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer<Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>>;
 using Libplanet.Blocks;
 using Libplanet;
+using Libplanet.Action;
 using Libplanet.Assets;
 
 namespace NineChronicles.Headless
@@ -103,6 +105,20 @@ namespace NineChronicles.Headless
                     exc.Message.Split("\n")[0]
                 )
             );
+
+            IActionTypeLoader MakeStaticActionTypeLoader() => new StaticActionTypeLoader(
+                Assembly.GetEntryAssembly() is { } entryAssembly
+                    ? new[] { typeof(ActionBase).Assembly, entryAssembly }
+                    : new[] { typeof(ActionBase).Assembly },
+                typeof(ActionBase)
+            );
+
+            IActionTypeLoader actionTypeLoader = properties.DynamicActionTypeLoader is { } actionTypeLoaderConfiguration
+                ? new DynamicActionTypeLoader(actionTypeLoaderConfiguration.BasePath,
+                    actionTypeLoaderConfiguration.AssemblyFileName,
+                    actionTypeLoaderConfiguration.HardForks.OrderBy(pair => pair.SinceBlockIndex))
+                : MakeStaticActionTypeLoader();
+
             if (Properties.Render)
             {
                 renderers.Add(blockPolicySource.BlockRenderer);
@@ -193,7 +209,9 @@ namespace NineChronicles.Headless
                     );
                 };
 
-            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(properties.NetworkType);
+            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(
+                properties.NetworkType,
+                properties.Libplanet.DynamicActionTypeLoader);
             var service = new NineChroniclesNodeService(
                 properties.MinerPrivateKey,
                 properties.Libplanet,
@@ -210,9 +228,22 @@ namespace NineChronicles.Headless
             return service;
         }
 
-        internal static IBlockPolicy<NCAction> GetBlockPolicy(NetworkType networkType)
+        internal static IBlockPolicy<NCAction> GetBlockPolicy(NetworkType networkType, DynamicActionTypeLoaderConfiguration? dynamicActionTypeLoaderConfiguration = null)
         {
-            var source = new BlockPolicySource(Log.Logger, LogEventLevel.Debug);
+            IActionTypeLoader MakeStaticActionTypeLoader() => new StaticActionTypeLoader(
+                Assembly.GetEntryAssembly() is { } entryAssembly
+                    ? new[] { typeof(ActionBase).Assembly, entryAssembly }
+                    : new[] { typeof(ActionBase).Assembly },
+                typeof(ActionBase)
+            );
+
+            IActionTypeLoader actionTypeLoader = dynamicActionTypeLoaderConfiguration is { }
+                ? new DynamicActionTypeLoader(dynamicActionTypeLoaderConfiguration.BasePath,
+                    dynamicActionTypeLoaderConfiguration.AssemblyFileName,
+                    dynamicActionTypeLoaderConfiguration.HardForks.OrderBy(pair => pair.SinceBlockIndex))
+                : MakeStaticActionTypeLoader();
+
+            var source = new BlockPolicySource(Log.Logger, LogEventLevel.Debug, actionTypeLoader);
             return networkType switch
             {
                 NetworkType.Main => source.GetPolicy(),
