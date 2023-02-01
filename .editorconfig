@@ -33,3 +33,6 @@ dotnet_diagnostic.SA1601.severity = suggestion
 
 # Allow FIXME tag as position free
 dotnet_diagnostic.S1134.severity = none
+
+[*.{csproj,xml}]
+indent_size = 2
