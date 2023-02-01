@@ -4,10 +4,12 @@ using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blocks;
+using Libplanet.Consensus;
 using Libplanet.Crypto;
 using Libplanet.KeyStore;
 using Libplanet.Tx;
 using Nekoyume.Action;
+using Nekoyume.BlockChain.Policy;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -17,6 +19,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using GraphQL.Execution;
@@ -263,6 +266,52 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 FungibleAssetValue.Parse(goldCurrency, "27.5"),
                 BlockChain.GetBalance(recipient, goldCurrency)
             );
+        }
+
+        [Fact]
+        public async Task SetValidator()
+        {
+            Block<PolymorphicAction<ActionBase>> genesis =
+                MakeGenesisBlock(
+                    default,
+#pragma warning disable CS0618
+                    // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                    Currency.Legacy("NCG", 2, null),
+#pragma warning restore CS0618
+                    ImmutableHashSet<Address>.Empty
+                );
+            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(
+                genesis, ValidatorAdminPolicy.TestValidatorAdminKey);
+
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.BlockChain;
+
+            var newValidator = new PrivateKey().PublicKey;
+            Assert.DoesNotContain(
+                new Validator(newValidator, BigInteger.One), BlockChain.GetValidatorSet().Validators);
+
+            var query = $"mutation {{ setValidator(" +
+                $"publicKey: \"{newValidator}\", " +
+                $"power: 1, " +
+                $"txNonce: {BlockChain.GetNextTxNonce(ValidatorAdminPolicy.TestValidatorAdminKey.ToAddress())}" +
+                $") }}";
+            ExecutionResult result = await ExecuteQueryAsync(query);
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
+
+            var stagedTxIds = StandaloneContextFx.BlockChain.GetStagedTransactionIds().ToImmutableList();
+            Assert.Single(stagedTxIds);
+
+            var expectedResult = new Dictionary<string, object>
+            {
+                ["setValidator"] = stagedTxIds.Single().ToString(),
+            };
+            Assert.Null(result.Errors);
+            Assert.Equal(expectedResult, data);
+
+            await BlockChain.MineBlock(service.MinerPrivateKey);
+
+            Assert.Contains(
+                new Validator(newValidator, BigInteger.One), BlockChain.GetValidatorSet().Validators);
         }
 
         [Theory]
