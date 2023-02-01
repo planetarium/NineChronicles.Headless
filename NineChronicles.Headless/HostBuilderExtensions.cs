@@ -84,6 +84,7 @@ namespace NineChronicles.Headless
                     services.AddOpenTelemetry()
                         .WithMetrics(
                             builder => builder
+                                .AddMeter("NineChronicles")
                                 .AddRuntimeInstrumentation()
                                 .AddAspNetCoreInstrumentation()
                                 .AddPrometheusExporter());
