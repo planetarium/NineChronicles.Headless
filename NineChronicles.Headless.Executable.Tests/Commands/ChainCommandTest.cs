@@ -243,7 +243,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
         [Theory]
         [InlineData(StoreType.RocksDb)]
-        public async Task Snapshot(StoreType storeType)
+        public void Snapshot(StoreType storeType)
         {
             IStore store = storeType.CreateStore(_storePath);
             var statesPath = Path.Combine(_storePath, "states");
@@ -273,7 +273,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 RuneInfos = new List<RuneSlotInfo>(),
             };
 
-            var proposer = new PrivateKey();
+            var proposer = ValidatorAdminPolicy.TestValidatorAdminKey;
             for (var i = 0; i < 2; i++)
             {
                 chain.MakeTransaction(proposer, new NCAction[] { action });
