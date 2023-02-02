@@ -95,11 +95,11 @@ namespace NineChronicles.Headless.GraphTypes
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var eventScheduleId = context.GetArgument<int>("eventScheduleId");
                     var eventMaterialItemRecipeId = context.GetArgument<int>("eventMaterialItemRecipeId");
-                    var materialsToUseList = context.GetArgument<List<MaterialsToUseType>>("materialsToUse");
+                    var materialsToUseList = context.GetArgument<List<(int, int)>>("materialsToUse");
                     var materialsToUse = materialsToUseList.Aggregate(new Dictionary<int, int>(),
                         (dict, material) =>
                         {
-                            dict.TryAdd(material.MaterialId, material.Quantity);
+                            dict.TryAdd(material.Item1, material.Item2);
                             return dict;
                         }
                     );

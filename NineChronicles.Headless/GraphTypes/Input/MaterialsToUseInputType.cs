@@ -3,7 +3,7 @@ using GraphQL.Types;
 
 namespace NineChronicles.Headless.GraphTypes.Input;
 
-public class MaterialsToUseInputType : InputObjectGraphType<MaterialsToUseType>
+public class MaterialsToUseInputType : InputObjectGraphType<(int materialId, int quantity)>
 {
     public MaterialsToUseInputType()
     {
@@ -19,10 +19,9 @@ public class MaterialsToUseInputType : InputObjectGraphType<MaterialsToUseType>
 
     public override object ParseDictionary(IDictionary<string, object?> value)
     {
-        return new MaterialsToUseType
-        {
-            MaterialId = (int)value["materialId"]!,
-            Quantity = (int)value["quantity"]!
-        };
+        return (
+            (int)value["materialId"]!,
+            (int)value["quantity"]!
+        );
     }
 }
