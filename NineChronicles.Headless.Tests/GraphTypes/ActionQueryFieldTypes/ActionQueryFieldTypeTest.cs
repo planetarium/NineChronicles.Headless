@@ -10,15 +10,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes.ActionQueryFieldTypes
 {
     public class ActionQueryFieldTypeTest
     {
-        private static Codec _codec;
-
-        public ActionQueryFieldTypeTest()
-        {
-            _codec = new Codec();
-        }
+        private static readonly Codec Codec = new();
 
         [Theory]
-        [InlineData(null, null, false, null)]
         [InlineData("name", null, false, null)]
         [InlineData("name", "description", false, null)]
         [InlineData("name", "description", true, "deprecationReason")]
@@ -43,7 +37,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.ActionQueryFieldTypes
         }
 
         [Theory]
-        [InlineData(null, null, false)]
+        [InlineData(null, null, true)]
         [InlineData("name", null, false)]
         [InlineData("name", "description", false)]
         [InlineData("name", "description", true)]
@@ -73,14 +67,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes.ActionQueryFieldTypes
         public static byte[] Encode(
             IResolveFieldContext context,
             NCAction action) =>
-            _codec.Encode(action.PlainValue);
+            Codec.Encode(action.PlainValue);
 
         public static NCAction Decode(byte[] bytes)
         {
 #pragma warning disable CS0612
             var action = new NCAction();
 #pragma warning restore CS0612
-            action.LoadPlainValue(_codec.Decode(bytes));
+            action.LoadPlainValue(Codec.Decode(bytes));
             return action;
         }
     }

@@ -20,7 +20,7 @@ namespace NineChronicles.Headless.GraphTypes.ActionQueryFieldTypes
                         Name = "avatarAddress",
                         Description = "Address of avatar.",
                     },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "petId",
                         Description = "Id of pet.",
@@ -36,12 +36,28 @@ namespace NineChronicles.Headless.GraphTypes.ActionQueryFieldTypes
 
         public override object? Resolve(IResolveFieldContext context)
         {
-            var avatarAddress = context.GetArgument<Address>("avatarAddress");
+            var avatarAddr = context.GetArgument<Address>("avatarAddress");
+            if (avatarAddr == default)
+            {
+                throw new ExecutionError("Invalid avatarAddress.");
+            }
+
             var petId = context.GetArgument<int>("petId");
+            if (petId < 0)
+            {
+                throw new ExecutionError("Invalid petId.");
+            }
+
             var targetLevel = context.GetArgument<int>("targetLevel");
+            if (targetLevel < 1 ||
+                targetLevel == int.MaxValue)
+            {
+                throw new ExecutionError("Invalid targetLevel.");
+            }
+
             var action = new PetEnhancement
             {
-                AvatarAddress = avatarAddress,
+                AvatarAddress = avatarAddr,
                 PetId = petId,
                 TargetLevel = targetLevel,
             };

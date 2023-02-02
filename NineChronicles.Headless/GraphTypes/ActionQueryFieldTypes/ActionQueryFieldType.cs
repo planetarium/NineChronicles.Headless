@@ -22,7 +22,9 @@ namespace NineChronicles.Headless.GraphTypes.ActionQueryFieldTypes
                 nameof(encoder),
                 "Encoder is required.");
 
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(
+                nameof(name),
+                "Name is required.");
             Description = description;
             Arguments = arguments;
             Resolver = this;
