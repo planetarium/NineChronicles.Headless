@@ -20,7 +20,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.ActionQueryFieldTypes
 
         [Theory]
         [InlineData(0, 1)]
-        [InlineData(int.MaxValue, int.MaxValue - 1)]
+        [InlineData(int.MaxValue, int.MaxValue)]
         public void Resolve(int petId, int targetLevel)
         {
             var avatarAddr = new PrivateKey().ToAddress();
