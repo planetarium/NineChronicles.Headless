@@ -19,12 +19,14 @@ using Lib9c.Renderer;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blocks;
+using Libplanet.Tx;
 using MagicOnion.Client;
 using MessagePack;
 using Microsoft.Extensions.Hosting;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.Shared.Hubs;
+using Sentry;
 using Serilog;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -43,6 +45,7 @@ namespace NineChronicles.Headless
         private readonly ConcurrentDictionary<Address, Client> _clients = new ConcurrentDictionary<Address, Client>();
 
         private RpcContext _context;
+        private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
 
         public ActionEvaluationPublisher(
             BlockRenderer blockRenderer,
@@ -51,8 +54,8 @@ namespace NineChronicles.Headless
             NodeStatusRenderer nodeStatusRenderer,
             string host,
             int port,
-            RpcContext context
-        )
+            RpcContext context,
+            ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces)
         {
             _blockRenderer = blockRenderer;
             _actionRenderer = actionRenderer;
@@ -61,6 +64,7 @@ namespace NineChronicles.Headless
             _host = host;
             _port = port;
             _context = context;
+            _sentryTraces = sentryTraces;
 
             ActionEvaluationHub.OnClientDisconnected += RemoveClient;
         }
@@ -79,7 +83,7 @@ namespace NineChronicles.Headless
             };
 
             GrpcChannel channel = GrpcChannel.ForAddress($"http://{_host}:{_port}", options);
-            Client client = await Client.CreateAsync(channel, clientAddress, _context);
+            Client client = await Client.CreateAsync(channel, clientAddress, _context, _sentryTraces);
             if (_clients.TryAdd(clientAddress, client))
             {
                 if (clientAddress == default)
@@ -182,19 +186,26 @@ namespace NineChronicles.Headless
 
             public ImmutableHashSet<Address> TargetAddresses { get; set; }
 
-            private Client(IActionEvaluationHub hub, Address clientAddress, RpcContext context)
+            public readonly ConcurrentDictionary<string, Sentry.ITransaction> SentryTraces;
+
+            private Client(
+                IActionEvaluationHub hub,
+                Address clientAddress,
+                RpcContext context,
+                ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces)
             {
                 _hub = hub;
                 _clientAddress = clientAddress;
                 _context = context;
                 TargetAddresses = ImmutableHashSet<Address>.Empty;
+                SentryTraces = sentryTraces;
             }
 
             public static async Task<Client> CreateAsync(
                 GrpcChannel channel,
                 Address clientAddress,
-                RpcContext context
-            )
+                RpcContext context,
+                ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces)
             {
                 IActionEvaluationHub hub = await StreamingHubClient.ConnectAsync<IActionEvaluationHub, IActionEvaluationHubReceiver>(
                     channel,
@@ -202,15 +213,14 @@ namespace NineChronicles.Headless
                 );
                 await hub.JoinAsync(clientAddress.ToHex());
 
-                return new Client(hub, clientAddress, context);
+                return new Client(hub, clientAddress, context, sentryTraces);
             }
 
             public void Subscribe(
                 BlockRenderer blockRenderer,
                 ActionRenderer actionRenderer,
                 ExceptionRenderer exceptionRenderer,
-                NodeStatusRenderer nodeStatusRenderer
-            )
+                NodeStatusRenderer nodeStatusRenderer)
             {
                 _blockSubscribe = blockRenderer.BlockSubject
                     .SubscribeOn(NewThreadScheduler.Default)
@@ -357,6 +367,13 @@ namespace NineChronicles.Headless
                             {
                                 // FIXME add logger as property
                                 Log.Error(e, "[{ClientAddress}] Skip broadcasting render due to the unexpected exception", _clientAddress);
+                            }
+
+                            if (ev.TxId is TxId txId && SentryTraces.TryRemove(txId.ToString() ?? "", out var sentryTrace))
+                            {
+                                var span = sentryTrace.GetLastActiveSpan();
+                                span?.Finish();
+                                sentryTrace.Finish();
                             }
                         }
                     );

@@ -21,6 +21,7 @@ using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common;
 using Serilog;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -28,7 +29,6 @@ using System.Linq;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using Lib9c.Tests;
 using Xunit.Abstractions;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -51,8 +51,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var goldCurrency = Currency.Legacy("NCG", 2, null);
 #pragma warning restore CS0618
 
-            var sheets =
-                TableSheetsImporter.ImportSheets(Path.Join("..", "..", "..", "..", "Lib9c", "Lib9c", "TableCSV"));
+            var sheets = TableSheetsImporter.ImportSheets();
             var blockAction = new RewardGold();
             var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
                 new NCAction[]
@@ -107,7 +106,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ncService.NodeStatusRenderer,
                 "",
                 0,
-                new RpcContext()
+                new RpcContext(),
+                new ConcurrentDictionary<string, Sentry.ITransaction>()
             );
             services.AddSingleton(publisher);
             services.AddSingleton(StandaloneContextFx);

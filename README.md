@@ -20,7 +20,12 @@
 $ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
 
 Usage: NineChronicles.Headless.Executable [command]
-Usage: NineChronicles.Headless.Executable [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <UInt16>] [--swarm-private-key <String>] [--workers <Int32>] [--no-miner] [--miner-count <Int32>] [--miner-private-key <String>] [--store-type <String>] [--store-path <String>] [--no-reduce-store] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...] [--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Int32>] [--rpc-remote-server] [--rpc-http-server] [--graphql-server] [--graphql-host <String>] [--graphql-port <Int32>] [--graphql-secret-token-path <String>] [--no-cors] [--confirmations <Int32>] [--nonblock-renderer] [--nonblock-renderer-queue <Int32>] [--strict-rendering] [--log-action-renders] [--network-type <NetworkType>] [--dev] [--dev.block-interval <Int32>] [--dev.reorg-interval <Int32>] [--aws-cognito-identity <String>] [--aws-access-key <String>] [--aws-secret-key <String>] [--aws-region <String>] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <Int32>] [--demand-buffer <Int32>] [--static-peer <String>...] [--skip-preload] [--minimum-broadcast-target <Int32>] [--bucket-size <Int32>] [--chain-tip-stale-behavior-type <String>] [--tx-quota-per-signer <Int32>] [--maximum-poll-peers <Int32>] [--config <String>] [--help] [--version]
+Usage: NineChronicles.Headless.Executable [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <UInt16>] [--swarm-private-key <String>] [--no-miner] [--miner-count <Int32>]
+[--miner-private-key <String>] [--miner.block-interval <Int32>] [--store-type <String>] [--store-path <String>] [--no-reduce-store] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...]
+[--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Int32>] [--rpc-remote-server] [--rpc-http-server] [--graphql-server] [--graphql-host <String>] [--graphql-port <Int32>] [--graphql-secret-token-path <String>] [--no-cor
+s] [--confirmations <Int32>] [--nonblock-renderer] [--nonblock-renderer-queue <Int32>] [--strict-rendering] [--log-action-renders] [--network-type <NetworkType>] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <I
+nt32>] [--demand-buffer <Int32>] [--static-peer <String>...] [--skip-preload] [--minimum-broadcast-target <Int32>] [--bucket-size <Int32>] [--chain-tip-stale-behavior-type <String>] [--tx-quota-per-signer <Int32>] [--maximum-poll-pe
+ers <Int32>] [--config <String>] [--sentry-dsn <String>] [--sentry-trace-sample-rate <Double>] [--help] [--version]
 
 NineChronicles.Headless.Executable
 
@@ -35,6 +40,7 @@ Commands:
   tx
   market
   genesis
+  replay
 
 Options:
   -V, --app-protocol-version <String>                      App protocol version token.
@@ -42,10 +48,10 @@ Options:
   -H, --host <String>                                      Hostname of this node for another nodes to access. This is not listening host like 0.0.0.0
   -P, --port <UInt16>                                      Port of this node for another nodes to access.
   --swarm-private-key <String>                             The private key used for signing messages and to specify your node. If you leave this null, a randomly generated value will be used.
-  --workers <Int32>                                        Number of workers to use in Swarm
   --no-miner                                               Disable block mining.
   --miner-count <Int32>                                    The number of miner task(thread).
   --miner-private-key <String>                             The private key used for mining blocks. Must not be null if you want to turn on mining with libplanet-node.
+  --miner.block-interval <Int32>                           The miner's break time after mining a block. The unit is millisecond.
   --store-type <String>                                    The type of storage to store blockchain data. If not provided, "LiteDB" will be used as default. Available type: ["rocksdb", "memory"]
   --store-path <String>                                    Path of storage. This value is required if you use persistent storage e.g. "rocksdb"
   --no-reduce-store                                        Do not reduce storage. Enabling this option will use enormous disk spaces.
@@ -68,13 +74,6 @@ Options:
   --strict-rendering                                       Flag to turn on validating action renderer.
   --log-action-renders                                     Log action renders besides block renders. --rpc-server implies this.
   --network-type <NetworkType>                             Network type. (Allowed values: Main, Internal, Permanent, Test, Default)
-  --dev                                                    Flag to turn on the dev mode. false by default.
-  --dev.block-interval <Int32>                             The time interval between blocks. It's unit is milliseconds. Works only when dev mode is on.
-  --dev.reorg-interval <Int32>                             The size of reorg interval. Works only when dev mode is on.
-  --aws-cognito-identity <String>                          The Cognito identity for AWS CloudWatch logging.
-  --aws-access-key <String>                                The access key for AWS CloudWatch logging.
-  --aws-secret-key <String>                                The secret key for AWS CloudWatch logging.
-  --aws-region <String>                                    The AWS region for AWS CloudWatch (e.g., us-east-1, ap-northeast-2).
   --tx-life-time <Int32>                                   The lifetime of each transaction, which uses minute as its unit.
   --message-timeout <Int32>                                The grace period for new messages, which uses second as its unit.
   --tip-timeout <Int32>                                    The grace period for tip update, which uses second as its unit.
@@ -87,17 +86,53 @@ Options:
   --tx-quota-per-signer <Int32>                            The number of maximum transactions can be included in stage per signer.
   --maximum-poll-peers <Int32>                             The maximum number of peers to poll blocks. int.MaxValue by default.
   -C, --config <String>                                    Absolute path of "appsettings.json" file to provide headless configurations. (Default: appsettings.json)
+  --sentry-dsn <String>                                    Sentry DSN
+  --sentry-trace-sample-rate <Double>                      Trace sample rate for sentry
   -h, --help                                               Show help message
   --version                                                Show version
 ```
 
-### Use `appsettings.json` to provide CLI options
+### Use `appsettings.{network}.json` to provide CLI options
 
-You can provide headless CLI options using file, `appsettings.json`. You'll find the default file at [here](NineChronicles.Headless.Executable/appsettings.json).  
-The path of `appsettings.json` can be either local file storage or URL.  
-Refer full configuration fields from [this file](NineChronicles.Headless.Executable/Configuration.cs), set your options into `appsettings.json` under `Headless` section.  
-You can also run headless server with previous way; You don't need to change anything if you don't want to.  
-In case that the same option is provided from both `appsetting.json` and CLI option, the CLI option value is used instead from `appsettings.json`.  
+You can provide headless CLI options using file, `appsettings.json`. You'll find the default file at [here](NineChronicles.Headless.Executable/appsettings.json).
+The path of `appsettings.json` can be either local file storage or URL.
+Refer full configuration fields from [this file](NineChronicles.Headless.Executable/Configuration.cs), set your options into `appsettings.json` under `Headless` section.
+You can also run headless server with previous way; You don't need to change anything if you don't want to.
+In case that the same option is provided from both `appsetting.json` and CLI option, the CLI option value is used instead from `appsettings.json`.
+
+The default `appsettings.json` is an example for your own appsettings file.
+`appsettings.{network}.json` are runnable appsettings file and you can run local node for each network using following command:
+```shell
+dotnet run --project NineChronicles.Headless.Executable -C appsettings.{network}.json --store-type={YOUR_OWN_STORE_PATH}
+```
+- appsettings.mainnet.json
+  - This makes your node to connect to the Nine Chronicles mainnet (production).
+- appsettings.internal.json
+  - This makes your node to connect to the Nine Chronicles internal network, which is test before release new version.
+  - Internal network is kind of hard-fork of mainnet at some point to test new version.
+  - You CANNOT use mainnet storage for internal headless node.
+- appsettings.previewnet.json
+  - This makes your node to connect to the Nine Chronicles preview network to show feature preview.
+  - This network is totally different network from genesis block.
+  - Previewnet can be restarted from genesis block without any announcement to prepare next feature.
+
+Please make sure the store in the path you provided must save right data for the network to connect.
+You cannot share data from any of those networks.
+
+If you want to run your own isolated local network, please copy `appsettings.json` to `appsettings.local.json` and edit the contents.
+```shell
+cp appsettings.json appsettings.local.json
+# Edit contents of appsettings.local.json
+dotnet run --project NineChronicles.Headless.Executable -C appsettings.local.json --store-type={YOUR_OWN_STORE_PATH}
+```
+
+#### Caveat
+APVs can be changed as Nine Chronicles deploys new version.
+You have to fit your APV sting to current on-chain version string.
+You can get APV strings at the following places:
+- mainnet: [Official released config.json](https://release.nine-chronicles.com/9c-launcher-config.json) - `AppProtocolVersion`
+- internal: [Internal network config](https://github.com/planetarium/9c-k8s-config/blob/main/9c-internal/configmap-versions.yaml) - `APP_PROTOCOL_VERSION`
+- previewnet: [Previewnet config](https://github.com/planetarium/9c-k8s-config/blob/main/9c-previewnet/configmap-versions.yaml) - `APP_PROTOCOL_VERSION`
 
 ## Docker Build
 
@@ -187,12 +222,12 @@ For more information on the GraphQL API, refer to the [NineChronicles Headless G
 ## Create a new genesis block
 
 ### 1. (Optional) Create activation keys and PendingActivationState
-Activation key is the code for 9c account to register/activate into NineChronicles.  
+Activation key is the code for 9c account to register/activate into NineChronicles.
 You can create activation key whenever you want later, so you can just skip this step.
 
 ```shell
-dotnet run --project ./.Lib9c.Tools tx create-activation-keys 10 > ActivationKeys.csv  # Change [10] to your number of new activation keys
-dotnet run --project ./.Lib9c.Tools tx create-pending-activations ActivationKeys.csv > PendingActivation
+dotnet run --project NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj -- tx create-activation-keys 10 > ActivationKeys.csv  # Change [10] to your number of new activation keys
+dotnet run --project NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj -- tx create-pending-activations ActivationKeys.csv > PendingActivation
 ```
 
 ### 2. Create config file for genesis block
@@ -233,7 +268,6 @@ dotnet run --project ./NineChronicles.Headless.Executable/ \
     -G=[PATH/TO/GENESIS/BLOCK] \
     --store-type=memory \
     --store-path= [PATH/TO/BLOCK/STORAGE] \
-    --workers=1000 \
     --host=localhost \
     --port=43210 \
     --miner-private-key=[PRIVATE_KEY_OF_BLOCK_MINER]

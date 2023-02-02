@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Libplanet;
 using Libplanet.Crypto;
+using Libplanet.Headless;
 using NineChronicles.Headless.Properties;
 
 namespace NineChronicles.Headless.Executable
@@ -80,6 +81,11 @@ namespace NineChronicles.Headless.Executable
         public int TxQuotaPerSigner { get; set; } = 10;
         public int MaximumPollPeers { get; set; } = int.MaxValue;
         public string[]? ValidatorStrings { get; set; }
+        public DynamicActionTypeLoaderConfiguration? DynamicActionTypeLoader { get; set; } = null;
+
+        public string SentryDsn { get; set; } = "";
+
+        public double SentryTraceSampleRate { get; set; } = 0.01;
 
         public void Overwrite(
             string? appProtocolVersionString,
@@ -126,7 +132,9 @@ namespace NineChronicles.Headless.Executable
             string? chainTipStaleBehaviorType,
             int? txQuotaPerSigner,
             int? maximumPollPeers,
-            string[]? validatorStrings
+            string[]? validatorStrings,
+            string? sentryDsn,
+            double? sentryTraceSampleRate
         )
         {
             AppProtocolVersionString = appProtocolVersionString ?? AppProtocolVersionString;
@@ -175,6 +183,8 @@ namespace NineChronicles.Headless.Executable
             TxQuotaPerSigner = txQuotaPerSigner ?? TxQuotaPerSigner;
             MaximumPollPeers = maximumPollPeers ?? MaximumPollPeers;
             ValidatorStrings = validatorStrings ?? ValidatorStrings;
+            SentryDsn = sentryDsn ?? SentryDsn;
+            SentryTraceSampleRate = sentryTraceSampleRate ?? SentryTraceSampleRate;
         }
     }
 }

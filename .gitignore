@@ -458,3 +458,9 @@ modules.xml
 
 # Downloaded NineChronicles Snapshot Files
 9c-main-snapshot*/
+
+# local headless appsettings
+appsettings.local.json
+
+# For action
+!.github/bin/

@@ -67,7 +67,8 @@ namespace NineChronicles.Headless.Properties
                 int bucketSize = 16,
                 string chainTipStaleBehaviorType = "reboot",
                 int maximumPollPeers = int.MaxValue,
-                string[]? validatorStrings = null)
+                string[]? validatorStrings = null,
+                DynamicActionTypeLoaderConfiguration? dynamicActionTypeLoader = null)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
@@ -125,6 +126,7 @@ namespace NineChronicles.Headless.Properties
                 ChainTipStaleBehavior = chainTipStaleBehaviorType,
                 MaximumPollPeers = maximumPollPeers,
                 Validators = validators,
+                DynamicActionTypeLoader = dynamicActionTypeLoader,
             };
         }
 
