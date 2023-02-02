@@ -9,11 +9,11 @@ public class MaterialsToUseInputType : InputObjectGraphType<MaterialsToUseType>
     {
         Field<NonNullGraphType<IntGraphType>>(
             name: "materialId",
-            description: "Material ID to be used"
+            description: "Material ID to be used."
         );
         Field<NonNullGraphType<IntGraphType>>(
             name: "quantity",
-            description: "Item quantity to be used"
+            description: "Item quantity to be used."
         );
     }
 
