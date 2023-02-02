@@ -309,7 +309,7 @@ namespace NineChronicles.Headless.Executable
                             ? new GraphQLNodeServiceProperties.MagicOnionHttpOptions(
                                 $"{headlessConfig.RpcListenHost}:{headlessConfig.RpcListenPort}")
                             : (GraphQLNodeServiceProperties.MagicOnionHttpOptions?)null,
-                        IpRateLimitOptions = configuration.GetSection("IpRateLimiting"),
+                        IpRateLimitOptions = configuration.GetSection("IpRateLimiting").Value != null ? configuration.GetSection("IpRateLimiting") : null,
                     };
 
                     var graphQLService = new GraphQLService(graphQLNodeServiceProperties);

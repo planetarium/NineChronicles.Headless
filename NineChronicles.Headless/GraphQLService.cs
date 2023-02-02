@@ -101,7 +101,7 @@ namespace NineChronicles.Headless
 
             public void ConfigureServices(IServiceCollection services)
             {
-                if (Configuration.GetSection("IpRateLimitingOptions") != null)
+                if (Configuration.GetSection("IpRateLimitingOptions").Value != null)
                 {
                     services.AddOptions();
                     services.AddMemoryCache();
@@ -175,7 +175,7 @@ namespace NineChronicles.Headless
 
                 app.UseRouting();
                 app.UseAuthorization();
-                if (Configuration.GetSection("IpRateLimitingOptions") != null)
+                if (Configuration.GetSection("IpRateLimitingOptions").Value != null)
                 {
                     app.UseIpRateLimiting();
                     app.UseMvc();
