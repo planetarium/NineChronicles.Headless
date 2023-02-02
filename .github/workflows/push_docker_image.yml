@@ -73,7 +73,7 @@ jobs:
       - name: push git tagged version
         run: |
           docker pull $DOCKER_REPO:git-${{ github.sha }}-amd64
-          if [[ -z ${{ github.event.inputs.imageTag }} ]]; then
+          if [[ -z "${{ github.event.inputs.imageTag }}" ]]; then
             export IMAGE_TAG=${{ github.ref_name }}
           else
             export IMAGE_TAG=${{ github.event.inputs.imageTag }}
