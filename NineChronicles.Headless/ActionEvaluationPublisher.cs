@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.Metrics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -65,6 +66,12 @@ namespace NineChronicles.Headless
             _port = port;
             _context = context;
             _sentryTraces = sentryTraces;
+
+            var meter = new Meter("NineChronicles");
+            meter.CreateObservableGauge(
+                "ninechronicles_rpc_clients_count",
+                () => this.GetClients().Count,
+                description: "Number of RPC clients connected.");
 
             ActionEvaluationHub.OnClientDisconnected += RemoveClient;
         }
