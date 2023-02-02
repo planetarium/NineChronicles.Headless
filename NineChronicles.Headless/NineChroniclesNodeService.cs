@@ -21,6 +21,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.Metrics;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading;
@@ -278,6 +279,19 @@ namespace NineChronicles.Headless
                 txQuotaPerSigner: properties.TxQuotaPerSigner
             );
             service.ConfigureContext(context);
+            var meter = new Meter("NineChronicles");
+            meter.CreateObservableGauge(
+                "ninechronicles_tip_index",
+                () => service.BlockChain.Tip.Index,
+                description: "The tip block's index.");
+            meter.CreateObservableGauge(
+                "ninechronicles_staged_txids_count",
+                () => service.BlockChain.GetStagedTransactionIds().Count,
+                description: "Number of staged transactions.");
+            meter.CreateObservableGauge(
+                "ninechronicles_subscriber_addresses_count",
+                () => context.AgentAddresses.Count);
+
             return service;
         }
 

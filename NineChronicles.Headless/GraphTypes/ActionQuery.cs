@@ -546,6 +546,12 @@ namespace NineChronicles.Headless.GraphTypes
             RegisterRapidCombination();
             RegisterCombinationConsumable();
 
+            Field<NonNullGraphType<CraftQuery>>(
+                name: "craftQuery",
+                description: "Query to craft/enhance items/foods",
+                resolve: context => new CraftQuery(standaloneContext)
+            );
+
             base.AddField(new PetEnhancementFieldType(Encode));
 
 #if LIB9C_DEV_EXTENSIONS
