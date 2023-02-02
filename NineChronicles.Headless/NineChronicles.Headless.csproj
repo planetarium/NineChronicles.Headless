@@ -6,7 +6,6 @@
     <Nullable>enable</Nullable>
     <Configurations>Debug;Release;DevEx</Configurations>
     <Platforms>AnyCPU</Platforms>
-    <NoWarn>$(NoWarn);SA1100</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'DevEx' ">

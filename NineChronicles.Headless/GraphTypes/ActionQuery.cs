@@ -552,7 +552,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context => new CraftQuery(standaloneContext)
             );
 
-            base.AddField(new PetEnhancementFieldType(Encode));
+            AddField(new PetEnhancementFieldType(Encode));
 
 #if LIB9C_DEV_EXTENSIONS
             RegisterFieldsForDevEx();
