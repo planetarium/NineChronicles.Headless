@@ -34,7 +34,7 @@ namespace NineChronicles.Headless
 
         public const string MagicOnionTargetKey = "magicOnionTarget";
 
-        private static GraphQLNodeServiceProperties? GraphQlNodeServiceProperties { get; set; }
+        private GraphQLNodeServiceProperties GraphQlNodeServiceProperties { get; }
 
         public GraphQLService(GraphQLNodeServiceProperties properties)
         {
@@ -43,7 +43,7 @@ namespace NineChronicles.Headless
 
         public IHostBuilder Configure(IHostBuilder hostBuilder)
         {
-            var listenHost = GraphQlNodeServiceProperties!.GraphQLListenHost;
+            var listenHost = GraphQlNodeServiceProperties.GraphQLListenHost;
             var listenPort = GraphQlNodeServiceProperties.GraphQLListenPort;
 
             return hostBuilder.ConfigureWebHostDefaults(builder =>
@@ -73,6 +73,11 @@ namespace NineChronicles.Headless
                             dictionary[MagicOnionTargetKey] = options.Target;
                         }
 
+                        if (GraphQlNodeServiceProperties.IpRateLimitOptions is { } ipRateLimitOptions)
+                        {
+                            builder.AddConfiguration(ipRateLimitOptions);
+                        }
+
                         builder.AddInMemoryCollection(dictionary);
                     })
                     .ConfigureKestrel(options =>
@@ -96,11 +101,11 @@ namespace NineChronicles.Headless
 
             public void ConfigureServices(IServiceCollection services)
             {
-                if (GraphQlNodeServiceProperties?.IpRateLimitOptions != null)
+                if (Configuration.GetSection("IpRateLimitingOptions") != null)
                 {
                     services.AddOptions();
                     services.AddMemoryCache();
-                    services.Configure<IpRateLimitOptions>(GraphQlNodeServiceProperties.IpRateLimitOptions);
+                    services.Configure<IpRateLimitOptions>(Configuration.GetSection("IpRateLimitingOptions"));
                     services.AddInMemoryRateLimiting();
                     services.AddMvc();
                     services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
@@ -170,7 +175,7 @@ namespace NineChronicles.Headless
 
                 app.UseRouting();
                 app.UseAuthorization();
-                if (GraphQlNodeServiceProperties?.IpRateLimitOptions != null)
+                if (Configuration.GetSection("IpRateLimitingOptions") != null)
                 {
                     app.UseIpRateLimiting();
                     app.UseMvc();
