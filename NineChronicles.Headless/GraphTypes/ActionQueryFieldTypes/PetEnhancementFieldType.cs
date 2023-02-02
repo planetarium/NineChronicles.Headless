@@ -46,14 +46,14 @@ namespace NineChronicles.Headless.GraphTypes.ActionQueryFieldTypes
             if (petId < 0)
             {
                 throw new ExecutionError(
-                    "Invalid petId. petId must greater than or equal to 0");
+                    "Invalid petId. petId must be greater than or equal to 0.");
             }
 
             var targetLevel = context.GetArgument<int>("targetLevel");
             if (targetLevel < 1)
             {
                 throw new ExecutionError(
-                    "Invalid targetLevel. targetLevel must greater than or equal to 1");
+                    "Invalid targetLevel. targetLevel must be greater than 0.");
             }
 
             var action = new PetEnhancement
