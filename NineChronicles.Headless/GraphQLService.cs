@@ -194,6 +194,8 @@ namespace NineChronicles.Headless
                 // Prints 
                 app.UseMiddleware<GraphQLSchemaMiddleware<StandaloneSchema>>("/schema.graphql");
 
+                app.UseOpenTelemetryPrometheusScrapingEndpoint();
+
                 // /ui/playground 옵션을 통해서 Playground를 사용할 수 있습니다.
                 app.UseGraphQLPlayground();
             }
