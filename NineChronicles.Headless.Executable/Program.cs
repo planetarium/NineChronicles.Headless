@@ -308,7 +308,7 @@ namespace NineChronicles.Headless.Executable
                         HttpOptions = headlessConfig.RpcServer && headlessConfig.RpcHttpServer == true
                             ? new GraphQLNodeServiceProperties.MagicOnionHttpOptions(
                                 $"{headlessConfig.RpcListenHost}:{headlessConfig.RpcListenPort}")
-                            : (GraphQLNodeServiceProperties.MagicOnionHttpOptions?)null
+                            : (GraphQLNodeServiceProperties.MagicOnionHttpOptions?)null,
                     };
 
                     var graphQLService = new GraphQLService(graphQLNodeServiceProperties);
