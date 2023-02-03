@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Configuration;
-
 namespace NineChronicles.Headless.Properties
 {
     public class GraphQLNodeServiceProperties
