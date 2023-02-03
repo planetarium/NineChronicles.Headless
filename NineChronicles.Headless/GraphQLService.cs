@@ -73,11 +73,6 @@ namespace NineChronicles.Headless
                             dictionary[MagicOnionTargetKey] = options.Target;
                         }
 
-                        if (GraphQlNodeServiceProperties.IpRateLimitOptions is { } ipRateLimitOptions)
-                        {
-                            builder.AddConfiguration(ipRateLimitOptions);
-                        }
-
                         builder.AddInMemoryCollection(dictionary);
                     })
                     .ConfigureKestrel(options =>
@@ -101,13 +96,13 @@ namespace NineChronicles.Headless
 
             public void ConfigureServices(IServiceCollection services)
             {
-                if (Configuration.GetSection("IpRateLimitingOptions").Value != null)
+                if (Convert.ToBoolean(Configuration.GetSection("IpRateLimiting")["EnableRateLimiting"]))
                 {
                     services.AddOptions();
                     services.AddMemoryCache();
-                    services.Configure<IpRateLimitOptions>(Configuration.GetSection("IpRateLimitingOptions"));
+                    services.Configure<IpRateLimitOptions>(Configuration.GetSection("IpRateLimiting"));
                     services.AddInMemoryRateLimiting();
-                    services.AddMvc();
+                    services.AddMvc(options => options.EnableEndpointRouting = false);
                     services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
                 }
 
@@ -175,7 +170,7 @@ namespace NineChronicles.Headless
 
                 app.UseRouting();
                 app.UseAuthorization();
-                if (Configuration.GetSection("IpRateLimitingOptions").Value != null)
+                if (Convert.ToBoolean(Configuration.GetSection("IpRateLimiting")["EnableRateLimiting"]))
                 {
                     app.UseIpRateLimiting();
                     app.UseMvc();

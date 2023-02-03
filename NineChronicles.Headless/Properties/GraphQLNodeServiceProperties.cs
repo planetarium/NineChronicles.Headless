@@ -27,7 +27,5 @@ namespace NineChronicles.Headless.Properties
 
             public string Target { get; }
         }
-
-        public IConfigurationSection? IpRateLimitOptions { get; set; }
     }
 }
