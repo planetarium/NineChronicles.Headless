@@ -1,4 +1,5 @@
 using GraphQL.Types;
+using Libplanet.Explorer.GraphTypes;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -6,13 +7,17 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public DailyRewardStatusType()
         {
-            Field<ListGraphType<LongGraphType>>(
+            Field<NonNullGraphType<LongGraphType>>(
                    nameof(DailyRewardStatus.lastRewardIndex),
                    resolve: context => context.Source.lastRewardIndex
                 );
-            Field<ListGraphType<IntGraphType>>(
+            Field<NonNullGraphType<IntGraphType>>(
                 nameof(DailyRewardStatus.actionPoint),
                 resolve: context => context.Source.actionPoint
+                );
+            Field<NonNullGraphType<AddressType>>(
+                nameof(DailyRewardStatus.avatarAddress),
+                resolve: context => context.Source.avatarAddress
                 );
         }
     }

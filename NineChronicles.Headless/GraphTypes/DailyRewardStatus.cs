@@ -1,3 +1,4 @@
+using Libplanet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,13 +9,15 @@ namespace NineChronicles.Headless.GraphTypes
 {
     internal class DailyRewardStatus
     {
-        public List<long> lastRewardIndex { get; }
-        public List<int> actionPoint { get; }
+        public long lastRewardIndex { get; }
+        public int actionPoint { get; }
+        public Address avatarAddress { get; }
 
-        public DailyRewardStatus(List<long> lastRwardIndex, List<int> actionPoint)
+        public DailyRewardStatus(long lastRewardIndex, int actionPoint, Address avatarAddress)
         {
-            lastRewardIndex= lastRwardIndex;
+            this.lastRewardIndex= lastRewardIndex;
             this.actionPoint= actionPoint;
+            this.avatarAddress = avatarAddress;
         }
     }
 }

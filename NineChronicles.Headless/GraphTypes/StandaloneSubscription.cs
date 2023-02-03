@@ -27,7 +27,7 @@ using Serilog;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    public class StandaloneSubscription : ObjectGraphType
+    public partial class StandaloneSubscription : ObjectGraphType
     {
         class TipChanged : ObjectGraphType<TipChanged>
         {
@@ -112,13 +112,22 @@ namespace NineChronicles.Headless.GraphTypes
         public StandaloneSubscription(StandaloneContext standaloneContext)
         {
             StandaloneContext = standaloneContext;
-            if (standaloneContext.NineChroniclesNodeService != null)
-            {
-                Field<NonNullGraphType<AvatarSubscription>>(
-                    name: nameof(AvatarSubscription),
-                    resolve: context => new AvatarSubscription(standaloneContext.NineChroniclesNodeService)
-                    );
-            }
+            //if (standaloneContext.NineChroniclesNodeService != null)
+            //{
+            //    AddField(new EventStreamFieldType
+            //    {
+            //        Name = nameof(AvatarSubscription),
+            //        Type= typeof(AvatarSubscription),
+            //        Resolver = new FuncFieldResolver<AvatarSubscription>(context => (context.Source as AvatarSubscription)),
+            //        Subscriber = new EventStreamResolver<AvatarSubscription>(context => new AvatarSubscription(standaloneContext.NineChroniclesNodeService).)
+            //    }
+            //        )
+            //    Field<NonNullGraphType<AvatarSubscription>>(
+            //        name: nameof(AvatarSubscription),
+            //        streamres: context => new AvatarSubscription(standaloneContext.NineChroniclesNodeService),
+                    
+            //        );
+            //}
             AddField(new EventStreamFieldType
             {
                 Name = "tipChanged",
@@ -250,6 +259,10 @@ namespace NineChronicles.Headless.GraphTypes
             actionRenderer.EveryRender<ClaimMonsterCollectionReward>()
                 .ObserveOn(NewThreadScheduler.Default)
                 .Subscribe(RenderMonsterCollectionStateSubject);
+            if (standaloneContext.NineChroniclesNodeService != null)
+            {
+                AvatarSubscription(standaloneContext.NineChroniclesNodeService);
+            }
         }
 
         private IObservable<MonsterCollectionState> SubscribeMonsterCollectionState(IResolveEventStreamContext context)

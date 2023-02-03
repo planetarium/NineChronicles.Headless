@@ -28,33 +28,31 @@ using Org.BouncyCastle.Utilities;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    internal class AvatarSubscription : ObjectGraphType
+    public partial class StandaloneSubscription : ObjectGraphType
     {
-        private const int _blockRenderDegreeOfParallelism = 8;
+        //private const int _blockRenderDegreeOfParallelism = 8;
 
-        private BlockHeader? _tipHeader;
-        private ISubject<TipChanged> _subject = new ReplaySubject<TipChanged>();
-        public ConcurrentDictionary<Address,
+        //private BlockHeader? _tipHeader;
+        //private ISubject<TipChanged> _subject = new ReplaySubject<TipChanged>();
+        private ConcurrentDictionary<Address,
                 (ReplaySubject<AvatarState> avatarStateSubject, ReplaySubject<DailyRewardStatus> dailyRewardSubject)>
-            agentAddresses
+            agentAvatarAddresses
         { get; } = new ConcurrentDictionary<Address,
                 (ReplaySubject<AvatarState>, ReplaySubject<DailyRewardStatus>)>();
-        class TipChanged : ObjectGraphType<TipChanged>
-        {
-            public long Index { get; set; }
+        //class TipChanged : ObjectGraphType<TipChanged>
+        //{
+        //    public long Index { get; set; }
 
-            public BlockHash Hash { get; set; }
+        //    public BlockHash Hash { get; set; }
 
-            public TipChanged()
-            {
-                Field<NonNullGraphType<LongGraphType>>(nameof(Index));
-                Field<ByteStringType>("hash", resolve: context => context.Source.Hash.ToByteArray());
-            }
-        }
-
-        private NineChroniclesNodeService nineChroniclesNodeService { get; set; }
-
-        public AvatarSubscription(NineChroniclesNodeService service)
+        //    public TipChanged()
+        //    {
+        //        Field<NonNullGraphType<LongGraphType>>(nameof(Index));
+        //        Field<ByteStringType>("hash", resolve: context => context.Source.Hash.ToByteArray());
+        //    }
+        //}
+        //private NineChroniclesNodeService nineChroniclesNodeService { get; set; }
+        public void AvatarSubscription(NineChroniclesNodeService service)
         {
             AddField(new EventStreamFieldType
             {
@@ -71,12 +69,11 @@ namespace NineChronicles.Headless.GraphTypes
                 Subscriber = new EventStreamResolver<DailyRewardStatus>(SubscribeDailyReward),
             });
 
-            nineChroniclesNodeService = service;
-            BlockRenderer blockRenderer = service.BlockRenderer;
-            blockRenderer.BlockSubject
-                .ObserveOn(NewThreadScheduler.Default)
-                .Subscribe(RenderBlock);
-
+            //nineChroniclesNodeService = service;
+            //BlockRenderer blockRenderer = service.BlockRenderer;
+            //blockRenderer.BlockSubject
+            //    .ObserveOn(NewThreadScheduler.Default)
+            //    .Subscribe(RenderAvatarBlock);
             ActionRenderer actionRenderer = service.ActionRenderer;
             actionRenderer.EveryRender<DailyReward>()
                 .ObserveOn(NewThreadScheduler.Default)
@@ -86,7 +83,7 @@ namespace NineChronicles.Headless.GraphTypes
         private void RenderDailyRewardStateSubject<T>(ActionBase.ActionEvaluation<T> eval)
             where T : ActionBase
         {
-            if (!(nineChroniclesNodeService is { } service))
+            if (!(StandaloneContext.NineChroniclesNodeService is { } service))
             {
                 throw new InvalidOperationException(
                     $"{nameof(NineChroniclesNodeService)} is null.");
@@ -98,35 +95,30 @@ namespace NineChronicles.Headless.GraphTypes
                 return;
             }
 
-            foreach (var (address, subjects) in agentAddresses)
+            foreach (var (address, subjects) in agentAvatarAddresses)
             {
                 if (eval.Signer.Equals(address) &&
                     service.BlockChain.GetState(address, _tipHeader?.Hash) is Dictionary agentDict)
                 {
                     var agentState = new AgentState(agentDict);
-
-
                     var subject = subjects.avatarStateSubject;
                     var rewardSubect = subjects.dailyRewardSubject;
-                    var lastRewardIndexes = new List<long>();
-                    var actionPoints = new List<int>();
                     foreach (var avatarAddress in agentState.avatarAddresses)
                     {
-                        if (service.BlockChain.GetState(avatarAddress.Value, _tipHeader?.Hash) is Dictionary avatarDict)
+                        if (eval.Action is DailyReward rewardAction
+                            && rewardAction.avatarAddress.Equals(avatarAddress)
+                            && service.BlockChain.GetState(avatarAddress.Value, _tipHeader?.Hash) is Dictionary avatarDict)
                         {
                             var avatarState = new AvatarState(avatarDict);
-                            lastRewardIndexes.Add(avatarState.dailyRewardReceivedIndex);
-                            actionPoints.Add(avatarState.actionPoint);
+                            var avatarReward = new DailyRewardStatus(avatarState.dailyRewardReceivedIndex, avatarState.actionPoint, avatarAddress.Value);
+                            rewardSubect.OnNext(avatarReward);
                         }
                     }
-                    var dailyReward = new DailyRewardStatus(lastRewardIndexes, actionPoints);
-                    rewardSubect.OnNext(dailyReward);
-
                 }
             }
         }
 
-        private void RenderBlock((Block<PolymorphicAction<ActionBase>> OldTip, Block<PolymorphicAction<ActionBase>> NewTip) pair)
+        private void RenderAvatarBlock((Block<PolymorphicAction<ActionBase>> OldTip, Block<PolymorphicAction<ActionBase>> NewTip) pair)
         {
             _tipHeader = pair.NewTip.Header;
             _subject.OnNext(
@@ -137,7 +129,7 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            if (nineChroniclesNodeService is null)
+            if (StandaloneContext.NineChroniclesNodeService is null)
             {
                 throw new InvalidOperationException(
                     $"{nameof(StandaloneContext.NineChroniclesNodeService)} is null.");
@@ -147,7 +139,7 @@ namespace NineChronicles.Headless.GraphTypes
             sw.Start();
             Log.Debug("AvatarSubscription.RenderBlock started");
 
-            BlockChain<PolymorphicAction<ActionBase>> blockChain = nineChroniclesNodeService.BlockChain;
+            BlockChain<PolymorphicAction<ActionBase>> blockChain = StandaloneContext.NineChroniclesNodeService.BlockChain;
             Currency currency =
                 new GoldCurrencyState(
                     (Dictionary)blockChain.GetState(Addresses.GoldCurrency, _tipHeader.Hash)
@@ -158,8 +150,8 @@ namespace NineChronicles.Headless.GraphTypes
                 _tipHeader.Hash
             ).ToDotnetString();
             rewardSheet.Set(csv);
-            Log.Debug($"AvatarSubscription.RenderBlock target addresses. (count: {agentAddresses.Count})");
-            agentAddresses
+            Log.Debug($"AvatarSubscription.RenderBlock target addresses. (count: {agentAvatarAddresses.Count})");
+            agentAvatarAddresses
                 .AsParallel()
                 .WithDegreeOfParallelism(_blockRenderDegreeOfParallelism)
                 .ForAll(kv =>
@@ -171,7 +163,7 @@ namespace NineChronicles.Headless.GraphTypes
                         blockChain,
                         _tipHeader,
                         address,
-                       // avatarStateSubject,
+                        // avatarStateSubject,
                         dailyRewardSubject
                     );
                 });
@@ -191,18 +183,18 @@ namespace NineChronicles.Headless.GraphTypes
             if (blockChain.GetState(address, tipHeader.Hash) is Dictionary rawAgent)
             {
                 var agentState = new AgentState(rawAgent);
-                var lastRewardIndexes = new List<long>();
-                var actionPoints = new List<int>();
-                foreach (var avatarAddress in agentState.avatarAddresses)
-                {
-                    if (blockChain.GetState(avatarAddress.Value, _tipHeader?.Hash) is Dictionary avatarDict)
-                    {
-                        var avatarState = new AvatarState(avatarDict);
-                        lastRewardIndexes.Add(avatarState.dailyRewardReceivedIndex);
-                        actionPoints.Add(avatarState.actionPoint);
-                    }
-                }
-                var dailyReward = new DailyRewardStatus(lastRewardIndexes, actionPoints);
+                //var lastRewardIndexes = new List<long>();
+                //var actionPoints = new List<int>();
+                //foreach (var avatarAddress in agentState.avatarAddresses)
+                //{
+                //    if (blockChain.GetState(avatarAddress.Value, _tipHeader?.Hash) is Dictionary avatarDict)
+                //    {
+                //        var avatarState = new AvatarState(avatarDict);
+                //        lastRewardIndexes.Add(avatarState.dailyRewardReceivedIndex);
+                //        actionPoints.Add(avatarState.actionPoint);
+                //    }
+                //}
+                var dailyReward = new DailyRewardStatus(0, 0, new Address());
                 dailyRewardSubject.OnNext(dailyReward);
 
             }
@@ -210,11 +202,11 @@ namespace NineChronicles.Headless.GraphTypes
 
         private IObservable<DailyRewardStatus> SubscribeDailyReward(IResolveEventStreamContext context)
         {
-            var address = context.GetArgument<Address>("address");
+            var address = context.GetArgument<Address>("agentAddress");
 
-            agentAddresses.TryAdd(address,
+            agentAvatarAddresses.TryAdd(address,
                 (new ReplaySubject<AvatarState>(), new ReplaySubject<DailyRewardStatus>()));
-            agentAddresses.TryGetValue(address, out var subjects);
+            agentAvatarAddresses.TryGetValue(address, out var subjects);
             return subjects.dailyRewardSubject.AsObservable();
         }
     }
