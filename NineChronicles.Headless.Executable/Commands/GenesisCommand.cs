@@ -126,14 +126,29 @@ namespace NineChronicles.Headless.Executable.Commands
             _console.Out.WriteLine("Admin config done");
         }
 
+        private void ProcessValidator(List<Validator>? config, out List<Validator> initialValidatorSet)
+        {
+            _console.Out.WriteLine("\nProcessing initial validator set for genesis...");
+            initialValidatorSet = new List<Validator>();
+            if (config is null)
+            {
+                _console.Out.WriteLine(
+                    "InitialValidatorSet not provided. Skip initial validator set setting...");
+                return;
+            }
+
+            initialValidatorSet = config.ToList();
+            var str = initialValidatorSet.Aggregate(string.Empty,
+                (s, v) => s + "PublicKey: " + v.PublicKey + ", Power: " + v.Power + "\n");
+            _console.Out.WriteLine($"Initial validator set config done: {str}");
+        }
+
         private void ProcessExtra(ExtraConfig? config,
-            out List<PendingActivationState> pendingActivationStates,
-            out List<Validator> initialValidatorSet
+            out List<PendingActivationState> pendingActivationStates
         )
         {
             _console.Out.WriteLine("\nProcessing extra data for genesis...");
             pendingActivationStates = new List<PendingActivationState>();
-            initialValidatorSet = new List<Validator>();
 
             if (config is null)
             {
@@ -151,16 +166,6 @@ namespace NineChronicles.Headless.Executable.Commands
                     pa => new PendingActivationState(pa.Nonce, new PublicKey(pa.PublicKey))
                 ).ToList();
             }
-
-            if (config.Value.InitialValidatorSet is null)
-            {
-                return;
-            }
-
-            initialValidatorSet = config.Value.InitialValidatorSet.ToList();
-            var str = initialValidatorSet.Aggregate(string.Empty,
-                (s, v) => s + "PublicKey: " + v.PublicKey + ", Power: " + v.Power + "\n");
-            _console.Out.WriteLine($"Initial validator set: {str}");
         }
 
         [Command(Description = "Mine a new genesis block")]
@@ -184,9 +189,10 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 ProcessAdmin(genesisConfig.Admin, initialMinter, out var adminState);
 
+                ProcessValidator(genesisConfig.InitialValidatorSet, out var initialValidatorSet);
+
                 ProcessExtra(genesisConfig.Extra,
-                    out var pendingActivationStates,
-                    out var initialValidatorSet);
+                    out var pendingActivationStates);
 
                 // Mine genesis block
                 _console.Out.WriteLine("\nMining genesis block...\n");
@@ -299,6 +305,14 @@ namespace NineChronicles.Headless.Executable.Commands
             public long ValidUntil { get; set; }
         }
 
+        [Serializable]
+        private struct Validator
+        {
+            public string PublicKey { get; set; }
+
+            public long Power { get; set; }
+        }
+
         /// <summary>
         /// Extra configurations.
         /// </summary>
@@ -311,16 +325,6 @@ namespace NineChronicles.Headless.Executable.Commands
             /// See <see cref="TxCommand"/> to create activation key.
             /// </value>
             public string? PendingActivationStatePath { get; set; }
-
-            public List<Validator>? InitialValidatorSet { get; set; }
-        }
-
-        [Serializable]
-        private struct Validator
-        {
-            public string PublicKey { get; set; }
-
-            public int Power { get; set; }
         }
 
         /// <summary>
@@ -344,6 +348,10 @@ namespace NineChronicles.Headless.Executable.Commands
         /// <description>Optional. Sets game admin and lifespan to genesis block.</description>
         /// </item>
         /// <item>
+        /// <term><see cref="InitialValidatorSet">Initial validator set</see></term>
+        /// <description>Optional. Sets game admin and lifespan to genesis block.</description>
+        /// </item>
+        /// <item>
         /// <term><see cref="ExtraConfig">Extra</see></term>
         /// <description>Optional. Sets extra data (e.g. activation keys) to genesis block.</description>
         /// </item>
@@ -354,6 +362,7 @@ namespace NineChronicles.Headless.Executable.Commands
             public DataConfig Data { get; set; } // Required
             public CurrencyConfig? Currency { get; set; }
             public AdminConfig? Admin { get; set; }
+            public List<Validator>? InitialValidatorSet { get; set; }
             public ExtraConfig? Extra { get; set; }
         }
 #pragma warning restore S3459
