@@ -35,10 +35,10 @@ namespace NineChronicles.Headless.GraphTypes
         //private BlockHeader? _tipHeader;
         //private ISubject<TipChanged> _subject = new ReplaySubject<TipChanged>();
         private ConcurrentDictionary<Address,
-                (ReplaySubject<AvatarState> avatarStateSubject, ReplaySubject<DailyRewardStatus> dailyRewardSubject)>
+                (ReplaySubject<AvatarActionPointStatus> hackAndSlashSubject, ReplaySubject<DailyRewardStatus> dailyRewardSubject)>
             agentAvatarAddresses
         { get; } = new ConcurrentDictionary<Address,
-                (ReplaySubject<AvatarState>, ReplaySubject<DailyRewardStatus>)>();
+                (ReplaySubject<AvatarActionPointStatus>, ReplaySubject<DailyRewardStatus>)>();
         //class TipChanged : ObjectGraphType<TipChanged>
         //{
         //    public long Index { get; set; }
@@ -68,6 +68,20 @@ namespace NineChronicles.Headless.GraphTypes
                 Resolver = new FuncFieldResolver<DailyRewardStatus>(context => (context.Source as DailyRewardStatus)!),
                 Subscriber = new EventStreamResolver<DailyRewardStatus>(SubscribeDailyReward),
             });
+            AddField(new EventStreamFieldType
+            {
+                Name = $"{nameof(AvatarActionPointStatus)}ByAgent",
+                Arguments = new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Description = "A hex-encoded address of an agent.",
+                        Name = "agentAddress",
+                    }
+                    ),
+                Type = typeof(NonNullGraphType<AvatarActionPointStatusType>),
+                Resolver = new FuncFieldResolver<AvatarActionPointStatus>(context => (context.Source as AvatarActionPointStatus)!),
+                Subscriber = new EventStreamResolver<AvatarActionPointStatus>(SubscribeHackAndSlash)
+            });
 
             //nineChroniclesNodeService = service;
             //BlockRenderer blockRenderer = service.BlockRenderer;
@@ -79,6 +93,8 @@ namespace NineChronicles.Headless.GraphTypes
                 .ObserveOn(NewThreadScheduler.Default)
                 .Subscribe(RenderDailyRewardStateSubject);
         }
+
+        
 
         private void RenderDailyRewardStateSubject<T>(ActionBase.ActionEvaluation<T> eval)
             where T : ActionBase
@@ -101,17 +117,25 @@ namespace NineChronicles.Headless.GraphTypes
                     service.BlockChain.GetState(address, _tipHeader?.Hash) is Dictionary agentDict)
                 {
                     var agentState = new AgentState(agentDict);
-                    var subject = subjects.avatarStateSubject;
+                    var subject = subjects.hackAndSlashSubject;
                     var rewardSubect = subjects.dailyRewardSubject;
                     foreach (var avatarAddress in agentState.avatarAddresses)
                     {
-                        if (eval.Action is DailyReward rewardAction
-                            && rewardAction.avatarAddress.Equals(avatarAddress)
-                            && service.BlockChain.GetState(avatarAddress.Value, _tipHeader?.Hash) is Dictionary avatarDict)
+                        if(((eval.Action is HackAndSlash hackAndSlashAction && hackAndSlashAction?.AvatarAddress.Equals(avatarAddress) == true) 
+                            || (eval.Action is HackAndSlashSweep hackAndSlashSweepAction && hackAndSlashSweepAction?.avatarAddress.Equals(avatarAddress) == true)
+                            || (eval.Action is Grinding grindingAction && grindingAction?.AvatarAddress.Equals(avatarAddress) == true)
+                            || (eval.Action is ChargeActionPoint chargeAction && chargeAction?.avatarAddress.Equals(avatarAddress) == true)
+                            || (eval.Action is DailyReward rewardAction && rewardAction?.avatarAddress.Equals(avatarAddress) == true))
+                            && service.BlockChain.GetState(avatarAddress.Value, _tipHeader?.Hash) is Dictionary avatarHnS)
                         {
-                            var avatarState = new AvatarState(avatarDict);
-                            var avatarReward = new DailyRewardStatus(avatarState.dailyRewardReceivedIndex, avatarState.actionPoint, avatarAddress.Value);
-                            rewardSubect.OnNext(avatarReward);
+                            var avatarState = new AvatarState(avatarHnS);
+                            var hns = new AvatarActionPointStatus(_tipHeader!.Index, avatarState.actionPoint, avatarAddress.Value, avatarState.exp, avatarState.level, avatarState.inventory);
+                            subject.OnNext(hns);
+                            if (eval.Action is DailyReward)
+                            {
+                                var avatarReward = new DailyRewardStatus(avatarState.dailyRewardReceivedIndex, avatarState.actionPoint, avatarAddress.Value);
+                                rewardSubect.OnNext(avatarReward);
+                            }
                         }
                     }
                 }
@@ -157,7 +181,7 @@ namespace NineChronicles.Headless.GraphTypes
                 .ForAll(kv =>
                 {
                     Address address = kv.Key;
-                    (ReplaySubject<AvatarState> avatarStateSubject, ReplaySubject<DailyRewardStatus> dailyRewardSubject) =
+                    (ReplaySubject<AvatarActionPointStatus> hackAndSlashSubject, ReplaySubject<DailyRewardStatus> dailyRewardSubject) =
                         kv.Value;
                     RenderForAgent(
                         blockChain,
@@ -205,9 +229,18 @@ namespace NineChronicles.Headless.GraphTypes
             var address = context.GetArgument<Address>("agentAddress");
 
             agentAvatarAddresses.TryAdd(address,
-                (new ReplaySubject<AvatarState>(), new ReplaySubject<DailyRewardStatus>()));
+                (new ReplaySubject<AvatarActionPointStatus>(), new ReplaySubject<DailyRewardStatus>()));
             agentAvatarAddresses.TryGetValue(address, out var subjects);
             return subjects.dailyRewardSubject.AsObservable();
+        }
+        private IObservable<AvatarActionPointStatus?> SubscribeHackAndSlash(IResolveEventStreamContext context)
+        {
+            var address = context.GetArgument<Address>("agentAddress");
+
+            agentAvatarAddresses.TryAdd(address,
+                (new ReplaySubject<AvatarActionPointStatus>(), new ReplaySubject<DailyRewardStatus>()));
+            agentAvatarAddresses.TryGetValue(address, out var subjects);
+            return subjects.hackAndSlashSubject.AsObservable();
         }
     }
 }
