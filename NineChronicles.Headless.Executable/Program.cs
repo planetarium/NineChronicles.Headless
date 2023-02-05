@@ -202,11 +202,13 @@ namespace NineChronicles.Headless.Executable
                 HttpResponseMessage resp = await client.GetAsync(configPath);
                 resp.EnsureSuccessStatusCode();
                 Stream body = await resp.Content.ReadAsStreamAsync();
-                configurationBuilder.AddJsonStream(body);
+                configurationBuilder.AddJsonStream(body)
+                    .AddEnvironmentVariables();
             }
             else
             {
-                configurationBuilder.AddJsonFile(configPath);
+                configurationBuilder.AddJsonFile(configPath)
+                    .AddEnvironmentVariables();
             }
 
             // Setup logger.
