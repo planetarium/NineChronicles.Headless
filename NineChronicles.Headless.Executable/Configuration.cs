@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Libplanet.Headless;
 using NineChronicles.Headless.Properties;
 
 namespace NineChronicles.Headless.Executable
@@ -15,8 +16,6 @@ namespace NineChronicles.Headless.Executable
         public ushort? Port { get; set; }
 
         public string? SwarmPrivateKeyString { get; set; }
-
-        public int Workers { get; set; } = 5;
 
         // Storage
         public string? StoreType { get; set; }
@@ -77,6 +76,7 @@ namespace NineChronicles.Headless.Executable
         public string ChainTipStaleBehaviorType { get; set; } = "reboot";
         public int TxQuotaPerSigner { get; set; } = 10;
         public int MaximumPollPeers { get; set; } = int.MaxValue;
+        public DynamicActionTypeLoaderConfiguration? DynamicActionTypeLoader { get; set; } = null;
 
         public string SentryDsn { get; set; } = "";
 
@@ -89,7 +89,6 @@ namespace NineChronicles.Headless.Executable
             string? host,
             ushort? port,
             string? swarmPrivateKeyString,
-            int? workers,
             string? storeType,
             string? storePath,
             bool? noReduceStore,
@@ -137,7 +136,6 @@ namespace NineChronicles.Headless.Executable
             Host = host ?? Host;
             Port = port ?? Port;
             SwarmPrivateKeyString = swarmPrivateKeyString ?? SwarmPrivateKeyString;
-            Workers = workers ?? Workers;
             StoreType = storeType ?? StoreType;
             StorePath = storePath ?? StorePath;
             NoReduceStore = noReduceStore ?? NoReduceStore;

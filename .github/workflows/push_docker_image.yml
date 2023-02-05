@@ -12,6 +12,11 @@ on:
       - 2022q3-worldboss
     tags:
       - v*
+  workflow_dispatch:
+    inputs:
+      imageTag:
+        description: 'Custom docker image tag if needed'
+        default: ''
 
 env:
   DOCKER_REPO: planetariumhq/ninechronicles-headless
@@ -57,7 +62,7 @@ jobs:
           docker manifest push $DOCKER_REPO:git-${{ github.sha }}
 
   tag:
-    if: github.ref_type == 'tag'
+    if: github.ref_type == 'tag' || github.event.inputs.imageTag != ''
     runs-on: ubuntu-latest
     steps:
       - name: login
@@ -68,16 +73,22 @@ jobs:
       - name: push git tagged version
         run: |
           docker pull $DOCKER_REPO:git-${{ github.sha }}-amd64
+          if [[ -z "${{ github.event.inputs.imageTag }}" ]]; then
+            export IMAGE_TAG=${{ github.ref_name }}
+          else
+            export IMAGE_TAG=${{ github.event.inputs.imageTag }}
+          fi
+
           docker tag \
             $DOCKER_REPO:git-${{ github.sha }}-amd64 \
-            $DOCKER_REPO:${{ github.ref_name }}-amd64
-          docker push $DOCKER_REPO:${{ github.ref_name }}-amd64
+            $DOCKER_REPO:$IMAGE_TAG-amd64
+          docker push $DOCKER_REPO:$IMAGE_TAG-amd64
           docker pull $DOCKER_REPO:git-${{ github.sha }}-arm64v8
           docker tag \
             $DOCKER_REPO:git-${{ github.sha }}-arm64v8 \
-            $DOCKER_REPO:${{ github.ref_name }}-arm64v8
-          docker push $DOCKER_REPO:${{ github.ref_name }}-arm64v8
-          docker manifest create $DOCKER_REPO:${{ github.ref_name }} \
-            --amend $DOCKER_REPO:${{ github.ref_name }}-amd64 \
-            --amend $DOCKER_REPO:${{ github.ref_name }}-arm64v8
-          docker manifest push $DOCKER_REPO:${{ github.ref_name }}
+            $DOCKER_REPO:$IMAGE_TAG-arm64v8
+          docker push $DOCKER_REPO:$IMAGE_TAG-arm64v8
+          docker manifest create $DOCKER_REPO:$IMAGE_TAG \
+            --amend $DOCKER_REPO:$IMAGE_TAG-amd64 \
+            --amend $DOCKER_REPO:$IMAGE_TAG-arm64v8
+          docker manifest push $DOCKER_REPO:$IMAGE_TAG

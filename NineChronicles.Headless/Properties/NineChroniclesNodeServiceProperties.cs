@@ -73,7 +73,8 @@ namespace NineChronicles.Headless.Properties
                 int minimumBroadcastTarget = 10,
                 int bucketSize = 16,
                 string chainTipStaleBehaviorType = "reboot",
-                int maximumPollPeers = int.MaxValue)
+                int maximumPollPeers = int.MaxValue,
+                DynamicActionTypeLoaderConfiguration? dynamicActionTypeLoader = null)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
@@ -105,7 +106,6 @@ namespace NineChronicles.Headless.Properties
                 NoReduceStore = noReduceStore,
                 StoreStatesCacheSize = storeStateCacheSize,
                 Render = render,
-                Workers = workers,
                 Confirmations = Math.Max(confirmations, 0),
                 NonblockRenderer = nonblockRenderer,
                 NonblockRendererQueue = Math.Max(nonblockRendererQueue, 1),
@@ -117,7 +117,8 @@ namespace NineChronicles.Headless.Properties
                 MinimumBroadcastTarget = minimumBroadcastTarget,
                 BucketSize = bucketSize,
                 ChainTipStaleBehavior = chainTipStaleBehaviorType,
-                MaximumPollPeers = maximumPollPeers
+                MaximumPollPeers = maximumPollPeers,
+                DynamicActionTypeLoader = dynamicActionTypeLoader,
             };
         }
 

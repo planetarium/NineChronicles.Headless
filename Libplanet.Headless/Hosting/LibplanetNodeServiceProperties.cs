@@ -46,8 +46,6 @@ namespace Libplanet.Headless.Hosting
 
         public bool LogActionRenders { get; set; }
 
-        public int Workers { get; set; } = 5;
-
         public int Confirmations { get; set; } = 0;
 
         public bool NonblockRenderer { get; set; } = false;
@@ -73,5 +71,9 @@ namespace Libplanet.Headless.Hosting
         public string ChainTipStaleBehavior { get; set; } = "reboot";
 
         public int MaximumPollPeers { get; set; } = int.MaxValue;
+
+#nullable enable
+        public DynamicActionTypeLoaderConfiguration? DynamicActionTypeLoader { get; init; } = null;
+#nullable disable
     }
 }
