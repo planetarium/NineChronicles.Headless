@@ -247,12 +247,14 @@ namespace NineChronicles.Headless.Executable
                 loggerConf = loggerConf.WriteTo.AmazonS3(
                     formatter: new CompactJsonFormatter(),
                     path: "log.json",
-                    bucketName: "9c-pbft-logs",
+                    bucketName: "9c-pbft-pub-test-logs",
                     bucketPath: headlessConfig.SwarmPrivateKeyString == null
                         ? "UnknownSwarmKey"
                         : new PrivateKey(headlessConfig.SwarmPrivateKeyString).ToAddress().ToString(),
                     rollingInterval: RollingInterval.Hour,
                     serviceUrl: "https://s3.us-east-2.amazonaws.com",
+                    batchSizeLimit: 10000,
+                    batchingPeriod: TimeSpan.FromMinutes(1),
                     awsAccessKeyId: credentialConfig.AwsAccessKeyId,
                     awsSecretAccessKey: credentialConfig.AwsSecretAccessKey
                 );
