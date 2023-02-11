@@ -18,13 +18,12 @@ using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common;
 using Serilog;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
-using Lib9c.Tests;
 using Xunit.Abstractions;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -40,13 +39,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             _output = output;
 
-            var goldCurrency = new Currency("NCG", 2, minter: null);
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            var goldCurrency = Currency.Legacy("NCG", 2, null);
+#pragma warning restore CS0618
 
-            var sheets =
-                TableSheetsImporter.ImportSheets(Path.Join("..", "..", "..", "..", "Lib9c", "Lib9c", "TableCSV"));
+            var sheets = TableSheetsImporter.ImportSheets();
             var blockAction = new RewardGold();
             var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
-                HashAlgorithmType.Of<SHA256>(),
                 new NCAction[]
                 {
                     new InitializeStates(
@@ -73,6 +73,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             StandaloneContextFx = new StandaloneContext
             {
                 KeyStore = keyStore,
+                DifferentAppProtocolVersionEncounterInterval = TimeSpan.FromSeconds(1),
+                NotificationInterval = TimeSpan.FromSeconds(1),
+                NodeExceptionInterval = TimeSpan.FromSeconds(1),
+                MonsterCollectionStateInterval = TimeSpan.FromSeconds(1),
+                MonsterCollectionStatusInterval = TimeSpan.FromSeconds(1),
             };
             ncService.ConfigureContext(StandaloneContextFx);
 
@@ -87,15 +92,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ncService.NodeStatusRenderer,
                 "",
                 0,
-                new RpcContext()
+                new RpcContext(),
+                new ConcurrentDictionary<string, Sentry.ITransaction>()
             );
             services.AddSingleton(publisher);
             services.AddSingleton(StandaloneContextFx);
             services.AddSingleton<IConfiguration>(configuration);
             services.AddGraphTypes();
             services.AddLibplanetExplorer<NCAction>();
-            services.AddSingleton<StateQuery>();
             services.AddSingleton(ncService);
+            services.AddSingleton(ncService.Store);
             ServiceProvider serviceProvider = services.BuildServiceProvider();
             Schema = new StandaloneSchema(serviceProvider);
 
@@ -157,7 +163,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             AppProtocolVersion appProtocolVersion,
             PublicKey appProtocolVersionSigner,
             Progress<PreloadState>? preloadProgress = null,
-            IEnumerable<Peer>? peers = null,
+            IEnumerable<BoundPeer>? peers = null,
             ImmutableHashSet<BoundPeer>? staticPeers = null)
             where T : IAction, new()
         {
@@ -172,9 +178,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Port = null,
                 NoMiner = true,
                 Render = false,
-                Peers = peers ?? ImmutableHashSet<Peer>.Empty,
+                Peers = peers ?? ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = ImmutableHashSet<PublicKey>.Empty.Add(appProtocolVersionSigner),
                 StaticPeers = staticPeers ?? ImmutableHashSet<BoundPeer>.Empty,
+                IceServers = ImmutableList<IceServer>.Empty,
             };
 
             return new LibplanetNodeService<T>(

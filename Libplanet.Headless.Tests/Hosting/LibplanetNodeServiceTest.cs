@@ -1,7 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet.Action;
@@ -19,7 +19,7 @@ namespace Libplanet.Headless.Tests.Hosting
         [Fact]
         public void Constructor()
         {
-            var genesisBlock = BlockChain<DummyAction>.MakeGenesisBlock(HashAlgorithmType.Of<SHA256>());
+            var genesisBlock = BlockChain<DummyAction>.MakeGenesisBlock();
             var service = new LibplanetNodeService<DummyAction>(
                 new LibplanetNodeServiceProperties<DummyAction>()
                 {
@@ -29,6 +29,7 @@ namespace Libplanet.Headless.Tests.Hosting
                     StoreStatesCacheSize = 2,
                     StorePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()),
                     Host = IPAddress.Loopback.ToString(),
+                    IceServers = new List<IceServer>(),
                 },
                 blockPolicy: new BlockPolicy<DummyAction>(),
                 stagePolicy: new VolatileStagePolicy<DummyAction>(),
@@ -54,6 +55,7 @@ namespace Libplanet.Headless.Tests.Hosting
                         SwarmPrivateKey = new PrivateKey(),
                         StoreStatesCacheSize = 2,
                         Host = IPAddress.Loopback.ToString(),
+                        IceServers = new List<IceServer>(),
                     },
                     blockPolicy: new BlockPolicy<DummyAction>(),
                     stagePolicy: new VolatileStagePolicy<DummyAction>(),

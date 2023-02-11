@@ -30,7 +30,7 @@ namespace Libplanet.Headless.Hosting
 
         public Block<T> GenesisBlock { get; set; }
 
-        public IEnumerable<Peer> Peers { get; set; }
+        public IEnumerable<BoundPeer> Peers { get; set; }
 
         public bool NoMiner { get; set; }
 
@@ -45,8 +45,6 @@ namespace Libplanet.Headless.Hosting
         public bool Render { get; set; }
 
         public bool LogActionRenders { get; set; }
-
-        public int Workers { get; set; } = 5;
 
         public int Confirmations { get; set; } = 0;
 
@@ -73,5 +71,9 @@ namespace Libplanet.Headless.Hosting
         public string ChainTipStaleBehavior { get; set; } = "reboot";
 
         public int MaximumPollPeers { get; set; } = int.MaxValue;
+
+#nullable enable
+        public DynamicActionTypeLoaderConfiguration? DynamicActionTypeLoader { get; init; } = null;
+#nullable disable
     }
 }

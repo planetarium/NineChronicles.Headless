@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.Properties;
@@ -14,6 +15,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Nekoyume.Action;
+using Sentry;
 
 namespace NineChronicles.Headless
 {
@@ -37,6 +39,7 @@ namespace NineChronicles.Headless
                 services.AddSingleton(provider => service);
                 services.AddSingleton(provider => service.Swarm);
                 services.AddSingleton(provider => service.BlockChain);
+                services.AddSingleton(provider => service.Store);
                 if (properties.Libplanet is { } libplanetNodeServiceProperties)
                 {
                     services.AddSingleton<LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>>(provider => libplanetNodeServiceProperties);
@@ -50,7 +53,8 @@ namespace NineChronicles.Headless
                         context.NineChroniclesNodeService!.NodeStatusRenderer,
                         IPAddress.Loopback.ToString(),
                         0,
-                        rpcContext
+                        rpcContext,
+                        provider.GetRequiredService<ConcurrentDictionary<string, ITransaction>>()
                     );
                 });
             });
@@ -85,7 +89,8 @@ namespace NineChronicles.Headless
                             ctx.NineChroniclesNodeService!.NodeStatusRenderer,
                             IPAddress.Loopback.ToString(),
                             properties.RpcListenPort,
-                            context
+                            context,
+                            provider.GetRequiredService<ConcurrentDictionary<string, ITransaction>>()
                         );
                     });
                     var resolver = MessagePack.Resolvers.CompositeResolver.Create(

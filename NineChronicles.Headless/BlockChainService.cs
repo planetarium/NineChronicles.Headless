@@ -27,6 +27,7 @@ using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using NodeExceptionType = Libplanet.Headless.NodeExceptionType;
 using Libplanet.Headless;
 using Nekoyume.Model.State;
+using Sentry;
 
 namespace NineChronicles.Headless
 {
@@ -40,13 +41,15 @@ namespace NineChronicles.Headless
         private LibplanetNodeServiceProperties<NCAction> _libplanetNodeServiceProperties;
         private DelayedRenderer<NCAction> _delayedRenderer;
         private ActionEvaluationPublisher _publisher;
+        private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
+
         public BlockChainService(
             BlockChain<NCAction> blockChain,
             Swarm<NCAction> swarm,
             RpcContext context,
             LibplanetNodeServiceProperties<NCAction> libplanetNodeServiceProperties,
-            ActionEvaluationPublisher actionEvaluationPublisher
-        )
+            ActionEvaluationPublisher actionEvaluationPublisher,
+            ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces)
         {
             _blockChain = blockChain;
             _delayedRenderer = blockChain.GetDelayedRenderer();
@@ -55,6 +58,7 @@ namespace NineChronicles.Headless
             _codec = new Codec();
             _libplanetNodeServiceProperties = libplanetNodeServiceProperties;
             _publisher = actionEvaluationPublisher;
+            _sentryTraces = sentryTraces;
         }
 
         public UnaryResult<bool> PutTransaction(byte[] txBytes)
@@ -64,6 +68,16 @@ namespace NineChronicles.Headless
                 Transaction<PolymorphicAction<ActionBase>> tx =
                     Transaction<PolymorphicAction<ActionBase>>.Deserialize(txBytes);
 
+                var actionName = tx.CustomActions[0]?.GetInnerActionTypeName() ?? "NoAction";
+                var txId = tx.Id.ToString();
+                var sentryTrace = SentrySdk.StartTransaction(
+                    actionName,
+                    "PutTransaction");
+                sentryTrace.SetTag("TxId", txId);
+                var span = sentryTrace.StartChild(
+                    "BroadcastTX",
+                    $"Broadcast Transaction {txId}");
+
                 try
                 {
                     tx.Validate();
@@ -72,11 +86,17 @@ namespace NineChronicles.Headless
                     _blockChain.StageTransaction(tx);
                     _swarm.BroadcastTxs(new[] { tx });
 
+                    span.Finish();
+                    sentryTrace.StartChild(
+                        "ExecuteAction",
+                        $"Execute Action {actionName} from tx {txId}");
+                    _sentryTraces.TryAdd(txId, sentryTrace);
                     return UnaryResult(true);
                 }
                 catch (InvalidTxException ite)
                 {
                     Log.Error(ite, $"{nameof(InvalidTxException)} occurred during {nameof(PutTransaction)}(). {{e}}", ite);
+                    sentryTrace.Finish(ite);
                     return UnaryResult(false);
                 }
             }

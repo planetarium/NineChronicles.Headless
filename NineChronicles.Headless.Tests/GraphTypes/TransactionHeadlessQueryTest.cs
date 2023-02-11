@@ -40,7 +40,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new VolatileStagePolicy<NCAction>(),
                 _store,
                 _stateStore,
-                BlockChain<NCAction>.MakeGenesisBlock(HashAlgorithmType.Of<SHA256>()));
+                BlockChain<NCAction>.MakeGenesisBlock());
             _service = ServiceBuilder.CreateNineChroniclesNodeService(_blockChain.Genesis, new PrivateKey());
         }
 
@@ -84,7 +84,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     signature
                     timestamp
                     updatedAddresses
-                    actions {{
+                    customActions {{
                         inspection
                     }}
                 }}
@@ -121,8 +121,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(tx.Timestamp, transaction.Timestamp);
             Assert.Equal(tx.UpdatedAddresses, transaction.UpdatedAddresses);
 
-            var plainValue = tx.Actions.First().PlainValue.Inspect(true);
-            Assert.Equal(transaction.Actions.First().PlainValue.Inspect(true), plainValue);
+            var plainValue = tx.CustomActions!.First().PlainValue.Inspect(true);
+            Assert.Equal(transaction.CustomActions!.First().PlainValue.Inspect(true), plainValue);
         }
 
         [Theory]
@@ -218,7 +218,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(unsignedTx.Nonce, signedTx.Nonce);
             Assert.Equal(unsignedTx.UpdatedAddresses, signedTx.UpdatedAddresses);
             Assert.Equal(unsignedTx.Timestamp, signedTx.Timestamp);
-            Assert.Equal(unsignedTx.Actions, signedTx.Actions);
+            Assert.Equal(unsignedTx.CustomActions, signedTx.CustomActions);
         }
 
         [Theory]
@@ -295,7 +295,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task TransactionResultIsSuccess()
         {
             var privateKey = new PrivateKey();
-            var action = new DumbTransferAction(new Address(), new Address());
+            // Because `AddActivatedAccount` doesn't need any prerequisites.
+            var action = new AddActivatedAccount(default);
             Transaction<NCAction> tx = _blockChain.MakeTransaction(privateKey, new NCAction[] { action });
             await _blockChain.MineBlock(new PrivateKey());
             var queryFormat = @"query {{

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
@@ -90,7 +91,7 @@ namespace Libplanet.Headless.Hosting
 
             Properties = properties;
 
-            var genesisBlock = LoadGenesisBlock(properties, blockPolicy.GetHashAlgorithm);
+            var genesisBlock = LoadGenesisBlock(properties);
 
             var iceServers = Properties.IceServers;
 
@@ -106,12 +107,11 @@ namespace Libplanet.Headless.Hosting
 
             if (Properties.Confirmations > 0)
             {
-                HashAlgorithmGetter getHashAlgo = blockPolicy.GetHashAlgorithm;
                 IComparer<IBlockExcerpt> comparer = blockPolicy.CanonicalChainComparer;
                 int confirms = Properties.Confirmations;
                 renderers = renderers.Select(r => r is IActionRenderer<T> ar
-                    ? new DelayedActionRenderer<T>(ar, comparer, Store, getHashAlgo, confirms, 50)
-                    : new DelayedRenderer<T>(r, comparer, Store, getHashAlgo, confirms)
+                    ? new DelayedActionRenderer<T>(ar, comparer, Store, confirms, 50)
+                    : new DelayedRenderer<T>(r, comparer, Store, confirms)
                 );
 
                 // Log the outmost (before delayed) events as well as
@@ -146,13 +146,54 @@ namespace Libplanet.Headless.Hosting
                 });
             }
 
+            var blockChainStates = new BlockChainStates<T>(Store, StateStore);
+
+            Type UnwrapPolymorphicAction(Type type)
+            {
+                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(PolymorphicAction<>))
+                {
+                    return type.GetGenericArguments()[0];
+                }
+
+                return type;
+            }
+
+            IActionTypeLoader MakeStaticActionTypeLoader() => new StaticActionTypeLoader(
+                Assembly.GetEntryAssembly() is { } entryAssembly
+                    ? new[] { UnwrapPolymorphicAction(typeof(T)).Assembly, entryAssembly }
+                    : new[] { UnwrapPolymorphicAction(typeof(T)).Assembly },
+                typeof(T)
+            );
+
+            IActionTypeLoader actionTypeLoader = properties.DynamicActionTypeLoader is { } actionTypeLoaderConfiguration
+                ? new DynamicActionTypeLoader(actionTypeLoaderConfiguration.BasePath,
+                    actionTypeLoaderConfiguration.AssemblyFileName,
+                    actionTypeLoaderConfiguration.HardForks.OrderBy(pair => pair.SinceBlockIndex))
+                : MakeStaticActionTypeLoader();
             BlockChain = new BlockChain<T>(
                 policy: blockPolicy,
                 store: Store,
                 stagePolicy: stagePolicy,
                 stateStore: StateStore,
                 genesisBlock: genesisBlock,
-                renderers: renderers
+                renderers: renderers,
+                blockChainStates: blockChainStates,
+                actionEvaluator: new ActionEvaluator<T>(
+                    blockHeader =>
+                    {
+                        var blockActionType = actionTypeLoader
+                            .LoadAllActionTypes(new ActionTypeLoaderContext(blockHeader.Index))
+                            .FirstOrDefault(t => t.FullName == "Nekoyume.Action.RewardGold");
+                        return blockActionType is { } t ? (IAction)Activator.CreateInstance(t) : null;
+                    },
+                    blockChainStates: blockChainStates,
+                    trieGetter: hash => StateStore.GetStateRoot(
+                        Store.GetBlockDigest(hash)?.StateRootHash
+                    ),
+                    genesisHash: genesisBlock.Hash,
+                    nativeTokenPredicate: blockPolicy.NativeTokens.Contains,
+                    actionTypeLoader: actionTypeLoader
+                )
             );
 
             _obsoletedChainIds = chainIds.Where(chainId => chainId != BlockChain.Id).ToList();
@@ -167,16 +208,20 @@ namespace Libplanet.Headless.Hosting
                 shuffledIceServers = iceServers.OrderBy(x => rand.Next());
             }
 
+            var appProtocolVersionOptions = new AppProtocolVersionOptions
+            {
+                AppProtocolVersion = Properties.AppProtocolVersion,
+                TrustedAppProtocolVersionSigners =
+                    Properties.TrustedAppProtocolVersionSigners?.ToImmutableHashSet() ?? ImmutableHashSet<PublicKey>.Empty,
+                DifferentAppProtocolVersionEncountered = Properties.DifferentAppProtocolVersionEncountered,
+            };
+            var hostOptions = new Net.HostOptions(Properties.Host, shuffledIceServers, Properties.Port ?? default);
+
             Swarm = new Swarm<T>(
                 BlockChain,
                 Properties.SwarmPrivateKey,
-                Properties.AppProtocolVersion,
-                trustedAppProtocolVersionSigners: Properties.TrustedAppProtocolVersionSigners,
-                host: Properties.Host,
-                listenPort: Properties.Port,
-                iceServers: shuffledIceServers,
-                workers: Properties.Workers,
-                differentAppProtocolVersionEncountered: Properties.DifferentAppProtocolVersionEncountered,
+                appProtocolVersionOptions: appProtocolVersionOptions,
+                hostOptions: hostOptions,
                 options: new SwarmOptions
                 {
                     BranchpointThreshold = 50,
@@ -579,8 +624,7 @@ namespace Libplanet.Headless.Hosting
         }
 
         protected Block<T> LoadGenesisBlock(
-            LibplanetNodeServiceProperties<T> properties,
-            HashAlgorithmGetter hashAlgorithmGetter
+            LibplanetNodeServiceProperties<T> properties
         )
         {
             if (!(properties.GenesisBlock is null))
@@ -601,7 +645,7 @@ namespace Libplanet.Headless.Hosting
                     rawBlock = client.GetByteArrayAsync(uri).Result;
                 }
                 var blockDict = (Bencodex.Types.Dictionary)Codec.Decode(rawBlock);
-                return BlockMarshaler.UnmarshalBlock<T>(hashAlgorithmGetter, blockDict);
+                return BlockMarshaler.UnmarshalBlock<T>(blockDict);
             }
             else
             {
@@ -619,6 +663,17 @@ namespace Libplanet.Headless.Hosting
 
             (Store as IDisposable)?.Dispose();
             Log.Debug("Store disposed.");
+        }
+
+        // FIXME: Request libplanet provide default implementation.
+        private sealed class ActionTypeLoaderContext : IActionTypeLoaderContext
+        {
+            public ActionTypeLoaderContext(long index)
+            {
+                Index = index;
+            }
+
+            public long Index { get; }
         }
     }
 }

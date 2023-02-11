@@ -112,6 +112,10 @@ namespace NineChronicles.Headless.Executable.Commands
                     _console.Out.WriteLine("Admin address not provided. Give admin privilege to initialMinter");
                     adminState = new AdminState(initialMinter.ToAddress(), config.Value.ValidUntil);
                 }
+                else
+                {
+                    adminState = new AdminState(new Address(config.Value.Address), config.Value.ValidUntil);
+                }
             }
             else
             {
@@ -286,7 +290,7 @@ namespace NineChronicles.Headless.Executable.Commands
             /// <value>
             /// Dump file path of pending activation state created using <c>9c-tools</c><br/>
             /// This will set activation codes that can be used to genesis block. <br/>
-            /// See <a href="https://github.com/planetarium/lib9c/blob/development/.Lib9c.Tools/SubCommand/Tx.cs">Tx.cs</a> to create activation key.
+            /// See <see cref="TxCommand"/> to create activation key.
             /// </value>
             public string? PendingActivationStatePath { get; set; }
         }

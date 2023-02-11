@@ -9,6 +9,7 @@ using NineChronicles.Headless.GraphTypes.States.Models.World;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
 using NineChronicles.Headless.GraphTypes.States.Models.Mail;
 using NineChronicles.Headless.GraphTypes.States.Models.Quest;
+using Nekoyume.BlockChain.Policy;
 
 namespace NineChronicles.Headless.GraphTypes.States
 {
@@ -16,7 +17,7 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class StakeStateContext : StateContext
         {
-            public StakeStateContext(StakeState stakeState, AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter, long? blockIndex)
+            public StakeStateContext(StakeState stakeState, AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter, long blockIndex)
                 : base(accountStateGetter, accountBalanceGetter, blockIndex)
             {
                 StakeState = stakeState;
@@ -54,8 +55,26 @@ namespace NineChronicles.Headless.GraphTypes.States
                 "claimableBlockIndex",
                 description: "The block index the user can claim rewards.",
                 resolve: context =>
-                    Math.Max(context.Source.StakeState.ReceivedBlockIndex,
-                        context.Source.StakeState.StartedBlockIndex) + StakeState.RewardInterval);
+                {
+                    var stakeState = context.Source.StakeState;
+                    if (context.Source.BlockIndex >= BlockPolicySource.V100290ObsoleteIndex)
+                    {
+                        if (stakeState.ReceivedBlockIndex > 0)
+                        {
+                            long lastStep = Math.DivRem(
+                                stakeState.ReceivedBlockIndex - stakeState.StartedBlockIndex,
+                                StakeState.RewardInterval,
+                                out _
+                            );
+
+                            return stakeState.StartedBlockIndex + (lastStep + 1) * StakeState.RewardInterval;
+                        }
+
+                        return stakeState.StartedBlockIndex + StakeState.RewardInterval;
+                    }
+
+                    return Math.Max(stakeState.StartedBlockIndex, stakeState.ReceivedBlockIndex) + StakeState.RewardInterval;
+                });
             Field<NonNullGraphType<StakeAchievementsType>>(
                 nameof(StakeState.Achievements),
                 description: "The staking achievements.",

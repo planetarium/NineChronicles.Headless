@@ -39,12 +39,13 @@ namespace NineChronicles.Headless.Tests.Common
                 NoMiner = true,
                 Render = false,
                 LogActionRenders = false,
-                Peers = ImmutableHashSet<Peer>.Empty,
+                Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 MessageTimeout = TimeSpan.FromMinutes(1),
                 TipTimeout = TimeSpan.FromMinutes(1),
                 DemandBuffer = 1150,
                 StaticPeers = ImmutableHashSet<BoundPeer>.Empty,
+                IceServers = ImmutableList<IceServer>.Empty,
             };
             return new NineChroniclesNodeService(privateKey, properties, BlockPolicy, NetworkType.Test);
         }

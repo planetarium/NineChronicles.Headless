@@ -5,16 +5,17 @@ using Bencodex.Types;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
+using Libplanet.Consensus;
 
 namespace NineChronicles.Headless.GraphTypes.States
 {
     public class StateContext : IAccountStateDelta
     {
-        public StateContext(AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter, long? blockIndex)
+        public StateContext(AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter, long blockIndex)
         {
             AccountStateGetter = accountStateGetter;
             AccountBalanceGetter = accountBalanceGetter;
-            this.BlockIndex = blockIndex;
+            BlockIndex = blockIndex;
         }
         public static ChampionArenaInfo[] AddRank(
            ChampionArenaInfo[] tuples)
@@ -87,13 +88,15 @@ namespace NineChronicles.Headless.GraphTypes.States
 
         public AccountStateGetter AccountStateGetter { get; }
         public AccountBalanceGetter AccountBalanceGetter { get; }
-        public long? BlockIndex { get; }
+        public long BlockIndex { get; }
 
         public IImmutableSet<Address> UpdatedAddresses => throw new System.NotImplementedException();
 
         public IImmutableSet<Address> StateUpdatedAddresses => throw new System.NotImplementedException();
 
         public IImmutableDictionary<Address, IImmutableSet<Currency>> UpdatedFungibleAssets => throw new System.NotImplementedException();
+
+        public IImmutableSet<Currency> TotalSupplyUpdatedCurrencies => throw new System.NotImplementedException();
 
         public IValue? GetState(Address address) =>
             AccountStateGetter(new[] { address })[0];
@@ -124,6 +127,19 @@ namespace NineChronicles.Headless.GraphTypes.States
             throw new System.NotImplementedException();
         }
 
-        
+        public IAccountStateDelta SetValidator(Validator validator)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public FungibleAssetValue GetTotalSupply(Currency currency)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public ValidatorSet GetValidatorSet()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

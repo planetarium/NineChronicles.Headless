@@ -6,6 +6,7 @@ using Libplanet.Action;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Explorer.Interfaces;
 using Libplanet.Explorer.Queries;
+using Libplanet.Explorer.Schemas;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -35,6 +36,14 @@ namespace NineChronicles.Headless
             services.TryAddSingleton<AddressType>();
             services.TryAddSingleton<ByteStringType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.PublicKeyType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.TxResultType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.TxResultType.FungibleAssetBalancesType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.TxResultType.UpdatedStateType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.TxStatusType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.BencodexValueType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.FungibleAssetValueType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.CurrencyType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.ValidatorType>();
 
             return services;
         }
@@ -51,6 +60,7 @@ namespace NineChronicles.Headless
         {
             services.AddLibplanetScalarTypes();
             services.AddBlockChainContext();
+            services.AddSingleton<LibplanetExplorerSchema<T>>();
 
             services.TryAddSingleton<ActionType<T>>();
             services.TryAddSingleton<BlockType<T>>();
@@ -59,6 +69,11 @@ namespace NineChronicles.Headless
             services.TryAddSingleton<BlockQuery<T>>();
             services.TryAddSingleton<TransactionQuery<T>>();
             services.TryAddSingleton<ExplorerQuery<T>>();
+            services.TryAddSingleton(_ => new StateQuery<T>()
+            {
+                Name = "LibplanetStateQuery",
+            });
+            services.TryAddSingleton<BlockPolicyType<T>>();
 
             return services;
         }

@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using GraphQL.Execution;
@@ -39,7 +38,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         public StandaloneMutationTest(ITestOutputHelper output) : base(output)
         {
-            _sheets = TableSheetsImporter.ImportSheets(Path.Join("..", "..", "..", "..", "Lib9c", "Lib9c", "TableCSV"));
+            _sheets = TableSheetsImporter.ImportSheets();
             _tableSheets = new TableSheets(_sheets);
         }
 
@@ -188,8 +187,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     id: transferTxId,
                     filtered: true);
                 Assert.NotNull(tx);
-                Assert.IsType<TransferAsset>(tx!.Actions.Single().InnerAction);
-                TransferAsset transferAsset = (TransferAsset)tx.Actions.Single().InnerAction;
+                Assert.IsType<TransferAsset>(tx!.CustomActions!.Single().InnerAction);
+                TransferAsset transferAsset = (TransferAsset)tx.CustomActions!.Single().InnerAction;
                 Assert.Equal(memo, transferAsset.Memo);
 
                 var expectedResult = new Dictionary<string, object>
@@ -296,8 +295,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }
             };
             Assert.Equal(expected, data!);
-            Assert.Single(tx.Actions);
-            var action = (CreateAvatar)tx.Actions.First().InnerAction;
+            Assert.Single(tx.CustomActions);
+            var action = (CreateAvatar)tx.CustomActions!.First().InnerAction;
             Assert.Equal(name, action.name);
             Assert.Equal(index, action.index);
             Assert.Equal(hair, action.hair);
@@ -345,7 +344,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             int stageId,
             List<Guid> costumeIds,
             List<Guid> equipmentIds,
-            List<Guid> consumableIds
+            List<Guid> consumableIds,
+            List<RuneSlotInfo> runeSlotInfos
         )
         {
             var playerPrivateKey = new PrivateKey();
@@ -367,6 +367,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 queryArgs += $", consumableIds: [{string.Join(",", consumableIds.Select(r => string.Format($"\"{r}\"")))}]";
             }
+
+            if (runeSlotInfos.Any())
+            {
+                queryArgs += $", runeSlotInfos: [{string.Join(",", runeSlotInfos.Select(r => $"{{slotIndex: {r.SlotIndex}, runeId: {r.RuneId}}}"))}]";
+            }
             var query = @$"mutation {{ action {{ hackAndSlash({queryArgs}) }} }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
             var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
@@ -383,14 +388,20 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }
             };
             Assert.Equal(expected, data);
-            Assert.Single(tx.Actions);
-            var action = (HackAndSlash)tx.Actions.First().InnerAction;
-            Assert.Equal(avatarAddress, action.avatarAddress);
-            Assert.Equal(worldId, action.worldId);
-            Assert.Equal(stageId, action.stageId);
-            Assert.Equal(costumeIds, action.costumes);
-            Assert.Equal(equipmentIds, action.equipments);
-            Assert.Equal(consumableIds, action.foods);
+            Assert.Single(tx.CustomActions);
+            var action = (HackAndSlash)tx.CustomActions!.First().InnerAction;
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            Assert.Equal(worldId, action.WorldId);
+            Assert.Equal(stageId, action.StageId);
+            Assert.Equal(costumeIds.ToHashSet(), action.Costumes.ToHashSet());
+            Assert.Equal(equipmentIds.ToHashSet(), action.Equipments.ToHashSet());
+            Assert.Equal(consumableIds.ToHashSet(), action.Foods.ToHashSet());
+            for (int i = 0; i < action.RuneInfos.Count; i++)
+            {
+                var runeSlotInfo = runeSlotInfos[i];
+                Assert.Equal(i, runeSlotInfo.SlotIndex);
+                Assert.Equal(i + 1, runeSlotInfo.RuneId);
+            }
         }
 
         public static IEnumerable<object?[]> HackAndSlashMember => new List<object?[]>
@@ -402,7 +413,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 2,
                 new List<Guid>(),
                 new List<Guid>(),
-                new List<Guid>()
+                new List<Guid>(),
+                new List<RuneSlotInfo>(),
             },
             new object?[]
             {
@@ -423,28 +435,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     Guid.NewGuid(),
                     Guid.NewGuid(),
                     Guid.NewGuid(),
-                }
-            },
-            new object?[]
-            {
-                new Address(),
-                2,
-                3,
-                new List<Guid>
-                {
-                    Guid.NewGuid(),
                 },
-                new List<Guid>
+                new List<RuneSlotInfo>
                 {
-                    Guid.NewGuid(),
-                    Guid.NewGuid(),
+                    new(0, 1),
+                    new(1, 2),
                 },
-                new List<Guid>
-                {
-                    Guid.NewGuid(),
-                    Guid.NewGuid(),
-                    Guid.NewGuid(),
-                }
             },
         };
 
@@ -478,8 +474,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }
             };
             Assert.Equal(expected, data);
-            Assert.Single(tx.Actions);
-            var action = (DailyReward)tx.Actions.First().InnerAction;
+            Assert.Single(tx.CustomActions);
+            var action = (DailyReward)tx.CustomActions!.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
         }
 
@@ -513,8 +509,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }
             };
             Assert.Equal(expected, data);
-            Assert.Single(tx.Actions);
-            var action = (ChargeActionPoint)tx.Actions.First().InnerAction;
+            Assert.Single(tx.CustomActions);
+            var action = (ChargeActionPoint)tx.CustomActions!.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
         }
 
@@ -544,8 +540,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }
             };
             Assert.Equal(expected, data);
-            Assert.Single(tx.Actions);
-            var action = (CombinationEquipment)tx.Actions.First().InnerAction;
+            Assert.Single(tx.CustomActions);
+            var action = (CombinationEquipment)tx.CustomActions!.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(recipeId, action.recipeId);
             Assert.Equal(slotIndex, action.slotIndex);
@@ -602,8 +598,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }
             };
             Assert.Equal(expected, data);
-            Assert.Single(tx.Actions);
-            var action = (ItemEnhancement)tx.Actions.First().InnerAction;
+            Assert.Single(tx.CustomActions);
+            var action = (ItemEnhancement)tx.CustomActions!.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(itemId, action.itemId);
             Assert.Equal(materialId, action.materialId);
@@ -654,8 +650,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }
             };
             Assert.Equal(expected, data);
-            Assert.Single(tx.Actions);
-            var action = (CombinationConsumable)tx.Actions.First().InnerAction;
+            Assert.Single(tx.CustomActions);
+            var action = (CombinationConsumable)tx.CustomActions!.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(recipeId, action.recipeId);
             Assert.Equal(slotIndex, action.slotIndex);
@@ -715,8 +711,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }
             };
             Assert.Equal(expected, data);
-            Assert.Single(tx.Actions);
-            var action = (MonsterCollect)tx.Actions.First().InnerAction;
+            Assert.Single(tx.CustomActions);
+            var action = (MonsterCollect)tx.CustomActions!.First().InnerAction;
             Assert.Equal(1, action.level);
         }
 
@@ -760,8 +756,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }
             };
             Assert.Equal(expected, data);
-            Assert.Single(tx.Actions);
-            var action = (ClaimMonsterCollectionReward)tx.Actions.First().InnerAction;
+            Assert.Single(tx.CustomActions);
+            var action = (ClaimMonsterCollectionReward)tx.CustomActions!.First().InnerAction;
             Assert.Equal(avatarAddress, action.avatarAddress);
         }
 
@@ -804,8 +800,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         //         }
         //     };
         //     Assert.Equal(expected, result.Data!);
-        //     Assert.Single(tx.Actions);
-        //     var action = (CancelMonsterCollect) tx.Actions.First().InnerAction;
+        //     Assert.Single(tx.CustomActions);
+        //     var action = (CancelMonsterCollect) tx.CustomActions!.First().InnerAction;
         //     Assert.Equal(1, action.level);
         //     Assert.Equal(0, action.collectRound);
         // }
@@ -815,7 +811,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Block<PolymorphicAction<ActionBase>> genesis =
                 MakeGenesisBlock(
                     default,
-                    new Currency("NCG", 2, minters: null),
+#pragma warning disable CS0618
+                    // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                    Currency.Legacy("NCG", 2, null),
+#pragma warning restore CS0618
                     ImmutableHashSet<Address>.Empty
                 );
             NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
@@ -839,7 +838,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Transaction<PolymorphicAction<ActionBase>> tx =
                 Transaction<PolymorphicAction<ActionBase>>.Create(
                     0,
-                    service.MinerPrivateKey,
+                    service.MinerPrivateKey!,
                     genesis.Hash,
                     new PolymorphicAction<ActionBase>[] { }
                 );
@@ -866,7 +865,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Block<PolymorphicAction<ActionBase>> genesis =
                 MakeGenesisBlock(
                     default,
-                    new Currency("NCG", 2, minters: null),
+#pragma warning disable CS0618
+                    // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                    Currency.Legacy("NCG", 2, null),
+#pragma warning restore CS0618
                     ImmutableHashSet<Address>.Empty
                 );
             NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, new PrivateKey());
@@ -882,7 +884,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Transaction<PolymorphicAction<ActionBase>> tx =
                 Transaction<PolymorphicAction<ActionBase>>.Create(
                     0,
-                    service.MinerPrivateKey,
+                    service.MinerPrivateKey!,
                     genesis.Hash,
                     new PolymorphicAction<ActionBase>[] { }
                 );
@@ -941,7 +943,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             IImmutableSet<Address> activatedAccounts,
             RankingState0? rankingState = null
         ) => BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
-            HashAlgorithmType.Of<SHA256>(),
             new PolymorphicAction<ActionBase>[]
             {
                 new InitializeStates(

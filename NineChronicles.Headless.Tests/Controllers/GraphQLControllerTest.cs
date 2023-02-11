@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive.Subjects;
@@ -39,9 +40,7 @@ namespace NineChronicles.Headless.Tests.Controllers
         {
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
-                HashAlgorithmType.Of<SHA256>()
-            );
+            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock();
             var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
                 new BlockPolicy<PolymorphicAction<ActionBase>>(),
                 new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
@@ -191,6 +190,7 @@ namespace NineChronicles.Headless.Tests.Controllers
                     AppProtocolVersion = AppProtocolVersion.Sign(new PrivateKey(), 0),
                     SwarmPrivateKey = new PrivateKey(),
                     Host = IPAddress.Loopback.ToString(),
+                    IceServers = new List<IceServer>(),
                 },
                 NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test),
                 NetworkType.Test);

@@ -19,7 +19,7 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class AgentStateContext : StateContext
         {
-            public AgentStateContext(AgentState agentState, AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter, long? blockIndex)
+            public AgentStateContext(AgentState agentState, AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter, long blockIndex)
                 : base(accountStateGetter, accountBalanceGetter, blockIndex)
             {
                 AgentState = agentState;
@@ -49,7 +49,8 @@ namespace NineChronicles.Headless.GraphTypes.States
                         x => new AvatarStateType.AvatarStateContext(
                             x,
                             context.Source.AccountStateGetter,
-                            context.Source.AccountBalanceGetter));
+                            context.Source.AccountBalanceGetter,
+                            context.Source.BlockIndex));
                 });
             Field<NonNullGraphType<StringGraphType>>(
                 "gold",

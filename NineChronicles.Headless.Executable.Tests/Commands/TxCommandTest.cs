@@ -1,10 +1,10 @@
 using System;
 using System.IO;
-using Bencodex;
 using Libplanet;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Tx;
+using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.Executable.Commands;
@@ -88,13 +88,26 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             Assert_Tx(1, filePath);
         }
 
-        [Fact]
-        public void Sign_ClaimStakeReward()
+        [Theory]
+        [InlineData(null, null)]
+        [InlineData(0, null)]
+        [InlineData(ClaimStakeReward.ObsoletedIndex - 1, null)]
+        [InlineData(ClaimStakeReward.ObsoletedIndex, null)]
+        [InlineData(ClaimStakeReward.ObsoletedIndex + 1, null)]
+        [InlineData(long.MaxValue, null)]
+        [InlineData(null, 1)]
+        [InlineData(null, 2)]
+        [InlineData(null, 3)]
+        public void Sign_ClaimStakeReward(long? blockIndex, int? actionVersion)
         {
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
             var actionCommand = new ActionCommand(_console);
             var avatarAddress = new Address();
-            actionCommand.ClaimStakeReward(avatarAddress.ToHex(), filePath);
+            actionCommand.ClaimStakeReward(
+                avatarAddress.ToHex(),
+                filePath,
+                blockIndex,
+                actionVersion);
             Assert_Tx(1, filePath);
         }
 

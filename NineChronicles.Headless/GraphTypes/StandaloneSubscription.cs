@@ -8,9 +8,9 @@ using Libplanet.Explorer.GraphTypes;
 using Libplanet.Headless;
 using Libplanet.Net;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Bencodex.Types;
@@ -22,9 +22,8 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States;
-using Serilog;
 using Libplanet.Blockchain;
-using Libplanet.Blockchain.Renderers;
+using Serilog;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -45,7 +44,7 @@ namespace NineChronicles.Headless.GraphTypes
 
         class PreloadStateType : ObjectGraphType<PreloadState>
         {
-            private class PreloadStateExtra
+            private sealed class PreloadStateExtra
             {
                 public string Type { get; }
                 public long CurrentCount { get; }
@@ -59,7 +58,7 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             }
 
-            private class PreloadStateExtraType : ObjectGraphType<PreloadStateExtra>
+            private sealed class PreloadStateExtraType : ObjectGraphType<PreloadStateExtra>
             {
                 public PreloadStateExtraType()
                 {
@@ -102,6 +101,10 @@ namespace NineChronicles.Headless.GraphTypes
             }
         }
 
+        private const int _blockRenderDegreeOfParallelism = 8;
+
+        private BlockHeader? _tipHeader;
+
         private ISubject<TipChanged> _subject = new ReplaySubject<TipChanged>();
 
         private StandaloneContext StandaloneContext { get; }
@@ -137,7 +140,10 @@ namespace NineChronicles.Headless.GraphTypes
                 Resolver = new FuncFieldResolver<DifferentAppProtocolVersionEncounter>(context =>
                     (DifferentAppProtocolVersionEncounter)context.Source!),
                 Subscriber = new EventStreamResolver<DifferentAppProtocolVersionEncounter>(context =>
-                    StandaloneContext.DifferentAppProtocolVersionEncounterSubject.AsObservable()),
+                    StandaloneContext.DifferentAppProtocolVersionEncounterSubject
+                        .Sample(standaloneContext.DifferentAppProtocolVersionEncounterInterval)
+                        .AsObservable()
+                    ),
             });
             AddField(new EventStreamFieldType
             {
@@ -145,7 +151,9 @@ namespace NineChronicles.Headless.GraphTypes
                 Type = typeof(NonNullGraphType<NotificationType>),
                 Resolver = new FuncFieldResolver<Notification>(context => (context.Source as Notification)!),
                 Subscriber = new EventStreamResolver<Notification>(context =>
-                    StandaloneContext.NotificationSubject.AsObservable()),
+                    StandaloneContext.NotificationSubject
+                        .Sample(standaloneContext.NotificationInterval)
+                        .AsObservable()),
             });
             AddField(new EventStreamFieldType
             {
@@ -153,49 +161,9 @@ namespace NineChronicles.Headless.GraphTypes
                 Type = typeof(NonNullGraphType<NodeExceptionType>),
                 Resolver = new FuncFieldResolver<NodeException>(context => (context.Source as NodeException)!),
                 Subscriber = new EventStreamResolver<NodeException>(context =>
-                    StandaloneContext.NodeExceptionSubject.AsObservable()),
-            });
-            AddField(new EventStreamFieldType
-            {
-                Name = nameof(MonsterCollectionState),
-                Type = typeof(NonNullGraphType<MonsterCollectionStateType>),
-                Resolver = new FuncFieldResolver<MonsterCollectionState>(context => (context.Source as MonsterCollectionState)!),
-                Subscriber = new EventStreamResolver<MonsterCollectionState>(context => standaloneContext.MonsterCollectionStateSubject.AsObservable()),
-            });
-            AddField(new EventStreamFieldType
-            {
-                Name = nameof(MonsterCollectionStatus),
-                Type = typeof(NonNullGraphType<MonsterCollectionStatusType>),
-                Resolver = new FuncFieldResolver<MonsterCollectionStatus>(context => (context.Source as MonsterCollectionStatus)!),
-                Subscriber = new EventStreamResolver<MonsterCollectionStatus>(context => standaloneContext.MonsterCollectionStatusSubject.AsObservable()),
-            });
-            AddField(new EventStreamFieldType
-            {
-                Name = $"{nameof(MonsterCollectionStatus)}ByAgent",
-                Arguments = new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Description = "A hex-encoded address of agent.",
-                        Name = "address",
-                    }
-                ),
-                Type = typeof(NonNullGraphType<MonsterCollectionStatusType>),
-                Resolver = new FuncFieldResolver<MonsterCollectionStatus>(context => (context.Source as MonsterCollectionStatus)!),
-                Subscriber = new EventStreamResolver<MonsterCollectionStatus>(SubscribeMonsterCollectionStatus),
-            });
-            AddField(new EventStreamFieldType
-            {
-                Name = $"{nameof(MonsterCollectionState)}ByAgent",
-                Arguments = new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Description = "A hex-encoded address of agent.",
-                        Name = "address",
-                    }
-                ),
-                Type = typeof(NonNullGraphType<MonsterCollectionStateType>),
-                Resolver = new FuncFieldResolver<MonsterCollectionState>(context => (context.Source as MonsterCollectionState)!),
-                Subscriber = new EventStreamResolver<MonsterCollectionState>(SubscribeMonsterCollectionState),
+                    StandaloneContext.NodeExceptionSubject
+                        .Sample(standaloneContext.NodeExceptionInterval)
+                        .AsObservable()),
             });
             AddField(new EventStreamFieldType
             {
@@ -213,13 +181,20 @@ namespace NineChronicles.Headless.GraphTypes
             });
 
             BlockRenderer blockRenderer = standaloneContext.NineChroniclesNodeService!.BlockRenderer;
-            blockRenderer.BlockSubject.Subscribe(RenderBlock);
+            blockRenderer.BlockSubject
+                .ObserveOn(NewThreadScheduler.Default)
+                .Subscribe(RenderBlock);
 
             ActionRenderer actionRenderer = standaloneContext.NineChroniclesNodeService!.ActionRenderer;
-            actionRenderer.EveryRender<ActionBase>().Subscribe(RenderAction);
-            actionRenderer.EveryRender<MonsterCollect>().Subscribe(RenderMonsterCollectionStateSubject);
-            actionRenderer.EveryRender<CancelMonsterCollect>().Subscribe(RenderMonsterCollectionStateSubject);
-            actionRenderer.EveryRender<ClaimMonsterCollectionReward>().Subscribe(RenderMonsterCollectionStateSubject);
+            actionRenderer.EveryRender<MonsterCollect>()
+                .ObserveOn(NewThreadScheduler.Default)
+                .Subscribe(RenderMonsterCollectionStateSubject);
+            actionRenderer.EveryRender<CancelMonsterCollect>()
+                .ObserveOn(NewThreadScheduler.Default)
+                .Subscribe(RenderMonsterCollectionStateSubject);
+            actionRenderer.EveryRender<ClaimMonsterCollectionReward>()
+                .ObserveOn(NewThreadScheduler.Default)
+                .Subscribe(RenderMonsterCollectionStateSubject);
         }
 
         private IObservable<MonsterCollectionState> SubscribeMonsterCollectionState(IResolveEventStreamContext context)
@@ -266,73 +241,93 @@ namespace NineChronicles.Headless.GraphTypes
         }
         private void RenderBlock((Block<PolymorphicAction<ActionBase>> OldTip, Block<PolymorphicAction<ActionBase>> NewTip) pair)
         {
-            _subject.OnNext(new TipChanged
-            {
-                Index = pair.NewTip.Index,
-                Hash = pair.NewTip.Hash,
-            }
+            _tipHeader = pair.NewTip.Header;
+            _subject.OnNext(
+                new TipChanged
+                {
+                    Index = pair.NewTip.Index,
+                    Hash = pair.NewTip.Hash,
+                }
             );
+
             if (StandaloneContext.NineChroniclesNodeService is null)
             {
                 throw new InvalidOperationException(
                     $"{nameof(StandaloneContext.NineChroniclesNodeService)} is null.");
             }
 
+            var sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+            Log.Debug("StandaloneSubscription.RenderBlock started");
+
             BlockChain<PolymorphicAction<ActionBase>> blockChain = StandaloneContext.NineChroniclesNodeService.BlockChain;
-            DelayedRenderer<PolymorphicAction<ActionBase>>? delayedRenderer = blockChain.GetDelayedRenderer();
-            BlockHash? offset = delayedRenderer?.Tip?.Hash;
             Currency currency =
                 new GoldCurrencyState(
-                    (Dictionary)blockChain.GetState(Addresses.GoldCurrency, offset)
+                    (Dictionary)blockChain.GetState(Addresses.GoldCurrency, _tipHeader.Hash)
                 ).Currency;
             var rewardSheet = new MonsterCollectionRewardSheet();
             var csv = blockChain.GetState(
                 Addresses.GetSheetAddress<MonsterCollectionRewardSheet>(),
-                offset
+                _tipHeader.Hash
             ).ToDotnetString();
             rewardSheet.Set(csv);
-            foreach (var (address, subjects) in StandaloneContext.AgentAddresses)
-            {
-                FungibleAssetValue agentBalance = blockChain.GetBalance(address, currency, offset);
-                subjects.balanceSubject.OnNext(agentBalance.GetQuantityString(true));
-                if (blockChain.GetState(address, offset) is Dictionary rawAgent)
+            Log.Debug($"StandaloneSubscription.RenderBlock target addresses. (count: {StandaloneContext.AgentAddresses.Count})");
+            StandaloneContext.AgentAddresses
+                .AsParallel()
+                .WithDegreeOfParallelism(_blockRenderDegreeOfParallelism)
+                .ForAll(kv =>
                 {
-                    AgentState agentState = new AgentState(rawAgent);
-                    Address deriveAddress =
-                        MonsterCollectionState.DeriveAddress(address, agentState.MonsterCollectionRound);
-                    if (blockChain.GetState(deriveAddress, offset) is Dictionary collectDict &&
-                        agentState.avatarAddresses.Any())
-                    {
-                        long tipIndex = blockChain.Tip.Index;
-                        var monsterCollectionState = new MonsterCollectionState(collectDict);
-                        List<MonsterCollectionRewardSheet.RewardInfo> rewards = monsterCollectionState.CalculateRewards(
-                            rewardSheet,
-                            tipIndex
-                        );
+                    Address address = kv.Key;
+                    (ReplaySubject<MonsterCollectionStatus> statusSubject, _, ReplaySubject<string> balanceSubject) =
+                        kv.Value;
+                    RenderForAgent(
+                        blockChain,
+                        _tipHeader,
+                        address,
+                        currency,
+                        statusSubject,
+                        balanceSubject,
+                        rewardSheet
+                    );
+                });
 
-                        var monsterCollectionStatus = new MonsterCollectionStatus(
-                            agentBalance,
-                            rewards,
-                            tipIndex,
-                            monsterCollectionState.IsLocked(tipIndex)
-                        );
-                        subjects.statusSubject.OnNext(monsterCollectionStatus);
-                    }
-                }
-            }
+            sw.Stop();
+            Log.Debug($"StandaloneSubscription.RenderBlock ended. elapsed: {sw.Elapsed}");
         }
 
-        private void RenderAction(ActionBase.ActionEvaluation<ActionBase> eval)
+        private void RenderForAgent(
+            BlockChain<PolymorphicAction<ActionBase>> blockChain,
+            BlockHeader tipHeader,
+            Address address,
+            Currency currency,
+            ReplaySubject<MonsterCollectionStatus> statusSubject,
+            ReplaySubject<string> balanceSubject,
+            MonsterCollectionRewardSheet rewardSheet)
         {
-            if (StandaloneContext.NineChroniclesNodeService is null)
+            FungibleAssetValue agentBalance = blockChain.GetBalance(address, currency, tipHeader.Hash);
+            balanceSubject.OnNext(agentBalance.GetQuantityString(true));
+            if (blockChain.GetState(address, tipHeader.Hash) is Dictionary rawAgent)
             {
-                throw new InvalidOperationException(
-                    $"{nameof(StandaloneContext.NineChroniclesNodeService)} is null.");
-            }
+                AgentState agentState = new AgentState(rawAgent);
+                Address deriveAddress =
+                    MonsterCollectionState.DeriveAddress(address, agentState.MonsterCollectionRound);
+                if (agentState.avatarAddresses.Any() &&
+                    blockChain.GetState(deriveAddress, tipHeader.Hash) is Dictionary collectDict)
+                {
+                    var monsterCollectionState = new MonsterCollectionState(collectDict);
+                    List<MonsterCollectionRewardSheet.RewardInfo> rewards = monsterCollectionState.CalculateRewards(
+                        rewardSheet,
+                        tipHeader.Index
+                    );
 
-            if (StandaloneContext.NineChroniclesNodeService.MinerPrivateKey is null)
-            {
-                Log.Information("PrivateKey is not set. please call SetPrivateKey() first");
+                    var monsterCollectionStatus = new MonsterCollectionStatus(
+                        agentBalance,
+                        rewards,
+                        tipHeader.Index,
+                        monsterCollectionState.IsLocked(tipHeader.Index)
+                    );
+                    statusSubject.OnNext(monsterCollectionStatus);
+                }
             }
         }
 
@@ -345,11 +340,16 @@ namespace NineChronicles.Headless.GraphTypes
                     $"{nameof(NineChroniclesNodeService)} is null.");
             }
 
+            // Skip when error.
+            if (eval.Exception is { })
+            {
+                return;
+            }
+
             foreach (var (address, subjects) in StandaloneContext.AgentAddresses)
             {
                 if (eval.Signer.Equals(address) &&
-                    eval.Exception is null &&
-                    service.BlockChain.GetState(address) is Dictionary agentDict)
+                    service.BlockChain.GetState(address, _tipHeader?.Hash) is Dictionary agentDict)
                 {
                     var agentState = new AgentState(agentDict);
                     Address deriveAddress = MonsterCollectionState.DeriveAddress(address, agentState.MonsterCollectionRound);

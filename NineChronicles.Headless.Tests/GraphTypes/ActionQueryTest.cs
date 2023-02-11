@@ -1,13 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
-using GraphQL;
 using GraphQL.Execution;
 using Libplanet;
 using Libplanet.Action;
@@ -20,6 +20,7 @@ using Libplanet.Store.Trie;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Helper;
+using Nekoyume.Model;
 using Nekoyume.Model.EnumType;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -34,15 +35,22 @@ namespace NineChronicles.Headless.Tests.GraphTypes
     {
         private readonly Codec _codec;
         private readonly StandaloneContext _standaloneContext;
+        private readonly PrivateKey _activationCodeSeed;
+        private readonly ActivationKey _activationKey;
+        private readonly byte[] _nonce;
 
         public ActionQueryTest()
         {
             _codec = new Codec();
+            _activationCodeSeed = new PrivateKey();
+            _nonce = new byte[16];
+            new Random().NextBytes(_nonce);
+            (_activationKey, PendingActivationState pending) = ActivationKey.Create(_activationCodeSeed, _nonce);
+
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             var minerPrivateKey = new PrivateKey();
             var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
-                HashAlgorithmType.Of<SHA256>(),
                 new PolymorphicAction<ActionBase>[]
                 {
                     new InitializeStates(
@@ -55,10 +63,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                         ),
                         adminAddressState: new AdminState(new PrivateKey().ToAddress(), 1500000),
                         activatedAccountsState: new ActivatedAccountsState(),
-                        goldCurrencyState: new GoldCurrencyState(new Currency("NCG", 2, minerPrivateKey.ToAddress())),
+#pragma warning disable CS0618
+                        // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                        goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, minerPrivateKey.ToAddress())),
+#pragma warning restore CS0618
                         goldDistributions: Array.Empty<GoldDistribution>(),
                         tableSheets: new Dictionary<string, string>(),
-                        pendingActivationStates: new PendingActivationState[]{ }
+                        pendingActivationStates: new[] { pending }
                     ),
                 },
                 privateKey: minerPrivateKey
@@ -92,7 +103,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 ["stake"] = ByteUtil.Hex(_codec.Encode(action.PlainValue)),
             };
-            Assert.Equal(expected, data);
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["stake"]));
+            var expectedPlainValue = _codec.Decode(ByteUtil.ParseHex((string)expected["stake"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var dictionary = (Dictionary)plainValue;
+            Assert.IsType<Stake>(DeserializeNCAction(dictionary).InnerAction);
+            var actualAmount = ((Dictionary)dictionary["values"])["am"].ToBigInteger();
+            var expectedAmount = ((Dictionary)((Dictionary)expectedPlainValue)["values"])["am"].ToBigInteger();
+            Assert.Equal(expectedAmount, actualAmount);
         }
 
         [Fact]
@@ -109,7 +127,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["claimStakeReward"]));
             Assert.IsType<Dictionary>(plainValue);
             var dictionary = (Dictionary)plainValue;
-            Assert.IsType<ClaimStakeReward>(DeserializeNCAction(dictionary).InnerAction);
+            Assert.IsAssignableFrom<IClaimStakeReward>(DeserializeNCAction(dictionary).InnerAction);
         }
 
         [Fact]
@@ -337,6 +355,330 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 #pragma warning restore CS0612
             action.LoadPlainValue(value);
             return action;
+        }
+
+        [Theory]
+        [InlineData(true, false, false, false, false)]
+        [InlineData(false, true, false, false, false)]
+        [InlineData(false, false, true, false, false)]
+        [InlineData(false, false, false, true, false)]
+        [InlineData(false, false, false, false, true)]
+        public async Task Raid(bool equipment, bool costume, bool food, bool payNcg, bool rune)
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var args = $"avatarAddress: \"{avatarAddress}\"";
+            var guid = Guid.NewGuid();
+            if (equipment)
+            {
+                args += $", equipmentIds: [\"{guid}\"]";
+            }
+
+            if (costume)
+            {
+                args += $", costumeIds: [\"{guid}\"]";
+            }
+
+            if (food)
+            {
+                args += $", foodIds: [\"{guid}\"]";
+            }
+
+            if (payNcg)
+            {
+                args += ", payNcg: true";
+            }
+
+            if (rune)
+            {
+                args += ", runeSlotInfos: [{ slotIndex: 1, runeId: 2 }]";
+            }
+
+            var query = $"{{ raid({args}) }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["raid"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<Raid>(polymorphicAction.InnerAction);
+
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            if (equipment)
+            {
+                var equipmentId = Assert.Single(action.EquipmentIds);
+                Assert.Equal(guid, equipmentId);
+            }
+            else
+            {
+                Assert.Empty(action.EquipmentIds);
+            }
+
+            if (costume)
+            {
+                var costumeId = Assert.Single(action.CostumeIds);
+                Assert.Equal(guid, costumeId);
+            }
+            else
+            {
+                Assert.Empty(action.CostumeIds);
+            }
+
+            if (food)
+            {
+                var foodId = Assert.Single(action.FoodIds);
+                Assert.Equal(guid, foodId);
+            }
+            else
+            {
+                Assert.Empty(action.FoodIds);
+            }
+
+            if (rune)
+            {
+                var runeSlotInfo = Assert.Single(action.RuneInfos);
+                Assert.Equal(1, runeSlotInfo.SlotIndex);
+                Assert.Equal(2, runeSlotInfo.RuneId);
+            }
+            else
+            {
+                Assert.Empty(action.RuneInfos);
+            }
+
+            Assert.Equal(payNcg, action.PayNcg);
+        }
+
+        [Fact]
+        public async Task ClaimRaidReward()
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var query = $"{{ claimRaidReward(avatarAddress: \"{avatarAddress}\") }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["claimRaidReward"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<ClaimRaidReward>(polymorphicAction.InnerAction);
+
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+        }
+
+        [Fact]
+        public async Task ClaimWorldBossKillReward()
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var query = $"{{ claimWorldBossKillReward(avatarAddress: \"{avatarAddress}\") }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["claimWorldBossKillReward"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<ClaimWordBossKillReward>(polymorphicAction.InnerAction);
+
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+        }
+
+        [Theory]
+        [InlineData(true, 2)]
+        [InlineData(false, 1)]
+        public async Task PrepareRewardAssets(bool mintersExist, int expectedCount)
+        {
+            var rewardPoolAddress = new PrivateKey().ToAddress();
+            var assets = "{quantity: 100, decimalPlaces: 0, ticker: \"CRYSTAL\"}";
+            if (mintersExist)
+            {
+                assets += $", {{quantity: 100, decimalPlaces: 2, ticker: \"NCG\", minters: [\"{rewardPoolAddress}\"]}}";
+            }
+            var query = $"{{ prepareRewardAssets(rewardPoolAddress: \"{rewardPoolAddress}\", assets: [{assets}]) }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["prepareRewardAssets"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<PrepareRewardAssets>(polymorphicAction.InnerAction);
+
+            Assert.Equal(rewardPoolAddress, action.RewardPoolAddress);
+            Assert.Equal(expectedCount, action.Assets.Count);
+
+            var crystal = action.Assets.First(r => r.Currency.Ticker == "CRYSTAL");
+            Assert.Equal(100, crystal.MajorUnit);
+            Assert.Equal(0, crystal.Currency.DecimalPlaces);
+            Assert.Null(crystal.Currency.Minters);
+
+            if (mintersExist)
+            {
+                var ncg = action.Assets.First(r => r.Currency.Ticker == "NCG");
+                Assert.Equal(100, ncg.MajorUnit);
+                Assert.Equal(2, ncg.Currency.DecimalPlaces);
+                var minter = Assert.Single(ncg.Currency.Minters!);
+                Assert.Equal(rewardPoolAddress, minter);
+            }
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task TransferAssets(bool exc)
+        {
+            var sender = new PrivateKey().ToAddress();
+            var recipients =
+                $"{{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 18, ticker: \"CRYSTAL\" }} }}, {{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 0, ticker: \"RUNE_FENRIR1\" }} }}";
+            if (exc)
+            {
+                var count = 0;
+                while (count < Nekoyume.Action.TransferAssets.RecipientsCapacity)
+                {
+                    recipients += $", {{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 18, ticker: \"CRYSTAL\" }} }}, {{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 0, ticker: \"RUNE_FENRIR1\" }} }}";
+                    count++;
+                }
+            }
+            var query = $"{{ transferAssets(sender: \"{sender}\", recipients: [{recipients}]) }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+
+            if (exc)
+            {
+                var error = Assert.Single(queryResult.Errors!);
+                Assert.Contains($"recipients must be less than or equal {Nekoyume.Action.TransferAssets.RecipientsCapacity}.", error.Message);
+            }
+            else
+            {
+                Assert.Null(queryResult.Errors);
+                var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+                var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["transferAssets"]));
+                Assert.IsType<Dictionary>(plainValue);
+                var polymorphicAction = DeserializeNCAction(plainValue);
+                var action = Assert.IsType<TransferAssets>(polymorphicAction.InnerAction);
+
+                Assert.Equal(sender, action.Sender);
+                Assert.Equal(2, action.Recipients.Count);
+                Assert.All(action.Recipients, recipient => Assert.Equal(sender, recipient.recipient));
+                Assert.All(action.Recipients, recipient => Assert.Equal(100, recipient.amount.MajorUnit));
+                Assert.All(action.Recipients, recipient => Assert.Null(recipient.amount.Currency.Minters));
+                foreach (var (ticker, decimalPlaces) in new[] { ("CRYSTAL", 18), ("RUNE_FENRIR1", 0) })
+                {
+                    var recipient = action.Recipients.First(r => r.amount.Currency.Ticker == ticker);
+                    Assert.Equal(decimalPlaces, recipient.amount.Currency.DecimalPlaces);
+                }
+            }
+        }
+
+        [Fact]
+        public async Task ActivateAccount()
+        {
+            var activationCode = _activationKey.Encode();
+            var signature = _activationKey.PrivateKey.Sign(_nonce);
+
+            var query = $"{{ activateAccount(activationCode: \"{activationCode}\") }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+
+            Assert.Null(queryResult.Errors);
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["activateAccount"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<ActivateAccount>(polymorphicAction.InnerAction);
+
+            Assert.Equal(signature, action.Signature);
+        }
+
+        [Theory]
+        [InlineData(-1, "ab", null, null, null, null, false)]
+        [InlineData(0, "ab", null, null, null, null, true)]
+        [InlineData(2, "ab", null, null, null, null, true)]
+        [InlineData(3, "ab", null, null, null, null, false)]
+        [InlineData(1, "", null, null, null, null, false)]
+        [InlineData(1, "a", null, null, null, null, false)]
+        [InlineData(1, "ab", null, null, null, null, true)]
+        [InlineData(1, "12345678901234567890", null, null, null, null, true)]
+        [InlineData(1, "123456789012345678901", null, null, null, null, false)]
+        [InlineData(1, "ab", 1, null, null, null, true)]
+        [InlineData(1, "ab", null, 1, null, null, true)]
+        [InlineData(1, "ab", null, null, 1, null, true)]
+        [InlineData(1, "ab", null, null, null, 1, true)]
+        [InlineData(1, "ab", 1, 1, 1, 1, true)]
+        public async Task CreateAvatar(
+            int index,
+            string name,
+            int? hair,
+            int? lens,
+            int? ear,
+            int? tail,
+            bool errorsShouldBeNull)
+        {
+            var sb = new StringBuilder();
+            sb.Append($"{{ createAvatar(index: {index}, name: \"{name}\"");
+            if (hair.HasValue)
+            {
+                sb.Append($", hair: {hair}");
+            }
+
+            if (lens.HasValue)
+            {
+                sb.Append($", lens: {lens}");
+            }
+
+            if (ear.HasValue)
+            {
+                sb.Append($", ear: {ear}");
+            }
+
+            if (tail.HasValue)
+            {
+                sb.Append($", tail: {tail}");
+            }
+
+            sb.Append(") }");
+            var query = sb.ToString();
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(
+                query,
+                standaloneContext: _standaloneContext);
+            if (!errorsShouldBeNull)
+            {
+                Assert.NotNull(queryResult.Errors);
+                return;
+            }
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["createAvatar"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<CreateAvatar>(polymorphicAction.InnerAction);
+            Assert.Equal(index, action.index);
+            Assert.Equal(name, action.name);
+            Assert.Equal(hair ?? 0, action.hair);
+            Assert.Equal(lens ?? 0, action.lens);
+            Assert.Equal(ear ?? 0, action.ear);
+            Assert.Equal(tail ?? 0, action.tail);
+        }
+
+        [Theory]
+        [InlineData(0, 1, true)] // Actually this cannot be executed, but can build a query.
+        [InlineData(1001, 1, true)]
+        [InlineData(1001, null, true)]
+        [InlineData(1001, -1, false)]
+        public async Task RuneEnhancement(int runeId, int? tryCount, bool isSuccessCase)
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var args = $"avatarAddress: \"{avatarAddress}\", runeId: {runeId}";
+            if (tryCount is not null)
+            {
+                args += $" tryCount: {tryCount}";
+            }
+
+            var query = $"{{runeEnhancement({args})}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            if (!isSuccessCase)
+            {
+                Assert.NotNull(queryResult.Errors);
+                return;
+            }
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["runeEnhancement"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<RuneEnhancement>(polymorphicAction.InnerAction);
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            Assert.Equal(runeId, action.RuneId);
+            Assert.Equal(tryCount ?? 1, action.TryCount);
         }
     }
 }
