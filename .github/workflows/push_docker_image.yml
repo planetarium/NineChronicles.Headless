@@ -11,6 +11,7 @@ on:
       - qa-*
       - 2022q3-worldboss
       - test/block-transport
+      - hotfix/v100361/test-block-transport-with-miner-bugfix
     tags:
       - v*
   workflow_dispatch:
