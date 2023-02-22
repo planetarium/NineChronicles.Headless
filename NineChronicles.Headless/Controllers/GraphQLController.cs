@@ -19,7 +19,7 @@ using Nekoyume.Model.Item;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Requests;
 using Serilog;
-
+using Lib9c.Renderers;
 
 namespace NineChronicles.Headless.Controllers
 {
@@ -229,7 +229,7 @@ namespace NineChronicles.Headless.Controllers
             }
         }
 
-        private void NotifyAction(ActionBase.ActionEvaluation<ActionBase> eval)
+        private void NotifyAction(ActionEvaluation<ActionBase> eval)
         {
             if (StandaloneContext.NineChroniclesNodeService is null)
             {

@@ -1,4 +1,4 @@
-using Lib9c.Renderer;
+using Lib9c.Renderers;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;

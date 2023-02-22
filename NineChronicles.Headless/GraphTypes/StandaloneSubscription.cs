@@ -2,7 +2,7 @@ using GraphQL;
 using GraphQL.Resolvers;
 using GraphQL.Subscription;
 using GraphQL.Types;
-using Lib9c.Renderer;
+using Lib9c.Renderers;
 using Libplanet.Blocks;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Headless;
@@ -331,7 +331,7 @@ namespace NineChronicles.Headless.GraphTypes
             }
         }
 
-        private void RenderMonsterCollectionStateSubject<T>(ActionBase.ActionEvaluation<T> eval)
+        private void RenderMonsterCollectionStateSubject<T>(ActionEvaluation<T> eval)
             where T : ActionBase
         {
             if (!(StandaloneContext.NineChroniclesNodeService is { } service))
