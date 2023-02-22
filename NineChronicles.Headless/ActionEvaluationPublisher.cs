@@ -16,7 +16,7 @@ using Bencodex;
 using Bencodex.Types;
 using Grpc.Core;
 using Grpc.Net.Client;
-using Lib9c.Renderer;
+using Lib9c.Renderers;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Blocks;
@@ -497,21 +497,21 @@ namespace NineChronicles.Headless
                 await _hub.DisposeAsync();
             }
 
-            private bool ContainsAddressToBroadcast(ActionBase.ActionEvaluation<ActionBase> ev)
+            private bool ContainsAddressToBroadcast(ActionEvaluation<ActionBase> ev)
             {
                 return _context.RpcRemoteSever
                     ? ContainsAddressToBroadcastRemoteClient(ev)
                     : ContainsAddressToBroadcastLocal(ev);
             }
 
-            private bool ContainsAddressToBroadcastLocal(ActionBase.ActionEvaluation<ActionBase> ev)
+            private bool ContainsAddressToBroadcastLocal(ActionEvaluation<ActionBase> ev)
             {
                 var updatedAddresses =
                     ev.OutputStates.UpdatedAddresses.Union(ev.OutputStates.UpdatedFungibleAssets.Keys);
                 return _context.AddressesToSubscribe.Any(updatedAddresses.Add(ev.Signer).Contains);
             }
 
-            private bool ContainsAddressToBroadcastRemoteClient(ActionBase.ActionEvaluation<ActionBase> ev)
+            private bool ContainsAddressToBroadcastRemoteClient(ActionEvaluation<ActionBase> ev)
             {
                 var updatedAddresses =
                     ev.OutputStates.UpdatedAddresses.Union(ev.OutputStates.UpdatedFungibleAssets.Keys);

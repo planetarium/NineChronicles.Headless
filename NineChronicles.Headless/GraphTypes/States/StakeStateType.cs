@@ -10,6 +10,7 @@ using NineChronicles.Headless.GraphTypes.States.Models.Item;
 using NineChronicles.Headless.GraphTypes.States.Models.Mail;
 using NineChronicles.Headless.GraphTypes.States.Models.Quest;
 using Nekoyume.BlockChain.Policy;
+using Nekoyume;
 
 namespace NineChronicles.Headless.GraphTypes.States
 {
@@ -57,7 +58,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context =>
                 {
                     var stakeState = context.Source.StakeState;
-                    if (context.Source.BlockIndex >= BlockPolicySource.V100290ObsoleteIndex)
+                    if (context.Source.BlockIndex >= ActionObsoleteConfig.V100290ObsoleteIndex)
                     {
                         if (stakeState.ReceivedBlockIndex > 0)
                         {
