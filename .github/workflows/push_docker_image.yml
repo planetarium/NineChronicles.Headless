@@ -10,6 +10,7 @@ on:
       - previewnet
       - qa-*
       - 2022q3-worldboss
+      - 2023q1-previewnet
     tags:
       - v*
   workflow_dispatch:
