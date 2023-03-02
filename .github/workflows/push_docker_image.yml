@@ -10,6 +10,7 @@ on:
       - previewnet
       - qa-*
       - 2022q3-worldboss
+      - test/libplanet-logging
     tags:
       - v*
   workflow_dispatch:
