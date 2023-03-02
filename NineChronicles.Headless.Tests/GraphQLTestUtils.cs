@@ -1,9 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
+using Libplanet.Action;
+using Libplanet.Blockchain;
+using Libplanet.Blockchain.Policies;
+using Libplanet.Crypto;
+using Libplanet.Store;
+using Libplanet.Store.Trie;
 using Microsoft.Extensions.DependencyInjection;
+using Nekoyume.Action;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests
@@ -53,6 +61,60 @@ namespace NineChronicles.Headless.Tests
                 UserContext = userContext!,
                 Root = source,
             });
+        }
+
+        public static NCAction DeserializeNCAction(IValue value)
+        {
+#pragma warning disable CS0612
+            NCAction action = new NCAction();
+#pragma warning restore CS0612
+            action.LoadPlainValue(value);
+            return action;
+        }
+
+        public static StandaloneContext CreateStandaloneContext()
+        {
+            var store = new DefaultStore(null);
+            var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
+            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock();
+            var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
+                new BlockPolicy<PolymorphicAction<ActionBase>>(),
+                new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
+                store,
+                stateStore,
+                genesisBlock);
+            return new StandaloneContext
+            {
+                BlockChain = blockchain,
+                Store = store,
+            };
+        }
+
+        public static StandaloneContext CreateStandaloneContext(
+            InitializeStates initializeStates,
+            PrivateKey minerPrivateKey
+        )
+        {
+            var store = new DefaultStore(null);
+            var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
+            var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
+                new PolymorphicAction<ActionBase>[]
+                {
+                    initializeStates,
+                },
+                privateKey: minerPrivateKey
+            );
+            var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
+                new BlockPolicy<PolymorphicAction<ActionBase>>(),
+                new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
+                store,
+                stateStore,
+                genesisBlock);
+            return new StandaloneContext
+            {
+                BlockChain = blockchain,
+                Store = store,
+            };
         }
     }
 }

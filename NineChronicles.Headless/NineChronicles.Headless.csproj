@@ -4,34 +4,51 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CodeAnalysisRuleSet>..\NineChronicles.Headless.Common.ruleset</CodeAnalysisRuleSet>
     <Nullable>enable</Nullable>
+    <Configurations>Debug;Release;DevEx</Configurations>
+    <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'DevEx' ">
+    <DebugSymbols Condition=" '$(DebugSymbols)' == '' ">true</DebugSymbols>
+    <Optimize Condition=" '$(Optimize)' == '' ">false</Optimize>
+    <DefineConstants>$(DefineConstants);TRACE;LIB9C_DEV_EXTENSIONS</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Lib9c\Lib9c.MessagePack\Lib9c.MessagePack.csproj" />
     <ProjectReference Include="..\Lib9c\Lib9c.Miner\Lib9c.Miner.csproj" />
     <ProjectReference Include="..\Lib9c\Lib9c\Lib9c.csproj" />
-    <ProjectReference Include="..\Lib9c\Lib9c.DevExtensions\Lib9c.DevExtensions.csproj" />
+    <ProjectReference Include="..\Lib9c\Lib9c.Policy\Lib9c.Policy.csproj" />
     <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet.Explorer\Libplanet.Explorer.csproj" />
     <ProjectReference Include="..\Lib9c\Libplanet.Crypto.Secp256k1\Libplanet.Crypto.Secp256k1.csproj" />
     <ProjectReference Include="..\Libplanet.Headless\Libplanet.Headless.csproj" />
     <ProjectReference Include="..\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared.csproj" />
   </ItemGroup>
+
   <ItemGroup>
+    <PackageReference Include="AspNetCoreRateLimit" Version="5.0.0" />
     <PackageReference Include="GraphQL.Server.Authorization.AspNetCore" Version="5.1.1" />
     <PackageReference Include="GraphQL.Server.Transports.AspNetCore" Version="5.1.1" />
     <PackageReference Include="GraphQL.Server.Transports.AspNetCore.SystemTextJson" Version="5.1.1" />
     <PackageReference Include="GraphQL.Server.Transports.Subscriptions.WebSockets" Version="5.1.1" />
     <PackageReference Include="GraphQL.Server.Ui.Playground" Version="5.1.1" />
     <PackageReference Include="GraphQL.SystemTextJson" Version="4.7.1" />
-    <PackageReference Include="MagicOnion" Version="4.3.1" />
-    <PackageReference Include="MagicOnion.Abstractions" Version="4.5.2" />
-    <PackageReference Include="MagicOnion.Server" Version="4.3.1" />
-    <PackageReference Include="MagicOnion.Server.HttpGateway" Version="4.3.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="MagicOnion" Version="5.0.3" />
+    <PackageReference Include="MagicOnion.Abstractions" Version="5.0.3" />
+    <PackageReference Include="MagicOnion.Server" Version="5.0.3" />
+    <PackageReference Include="MagicOnion.Server.HttpGateway" Version="5.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="Sentry" Version="3.23.0" />
     <PackageReference Include="Sentry.AspNetCore.Grpc" Version="3.22.0" />
     <PackageReference Include="Sentry.DiagnosticSource" Version="3.22.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
     <PackageReference Include="GraphQL" Version="4.7.1" />
+    <PackageReference Include="OpenTelemetry" Version="1.4.0-rc.2" />
+    <PackageReference Include="OpenTelemetry.Api" Version="1.4.0-rc.2" />
+    <PackageReference Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" Version="1.4.0-rc.2" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.4.0-rc.2" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.0.0-rc9.11" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.1.0-beta.3" />
     <PackageReference Include="SonarAnalyzer.CSharp" Version="8.49.0.57237">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -41,6 +58,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
+
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>

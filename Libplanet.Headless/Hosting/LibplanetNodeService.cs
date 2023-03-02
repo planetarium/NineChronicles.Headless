@@ -17,6 +17,7 @@ using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Net.Protocols;
+using Libplanet.Net.Transports;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
@@ -80,6 +81,7 @@ namespace Libplanet.Headless.Hosting
             Progress<PreloadState> preloadProgress,
             Action<RPCException, string> exceptionHandlerAction,
             Action<bool> preloadStatusHandlerAction,
+            IActionTypeLoader actionTypeLoader,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false
         )
@@ -148,28 +150,6 @@ namespace Libplanet.Headless.Hosting
 
             var blockChainStates = new BlockChainStates<T>(Store, StateStore);
 
-            Type UnwrapPolymorphicAction(Type type)
-            {
-                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(PolymorphicAction<>))
-                {
-                    return type.GetGenericArguments()[0];
-                }
-
-                return type;
-            }
-
-            IActionTypeLoader MakeStaticActionTypeLoader() => new StaticActionTypeLoader(
-                Assembly.GetEntryAssembly() is { } entryAssembly
-                    ? new[] { UnwrapPolymorphicAction(typeof(T)).Assembly, entryAssembly }
-                    : new[] { UnwrapPolymorphicAction(typeof(T)).Assembly },
-                typeof(T)
-            );
-
-            IActionTypeLoader actionTypeLoader = properties.DynamicActionTypeLoader is { } actionTypeLoaderConfiguration
-                ? new DynamicActionTypeLoader(actionTypeLoaderConfiguration.BasePath,
-                    actionTypeLoaderConfiguration.AssemblyFileName,
-                    actionTypeLoaderConfiguration.HardForks.OrderBy(pair => pair.SinceBlockIndex))
-                : MakeStaticActionTypeLoader();
             BlockChain = new BlockChain<T>(
                 policy: blockPolicy,
                 store: Store,
@@ -216,27 +196,31 @@ namespace Libplanet.Headless.Hosting
                 DifferentAppProtocolVersionEncountered = Properties.DifferentAppProtocolVersionEncountered,
             };
             var hostOptions = new Net.HostOptions(Properties.Host, shuffledIceServers, Properties.Port ?? default);
+            var swarmOptions = new SwarmOptions
+            {
+                BranchpointThreshold = 50,
+                StaticPeers = Properties.StaticPeers,
+                MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
+                BucketSize = Properties.BucketSize,
+                MaximumPollPeers = Properties.MaximumPollPeers,
+                TimeoutOptions = new TimeoutOptions
+                {
+                    MaxTimeout = TimeSpan.FromSeconds(50),
+                    GetBlockHashesTimeout = TimeSpan.FromSeconds(50),
+                    GetBlocksBaseTimeout = TimeSpan.FromSeconds(5),
+                },
+            };
 
+            var transport = NetMQTransport.Create(
+                Properties.SwarmPrivateKey,
+                appProtocolVersionOptions,
+                hostOptions,
+                swarmOptions.MessageTimestampBuffer).ConfigureAwait(false).GetAwaiter().GetResult();
             Swarm = new Swarm<T>(
                 BlockChain,
                 Properties.SwarmPrivateKey,
-                appProtocolVersionOptions: appProtocolVersionOptions,
-                hostOptions: hostOptions,
-                options: new SwarmOptions
-                {
-                    BranchpointThreshold = 50,
-                    StaticPeers = Properties.StaticPeers,
-                    MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
-                    BucketSize = Properties.BucketSize,
-                    MaximumPollPeers = Properties.MaximumPollPeers,
-                    TimeoutOptions = new TimeoutOptions
-                    {
-                        MaxTimeout = TimeSpan.FromSeconds(50),
-                        GetBlockHashesTimeout = TimeSpan.FromSeconds(50),
-                        GetBlocksBaseTimeout = TimeSpan.FromSeconds(5),
-                    },
-                }
-            );
+                transport,
+                swarmOptions);
 
             PreloadEnded = new AsyncManualResetEvent();
             BootstrapEnded = new AsyncManualResetEvent();

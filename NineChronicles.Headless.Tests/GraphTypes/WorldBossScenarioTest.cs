@@ -69,45 +69,27 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 [1] = true,
                 [2] = false,
             };
-            var store = new DefaultStore(null);
-            var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             var minerPrivateKey = new PrivateKey();
-            var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
-                new PolymorphicAction<ActionBase>[]
-                {
-                    new InitializeStates(
-                        rankingState: new RankingState0(),
-                        shopState: new ShopState(),
-                        gameConfigState: new GameConfigState(),
-                        redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                            .Add("address", RedeemCodeState.Address.Serialize())
-                            .Add("map", Bencodex.Types.Dictionary.Empty)
-                        ),
-                        adminAddressState: new AdminState(new PrivateKey().ToAddress(), 1500000),
-                        activatedAccountsState: new ActivatedAccountsState(),
+            var initializeStates = new InitializeStates(
+                rankingState: new RankingState0(),
+                shopState: new ShopState(),
+                gameConfigState: new GameConfigState(),
+                redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                    .Add("address", RedeemCodeState.Address.Serialize())
+                    .Add("map", Bencodex.Types.Dictionary.Empty)
+                ),
+                adminAddressState: new AdminState(new PrivateKey().ToAddress(), 1500000),
+                activatedAccountsState: new ActivatedAccountsState(),
 #pragma warning disable CS0618
-                        // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
-                        goldCurrencyState:
-                        new GoldCurrencyState(Currency.Legacy("NCG", 2, minerPrivateKey.ToAddress())),
+                // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                goldCurrencyState:
+                new GoldCurrencyState(Currency.Legacy("NCG", 2, minerPrivateKey.ToAddress())),
 #pragma warning restore CS0618
-                        goldDistributions: Array.Empty<GoldDistribution>(),
-                        tableSheets: new Dictionary<string, string>(),
-                        pendingActivationStates: new PendingActivationState[] { }
-                    ),
-                },
-                privateKey: minerPrivateKey
+                goldDistributions: Array.Empty<GoldDistribution>(),
+                tableSheets: new Dictionary<string, string>(),
+                pendingActivationStates: new PendingActivationState[] { }
             );
-            var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
-                new BlockPolicy<PolymorphicAction<ActionBase>>(),
-                new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
-                store,
-                stateStore,
-                genesisBlock);
-            _standaloneContext = new StandaloneContext
-            {
-                BlockChain = blockchain,
-                Store = store,
-            };
+            _standaloneContext = CreateStandaloneContext(initializeStates, minerPrivateKey);
         }
 
         [Theory]

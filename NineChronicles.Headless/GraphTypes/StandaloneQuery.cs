@@ -430,6 +430,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<ActionQuery>>(
                 name: "actionQuery",
+                description: "Query to create action transaction.",
                 resolve: context => new ActionQuery(standaloneContext));
 
             Field<NonNullGraphType<ActionTxQuery>>(

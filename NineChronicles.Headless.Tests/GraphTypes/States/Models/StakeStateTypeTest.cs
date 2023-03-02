@@ -5,6 +5,7 @@ using Bencodex.Types;
 using GraphQL.Execution;
 using Libplanet;
 using Libplanet.Assets;
+using Nekoyume;
 using Nekoyume.BlockChain.Policy;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
@@ -127,7 +128,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             {
                 new StakeState(Fixtures.StakeStateAddress, 10, 50412, 201610, new StakeState.StakeAchievements()),
                 100,
-                BlockPolicySource.V100290ObsoleteIndex,
+                ActionObsoleteConfig.V100290ObsoleteIndex,
                 new Dictionary<string, object>
                 {
                     ["address"] = Fixtures.StakeStateAddress.ToString(),
