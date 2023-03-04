@@ -9,7 +9,9 @@ using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Arena;
 using Nekoyume.Extensions;
+using Nekoyume.Model.Arena;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -102,6 +104,109 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return null;
                 });
+            Field<ChampionshipArenaStateType>(
+                name: "championshipArena",
+                description: "State for championShip arena.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "championshipid",
+                        Description = "Championship Id, increases each season"
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "round",
+                        Description = "The round number"
+                    }),
+                resolve: context =>
+                {
+                    var championshipId = context.GetArgument<int>("championshipid");
+                    var round = context.GetArgument<int>("round");
+                    var sheets = context.Source.GetSheets(sheetTypes: new[]
+                    {
+                        typeof(ArenaSheet)
+                    });
+                    var arenaSheet = sheets.FirstOrDefault().Value.sheet as ArenaSheet;
+                    if (arenaSheet == null || !arenaSheet.TryGetValue(championshipId, out var arenaRow))
+                    {
+                        throw new SheetRowNotFoundException(nameof(ArenaSheet),
+                            $"championship Id : {championshipId}");
+                    }
+                    if (!arenaRow.TryGetRound(round, out var roundData))
+                    {
+                        throw new RoundNotFoundException(
+                            $"[{nameof(BattleArena)}] ChampionshipId({arenaRow.ChampionshipId}) - round({round})");
+                    }
+
+                    var arenaParticipantsAdr =
+                        ArenaParticipants.DeriveAddress(roundData.ChampionshipId, roundData.Round);
+                    if (!context.Source.TryGetArenaParticipants(arenaParticipantsAdr, out var arenaParticipants))
+                    {
+                        throw new ArenaParticipantsNotFoundException(
+                            $"[{nameof(BattleArena)}] ChampionshipId({roundData.ChampionshipId}) - round({roundData.Round})");
+                    }
+                    var championshipInfo = new ChampionshipArenaState();
+                    championshipInfo.StartIndex = roundData.StartBlockIndex;
+                    championshipInfo.EndIndex = roundData.EndBlockIndex;
+                    championshipInfo.Address = arenaParticipantsAdr;
+                    List<ChampionArenaInfo> arenaInformations = new List<ChampionArenaInfo>();
+                    var gameConfigState = context.Source.GetGameConfigState();
+                    var interval = gameConfigState.DailyArenaInterval;
+                    var currentTicketResetCount = ArenaHelper.GetCurrentTicketResetCount(
+                                    context.Source.BlockIndex!, roundData.StartBlockIndex, interval);
+                    foreach (var participant in arenaParticipants.AvatarAddresses)
+                    {
+                        var arenaInformationAdr =
+                            ArenaInformation.DeriveAddress(participant, roundData.ChampionshipId, roundData.Round);
+                        if (!context.Source.TryGetArenaInformation(arenaInformationAdr, out var arenaInformation))
+                        {
+                            continue;
+                        }
+                        var arenaScoreAdr =
+                                ArenaScore.DeriveAddress(participant, roundData.ChampionshipId, roundData.Round);
+                        if (!context.Source.TryGetArenaScore(arenaScoreAdr, out var arenaScore))
+                        {
+                            continue;
+                        }
+                        var ticket = arenaInformation.Ticket;
+                        if (ticket == 0 && arenaInformation.TicketResetCount < currentTicketResetCount)
+                        {
+                            ticket = 8;
+                        }
+                        var avatar = context.Source.GetAvatarStateV2(participant);
+                        var arenaAvatarStateAdr = ArenaAvatarState.DeriveAddress(participant);
+                        var arenaAvatarState = context.Source.GetArenaAvatarState(arenaAvatarStateAdr, avatar);
+                        var arenaInfo = new ChampionArenaInfo
+                        {
+                            AvatarAddress = participant,
+                            AgentAddress = avatar.agentAddress,
+                            AvatarName = avatar.name,
+                            Win = arenaInformation.Win,
+                            Ticket = ticket,
+                            Lose = arenaInformation.Lose,
+                            Score = arenaScore.Score,
+                            PurchasedTicketCount = arenaInformation.PurchasedTicketCount,
+                            TicketResetCount = arenaInformation.TicketResetCount,
+                            Active = true,
+                            Equipment = arenaAvatarState.Equipments,
+                            Costumes = arenaAvatarState.Costumes
+                        };
+                        arenaInformations.Add(arenaInfo);
+                    }
+
+                    var ranks = StateContext.AddRank(arenaInformations.ToArray());
+                    foreach (var rank in ranks)
+                    {
+                        var info = arenaInformations.First(a => a.AvatarAddress == rank.AvatarAddress);
+                        if (info != null)
+                        {
+                            info.Rank = rank.Rank;
+                        }
+                    }
+                    var orderInfos = arenaInformations.OrderBy(a => a.Rank).ToList();
+                    championshipInfo.OrderedArenaInfos = orderInfos;
+                    return championshipInfo;
+                });
             Field<WeeklyArenaStateType>(
                 name: "weeklyArena",
                 description: "State for weekly arena.",
@@ -109,7 +214,7 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "index",
-                        Description = "WeeklyArenaState index. It increases every 56,000 blocks."
+                        Description = "Old WeeklyArenaState index. It increases every 56,000 blocks."
                     }),
                 resolve: context =>
                 {
