@@ -4,17 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Subjects;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using Libplanet;
 using Libplanet.Action;
-using Libplanet.Assets;
-using Libplanet.Blockchain;
-using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
 using Libplanet.Net;
-using Libplanet.Store;
-using Libplanet.Store.Trie;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -24,8 +18,10 @@ using NineChronicles.Headless.Controllers;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Properties;
 using NineChronicles.Headless.Requests;
+using NineChronicles.Headless.Tests.Common;
 using Xunit;
 using IPAddress = System.Net.IPAddress;
+using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 
 namespace NineChronicles.Headless.Tests.Controllers
 {
@@ -38,20 +34,7 @@ namespace NineChronicles.Headless.Tests.Controllers
 
         public GraphQLControllerTest()
         {
-            var store = new DefaultStore(null);
-            var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock();
-            var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
-                new BlockPolicy<PolymorphicAction<ActionBase>>(),
-                new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
-                store,
-                stateStore,
-                genesisBlock);
-            _standaloneContext = new StandaloneContext
-            {
-                BlockChain = blockchain,
-                Store = store,
-            };
+            _standaloneContext = CreateStandaloneContext();
             _configuration = new ConfigurationBuilder().AddInMemoryCollection().Build();
             _httpContextAccessor = new HttpContextAccessor();
             _httpContextAccessor.HttpContext = new DefaultHttpContext();
@@ -156,6 +139,7 @@ namespace NineChronicles.Headless.Tests.Controllers
             {
                 _standaloneContext.AgentAddresses[address] = (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(), new ReplaySubject<string>());
             }
+
             Assert.Equal(exist, _standaloneContext.AgentAddresses.Any());
             _controller.RemoveSubscribe(new AddressRequest
             {
@@ -192,8 +176,9 @@ namespace NineChronicles.Headless.Tests.Controllers
                     Host = IPAddress.Loopback.ToString(),
                     IceServers = new List<IceServer>(),
                 },
-                NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test),
-                NetworkType.Test);
+                NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test, StaticActionTypeLoaderSingleton.Instance),
+                NetworkType.Test,
+                StaticActionTypeLoaderSingleton.Instance);
         }
     }
 }

@@ -5,11 +5,23 @@
     <IsPublishable>false</IsPublishable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <NoWarn>$(NoWarn);CS8602;CS8604</NoWarn>
+    <NoWarn>$(NoWarn);CS8600;CS8602;CS8604;CS8618;CS8625</NoWarn>
     <CodeAnalysisRuleSet>..\NineChronicles.Headless.Common.ruleset</CodeAnalysisRuleSet>
     <Nullable>enable</Nullable>
+    <Configurations>Debug;Release;DevEx</Configurations>
+    <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'DevEx' ">
+    <DebugSymbols Condition=" '$(DebugSymbols)' == '' ">true</DebugSymbols>
+    <Optimize Condition=" '$(Optimize)' == '' ">false</Optimize>
+    <DefineConstants>$(DefineConstants);TRACE;LIB9C_DEV_EXTENSIONS</DefineConstants>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <Compile Include="..\Lib9c\.Lib9c.Tests\TableSheets.cs" Link="TableSheets.cs" />
+    <Compile Include="..\Lib9c\.Lib9c.Tests\TableSheetsImporter.cs" Link="TableSheetsImporter.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
@@ -30,7 +42,6 @@
     <ProjectReference Include="..\NineChronicles.Headless.Executable.Tests\NineChronicles.Headless.Executable.Tests.csproj" />
     <ProjectReference Include="..\NineChronicles.Headless.Executable\NineChronicles.Headless.Executable.csproj" />
     <ProjectReference Include="..\NineChronicles.Headless\NineChronicles.Headless.csproj" />
-    <ProjectReference Include="..\Lib9c\.Lib9c.Tests\Lib9c.Tests.csproj" />
   </ItemGroup>
 
 </Project>

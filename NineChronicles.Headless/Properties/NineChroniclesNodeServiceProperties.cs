@@ -2,6 +2,7 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using Libplanet;
+using Libplanet.Action;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
@@ -12,6 +13,11 @@ namespace NineChronicles.Headless.Properties
 {
     public class NineChroniclesNodeServiceProperties
     {
+        public NineChroniclesNodeServiceProperties(IActionTypeLoader actionTypeLoader)
+        {
+            ActionTypeLoader = actionTypeLoader;
+        }
+
         /// <summary>
         /// Gets or sets a private key that is used in mining and signing transactions,
         /// which is different with the private key used in swarm to sign messages.
@@ -44,6 +50,7 @@ namespace NineChronicles.Headless.Properties
 
         public int TxQuotaPerSigner { get; set; }
 
+        public IActionTypeLoader ActionTypeLoader { get; init; }
 
         public static LibplanetNodeServiceProperties<NineChroniclesActionType>
             GenerateLibplanetNodeServiceProperties(
@@ -73,8 +80,7 @@ namespace NineChronicles.Headless.Properties
                 int minimumBroadcastTarget = 10,
                 int bucketSize = 16,
                 string chainTipStaleBehaviorType = "reboot",
-                int maximumPollPeers = int.MaxValue,
-                DynamicActionTypeLoaderConfiguration? dynamicActionTypeLoader = null)
+                int maximumPollPeers = int.MaxValue)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
@@ -118,7 +124,6 @@ namespace NineChronicles.Headless.Properties
                 BucketSize = bucketSize,
                 ChainTipStaleBehavior = chainTipStaleBehaviorType,
                 MaximumPollPeers = maximumPollPeers,
-                DynamicActionTypeLoader = dynamicActionTypeLoader,
             };
         }
 

@@ -100,7 +100,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             }
             else
             {
-                Assert.Contains("System.FormatException: Could not find any recognizable digits.", _console.Error.ToString());
+                Assert.Contains("System.FormatException: Input string was not in a correct format.", _console.Error.ToString());
             }
         }
 
@@ -140,7 +140,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             }
             else
             {
-                Assert.Contains("System.FormatException: Could not find any recognizable digits.", _console.Error.ToString());
+                Assert.Contains("System.FormatException: Input string was not in a correct format.", _console.Error.ToString());
             }
         }
 
@@ -182,7 +182,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             }
             else
             {
-                Assert.Contains("System.FormatException: Could not find any recognizable digits.", _console.Error.ToString());
+                Assert.Contains("System.FormatException: Input string was not in a correct format.", _console.Error.ToString());
             }
         }
 
@@ -206,6 +206,8 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var decoded = (List)_codec.Decode(rawAction);
             var plainValue = Assert.IsType<Dictionary>(decoded[1]);
             var action = ClaimStakeRewardFactory.CreateByBlockIndex(blockIndex, addr);
+            Assert.NotNull(action);
+            Assert.Equal(action.GetType(), expectedActionType);
             action.LoadPlainValue(plainValue);
             string type = (Text)decoded[0];
             Assert.Equal(action.GetType().Name, type);
@@ -268,7 +270,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             }
             else
             {
-                Assert.Contains("System.FormatException: Could not find any recognizable digits.", _console.Error.ToString());
+                Assert.Contains("System.FormatException: Input string was not in a correct format.", _console.Error.ToString());
             }
         }
     }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using AspNetCoreRateLimit;
 using GraphQL.Server;
 using GraphQL.Utilities;
 using Grpc.Core;
@@ -95,6 +96,16 @@ namespace NineChronicles.Headless
 
             public void ConfigureServices(IServiceCollection services)
             {
+                if (Convert.ToBoolean(Configuration.GetSection("IpRateLimiting")["EnableRateLimiting"]))
+                {
+                    services.AddOptions();
+                    services.AddMemoryCache();
+                    services.Configure<IpRateLimitOptions>(Configuration.GetSection("IpRateLimiting"));
+                    services.AddInMemoryRateLimiting();
+                    services.AddMvc(options => options.EnableEndpointRouting = false);
+                    services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+                }
+
                 if (!(Configuration[NoCorsKey] is null))
                 {
                     services.AddCors(
@@ -159,6 +170,12 @@ namespace NineChronicles.Headless
 
                 app.UseRouting();
                 app.UseAuthorization();
+                if (Convert.ToBoolean(Configuration.GetSection("IpRateLimiting")["EnableRateLimiting"]))
+                {
+                    app.UseIpRateLimiting();
+                    app.UseMvc();
+                }
+
                 app.UseEndpoints(endpoints =>
                 {
                     endpoints.MapControllers();
@@ -193,6 +210,8 @@ namespace NineChronicles.Headless
 
                 // Prints 
                 app.UseMiddleware<GraphQLSchemaMiddleware<StandaloneSchema>>("/schema.graphql");
+
+                app.UseOpenTelemetryPrometheusScrapingEndpoint();
 
                 // /ui/playground 옵션을 통해서 Playground를 사용할 수 있습니다.
                 app.UseGraphQLPlayground();

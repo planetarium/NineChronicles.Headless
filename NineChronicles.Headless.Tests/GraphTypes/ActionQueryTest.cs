@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -10,13 +9,8 @@ using Bencodex;
 using Bencodex.Types;
 using GraphQL.Execution;
 using Libplanet;
-using Libplanet.Action;
 using Libplanet.Assets;
-using Libplanet.Blockchain;
-using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
-using Libplanet.Store;
-using Libplanet.Store.Trie;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Helper;
@@ -46,45 +40,27 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             _nonce = new byte[16];
             new Random().NextBytes(_nonce);
             (_activationKey, PendingActivationState pending) = ActivationKey.Create(_activationCodeSeed, _nonce);
-
-            var store = new DefaultStore(null);
-            var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             var minerPrivateKey = new PrivateKey();
-            var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
-                new PolymorphicAction<ActionBase>[]
-                {
-                    new InitializeStates(
-                        rankingState: new RankingState0(),
-                        shopState: new ShopState(),
-                        gameConfigState: new GameConfigState(),
-                        redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                            .Add("address", RedeemCodeState.Address.Serialize())
-                            .Add("map", Bencodex.Types.Dictionary.Empty)
-                        ),
-                        adminAddressState: new AdminState(new PrivateKey().ToAddress(), 1500000),
-                        activatedAccountsState: new ActivatedAccountsState(),
+            var initializeStates = new InitializeStates(
+                rankingState: new RankingState0(),
+                shopState: new ShopState(),
+                gameConfigState: new GameConfigState(),
+                redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                    .Add("address", RedeemCodeState.Address.Serialize())
+                    .Add("map", Bencodex.Types.Dictionary.Empty)
+                ),
+                adminAddressState: new AdminState(new PrivateKey().ToAddress(), 1500000),
+                activatedAccountsState: new ActivatedAccountsState(),
 #pragma warning disable CS0618
-                        // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
-                        goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, minerPrivateKey.ToAddress())),
+                // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                goldCurrencyState:
+                new GoldCurrencyState(Currency.Legacy("NCG", 2, minerPrivateKey.ToAddress())),
 #pragma warning restore CS0618
-                        goldDistributions: Array.Empty<GoldDistribution>(),
-                        tableSheets: new Dictionary<string, string>(),
-                        pendingActivationStates: new[] { pending }
-                    ),
-                },
-                privateKey: minerPrivateKey
+                goldDistributions: Array.Empty<GoldDistribution>(),
+                tableSheets: new Dictionary<string, string>(),
+                pendingActivationStates: new[] { pending }
             );
-            var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
-                new BlockPolicy<PolymorphicAction<ActionBase>>(),
-                new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
-                store,
-                stateStore,
-                genesisBlock);
-            _standaloneContext = new StandaloneContext
-            {
-                BlockChain = blockchain,
-                Store = store,
-            };
+            _standaloneContext = CreateStandaloneContext(initializeStates, minerPrivateKey);
         }
 
         [Theory]
@@ -347,14 +323,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
             var error = queryResult.Errors!.Single();
             Assert.Contains("Invalid tableName.", error.Message);
-        }
-        private NCAction DeserializeNCAction(IValue value)
-        {
-#pragma warning disable CS0612
-            NCAction action = new NCAction();
-#pragma warning restore CS0612
-            action.LoadPlainValue(value);
-            return action;
         }
 
         [Theory]
@@ -679,6 +647,289 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(runeId, action.RuneId);
             Assert.Equal(tryCount ?? 1, action.TryCount);
+        }
+
+        [Theory]
+        [InlineData(false, false, false, false, false)]
+        [InlineData(true, false, false, false, false)]
+        [InlineData(true, true, false, false, false)]
+        [InlineData(true, true, true, false, false)]
+        [InlineData(true, true, true, true, false)]
+        [InlineData(true, true, true, true, true)]
+        public async Task HackAndSlash(bool useCostume, bool useEquipment, bool useFood, bool useRune, bool useBuff)
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var worldId = 1;
+            var stageId = 1;
+            var costume = Guid.NewGuid();
+            var equipment = Guid.NewGuid();
+            var food = Guid.NewGuid();
+            var runeInfo = new RuneSlotInfo(0, 10001);
+            var stageBuffId = 1;
+
+            var args = $"avatarAddress: \"{avatarAddress}\", worldId: {worldId}, stageId: {stageId}";
+            if (useCostume)
+            {
+                args += $", costumeIds: [\"{costume}\"]";
+            }
+
+            if (useEquipment)
+            {
+                args += $", equipmentIds: [\"{equipment}\"]";
+            }
+
+            if (useFood)
+            {
+                args += $", consumableIds: [\"{food}\"]";
+            }
+
+            if (useRune)
+            {
+                args += $", runeSlotInfos: [{{slotIndex: {runeInfo.SlotIndex}, runeId: {runeInfo.RuneId}}}]";
+            }
+
+            if (useBuff)
+            {
+                args += $", stageBuffId: {stageBuffId}";
+            }
+
+            var query = $"{{hackAndSlash({args})}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["hackAndSlash"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<HackAndSlash>(polymorphicAction.InnerAction);
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            Assert.Equal(worldId, action.WorldId);
+            Assert.Equal(stageId, action.StageId);
+            if (useCostume)
+            {
+                Assert.Equal(costume, action.Costumes.First());
+            }
+
+            if (useEquipment)
+            {
+                Assert.Equal(equipment, action.Equipments.First());
+            }
+
+            if (useFood)
+            {
+                Assert.Equal(food, action.Foods.First());
+            }
+
+            if (useRune)
+            {
+                Assert.Equal(runeInfo.SlotIndex, action.RuneInfos.First().SlotIndex);
+                Assert.Equal(runeInfo.RuneId, action.RuneInfos.First().RuneId);
+            }
+
+            if (useBuff)
+            {
+                Assert.Equal(stageBuffId, action.StageBuffId);
+            }
+        }
+
+        [Theory]
+        [InlineData(false, false, false, false)]
+        [InlineData(true, false, false, false)]
+        [InlineData(true, true, false, false)]
+        [InlineData(true, true, true, false)]
+        [InlineData(true, true, true, true)]
+        public async Task HackAndSlashSweep(bool useCostume, bool useEquipment, bool useRune, bool useApStone)
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var worldId = 1;
+            var stageId = 1;
+            var costume = Guid.NewGuid();
+            var equipment = Guid.NewGuid();
+            var runeInfo = new RuneSlotInfo(0, 10001);
+            var actionPoint = 120;
+            var apStoneCount = 1;
+
+            var args = @$"
+avatarAddress: ""{avatarAddress}"", 
+worldId: {worldId}, 
+stageId: {stageId},
+actionPoint: {actionPoint},
+";
+            if (useApStone)
+            {
+                args += $", apStoneCount: {apStoneCount}";
+            }
+
+            if (useCostume)
+            {
+                args += $", costumeIds: [\"{costume}\"]";
+            }
+
+            if (useEquipment)
+            {
+                args += $", equipmentIds: [\"{equipment}\"]";
+            }
+
+            if (useRune)
+            {
+                args += $", runeSlotInfos: [{{slotIndex: {runeInfo.SlotIndex}, runeId: {runeInfo.RuneId}}}]";
+            }
+
+            var query = $"{{hackAndSlashSweep({args})}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["hackAndSlashSweep"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<HackAndSlashSweep>(polymorphicAction.InnerAction);
+            Assert.Equal(avatarAddress, action.avatarAddress);
+            Assert.Equal(worldId, action.worldId);
+            Assert.Equal(stageId, action.stageId);
+            Assert.Equal(actionPoint, action.actionPoint);
+            Assert.Equal(useApStone ? apStoneCount : 0, action.apStoneCount);
+            if (useCostume)
+            {
+                Assert.Equal(costume, action.costumes.First());
+            }
+
+            if (useEquipment)
+            {
+                Assert.Equal(equipment, action.equipments.First());
+            }
+
+            if (useRune)
+            {
+                Assert.Equal(runeInfo.SlotIndex, action.runeInfos.First().SlotIndex);
+                Assert.Equal(runeInfo.RuneId, action.runeInfos.First().RuneId);
+            }
+        }
+
+        [Fact]
+        public async Task DailyReward()
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var query = $"{{dailyReward(avatarAddress: \"{avatarAddress}\")}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["dailyReward"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<DailyReward>(polymorphicAction.InnerAction);
+            Assert.Equal(avatarAddress, action.avatarAddress);
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task CombinationEquipment(bool useSubRecipe)
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var slotIndex = 0;
+            var recipeId = 1;
+            var subRecipeId = 10;
+            var payByCrystalValue = "false";
+            var payByCrystal = false;
+            var useHammerPointValue = "false";
+            var useHammerPoint = false;
+
+            var args =
+                $"avatarAddress: \"{avatarAddress}\", slotIndex: {slotIndex}, recipeId: {recipeId}, payByCrystal: {payByCrystalValue}, useHammerPoint: {useHammerPointValue}";
+            if (useSubRecipe)
+            {
+                args += $", subRecipeId: {subRecipeId}";
+            }
+
+            var query = $"{{combinationEquipment({args})}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["combinationEquipment"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<CombinationEquipment>(polymorphicAction.InnerAction);
+            Assert.Equal(avatarAddress, action.avatarAddress);
+            Assert.Equal(slotIndex, action.slotIndex);
+            Assert.Equal(recipeId, action.recipeId);
+            Assert.Equal(payByCrystal, action.payByCrystal);
+            Assert.Equal(useHammerPoint, action.useHammerPoint);
+            if (useSubRecipe)
+            {
+                Assert.Equal(subRecipeId, action.subRecipeId);
+            }
+            else
+            {
+                Assert.Null(action.subRecipeId);
+            }
+        }
+
+        [Fact]
+        public async Task ItemEnhantement()
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var slotIndex = 0;
+            var itemId = Guid.NewGuid();
+            var materialId = Guid.NewGuid();
+
+            var query = $"{{itemEnhancement(avatarAddress: \"{avatarAddress}\", slotIndex: {slotIndex}, " +
+                        $"itemId: \"{itemId}\", materialId: \"{materialId}\")}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["itemEnhancement"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<ItemEnhancement>(polymorphicAction.InnerAction);
+            Assert.Equal(avatarAddress, action.avatarAddress);
+            Assert.Equal(slotIndex, action.slotIndex);
+            Assert.Equal(itemId, action.itemId);
+            Assert.Equal(materialId, action.materialId);
+        }
+
+        [Fact]
+        public async Task RapidCombination()
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var slotIndex = 0;
+
+            var query = $"{{rapidCombination(avatarAddress: \"{avatarAddress}\", slotIndex: {slotIndex})}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["rapidCombination"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<RapidCombination>(polymorphicAction.InnerAction);
+            Assert.Equal(avatarAddress, action.avatarAddress);
+            Assert.Equal(slotIndex, action.slotIndex);
+        }
+
+        [Fact]
+        public async Task CombinationConsumable()
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var slotIndex = 0;
+            var recipeId = 1;
+
+            var query =
+                $"{{combinationConsumable(avatarAddress: \"{avatarAddress}\", slotIndex: {slotIndex}, recipeId: {recipeId})}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["combinationConsumable"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<CombinationConsumable>(polymorphicAction.InnerAction);
+            Assert.Equal(avatarAddress, action.avatarAddress);
+            Assert.Equal(slotIndex, action.slotIndex);
+            Assert.Equal(recipeId, action.recipeId);
         }
     }
 }
