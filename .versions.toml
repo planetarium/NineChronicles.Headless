@@ -1,0 +1,7 @@
+[versions]
+v100370 = { ref = "v100370" }
+v100371 = { ref = "v100371" }
+
+[config]
+output_path = "/tmp/testdlls"
+repository_url = "https://github.com/planetarium/lib9c"
