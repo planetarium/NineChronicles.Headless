@@ -357,8 +357,22 @@ namespace NineChronicles.Headless.Executable
 
                 IActionTypeLoader MakeStaticActionTypeLoader() => new StaticActionTypeLoader(
                     Assembly.GetEntryAssembly() is { } entryAssembly
+#if LIB9C_DEV_EXTENSIONS
+                        ? new[]
+                        {
+                            typeof(ActionBase).Assembly,
+                            typeof(Lib9c.DevExtensions.Action.CreateOrReplaceAvatar).Assembly,
+                            entryAssembly
+                        }
+                        : new[]
+                        {
+                            typeof(ActionBase).Assembly,
+                            typeof(Lib9c.DevExtensions.Action.CreateOrReplaceAvatar).Assembly
+                        },
+#else
                         ? new[] { typeof(ActionBase).Assembly, entryAssembly }
                         : new[] { typeof(ActionBase).Assembly },
+#endif
                     typeof(ActionBase)
                 );
 
@@ -386,6 +400,11 @@ namespace NineChronicles.Headless.Executable
                 else
                 {
                     actionTypeLoader = MakeStaticActionTypeLoader();
+                }
+
+                if (actionTypeLoader is StaticActionTypeLoader staticActionTypeLoader)
+                {
+                    PolymorphicAction<ActionBase>.ActionTypeLoader = staticActionTypeLoader;
                 }
 
                 var minerPrivateKey = string.IsNullOrEmpty(headlessConfig.MinerPrivateKeyString)
