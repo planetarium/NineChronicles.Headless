@@ -148,7 +148,7 @@ namespace NineChronicles.Headless
                 PrivateKey privateKey,
                 CancellationToken cancellationToken)
             {
-                var miner = new Miner(chain, swarm, privateKey, actionTypeLoader);
+                var miner = new Miner(chain, privateKey, actionTypeLoader);
                 Log.Debug("Miner called.");
                 while (!cancellationToken.IsCancellationRequested)
                 {
@@ -164,9 +164,17 @@ namespace NineChronicles.Headless
                             {
                                 if (bp.IsAllowedToMine(privateKey.ToAddress(), chain.Count))
                                 {
-                                    IEnumerable<Task<Block<NCAction>?>> miners = Enumerable
+                                    IEnumerable<Task> miners = Enumerable
                                         .Range(0, minerCount)
-                                        .Select(_ => miner.MineBlockAsync(cancellationToken));
+                                        .Select(async _ =>
+                                        {
+                                            Block<NCAction>? block =
+                                                await miner.MineBlockAsync(cancellationToken);
+                                            if (block != null)
+                                            {
+                                                swarm.BroadcastBlock(block);
+                                            }
+                                        });
                                     await Task.WhenAll(miners);
                                     await Task.Delay(minerBlockInterval ?? TimeSpan.Zero);
                                 }
