@@ -148,7 +148,7 @@ namespace NineChronicles.Headless
                 PrivateKey privateKey,
                 CancellationToken cancellationToken)
             {
-                var miner = new Miner(chain, swarm, privateKey, actionTypeLoader);
+                var miner = new Miner(chain, privateKey, actionTypeLoader);
                 Log.Debug("Miner called.");
                 while (!cancellationToken.IsCancellationRequested)
                 {
