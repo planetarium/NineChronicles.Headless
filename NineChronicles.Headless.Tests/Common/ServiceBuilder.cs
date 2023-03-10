@@ -26,6 +26,7 @@ namespace NineChronicles.Headless.Tests.Common
             PrivateKey? privateKey = null
         )
         {
+            var consensusPrivateKey = new PrivateKey();
             var storePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
             {
@@ -35,7 +36,9 @@ namespace NineChronicles.Headless.Tests.Common
                 StorePath = storePath,
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
+                ConsensusPrivateKey = consensusPrivateKey,
                 Port = null,
+                ConsensusPort = null,
                 NoMiner = true,
                 Render = false,
                 LogActionRenders = false,
@@ -44,7 +47,8 @@ namespace NineChronicles.Headless.Tests.Common
                 MessageTimeout = TimeSpan.FromMinutes(1),
                 TipTimeout = TimeSpan.FromMinutes(1),
                 DemandBuffer = 1150,
-                StaticPeers = ImmutableHashSet<BoundPeer>.Empty,
+                ConsensusSeeds = ImmutableList<BoundPeer>.Empty,
+                ConsensusPeers = ImmutableList<BoundPeer>.Empty,
                 IceServers = ImmutableList<IceServer>.Empty,
             };
             return new NineChroniclesNodeService(

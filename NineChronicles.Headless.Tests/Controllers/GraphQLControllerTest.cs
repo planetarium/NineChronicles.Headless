@@ -43,43 +43,6 @@ namespace NineChronicles.Headless.Tests.Controllers
         }
 
         [Theory]
-        [InlineData(true, true)]
-        [InlineData(true, false)]
-        [InlineData(false, true)]
-        [InlineData(false, false)]
-        public void SetMining(bool useSecretToken, bool mine)
-        {
-            if (useSecretToken)
-            {
-                ConfigureSecretToken();
-                ConfigureAdminClaim();
-            }
-
-            ConfigureNineChroniclesNodeService();
-            Assert.IsType<OkObjectResult>(_controller.SetMining(new SetMiningRequest
-            {
-                Mine = mine,
-            }));
-            Assert.Equal(mine, _standaloneContext.IsMining);
-        }
-
-        [Fact]
-        public void SetMiningThrowsConflict()
-        {
-            _standaloneContext.NineChroniclesNodeService = null;
-            IActionResult result = _controller.SetMining(new SetMiningRequest());
-            Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status409Conflict, ((StatusCodeResult)result).StatusCode);
-        }
-
-        [Fact]
-        public void SetMiningThrowsUnauthorizedIfSecretTokenUsed()
-        {
-            ConfigureSecretToken();
-            Assert.IsType<UnauthorizedResult>(_controller.SetMining(new SetMiningRequest()));
-        }
-
-        [Theory]
         [InlineData(true)]
         [InlineData(false)]
         public void SetPrivateKey(bool useSecretToken)

@@ -562,7 +562,7 @@ namespace NineChronicles.Headless.Executable.Commands
         /// </summary>
         private static IEnumerable<ActionEvaluation> EvaluateActions(
             BlockHash? genesisHash,
-            ImmutableArray<byte> preEvaluationHash,
+            HashDigest<SHA256> preEvaluationHash,
             long blockIndex,
             TxId? txid,
             IAccountStateDelta previousStates,
@@ -598,7 +598,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 hashedSignature = hasher.ComputeHash(signature);
             }
 
-            byte[] preEvaluationHashBytes = preEvaluationHash.ToBuilder().ToArray();
+            byte[] preEvaluationHashBytes = preEvaluationHash.ToByteArray();
             int seed = ActionEvaluator<NCAction>.GenerateRandomSeed(
                 preEvaluationHashBytes,
                 hashedSignature,
@@ -632,7 +632,7 @@ namespace NineChronicles.Headless.Executable.Commands
                         action,
                         txid,
                         blockIndex,
-                        ByteUtil.Hex(preEvaluationHash));
+                        ByteUtil.Hex(preEvaluationHash.ByteArray));
                     throw;
                 }
                 catch (Exception e)
@@ -665,11 +665,11 @@ namespace NineChronicles.Headless.Executable.Commands
                             action,
                             txid,
                             blockIndex,
-                            ByteUtil.Hex(preEvaluationHash),
+                            ByteUtil.Hex(preEvaluationHash.ByteArray),
                             stateRootHash);
                         var innerMessage =
                             $"The action {action} (block #{blockIndex}, " +
-                            $"pre-evaluation hash {ByteUtil.Hex(preEvaluationHash)}, tx {txid}, " +
+                            $"pre-evaluation hash {ByteUtil.Hex(preEvaluationHash.ByteArray)}, tx {txid}, " +
                             $"previous state root hash {stateRootHash}) threw " +
                             "an exception during execution.  " +
                             "See also this exception's InnerException property.";

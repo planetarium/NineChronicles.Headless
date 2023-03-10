@@ -142,6 +142,18 @@ namespace Libplanet.Headless
         public void PruneOutdatedChains(bool noopWithoutCanon = false) =>
             InternalStore.PruneOutdatedChains(noopWithoutCanon);
 
+        public BlockCommit GetBlockCommit(BlockHash blockHash) =>
+            InternalStore.GetBlockCommit(blockHash);
+
+        public void PutBlockCommit(BlockCommit lastCommit) =>
+            InternalStore.PutBlockCommit(lastCommit);
+
+        public void DeleteBlockCommit(BlockHash blockHash) =>
+            InternalStore.DeleteBlockCommit(blockHash);
+
+        public IEnumerable<BlockHash> GetBlockCommitHashes() =>
+            InternalStore.GetBlockCommitHashes();
+
         public void Dispose() => InternalStore.Dispose();
     }
 }

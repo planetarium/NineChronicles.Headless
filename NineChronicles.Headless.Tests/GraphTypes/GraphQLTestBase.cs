@@ -1,10 +1,12 @@
 using GraphQL;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Action.Sys;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
+using Libplanet.Consensus;
 using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
 using Libplanet.KeyStore;
@@ -14,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
+using Nekoyume.BlockChain.Policy;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common;
 using Serilog;
@@ -22,6 +25,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit.Abstractions;
@@ -39,6 +44,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             _output = output;
 
+            var _proposerPrivateKey = new PrivateKey();
+
 #pragma warning disable CS0618
             // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
             var goldCurrency = Currency.Legacy("NCG", 2, null);
@@ -46,7 +53,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var sheets = TableSheetsImporter.ImportSheets();
             var blockAction = new RewardGold();
-            var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
+            var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
                 new NCAction[]
                 {
                     new InitializeStates(
@@ -64,9 +71,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                         tableSheets: sheets,
                         pendingActivationStates: new PendingActivationState[]{ }
                     ),
-                }, blockAction: blockAction);
+                },
+                systemActions: new IAction[]
+                {
+                    new SetValidator(new Validator(ValidatorAdminPolicy.TestValidatorAdminKey.PublicKey, BigInteger.One)),
+                    new SetValidator(new Validator(ProposerPrivateKey.PublicKey, BigInteger.One))
+                },
+                blockAction: blockAction,
+                privateKey: ValidatorAdminPolicy.TestValidatorAdminKey);
 
-            var ncService = ServiceBuilder.CreateNineChroniclesNodeService(genesisBlock, new PrivateKey());
+            var ncService = ServiceBuilder.CreateNineChroniclesNodeService(genesisBlock, ProposerPrivateKey);
             var tempKeyStorePath = Path.Join(Path.GetTempPath(), Path.GetRandomFileName());
             var keyStore = new Web3KeyStore(tempKeyStorePath);
 
@@ -111,6 +125,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         protected PrivateKey AdminPrivateKey { get; } = new PrivateKey();
 
         protected Address AdminAddress => AdminPrivateKey.ToAddress();
+
+        protected PrivateKey ProposerPrivateKey { get; } = new PrivateKey();
+
+        protected List<PrivateKey> GenesisValidators
+        {
+            get => new List<PrivateKey>
+            {
+                ValidatorAdminPolicy.TestValidatorAdminKey, ProposerPrivateKey
+            }.OrderBy(key => key.ToAddress()).ToList();
+        }
 
         protected StandaloneSchema Schema { get; }
 
@@ -164,9 +188,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             PublicKey appProtocolVersionSigner,
             Progress<PreloadState>? preloadProgress = null,
             IEnumerable<BoundPeer>? peers = null,
-            ImmutableHashSet<BoundPeer>? staticPeers = null)
+            ImmutableList<BoundPeer>? consensusSeeds = null,
+            ImmutableList<BoundPeer>? consensusPeers = null)
             where T : IAction, new()
         {
+            var consensusPrivateKey = new PrivateKey();
+
             var properties = new LibplanetNodeServiceProperties<T>
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
@@ -175,13 +202,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StoreStatesCacheSize = 2,
                 StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                 SwarmPrivateKey = new PrivateKey(),
+                ConsensusPrivateKey = consensusPrivateKey,
+                ConsensusPort = null,
                 Port = null,
                 NoMiner = true,
                 Render = false,
                 Peers = peers ?? ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = ImmutableHashSet<PublicKey>.Empty.Add(appProtocolVersionSigner),
-                StaticPeers = staticPeers ?? ImmutableHashSet<BoundPeer>.Empty,
                 IceServers = ImmutableList<IceServer>.Empty,
+                ConsensusSeeds = consensusSeeds ?? ImmutableList<BoundPeer>.Empty,
+                ConsensusPeers = consensusPeers ?? ImmutableList<BoundPeer>.Empty,
             };
 
             return new LibplanetNodeService<T>(
@@ -189,12 +219,28 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 blockPolicy: new BlockPolicy<T>(),
                 stagePolicy: new VolatileStagePolicy<T>(),
                 renderers: new[] { new DummyRenderer<T>() },
-                minerLoopAction: (chain, swarm, privateKey, _) => Task.CompletedTask,
                 preloadProgress: preloadProgress,
                 exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),
                 preloadStatusHandlerAction: isPreloadStart => { },
                 actionTypeLoader: StaticActionTypeLoaderSingleton.Instance
             );
+        }
+
+        protected BlockCommit? GenerateBlockCommit(long height, BlockHash hash, List<PrivateKey> validators)
+        {
+            return height != 0
+                ? new BlockCommit(
+                    height,
+                    0,
+                    hash,
+                    validators.Select(validator => new VoteMetadata(
+                            height,
+                            0,
+                            hash,
+                            DateTimeOffset.UtcNow,
+                            validator.PublicKey,
+                            VoteFlag.PreCommit).Sign(validator)).ToImmutableArray())
+                : (BlockCommit?)null;
         }
     }
 }

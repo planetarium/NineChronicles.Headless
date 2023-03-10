@@ -14,8 +14,11 @@ namespace NineChronicles.Headless.Executable
         public string? GenesisBlockPath { get; set; }
         public string? Host { get; set; }
         public ushort? Port { get; set; }
+        public ushort? ConsensusPort { get; set; }
 
         public string? SwarmPrivateKeyString { get; set; }
+        public string? ConsensusPrivateKeyString { get; set; }
+        public string? MinerPrivateKeyString { get; set; }
 
         // Storage
         public string? StoreType { get; set; }
@@ -34,9 +37,6 @@ namespace NineChronicles.Headless.Executable
 
         // Miner
         public bool NoMiner { get; set; }
-        public int MinerCount { get; set; } = 1;
-        public string? MinerPrivateKeyString { get; set; }
-        public int MinerBlockIntervalMilliseconds { get; set; }
 
         // Networking
         public NetworkType NetworkType { get; set; } = NetworkType.Main;
@@ -69,7 +69,8 @@ namespace NineChronicles.Headless.Executable
         public int MessageTimeout { get; set; } = 60;
         public int TipTimeout { get; set; } = 60;
         public int DemandBuffer { get; set; } = 1150;
-        public string[]? StaticPeerStrings { get; set; }
+        public string[]? ConsensusSeedStrings { get; set; }
+        public string[]? ConsensusPeerStrings { get; set; }
         public bool SkipPreload { get; set; }
         public int MinimumBroadcastTarget { get; set; } = 10;
         public int BucketSize { get; set; } = 16;
@@ -88,14 +89,14 @@ namespace NineChronicles.Headless.Executable
             string? genesisBlockPath,
             string? host,
             ushort? port,
+            ushort? consensusPort,
             string? swarmPrivateKeyString,
+            string? consensusPrivateKeyString,
+            string? minerPrivateKeyString,
             string? storeType,
             string? storePath,
             bool? noReduceStore,
             bool? noMiner,
-            int? minerCount,
-            string? minerPrivateKeyString,
-            int? minerBlockIntervalMilliseconds,
             NetworkType? networkType,
             string[]? iceServerStrings,
             string[]? peerStrings,
@@ -118,7 +119,8 @@ namespace NineChronicles.Headless.Executable
             int? messageTimeout,
             int? tipTimeout,
             int? demandBuffer,
-            string[]? staticPeerStrings,
+            string[]? consensusSeedStrings,
+            string[]? consensusPeerStrings,
             bool? skipPreload,
             int? minimumBroadcastTarget,
             int? bucketSize,
@@ -135,14 +137,14 @@ namespace NineChronicles.Headless.Executable
             GenesisBlockPath = genesisBlockPath ?? GenesisBlockPath;
             Host = host ?? Host;
             Port = port ?? Port;
+            ConsensusPort = consensusPort ?? ConsensusPort;
             SwarmPrivateKeyString = swarmPrivateKeyString ?? SwarmPrivateKeyString;
+            ConsensusPrivateKeyString = consensusPrivateKeyString ?? ConsensusPrivateKeyString;
+            MinerPrivateKeyString = minerPrivateKeyString ?? MinerPrivateKeyString;
             StoreType = storeType ?? StoreType;
             StorePath = storePath ?? StorePath;
             NoReduceStore = noReduceStore ?? NoReduceStore;
             NoMiner = noMiner ?? NoMiner;
-            MinerCount = minerCount ?? MinerCount;
-            MinerPrivateKeyString = minerPrivateKeyString ?? MinerPrivateKeyString;
-            MinerBlockIntervalMilliseconds = minerBlockIntervalMilliseconds ?? MinerBlockIntervalMilliseconds;
             NetworkType = networkType ?? NetworkType;
             IceServerStrings = iceServerStrings ?? IceServerStrings;
             PeerStrings = peerStrings ?? PeerStrings;
@@ -165,7 +167,8 @@ namespace NineChronicles.Headless.Executable
             MessageTimeout = messageTimeout ?? MessageTimeout;
             TipTimeout = tipTimeout ?? TipTimeout;
             DemandBuffer = demandBuffer ?? DemandBuffer;
-            StaticPeerStrings = staticPeerStrings ?? StaticPeerStrings;
+            ConsensusSeedStrings = consensusSeedStrings ?? ConsensusSeedStrings;
+            ConsensusPeerStrings = consensusPeerStrings ?? ConsensusPeerStrings;
             SkipPreload = skipPreload ?? SkipPreload;
             MinimumBroadcastTarget = minimumBroadcastTarget ?? MinimumBroadcastTarget;
             BucketSize = bucketSize ?? BucketSize;

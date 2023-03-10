@@ -58,7 +58,10 @@ namespace NineChronicles.Headless.Properties
                 string? genesisBlockPath = null,
                 string? swarmHost = null,
                 ushort? swarmPort = null,
+                ushort? consensusPort = null,
                 string? swarmPrivateKeyString = null,
+                string? consensusPrivateKeyString = null,
+                string? minerPrivateKeyString = null,
                 string? storeType = null,
                 string? storePath = null,
                 bool noReduceStore = false,
@@ -75,7 +78,8 @@ namespace NineChronicles.Headless.Properties
                 int messageTimeout = 60,
                 int tipTimeout = 60,
                 int demandBuffer = 1150,
-                string[]? staticPeerStrings = null,
+                string[]? consensusSeedStrings = null,
+                string[]? consensusPeerStrings = null,
                 bool preload = true,
                 int minimumBroadcastTarget = 10,
                 int bucketSize = 16,
@@ -85,20 +89,31 @@ namespace NineChronicles.Headless.Properties
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
                 : new PrivateKey(ByteUtil.ParseHex(swarmPrivateKeyString));
+            var consensusPrivateKey = string.IsNullOrEmpty(consensusPrivateKeyString)
+                ? new PrivateKey()
+                : new PrivateKey(ByteUtil.ParseHex(consensusPrivateKeyString));
+            var minerPrivateKey = string.IsNullOrEmpty(minerPrivateKeyString)
+                ? new PrivateKey()
+                : new PrivateKey(ByteUtil.ParseHex(minerPrivateKeyString));
 
             peerStrings ??= Array.Empty<string>();
             iceServerStrings ??= Array.Empty<string>();
-            staticPeerStrings ??= Array.Empty<string>();
+            consensusSeedStrings ??= Array.Empty<string>();
+            consensusPeerStrings ??= Array.Empty<string>();
 
             var iceServers = iceServerStrings.Select(PropertyParser.ParseIceServer).ToImmutableArray();
             var peers = peerStrings.Select(PropertyParser.ParsePeer).ToImmutableArray();
-            var staticPeers = staticPeerStrings.Select(PropertyParser.ParsePeer).ToImmutableHashSet();
+            var consensusSeeds = consensusSeedStrings.Select(PropertyParser.ParsePeer).ToImmutableList();
+            var consensusPeers = consensusPeerStrings.Select(PropertyParser.ParsePeer).ToImmutableList();
 
             return new LibplanetNodeServiceProperties<NineChroniclesActionType>
             {
                 Host = swarmHost,
                 Port = swarmPort,
+                ConsensusPort = consensusPort,
                 SwarmPrivateKey = swarmPrivateKey,
+                ConsensusPrivateKey = consensusPrivateKey,
+                MinerPrivateKey = minerPrivateKey,
                 AppProtocolVersion = AppProtocolVersion.FromToken(appProtocolVersionToken),
                 TrustedAppProtocolVersionSigners = trustedAppProtocolVersionSigners
                     ?.Select(s => new PublicKey(ByteUtil.ParseHex(s)))
@@ -118,7 +133,8 @@ namespace NineChronicles.Headless.Properties
                 MessageTimeout = TimeSpan.FromSeconds(messageTimeout),
                 TipTimeout = TimeSpan.FromSeconds(tipTimeout),
                 DemandBuffer = demandBuffer,
-                StaticPeers = staticPeers,
+                ConsensusSeeds = consensusSeeds,
+                ConsensusPeers = consensusPeers,
                 Preload = preload,
                 MinimumBroadcastTarget = minimumBroadcastTarget,
                 BucketSize = bucketSize,

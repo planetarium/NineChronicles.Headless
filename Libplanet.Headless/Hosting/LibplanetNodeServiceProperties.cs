@@ -16,7 +16,13 @@ namespace Libplanet.Headless.Hosting
 
         public ushort? Port { get; set; }
 
+        public ushort? ConsensusPort { get; set; }
+
         public PrivateKey SwarmPrivateKey { get; set; }
+
+        public PrivateKey ConsensusPrivateKey { get; set; }
+
+        public PrivateKey MinerPrivateKey { get; set; }
 
         public string StoreType { get; set; }
 
@@ -60,7 +66,9 @@ namespace Libplanet.Headless.Hosting
 
         public int DemandBuffer { get; set; } = 1150;
 
-        public ImmutableHashSet<BoundPeer> StaticPeers { get; set; }
+        public ImmutableList<BoundPeer> ConsensusSeeds { get; set; }
+
+        public ImmutableList<BoundPeer> ConsensusPeers { get; set; }
 
         public bool Preload { get; set; } = true;
 
