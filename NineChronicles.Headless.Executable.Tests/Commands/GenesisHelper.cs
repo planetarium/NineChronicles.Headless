@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text.Json;
 using Libplanet;
 using Libplanet.Blocks;
@@ -11,6 +12,7 @@ using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
+using Nekoyume.BlockChain.Policy;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Lib9cUtils = Lib9c.DevExtensions.Utils;
 
@@ -20,8 +22,8 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
     {
         public static Block<NCAction> MineGenesisBlock(
             Address? targetAddress = null,
-            int? targetCurrency = null
-            )
+            int? targetCurrency = null,
+            Dictionary<PublicKey, BigInteger>? genesisValidatorSet = null)
         {
             Dictionary<string, string> tableSheets = Lib9cUtils.ImportSheets("../../../../Lib9c/Lib9c/TableCSV");
             var goldDistributionPath = Path.GetTempFileName();
@@ -37,7 +39,7 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
                 File.AppendAllText(goldDistributionPath, $"{targetAddress.ToString()},{targetCurrency},0,0");
             }
 
-            var privateKey = new PrivateKey();
+            var privateKey = ValidatorAdminPolicy.TestValidatorAdminKey;
             goldDistributionPath =
                 goldDistributionPath.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             var config = new Dictionary<string, object>
@@ -73,13 +75,20 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
                 .LoadInDescendingEndBlockOrder(goldDistributionPath);
             AdminState adminState =
                 new AdminState(new Address(genesisConfig.AdminAddress), genesisConfig.AdminValidUntil);
-            Block<NCAction> genesisBlock = BlockHelper.MineGenesisBlock(
+            Block<NCAction> genesisBlock = BlockHelper.ProposeGenesisBlock(
                 tableSheets,
                 goldDistributions,
                 pendingActivationStates.ToArray(),
                 adminState,
                 authorizedMinersState,
                 ImmutableHashSet<Address>.Empty,
+                genesisValidatorSet ?? new Dictionary<PublicKey, BigInteger>
+                {
+                    {
+                        ValidatorAdminPolicy.TestValidatorAdminKey.PublicKey,
+                        BigInteger.One
+                    }
+                },
                 genesisConfig.ActivationKeyCount != 0,
                 null,
                 new PrivateKey(ByteUtil.ParseHex(genesisConfig.PrivateKey))

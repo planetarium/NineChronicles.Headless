@@ -77,21 +77,23 @@ namespace NineChronicles.Headless.Executable
             [Option('P',
                 Description = "Port of this node for another nodes to access.")]
             ushort? port = null,
+            [Option("consensus-port",
+                Description = "Port used for communicating consensus related messages.  null by default.")]
+            ushort? consensusPort = null,
             [Option("swarm-private-key",
                 Description = "The private key used for signing messages and to specify your node. " +
                               "If you leave this null, a randomly generated value will be used.")]
             string? swarmPrivateKeyString = null,
-            [Option(Description = "Disable block mining.")]
-            bool? noMiner = null,
-            [Option("miner-count", Description = "The number of miner task(thread).")]
-            int? minerCount = null,
+            [Option("consensus-private-key",
+                Description = "The private key used for signing consensus messages. " +
+                              "Cannot be null.")]
+            string? consensusPrivateKeyString = null,
             [Option("miner-private-key",
                 Description = "The private key used for mining blocks. " +
                               "Must not be null if you want to turn on mining with libplanet-node.")]
             string? minerPrivateKeyString = null,
-            [Option("miner.block-interval",
-                Description = "The miner's break time after mining a block. The unit is millisecond.")]
-            int? minerBlockIntervalMilliseconds = null,
+            [Option(Description = "Disable block mining.")]
+            bool? noMiner = null,
             [Option(Description = "The type of storage to store blockchain data. " +
                                   "If not provided, \"LiteDB\" will be used as default. " +
                                   "Available type: [\"rocksdb\", \"memory\"]")]
@@ -165,9 +167,12 @@ namespace NineChronicles.Headless.Executable
             [Option(Description = "A number of block size that determines how far behind the demand " +
                                   "the tip of the chain will publish `NodeException` to GraphQL subscriptions.")]
             int? demandBuffer = null,
-            [Option("static-peer",
-                Description = "A list of peers that the node will continue to maintain.")]
-            string[]? staticPeerStrings = null,
+            [Option("consensus-seed",
+                Description = "A list of seed peers to join the block consensus.")]
+            string[]? consensusSeedStrings = null,
+            [Option("consensus-peer",
+                Description = "A list of peers that joining the block consensus.")]
+            string[]? consensusPeerStrings = null,
             [Option(Description = "Run node without preloading.")]
             bool? skipPreload = null,
             [Option(Description = "Minimum number of peers to broadcast message.")]
@@ -219,13 +224,13 @@ namespace NineChronicles.Headless.Executable
             var headlessConfig = new Configuration();
             configuration.Bind("Headless", headlessConfig);
             headlessConfig.Overwrite(
-                appProtocolVersionToken, trustedAppProtocolVersionSigners, genesisBlockPath, host, port,
-                swarmPrivateKeyString, storeType, storePath, noReduceStore, noMiner, minerCount,
-                minerPrivateKeyString, minerBlockIntervalMilliseconds, networkType, iceServerStrings, peerStrings, rpcServer, rpcListenHost,
+                appProtocolVersionToken, trustedAppProtocolVersionSigners, genesisBlockPath, host, port, consensusPort,
+                swarmPrivateKeyString, consensusPrivateKeyString, minerPrivateKeyString, storeType, storePath, noReduceStore, noMiner,
+                networkType, iceServerStrings, peerStrings, rpcServer, rpcListenHost,
                 rpcListenPort, rpcRemoteServer, rpcHttpServer, graphQLServer, graphQLHost, graphQLPort,
                 graphQLSecretTokenPath, noCors, nonblockRenderer, nonblockRendererQueue, strictRendering,
                 logActionRenders, confirmations,
-                txLifeTime, messageTimeout, tipTimeout, demandBuffer, staticPeerStrings, skipPreload,
+                txLifeTime, messageTimeout, tipTimeout, demandBuffer, consensusSeedStrings, consensusPeerStrings, skipPreload,
                 minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers,
                 sentryDsn, sentryTraceSampleRate
             );
@@ -321,7 +326,10 @@ namespace NineChronicles.Headless.Executable
                         headlessConfig.GenesisBlockPath,
                         headlessConfig.Host,
                         headlessConfig.Port,
+                        headlessConfig.ConsensusPort,
                         headlessConfig.SwarmPrivateKeyString,
+                        headlessConfig.ConsensusPrivateKeyString,
+                        headlessConfig.MinerPrivateKeyString,
                         headlessConfig.StoreType,
                         headlessConfig.StorePath,
                         headlessConfig.NoReduceStore,
@@ -336,7 +344,8 @@ namespace NineChronicles.Headless.Executable
                         messageTimeout: headlessConfig.MessageTimeout,
                         tipTimeout: headlessConfig.TipTimeout,
                         demandBuffer: headlessConfig.DemandBuffer,
-                        staticPeerStrings: headlessConfig.StaticPeerStrings,
+                        consensusSeedStrings: headlessConfig.ConsensusSeedStrings,
+                        consensusPeerStrings: headlessConfig.ConsensusPeerStrings,
                         preload: !headlessConfig.SkipPreload,
                         minimumBroadcastTarget: headlessConfig.MinimumBroadcastTarget,
                         bucketSize: headlessConfig.BucketSize,
@@ -391,7 +400,6 @@ namespace NineChronicles.Headless.Executable
                 var minerPrivateKey = string.IsNullOrEmpty(headlessConfig.MinerPrivateKeyString)
                     ? null
                     : new PrivateKey(ByteUtil.ParseHex(headlessConfig.MinerPrivateKeyString));
-                TimeSpan minerBlockInterval = TimeSpan.FromMilliseconds(headlessConfig.MinerBlockIntervalMilliseconds);
                 var nineChroniclesProperties = new NineChroniclesNodeServiceProperties(actionTypeLoader)
                 {
                     MinerPrivateKey = minerPrivateKey,
@@ -399,8 +407,6 @@ namespace NineChronicles.Headless.Executable
                     NetworkType = headlessConfig.NetworkType,
                     StrictRender = headlessConfig.StrictRendering,
                     TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime),
-                    MinerCount = headlessConfig.MinerCount,
-                    MinerBlockInterval = minerBlockInterval,
                     TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner,
                 };
                 hostBuilder.ConfigureServices(services =>

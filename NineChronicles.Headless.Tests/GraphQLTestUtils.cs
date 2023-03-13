@@ -12,6 +12,8 @@ using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Microsoft.Extensions.DependencyInjection;
 using Nekoyume.Action;
+using NineChronicles.Headless.Properties;
+using NineChronicles.Headless.Tests.Common;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests
@@ -76,7 +78,8 @@ namespace NineChronicles.Headless.Tests
         {
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock();
+            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
+                blockAction: NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test, StaticActionTypeLoaderSingleton.Instance).BlockAction);
             var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
                 new BlockPolicy<PolymorphicAction<ActionBase>>(),
                 new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
@@ -97,13 +100,10 @@ namespace NineChronicles.Headless.Tests
         {
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
-                new PolymorphicAction<ActionBase>[]
-                {
-                    initializeStates,
-                },
-                privateKey: minerPrivateKey
-            );
+            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
+                customActions: new PolymorphicAction<ActionBase>[] { initializeStates },
+                privateKey: minerPrivateKey,
+                blockAction: NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test, StaticActionTypeLoaderSingleton.Instance).BlockAction);
             var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
                 new BlockPolicy<PolymorphicAction<ActionBase>>(),
                 new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),

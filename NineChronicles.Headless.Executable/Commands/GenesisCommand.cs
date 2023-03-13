@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text.Json;
 using Bencodex;
 using Bencodex.Types;
@@ -125,6 +126,23 @@ namespace NineChronicles.Headless.Executable.Commands
             _console.Out.WriteLine("Admin config done");
         }
 
+        private void ProcessValidator(List<Validator>? config, out List<Validator> initialValidatorSet)
+        {
+            _console.Out.WriteLine("\nProcessing initial validator set for genesis...");
+            initialValidatorSet = new List<Validator>();
+            if (config is null)
+            {
+                _console.Out.WriteLine(
+                    "InitialValidatorSet not provided. Skip initial validator set setting...");
+                return;
+            }
+
+            initialValidatorSet = config.ToList();
+            var str = initialValidatorSet.Aggregate(string.Empty,
+                (s, v) => s + "PublicKey: " + v.PublicKey + ", Power: " + v.Power + "\n");
+            _console.Out.WriteLine($"Initial validator set config done: {str}");
+        }
+
         private void ProcessExtra(ExtraConfig? config,
             out List<PendingActivationState> pendingActivationStates
         )
@@ -171,16 +189,21 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 ProcessAdmin(genesisConfig.Admin, initialMinter, out var adminState);
 
+                ProcessValidator(genesisConfig.InitialValidatorSet, out var initialValidatorSet);
+
                 ProcessExtra(genesisConfig.Extra, out List<PendingActivationState> pendingActivationStates);
 
                 // Mine genesis block
                 _console.Out.WriteLine("\nMining genesis block...\n");
-                Block<PolymorphicAction<ActionBase>> block = BlockHelper.MineGenesisBlock(
+                Block<PolymorphicAction<ActionBase>> block = BlockHelper.ProposeGenesisBlock(
                     tableSheets: tableSheets,
                     goldDistributions: initialDepositList.ToArray(),
                     pendingActivationStates: pendingActivationStates.ToArray(),
                     adminState: adminState,
-                    privateKey: initialMinter
+                    privateKey: initialMinter,
+                    initialValidators: initialValidatorSet.ToDictionary(
+                        item => new PublicKey(ByteUtil.ParseHex(item.PublicKey)),
+                        item => new BigInteger(item.Power))
                 );
 
                 Lib9cUtils.ExportBlock(block, "genesis-block");
@@ -281,6 +304,14 @@ namespace NineChronicles.Headless.Executable.Commands
             public long ValidUntil { get; set; }
         }
 
+        [Serializable]
+        private struct Validator
+        {
+            public string PublicKey { get; set; }
+
+            public long Power { get; set; }
+        }
+
         /// <summary>
         /// Extra configurations.
         /// </summary>
@@ -326,6 +357,7 @@ namespace NineChronicles.Headless.Executable.Commands
             public DataConfig Data { get; set; } // Required
             public CurrencyConfig? Currency { get; set; }
             public AdminConfig? Admin { get; set; }
+            public List<Validator>? InitialValidatorSet { get; set; }
             public ExtraConfig? Extra { get; set; }
         }
 #pragma warning restore S3459
