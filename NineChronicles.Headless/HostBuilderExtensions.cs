@@ -15,8 +15,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Nekoyume.Action;
-using OpenTelemetry;
-using OpenTelemetry.Metrics;
 using Sentry;
 
 namespace NineChronicles.Headless
@@ -81,13 +79,6 @@ namespace NineChronicles.Headless
                         options.MaxReceiveMessageSize = null;
                     });
                     services.AddMagicOnion();
-                    services.AddOpenTelemetry()
-                        .WithMetrics(
-                            builder => builder
-                                .AddMeter("NineChronicles")
-                                .AddRuntimeInstrumentation()
-                                .AddAspNetCoreInstrumentation()
-                                .AddPrometheusExporter());
                     services.AddSingleton(provider =>
                     {
                         StandaloneContext? ctx = provider.GetRequiredService<StandaloneContext>();
