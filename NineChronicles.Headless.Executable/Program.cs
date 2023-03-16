@@ -29,6 +29,8 @@ using Libplanet.Blocks;
 using Libplanet.Headless;
 using Libplanet.Net.Transports;
 using Nekoyume.Action;
+using OpenTelemetry;
+using OpenTelemetry.Metrics;
 
 namespace NineChronicles.Headless.Executable
 {
@@ -426,6 +428,13 @@ namespace NineChronicles.Headless.Executable
                 {
                     services.AddSingleton(_ => standaloneContext);
                     services.AddSingleton<ConcurrentDictionary<string, ITransaction>>();
+                    services.AddOpenTelemetry()
+                        .WithMetrics(
+                            builder => builder
+                                .AddMeter("NineChronicles")
+                                .AddRuntimeInstrumentation()
+                                .AddAspNetCoreInstrumentation()
+                                .AddPrometheusExporter());
                 });
                 hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, standaloneContext);
                 if (headlessConfig.RpcServer)
