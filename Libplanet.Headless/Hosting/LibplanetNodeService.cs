@@ -182,31 +182,6 @@ namespace Libplanet.Headless.Hosting
                 shuffledIceServers = iceServers.OrderBy(x => rand.Next());
             }
 
-            ConsensusReactorOption? consensusReactorOption = null;
-
-            // One of consensus seeds or consensus peers should not be null
-            if (!(Properties.ConsensusPrivateKey is null) &&
-                !(Properties.Host is null) &&
-                !(Properties.ConsensusPort is null) &&
-                !(Properties.ConsensusSeeds is null && Properties.ConsensusPeers is null))
-            {
-                consensusReactorOption = new ConsensusReactorOption
-                {
-                    SeedPeers = Properties.ConsensusSeeds!,
-                    ConsensusPeers = Properties.ConsensusPeers!,
-                    ConsensusPort = (int)Properties.ConsensusPort,
-                    ConsensusPrivateKey = Properties.ConsensusPrivateKey,
-                    ConsensusWorkers = 500,
-                    TargetBlockInterval = TimeSpan.FromSeconds(10)
-                };
-            }
-
-            Log.Debug(
-                "Initializing {Swarm}. {Reactor}: {Validator}",
-                nameof(Swarm),
-                nameof(ConsensusReactor<T>),
-                !(consensusReactorOption is null));
-
             var appProtocolVersionOptions = new AppProtocolVersionOptions
             {
                 AppProtocolVersion = Properties.AppProtocolVersion,
@@ -234,11 +209,44 @@ namespace Libplanet.Headless.Hosting
                 appProtocolVersionOptions,
                 hostOptions,
                 swarmOptions.MessageTimestampBuffer).ConfigureAwait(false).GetAwaiter().GetResult();
+
+            NetMQTransport consensusTransport = null;
+            ConsensusReactorOption? consensusReactorOption = null;
+
+            // One of consensus seeds or consensus peers should not be null
+            if (!(Properties.ConsensusPrivateKey is null) &&
+                !(Properties.Host is null) &&
+                !(Properties.ConsensusPort is null) &&
+                !(Properties.ConsensusSeeds is null && Properties.ConsensusPeers is null))
+            {
+                consensusTransport = NetMQTransport.Create(
+                    Properties.ConsensusPrivateKey,
+                    appProtocolVersionOptions,
+                    new Net.HostOptions(Properties.Host, shuffledIceServers, (int)Properties.ConsensusPort),
+                    swarmOptions.MessageTimestampBuffer).ConfigureAwait(false).GetAwaiter().GetResult();
+                consensusReactorOption = new ConsensusReactorOption
+                {
+                    SeedPeers = Properties.ConsensusSeeds!,
+                    ConsensusPeers = Properties.ConsensusPeers!,
+                    ConsensusPort = (int)Properties.ConsensusPort,
+                    ConsensusPrivateKey = Properties.ConsensusPrivateKey,
+                    ConsensusWorkers = 500,
+                    TargetBlockInterval = TimeSpan.FromSeconds(10)
+                };
+            }
+
+            Log.Debug(
+                "Initializing {Swarm}. {Reactor}: {Validator}",
+                nameof(Swarm),
+                nameof(ConsensusReactor<T>),
+                !(consensusReactorOption is null));
+
             Swarm = new Swarm<T>(
                 BlockChain,
                 Properties.SwarmPrivateKey,
                 transport,
                 swarmOptions,
+                consensusTransport,
                 consensusOption: consensusReactorOption);
 
             PreloadEnded = new AsyncManualResetEvent();
