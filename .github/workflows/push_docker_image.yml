@@ -10,6 +10,7 @@ on:
       - previewnet
       - qa-*
       - 2022q3-worldboss
+      - test/evaluation-logging
     tags:
       - v*
   workflow_dispatch:
