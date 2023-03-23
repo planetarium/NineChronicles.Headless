@@ -8,7 +8,9 @@ using GraphQL;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Assets;
+using Libplanet.Crypto;
 using Libplanet.Explorer.GraphTypes;
+using Libplanet.Tests.Common.Action;
 using Nekoyume.Action;
 using Nekoyume.Action.Factory;
 using Nekoyume.Helper;
@@ -533,6 +535,40 @@ namespace NineChronicles.Headless.GraphTypes
                         AvatarAddress = avatarAddress,
                         RuneId = runeId,
                         TryCount = tryCount
+                    };
+                    return Encode(context, action);
+                });
+            Field<NonNullGraphType<ByteStringType>>(
+                "ValidatorSetOperate",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ValidatorSetOperatorGraphType>>
+                    {
+                        Name = "operatorType",
+                        Description = "Type of operator for validator set."
+                    },
+                    new QueryArgument<NonNullGraphType<PublicKeyType>>
+                    {
+                        Name = "publicKey",
+                        Description = "The public key for operand validator."
+                    },
+                    new QueryArgument<NonNullGraphType<BigIntGraphType>>
+                    {
+                        Name = "power",
+                        Description = "The power for operate operand validator's power."
+                    }),
+                resolve: context =>
+                {
+                    var opType = context.GetArgument<ValidatorSetOperatorType>("operatorType");
+                    var publicKey = context.GetArgument<PublicKey>("publicKey");
+                    var power = context.GetArgument<BigInteger>("power");
+
+                    var operand = new Libplanet.Consensus.Validator(publicKey, power);
+                    NCAction action = opType switch
+                    {
+                        ValidatorSetOperatorType.Append => ValidatorSetOperate.Append(operand),
+                        ValidatorSetOperatorType.Remove => ValidatorSetOperate.Remove(operand),
+                        ValidatorSetOperatorType.Update => ValidatorSetOperate.Update(operand),
+                        _ => throw new ExecutionError($"Unexpected {nameof(ValidatorSetOperatorType)}.")
                     };
                     return Encode(context, action);
                 });
