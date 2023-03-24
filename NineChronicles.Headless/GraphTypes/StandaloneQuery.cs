@@ -458,6 +458,52 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "addressQuery",
                 description: "Query to get derived address.",
                 resolve: context => new AddressQuery(standaloneContext));
+            Field<NonNullGraphType<BooleanGraphType>>(
+                name: "replayBlocks",
+                arguments: new QueryArguments(
+                    new QueryArgument<LongGraphType>
+                    {
+                        Name = "startIndex"
+                    },
+                    new QueryArgument<LongGraphType>
+                    {
+                        Name = "endIndex"
+                    },
+                    new QueryArgument<IntGraphType>
+                    {
+                        Name = "repeatCount",
+                        DefaultValue = 1
+                    }
+                ),
+                resolve: context =>
+                {
+                    var startIndex = context.GetArgument<long?>("startIndex");
+                    var endIndex = context.GetArgument<long?>("endIndex");
+                    var repeatCount = context.GetArgument<int>("repeatCount");
+                    if (!(standaloneContext.BlockChain is { } chain))
+                    {
+                        return null;
+                    }
+
+                    var store = standaloneContext.Store;
+                    var stateStore = standaloneContext.NineChroniclesNodeService!.NodeService.StateStore;
+                    var blockChain = new BlockChain<NCAction>(chain.Policy, chain.StagePolicy, store, stateStore, chain.Genesis);
+                    startIndex ??= chain.Tip.Index;
+                    endIndex ??= startIndex;
+                    var currentBlockIndex = (long)startIndex;
+                    while (currentBlockIndex <= endIndex)
+                    {
+                        var block = blockChain[currentBlockIndex++];
+
+                        for (var i = 0; i < repeatCount; i++)
+                        {
+                            blockChain.ExecuteActions(block, StateCompleterSet<NCAction>.Reject);
+                        }
+                    }
+
+                    return true;
+                }
+            );
         }
     }
 }
