@@ -38,7 +38,7 @@ namespace NineChronicles.Headless
 {
     public class NineChroniclesNodeService : IHostedService, IDisposable
     {
-        private LibplanetNodeService<NCAction> NodeService { get; set; }
+        public LibplanetNodeService<NCAction> NodeService { get; private set; }
 
         private LibplanetNodeServiceProperties<NCAction> Properties { get; }
 
