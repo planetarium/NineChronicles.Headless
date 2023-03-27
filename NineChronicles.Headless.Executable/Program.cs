@@ -29,6 +29,8 @@ using Libplanet.Blocks;
 using Libplanet.Headless;
 using Libplanet.Net.Transports;
 using Nekoyume.Action;
+using OpenTelemetry;
+using OpenTelemetry.Metrics;
 
 namespace NineChronicles.Headless.Executable
 {
@@ -357,8 +359,22 @@ namespace NineChronicles.Headless.Executable
 
                 IActionTypeLoader MakeStaticActionTypeLoader() => new StaticActionTypeLoader(
                     Assembly.GetEntryAssembly() is { } entryAssembly
+#if LIB9C_DEV_EXTENSIONS
+                        ? new[]
+                        {
+                            typeof(ActionBase).Assembly,
+                            typeof(Lib9c.DevExtensions.Action.CreateOrReplaceAvatar).Assembly,
+                            entryAssembly
+                        }
+                        : new[]
+                        {
+                            typeof(ActionBase).Assembly,
+                            typeof(Lib9c.DevExtensions.Action.CreateOrReplaceAvatar).Assembly
+                        },
+#else
                         ? new[] { typeof(ActionBase).Assembly, entryAssembly }
                         : new[] { typeof(ActionBase).Assembly },
+#endif
                     typeof(ActionBase)
                 );
 
@@ -388,6 +404,11 @@ namespace NineChronicles.Headless.Executable
                     actionTypeLoader = MakeStaticActionTypeLoader();
                 }
 
+                if (actionTypeLoader is StaticActionTypeLoader staticActionTypeLoader)
+                {
+                    PolymorphicAction<ActionBase>.ActionTypeLoader = staticActionTypeLoader;
+                }
+
                 var minerPrivateKey = string.IsNullOrEmpty(headlessConfig.MinerPrivateKeyString)
                     ? null
                     : new PrivateKey(ByteUtil.ParseHex(headlessConfig.MinerPrivateKeyString));
@@ -407,6 +428,13 @@ namespace NineChronicles.Headless.Executable
                 {
                     services.AddSingleton(_ => standaloneContext);
                     services.AddSingleton<ConcurrentDictionary<string, ITransaction>>();
+                    services.AddOpenTelemetry()
+                        .WithMetrics(
+                            builder => builder
+                                .AddMeter("NineChronicles")
+                                .AddRuntimeInstrumentation()
+                                .AddAspNetCoreInstrumentation()
+                                .AddPrometheusExporter());
                 });
                 hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, standaloneContext);
                 if (headlessConfig.RpcServer)
