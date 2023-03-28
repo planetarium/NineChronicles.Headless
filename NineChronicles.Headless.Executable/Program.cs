@@ -215,11 +215,12 @@ namespace NineChronicles.Headless.Executable
             var configuration = configurationBuilder.Build();
             var loggerConf = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
-                .WriteTo.RollingFile(
+                .WriteTo.File(
                     new RenderedCompactJsonFormatter(),
-                    pathFormat: Environment.GetEnvironmentVariable("JSON_LOG_PATH") ?? "remote-headless_9c-network_remote-headless-{Hour}.json",
+                    path: Environment.GetEnvironmentVariable("JSON_LOG_PATH") ?? "remote-headless_9c-network_remote-headless.json",
                     retainedFileCountLimit: 5,
-                    fileSizeLimitBytes: 524_288_000 )
+                    rollOnFileSizeLimit: true,
+                    fileSizeLimitBytes: 524_288_000)
                 .Destructure.UsingAttributes();
             var headlessConfig = new Configuration();
             configuration.Bind("Headless", headlessConfig);
