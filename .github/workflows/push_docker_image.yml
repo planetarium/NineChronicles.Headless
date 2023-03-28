@@ -11,6 +11,7 @@ on:
       - qa-*
       - 2022q3-worldboss
       - test/evaluation-logging
+      - test/fix-state-cache
     tags:
       - v*
   workflow_dispatch:
