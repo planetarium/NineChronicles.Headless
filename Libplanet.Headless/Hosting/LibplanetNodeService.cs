@@ -78,6 +78,7 @@ namespace Libplanet.Headless.Hosting
             Action<RPCException, string> exceptionHandlerAction,
             Action<bool> preloadStatusHandlerAction,
             IActionTypeLoader actionTypeLoader,
+            IActionEvaluator actionEvaluator = null,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false
         )
@@ -155,7 +156,7 @@ namespace Libplanet.Headless.Hosting
                     genesisBlock: genesisBlock,
                     renderers: renderers,
                     blockChainStates: blockChainStates,
-                    actionEvaluator: new ActionEvaluator(
+                    actionEvaluator: actionEvaluator ?? new ActionEvaluator(
                         blockHeader =>
                         {
                             var blockActionType = actionTypeLoader

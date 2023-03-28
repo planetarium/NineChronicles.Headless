@@ -7,6 +7,7 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using Lib9c.Formatters;
 using Libplanet.Action;
+using Libplanet.Blockchain;
 using Libplanet.Headless.Hosting;
 using MagicOnion.Server;
 using MessagePack;
@@ -39,6 +40,7 @@ namespace NineChronicles.Headless
                 services.AddSingleton(provider => service);
                 services.AddSingleton(provider => service.Swarm);
                 services.AddSingleton(provider => service.BlockChain);
+                services.AddSingleton<IBlockChainStates>(provider => service.BlockChain);
                 services.AddSingleton(provider => service.Store);
                 if (properties.Libplanet is { } libplanetNodeServiceProperties)
                 {

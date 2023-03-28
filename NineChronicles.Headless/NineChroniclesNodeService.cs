@@ -156,6 +156,9 @@ namespace NineChronicles.Headless
                     NodeStatusRenderer.PreloadStatus(isPreloadStarted);
                 },
                 actionTypeLoader,
+#pragma warning disable S1075
+                actionEvaluator: new RemoteActionEvaluator<NCAction>(new Uri("http://localhost:5021/")),
+#pragma warning restore S1075
                 ignoreBootstrapFailure,
                 ignorePreloadFailure
             );

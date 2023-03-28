@@ -24,6 +24,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Libplanet.Action;
+using Libplanet.Blockchain;
 // import necessary for sentry exception filters
 using Libplanet.Blocks;
 using Libplanet.Headless;
