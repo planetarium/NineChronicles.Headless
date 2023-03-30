@@ -21,7 +21,7 @@ namespace Libplanet.Headless.Tests.Hosting
         [Fact]
         public void Constructor()
         {
-            var genesisBlock = BlockChain<DummyAction>.MakeGenesisBlock();
+            var genesisBlock = BlockChain<DummyAction>.ProposeGenesisBlock();
 
             IActionTypeLoader actionTypeLoader = new StaticActionTypeLoader(
                 Assembly.GetEntryAssembly() is { } entryAssembly
@@ -44,7 +44,6 @@ namespace Libplanet.Headless.Tests.Hosting
                 blockPolicy: new BlockPolicy<DummyAction>(),
                 stagePolicy: new VolatileStagePolicy<DummyAction>(),
                 renderers: null,
-                minerLoopAction: (chain, swarm, pk, ct) => Task.CompletedTask,
                 preloadProgress: null,
                 exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),
                 preloadStatusHandlerAction: isPreloadStart => { },
@@ -71,6 +70,7 @@ namespace Libplanet.Headless.Tests.Hosting
                     {
                         AppProtocolVersion = new AppProtocolVersion(),
                         SwarmPrivateKey = new PrivateKey(),
+                        ConsensusPrivateKey = new PrivateKey(),
                         StoreStatesCacheSize = 2,
                         Host = IPAddress.Loopback.ToString(),
                         IceServers = new List<IceServer>(),
@@ -78,7 +78,6 @@ namespace Libplanet.Headless.Tests.Hosting
                     blockPolicy: new BlockPolicy<DummyAction>(),
                     stagePolicy: new VolatileStagePolicy<DummyAction>(),
                     renderers: null,
-                    minerLoopAction: (chain, swarm, pk, ct) => Task.CompletedTask,
                     preloadProgress: null,
                     exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),
                     preloadStatusHandlerAction: isPreloadStart => { },

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using Bencodex.Json;
@@ -13,6 +14,7 @@ using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
+using Libplanet.Headless;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Tx;
@@ -90,27 +92,23 @@ namespace NineChronicles.Headless.Executable.Commands
                 IAccountStateDelta previousStates = new AccountStateDeltaImpl(
                     addresses => blockChain.GetStates(
                         addresses,
-                        previousBlock.Hash,
-                        StateCompleters<NCAction>.Reject),
+                        previousBlock.Hash),
                     (address, currency) => blockChain.GetBalance(
                         address,
                         currency,
-                        previousBlock.Hash,
-                        FungibleAssetStateCompleters<NCAction>.Reject),
+                        previousBlock.Hash),
                     currency => blockChain.GetTotalSupply(
                         currency,
-                        previousBlock.Hash,
-                        TotalSupplyStateCompleters<NCAction>.Reject),
+                        previousBlock.Hash),
                     () => blockChain.GetValidatorSet(
-                        previousBlock.Hash,
-                        ValidatorSetStateCompleters<NCAction>.Reject),
+                        previousBlock.Hash),
                     tx.Signer);
                 var actions = tx.SystemAction is { } sa
                     ? ImmutableList.Create(sa)
                     : ImmutableList.CreateRange(tx.CustomActions!.Cast<IAction>());
                 var actionEvaluations = EvaluateActions(
                     genesisHash: blockChain.Genesis.Hash,
-                    preEvaluationHash: targetBlock.PreEvaluationHash,
+                    preEvaluationHash: targetBlock.PreEvaluationHash.ByteArray,
                     blockIndex: blockIndex,
                     txid: tx.Id,
                     previousStates: previousStates,
@@ -277,9 +275,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
                         try
                         {
-                            var actionEvaluations = blockChain.ExecuteActions(
-                                block,
-                                StateCompleterSet<NCAction>.Reject);
+                            var actionEvaluations = blockChain.ExecuteActions(block);
 
                             if (verbose)
                             {
@@ -304,9 +300,7 @@ namespace NineChronicles.Headless.Executable.Commands
                                 blockChain,
                                 stateStore,
                                 blockChain.Genesis.Hash);
-                            var actionEvaluations = actionEvaluator.Evaluate(
-                                block,
-                                StateCompleterSet<NCAction>.Reject);
+                            var actionEvaluations = actionEvaluator.Evaluate(block);
                             LoggingActionEvaluations(actionEvaluations, outputSw);
 
                             msg = $"- block #{block.Index} evaluating failed with ";
@@ -448,18 +442,26 @@ namespace NineChronicles.Headless.Executable.Commands
             return new Transaction<NCAction>(txDict);
         }
 
-        private ActionEvaluator<NCAction> GetActionEvaluator(
+        private ActionEvaluator GetActionEvaluator(
             BlockChain<NCAction> blockChain,
             IStateStore stateStore,
             BlockHash genesisBlockHash)
         {
             var policy = new BlockPolicySource(Logger.None).GetPolicy();
-            return new ActionEvaluator<NCAction>(
+            IActionTypeLoader actionTypeLoader = new StaticActionTypeLoader(
+                Assembly.GetEntryAssembly() is { } entryAssembly
+                    ? new[] { typeof(NCAction).Assembly, entryAssembly }
+                    : new[] { typeof(NCAction).Assembly },
+                typeof(NCAction)
+            );
+            return new ActionEvaluator(
                 _ => policy.BlockAction,
                 blockChainStates: blockChain,
                 trieGetter: hash => stateStore.GetStateRoot(blockChain[hash].StateRootHash),
                 genesisHash: genesisBlockHash,
-                nativeTokenPredicate: policy.NativeTokens.Contains);
+                nativeTokenPredicate: policy.NativeTokens.Contains,
+                actionTypeLoader: actionTypeLoader,
+                feeCalculator: null);
         }
 
         private void LoggingAboutIncompleteBlockStatesException(

@@ -338,7 +338,6 @@ namespace NineChronicles.Headless.Executable
                         messageTimeout: headlessConfig.MessageTimeout,
                         tipTimeout: headlessConfig.TipTimeout,
                         demandBuffer: headlessConfig.DemandBuffer,
-                        staticPeerStrings: headlessConfig.StaticPeerStrings,
                         preload: !headlessConfig.SkipPreload,
                         minimumBroadcastTarget: headlessConfig.MinimumBroadcastTarget,
                         bucketSize: headlessConfig.BucketSize,

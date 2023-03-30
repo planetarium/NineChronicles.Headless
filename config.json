@@ -1,0 +1,41 @@
+{
+    "data": {
+        "tablePath": "Lib9c/Lib9c/TableCSV"
+    },
+    "currency": {
+        "initialMinter": "",
+        "initialCurrencyDeposit": [
+            {
+                "address": "",
+                "amount": 100000,
+                "start": 0,
+                "end": 0
+            }
+        ]
+    },
+    "admin": {
+        "activate": false,
+        "address": "",
+        "validUntil": 10000
+    },
+    "initialValidatorSet": [
+        {
+            "publicKey": "02d20de0afd2231b17b3a7189c3e897796b3b31378c7b1689a6131d904bab08e5c",
+            "power": 1
+        },
+        {
+            "publicKey": "0324c9cb6d7adfdce58f23800dacbd19c065f37a41178812d4fe3e57ac94b979e8",
+            "power": 1
+        },
+        {
+            "publicKey": "0334add7a681744c22efa307da72f205df39ae8866b9cfe76300cc7da9fe799ee7",
+            "power": 1
+        },
+        {
+            "publicKey": "0245494d87c9d5f2e50ef8fa85035a6cf66d103cce50022cb5376e6fc914ec45c5",
+            "power": 1
+        }
+    ],
+    "extra": {
+    }
+}
