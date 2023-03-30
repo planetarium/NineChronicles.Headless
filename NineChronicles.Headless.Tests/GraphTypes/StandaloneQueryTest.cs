@@ -434,7 +434,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 activatedAccounts = new[] { adminAddress }.ToImmutableHashSet();
             }
 
-            ValidatorSet validatorSetCandidate = new ValidatorSet(new []
+            ValidatorSet validatorSetCandidate = new ValidatorSet(new[]
             {
                 new Libplanet.Consensus.Validator(ProposerPrivateKey.PublicKey, BigInteger.One),
             }.ToList());
@@ -1064,7 +1064,7 @@ decimalPlaces
 #pragma warning restore CS0618
 
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
-            var validatorSetCandidate = new ValidatorSet(new []
+            var validatorSetCandidate = new ValidatorSet(new[]
             {
                 new Libplanet.Consensus.Validator(ProposerPrivateKey.PublicKey, BigInteger.One),
                 new Libplanet.Consensus.Validator(privateKey.PublicKey, BigInteger.One),

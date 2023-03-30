@@ -47,12 +47,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 _store,
                 _stateStore,
                 BlockChain<NCAction>.ProposeGenesisBlock(
-                    systemActions: new IAction[] { 
+                    systemActions: new IAction[]
+                    {
                         new Initialize(
                             new ValidatorSet(
                                 new[] { new Validator(_proposer.PublicKey, BigInteger.One) }
                                     .ToList()),
-                            states: ImmutableDictionary.Create<Address, IValue>()) },
+                            states: ImmutableDictionary.Create<Address, IValue>())
+                    },
                     blockAction: NineChroniclesNodeService.GetTestBlockPolicy().BlockAction,
                     privateKey: new PrivateKey()));
             _service = ServiceBuilder.CreateNineChroniclesNodeService(_blockChain.Genesis, new PrivateKey());
