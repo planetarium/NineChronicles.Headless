@@ -87,7 +87,7 @@ namespace NineChronicles.Headless.Executable.Tests
 
                 var service = MagicOnionClient.Create<IBlockChainService>(channel, Array.Empty<IClientFilter>())
                     .WithCancellationToken(channel.ShutdownToken);
-                Assert.Equal(11085640, (await service.GetTip()).Length);
+                Assert.Equal(11085612, (await service.GetTip()).Length);
             }
             finally
             {

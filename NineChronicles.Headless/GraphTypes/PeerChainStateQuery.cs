@@ -30,14 +30,14 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var chainStates = new List<string>
                     {
-                        $"{swarm.AsPeer.Address}, {chain.Tip.Index}, {chain.Tip.TotalDifficulty}"
+                        $"{swarm.AsPeer.Address}, {chain.Tip.Index}"
                     };
 
                     var peerChainState = swarm.GetPeerChainStateAsync(
                         TimeSpan.FromSeconds(5), default)
                         .Result
                         .Select(
-                            state => $"{state.Peer.Address}, {state.TipIndex}, {state.TotalDifficulty}");
+                            state => $"{state.Peer.Address}, {state.TipIndex}");
 
                     chainStates.AddRange(peerChainState);
 

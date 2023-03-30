@@ -76,8 +76,8 @@ namespace NineChronicles.Headless.Tests
         {
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock();
-            var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
+            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock();
+            var blockchain = BlockChain<PolymorphicAction<ActionBase>>.Create(
                 new BlockPolicy<PolymorphicAction<ActionBase>>(),
                 new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
                 store,
@@ -97,14 +97,14 @@ namespace NineChronicles.Headless.Tests
         {
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
+            var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
                 new PolymorphicAction<ActionBase>[]
                 {
                     initializeStates,
                 },
                 privateKey: minerPrivateKey
             );
-            var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
+            var blockchain = BlockChain<PolymorphicAction<ActionBase>>.Create(
                 new BlockPolicy<PolymorphicAction<ActionBase>>(),
                 new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
                 store,

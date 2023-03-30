@@ -69,7 +69,6 @@ namespace NineChronicles.Headless.Executable
         public int MessageTimeout { get; set; } = 60;
         public int TipTimeout { get; set; } = 60;
         public int DemandBuffer { get; set; } = 1150;
-        public string[]? StaticPeerStrings { get; set; }
         public bool SkipPreload { get; set; }
         public int MinimumBroadcastTarget { get; set; } = 10;
         public int BucketSize { get; set; } = 16;
@@ -165,7 +164,6 @@ namespace NineChronicles.Headless.Executable
             MessageTimeout = messageTimeout ?? MessageTimeout;
             TipTimeout = tipTimeout ?? TipTimeout;
             DemandBuffer = demandBuffer ?? DemandBuffer;
-            StaticPeerStrings = staticPeerStrings ?? StaticPeerStrings;
             SkipPreload = skipPreload ?? SkipPreload;
             MinimumBroadcastTarget = minimumBroadcastTarget ?? MinimumBroadcastTarget;
             BucketSize = bucketSize ?? BucketSize;

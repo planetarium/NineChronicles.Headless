@@ -35,7 +35,9 @@ namespace NineChronicles.Headless.Tests.Common
                 StorePath = storePath,
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
+                ConsensusPrivateKey = privateKey,
                 Port = null,
+                ConsensusPort = null,
                 NoMiner = true,
                 Render = false,
                 LogActionRenders = false,
@@ -44,7 +46,8 @@ namespace NineChronicles.Headless.Tests.Common
                 MessageTimeout = TimeSpan.FromMinutes(1),
                 TipTimeout = TimeSpan.FromMinutes(1),
                 DemandBuffer = 1150,
-                StaticPeers = ImmutableHashSet<BoundPeer>.Empty,
+                ConsensusSeeds = ImmutableList<BoundPeer>.Empty,
+                ConsensusPeers = ImmutableList<BoundPeer>.Empty,
                 IceServers = ImmutableList<IceServer>.Empty,
             };
             return new NineChroniclesNodeService(

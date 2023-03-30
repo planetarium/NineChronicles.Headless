@@ -81,13 +81,11 @@ namespace NineChronicles.Headless
             IBlockPolicy<NCAction> blockPolicy,
             NetworkType networkType,
             IActionTypeLoader actionTypeLoader,
-            TimeSpan? minerBlockInterval = null,
             Progress<PreloadState>? preloadProgress = null,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false,
             bool strictRendering = false,
             TimeSpan txLifeTime = default,
-            int minerCount = 1,
             int txQuotaPerSigner = 10
         )
         {
@@ -142,70 +140,11 @@ namespace NineChronicles.Headless
                 renderers.Add(strictRenderer);
             }
 
-            async Task minerLoopAction(
-                BlockChain<NCAction> chain,
-                Swarm<NCAction> swarm,
-                PrivateKey privateKey,
-                CancellationToken cancellationToken)
-            {
-                var miner = new Miner(chain, privateKey, actionTypeLoader);
-                Log.Debug("Miner called.");
-                while (!cancellationToken.IsCancellationRequested)
-                {
-                    try
-                    {
-                        long nextBlockIndex = chain.Tip.Index + 1;
-
-                        if (swarm.Running)
-                        {
-                            Log.Debug("Start mining.");
-
-                            if (chain.Policy is BlockPolicy bp)
-                            {
-                                if (bp.IsAllowedToMine(privateKey.ToAddress(), chain.Count))
-                                {
-                                    IEnumerable<Task<Block<NCAction>?>> miners = Enumerable
-                                        .Range(0, minerCount)
-                                        .Select(_ => miner.MineBlockAsync(cancellationToken));
-                                    await Task.WhenAll(miners);
-                                    await Task.Delay(minerBlockInterval ?? TimeSpan.Zero);
-                                }
-                                else
-                                {
-                                    Log.Debug(
-                                        "Miner {MinerAddress} is not allowed to mine a block with index {Index} " +
-                                        "under current policy.",
-                                        privateKey.ToAddress(),
-                                        chain.Count);
-                                    await Task.Delay(1000, cancellationToken);
-                                }
-                            }
-                            else
-                            {
-                                Log.Error(
-                                    "No suitable policy was found for chain {ChainId}.",
-                                    chain.Id);
-                                await Task.Delay(1000, cancellationToken);
-                            }
-                        }
-                        else
-                        {
-                            await Task.Delay(1000, cancellationToken);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "Exception occurred.");
-                    }
-                }
-            }
-
             NodeService = new LibplanetNodeService<NCAction>(
                 Properties,
                 blockPolicy,
                 stagePolicy,
                 renderers,
-                minerLoopAction,
                 preloadProgress,
                 (code, msg) =>
                 {
@@ -269,13 +208,11 @@ namespace NineChronicles.Headless
                 blockPolicy,
                 properties.NetworkType,
                 properties.ActionTypeLoader,
-                properties.MinerBlockInterval,
                 preloadProgress: progress,
                 ignoreBootstrapFailure: properties.IgnoreBootstrapFailure,
                 ignorePreloadFailure: properties.IgnorePreloadFailure,
                 strictRendering: properties.StrictRender,
                 txLifeTime: properties.TxLifeTime,
-                minerCount: properties.MinerCount,
                 txQuotaPerSigner: properties.TxQuotaPerSigner
             );
             service.ConfigureContext(context);
@@ -312,19 +249,10 @@ namespace NineChronicles.Headless
         internal static IBlockPolicy<NCAction> GetTestBlockPolicy() =>
             new BlockPolicySource(Log.Logger, LogEventLevel.Debug).GetTestPolicy();
 
-        public void StartMining() => NodeService?.StartMining(MinerPrivateKey);
-
-        public void StopMining() => NodeService?.StopMining();
-
         public Task<bool> CheckPeer(string addr) => NodeService?.CheckPeer(addr) ?? throw new InvalidOperationException();
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            if (!Properties.NoMiner)
-            {
-                StartMining();
-            }
-
             return NodeService.StartAsync(cancellationToken);
         }
 
