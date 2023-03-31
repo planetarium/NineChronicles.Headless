@@ -76,11 +76,10 @@ namespace NineChronicles.Headless.Executable
         public int TxQuotaPerSigner { get; set; } = 10;
         public int MaximumPollPeers { get; set; } = int.MaxValue;
         public ActionTypeLoaderConfiguration? ActionTypeLoader { get; set; } = null;
-       
+
         // Consensus
         public string? ConsensusPrivateKeyString { get; set; }
         public string[]? ConsensusSeedStrings { get; set; }
-        public string[]? ConsensusPeerStrings { get; set; }
         public ushort? ConsensusPort { get; set; }
 
         public string SentryDsn { get; set; } = "";

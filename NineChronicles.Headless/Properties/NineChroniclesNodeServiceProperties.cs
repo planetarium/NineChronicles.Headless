@@ -88,7 +88,7 @@ namespace NineChronicles.Headless.Properties
                 ? new PrivateKey()
                 : new PrivateKey(ByteUtil.ParseHex(swarmPrivateKeyString));
             var consensusPrivateKey = string.IsNullOrEmpty(consensusPrivateKeyString)
-                ? null 
+                ? null
                 : new PrivateKey(ByteUtil.ParseHex(consensusPrivateKeyString));
 
             peerStrings ??= Array.Empty<string>();
