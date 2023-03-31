@@ -79,17 +79,24 @@ namespace NineChronicles.Headless.Properties
                 int minimumBroadcastTarget = 10,
                 int bucketSize = 16,
                 string chainTipStaleBehaviorType = "reboot",
-                int maximumPollPeers = int.MaxValue)
+                int maximumPollPeers = int.MaxValue,
+                ushort? consensusPort = null,
+                string? consensusPrivateKeyString = null,
+                string[]? consensusSeedStrings = null)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
                 : new PrivateKey(ByteUtil.ParseHex(swarmPrivateKeyString));
+            var consensusPrivateKey = string.IsNullOrEmpty(consensusPrivateKeyString)
+                ? null 
+                : new PrivateKey(ByteUtil.ParseHex(consensusPrivateKeyString));
 
             peerStrings ??= Array.Empty<string>();
             iceServerStrings ??= Array.Empty<string>();
 
             var iceServers = iceServerStrings.Select(PropertyParser.ParseIceServer).ToImmutableArray();
             var peers = peerStrings.Select(PropertyParser.ParsePeer).ToImmutableArray();
+            var consensusSeeds = consensusSeedStrings?.Select(PropertyParser.ParsePeer).ToImmutableList();
 
             return new LibplanetNodeServiceProperties<NineChroniclesActionType>
             {
@@ -120,6 +127,9 @@ namespace NineChronicles.Headless.Properties
                 BucketSize = bucketSize,
                 ChainTipStaleBehavior = chainTipStaleBehaviorType,
                 MaximumPollPeers = maximumPollPeers,
+                ConsensusPort = consensusPort,
+                ConsensusSeeds = consensusSeeds,
+                ConsensusPrivateKey = consensusPrivateKey,
             };
         }
 

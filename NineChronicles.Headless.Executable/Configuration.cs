@@ -76,6 +76,12 @@ namespace NineChronicles.Headless.Executable
         public int TxQuotaPerSigner { get; set; } = 10;
         public int MaximumPollPeers { get; set; } = int.MaxValue;
         public ActionTypeLoaderConfiguration? ActionTypeLoader { get; set; } = null;
+       
+        // Consensus
+        public string? ConsensusPrivateKeyString { get; set; }
+        public string[]? ConsensusSeedStrings { get; set; }
+        public string[]? ConsensusPeerStrings { get; set; }
+        public ushort? ConsensusPort { get; set; }
 
         public string SentryDsn { get; set; } = "";
 
@@ -117,13 +123,15 @@ namespace NineChronicles.Headless.Executable
             int? messageTimeout,
             int? tipTimeout,
             int? demandBuffer,
-            string[]? staticPeerStrings,
             bool? skipPreload,
             int? minimumBroadcastTarget,
             int? bucketSize,
             string? chainTipStaleBehaviorType,
             int? txQuotaPerSigner,
             int? maximumPollPeers,
+            ushort? consensusPort,
+            string? consensusPrivateKeyString,
+            string[]? consensusSeedStrings,
             string? sentryDsn,
             double? sentryTraceSampleRate
         )
@@ -170,6 +178,9 @@ namespace NineChronicles.Headless.Executable
             ChainTipStaleBehaviorType = chainTipStaleBehaviorType ?? ChainTipStaleBehaviorType;
             TxQuotaPerSigner = txQuotaPerSigner ?? TxQuotaPerSigner;
             MaximumPollPeers = maximumPollPeers ?? MaximumPollPeers;
+            ConsensusPort = consensusPort ?? ConsensusPort;
+            ConsensusSeedStrings = consensusSeedStrings ?? ConsensusSeedStrings;
+            ConsensusPrivateKeyString = consensusPrivateKeyString ?? ConsensusPrivateKeyString;
             SentryDsn = sentryDsn ?? SentryDsn;
             SentryTraceSampleRate = sentryTraceSampleRate ?? SentryTraceSampleRate;
         }
