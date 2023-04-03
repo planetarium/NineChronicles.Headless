@@ -20,6 +20,31 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
                 "itemType",
                 description: "An ItemType of item",
                 resolve: context => context.Source.item.ItemType);
+            Field<NonNullGraphType<BooleanGraphType>>(
+                "locked",
+                resolve: context => context.Source.Locked);
+            Field<GuidGraphType>(
+                "lockId",
+                resolve: context =>
+                {
+                    if (context.Source.Lock is OrderLock orderLock)
+                    {
+                        return orderLock.OrderId;
+                    }
+
+                    return null;
+                });
+            Field<GuidGraphType>(
+                "tradableId",
+                resolve: context =>
+                {
+                    if (context.Source.item is ITradableItem tradableItem)
+                    {
+                        return tradableItem.TradableId;
+                    }
+
+                    return null;
+                });
         }
     }
 }
