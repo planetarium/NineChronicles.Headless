@@ -4,6 +4,7 @@ using System.Linq;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
+using Lib9c.Model.Order;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
@@ -16,6 +17,7 @@ using Nekoyume.TableData;
 using Nekoyume.TableData.Crystal;
 using NineChronicles.Headless.GraphTypes.Abstractions;
 using NineChronicles.Headless.GraphTypes.States;
+using NineChronicles.Headless.GraphTypes.States.Models.Item;
 using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
 using NineChronicles.Headless.GraphTypes.States.Models.Table;
 
@@ -481,6 +483,24 @@ namespace NineChronicles.Headless.GraphTypes
                     return null;
                 }
             );
+
+            Field<OrderDigestListStateType>(
+                "orderDigestList",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "avatarAddress"
+                }),
+                resolve: context =>
+                {
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+                    var orderDigestListAddress = OrderDigestListState.DeriveAddress(avatarAddress);
+                    if (context.Source.GetState(orderDigestListAddress) is Dictionary d)
+                    {
+                        return new OrderDigestListState(d);
+                    }
+
+                    return null;
+                });
         }
     }
 }
