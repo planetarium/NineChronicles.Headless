@@ -183,6 +183,16 @@ namespace NineChronicles.Headless.Executable
             int? txQuotaPerSigner = null,
             [Option(Description = "The maximum number of peers to poll blocks. int.MaxValue by default.")]
             int? maximumPollPeers = null,
+            [Option("consensus-port",
+                Description = "Port used for communicating consensus related messages.  null by default.")]
+            ushort? consensusPort = null,
+            [Option("consensus-private-key",
+                Description = "The private key used for signing consensus messages. " +
+                              "Cannot be null.")]
+            string? consensusPrivateKeyString = null,
+            [Option("consensus-seed",
+                Description = "A list of seed peers to join the block consensus.")]
+            string[]? consensusSeedStrings = null,
             [Option("config", new[] { 'C' },
                 Description = "Absolute path of \"appsettings.json\" file to provide headless configurations.")]
             string? configPath = "appsettings.json",
@@ -233,8 +243,9 @@ namespace NineChronicles.Headless.Executable
                 rpcListenPort, rpcRemoteServer, rpcHttpServer, graphQLServer, graphQLHost, graphQLPort,
                 graphQLSecretTokenPath, noCors, nonblockRenderer, nonblockRendererQueue, strictRendering,
                 logActionRenders, confirmations,
-                txLifeTime, messageTimeout, tipTimeout, demandBuffer, staticPeerStrings, skipPreload,
+                txLifeTime, messageTimeout, tipTimeout, demandBuffer, skipPreload,
                 minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers,
+                consensusPort, consensusPrivateKeyString, consensusSeedStrings,
                 sentryDsn, sentryTraceSampleRate
             );
 
@@ -344,11 +355,13 @@ namespace NineChronicles.Headless.Executable
                         messageTimeout: headlessConfig.MessageTimeout,
                         tipTimeout: headlessConfig.TipTimeout,
                         demandBuffer: headlessConfig.DemandBuffer,
-                        staticPeerStrings: headlessConfig.StaticPeerStrings,
                         preload: !headlessConfig.SkipPreload,
                         minimumBroadcastTarget: headlessConfig.MinimumBroadcastTarget,
                         bucketSize: headlessConfig.BucketSize,
                         chainTipStaleBehaviorType: headlessConfig.ChainTipStaleBehaviorType,
+                        consensusPort: headlessConfig.ConsensusPort,
+                        consensusPrivateKeyString: headlessConfig.ConsensusPrivateKeyString,
+                        consensusSeedStrings: headlessConfig.ConsensusSeedStrings,
                         maximumPollPeers: headlessConfig.MaximumPollPeers
                     );
 
