@@ -81,6 +81,7 @@ namespace NineChronicles.Headless.Controllers
             }
         }
 
+        // Should deprecate this endpoint after release v200000.
         [HttpPost(SetMiningEndpoint)]
         public IActionResult SetMining([FromBody] SetMiningRequest request)
         {
@@ -95,18 +96,9 @@ namespace NineChronicles.Headless.Controllers
                 return new StatusCodeResult(StatusCodes.Status409Conflict);
             }
 
-            bool mine = request.Mine;
-            if (mine)
-            {
-                StandaloneContext.NineChroniclesNodeService.StartMining();
-            }
-            else
-            {
-                StandaloneContext.NineChroniclesNodeService.StopMining();
-            }
+            StandaloneContext.IsMining = request.Mine;
 
-            StandaloneContext.IsMining = mine;
-            return Ok($"Set mining status to {mine}.");
+            return Ok();
         }
 
         [HttpPost(CheckPeerEndpoint)]

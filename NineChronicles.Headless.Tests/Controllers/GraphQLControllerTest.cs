@@ -56,7 +56,7 @@ namespace NineChronicles.Headless.Tests.Controllers
             }
 
             ConfigureNineChroniclesNodeService();
-            Assert.IsType<OkObjectResult>(_controller.SetMining(new SetMiningRequest
+            Assert.IsType<OkResult>(_controller.SetMining(new SetMiningRequest
             {
                 Mine = mine,
             }));

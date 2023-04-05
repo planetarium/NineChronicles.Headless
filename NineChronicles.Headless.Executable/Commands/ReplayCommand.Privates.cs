@@ -599,7 +599,7 @@ namespace NineChronicles.Headless.Executable.Commands
             }
 
             byte[] preEvaluationHashBytes = preEvaluationHash.ToBuilder().ToArray();
-            int seed = ActionEvaluator<NCAction>.GenerateRandomSeed(
+            int seed = ActionEvaluator.GenerateRandomSeed(
                 preEvaluationHashBytes,
                 hashedSignature,
                 signature,
@@ -677,7 +677,7 @@ namespace NineChronicles.Headless.Executable.Commands
                             "{Message}\nInnerException: {ExcMessage}", innerMessage, e.Message);
                         exc = new UnexpectedlyTerminatedActionException(
                             innerMessage,
-                            preEvaluationHash,
+                            new HashDigest<SHA256>(preEvaluationHash),
                             blockIndex,
                             txid,
                             stateRootHash,

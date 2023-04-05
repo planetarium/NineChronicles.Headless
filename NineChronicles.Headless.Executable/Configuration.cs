@@ -69,7 +69,6 @@ namespace NineChronicles.Headless.Executable
         public int MessageTimeout { get; set; } = 60;
         public int TipTimeout { get; set; } = 60;
         public int DemandBuffer { get; set; } = 1150;
-        public string[]? StaticPeerStrings { get; set; }
         public bool SkipPreload { get; set; }
         public int MinimumBroadcastTarget { get; set; } = 10;
         public int BucketSize { get; set; } = 16;
@@ -77,6 +76,11 @@ namespace NineChronicles.Headless.Executable
         public int TxQuotaPerSigner { get; set; } = 10;
         public int MaximumPollPeers { get; set; } = int.MaxValue;
         public ActionTypeLoaderConfiguration? ActionTypeLoader { get; set; } = null;
+
+        // Consensus
+        public string? ConsensusPrivateKeyString { get; set; }
+        public string[]? ConsensusSeedStrings { get; set; }
+        public ushort? ConsensusPort { get; set; }
 
         public string SentryDsn { get; set; } = "";
 
@@ -118,13 +122,15 @@ namespace NineChronicles.Headless.Executable
             int? messageTimeout,
             int? tipTimeout,
             int? demandBuffer,
-            string[]? staticPeerStrings,
             bool? skipPreload,
             int? minimumBroadcastTarget,
             int? bucketSize,
             string? chainTipStaleBehaviorType,
             int? txQuotaPerSigner,
             int? maximumPollPeers,
+            ushort? consensusPort,
+            string? consensusPrivateKeyString,
+            string[]? consensusSeedStrings,
             string? sentryDsn,
             double? sentryTraceSampleRate
         )
@@ -165,13 +171,15 @@ namespace NineChronicles.Headless.Executable
             MessageTimeout = messageTimeout ?? MessageTimeout;
             TipTimeout = tipTimeout ?? TipTimeout;
             DemandBuffer = demandBuffer ?? DemandBuffer;
-            StaticPeerStrings = staticPeerStrings ?? StaticPeerStrings;
             SkipPreload = skipPreload ?? SkipPreload;
             MinimumBroadcastTarget = minimumBroadcastTarget ?? MinimumBroadcastTarget;
             BucketSize = bucketSize ?? BucketSize;
             ChainTipStaleBehaviorType = chainTipStaleBehaviorType ?? ChainTipStaleBehaviorType;
             TxQuotaPerSigner = txQuotaPerSigner ?? TxQuotaPerSigner;
             MaximumPollPeers = maximumPollPeers ?? MaximumPollPeers;
+            ConsensusPort = consensusPort ?? ConsensusPort;
+            ConsensusSeedStrings = consensusSeedStrings ?? ConsensusSeedStrings;
+            ConsensusPrivateKeyString = consensusPrivateKeyString ?? ConsensusPrivateKeyString;
             SentryDsn = sentryDsn ?? SentryDsn;
             SentryTraceSampleRate = sentryTraceSampleRate ?? SentryTraceSampleRate;
         }

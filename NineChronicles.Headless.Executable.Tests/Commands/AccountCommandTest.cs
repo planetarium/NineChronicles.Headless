@@ -43,21 +43,18 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var statesPath = Path.Combine(_storePath, "states");
             Address targetAddress = new PrivateKey().ToAddress();
             int targetCurrency = 10000; // 100 NCG
-            Guid chainId = Guid.NewGuid();
-            store.SetCanonicalChainId(chainId);
             Block<NCAction> genesisBlock = GenesisHelper.MineGenesisBlock(targetAddress, targetCurrency);
-            store.PutBlock(genesisBlock);
-            store.AppendIndex(chainId, genesisBlock.Hash);
             var stateKeyValueStore = new RocksDBKeyValueStore(statesPath);
             var stateStore = new TrieStateStore(stateKeyValueStore);
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
             IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
-            BlockChain<NCAction> chain = new BlockChain<NCAction>(
+            BlockChain<NCAction> chain = BlockChain<NCAction>.Create(
                 blockPolicy,
                 stagePolicy,
                 store,
                 stateStore,
                 genesisBlock);
+            Guid chainId = chain.Id;
             chain.ExecuteActions(chain.Tip);
             store.Dispose();
             stateStore.Dispose();
