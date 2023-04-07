@@ -18,6 +18,12 @@
         "address": "",
         "validUntil": 10000
     },
+    "initialValidatorSet": [
+        {
+            "publicKey": "",
+            "power": 1
+        }
+    ],
     "extra": {
         "pendingActivationStatePath": "PendingActivation"
     }

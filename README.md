@@ -323,16 +323,22 @@ dotnet run --project NineChronicles.Headless.Executable/NineChronicles.Headless.
 | admin.activate                             | bool                |          | If true, give admin privilege to admin address.                                                                                                                                    |
 | admin.address                              | Address (string)    |          | Address to be admin. If not provided, the `initialMinter` will be set as admin.                                                                                                    |
 | admin.validUntil                           | long                |          | Block number of admin lifetime. Admin address loses its privilege after this block.                                                                                                |
-| extra                                      |                     | Optional | Extra setting.                                                                                                                                                                     |
+| initialValidatorSet                        |                     | Optional | Initial Validator set for this blockchain. Do not provide this section if you want to use default setting.                                                                         |   
+| initialValidatorSet[i].publicKey           | PublicKey (string)  |          | Public Key of validator.                                                                                                                                                           |
+| initialValidatorSet[i].power               | long                |          | Voting power of validator. Min. value of voting power is 1.                                                                                                                        |
+| extra                                      |                     | Optional | Extra settings.                                                                                                                                                                    |
 | extra.pendingActivationStatePath           | string              |          | If you want to set activation key inside genesis block to use, create `PendingActivationData` and save to file and provide here.                                                   |
 
 ### 3. Create genesis block
+
 ```shell
 dotnet run --project ./NineChronicles.Headless.Executable/ genesis ./config.json
 ```
+
 After this step, you will get `genesis-block` file as output and another info in addition.
 
 ### 4. Run Headless node with genesis block
+
 ```shell
 dotnet run --project ./NineChronicles.Headless.Executable/ \
     -V=[APP PROTOCOL VERSION] \

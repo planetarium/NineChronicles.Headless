@@ -126,18 +126,28 @@ namespace NineChronicles.Headless.Executable.Commands
             _console.Out.WriteLine("Admin config done");
         }
 
-        private void ProcessValidator(List<Validator>? config, out List<Validator> initialValidatorSet)
+        private void ProcessValidator(List<Validator>? config, PrivateKey initialValidator,
+            out List<Validator> initialValidatorSet)
         {
             _console.Out.WriteLine("\nProcessing initial validator set for genesis...");
             initialValidatorSet = new List<Validator>();
-            if (config is null)
+            if (config is null || config.Count == 0)
             {
                 _console.Out.WriteLine(
-                    "InitialValidatorSet not provided. Skip initial validator set setting...");
-                return;
+                    "InitialValidatorSet not provided. Use initial minter as initial validator."
+                );
+                initialValidatorSet.Add(new Validator
+                    {
+                        PublicKey = initialValidator.PublicKey.ToString(),
+                        Power = 1,
+                    }
+                );
+            }
+            else
+            {
+                initialValidatorSet = config.ToList();
             }
 
-            initialValidatorSet = config.ToList();
             var str = initialValidatorSet.Aggregate(string.Empty,
                 (s, v) => s + "PublicKey: " + v.PublicKey + ", Power: " + v.Power + "\n");
             _console.Out.WriteLine($"Initial validator set config done: {str}");
@@ -189,7 +199,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 ProcessAdmin(genesisConfig.Admin, initialMinter, out var adminState);
 
-                ProcessValidator(genesisConfig.InitialValidatorSet, out var initialValidatorSet);
+                ProcessValidator(genesisConfig.InitialValidatorSet, initialMinter, out var initialValidatorSet);
 
                 ProcessExtra(genesisConfig.Extra,
                     out var pendingActivationStates);
