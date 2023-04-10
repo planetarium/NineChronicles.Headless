@@ -79,7 +79,7 @@ namespace NineChronicles.Headless.Executable.Commands
             if (config.Value.InitialCurrencyDeposit is null || config.Value.InitialCurrencyDeposit.Count == 0)
             {
                 _console.Out.WriteLine("Initial currency deposit list not provided. " +
-                                $"Give initial {DefaultCurrencyValue} currency to InitialMinter");
+                                       $"Give initial {DefaultCurrencyValue} currency to InitialMinter");
                 initialDepositList.Add(new GoldDistribution
                 {
                     Address = initialMinter.ToAddress(),
@@ -137,10 +137,10 @@ namespace NineChronicles.Headless.Executable.Commands
                     "InitialValidatorSet not provided. Use initial minter as initial validator."
                 );
                 initialValidatorSet.Add(new Validator
-                    {
-                        PublicKey = initialValidator.PublicKey.ToString(),
-                        Power = 1,
-                    }
+                {
+                    PublicKey = initialValidator.PublicKey.ToString(),
+                    Power = 1,
+                }
                 );
             }
             else
@@ -227,7 +227,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     else
                     {
                         _console.Out.WriteLine("Admin privilege has been granted to given admin address. " +
-                                          "Keep this account in secret.");
+                                               "Keep this account in secret.");
                     }
                 }
 
@@ -237,7 +237,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     if (string.IsNullOrEmpty(genesisConfig.Currency?.InitialMinter))
                     {
                         _console.Out.WriteLine("No currency data provided. Initial minter gets initial deposition.\n" +
-                                          "Please check `initial_deposit.csv` file to get detailed info.");
+                                               "Please check `initial_deposit.csv` file to get detailed info.");
                         File.WriteAllText("initial_deposit.csv",
                             "Address,PrivateKey,AmountPerBlock,StartBlock,EndBlock\n");
                         File.AppendAllText("initial_deposit.csv",
@@ -246,7 +246,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     else
                     {
                         _console.Out.WriteLine("No initial deposit data provided. " +
-                                          "Initial minter you provided gets initial deposition.");
+                                               "Initial minter you provided gets initial deposition.");
                     }
                 }
 
