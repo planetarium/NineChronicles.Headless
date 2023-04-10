@@ -20,8 +20,8 @@ using NineChronicles.Headless.Properties;
 using NineChronicles.Headless.Requests;
 using NineChronicles.Headless.Tests.Common;
 using Xunit;
-using IPAddress = System.Net.IPAddress;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
+using IPAddress = System.Net.IPAddress;
 
 namespace NineChronicles.Headless.Tests.Controllers
 {

@@ -459,6 +459,9 @@ modules.xml
 # Downloaded NineChronicles Snapshot Files
 9c-main-snapshot*/
 
+# local genesis cofnig
+config.json
+
 # local headless appsettings
 appsettings.local.json
 
