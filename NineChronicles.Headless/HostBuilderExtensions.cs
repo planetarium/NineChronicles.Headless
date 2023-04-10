@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -15,6 +16,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Nekoyume.Action;
+using NineChronicles.Headless.Middleware;
 using Sentry;
 
 namespace NineChronicles.Headless
@@ -77,6 +79,7 @@ namespace NineChronicles.Headless
                     services.AddGrpc(options =>
                     {
                         options.MaxReceiveMessageSize = null;
+                        options.Interceptors.Add<RateLimitInterceptor>();
                     });
                     services.AddMagicOnion();
                     services.AddSingleton(provider =>
@@ -93,6 +96,7 @@ namespace NineChronicles.Headless
                             provider.GetRequiredService<ConcurrentDictionary<string, ITransaction>>()
                         );
                     });
+                    services.AddSingleton(new RateLimitInterceptor(1, TimeSpan.FromSeconds(5)));
                     var resolver = MessagePack.Resolvers.CompositeResolver.Create(
                         NineChroniclesResolver.Instance,
                         StandardResolver.Instance
