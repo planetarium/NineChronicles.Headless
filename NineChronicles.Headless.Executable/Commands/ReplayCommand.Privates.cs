@@ -22,7 +22,7 @@ namespace NineChronicles.Headless.Executable.Commands
     public partial class ReplayCommand : CoconaLiteConsoleAppBase
     {
         /// <summary>
-        /// Almost duplicate https://github.com/planetarium/libplanet/blob/main/Libplanet/Action/AccountStateDeltaImpl.cs
+        /// Almost duplicate https://github.com/planetarium/libplanet/blob/main/Libplanet/Action/AccountStateDeltaImpl.cs.
         /// </summary>
         private class AccountStateDeltaImpl : IAccountStateDelta
         {
@@ -404,7 +404,7 @@ namespace NineChronicles.Headless.Executable.Commands
         }
 
         /// <summary>
-        /// Almost duplicate https://github.com/planetarium/libplanet/blob/main/Libplanet/Action/ActionContext.cs
+        /// Almost duplicate https://github.com/planetarium/libplanet/blob/main/Libplanet/Action/ActionContext.cs.
         /// </summary>
         private sealed class ActionContext : IActionContext
         {
@@ -558,7 +558,7 @@ namespace NineChronicles.Headless.Executable.Commands
         }
 
         /// <summary>
-        /// Almost duplicate https://github.com/planetarium/libplanet/blob/main/Libplanet/Action/ActionEvaluator.cs#L286
+        /// Almost duplicate https://github.com/planetarium/libplanet/blob/main/Libplanet/Action/ActionEvaluator.cs#L286.
         /// </summary>
         private static IEnumerable<ActionEvaluation> EvaluateActions(
             BlockHash? genesisHash,

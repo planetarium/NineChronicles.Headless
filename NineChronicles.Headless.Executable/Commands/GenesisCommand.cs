@@ -79,7 +79,7 @@ namespace NineChronicles.Headless.Executable.Commands
             if (config.Value.InitialCurrencyDeposit is null || config.Value.InitialCurrencyDeposit.Count == 0)
             {
                 _console.Out.WriteLine("Initial currency deposit list not provided. " +
-                                $"Give initial {DefaultCurrencyValue} currency to InitialMinter");
+                                       $"Give initial {DefaultCurrencyValue} currency to InitialMinter");
                 initialDepositList.Add(new GoldDistribution
                 {
                     Address = initialMinter.ToAddress(),
@@ -126,18 +126,28 @@ namespace NineChronicles.Headless.Executable.Commands
             _console.Out.WriteLine("Admin config done");
         }
 
-        private void ProcessValidator(List<Validator>? config, out List<Validator> initialValidatorSet)
+        private void ProcessValidator(List<Validator>? config, PrivateKey initialValidator,
+            out List<Validator> initialValidatorSet)
         {
             _console.Out.WriteLine("\nProcessing initial validator set for genesis...");
             initialValidatorSet = new List<Validator>();
-            if (config is null)
+            if (config is null || config.Count == 0)
             {
                 _console.Out.WriteLine(
-                    "InitialValidatorSet not provided. Skip initial validator set setting...");
-                return;
+                    "InitialValidatorSet not provided. Use initial minter as initial validator."
+                );
+                initialValidatorSet.Add(new Validator
+                {
+                    PublicKey = initialValidator.PublicKey.ToString(),
+                    Power = 1,
+                }
+                );
+            }
+            else
+            {
+                initialValidatorSet = config.ToList();
             }
 
-            initialValidatorSet = config.ToList();
             var str = initialValidatorSet.Aggregate(string.Empty,
                 (s, v) => s + "PublicKey: " + v.PublicKey + ", Power: " + v.Power + "\n");
             _console.Out.WriteLine($"Initial validator set config done: {str}");
@@ -189,7 +199,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 ProcessAdmin(genesisConfig.Admin, initialMinter, out var adminState);
 
-                ProcessValidator(genesisConfig.InitialValidatorSet, out var initialValidatorSet);
+                ProcessValidator(genesisConfig.InitialValidatorSet, initialMinter, out var initialValidatorSet);
 
                 ProcessExtra(genesisConfig.Extra,
                     out var pendingActivationStates);
@@ -217,7 +227,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     else
                     {
                         _console.Out.WriteLine("Admin privilege has been granted to given admin address. " +
-                                          "Keep this account in secret.");
+                                               "Keep this account in secret.");
                     }
                 }
 
@@ -227,7 +237,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     if (string.IsNullOrEmpty(genesisConfig.Currency?.InitialMinter))
                     {
                         _console.Out.WriteLine("No currency data provided. Initial minter gets initial deposition.\n" +
-                                          "Please check `initial_deposit.csv` file to get detailed info.");
+                                               "Please check `initial_deposit.csv` file to get detailed info.");
                         File.WriteAllText("initial_deposit.csv",
                             "Address,PrivateKey,AmountPerBlock,StartBlock,EndBlock\n");
                         File.AppendAllText("initial_deposit.csv",
@@ -236,7 +246,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     else
                     {
                         _console.Out.WriteLine("No initial deposit data provided. " +
-                                          "Initial minter you provided gets initial deposition.");
+                                               "Initial minter you provided gets initial deposition.");
                     }
                 }
 

@@ -20,12 +20,80 @@
 $ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
 
 Usage: NineChronicles.Headless.Executable [command]
-Usage: NineChronicles.Headless.Executable [--app-protocol-version <String>] [--genesis-block-path <String>] [--host <String>] [--port <UInt16>] [--swarm-private-key <String>] [--no-miner] [--miner-count <Int32>]
-[--miner-private-key <String>] [--miner.block-interval <Int32>] [--store-type <String>] [--store-path <String>] [--no-reduce-store] [--ice-server <String>...] [--peer <String>...] [--trusted-app-protocol-version-signer <String>...]
-[--rpc-server] [--rpc-listen-host <String>] [--rpc-listen-port <Int32>] [--rpc-remote-server] [--rpc-http-server] [--graphql-server] [--graphql-host <String>] [--graphql-port <Int32>] [--graphql-secret-token-path <String>] [--no-cor
-s] [--confirmations <Int32>] [--nonblock-renderer] [--nonblock-renderer-queue <Int32>] [--strict-rendering] [--log-action-renders] [--network-type <NetworkType>] [--tx-life-time <Int32>] [--message-timeout <Int32>] [--tip-timeout <I
-nt32>] [--demand-buffer <Int32>] [--static-peer <String>...] [--skip-preload] [--minimum-broadcast-target <Int32>] [--bucket-size <Int32>] [--chain-tip-stale-behavior-type <String>] [--tx-quota-per-signer <Int32>] [--maximum-poll-pe
-ers <Int32>] [--config <String>] [--sentry-dsn <String>] [--sentry-trace-sample-rate <Double>] [--help] [--version]
+Usage: NineChronicles.Headless.Executable 
+
+// basic
+[--app-protocol-version <String>]
+[--trusted-app-protocol-version-signer <String>...]
+[--genesis-block-path <String>] 
+[--host <String>]
+[--port <UInt16>] 
+[--swarm-private-key <String>]
+  
+// Policy
+[--skip-preload] 
+[--chain-tip-stale-behavior-type <String>] 
+[--confirmations <Int32>]
+[--tx-life-time <Int32>] 
+[--message-timeout <Int32>] 
+[--tip-timeout <Int32>] 
+[--demand-buffer <Int32>]
+[--tx-quota-per-signer <Int32>]
+[--maximum-poll-peers <Int32>]
+
+// Store
+[--store-type <String>] 
+[--store-path <String>]
+[--no-reduce-store]
+ 
+// Network
+[--network-type <NetworkType>]
+[--ice-server <String>...] 
+[--peer <String>...] 
+[--static-peer <String>...]
+[--minimum-broadcast-target <Int32>] 
+[--bucket-size <Int32>] 
+ 
+// render
+[--nonblock-renderer]
+[--nonblock-renderer-queue <Int32>] 
+[--strict-rendering]
+[--log-action-renders]
+
+// consensus
+[--consensus-port <UInt16>] 
+[--consensus-private-key <String>] 
+[--consensus-seed <String>...] 
+
+// RPC
+[--rpc-server]
+[--rpc-listen-host <String>] 
+[--rpc-listen-port <Int32>] 
+[--rpc-remote-server]
+[--rpc-http-server]
+
+// GraphQL
+[--graphql-server] 
+[--graphql-host <String>]
+[--graphql-port <Int32>]
+[--graphql-secret-token-path <String>]
+[--no-cors]
+   
+// Sentry
+[--sentry-dsn <String>] 
+[--sentry-trace-sample-rate <Double>]
+
+// ETC
+[--config <String>] 
+[--help]
+[--version]
+
+// Miner (Deprecated)
+[--no-miner] 
+[--miner-count <Int32>] 
+[--miner-private-key <String>] 
+[--miner.block-interval <Int32>]
+
 
 NineChronicles.Headless.Executable
 
@@ -85,6 +153,9 @@ Options:
   --chain-tip-stale-behavior-type <String>                 Determines behavior when the chain's tip is stale. "reboot" and "preload" is available and "reboot" option is selected by default.
   --tx-quota-per-signer <Int32>                            The number of maximum transactions can be included in stage per signer.
   --maximum-poll-peers <Int32>                             The maximum number of peers to poll blocks. int.MaxValue by default.
+  --consensus-port <UInt16>                                Port used for communicating consensus related messages.  null by default.
+  --consensus-private-key <String>                         The private key used for signing consensus messages. Cannot be null.
+  --consensus-seed <String>...                             A list of seed peers to join the block consensus.
   -C, --config <String>                                    Absolute path of "appsettings.json" file to provide headless configurations. (Default: appsettings.json)
   --sentry-dsn <String>                                    Sentry DSN
   --sentry-trace-sample-rate <Double>                      Trace sample rate for sentry
@@ -252,16 +323,22 @@ dotnet run --project NineChronicles.Headless.Executable/NineChronicles.Headless.
 | admin.activate                             | bool                |          | If true, give admin privilege to admin address.                                                                                                                                    |
 | admin.address                              | Address (string)    |          | Address to be admin. If not provided, the `initialMinter` will be set as admin.                                                                                                    |
 | admin.validUntil                           | long                |          | Block number of admin lifetime. Admin address loses its privilege after this block.                                                                                                |
-| extra                                      |                     | Optional | Extra setting.                                                                                                                                                                     |
+| initialValidatorSet                        |                     | Optional | Initial Validator set for this blockchain. Do not provide this section if you want to use default setting.                                                                         |   
+| initialValidatorSet[i].publicKey           | PublicKey (string)  |          | Public Key of validator.                                                                                                                                                           |
+| initialValidatorSet[i].power               | long                |          | Voting power of validator. Min. value of voting power is 1.                                                                                                                        |
+| extra                                      |                     | Optional | Extra settings.                                                                                                                                                                    |
 | extra.pendingActivationStatePath           | string              |          | If you want to set activation key inside genesis block to use, create `PendingActivationData` and save to file and provide here.                                                   |
 
 ### 3. Create genesis block
+
 ```shell
 dotnet run --project ./NineChronicles.Headless.Executable/ genesis ./config.json
 ```
+
 After this step, you will get `genesis-block` file as output and another info in addition.
 
 ### 4. Run Headless node with genesis block
+
 ```shell
 dotnet run --project ./NineChronicles.Headless.Executable/ \
     -V=[APP PROTOCOL VERSION] \
