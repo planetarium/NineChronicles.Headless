@@ -229,7 +229,7 @@ namespace NineChronicles.Headless.Executable
                 .ReadFrom.Configuration(configuration)
                 .WriteTo.File(
                     new RenderedCompactJsonFormatter(),
-                    path: Environment.GetEnvironmentVariable("JSON_LOG_PATH") ?? "remote-headless_9c-network_remote-headless.json",
+                    path: Environment.GetEnvironmentVariable("JSON_LOG_PATH") ?? "./logs/remote-headless_9c-network_remote-headless.json",
                     retainedFileCountLimit: 5,
                     rollOnFileSizeLimit: true,
                     fileSizeLimitBytes: 524_288_000)
