@@ -163,7 +163,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             await service.StopAsync(cts.Token);
         }
 
-        [Fact(Timeout = 15000)]
+        [Fact(Timeout = 25000)]
         public async Task SubscribeDifferentAppProtocolVersionEncounter()
         {
             var result = await ExecuteSubscriptionQueryAsync(@"

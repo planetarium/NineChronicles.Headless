@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Lib9c\Lib9c.MessagePack\Lib9c.MessagePack.csproj" />
-    <ProjectReference Include="..\Lib9c\Lib9c.Miner\Lib9c.Miner.csproj" />
+    <ProjectReference Include="..\Lib9c\Lib9c.Proposer\Lib9c.Proposer.csproj" />
     <ProjectReference Include="..\Lib9c\Lib9c\Lib9c.csproj" />
     <ProjectReference Include="..\Lib9c\Lib9c.Policy\Lib9c.Policy.csproj" />
     <ProjectReference Include="..\Lib9c\Lib9c.DevExtensions\Lib9c.DevExtensions.csproj" Condition=" '$(Configuration)' == 'DevEx' " />
