@@ -219,7 +219,7 @@ namespace NineChronicles.Headless.Executable
             }
             else
             {
-                configurationBuilder.AddJsonFile(configPath)
+                configurationBuilder.AddJsonFile(configPath!)
                     .AddEnvironmentVariables();
             }
 

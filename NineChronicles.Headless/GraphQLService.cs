@@ -73,7 +73,7 @@ namespace NineChronicles.Headless
                             dictionary[MagicOnionTargetKey] = options.Target;
                         }
 
-                        builder.AddInMemoryCollection(dictionary);
+                        builder.AddInMemoryCollection(dictionary!);
                     })
                     .ConfigureKestrel(options =>
                     {
