@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0-jammy AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:7.0-jammy AS build-env
 WORKDIR /app
 ARG COMMIT
 
@@ -29,7 +29,7 @@ RUN python3.11 -m pip install GitPython
 RUN python3.11 prepare-pluggable-lib9c.py
 
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:6.0
+FROM mcr.microsoft.com/dotnet/aspnet:7.0
 WORKDIR /app
 RUN apt-get update && apt-get install -y libc6-dev
 COPY --from=build-env /app/out .
