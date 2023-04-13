@@ -105,7 +105,7 @@ namespace NineChronicles.Headless.GraphTypes
                         throw exception;
                     }
 
-                    var action = (NCAction)(GameAction)result;
+                    var action = (NCAction)(GameAction)result!;
                     return Encode(context, action);
                 });
         }
