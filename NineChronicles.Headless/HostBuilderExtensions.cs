@@ -79,7 +79,10 @@ namespace NineChronicles.Headless
                     services.AddGrpc(options =>
                     {
                         options.MaxReceiveMessageSize = null;
-                        options.Interceptors.Add<RateLimitInterceptor>();
+                        if (properties.RpcRateLimiter)
+                        {
+                            options.Interceptors.Add<RateLimitInterceptor>();
+                        }
                     });
                     services.AddMagicOnion();
                     services.AddSingleton(provider =>
@@ -96,7 +99,11 @@ namespace NineChronicles.Headless
                             provider.GetRequiredService<ConcurrentDictionary<string, ITransaction>>()
                         );
                     });
-                    services.AddSingleton(new RateLimitInterceptor(1, TimeSpan.FromSeconds(5)));
+                    if (properties.RpcRateLimiter)
+                    {
+                        services.AddSingleton(new RateLimitInterceptor(1, TimeSpan.FromSeconds(5)));
+                    }
+
                     var resolver = MessagePack.Resolvers.CompositeResolver.Create(
                         NineChroniclesResolver.Instance,
                         StandardResolver.Instance
