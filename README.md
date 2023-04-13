@@ -71,6 +71,7 @@ Usage: NineChronicles.Headless.Executable
 [--rpc-listen-port <Int32>] 
 [--rpc-remote-server]
 [--rpc-http-server]
+[--rpc-rate-limiter]
 
 // GraphQL
 [--graphql-server] 
@@ -131,6 +132,7 @@ Options:
   --rpc-listen-port <Int32>                                RPC listen port
   --rpc-remote-server                                      Do a role as RPC remote server? If you enable this option, multiple Unity clients can connect to your RPC server.
   --rpc-http-server                                        If you enable this option with "rpcRemoteServer" option at the same time, RPC server will use HTTP/1, not gRPC.
+  --rpc-rate-limiter                                       User this option to enable rate limiting on the RPC server.Rate limiting is only applied to tx staging. Turned off by default.
   --graphql-server                                         Use this option if you want to enable GraphQL server to enable querying data.
   --graphql-host <String>                                  GraphQL listen host
   --graphql-port <Int32>                                   GraphQL listen port
