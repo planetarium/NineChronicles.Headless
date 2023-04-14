@@ -178,7 +178,7 @@ namespace NineChronicles.Headless
                     app.UseRateLimiter();
                 }
 
-                if (Convert.ToBoolean(Configuration.GetSection("IpRateLimiting")["EnableRateLimiting"]))
+                if (Convert.ToBoolean(Configuration.GetSection("IpRateLimiting")["EnableEndpointRateLimiting"]))
                 {
                     app.UseIpRateLimiting();
                     app.UseMvc();
