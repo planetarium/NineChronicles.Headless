@@ -26,6 +26,7 @@ using Serilog;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using NodeExceptionType = Libplanet.Headless.NodeExceptionType;
 using Libplanet.Headless;
+using Microsoft.AspNetCore.RateLimiting;
 using Nekoyume.Model.State;
 using Sentry;
 
@@ -61,6 +62,7 @@ namespace NineChronicles.Headless
             _sentryTraces = sentryTraces;
         }
 
+        [EnableRateLimiting("GrpcRateLimiter")]
         public UnaryResult<bool> PutTransaction(byte[] txBytes)
         {
             try
