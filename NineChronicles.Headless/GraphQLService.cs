@@ -173,7 +173,7 @@ namespace NineChronicles.Headless
                 app.UseAuthorization();
 
                 if (((IList)Environment.GetCommandLineArgs()).Contains("--rpc-rate-limiter") ||
-                    Convert.ToBoolean(Configuration.GetSection("RPCRateLimiting")["EnableRateLimiting"]))
+                    Convert.ToBoolean(Configuration.GetSection("RpcRateLimiting")["EnableRateLimiting"]))
                 {
                     app.UseRateLimiter();
                 }
