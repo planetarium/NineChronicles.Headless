@@ -15,7 +15,7 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'DevEx' ">
     <DebugSymbols Condition=" '$(DebugSymbols)' == '' ">true</DebugSymbols>
     <Optimize Condition=" '$(Optimize)' == '' ">false</Optimize>
-    <DefineConstants>$(DefineConstants);TRACE;LIB9C_DEV_EXTENSIONS</DefineConstants>
+    <DefineConstants>$(DefineConstants);TRACE;LIB9C_DEV_EXTENSIONS$(UnityFlags.Replace("#",";"))</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
