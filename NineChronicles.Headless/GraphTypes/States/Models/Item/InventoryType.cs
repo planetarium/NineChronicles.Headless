@@ -28,18 +28,33 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
             );
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<InventoryItemType>>>>(
                 nameof(Inventory.Items),
-                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<IntGraphType>>
-                {
-                    Name = "inventoryItemId",
-                    Description = "An Id to find Inventory Item"
-                }),
+                arguments: new QueryArguments(
+                    new QueryArgument<IntGraphType>
+                    {
+                        Name = "inventoryItemId",
+                        Description = "An Id to find Inventory Item"
+                    },
+                    new QueryArgument<BooleanGraphType>
+                    {
+                        Name = "locked",
+                        Description = "filter locked Inventory Item"
+                    }
+                ),
                 description: "List of Inventory Item.",
                 resolve: context =>
                 {
                     IReadOnlyList<Inventory.Item>? items = context.Source.Items;
-                    int Id = context.GetArgument<int>("inventoryItemId");
-
-                    return items.Where(i => i.item.Id == Id);
+                    var itemId = context.GetArgument<int?>("inventoryItemId");
+                    var filter = context.GetArgument<bool?>("locked");
+                    if (itemId.HasValue)
+                    {
+                        items = items.Where(i => i.item.Id == itemId.Value).ToList();
+                    }
+                    if (filter.HasValue)
+                    {
+                        items = items.Where(i => i.Locked == filter.Value).ToList();
+                    }
+                    return items;
                 }
             );
         }
