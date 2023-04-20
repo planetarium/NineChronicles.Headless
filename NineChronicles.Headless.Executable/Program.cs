@@ -124,6 +124,15 @@ namespace NineChronicles.Headless.Executable
             [Option(Description = "If you enable this option with \"rpcRemoteServer\" option at the same time, " +
                                   "RPC server will use HTTP/1, not gRPC.")]
             bool? rpcHttpServer = null,
+            [Option(Description = "Use this option to enable rate limiting on the RPC server (fixed window)." +
+                                  "Rate limiting is only applied to tx staging. Turned off by default.")]
+            bool? rpcRateLimiter = null,
+            [Option(Description = "Use this option to set the window time(in seconds) on the RPC rate limiter" +
+                                  "(--rpc-rate-limiter option required). Set to 5 seconds by default.")]
+            int? rpcRateLimiterWindow = null,
+            [Option(Description = "Use this option to set the number of requests per window time on the RPC rate limiter" +
+                                  "(--rpc-rate-limiter option required). Set to 1 request by default.")]
+            int? rpcRateLimiterPermit = null,
             [Option("graphql-server",
                 Description = "Use this option if you want to enable GraphQL server to enable querying data.")]
             bool? graphQLServer = null,
@@ -240,9 +249,9 @@ namespace NineChronicles.Headless.Executable
                 appProtocolVersionToken, trustedAppProtocolVersionSigners, genesisBlockPath, host, port,
                 swarmPrivateKeyString, storeType, storePath, noReduceStore, noMiner, minerCount,
                 minerPrivateKeyString, minerBlockIntervalMilliseconds, networkType, iceServerStrings, peerStrings, rpcServer, rpcListenHost,
-                rpcListenPort, rpcRemoteServer, rpcHttpServer, graphQLServer, graphQLHost, graphQLPort,
-                graphQLSecretTokenPath, noCors, nonblockRenderer, nonblockRendererQueue, strictRendering,
-                logActionRenders, confirmations,
+                rpcListenPort, rpcRemoteServer, rpcHttpServer, rpcRateLimiter, rpcRateLimiterWindow, rpcRateLimiterPermit,
+                graphQLServer, graphQLHost, graphQLPort, graphQLSecretTokenPath, noCors,
+                nonblockRenderer, nonblockRendererQueue, strictRendering, logActionRenders, confirmations,
                 txLifeTime, messageTimeout, tipTimeout, demandBuffer, skipPreload,
                 minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers,
                 consensusPort, consensusPrivateKeyString, consensusSeedStrings,
@@ -463,7 +472,10 @@ namespace NineChronicles.Headless.Executable
                             .GenerateRpcNodeServiceProperties(
                                 headlessConfig.RpcListenHost,
                                 headlessConfig.RpcListenPort,
-                                headlessConfig.RpcRemoteServer == true
+                                headlessConfig.RpcRemoteServer == true,
+                                headlessConfig.RpcRateLimiter,
+                                headlessConfig.RpcRateLimiterWindow,
+                                headlessConfig.RpcRateLimiterPermit
                             )
                     );
                 }
