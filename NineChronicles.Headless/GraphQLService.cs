@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using AspNetCoreRateLimit;
 using GraphQL.Server;
@@ -171,14 +170,7 @@ namespace NineChronicles.Headless
 
                 app.UseRouting();
                 app.UseAuthorization();
-
-                if (((IList)Environment.GetCommandLineArgs()).Contains("--rpc-rate-limiter") ||
-                    Convert.ToBoolean(Configuration.GetSection("RpcRateLimiting")["EnableRateLimiting"]))
-                {
-                    app.UseRateLimiter();
-                }
-
-                if (Convert.ToBoolean(Configuration.GetSection("IpRateLimiting")["EnableEndpointRateLimiting"]))
+                if (Convert.ToBoolean(Configuration.GetSection("IpRateLimiting")["EnableRateLimiting"]))
                 {
                     app.UseIpRateLimiting();
                     app.UseMvc();
