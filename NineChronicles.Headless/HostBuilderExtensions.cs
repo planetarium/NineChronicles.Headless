@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Nekoyume.Action;
-using NineChronicles.Headless.Middleware;
 using Sentry;
 
 namespace NineChronicles.Headless
@@ -78,23 +77,7 @@ namespace NineChronicles.Headless
                     services.AddGrpc(options =>
                     {
                         options.MaxReceiveMessageSize = null;
-                        options.Interceptors.Add<GrpcCaptureMiddleware>();
                     });
-
-                    if (properties.RpcRateLimiter)
-                    {
-                        services.Configure<GrpcRateLimitOptions>(options =>
-                        {
-                            options.Window = properties.RpcRateLimiterWindow;
-                            options.PermitLimit = properties.RpcRateLimiterPermit;
-                        });
-
-                        services.AddRateLimiter(limiterOptions =>
-                        {
-                            limiterOptions.AddPolicy<string, GrpcRateLimiterPolicy>("GrpcRateLimiter");
-                        });
-                    }
-
                     services.AddMagicOnion();
                     services.AddSingleton(provider =>
                     {
