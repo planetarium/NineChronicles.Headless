@@ -25,7 +25,8 @@ namespace NineChronicles.Headless.Middleware
                 context.Request.EnableBuffering();
                 var remoteIp = context.Connection.RemoteIpAddress;
                 var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
-                _logger.Information("[REQUEST-CAPTURE] Ip: {IP} Method: {Method} Endpoint: {Path}\n{Body}", remoteIp, context.Request.Method, context.Request.Path, body);
+                _logger.Information("[GRAPHQL-REQUEST-CAPTURE] IP: {IP} Method: {Method} Endpoint: {Path} {Body}",
+                    remoteIp, context.Request.Method, context.Request.Path, body);
                 context.Request.Body.Seek(0, SeekOrigin.Begin);
             }
 

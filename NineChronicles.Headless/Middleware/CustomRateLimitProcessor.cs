@@ -1,0 +1,50 @@
+using System.Linq;
+using AspNetCoreRateLimit;
+
+namespace NineChronicles.Headless.Middleware
+{
+    public class CustomIpRateLimitProcessor : IpRateLimitProcessor
+    {
+        private readonly IpRateLimitOptions _options;
+
+        public CustomIpRateLimitProcessor(
+            IpRateLimitOptions options,
+            IIpPolicyStore policyStore,
+            IProcessingStrategy processingStrategy) : base(options, policyStore, processingStrategy)
+        {
+            _options = options;
+        }
+
+        public override bool IsWhitelisted(ClientRequestIdentity requestIdentity)
+        {
+            if (_options.ClientWhitelist != null && _options.ClientWhitelist.Contains(requestIdentity.ClientId))
+            {
+                return true;
+            }
+
+            if (_options.IpWhitelist != null && IpParser.ContainsIp(
+                    _options.IpWhitelist,
+                    requestIdentity.ClientIp.Split("/").FirstOrDefault()))
+            {
+                return true;
+            }
+
+            if (_options.EndpointWhitelist != null && _options.EndpointWhitelist.Any())
+            {
+                string path = _options.EnableRegexRuleMatching
+                    ? $".+:{requestIdentity.Path}"
+                    : $"*:{requestIdentity.Path}";
+
+                if (_options.EndpointWhitelist.Any(x =>
+                        $"{requestIdentity.HttpVerb}:{requestIdentity.Path}".IsUrlMatch(x,
+                            _options.EnableRegexRuleMatching)) ||
+                    _options.EndpointWhitelist.Any(x => path.IsUrlMatch(x, _options.EnableRegexRuleMatching)))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+}

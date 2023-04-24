@@ -96,7 +96,7 @@ namespace NineChronicles.Headless
 
             public void ConfigureServices(IServiceCollection services)
             {
-                if (Convert.ToBoolean(Configuration.GetSection("IpRateLimiting")["EnableRateLimiting"]))
+                if (Convert.ToBoolean(Configuration.GetSection("IpRateLimiting")["EnableEndpointRateLimiting"]))
                 {
                     services.AddOptions();
                     services.AddMemoryCache();
@@ -170,9 +170,9 @@ namespace NineChronicles.Headless
 
                 app.UseRouting();
                 app.UseAuthorization();
-                if (Convert.ToBoolean(Configuration.GetSection("IpRateLimiting")["EnableRateLimiting"]))
+                if (Convert.ToBoolean(Configuration.GetSection("IpRateLimiting")["EnableEndpointRateLimiting"]))
                 {
-                    app.UseIpRateLimiting();
+                    app.UseMiddleware<CustomRateLimitMiddleware>();
                     app.UseMvc();
                 }
 
