@@ -19,6 +19,7 @@
     <ProjectReference Include="..\Lib9c\Lib9c.Proposer\Lib9c.Proposer.csproj" />
     <ProjectReference Include="..\Lib9c\Lib9c\Lib9c.csproj" />
     <ProjectReference Include="..\Lib9c\Lib9c.Policy\Lib9c.Policy.csproj" />
+    <ProjectReference Include="..\Lib9c\Lib9c.Renderers\Lib9c.Renderers.csproj" />
     <ProjectReference Include="..\Lib9c\Lib9c.DevExtensions\Lib9c.DevExtensions.csproj" Condition=" '$(Configuration)' == 'DevEx' " />
     <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet.Explorer\Libplanet.Explorer.csproj" />
     <ProjectReference Include="..\Lib9c\Libplanet.Crypto.Secp256k1\Libplanet.Crypto.Secp256k1.csproj" />

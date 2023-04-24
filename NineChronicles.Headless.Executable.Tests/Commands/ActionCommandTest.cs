@@ -187,11 +187,11 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         }
 
         [Theory]
-        [InlineData(0L, typeof(ClaimStakeReward))]
-        [InlineData(Nekoyume.Action.ClaimStakeReward.ObsoletedIndex - 1, typeof(ClaimStakeReward))]
-        [InlineData(Nekoyume.Action.ClaimStakeReward.ObsoletedIndex, typeof(ClaimStakeReward))]
-        [InlineData(Nekoyume.Action.ClaimStakeReward.ObsoletedIndex + 1, typeof(ClaimStakeReward3))]
-        [InlineData(long.MaxValue, typeof(ClaimStakeReward3))]
+        [InlineData(0L, typeof(ClaimStakeReward2))]
+        [InlineData(Nekoyume.Action.ClaimStakeReward2.ObsoletedIndex - 1, typeof(ClaimStakeReward2))]
+        [InlineData(Nekoyume.Action.ClaimStakeReward2.ObsoletedIndex, typeof(ClaimStakeReward2))]
+        [InlineData(Nekoyume.Action.ClaimStakeReward2.ObsoletedIndex + 1, typeof(ClaimStakeReward))]
+        [InlineData(long.MaxValue, typeof(ClaimStakeReward))]
         public void ClaimStakeRewardWithBlockIndex(long blockIndex, Type expectedActionType)
         {
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
