@@ -87,7 +87,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 timestamp: DateTimeOffset.Parse(timestamp),
                 customActions: parsedActions
             );
-            byte[] raw = tx.Serialize(true);
+            byte[] raw = tx.Serialize();
 
             if (bytes)
             {

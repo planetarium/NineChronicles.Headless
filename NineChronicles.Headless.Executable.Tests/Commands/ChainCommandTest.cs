@@ -20,6 +20,7 @@ using Libplanet.Crypto;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
+using Libplanet.Tx;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.BlockChain.Policy;
@@ -84,15 +85,16 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         {
             var proposer = new PrivateKey();
             Block<NCAction> genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
-                systemActions: new IAction[]
-                {
-                    new Initialize(
-                        validatorSet: new ValidatorSet(
-                            new[] { new Validator(proposer.PublicKey, BigInteger.One) }.ToList()
-                        ),
-                        states: ImmutableDictionary.Create<Address, IValue>()
-                    )
-                });
+                transactions: new IAction[]
+                    {
+                        new Initialize(
+                            validatorSet: new ValidatorSet(
+                                new[] { new Validator(proposer.PublicKey, BigInteger.One) }.ToList()
+                            ),
+                            states: ImmutableDictionary.Create<Address, IValue>()
+                        )
+                    }.Select((sa, nonce) => Transaction<NCAction>.Create(nonce, new PrivateKey(), null, sa))
+                    .ToImmutableList());
             IStore store = storeType.CreateStore(_storePath);
             var stateStore = new TrieStateStore(new RocksDBKeyValueStore(Path.Combine(_storePath, "states")));
 
@@ -117,7 +119,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             };
 
             chain.MakeTransaction(proposer, new PolymorphicAction<ActionBase>[] { action });
-            Block<PolymorphicAction<ActionBase>> block = chain.ProposeBlock(proposer, DateTimeOffset.Now);
+            Block<PolymorphicAction<ActionBase>> block = chain.ProposeBlock(proposer);
             chain.Append(block, GenerateBlockCommit(block, proposer));
             store.Dispose();
             stateStore.Dispose();
@@ -139,13 +141,16 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         {
             var proposer = new PrivateKey();
             Block<NCAction> genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
-                systemActions: new IAction[] {
-                    new Initialize(
-                        validatorSet: new ValidatorSet(
-                            new[] { new Validator(proposer.PublicKey, BigInteger.One) }.ToList()
-                        ),
-                        states: ImmutableDictionary.Create<Address, IValue>()
-                    )});
+                transactions: new IAction[]
+                    {
+                        new Initialize(
+                            validatorSet: new ValidatorSet(
+                                new[] { new Validator(proposer.PublicKey, BigInteger.One) }.ToList()
+                            ),
+                            states: ImmutableDictionary.Create<Address, IValue>()
+                        )
+                    }.Select((sa, nonce) => Transaction<NCAction>.Create(nonce, new PrivateKey(), null, sa))
+                    .ToImmutableList());
             IStore store = storeType.CreateStore(_storePath);
             var stateStore = new TrieStateStore(new RocksDBKeyValueStore(Path.Combine(_storePath, "states")));
 
@@ -176,14 +181,13 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 chain.MakeTransaction(proposer, new NCAction[] { action });
                 if (chain.Tip.Index < 1)
                 {
-                    Block<NCAction> block = chain.ProposeBlock(proposer, DateTimeOffset.Now);
+                    Block<NCAction> block = chain.ProposeBlock(proposer);
                     chain.Append(block, GenerateBlockCommit(block, proposer));
                 }
                 else
                 {
                     Block<NCAction> block = chain.ProposeBlock(
                         proposer,
-                        DateTimeOffset.Now,
                         lastCommit: GenerateBlockCommit(chain.Tip, proposer));
                     chain.Append(block, GenerateBlockCommit(block, proposer));
                 }
@@ -220,7 +224,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 store,
                 stateStore,
                 genesisBlock);
-            chain.ExecuteActions(chain.Tip);
             int prevStatesCount = stateKeyValueStore.ListKeys().Count();
             stateKeyValueStore.Set(
                 new KeyBytes("alpha", Encoding.UTF8),
@@ -275,12 +278,10 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 chain.MakeTransaction(GenesisHelper.ValidatorKey, new NCAction[] { action });
                 Block<NCAction> block = chain.ProposeBlock(
                     GenesisHelper.ValidatorKey,
-                    DateTimeOffset.Now,
                     lastCommit: GenerateBlockCommit(chain.Tip, GenesisHelper.ValidatorKey));
                 chain.Append(block, GenerateBlockCommit(block, GenesisHelper.ValidatorKey));
             }
 
-            chain.ExecuteActions(chain.Tip);
             var indexCountBeforeSnapshot = store.CountIndex(chainId);
             const int blockEpochUnitSeconds = 86400;
             var blockEpoch = (int)(chain.Tip.Timestamp.ToUnixTimeSeconds() / blockEpochUnitSeconds);

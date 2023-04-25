@@ -81,18 +81,19 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
             var genesisBlock = BlockChain<EmptyAction>.ProposeGenesisBlock(
-                systemActions: new IAction[]
-                {
-                    new Initialize(
-                        new ValidatorSet(
-                            new[]
-                                {
-                                    new Validator(ProposerPrivateKey.PublicKey, BigInteger.One),
-                                    new Validator(apvPrivateKey.PublicKey, BigInteger.One)
-                                }
-                                .ToList()),
-                        states: ImmutableDictionary.Create<Address, IValue>())
-                },
+                transactions: new IAction[]
+                    {
+                        new Initialize(
+                            new ValidatorSet(
+                                new[]
+                                    {
+                                        new Validator(ProposerPrivateKey.PublicKey, BigInteger.One),
+                                        new Validator(apvPrivateKey.PublicKey, BigInteger.One)
+                                    }
+                                    .ToList()),
+                            states: ImmutableDictionary.Create<Address, IValue>())
+                    }.Select((sa, nonce) => Transaction<EmptyAction>.Create(nonce, new PrivateKey(), null, sa))
+                    .ToImmutableList(),
                 privateKey: new PrivateKey());
             var validators = new List<PrivateKey>
             {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using GraphQL;
@@ -10,6 +11,7 @@ using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
+using Libplanet.Tx;
 using Microsoft.Extensions.DependencyInjection;
 using Nekoyume.Action;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -98,10 +100,11 @@ namespace NineChronicles.Headless.Tests
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
-                new PolymorphicAction<ActionBase>[]
-                {
-                    initializeStates,
-                },
+                transactions: ImmutableList<Transaction<NCAction>>.Empty.Add(Transaction<NCAction>.Create(
+                    0, minerPrivateKey, null, new PolymorphicAction<ActionBase>[]
+                    {
+                        initializeStates,
+                    })),
                 privateKey: minerPrivateKey
             );
             var blockchain = BlockChain<PolymorphicAction<ActionBase>>.Create(
