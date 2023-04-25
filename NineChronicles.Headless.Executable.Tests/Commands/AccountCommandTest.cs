@@ -55,7 +55,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 stateStore,
                 genesisBlock);
             Guid chainId = chain.Id;
-            chain.ExecuteActions(chain.Tip);
             store.Dispose();
             stateStore.Dispose();
 

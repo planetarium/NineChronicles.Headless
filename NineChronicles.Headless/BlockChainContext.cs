@@ -1,5 +1,6 @@
 using Libplanet.Action;
 using Libplanet.Blockchain;
+using Libplanet.Explorer.Indexing;
 using Libplanet.Explorer.Interfaces;
 using Libplanet.Net;
 using Libplanet.Store;
@@ -21,5 +22,6 @@ namespace NineChronicles.Headless
         public BlockChain<PolymorphicAction<ActionBase>>? BlockChain => _standaloneContext.BlockChain;
         public IStore? Store => _standaloneContext.Store;
         public Swarm<NCAction>? Swarm => _standaloneContext.Swarm;
+        public IBlockChainIndex Index => new RocksDbBlockChainIndex("/tmp/no/no/no/store");
     }
 }

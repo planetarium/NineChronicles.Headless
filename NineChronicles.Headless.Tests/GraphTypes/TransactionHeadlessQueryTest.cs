@@ -47,14 +47,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 _store,
                 _stateStore,
                 BlockChain<NCAction>.ProposeGenesisBlock(
-                    systemActions: new IAction[]
-                    {
-                        new Initialize(
-                            new ValidatorSet(
-                                new[] { new Validator(_proposer.PublicKey, BigInteger.One) }
-                                    .ToList()),
-                            states: ImmutableDictionary.Create<Address, IValue>())
-                    },
+                    transactions: new IAction[]
+                        {
+                            new Initialize(
+                                new ValidatorSet(
+                                    new[] { new Validator(_proposer.PublicKey, BigInteger.One) }
+                                        .ToList()),
+                                states: ImmutableDictionary.Create<Address, IValue>())
+                        }.Select((sa, nonce) => Transaction<NCAction>.Create(nonce, new PrivateKey(), null, sa))
+                        .ToImmutableList(),
                     blockAction: NineChroniclesNodeService.GetTestBlockPolicy().BlockAction,
                     privateKey: new PrivateKey()));
             _service = ServiceBuilder.CreateNineChroniclesNodeService(_blockChain.Genesis, new PrivateKey());
@@ -173,13 +174,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 expectedNonce.ToString()));
             var base64EncodedUnsignedTx = (string)(
                 (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!)["createUnsignedTx"];
-            Transaction<NCAction> unsignedTx =
-                Transaction<NCAction>.Deserialize(Convert.FromBase64String(base64EncodedUnsignedTx), validate: false);
-            Assert.Empty(unsignedTx.Signature);
+            IUnsignedTx unsignedTx =
+                TxMarshaler.DeserializeUnsignedTx<NCAction>(Convert.FromBase64String(base64EncodedUnsignedTx));
             Assert.Equal(publicKey, unsignedTx.PublicKey);
             Assert.Equal(signer, unsignedTx.Signer);
             Assert.Equal(expectedNonce, unsignedTx.Nonce);
-            Assert.Contains(signer, unsignedTx.UpdatedAddresses);
         }
 
         [Theory]
@@ -207,14 +206,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             PublicKey publicKey = privateKey.PublicKey;
             Address signer = publicKey.ToAddress();
             long nonce = _blockChain.GetNextTxNonce(signer);
-            Transaction<NCAction> unsignedTx = Transaction<NCAction>.CreateUnsigned(
-                nonce,
-                publicKey,
-                _blockChain.Genesis.Hash,
-                ImmutableArray<NCAction>.Empty);
-            byte[] serializedUnsignedTx = unsignedTx.Serialize(false);
+            IUnsignedTx unsignedTx = new UnsignedTx(
+                new TxInvoice(genesisHash: _blockChain.Genesis.Hash),
+                new TxSigningMetadata(publicKey, nonce));
+            byte[] serializedUnsignedTx = unsignedTx.SerializeUnsignedTx().ToArray();
             // ignore timestamp's millisecond over 6 digits.
-            unsignedTx = Transaction<NCAction>.Deserialize(serializedUnsignedTx, false);
+            unsignedTx = TxMarshaler.DeserializeUnsignedTx<NCAction>(serializedUnsignedTx);
             byte[] signature = privateKey.Sign(serializedUnsignedTx);
 
             var queryFormat = @"query {{
@@ -235,7 +232,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(unsignedTx.Nonce, signedTx.Nonce);
             Assert.Equal(unsignedTx.UpdatedAddresses, signedTx.UpdatedAddresses);
             Assert.Equal(unsignedTx.Timestamp, signedTx.Timestamp);
-            Assert.Equal(unsignedTx.CustomActions, signedTx.CustomActions);
+            Assert.Equal(unsignedTx.Actions, signedTx.Actions);
         }
 
         [Theory]

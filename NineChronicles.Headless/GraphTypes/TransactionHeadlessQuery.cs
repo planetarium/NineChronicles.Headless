@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Immutable;
+using System.Linq;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet.Blockchain;
@@ -93,9 +95,13 @@ namespace NineChronicles.Headless.GraphTypes
                     var publicKey = new PublicKey(Convert.FromBase64String(context.GetArgument<string>("publicKey")));
                     Address signer = publicKey.ToAddress();
                     long nonce = context.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
-                    Transaction<NCAction> unsignedTransaction =
-                        Transaction<NCAction>.CreateUnsigned(nonce, publicKey, blockChain.Genesis.Hash, new[] { action });
-                    return Convert.ToBase64String(unsignedTransaction.Serialize(false));
+                    UnsignedTx unsignedTransaction =
+                        new UnsignedTx(
+                            new TxInvoice(
+                                genesisHash: blockChain.Genesis.Hash,
+                                actions: new TxCustomActionList(new[] { action })),
+                            new TxSigningMetadata(publicKey: publicKey, nonce: nonce));
+                    return Convert.ToBase64String(unsignedTransaction.SerializeUnsignedTx().ToArray());
                 });
 
             Field<NonNullGraphType<StringGraphType>>(
@@ -116,24 +122,15 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     byte[] signature = Convert.FromBase64String(context.GetArgument<string>("signature"));
-                    Transaction<NCAction> unsignedTransaction =
-                        Transaction<NCAction>.Deserialize(
-                            Convert.FromBase64String(context.GetArgument<string>("unsignedTransaction")),
-                            false);
-                    TxMetadata txMetadata = new TxMetadata(unsignedTransaction.PublicKey)
-                    {
-                        Nonce = unsignedTransaction.Nonce,
-                        GenesisHash = unsignedTransaction.GenesisHash,
-                        UpdatedAddresses = unsignedTransaction.UpdatedAddresses,
-                        Timestamp = unsignedTransaction.Timestamp
-                    };
+                    IUnsignedTx unsignedTransaction =
+                        TxMarshaler.DeserializeUnsignedTx<NCAction>(
+                            Convert.FromBase64String(context.GetArgument<string>("unsignedTransaction")));
 
                     Transaction<NCAction> signedTransaction = new Transaction<NCAction>(
-                        txMetadata,
-                        unsignedTransaction.CustomActions!,
-                        signature);
+                        unsignedTransaction,
+                        signature.ToImmutableArray());
 
-                    return Convert.ToBase64String(signedTransaction.Serialize(true));
+                    return Convert.ToBase64String(signedTransaction.Serialize());
                 });
 
             Field<NonNullGraphType<TxResultType>>(
@@ -222,9 +219,13 @@ namespace NineChronicles.Headless.GraphTypes
                     var publicKey = new PublicKey(ByteUtil.ParseHex(context.GetArgument<string>("publicKey")));
                     Address signer = publicKey.ToAddress();
                     long nonce = context.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
-                    Transaction<NCAction> unsignedTransaction =
-                        Transaction<NCAction>.CreateUnsigned(nonce, publicKey, blockChain.Genesis.Hash, new[] { action });
-                    return unsignedTransaction.Serialize(false);
+                    UnsignedTx unsignedTransaction =
+                        new UnsignedTx(
+                            new TxInvoice(
+                                genesisHash: blockChain.Genesis.Hash,
+                                actions: new TxCustomActionList(new[] { action })),
+                            new TxSigningMetadata(publicKey, nonce));
+                    return unsignedTransaction.SerializeUnsignedTx().ToArray();
                 });
 
             Field<NonNullGraphType<ByteStringType>>(
@@ -244,25 +245,14 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     byte[] signature = ByteUtil.ParseHex(context.GetArgument<string>("signature"));
-                    Transaction<NCAction> unsignedTransaction =
-                        Transaction<NCAction>.Deserialize(
-                            ByteUtil.ParseHex(context.GetArgument<string>("unsignedTransaction")),
-                            false);
-                    TxMetadata txMetadata = new TxMetadata(unsignedTransaction.PublicKey)
-                    {
-                        Nonce = unsignedTransaction.Nonce,
-                        GenesisHash = unsignedTransaction.GenesisHash,
-                        UpdatedAddresses = unsignedTransaction.UpdatedAddresses,
-                        Timestamp = unsignedTransaction.Timestamp
-                    };
+                    IUnsignedTx unsignedTransaction =
+                        TxMarshaler.DeserializeUnsignedTx<NCAction>(
+                            ByteUtil.ParseHex(context.GetArgument<string>("unsignedTransaction")));
 
-                    Transaction<NCAction> signedTransaction = new Transaction<NCAction>(
-                        txMetadata,
-                        unsignedTransaction.CustomActions!,
-                        signature);
-                    signedTransaction.Validate();
+                    Transaction<NCAction> signedTransaction =
+                        new Transaction<NCAction>(unsignedTransaction, signature.ToImmutableArray());
 
-                    return signedTransaction.Serialize(true);
+                    return signedTransaction.Serialize();
                 }
             );
         }

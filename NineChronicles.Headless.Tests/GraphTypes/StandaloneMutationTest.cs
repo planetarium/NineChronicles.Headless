@@ -872,7 +872,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     genesis.Hash,
                     new PolymorphicAction<ActionBase>[] { }
                 );
-            string base64Encoded = Convert.ToBase64String(tx.Serialize(true));
+            string base64Encoded = Convert.ToBase64String(tx.Serialize());
             query = $"mutation {{ stageTx(payload: \"{base64Encoded}\") }}";
             result = await ExecuteQueryAsync(query);
             data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
@@ -919,7 +919,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     genesis.Hash,
                     new PolymorphicAction<ActionBase>[] { }
                 );
-            string base64Encoded = Convert.ToBase64String(tx.Serialize(true));
+            string base64Encoded = Convert.ToBase64String(tx.Serialize());
             query = $"mutation {{ stageTxV2(payload: \"{base64Encoded}\") }}";
             result = await ExecuteQueryAsync(query);
             var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
@@ -981,32 +981,33 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             IImmutableSet<Address> activatedAccounts,
             RankingState0? rankingState = null
         ) => BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
-            new PolymorphicAction<ActionBase>[]
-            {
-                new InitializeStates(
-                    rankingState: rankingState ?? new RankingState0(),
-                    shopState: new ShopState(),
-                    gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
-                    redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                        .Add("address", RedeemCodeState.Address.Serialize())
-                        .Add("map", Bencodex.Types.Dictionary.Empty)
+            transactions: ImmutableList<Transaction<NCAction>>.Empty.Add(Transaction<NCAction>.Create(0,
+                AdminPrivateKey, null, new PolymorphicAction<ActionBase>[]
+                {
+                    new InitializeStates(
+                        rankingState: rankingState ?? new RankingState0(),
+                        shopState: new ShopState(),
+                        gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
+                        redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                            .Add("address", RedeemCodeState.Address.Serialize())
+                            .Add("map", Bencodex.Types.Dictionary.Empty)
+                        ),
+                        adminAddressState: new AdminState(adminAddress, 1500000),
+                        activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
+                        goldCurrencyState: new GoldCurrencyState(curreny),
+                        goldDistributions: new GoldDistribution[0],
+                        tableSheets: _sheets,
+                        pendingActivationStates: new PendingActivationState[] { }
                     ),
-                    adminAddressState: new AdminState(adminAddress, 1500000),
-                    activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-                    goldCurrencyState: new GoldCurrencyState(curreny),
-                    goldDistributions: new GoldDistribution[0],
-                    tableSheets: _sheets,
-                    pendingActivationStates: new PendingActivationState[]{ }
-                ),
-            }, blockAction: ServiceBuilder.BlockPolicy.BlockAction,
-            systemActions: new IAction[]
+                })).AddRange(new IAction[]
             {
                 new Initialize(
                     new ValidatorSet(
                         new[] { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }
                             .ToList()),
                     states: ImmutableDictionary.Create<Address, IValue>())
-            },
+            }.Select((sa, nonce) => Transaction<NCAction>.Create(nonce + 1, AdminPrivateKey, null, sa))),
+            blockAction: ServiceBuilder.BlockPolicy.BlockAction,
             privateKey: AdminPrivateKey
         );
     }

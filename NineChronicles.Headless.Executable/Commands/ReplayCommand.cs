@@ -277,7 +277,8 @@ namespace NineChronicles.Headless.Executable.Commands
 
                         try
                         {
-                            var actionEvaluations = blockChain.ExecuteActions(block);
+                            blockChain.DetermineBlockStateRootHash(block,
+                                out IReadOnlyList<ActionEvaluation> actionEvaluations);
 
                             if (verbose)
                             {
@@ -441,7 +442,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     -1);
             }
 
-            return new Transaction<NCAction>(txDict);
+            return TxMarshaler.UnmarshalTransaction<NCAction>(txDict);
         }
 
         private ActionEvaluator GetActionEvaluator(

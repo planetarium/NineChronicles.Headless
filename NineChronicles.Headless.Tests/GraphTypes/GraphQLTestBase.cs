@@ -30,6 +30,7 @@ using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex.Types;
+using Libplanet.Tx;
 using Xunit.Abstractions;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -53,33 +54,33 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var sheets = TableSheetsImporter.ImportSheets();
             var blockAction = new RewardGold();
             var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
-                new NCAction[]
-                {
-                    new InitializeStates(
-                        rankingState: new RankingState0(),
-                        shopState: new ShopState(),
-                        gameConfigState: new GameConfigState(sheets[nameof(GameConfigSheet)]),
-                        redeemCodeState: new RedeemCodeState(
-                            Bencodex.Types.Dictionary.Empty
-                                .Add("address", RedeemCodeState.Address.Serialize())
-                                .Add("map", Bencodex.Types.Dictionary.Empty)
+                transactions: ImmutableList<Transaction<NCAction>>.Empty.Add(Transaction<NCAction>.Create(0,
+                    AdminPrivateKey, null, new NCAction[]
+                    {
+                        new InitializeStates(
+                            rankingState: new RankingState0(),
+                            shopState: new ShopState(),
+                            gameConfigState: new GameConfigState(sheets[nameof(GameConfigSheet)]),
+                            redeemCodeState: new RedeemCodeState(
+                                Bencodex.Types.Dictionary.Empty
+                                    .Add("address", RedeemCodeState.Address.Serialize())
+                                    .Add("map", Bencodex.Types.Dictionary.Empty)
+                            ),
+                            adminAddressState: new AdminState(AdminAddress, 10000),
+                            activatedAccountsState: new ActivatedAccountsState(),
+                            goldCurrencyState: new GoldCurrencyState(goldCurrency),
+                            goldDistributions: new GoldDistribution[] { },
+                            tableSheets: sheets,
+                            pendingActivationStates: new PendingActivationState[] { }
                         ),
-                        adminAddressState: new AdminState(AdminAddress, 10000),
-                        activatedAccountsState: new ActivatedAccountsState(),
-                        goldCurrencyState: new GoldCurrencyState(goldCurrency),
-                        goldDistributions: new GoldDistribution[] { },
-                        tableSheets: sheets,
-                        pendingActivationStates: new PendingActivationState[] { }
-                    ),
-                },
-                systemActions: new IAction[]
+                    })).AddRange(new IAction[]
                 {
                     new Initialize(
                         new ValidatorSet(
                             new[] { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }
                                 .ToList()),
                         states: ImmutableDictionary.Create<Address, IValue>())
-                },
+                }.Select((sa, nonce) => Transaction<NCAction>.Create(nonce + 1, AdminPrivateKey, null, sa))),
                 blockAction: blockAction,
                 privateKey: AdminPrivateKey);
 
