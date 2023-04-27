@@ -175,7 +175,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var base64EncodedUnsignedTx = (string)(
                 (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!)["createUnsignedTx"];
             IUnsignedTx unsignedTx =
-                TxMarshaler.DeserializeUnsignedTx<NCAction>(Convert.FromBase64String(base64EncodedUnsignedTx));
+                TxMarshaler.DeserializeUnsignedTx(Convert.FromBase64String(base64EncodedUnsignedTx));
             Assert.Equal(publicKey, unsignedTx.PublicKey);
             Assert.Equal(signer, unsignedTx.Signer);
             Assert.Equal(expectedNonce, unsignedTx.Nonce);
@@ -211,7 +211,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new TxSigningMetadata(publicKey, nonce));
             byte[] serializedUnsignedTx = unsignedTx.SerializeUnsignedTx().ToArray();
             // ignore timestamp's millisecond over 6 digits.
-            unsignedTx = TxMarshaler.DeserializeUnsignedTx<NCAction>(serializedUnsignedTx);
+            unsignedTx = TxMarshaler.DeserializeUnsignedTx(serializedUnsignedTx);
             byte[] signature = privateKey.Sign(serializedUnsignedTx);
 
             var queryFormat = @"query {{

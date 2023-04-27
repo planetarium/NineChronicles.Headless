@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Bencodex.Types;
 using Libplanet.Action;
 using Libplanet.Blocks;
 using Serilog;
@@ -27,9 +28,9 @@ public class DynamicActionTypeLoader : IActionTypeLoader
         _cache = new Dictionary<string, Assembly>();
     }
 
-    public IDictionary<string, Type> Load(IActionTypeLoaderContext context)
+    public IDictionary<IValue, Type> Load(IActionTypeLoaderContext context)
     {
-        var types = new Dictionary<string, Type>();
+        var types = new Dictionary<IValue, Type>();
 
         foreach (Type type in LoadAllActionTypes(context))
         {

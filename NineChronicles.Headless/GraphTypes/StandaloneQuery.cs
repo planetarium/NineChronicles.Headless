@@ -42,7 +42,7 @@ namespace NineChronicles.Headless.GraphTypes
                     BlockHash? blockHash = context.GetArgument<byte[]>("hash") switch
                     {
                         byte[] bytes => new BlockHash(bytes),
-                        null => standaloneContext.BlockChain?.GetDelayedRenderer()?.Tip?.Hash,
+                        null => standaloneContext.BlockChain?.Tip?.Hash,
                     };
 
                     if (!(standaloneContext.BlockChain is { } chain))
@@ -306,7 +306,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
 
-                    BlockHash? offset = blockChain.GetDelayedRenderer()?.Tip?.Hash;
+                    BlockHash offset = blockChain.Tip.Hash;
 #pragma warning disable S3247
                     if (blockChain.GetState(agentAddress, offset) is Dictionary agentDict)
 #pragma warning restore S3247

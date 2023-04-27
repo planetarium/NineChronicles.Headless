@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
+using Bencodex.Types;
 using Cocona;
 using Cocona.Help;
 using Libplanet;
@@ -176,17 +177,21 @@ namespace NineChronicles.Headless.Executable.Commands
                         }
 
                         var typeIdentifier = actionTypeAttribute.TypeIdentifier;
-                        if (typeIdentifier.StartsWith("hack_and_slash"))
+                        if (typeIdentifier is Text text)
                         {
-                            hackAndSlashCount++;
-                        }
-                        else if (typeIdentifier.StartsWith("ranking_battle"))
-                        {
-                            rankingBattleCount++;
-                        }
-                        else if (typeIdentifier.StartsWith("mimisbrunnr_battle"))
-                        {
-                            mimisbrunnrBattleCount++;
+                            var typeIdentifierStr = text.Value;
+                            if (typeIdentifierStr.StartsWith("hack_and_slash"))
+                            {
+                                hackAndSlashCount++;
+                            }
+                            else if (typeIdentifierStr.StartsWith("ranking_battle"))
+                            {
+                                rankingBattleCount++;
+                            }
+                            else if (typeIdentifierStr.StartsWith("mimisbrunnr_battle"))
+                            {
+                                mimisbrunnrBattleCount++;
+                            }
                         }
                     }
                 }
