@@ -181,7 +181,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 (string)((Dictionary<string, object>)((ExecutionNode)unsignedQueryResult.Data!).ToValue()!)[
                     "unsignedTransaction"];
             var unsignedTxBytes = ByteUtil.ParseHex(unsignedData);
-            Transaction<NCAction> unsignedTx = Transaction<NCAction>.Deserialize(unsignedTxBytes, false);
+            IUnsignedTx unsignedTx = TxMarshaler.DeserializeUnsignedTx<NCAction>(unsignedTxBytes);
 
             // Sign Transaction in local.
             var path = Path.GetTempFileName();
@@ -208,7 +208,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(nonce, signedTx.Nonce);
             Assert.Equal(unsignedTx.UpdatedAddresses, signedTx.UpdatedAddresses);
             Assert.Equal(unsignedTx.Timestamp, signedTx.Timestamp);
-            Assert.Single(unsignedTx.CustomActions!);
+            Assert.Single(unsignedTx.Actions);
             Assert.Single(signedTx.CustomActions!);
             return (signedTx, hex);
         }

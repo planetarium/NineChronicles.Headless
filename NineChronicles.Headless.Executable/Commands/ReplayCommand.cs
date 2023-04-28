@@ -199,7 +199,7 @@ namespace NineChronicles.Headless.Executable.Commands
             [Option('s', Description = "An absolute path of block storage.(rocksdb)")]
             string storePath,
             [Option('i', Description = "Target start block height. Tip as default. (Min: 1)")]
-            long startIndex = 1,
+            long? startIndex = null,
             [Option('e', Description = "Target end block height. Tip as default. (Min: 1)" +
                                        "If not set, same as argument \"-i\".")]
             long? endIndex = null,
@@ -216,7 +216,12 @@ namespace NineChronicles.Headless.Executable.Commands
             var disposables = new List<IDisposable?> { outputSw, outputFs };
             try
             {
-                if (startIndex < 1)
+                var (store, stateStore, blockChain) = LoadBlockchain(storePath);
+                disposables.Add(store);
+                disposables.Add(stateStore);
+                startIndex ??= blockChain.Tip.Index;
+
+                if (startIndex is null or < 1)
                 {
                     throw new CommandExitedException(
                         "START-INDEX must be greater than or equal to 1.",
@@ -248,10 +253,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     outputSw?.WriteLine(msg);
                 }
 
-                var (store, stateStore, blockChain) = LoadBlockchain(storePath);
-                disposables.Add(store);
-                disposables.Add(stateStore);
-                var currentBlockIndex = startIndex;
+                var currentBlockIndex = startIndex.Value;
                 while (currentBlockIndex <= endIndex)
                 {
                     var block = blockChain[currentBlockIndex++];
@@ -275,7 +277,8 @@ namespace NineChronicles.Headless.Executable.Commands
 
                         try
                         {
-                            var actionEvaluations = blockChain.ExecuteActions(block);
+                            blockChain.DetermineBlockStateRootHash(block,
+                                out IReadOnlyList<ActionEvaluation> actionEvaluations);
 
                             if (verbose)
                             {
@@ -439,7 +442,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     -1);
             }
 
-            return new Transaction<NCAction>(txDict);
+            return TxMarshaler.UnmarshalTransaction<NCAction>(txDict);
         }
 
         private ActionEvaluator GetActionEvaluator(

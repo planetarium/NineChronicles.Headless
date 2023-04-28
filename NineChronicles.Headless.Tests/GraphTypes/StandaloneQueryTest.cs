@@ -440,34 +440,39 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }.ToList());
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
-                    new PolymorphicAction<ActionBase>[]
-                    {
-                        new InitializeStates(
-                            rankingState: new RankingState0(),
-                            shopState: new ShopState(),
-                            gameConfigState: new GameConfigState(),
-                            redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                                .Add("address", RedeemCodeState.Address.Serialize())
-                                .Add("map", Bencodex.Types.Dictionary.Empty)
-                            ),
-                            adminAddressState: new AdminState(adminAddress, 1500000),
-                            activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
+                    transactions: ImmutableList<Transaction<PolymorphicAction<ActionBase>>>.Empty
+                        .Add(Transaction<PolymorphicAction<ActionBase>>.Create(0, ProposerPrivateKey, null,
+                            new PolymorphicAction<ActionBase>[]
+                            {
+                                new InitializeStates(
+                                    rankingState: new RankingState0(),
+                                    shopState: new ShopState(),
+                                    gameConfigState: new GameConfigState(),
+                                    redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                                        .Add("address", RedeemCodeState.Address.Serialize())
+                                        .Add("map", Bencodex.Types.Dictionary.Empty)
+                                    ),
+                                    adminAddressState: new AdminState(adminAddress, 1500000),
+                                    activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
 #pragma warning disable CS0618
-                            // Use of obsolete method Currency.Legacy():
-                            // https://github.com/planetarium/lib9c/discussions/1319
-                            goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
+                                    // Use of obsolete method Currency.Legacy():
+                                    // https://github.com/planetarium/lib9c/discussions/1319
+                                    goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
 #pragma warning restore CS0618
-                            goldDistributions: new GoldDistribution[0],
-                            tableSheets: _sheets,
-                            pendingActivationStates: new PendingActivationState[]{ }
+                                    goldDistributions: new GoldDistribution[0],
+                                    tableSheets: _sheets,
+                                    pendingActivationStates: new PendingActivationState[] { }
+                                ),
+                            }))
+                        .AddRange(new IAction[]
+                            {
+                                new Initialize(
+                                    validatorSet: validatorSetCandidate,
+                                    states: ImmutableDictionary<Address, IValue>.Empty),
+                            }.Select((sa, nonce) =>
+                                Transaction<PolymorphicAction<ActionBase>>.Create(nonce + 1, ProposerPrivateKey, null,
+                                    sa))
                         ),
-                    },
-                    systemActions: new IAction[]
-                    {
-                        new Initialize(
-                            validatorSet: validatorSetCandidate,
-                            states: ImmutableDictionary<Address, IValue>.Empty),
-                    },
                     privateKey: ProposerPrivateKey
                 );
 
@@ -824,28 +829,30 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
-                    new PolymorphicAction<ActionBase>[]
-                    {
-                        new InitializeStates(
-                            rankingState: new RankingState0(),
-                            shopState: new ShopState(),
-                            gameConfigState: new GameConfigState(),
-                            redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                                .Add("address", RedeemCodeState.Address.Serialize())
-                                .Add("map", Bencodex.Types.Dictionary.Empty)
-                            ),
-                            adminAddressState: new AdminState(adminAddress, 1500000),
-                            activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
+                    transactions: ImmutableList<Transaction<PolymorphicAction<ActionBase>>>.Empty.Add(
+                        Transaction<PolymorphicAction<ActionBase>>.Create(0, new PrivateKey(), null,
+                            new PolymorphicAction<ActionBase>[]
+                            {
+                                new InitializeStates(
+                                    rankingState: new RankingState0(),
+                                    shopState: new ShopState(),
+                                    gameConfigState: new GameConfigState(),
+                                    redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                                        .Add("address", RedeemCodeState.Address.Serialize())
+                                        .Add("map", Bencodex.Types.Dictionary.Empty)
+                                    ),
+                                    adminAddressState: new AdminState(adminAddress, 1500000),
+                                    activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
 #pragma warning disable CS0618
-                            // Use of obsolete method Currency.Legacy():
-                            // https://github.com/planetarium/lib9c/discussions/1319
-                            goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
+                                    // Use of obsolete method Currency.Legacy():
+                                    // https://github.com/planetarium/lib9c/discussions/1319
+                                    goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
 #pragma warning restore CS0618
-                            goldDistributions: new GoldDistribution[0],
-                            tableSheets: _sheets,
-                            pendingActivationStates: pendingActivationStates.ToArray()
-                        ),
-                    }
+                                    goldDistributions: new GoldDistribution[0],
+                                    tableSheets: _sheets,
+                                    pendingActivationStates: pendingActivationStates.ToArray()
+                                ),
+                            }))
                 );
 
             var apvPrivateKey = new PrivateKey();
@@ -902,29 +909,34 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
-                    new PolymorphicAction<ActionBase>[]
-                    {
-                        new InitializeStates(
-                            rankingState: new RankingState0(),
-                            shopState: new ShopState(),
-                            gameConfigState: new GameConfigState(),
-                            redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                                .Add("address", RedeemCodeState.Address.Serialize())
-                                .Add("map", Bencodex.Types.Dictionary.Empty)
-                            ),
-                            adminAddressState: new AdminState(adminAddress, 1500000),
-                            activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
+                    transactions: ImmutableList<Transaction<PolymorphicAction<ActionBase>>>.Empty
+                        .Add(Transaction<PolymorphicAction<ActionBase>>.Create(
+                            0,
+                            new PrivateKey(),
+                            null,
+                            new PolymorphicAction<ActionBase>[]
+                            {
+                                new InitializeStates(
+                                    rankingState: new RankingState0(),
+                                    shopState: new ShopState(),
+                                    gameConfigState: new GameConfigState(),
+                                    redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                                        .Add("address", RedeemCodeState.Address.Serialize())
+                                        .Add("map", Bencodex.Types.Dictionary.Empty)
+                                    ),
+                                    adminAddressState: new AdminState(adminAddress, 1500000),
+                                    activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
 #pragma warning disable CS0618
-                            // Use of obsolete method Currency.Legacy():
-                            // https://github.com/planetarium/lib9c/discussions/1319
-                            goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
+                                    // Use of obsolete method Currency.Legacy():
+                                    // https://github.com/planetarium/lib9c/discussions/1319
+                                    goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
 #pragma warning restore CS0618
-                            goldDistributions: new GoldDistribution[0],
-                            tableSheets: _sheets,
-                            pendingActivationStates: pendingActivationStates.ToArray()
-                        ),
-                    }
-                );
+                                    goldDistributions: new GoldDistribution[0],
+                                    tableSheets: _sheets,
+                                    pendingActivationStates: pendingActivationStates.ToArray()
+                                ),
+                            }))
+                        );
 
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
@@ -973,27 +985,29 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
-                    new PolymorphicAction<ActionBase>[]
-                    {
-                        new InitializeStates(
-                            rankingState: new RankingState0(),
-                            shopState: new ShopState(),
-                            gameConfigState: new GameConfigState(),
-                            redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                                .Add("address", RedeemCodeState.Address.Serialize())
-                                .Add("map", Bencodex.Types.Dictionary.Empty)
-                            ),
-                            adminAddressState: new AdminState(adminAddress, 1500000),
-                            activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
+                    transactions: ImmutableList<Transaction<PolymorphicAction<ActionBase>>>.Empty.Add(
+                        Transaction<PolymorphicAction<ActionBase>>.Create(0, new PrivateKey(), null,
+                            new PolymorphicAction<ActionBase>[]
+                            {
+                                new InitializeStates(
+                                    rankingState: new RankingState0(),
+                                    shopState: new ShopState(),
+                                    gameConfigState: new GameConfigState(),
+                                    redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                                        .Add("address", RedeemCodeState.Address.Serialize())
+                                        .Add("map", Bencodex.Types.Dictionary.Empty)
+                                    ),
+                                    adminAddressState: new AdminState(adminAddress, 1500000),
+                                    activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
 #pragma warning disable CS0618
-                            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
-                            goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
+                                    // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                                    goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
 #pragma warning restore CS0618
-                            goldDistributions: new GoldDistribution[0],
-                            tableSheets: _sheets,
-                            pendingActivationStates: pendingActivationStates.ToArray()
-                        ),
-                    }
+                                    goldDistributions: new GoldDistribution[0],
+                                    tableSheets: _sheets,
+                                    pendingActivationStates: pendingActivationStates.ToArray()
+                                ),
+                            }))
                 );
 
             var apvPrivateKey = new PrivateKey();
@@ -1071,29 +1085,38 @@ decimalPlaces
             }.ToList());
             Block<PolymorphicAction<ActionBase>> genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
-                    new PolymorphicAction<ActionBase>[]
-                    {
-                        new InitializeStates(
-                            rankingState: new RankingState0(),
-                            shopState: new ShopState(),
-                            gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
-                            redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                                .Add("address", RedeemCodeState.Address.Serialize())
-                                .Add("map", Bencodex.Types.Dictionary.Empty)
-                            ),
-                            adminAddressState: new AdminState(default, 0),
-                            activatedAccountsState: new ActivatedAccountsState(),
-                            goldCurrencyState: new GoldCurrencyState(goldCurrency),
-                            goldDistributions: new GoldDistribution[]{ },
-                            tableSheets: _sheets,
-                            pendingActivationStates: new PendingActivationState[]{ }
+                    transactions: ImmutableList<Transaction<PolymorphicAction<ActionBase>>>.Empty
+                        .Add(
+                            Transaction<PolymorphicAction<ActionBase>>.Create(0, ProposerPrivateKey, null,
+                                new PolymorphicAction<ActionBase>[]
+                                {
+                                    new InitializeStates(
+                                        rankingState: new RankingState0(),
+                                        shopState: new ShopState(),
+                                        gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
+                                        redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                                            .Add("address", RedeemCodeState.Address.Serialize())
+                                            .Add("map", Bencodex.Types.Dictionary.Empty)
+                                        ),
+                                        adminAddressState: new AdminState(default, 0),
+                                        activatedAccountsState: new ActivatedAccountsState(),
+                                        goldCurrencyState: new GoldCurrencyState(goldCurrency),
+                                        goldDistributions: new GoldDistribution[] { },
+                                        tableSheets: _sheets,
+                                        pendingActivationStates: new PendingActivationState[] { }
+                                    ),
+                                }
+                            )
+                        )
+                        .AddRange(
+                            new IAction[]
+                            {
+                                new Initialize(validatorSetCandidate, ImmutableDictionary<Address, IValue>.Empty),
+                            }.Select((sa, nonce) =>
+                                Transaction<PolymorphicAction<ActionBase>>.Create(nonce + 1, ProposerPrivateKey, null,
+                                    sa))
                         ),
-                    },
                     blockAction: blockPolicy.BlockAction,
-                    systemActions: new IAction[]
-                    {
-                        new Initialize(validatorSetCandidate, ImmutableDictionary<Address, IValue>.Empty),
-                    },
                     privateKey: ProposerPrivateKey
                 );
 

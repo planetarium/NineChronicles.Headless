@@ -80,7 +80,6 @@ namespace NineChronicles.Headless
 
                 try
                 {
-                    tx.Validate();
                     Log.Debug("PutTransaction: (nonce: {nonce}, id: {id})", tx.Nonce, tx.Id);
                     Log.Debug("StagedTransactions: {txIds}", string.Join(", ", _blockChain.GetStagedTransactionIds()));
                     _blockChain.StageTransaction(tx);
