@@ -39,7 +39,6 @@ namespace NineChronicles.Headless
         private RpcContext _context;
         private Codec _codec;
         private LibplanetNodeServiceProperties<NCAction> _libplanetNodeServiceProperties;
-        private DelayedRenderer<NCAction> _delayedRenderer;
         private ActionEvaluationPublisher _publisher;
         private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
 
@@ -52,7 +51,6 @@ namespace NineChronicles.Headless
             ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces)
         {
             _blockChain = blockChain;
-            _delayedRenderer = blockChain.GetDelayedRenderer();
             _swarm = swarm;
             _context = context;
             _codec = new Codec();

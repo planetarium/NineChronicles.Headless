@@ -278,7 +278,7 @@ namespace NineChronicles.Headless.Executable.Commands
                         try
                         {
                             blockChain.DetermineBlockStateRootHash(block,
-                                out IReadOnlyList<ActionEvaluation> actionEvaluations);
+                                out IReadOnlyList<IActionEvaluation> actionEvaluations);
 
                             if (verbose)
                             {
@@ -490,16 +490,43 @@ namespace NineChronicles.Headless.Executable.Commands
         }
 
         private void LoggingActionEvaluations(
-            IReadOnlyList<ActionEvaluation> actionEvaluations,
+            IReadOnlyList<IActionEvaluation> actionEvaluations,
             TextWriter? textWriter)
         {
             var count = actionEvaluations.Count;
             for (var i = 0; i < count; i++)
             {
                 var actionEvaluation = actionEvaluations[i];
-                var actionType = actionEvaluation.Action is NCAction nca
-                    ? ActionTypeAttribute.ValueOf(nca.InnerAction.GetType())
-                    : actionEvaluation.Action.GetType().Name;
+                NCAction? DecodeAction(IValue plainValue)
+                {
+                    try
+                    {
+#pragma warning disable CS0612
+                        var action = new NCAction();
+#pragma warning restore CS0612
+                        action.LoadPlainValue(plainValue);
+                        return action;
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+
+                string? actionType;
+                if (DecodeAction(actionEvaluation.Action) is { } nca)
+                {
+                    actionType = ActionTypeAttribute.ValueOf(nca.InnerAction.GetType())?.ToString();
+                }
+                else if (actionEvaluation.Action is Dictionary dictionary && dictionary.ContainsKey("type_id"))
+                {
+                    actionType = dictionary["type_id"].ToString();
+                }
+                else
+                {
+                    actionType = actionEvaluation.Action.GetType().Name;
+                }
+
                 var prefix = $"--- action evaluation {i + 1}/{count}:";
                 var msg = prefix +
                           $" tx-id({actionEvaluation.InputContext.TxId})" +

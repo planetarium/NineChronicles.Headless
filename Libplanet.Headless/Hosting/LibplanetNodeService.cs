@@ -105,12 +105,6 @@ namespace Libplanet.Headless.Hosting
 
             if (Properties.Confirmations > 0)
             {
-                int confirms = Properties.Confirmations;
-                renderers = renderers.Select(r => r is IActionRenderer<T> ar
-                    ? new DelayedActionRenderer<T>(ar, Store, confirms, 50)
-                    : new DelayedRenderer<T>(r, Store, confirms)
-                );
-
                 // Log the outmost (before delayed) events as well as
                 // the innermost (after delayed) events:
                 ILogger logger = Log.ForContext("SubLevel", " RAW-RENDER-EVENT");
@@ -118,29 +112,6 @@ namespace Libplanet.Headless.Hosting
                     ? new LoggedActionRenderer<T>(ar, logger, LogEventLevel.Debug)
                     : new LoggedRenderer<T>(r, logger, LogEventLevel.Debug)
                 );
-            }
-
-            if (Properties.NonblockRenderer)
-            {
-                renderers = renderers.Select(r =>
-                {
-                    if (r is IActionRenderer<T> ar)
-                    {
-                        return new NonblockActionRenderer<T>(
-                            ar,
-                            Properties.NonblockRendererQueue,
-                            NonblockActionRenderer<T>.FullMode.DropOldest
-                        );
-                    }
-                    else
-                    {
-                        return new NonblockRenderer<T>(
-                            r,
-                            Properties.NonblockRendererQueue,
-                            NonblockActionRenderer<T>.FullMode.DropOldest
-                        );
-                    }
-                });
             }
 
             var blockChainStates = new BlockChainStates(Store, StateStore);
@@ -569,7 +540,6 @@ namespace Libplanet.Headless.Hosting
                                 Log.Error("Start preloading due to staled tip.");
                                 await Swarm.PreloadAsync(
                                     PreloadProgress,
-                                    render: true,
                                     cancellationToken: cancellationToken
                                 );
                                 Log.Error(
