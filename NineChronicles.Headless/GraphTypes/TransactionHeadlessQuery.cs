@@ -123,7 +123,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     byte[] signature = Convert.FromBase64String(context.GetArgument<string>("signature"));
                     IUnsignedTx unsignedTransaction =
-                        TxMarshaler.DeserializeUnsignedTx<NCAction>(
+                        TxMarshaler.DeserializeUnsignedTx(
                             Convert.FromBase64String(context.GetArgument<string>("unsignedTransaction")));
 
                     Transaction<NCAction> signedTransaction = new Transaction<NCAction>(
@@ -246,7 +246,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     byte[] signature = ByteUtil.ParseHex(context.GetArgument<string>("signature"));
                     IUnsignedTx unsignedTransaction =
-                        TxMarshaler.DeserializeUnsignedTx<NCAction>(
+                        TxMarshaler.DeserializeUnsignedTx(
                             ByteUtil.ParseHex(context.GetArgument<string>("unsignedTransaction")));
 
                     Transaction<NCAction> signedTransaction =

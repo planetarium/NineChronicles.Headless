@@ -181,7 +181,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 (string)((Dictionary<string, object>)((ExecutionNode)unsignedQueryResult.Data!).ToValue()!)[
                     "unsignedTransaction"];
             var unsignedTxBytes = ByteUtil.ParseHex(unsignedData);
-            IUnsignedTx unsignedTx = TxMarshaler.DeserializeUnsignedTx<NCAction>(unsignedTxBytes);
+            IUnsignedTx unsignedTx = TxMarshaler.DeserializeUnsignedTx(unsignedTxBytes);
 
             // Sign Transaction in local.
             var path = Path.GetTempFileName();
