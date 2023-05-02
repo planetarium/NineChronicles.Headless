@@ -17,6 +17,7 @@ using Nekoyume.TableData;
 using Nekoyume.TableData.Crystal;
 using NineChronicles.Headless.GraphTypes.Abstractions;
 using NineChronicles.Headless.GraphTypes.States;
+using NineChronicles.Headless.GraphTypes.States.Models;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
 using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
 using NineChronicles.Headless.GraphTypes.States.Models.Table;
@@ -515,6 +516,27 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return null;
                 });
+            Field<NonNullGraphType<MeadContractType>>(
+                "contracted",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "agentAddress"
+                }),
+                resolve: context =>
+                {
+                    var agentAddress = context.GetArgument<Address>("agentAddress");
+                    var contractAddress = agentAddress.Derive(nameof(BringEinheri));
+                    Address? address = null;
+                    bool contracted = false;
+                    if (context.Source.GetState(contractAddress) is List l)
+                    {
+                        address = l[0].ToAddress();
+                        contracted = l[1].ToBoolean();
+                    }
+
+                    return (address, contracted);
+                }
+            );
         }
     }
 }
