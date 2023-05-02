@@ -8,8 +8,7 @@ using Libplanet.Net;
 
 namespace Libplanet.Headless.Hosting
 {
-    public class LibplanetNodeServiceProperties<T>
-        where T : IAction, new()
+    public class LibplanetNodeServiceProperties
     {
         // swarm.
         public string Host { get; set; }
@@ -36,7 +35,7 @@ namespace Libplanet.Headless.Hosting
 
         public string GenesisBlockPath { get; set; }
 
-        public Block<T> GenesisBlock { get; set; }
+        public Block GenesisBlock { get; set; }
 
         public IEnumerable<BoundPeer> Peers { get; set; }
 

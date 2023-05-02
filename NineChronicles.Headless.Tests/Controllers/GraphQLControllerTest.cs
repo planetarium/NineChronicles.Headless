@@ -167,7 +167,7 @@ namespace NineChronicles.Headless.Tests.Controllers
         {
             _standaloneContext.NineChroniclesNodeService = new NineChroniclesNodeService(
                 new PrivateKey(),
-                new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+                new LibplanetNodeServiceProperties
                 {
                     GenesisBlock = _standaloneContext.BlockChain!.Genesis,
                     StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),

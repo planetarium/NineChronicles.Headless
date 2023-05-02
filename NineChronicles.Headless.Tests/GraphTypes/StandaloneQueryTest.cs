@@ -35,6 +35,8 @@ using NineChronicles.Headless.Tests.Common;
 using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
 using Xunit.Abstractions;
+using static NineChronicles.Headless.NCActionUtils;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -241,7 +243,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockChain = StandaloneContextFx.BlockChain;
             for (int i = 0; i < 10; i++)
             {
-                Block<PolymorphicAction<ActionBase>> block = blockChain!.ProposeBlock(
+                Block block = blockChain!.ProposeBlock(
                     userPrivateKey,
                     lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, validators));
                 blockChain!.Append(block, GenerateBlockCommit(block.Index, block.Hash, validators));
@@ -298,7 +300,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             for (int i = 0; i < 10; i++)
             {
-                Block<PolymorphicAction<ActionBase>> block = BlockChain.ProposeBlock(
+                Block block = BlockChain.ProposeBlock(
                     ProposerPrivateKey,
                     lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
                 BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
@@ -438,10 +440,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 new Libplanet.Consensus.Validator(ProposerPrivateKey.PublicKey, BigInteger.One),
             }.ToList());
-            Block<PolymorphicAction<ActionBase>> genesis =
+            Block genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
-                    transactions: ImmutableList<Transaction<PolymorphicAction<ActionBase>>>.Empty
-                        .Add(Transaction<PolymorphicAction<ActionBase>>.Create(0, ProposerPrivateKey, null,
+                    transactions: ImmutableList<Transaction>.Empty
+                        .Add(Transaction.Create<NCAction>(0, ProposerPrivateKey, null,
                             new PolymorphicAction<ActionBase>[]
                             {
                                 new InitializeStates(
@@ -470,8 +472,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                     validatorSet: validatorSetCandidate,
                                     states: ImmutableDictionary<Address, IValue>.Empty),
                             }.Select((sa, nonce) =>
-                                Transaction<PolymorphicAction<ActionBase>>.Create(nonce + 1, ProposerPrivateKey, null,
-                                    sa))
+                                Transaction.Create<NCAction>(nonce + 1, ProposerPrivateKey, null,
+                                    new[] { sa }))
                         ),
                     privateKey: ProposerPrivateKey
                 );
@@ -480,7 +482,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
             var userPrivateKey = new PrivateKey();
             var consensusPrivateKey = new PrivateKey();
-            var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+            var properties = new LibplanetNodeServiceProperties
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
                 AppProtocolVersion = apv,
@@ -521,7 +523,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ActivationKey.Create(privateKey, nonce);
             PolymorphicAction<ActionBase> action = new CreatePendingActivation(pendingActivation);
             blockChain.MakeTransaction(adminPrivateKey, new[] { action });
-            Block<PolymorphicAction<ActionBase>> block = blockChain.ProposeBlock(
+            Block block = blockChain.ProposeBlock(
                 ProposerPrivateKey,
                 lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
             blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
@@ -566,7 +568,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 data
             );
 
-            Block<PolymorphicAction<ActionBase>> block = blockChain!.ProposeBlock(
+            Block block = blockChain!.ProposeBlock(
                 userPrivateKey,
                 lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, validators));
             blockChain!.Append(block, GenerateBlockCommit(block.Index, block.Hash, validators));
@@ -590,7 +592,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             PrivateKey senderKey = ProposerPrivateKey, recipientKey = new PrivateKey();
             Address sender = senderKey.ToAddress(), recipient = recipientKey.ToAddress();
 
-            Block<PolymorphicAction<ActionBase>> block = BlockChain.ProposeBlock(
+            Block block = BlockChain.ProposeBlock(
                 ProposerPrivateKey,
                 lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
             BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
@@ -600,7 +602,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
 
             var currency = new GoldCurrencyState((Dictionary)BlockChain.GetState(Addresses.GoldCurrency)).Currency;
-            Transaction<PolymorphicAction<ActionBase>> MakeTx(PolymorphicAction<ActionBase> action)
+            Transaction MakeTx(PolymorphicAction<ActionBase> action)
             {
                 return BlockChain.MakeTransaction(ProposerPrivateKey,
                     new PolymorphicAction<ActionBase>[] { action });
@@ -627,9 +629,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     $"{{ transferNCGHistories(blockHash: \"{blockHashHex}\") {{ blockHash txId sender recipient amount memo }} }}");
             var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
 
-            ITransferAsset GetFirstCustomActionAsTransferAsset(Transaction<PolymorphicAction<ActionBase>> tx)
+            ITransferAsset GetFirstCustomActionAsTransferAsset(Transaction tx)
             {
-                return (ITransferAsset)tx.CustomActions!.First().InnerAction;
+                return (ITransferAsset)ToAction(tx.Actions!.First()).InnerAction;
             }
 
             Assert.Null(result.Errors);
@@ -736,7 +738,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockChain = StandaloneContextFx.BlockChain;
             var transaction = blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
             blockChain.StageTransaction(transaction);
-            Block<PolymorphicAction<ActionBase>> block = blockChain.ProposeBlock(
+            Block block = blockChain.ProposeBlock(
                 userPrivateKey,
                 lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, validators));
             blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, validators));
@@ -787,7 +789,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockChain = StandaloneContextFx.BlockChain;
             var transaction = blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
             blockChain.StageTransaction(transaction);
-            Block<PolymorphicAction<ActionBase>> block = blockChain.ProposeBlock(
+            Block block = blockChain.ProposeBlock(
                 userPrivateKey,
                 lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, validators));
             blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, validators));
@@ -827,10 +829,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 pendingActivation,
             };
-            Block<PolymorphicAction<ActionBase>> genesis =
+            Block genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
-                    transactions: ImmutableList<Transaction<PolymorphicAction<ActionBase>>>.Empty.Add(
-                        Transaction<PolymorphicAction<ActionBase>>.Create(0, new PrivateKey(), null,
+                    transactions: ImmutableList<Transaction>.Empty.Add(
+                        Transaction.Create<NCAction>(0, new PrivateKey(), null,
                             new PolymorphicAction<ActionBase>[]
                             {
                                 new InitializeStates(
@@ -859,7 +861,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
             var userPrivateKey = new PrivateKey();
             var consensusPrivateKey = new PrivateKey();
-            var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+            var properties = new LibplanetNodeServiceProperties
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
                 AppProtocolVersion = apv,
@@ -907,10 +909,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var activatedAccounts = ImmutableHashSet<Address>.Empty;
             var pendingActivationStates = new List<PendingActivationState>();
 
-            Block<PolymorphicAction<ActionBase>> genesis =
+            Block genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
-                    transactions: ImmutableList<Transaction<PolymorphicAction<ActionBase>>>.Empty
-                        .Add(Transaction<PolymorphicAction<ActionBase>>.Create(
+                    transactions: ImmutableList<Transaction>.Empty
+                        .Add(Transaction.Create<NCAction>(
                             0,
                             new PrivateKey(),
                             null,
@@ -942,7 +944,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
             var userPrivateKey = new PrivateKey();
             var consensusPrivateKey = new PrivateKey();
-            var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+            var properties = new LibplanetNodeServiceProperties
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
                 AppProtocolVersion = apv,
@@ -983,10 +985,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var activatedAccounts = ImmutableHashSet<Address>.Empty;
             var pendingActivationStates = new List<PendingActivationState>();
 
-            Block<PolymorphicAction<ActionBase>> genesis =
+            Block genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
-                    transactions: ImmutableList<Transaction<PolymorphicAction<ActionBase>>>.Empty.Add(
-                        Transaction<PolymorphicAction<ActionBase>>.Create(0, new PrivateKey(), null,
+                    transactions: ImmutableList<Transaction>.Empty.Add(
+                        Transaction.Create<NCAction>(0, new PrivateKey(), null,
                             new PolymorphicAction<ActionBase>[]
                             {
                                 new InitializeStates(
@@ -1015,7 +1017,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var userPrivateKey = new PrivateKey();
             var consensusPrivateKey = new PrivateKey();
-            var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+            var properties = new LibplanetNodeServiceProperties
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
                 AppProtocolVersion = apv,
@@ -1083,11 +1085,11 @@ decimalPlaces
                 new Libplanet.Consensus.Validator(ProposerPrivateKey.PublicKey, BigInteger.One),
                 new Libplanet.Consensus.Validator(privateKey.PublicKey, BigInteger.One),
             }.ToList());
-            Block<PolymorphicAction<ActionBase>> genesis =
+            Block genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
-                    transactions: ImmutableList<Transaction<PolymorphicAction<ActionBase>>>.Empty
+                    transactions: ImmutableList<Transaction>.Empty
                         .Add(
-                            Transaction<PolymorphicAction<ActionBase>>.Create(0, ProposerPrivateKey, null,
+                            Transaction.Create<NCAction>(0, ProposerPrivateKey, null,
                                 new PolymorphicAction<ActionBase>[]
                                 {
                                     new InitializeStates(
@@ -1113,15 +1115,15 @@ decimalPlaces
                             {
                                 new Initialize(validatorSetCandidate, ImmutableDictionary<Address, IValue>.Empty),
                             }.Select((sa, nonce) =>
-                                Transaction<PolymorphicAction<ActionBase>>.Create(nonce + 1, ProposerPrivateKey, null,
-                                    sa))
+                                Transaction.Create<NCAction>(nonce + 1, ProposerPrivateKey, null,
+                                    new[] { sa }))
                         ),
                     blockAction: blockPolicy.BlockAction,
                     privateKey: ProposerPrivateKey
                 );
 
             var consensusPrivateKey = new PrivateKey();
-            var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+            var properties = new LibplanetNodeServiceProperties
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
                 AppProtocolVersion = default,

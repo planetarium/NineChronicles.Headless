@@ -58,7 +58,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [InlineData(StoreType.RocksDb)]
         public void Tip(StoreType storeType)
         {
-            Block<NCAction> genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock();
+            Block genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock();
             IStore store = storeType.CreateStore(_storePath);
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
@@ -68,7 +68,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
             // FIXME For an unknown reason, BlockHeader.TimeStamp precision issue occurred and the store we should open it again.
             store = storeType.CreateStore(_storePath);
-            genesisBlock = store.GetBlock<NCAction>(genesisBlock.Hash);
+            genesisBlock = store.GetBlock(genesisBlock.Hash);
             store.Dispose();
 
             _command.Tip(storeType, _storePath);
@@ -84,7 +84,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         public void Inspect(StoreType storeType)
         {
             var proposer = new PrivateKey();
-            Block<NCAction> genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
+            Block genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
                 transactions: new IAction[]
                     {
                         new Initialize(
@@ -93,7 +93,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                             ),
                             states: ImmutableDictionary.Create<Address, IValue>()
                         )
-                    }.Select((sa, nonce) => Transaction<NCAction>.Create(nonce, new PrivateKey(), null, sa))
+                    }.Select((sa, nonce) => Transaction.Create<NCAction>(nonce, new PrivateKey(), null, new[] { sa }))
                     .ToImmutableList());
             IStore store = storeType.CreateStore(_storePath);
             var stateStore = new TrieStateStore(new RocksDBKeyValueStore(Path.Combine(_storePath, "states")));
@@ -119,7 +119,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             };
 
             chain.MakeTransaction(proposer, new PolymorphicAction<ActionBase>[] { action });
-            Block<PolymorphicAction<ActionBase>> block = chain.ProposeBlock(proposer);
+            Block block = chain.ProposeBlock(proposer);
             chain.Append(block, GenerateBlockCommit(block, proposer));
             store.Dispose();
             stateStore.Dispose();
@@ -140,7 +140,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         public void Truncate(StoreType storeType)
         {
             var proposer = new PrivateKey();
-            Block<NCAction> genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
+            Block genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
                 transactions: new IAction[]
                     {
                         new Initialize(
@@ -149,7 +149,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                             ),
                             states: ImmutableDictionary.Create<Address, IValue>()
                         )
-                    }.Select((sa, nonce) => Transaction<NCAction>.Create(nonce, new PrivateKey(), null, sa))
+                    }.Select((sa, nonce) => Transaction.Create<NCAction>(nonce, new PrivateKey(), null, new[] { sa }))
                     .ToImmutableList());
             IStore store = storeType.CreateStore(_storePath);
             var stateStore = new TrieStateStore(new RocksDBKeyValueStore(Path.Combine(_storePath, "states")));
@@ -181,12 +181,12 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 chain.MakeTransaction(proposer, new NCAction[] { action });
                 if (chain.Tip.Index < 1)
                 {
-                    Block<NCAction> block = chain.ProposeBlock(proposer);
+                    Block block = chain.ProposeBlock(proposer);
                     chain.Append(block, GenerateBlockCommit(block, proposer));
                 }
                 else
                 {
-                    Block<NCAction> block = chain.ProposeBlock(
+                    Block block = chain.ProposeBlock(
                         proposer,
                         lastCommit: GenerateBlockCommit(chain.Tip, proposer));
                     chain.Append(block, GenerateBlockCommit(block, proposer));
@@ -276,7 +276,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             for (var i = 0; i < 2; i++)
             {
                 chain.MakeTransaction(GenesisHelper.ValidatorKey, new NCAction[] { action });
-                Block<NCAction> block = chain.ProposeBlock(
+                Block block = chain.ProposeBlock(
                     GenesisHelper.ValidatorKey,
                     lastCommit: GenerateBlockCommit(chain.Tip, GenesisHelper.ValidatorKey));
                 chain.Append(block, GenerateBlockCommit(block, GenesisHelper.ValidatorKey));
@@ -333,7 +333,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             Directory.Delete(outputDirectory, true);
         }
 
-        private Block<NCAction> MineGenesisBlock()
+        private Block MineGenesisBlock()
         {
             Dictionary<string, string> tableSheets = Lib9cUtils.ImportSheets("../../../../Lib9c/Lib9c/TableCSV");
             var goldDistributionPath = Path.GetTempFileName();
@@ -378,7 +378,7 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
                 .LoadInDescendingEndBlockOrder(goldDistributionPath);
             AdminState adminState =
                 new AdminState(new Address(genesisConfig.AdminAddress), genesisConfig.AdminValidUntil);
-            Block<NCAction> genesisBlock = BlockHelper.ProposeGenesisBlock(
+            Block genesisBlock = BlockHelper.ProposeGenesisBlock(
                 tableSheets,
                 goldDistributions,
                 pendingActivationStates.ToArray(),
@@ -398,8 +398,7 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
             return genesisBlock;
         }
 
-        private BlockCommit? GenerateBlockCommit<T>(Block<T> block, PrivateKey validator)
-            where T : IAction, new()
+        private BlockCommit? GenerateBlockCommit(Block block, PrivateKey validator)
         {
             return block.Index != 0
                 ? new BlockCommit(

@@ -43,7 +43,7 @@ namespace Libplanet.Headless.Hosting
 
         public readonly Swarm<T> Swarm;
 
-        public readonly LibplanetNodeServiceProperties<T> Properties;
+        public readonly LibplanetNodeServiceProperties Properties;
 
         public AsyncManualResetEvent BootstrapEnded { get; }
 
@@ -70,7 +70,7 @@ namespace Libplanet.Headless.Hosting
         private List<Guid> _obsoletedChainIds;
 
         public LibplanetNodeService(
-            LibplanetNodeServiceProperties<T> properties,
+            LibplanetNodeServiceProperties properties,
             IBlockPolicy<T> blockPolicy,
             IStagePolicy<T> stagePolicy,
             IEnumerable<IRenderer<T>> renderers,
@@ -600,8 +600,8 @@ namespace Libplanet.Headless.Hosting
             }
         }
 
-        protected Block<T> LoadGenesisBlock(
-            LibplanetNodeServiceProperties<T> properties
+        protected Block LoadGenesisBlock(
+            LibplanetNodeServiceProperties properties
         )
         {
             if (!(properties.GenesisBlock is null))
@@ -622,12 +622,12 @@ namespace Libplanet.Headless.Hosting
                     rawBlock = client.GetByteArrayAsync(uri).Result;
                 }
                 var blockDict = (Bencodex.Types.Dictionary)Codec.Decode(rawBlock);
-                return BlockMarshaler.UnmarshalBlock<T>(blockDict);
+                return BlockMarshaler.UnmarshalBlock(blockDict);
             }
             else
             {
                 throw new ArgumentException(
-                    $"At least, one of {nameof(LibplanetNodeServiceProperties<T>.GenesisBlock)} or {nameof(LibplanetNodeServiceProperties<T>.GenesisBlockPath)} must be set.");
+                    $"At least, one of {nameof(LibplanetNodeServiceProperties.GenesisBlock)} or {nameof(LibplanetNodeServiceProperties.GenesisBlockPath)} must be set.");
             }
         }
 

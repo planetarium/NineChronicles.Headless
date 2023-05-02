@@ -18,10 +18,11 @@ using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Libplanet.Headless;
 using Nekoyume.Model;
 using NineChronicles.Headless.GraphTypes.States;
+using static NineChronicles.Headless.NCActionUtils;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -115,12 +116,12 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var recipient = context.GetArgument<Address?>("recipient");
 
-                    IEnumerable<Transaction<NCAction>> txs = digest.TxIds
+                    IEnumerable<Transaction> txs = digest.TxIds
                         .Select(b => new TxId(b.ToBuilder().ToArray()))
-                        .Select(store.GetTransaction<NCAction>);
+                        .Select(store.GetTransaction);
                     var filteredTransactions = txs.Where(tx =>
-                        tx.CustomActions!.Count == 1 &&
-                        tx.CustomActions.First().InnerAction is ITransferAsset transferAsset &&
+                        tx.Actions!.Count == 1 &&
+                        ToAction(tx.Actions.First()).InnerAction is ITransferAsset transferAsset &&
                         (!recipient.HasValue || transferAsset.Recipient == recipient) &&
                         transferAsset.Amount.Currency.Ticker == "NCG" &&
                         store.GetTxExecution(blockHash, tx.Id) is TxSuccess);
@@ -145,7 +146,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var histories = filteredTransactions.Select(tx =>
                         ToTransferNCGHistory((TxSuccess)store.GetTxExecution(blockHash, tx.Id),
-                            ((ITransferAsset)tx.CustomActions!.Single().InnerAction).Memo));
+                            ((ITransferAsset)ToAction(tx.Actions!.Single()).InnerAction).Memo));
 
                     return histories;
                 });
