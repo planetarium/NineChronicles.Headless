@@ -228,6 +228,26 @@ namespace NineChronicles.Headless
             meter.CreateObservableGauge(
                 "ninechronicles_subscriber_addresses_count",
                 () => context.AgentAddresses.Count);
+            meter.CreateObservableGauge(
+                "ninechronicles_tx_count",
+                () => service.BlockChain.Tip.Transactions.Count,
+                description: "The count of the tip block's transactions.");
+            meter.CreateObservableGauge(
+                "ninechronicles_block_interval",
+                () =>
+                {
+                    var currentBlockHash = service.BlockChain.Tip.Hash;
+                    var nullablePreviousBlockHash = service.BlockChain[currentBlockHash].PreviousHash;
+                    if (nullablePreviousBlockHash is { } previousBlockHash)
+                    {
+                        return (service.BlockChain[currentBlockHash].Timestamp -
+                                service.BlockChain[previousBlockHash].Timestamp).TotalSeconds;
+                    }
+
+                    // When the tip is genesis block...
+                    return 0;
+                },
+                description: "The block interval between tip block and tip - 1 block.");
 
             return service;
         }
