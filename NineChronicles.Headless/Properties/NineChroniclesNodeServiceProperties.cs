@@ -25,7 +25,7 @@ namespace NineChronicles.Headless.Properties
         /// <seealso cref="LibplanetNodeServiceProperties{T}.SwarmPrivateKey"/>
         public PrivateKey? MinerPrivateKey { get; set; }
 
-        public LibplanetNodeServiceProperties<NineChroniclesActionType>? Libplanet { get; set; }
+        public LibplanetNodeServiceProperties? Libplanet { get; set; }
 
         public NetworkType NetworkType { get; set; } = NetworkType.Main;
 
@@ -52,7 +52,7 @@ namespace NineChronicles.Headless.Properties
 
         public IActionTypeLoader ActionTypeLoader { get; init; }
 
-        public static LibplanetNodeServiceProperties<NineChroniclesActionType>
+        public static LibplanetNodeServiceProperties
             GenerateLibplanetNodeServiceProperties(
                 string? appProtocolVersionToken = null,
                 string? genesisBlockPath = null,
@@ -98,7 +98,7 @@ namespace NineChronicles.Headless.Properties
             var peers = peerStrings.Select(PropertyParser.ParsePeer).ToImmutableArray();
             var consensusSeeds = consensusSeedStrings?.Select(PropertyParser.ParsePeer).ToImmutableList();
 
-            return new LibplanetNodeServiceProperties<NineChroniclesActionType>
+            return new LibplanetNodeServiceProperties
             {
                 Host = swarmHost,
                 Port = swarmPort,

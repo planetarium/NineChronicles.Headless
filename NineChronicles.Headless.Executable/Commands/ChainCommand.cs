@@ -24,6 +24,7 @@ using Newtonsoft.Json.Linq;
 using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Executable.Store;
 using Serilog.Core;
+using static NineChronicles.Headless.NCActionUtils;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
@@ -79,7 +80,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             BlockHash tipHash = store.IndexBlockHash(chainId, -1)
                           ?? throw new CommandExitedException("The given chain seems empty.", -1);
-            Block<NCAction> tip = store.GetBlock<NCAction>(tipHash);
+            Block tip = store.GetBlock(tipHash);
             _console.Out.WriteLine(Utils.SerializeHumanReadable(tip.Header));
             store.Dispose();
         }
@@ -126,7 +127,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 throw new CommandExitedException($"There is no genesis block: {storePath}", -1);
             }
 
-            Block<NCAction> genesisBlock = store.GetBlock<NCAction>(gHash);
+            Block genesisBlock = store.GetBlock(gHash);
             BlockChain<NCAction> chain = new BlockChain<NCAction>(
                 blockPolicy,
                 stagePolicy,
@@ -153,8 +154,8 @@ namespace NineChronicles.Headless.Executable.Commands
             foreach (var item in
                 store.IterateIndexes(chain.Id, offset + 1 ?? 1, limit).Select((value, i) => new { i, value }))
             {
-                var block = store.GetBlock<NCAction>(item.value);
-                var previousBlock = store.GetBlock<NCAction>(
+                var block = store.GetBlock(item.value);
+                var previousBlock = store.GetBlock(
                     block.PreviousHash ?? block.Hash
                 );
 
@@ -166,10 +167,10 @@ namespace NineChronicles.Headless.Executable.Commands
                 foreach (var tx in block.Transactions)
                 {
                     txCount++;
-                    foreach (var action in tx.CustomActions!)
+                    foreach (var action in tx.Actions!)
                     {
                         var actionTypeAttribute =
-                            Attribute.GetCustomAttribute(action.InnerAction.GetType(), typeOfActionTypeAttribute)
+                            Attribute.GetCustomAttribute(ToAction(action).InnerAction.GetType(), typeOfActionTypeAttribute)
                                 as ActionTypeAttribute;
                         if (actionTypeAttribute is null)
                         {
@@ -260,7 +261,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     -1);
             }
 
-            var tip = store.GetBlock<NCAction>(tipHash);
+            var tip = store.GetBlock(tipHash);
             var snapshotTipIndex = Math.Max(tipIndex - (blocksBefore + 1), 0);
             BlockHash snapshotTipHash;
 
@@ -276,7 +277,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 snapshotTipHash = hash;
-            } while (!stateStore.ContainsStateRoot(store.GetBlock<NCAction>(snapshotTipHash).StateRootHash));
+            } while (!stateStore.ContainsStateRoot(store.GetBlock(snapshotTipHash).StateRootHash));
 
             var forkedId = Guid.NewGuid();
 
@@ -460,7 +461,7 @@ namespace NineChronicles.Headless.Executable.Commands
                         -1);
                 }
 
-                Block<NCAction> tip = store.GetBlock<NCAction>(tipHash);
+                Block tip = store.GetBlock(tipHash);
                 var snapshotTipIndex = Math.Max(tipIndex - (blockBefore + 1), 0);
                 BlockHash snapshotTipHash;
 
@@ -476,7 +477,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     }
 
                     snapshotTipHash = hash;
-                } while (!stateStore.ContainsStateRoot(store.GetBlock<NCAction>(snapshotTipHash).StateRootHash));
+                } while (!stateStore.ContainsStateRoot(store.GetBlock(snapshotTipHash).StateRootHash));
 
                 var forkedId = Guid.NewGuid();
 
@@ -507,7 +508,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 {
                     if (latestBlockWithTx.PreviousHash is { } newHash)
                     {
-                        latestBlockWithTx = store.GetBlock<NCAction>(newHash);
+                        latestBlockWithTx = store.GetBlock(newHash);
                     }
                 }
 
@@ -933,17 +934,17 @@ namespace NineChronicles.Headless.Executable.Commands
             Guid src,
             Guid dest,
             BlockHash branchPointHash,
-            Block<NCAction> tip,
+            Block tip,
             IStore store)
         {
             store.ForkBlockIndexes(src, dest, branchPointHash);
             store.ForkTxNonces(src, dest);
 
             for (
-                Block<NCAction> block = tip;
+                Block block = tip;
                 block.PreviousHash is { } hash
                 && !block.Hash.Equals(branchPointHash);
-                block = store.GetBlock<NCAction>(hash))
+                block = store.GetBlock(hash))
             {
                 IEnumerable<(Address, int)> signers = block
                     .Transactions

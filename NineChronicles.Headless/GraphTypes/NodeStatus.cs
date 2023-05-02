@@ -79,7 +79,7 @@ namespace NineChronicles.Headless.GraphTypes
                         throw new InvalidOperationException($"{nameof(context.BlockChain)} is null.");
                     }
 
-                    IEnumerable<Block<NCAction>> blocks =
+                    IEnumerable<Block> blocks =
                         GetTopmostBlocks(context.BlockChain, fieldContext.GetArgument<int>("offset"));
                     if (fieldContext.GetArgument<Address?>("miner") is { } miner)
                     {
@@ -176,10 +176,10 @@ namespace NineChronicles.Headless.GraphTypes
             );
         }
 
-        private IEnumerable<Block<T>> GetTopmostBlocks<T>(BlockChain<T> blockChain, int offset)
+        private IEnumerable<Block> GetTopmostBlocks<T>(BlockChain<T> blockChain, int offset)
             where T : IAction, new()
         {
-            Block<T> block = blockChain.Tip;
+            Block block = blockChain.Tip;
 
             while (offset > 0)
             {

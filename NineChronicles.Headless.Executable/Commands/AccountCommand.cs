@@ -14,6 +14,7 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.Executable.IO;
 using Serilog.Core;
+using static NineChronicles.Headless.NCActionUtils;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
@@ -49,7 +50,7 @@ namespace NineChronicles.Headless.Executable.Commands
             (BlockChain<NCAction> chain, IStore store, _, _) =
                 Utils.GetBlockChain(logger, storePath, chainId);
 
-            Block<NCAction> offset = Utils.ParseBlockOffset(chain, block);
+            Block offset = Utils.ParseBlockOffset(chain, block);
             _console.Error.WriteLine("The offset block: #{0} {1}.", offset.Index, offset.Hash);
 
             Bencodex.Types.Dictionary goldCurrencyStateDict = (Bencodex.Types.Dictionary)
@@ -72,9 +73,9 @@ namespace NineChronicles.Headless.Executable.Commands
                 _console.Error.WriteLine("Scanning block #{0} {1}...", digest.Index, digest.Hash);
                 _console.Error.Flush();
                 IEnumerable<Address> addrs = digest.TxIds
-                    .Select(txId => store.GetTransaction<NCAction>(new TxId(txId.ToArray())))
-                    .SelectMany(tx => tx.CustomActions is { } ca
-                        ? ca.Select(a => a.InnerAction)
+                    .Select(txId => store.GetTransaction(new TxId(txId.ToArray())))
+                    .SelectMany(tx => tx.Actions is { } ca
+                        ? ca.Select(a => ToAction(a).InnerAction)
                             .SelectMany(a =>
                             {
                                 if (a is TransferAsset t)

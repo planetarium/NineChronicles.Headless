@@ -23,11 +23,13 @@ using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Shared.Services;
 using Serilog;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
-using NodeExceptionType = Libplanet.Headless.NodeExceptionType;
 using Libplanet.Headless;
 using Nekoyume.Model.State;
 using Sentry;
+using static NineChronicles.Headless.NCActionUtils;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+using NodeExceptionType = Libplanet.Headless.NodeExceptionType;
+using Transaction = Libplanet.Tx.Transaction;
 
 namespace NineChronicles.Headless
 {
@@ -38,7 +40,7 @@ namespace NineChronicles.Headless
         private Swarm<NCAction> _swarm;
         private RpcContext _context;
         private Codec _codec;
-        private LibplanetNodeServiceProperties<NCAction> _libplanetNodeServiceProperties;
+        private LibplanetNodeServiceProperties _libplanetNodeServiceProperties;
         private ActionEvaluationPublisher _publisher;
         private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
 
@@ -46,7 +48,7 @@ namespace NineChronicles.Headless
             BlockChain<NCAction> blockChain,
             Swarm<NCAction> swarm,
             RpcContext context,
-            LibplanetNodeServiceProperties<NCAction> libplanetNodeServiceProperties,
+            LibplanetNodeServiceProperties libplanetNodeServiceProperties,
             ActionEvaluationPublisher actionEvaluationPublisher,
             ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces)
         {
@@ -63,10 +65,10 @@ namespace NineChronicles.Headless
         {
             try
             {
-                Transaction<PolymorphicAction<ActionBase>> tx =
-                    Transaction<PolymorphicAction<ActionBase>>.Deserialize(txBytes);
+                Transaction tx =
+                    Transaction.Deserialize(txBytes);
 
-                var actionName = tx.CustomActions[0]?.GetInnerActionTypeName() ?? "NoAction";
+                var actionName = ToAction(tx.Actions[0])?.GetInnerActionTypeName() ?? "NoAction";
                 var txId = tx.Id.ToString();
                 var sentryTrace = SentrySdk.StartTransaction(
                     actionName,

@@ -22,6 +22,7 @@ using Nekoyume.BlockChain.Policy;
 using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Executable.Store;
 using Serilog.Core;
+using static NineChronicles.Headless.NCActionUtils;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
@@ -103,9 +104,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     () => blockChain.GetValidatorSet(
                         previousBlock.Hash),
                     tx.Signer);
-                var actions = tx.SystemAction is { } sa
-                    ? ImmutableList.Create(sa)
-                    : ImmutableList.CreateRange(tx.CustomActions!.Cast<IAction>());
+                var actions = tx.Actions.Select(a => ToAction(a));
                 var actionEvaluations = EvaluateActions(
                     genesisHash: blockChain.Genesis.Hash,
                     preEvaluationHash: targetBlock.PreEvaluationHash.ByteArray,
@@ -115,7 +114,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     miner: targetBlock.Miner,
                     signer: tx.Signer,
                     signature: tx.Signature,
-                    actions: actions,
+                    actions: actions.Cast<IAction>().ToImmutableList(),
                     rehearsal: false,
                     previousBlockStatesTrie: null,
                     nativeTokenPredicate: _ => true
@@ -401,7 +400,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var genesisBlockHash = store.IndexBlockHash(chainId, 0) ??
                                    throw new CommandExitedException(
                                        $"The given blockIndex {0} does not found", -1);
-            var genesisBlock = store.GetBlock<NCAction>(genesisBlockHash);
+            var genesisBlock = store.GetBlock(genesisBlockHash);
 
             // Make BlockChain and blocks.
             var policy = new BlockPolicySource(Logger.None).GetPolicy();
@@ -419,7 +418,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     genesisBlock));
         }
 
-        private Transaction<NCAction> LoadTx(string txPath)
+        private Transaction LoadTx(string txPath)
         {
             using var stream = new FileStream(txPath, FileMode.Open);
             stream.Seek(0, SeekOrigin.Begin);
@@ -442,7 +441,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     -1);
             }
 
-            return TxMarshaler.UnmarshalTransaction<NCAction>(txDict);
+            return TxMarshaler.UnmarshalTransaction(txDict);
         }
 
         private ActionEvaluator GetActionEvaluator(

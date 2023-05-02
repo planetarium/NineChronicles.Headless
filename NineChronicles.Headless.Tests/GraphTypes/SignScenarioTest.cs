@@ -19,6 +19,7 @@ using NineChronicles.Headless.GraphTypes;
 using Xunit;
 using Xunit.Abstractions;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
+using static NineChronicles.Headless.NCActionUtils;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 
@@ -42,8 +43,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var args = $"recipient: \"{recipient}\", sender: \"{sender}\", amount: \"17.5\", currency: CRYSTAL";
             object plainValue = await GetAction("transferAsset", args);
 
-            (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
-            var action = Assert.IsType<TransferAsset>(signedTx.CustomActions!.Single().InnerAction);
+            (Transaction signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
+            var action = Assert.IsType<TransferAsset>(ToAction(signedTx.Actions!.Single()).InnerAction);
             Assert.Equal(recipient, action.Recipient);
             Assert.Equal(sender, action.Sender);
             Assert.Equal(FungibleAssetValue.Parse(CrystalCalculator.CRYSTAL, "17.5"), action.Amount);
@@ -62,8 +63,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var args = $"avatarAddress: \"{avatarAddress}\", equipmentIds: {ids}, costumeIds: {ids}, foodIds: {ids}, payNcg: true, runeSlotInfos: [{{ slotIndex: 1, runeId: 2 }}]";
             object plainValue = await GetAction("raid", args);
 
-            (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
-            var action = Assert.IsType<Raid>(signedTx.CustomActions!.Single().InnerAction);
+            (Transaction signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
+            var action = Assert.IsType<Raid>(ToAction(signedTx.Actions!.Single()).InnerAction);
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Guid equipmentId = Assert.Single(action.EquipmentIds);
             Guid costumeId = Assert.Single(action.CostumeIds);
@@ -83,8 +84,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var args = $"avatarAddress: \"{avatarAddress}\"";
             object plainValue = await GetAction("claimRaidReward", args);
 
-            (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
-            var action = Assert.IsType<ClaimRaidReward>(signedTx.CustomActions!.Single().InnerAction);
+            (Transaction signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
+            var action = Assert.IsType<ClaimRaidReward>(ToAction(signedTx.Actions!.Single()).InnerAction);
             Assert.Equal(avatarAddress, action.AvatarAddress);
             await StageTransaction(signedTx, hex);
         }
@@ -98,8 +99,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var args = $"avatarAddress: \"{avatarAddress}\"";
             object plainValue = await GetAction("claimWorldBossKillReward", args);
 
-            (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
-            var action = Assert.IsType<ClaimWordBossKillReward>(signedTx.CustomActions!.Single().InnerAction);
+            (Transaction signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
+            var action = Assert.IsType<ClaimWordBossKillReward>(ToAction(signedTx.Actions!.Single()).InnerAction);
             Assert.Equal(avatarAddress, action.AvatarAddress);
             await StageTransaction(signedTx, hex);
         }
@@ -113,8 +114,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var args = $"rewardPoolAddress: \"{rewardPoolAddress}\", assets:[{{ quantity: 100, decimalPlaces: 0, ticker: \"CRYSTAL\" }}]";
             object plainValue = await GetAction("prepareRewardAssets", args);
 
-            (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
-            var action = Assert.IsType<PrepareRewardAssets>(signedTx.CustomActions!.Single().InnerAction);
+            (Transaction signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
+            var action = Assert.IsType<PrepareRewardAssets>(ToAction(signedTx.Actions!.Single()).InnerAction);
             Assert.Equal(rewardPoolAddress, action.RewardPoolAddress);
 #pragma warning disable CS0618
             // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
@@ -132,8 +133,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var args = $"sender: \"{sender}\", recipients: [{{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 18, ticker: \"CRYSTAL\" }} }}, {{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 0, ticker: \"RUNE_FENRIR1\" }} }}]";
             object plainValue = await GetAction("transferAssets", args);
 
-            (Transaction<NCAction> signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
-            var action = Assert.IsType<TransferAssets>(signedTx.CustomActions!.Single().InnerAction);
+            (Transaction signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
+            var action = Assert.IsType<TransferAssets>(ToAction(signedTx.Actions!.Single()).InnerAction);
             Assert.Equal(sender, action.Sender);
             Assert.Equal(2, action.Recipients.Count);
             await StageTransaction(signedTx, hex);
@@ -147,7 +148,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             return actionData[actionName];
         }
 
-        private async Task<(Transaction<NCAction>, string)> GetSignedTransaction(PrivateKey privateKey, object plainValue)
+        private async Task<(Transaction, string)> GetSignedTransaction(PrivateKey privateKey, object plainValue)
         {
             // Get Nonce.
             var nonceQuery = $@"query {{
@@ -201,7 +202,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var hex = (string)((Dictionary<string, object>)((ExecutionNode)signQueryResult.Data!).ToValue()!)[
                 "signTransaction"];
             byte[] result = ByteUtil.ParseHex(hex);
-            Transaction<NCAction> signedTx = Transaction<NCAction>.Deserialize(result);
+            Transaction signedTx = Transaction.Deserialize(result);
 
             Assert.Equal(unsignedTx.PublicKey, signedTx.PublicKey);
             Assert.Equal(unsignedTx.Signer, signedTx.Signer);
@@ -209,11 +210,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(unsignedTx.UpdatedAddresses, signedTx.UpdatedAddresses);
             Assert.Equal(unsignedTx.Timestamp, signedTx.Timestamp);
             Assert.Single(unsignedTx.Actions);
-            Assert.Single(signedTx.CustomActions!);
+            Assert.Single(signedTx.Actions!);
             return (signedTx, hex);
         }
 
-        private async Task StageTransaction(Transaction<NCAction> signedTx, string hex)
+        private async Task StageTransaction(Transaction signedTx, string hex)
         {
             // Staging Transaction.
             var stageTxMutation = $"mutation {{ stageTransaction(payload: \"{hex}\") }}";

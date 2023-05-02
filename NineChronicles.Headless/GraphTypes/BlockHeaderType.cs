@@ -37,8 +37,7 @@ namespace NineChronicles.Headless.GraphTypes
             );
         }
 
-        public static BlockHeaderType FromBlock<T>(Block<T> block)
-            where T : IAction, new() =>
+        public static BlockHeaderType FromBlock(Block block) =>
             new BlockHeaderType
             {
                 Index = block.Index,

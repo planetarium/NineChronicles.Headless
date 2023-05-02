@@ -43,7 +43,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var statesPath = Path.Combine(_storePath, "states");
             Address targetAddress = new PrivateKey().ToAddress();
             int targetCurrency = 10000; // 100 NCG
-            Block<NCAction> genesisBlock = GenesisHelper.MineGenesisBlock(targetAddress, targetCurrency);
+            Block genesisBlock = GenesisHelper.MineGenesisBlock(targetAddress, targetCurrency);
             var stateKeyValueStore = new RocksDBKeyValueStore(statesPath);
             var stateStore = new TrieStateStore(stateKeyValueStore);
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();

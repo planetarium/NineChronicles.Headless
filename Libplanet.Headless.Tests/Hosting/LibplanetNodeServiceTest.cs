@@ -31,7 +31,7 @@ namespace Libplanet.Headless.Tests.Hosting
             );
 
             var service = new LibplanetNodeService<DummyAction>(
-                new LibplanetNodeServiceProperties<DummyAction>()
+                new LibplanetNodeServiceProperties()
                 {
                     AppProtocolVersion = new AppProtocolVersion(),
                     GenesisBlock = genesisBlock,
@@ -66,7 +66,7 @@ namespace Libplanet.Headless.Tests.Hosting
                 );
 
                 var service = new LibplanetNodeService<DummyAction>(
-                    new LibplanetNodeServiceProperties<DummyAction>()
+                    new LibplanetNodeServiceProperties()
                     {
                         AppProtocolVersion = new AppProtocolVersion(),
                         SwarmPrivateKey = new PrivateKey(),

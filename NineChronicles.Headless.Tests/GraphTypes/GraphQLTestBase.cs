@@ -54,7 +54,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var sheets = TableSheetsImporter.ImportSheets();
             var blockAction = new RewardGold();
             var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
-                transactions: ImmutableList<Transaction<NCAction>>.Empty.Add(Transaction<NCAction>.Create(0,
+                transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create<NCAction>(0,
                     AdminPrivateKey, null, new NCAction[]
                     {
                         new InitializeStates(
@@ -80,7 +80,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             new[] { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }
                                 .ToList()),
                         states: ImmutableDictionary.Create<Address, IValue>())
-                }.Select((sa, nonce) => Transaction<NCAction>.Create(nonce + 1, AdminPrivateKey, null, sa))),
+                }.Select((sa, nonce) => Transaction.Create<NCAction>(nonce + 1, AdminPrivateKey, null, new[] { sa }))),
                 blockAction: blockAction,
                 privateKey: AdminPrivateKey);
 
@@ -187,7 +187,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         protected LibplanetNodeService<T> CreateLibplanetNodeService<T>(
-            Block<T> genesisBlock,
+            Block genesisBlock,
             AppProtocolVersion appProtocolVersion,
             PublicKey appProtocolVersionSigner,
             Progress<PreloadState>? preloadProgress = null,
@@ -198,7 +198,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             var consensusPrivateKey = new PrivateKey();
 
-            var properties = new LibplanetNodeServiceProperties<T>
+            var properties = new LibplanetNodeServiceProperties
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
                 AppProtocolVersion = appProtocolVersion,

@@ -40,7 +40,7 @@ namespace NineChronicles.Headless
     {
         private LibplanetNodeService<NCAction> NodeService { get; set; }
 
-        private LibplanetNodeServiceProperties<NCAction> Properties { get; }
+        private LibplanetNodeServiceProperties Properties { get; }
 
         public BlockRenderer BlockRenderer { get; }
 
@@ -77,7 +77,7 @@ namespace NineChronicles.Headless
 
         public NineChroniclesNodeService(
             PrivateKey? minerPrivateKey,
-            LibplanetNodeServiceProperties<NCAction> properties,
+            LibplanetNodeServiceProperties properties,
             IBlockPolicy<NCAction> blockPolicy,
             NetworkType networkType,
             IActionTypeLoader actionTypeLoader,

@@ -8,21 +8,21 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         where T : IAction, new()
     {
         public void RenderBlock(
-            Block<T> oldTip,
-            Block<T> newTip
+            Block oldTip,
+            Block newTip
         )
         {
         }
 
         public void RenderReorg(
-            Block<T> oldTip,
-            Block<T> newTip,
-            Block<T> branchpoint
+            Block oldTip,
+            Block newTip,
+            Block branchpoint
         )
         {
         }
 
-        public void RenderReorgEnd(Block<T> oldTip, Block<T> newTip, Block<T> branchpoint)
+        public void RenderReorgEnd(Block oldTip, Block newTip, Block branchpoint)
         {
         }
     }

@@ -27,13 +27,13 @@ namespace NineChronicles.Headless.Executable.Tests.Store
         public void GetGenesisBlock(StoreType storeType)
         {
             IStore store = storeType.CreateStore(_storePath);
-            Block<NCAction> genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock();
+            Block genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock();
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
             store.PutBlock(genesisBlock);
             store.AppendIndex(chainId, genesisBlock.Hash);
 
-            Assert.Equal(genesisBlock, store.GetGenesisBlock<NCAction>());
+            Assert.Equal(genesisBlock, store.GetGenesisBlock());
 
             (store as IDisposable)?.Dispose();
         }
@@ -46,7 +46,7 @@ namespace NineChronicles.Headless.Executable.Tests.Store
         {
             IStore store = storeType.CreateStore(_storePath);
             Assert.Throws<InvalidOperationException>(
-                () => store.GetGenesisBlock<NCAction>()
+                () => store.GetGenesisBlock()
             );
             (store as IDisposable)?.Dispose();
         }

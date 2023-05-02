@@ -58,7 +58,7 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         byte[] bytes = Convert.FromBase64String(context.GetArgument<string>("payload"));
-                        Transaction<NCAction> tx = Transaction<NCAction>.Deserialize(bytes);
+                        Transaction tx = Transaction.Deserialize(bytes);
                         NineChroniclesNodeService? service = standaloneContext.NineChroniclesNodeService;
                         BlockChain<NCAction>? blockChain = service?.Swarm.BlockChain;
 
@@ -107,7 +107,7 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         byte[] bytes = Convert.FromBase64String(context.GetArgument<string>("payload"));
-                        Transaction<NCAction> tx = Transaction<NCAction>.Deserialize(bytes);
+                        Transaction tx = Transaction.Deserialize(bytes);
                         NineChroniclesNodeService? service = standaloneContext.NineChroniclesNodeService;
                         BlockChain<NCAction>? blockChain = service?.Swarm.BlockChain;
 
@@ -198,7 +198,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     Address recipient = context.GetArgument<Address>("recipient");
                     string? memo = context.GetArgument<string?>("memo");
-                    Transaction<NCAction> tx = Transaction<NCAction>.Create(
+                    Transaction tx = Transaction.Create<NCAction>(
                         context.GetArgument<long>("txNonce"),
                         privateKey,
                         blockChain.Genesis.Hash,
@@ -256,7 +256,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     Address recipient = context.GetArgument<Address>("recipient");
 
-                    Transaction<NCAction> tx = blockChain.MakeTransaction(
+                    Transaction tx = blockChain.MakeTransaction(
                         privateKey,
                         new NCAction[]
                         {
@@ -286,7 +286,7 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         byte[] bytes = ByteUtil.ParseHex(context.GetArgument<string>("payload"));
-                        Transaction<NCAction> tx = Transaction<NCAction>.Deserialize(bytes);
+                        Transaction tx = Transaction.Deserialize(bytes);
                         NineChroniclesNodeService? service = standaloneContext.NineChroniclesNodeService;
                         BlockChain<NCAction>? blockChain = service?.Swarm.BlockChain;
 
