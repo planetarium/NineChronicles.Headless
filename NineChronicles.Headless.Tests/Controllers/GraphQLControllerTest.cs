@@ -176,9 +176,9 @@ namespace NineChronicles.Headless.Tests.Controllers
                     Host = IPAddress.Loopback.ToString(),
                     IceServers = new List<IceServer>(),
                 },
-                NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test, StaticActionTypeLoaderSingleton.Instance),
+                NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test, StaticActionLoaderSingleton.Instance),
                 NetworkType.Test,
-                StaticActionTypeLoaderSingleton.Instance);
+                StaticActionLoaderSingleton.Instance);
         }
     }
 }

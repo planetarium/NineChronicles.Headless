@@ -13,14 +13,14 @@ using HardFork = Libplanet.Headless.DynamicActionTypeLoaderConfiguration.HardFor
 
 namespace Libplanet.Headless;
 
-public class DynamicActionTypeLoader : IActionTypeLoader
+public class DynamicActionLoader : IActionLoader
 {
     private readonly string _basePath;
     private readonly string _assemblyFileName;
     private readonly IImmutableList<HardFork> _hardForks;
     private readonly IDictionary<string, Assembly> _cache;
 
-    public DynamicActionTypeLoader(string basePath, string assemblyFileName, IOrderedEnumerable<HardFork> hardForks)
+    public DynamicActionLoader(string basePath, string assemblyFileName, IOrderedEnumerable<HardFork> hardForks)
     {
         _basePath = basePath;
         _assemblyFileName = assemblyFileName;
@@ -28,11 +28,11 @@ public class DynamicActionTypeLoader : IActionTypeLoader
         _cache = new Dictionary<string, Assembly>();
     }
 
-    public IDictionary<IValue, Type> Load(IActionTypeLoaderContext context)
+    public IDictionary<IValue, Type> Load(long blockIndex)
     {
         var types = new Dictionary<IValue, Type>();
 
-        foreach (Type type in LoadAllActionTypes(context))
+        foreach (Type type in LoadAllActionTypes(blockIndex))
         {
             if (ActionTypeAttribute.ValueOf(type) is { } actionId)
             {
@@ -43,9 +43,9 @@ public class DynamicActionTypeLoader : IActionTypeLoader
         return types;
     }
 
-    public IEnumerable<Type> LoadAllActionTypes(IActionTypeLoaderContext context)
+    public IEnumerable<Type> LoadAllActionTypes(long blockIndex)
     {
-        var asm = GetAssembly(context.Index);
+        var asm = GetAssembly(blockIndex);
         var assemblyTypes = GetTypesWithoutErrors(asm);
 
         var actionType = typeof(IAction);
@@ -65,6 +65,45 @@ public class DynamicActionTypeLoader : IActionTypeLoader
                 yield return type;
             }
         }
+    }
+
+    public IAction LoadAction(long blockIndex, IValue plainValue)
+    {
+        if (plainValue is not Dictionary asDict)
+        {
+            throw new ArgumentException(
+                "Given plainValue isn't bencodex Dictionary",
+                nameof(plainValue)
+            );
+        }
+
+        if (!asDict.TryGetValue((Text)"type_id", out IValue rawTypeId))
+        {
+            throw new ArgumentException(
+                "Given plainValue doesn't have the type_id field",
+                nameof(plainValue)
+            );
+        }
+
+        if (rawTypeId is not Text typeId)
+        {
+            throw new ArgumentException(
+                $"type_id value isn't bencodex Text.",
+                nameof(plainValue)
+            );
+        }
+
+        if (!Load(blockIndex).TryGetValue(typeId, out Type actionType))
+        {
+            throw new ArgumentException(
+                $"There is no action type for {typeId} at #{blockIndex}",
+                nameof(plainValue)
+            );
+        }
+
+        var action = (IAction)Activator.CreateInstance(actionType);
+        action.LoadPlainValue(plainValue);
+        return action;
     }
 
     private Type[] GetTypesWithoutErrors(Assembly assembly)

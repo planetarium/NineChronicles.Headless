@@ -376,7 +376,7 @@ namespace NineChronicles.Headless.Executable
                     properties.LogActionRenders = true;
                 }
 
-                IActionTypeLoader MakeStaticActionTypeLoader() => new StaticActionTypeLoader(
+                IActionLoader MakeStaticActionLoader() => new StaticActionLoader(
                     Assembly.GetEntryAssembly() is { } entryAssembly
 #if LIB9C_DEV_EXTENSIONS
                         ? new[]
@@ -397,12 +397,12 @@ namespace NineChronicles.Headless.Executable
                     typeof(ActionBase)
                 );
 
-                IActionTypeLoader actionTypeLoader;
+                IActionLoader actionLoader;
                 if (headlessConfig.ActionTypeLoader is { } actionTypeLoaderConfiguration)
                 {
                     if (actionTypeLoaderConfiguration.DynamicActionTypeLoader is { } dynamicActionTypeLoaderConf)
                     {
-                        actionTypeLoader = new DynamicActionTypeLoader(
+                        actionLoader = new DynamicActionLoader(
                             dynamicActionTypeLoaderConf.BasePath,
                             dynamicActionTypeLoaderConf.AssemblyFileName,
                             dynamicActionTypeLoaderConf.HardForks.OrderBy(pair => pair.SinceBlockIndex));
@@ -411,28 +411,28 @@ namespace NineChronicles.Headless.Executable
                     {
                         var assemblies = staticActionTypeLoaderConf.Assemblies?.Select(x => Assembly.Load(File.ReadAllBytes(x))).ToHashSet()
                             ?? throw new CommandExitedException(-1);
-                        actionTypeLoader = new StaticActionTypeLoader(assemblies);
+                        actionLoader = new StaticActionLoader(assemblies);
                     }
                     else
                     {
-                        actionTypeLoader = MakeStaticActionTypeLoader();
+                        actionLoader = MakeStaticActionLoader();
                     }
                 }
                 else
                 {
-                    actionTypeLoader = MakeStaticActionTypeLoader();
+                    actionLoader = MakeStaticActionLoader();
                 }
 
-                if (actionTypeLoader is StaticActionTypeLoader staticActionTypeLoader)
+                if (actionLoader is StaticActionLoader staticActionLoader)
                 {
-                    PolymorphicAction<ActionBase>.ActionTypeLoader = staticActionTypeLoader;
+                    PolymorphicAction<ActionBase>.ActionTypeLoader = staticActionLoader;
                 }
 
                 var minerPrivateKey = string.IsNullOrEmpty(headlessConfig.MinerPrivateKeyString)
                     ? null
                     : new PrivateKey(ByteUtil.ParseHex(headlessConfig.MinerPrivateKeyString));
                 TimeSpan minerBlockInterval = TimeSpan.FromMilliseconds(headlessConfig.MinerBlockIntervalMilliseconds);
-                var nineChroniclesProperties = new NineChroniclesNodeServiceProperties(actionTypeLoader)
+                var nineChroniclesProperties = new NineChroniclesNodeServiceProperties(actionLoader)
                 {
                     MinerPrivateKey = minerPrivateKey,
                     Libplanet = properties,

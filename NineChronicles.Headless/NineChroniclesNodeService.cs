@@ -80,7 +80,7 @@ namespace NineChronicles.Headless
             LibplanetNodeServiceProperties properties,
             IBlockPolicy<NCAction> blockPolicy,
             NetworkType networkType,
-            IActionTypeLoader actionTypeLoader,
+            IActionLoader actionLoader,
             Progress<PreloadState>? preloadProgress = null,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false,
@@ -155,7 +155,7 @@ namespace NineChronicles.Headless
                 {
                     NodeStatusRenderer.PreloadStatus(isPreloadStarted);
                 },
-                actionTypeLoader,
+                actionLoader,
                 ignoreBootstrapFailure,
                 ignorePreloadFailure
             );
@@ -201,13 +201,13 @@ namespace NineChronicles.Headless
 
             var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(
                 properties.NetworkType,
-                properties.ActionTypeLoader);
+                properties.ActionLoader);
             var service = new NineChroniclesNodeService(
                 properties.MinerPrivateKey,
                 properties.Libplanet,
                 blockPolicy,
                 properties.NetworkType,
-                properties.ActionTypeLoader,
+                properties.ActionLoader,
                 preloadProgress: progress,
                 ignoreBootstrapFailure: properties.IgnoreBootstrapFailure,
                 ignorePreloadFailure: properties.IgnorePreloadFailure,
@@ -252,9 +252,9 @@ namespace NineChronicles.Headless
             return service;
         }
 
-        internal static IBlockPolicy<NCAction> GetBlockPolicy(NetworkType networkType, IActionTypeLoader actionTypeLoader)
+        internal static IBlockPolicy<NCAction> GetBlockPolicy(NetworkType networkType, IActionLoader actionLoader)
         {
-            var source = new BlockPolicySource(Log.Logger, LogEventLevel.Debug, actionTypeLoader);
+            var source = new BlockPolicySource(Log.Logger, LogEventLevel.Debug, actionLoader);
             return networkType switch
             {
                 NetworkType.Main => source.GetPolicy(),

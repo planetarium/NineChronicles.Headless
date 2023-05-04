@@ -23,7 +23,7 @@ namespace Libplanet.Headless.Tests.Hosting
         {
             var genesisBlock = BlockChain<DummyAction>.ProposeGenesisBlock();
 
-            IActionTypeLoader actionTypeLoader = new StaticActionTypeLoader(
+            IActionLoader actionLoader = new StaticActionLoader(
                 Assembly.GetEntryAssembly() is { } entryAssembly
                     ? new[] { typeof(DummyAction).Assembly, entryAssembly }
                     : new[] { typeof(DummyAction).Assembly },
@@ -47,7 +47,7 @@ namespace Libplanet.Headless.Tests.Hosting
                 preloadProgress: null,
                 exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),
                 preloadStatusHandlerAction: isPreloadStart => { },
-                actionTypeLoader: actionTypeLoader
+                actionLoader: actionLoader
             );
 
             Assert.NotNull(service);
@@ -58,7 +58,7 @@ namespace Libplanet.Headless.Tests.Hosting
         {
             Assert.Throws<ArgumentException>(() =>
             {
-                IActionTypeLoader actionTypeLoader = new StaticActionTypeLoader(
+                IActionLoader actionLoader = new StaticActionLoader(
                     Assembly.GetEntryAssembly() is { } entryAssembly
                         ? new[] { typeof(DummyAction).Assembly, entryAssembly }
                         : new[] { typeof(DummyAction).Assembly },
@@ -81,7 +81,7 @@ namespace Libplanet.Headless.Tests.Hosting
                     preloadProgress: null,
                     exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),
                     preloadStatusHandlerAction: isPreloadStart => { },
-                    actionTypeLoader: actionTypeLoader
+                    actionLoader: actionLoader
                 );
             });
         }
