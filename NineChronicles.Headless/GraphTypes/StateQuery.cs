@@ -514,7 +514,35 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return null;
-                });
+            });
+            Field<CombinationSlotStateType>(
+                "CombinationSlot",
+                description: "Allows you to see crafting slot data.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "Address of avatar."
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "slot",
+                        Description = "Slot index 0-3"
+                    }
+                ),
+                resolve: context =>
+                {
+                    var agentAddress = context.GetArgument<Address>("avatarAddress");
+                    var index = context.GetArgument<int>("slot");
+
+                    var deriveAddress = CombinationSlotState.DeriveAddress(agentAddress, index);
+                    if (context.Source.GetState(deriveAddress) is Dictionary state)
+                    {
+                        return new CombinationSlotState(state);
+                    }
+
+                    return null;
+            });
         }
     }
 }
