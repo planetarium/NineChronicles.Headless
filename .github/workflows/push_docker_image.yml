@@ -60,6 +60,12 @@ jobs:
             --amend $DOCKER_REPO:git-${{ github.sha }}-amd64 \
             --amend $DOCKER_REPO:git-${{ github.sha }}-arm64v8
           docker manifest push $DOCKER_REPO:git-${{ github.sha }}
+      - name: build-and-push for lib9c-stateservice
+        run: |
+          docker build . \
+            -f Dockerfile.lib9c-stateservice
+            -t planetariumhq/lib9c-stateservice:git-${{ github.sha }}
+          docker push planetariumhq/lib9c-stateservice:git-${{ github.sha }}
 
   tag:
     if: github.ref_type == 'tag' || github.event.inputs.imageTag != ''
