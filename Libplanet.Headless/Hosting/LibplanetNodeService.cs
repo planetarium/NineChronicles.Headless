@@ -77,7 +77,7 @@ namespace Libplanet.Headless.Hosting
             Progress<PreloadState> preloadProgress,
             Action<RPCException, string> exceptionHandlerAction,
             Action<bool> preloadStatusHandlerAction,
-            IActionTypeLoader actionTypeLoader,
+            IActionLoader actionLoader,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false
         )
@@ -129,8 +129,8 @@ namespace Libplanet.Headless.Hosting
                     actionEvaluator: new ActionEvaluator(
                         blockHeader =>
                         {
-                            var blockActionType = actionTypeLoader
-                                .LoadAllActionTypes(new ActionTypeLoaderContext(blockHeader.Index))
+                            var blockActionType = actionLoader
+                                .LoadAllActionTypes(blockHeader.Index)
                                 .FirstOrDefault(t => t.FullName == "Nekoyume.Action.RewardGold");
                             return blockActionType is { } t ? (IAction)Activator.CreateInstance(t) : null;
                         },
@@ -140,7 +140,7 @@ namespace Libplanet.Headless.Hosting
                         ),
                         genesisHash: genesisBlock.Hash,
                         nativeTokenPredicate: blockPolicy.NativeTokens.Contains,
-                        actionTypeLoader: actionTypeLoader,
+                        actionTypeLoader: actionLoader,
                         feeCalculator: null
                     )
                 );
@@ -158,8 +158,8 @@ namespace Libplanet.Headless.Hosting
                     actionEvaluator: new ActionEvaluator(
                         blockHeader =>
                         {
-                            var blockActionType = actionTypeLoader
-                                .LoadAllActionTypes(new ActionTypeLoaderContext(blockHeader.Index))
+                            var blockActionType = actionLoader
+                                .LoadAllActionTypes(blockHeader.Index)
                                 .FirstOrDefault(t => t.FullName == "Nekoyume.Action.RewardGold");
                             return blockActionType is { } t ? (IAction)Activator.CreateInstance(t) : null;
                         },
@@ -169,7 +169,7 @@ namespace Libplanet.Headless.Hosting
                         ),
                         genesisHash: genesisBlock.Hash,
                         nativeTokenPredicate: blockPolicy.NativeTokens.Contains,
-                        actionTypeLoader: actionTypeLoader,
+                        actionTypeLoader: actionLoader,
                         feeCalculator: null
                     )
                 );

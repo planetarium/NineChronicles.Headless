@@ -226,7 +226,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 preloadProgress: preloadProgress,
                 exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),
                 preloadStatusHandlerAction: isPreloadStart => { },
-                actionTypeLoader: StaticActionTypeLoaderSingleton.Instance
+                actionLoader: StaticActionLoaderSingleton.Instance
             );
         }
 

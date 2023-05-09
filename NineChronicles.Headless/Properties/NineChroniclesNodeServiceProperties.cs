@@ -6,16 +6,15 @@ using Libplanet.Action;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
-using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Libplanet.Headless;
 
 namespace NineChronicles.Headless.Properties
 {
     public class NineChroniclesNodeServiceProperties
     {
-        public NineChroniclesNodeServiceProperties(IActionTypeLoader actionTypeLoader)
+        public NineChroniclesNodeServiceProperties(IActionLoader actionLoader)
         {
-            ActionTypeLoader = actionTypeLoader;
+            ActionLoader = actionLoader;
         }
 
         /// <summary>
@@ -50,7 +49,7 @@ namespace NineChronicles.Headless.Properties
 
         public int TxQuotaPerSigner { get; set; }
 
-        public IActionTypeLoader ActionTypeLoader { get; init; }
+        public IActionLoader ActionLoader { get; init; }
 
         public static LibplanetNodeServiceProperties
             GenerateLibplanetNodeServiceProperties(

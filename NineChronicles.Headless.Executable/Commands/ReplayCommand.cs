@@ -450,7 +450,7 @@ namespace NineChronicles.Headless.Executable.Commands
             BlockHash genesisBlockHash)
         {
             var policy = new BlockPolicySource(Logger.None).GetPolicy();
-            IActionTypeLoader actionTypeLoader = new StaticActionTypeLoader(
+            IActionLoader actionLoader = new StaticActionLoader(
                 Assembly.GetEntryAssembly() is { } entryAssembly
                     ? new[] { typeof(NCAction).Assembly, entryAssembly }
                     : new[] { typeof(NCAction).Assembly },
@@ -462,7 +462,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 trieGetter: hash => stateStore.GetStateRoot(blockChain[hash].StateRootHash),
                 genesisHash: genesisBlockHash,
                 nativeTokenPredicate: policy.NativeTokens.Contains,
-                actionTypeLoader: actionTypeLoader,
+                actionTypeLoader: actionLoader,
                 feeCalculator: null);
         }
 

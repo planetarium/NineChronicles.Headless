@@ -4,9 +4,9 @@ using Nekoyume.Action;
 
 namespace NineChronicles.Headless.Tests.Common;
 
-public static class StaticActionTypeLoaderSingleton
+public static class StaticActionLoaderSingleton
 {
-    public static readonly StaticActionTypeLoader Instance = new StaticActionTypeLoader(
+    public static readonly StaticActionLoader Instance = new StaticActionLoader(
         Assembly.GetEntryAssembly() is { } entryAssembly
             ? new[] { typeof(ActionBase).Assembly, entryAssembly }
             : new[] { typeof(ActionBase).Assembly },
