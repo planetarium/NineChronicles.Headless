@@ -15,6 +15,7 @@ using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
+using Libplanet.Extensions.RemoteActionEvaluator;
 using Libplanet.Net;
 using Libplanet.Net.Consensus;
 using Libplanet.Net.Protocols;
@@ -79,7 +80,8 @@ namespace Libplanet.Headless.Hosting
             Action<bool> preloadStatusHandlerAction,
             IActionLoader actionLoader,
             bool ignoreBootstrapFailure = false,
-            bool ignorePreloadFailure = false
+            bool ignorePreloadFailure = false,
+            bool useRemoteActionEvaluator = false
         )
         {
             if (blockPolicy is null)
@@ -115,6 +117,28 @@ namespace Libplanet.Headless.Hosting
             }
 
             var blockChainStates = new BlockChainStates(Store, StateStore);
+#pragma warning disable S1075
+            const string REMOTE_ACTION_EVALUATOR_URL = "http://localhost:5157/evaluation";
+#pragma warning restore S1075
+            IActionEvaluator actionEvaluator = useRemoteActionEvaluator
+                ? new RemoteActionEvaluator(new Uri(REMOTE_ACTION_EVALUATOR_URL), blockChainStates)
+                : new ActionEvaluator(
+                    blockHeader =>
+                    {
+                        var blockActionType = actionLoader
+                            .LoadAllActionTypes(blockHeader.Index)
+                            .FirstOrDefault(t => t.FullName == "Nekoyume.Action.RewardGold");
+                        return blockActionType is { } t ? (IAction)Activator.CreateInstance(t) : null;
+                    },
+                    blockChainStates: blockChainStates,
+                    trieGetter: hash => StateStore.GetStateRoot(
+                        Store.GetBlockDigest(hash)?.StateRootHash
+                    ),
+                    genesisHash: genesisBlock.Hash,
+                    nativeTokenPredicate: blockPolicy.NativeTokens.Contains,
+                    actionTypeLoader: actionLoader,
+                    feeCalculator: null
+                );
 
             if (Store.GetCanonicalChainId() is { })
             {
@@ -126,23 +150,7 @@ namespace Libplanet.Headless.Hosting
                     genesisBlock: genesisBlock,
                     renderers: renderers,
                     blockChainStates: blockChainStates,
-                    actionEvaluator: new ActionEvaluator(
-                        blockHeader =>
-                        {
-                            var blockActionType = actionLoader
-                                .LoadAllActionTypes(blockHeader.Index)
-                                .FirstOrDefault(t => t.FullName == "Nekoyume.Action.RewardGold");
-                            return blockActionType is { } t ? (IAction)Activator.CreateInstance(t) : null;
-                        },
-                        blockChainStates: blockChainStates,
-                        trieGetter: hash => StateStore.GetStateRoot(
-                            Store.GetBlockDigest(hash)?.StateRootHash
-                        ),
-                        genesisHash: genesisBlock.Hash,
-                        nativeTokenPredicate: blockPolicy.NativeTokens.Contains,
-                        actionTypeLoader: actionLoader,
-                        feeCalculator: null
-                    )
+                    actionEvaluator: actionEvaluator
                 );
             }
             else
