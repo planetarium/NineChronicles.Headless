@@ -867,7 +867,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             );
 
             Transaction tx =
-                Transaction.Create<NCAction>(
+                Transaction.Create(
                     0,
                     service.MinerPrivateKey!,
                     genesis.Hash,
@@ -914,7 +914,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.NotNull(result.Errors);
             Assert.Null(result.Data!);
             Transaction tx =
-                Transaction.Create<NCAction>(
+                Transaction.Create(
                     0,
                     service.MinerPrivateKey!,
                     genesis.Hash,
@@ -982,7 +982,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             IImmutableSet<Address> activatedAccounts,
             RankingState0? rankingState = null
         ) => BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
-            transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create<NCAction>(0,
+            transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(0,
                 AdminPrivateKey, null, new PolymorphicAction<ActionBase>[]
                 {
                     new InitializeStates(
@@ -1007,7 +1007,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                         new[] { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }
                             .ToList()),
                     states: ImmutableDictionary.Create<Address, IValue>())
-            }.Select((sa, nonce) => Transaction.Create<NCAction>(nonce + 1, AdminPrivateKey, null, new[] { sa }))),
+            }.Select((sa, nonce) => Transaction.Create(nonce + 1, AdminPrivateKey, null, new[] { sa }))),
             blockAction: ServiceBuilder.BlockPolicy.BlockAction,
             privateKey: AdminPrivateKey
         );

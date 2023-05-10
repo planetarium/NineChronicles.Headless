@@ -55,7 +55,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                     new[] { new Validator(_proposer.PublicKey, BigInteger.One) }
                                         .ToList()),
                                 states: ImmutableDictionary.Create<Address, IValue>())
-                        }.Select((sa, nonce) => Transaction.Create<NCAction>(nonce, new PrivateKey(), null, new[] { sa }))
+                        }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa }))
                         .ToImmutableList(),
                     blockAction: NineChroniclesNodeService.GetTestBlockPolicy().BlockAction,
                     privateKey: new PrivateKey()));
@@ -259,7 +259,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task TransactionResultIsStaging()
         {
             var privateKey = new PrivateKey();
-            Transaction tx = Transaction.Create<NCAction>(
+            Transaction tx = Transaction.Create(
                 0,
                 privateKey,
                 _blockChain.Genesis.Hash,
@@ -285,7 +285,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task TransactionResultIsInvalid()
         {
             var privateKey = new PrivateKey();
-            Transaction tx = Transaction.Create<NCAction>(
+            Transaction tx = Transaction.Create(
                 0,
                 privateKey,
                 _blockChain.Genesis.Hash,
