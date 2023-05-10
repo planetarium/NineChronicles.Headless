@@ -40,7 +40,7 @@ public class RemoteEvaluationController : ControllerBase
                 null,
                 null,
                 _ => false,
-                new StaticActionTypeLoader(ImmutableHashSet<Assembly>.Empty.Add(typeof(ActionBase).Assembly), typeof(ActionBase)),
+                new StaticActionLoader(ImmutableHashSet<Assembly>.Empty.Add(typeof(ActionBase).Assembly), typeof(ActionBase)),
                 null);
         return Ok(new RemoteEvaluationResponse
         {
