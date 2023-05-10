@@ -11,7 +11,7 @@ public class ActionEvaluationSerializerTest
     public void Serialization()
     {
         var addresses = Enumerable.Repeat(0, 4).Select(_ => new PrivateKey().ToAddress()).ToImmutableList();
-        IAccountStateDelta outputStates = new AccountStateDelta()
+        AccountStateDelta outputStates = (AccountStateDelta)new AccountStateDelta()
             .SetState(addresses[0], Null.Value)
             .SetState(addresses[1], (Text)"foo")
             .SetState(addresses[2], new List((Text)"bar"));
