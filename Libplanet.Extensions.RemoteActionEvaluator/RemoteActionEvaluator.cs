@@ -21,6 +21,8 @@ public class RemoteActionEvaluator : IActionEvaluator
         _blockChainStates = blockChainStates;
     }
 
+    public IActionLoader ActionLoader => throw new NotSupportedException();
+
     public IReadOnlyList<IActionEvaluation> Evaluate(IPreEvaluationBlock block)
     {
         using var httpClient = new HttpClient();
