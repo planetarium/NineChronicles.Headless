@@ -443,7 +443,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Block genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
                     transactions: ImmutableList<Transaction>.Empty
-                        .Add(Transaction.Create<NCAction>(0, ProposerPrivateKey, null,
+                        .Add(Transaction.Create(0, ProposerPrivateKey, null,
                             new PolymorphicAction<ActionBase>[]
                             {
                                 new InitializeStates(
@@ -472,7 +472,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                     validatorSet: validatorSetCandidate,
                                     states: ImmutableDictionary<Address, IValue>.Empty),
                             }.Select((sa, nonce) =>
-                                Transaction.Create<NCAction>(nonce + 1, ProposerPrivateKey, null,
+                                Transaction.Create(nonce + 1, ProposerPrivateKey, null,
                                     new[] { sa }))
                         ),
                     privateKey: ProposerPrivateKey
@@ -832,7 +832,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Block genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
                     transactions: ImmutableList<Transaction>.Empty.Add(
-                        Transaction.Create<NCAction>(0, new PrivateKey(), null,
+                        Transaction.Create(0, new PrivateKey(), null,
                             new PolymorphicAction<ActionBase>[]
                             {
                                 new InitializeStates(
@@ -912,7 +912,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Block genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
                     transactions: ImmutableList<Transaction>.Empty
-                        .Add(Transaction.Create<NCAction>(
+                        .Add(Transaction.Create(
                             0,
                             new PrivateKey(),
                             null,
@@ -988,7 +988,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Block genesis =
                 BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
                     transactions: ImmutableList<Transaction>.Empty.Add(
-                        Transaction.Create<NCAction>(0, new PrivateKey(), null,
+                        Transaction.Create(0, new PrivateKey(), null,
                             new PolymorphicAction<ActionBase>[]
                             {
                                 new InitializeStates(
@@ -1089,7 +1089,7 @@ decimalPlaces
                 BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
                     transactions: ImmutableList<Transaction>.Empty
                         .Add(
-                            Transaction.Create<NCAction>(0, ProposerPrivateKey, null,
+                            Transaction.Create(0, ProposerPrivateKey, null,
                                 new PolymorphicAction<ActionBase>[]
                                 {
                                     new InitializeStates(
@@ -1115,7 +1115,7 @@ decimalPlaces
                             {
                                 new Initialize(validatorSetCandidate, ImmutableDictionary<Address, IValue>.Empty),
                             }.Select((sa, nonce) =>
-                                Transaction.Create<NCAction>(nonce + 1, ProposerPrivateKey, null,
+                                Transaction.Create(nonce + 1, ProposerPrivateKey, null,
                                     new[] { sa }))
                         ),
                     blockAction: blockPolicy.BlockAction,

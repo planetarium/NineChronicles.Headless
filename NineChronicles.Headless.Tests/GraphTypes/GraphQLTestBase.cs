@@ -54,7 +54,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var sheets = TableSheetsImporter.ImportSheets();
             var blockAction = new RewardGold();
             var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
-                transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create<NCAction>(0,
+                transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(0,
                     AdminPrivateKey, null, new NCAction[]
                     {
                         new InitializeStates(
@@ -80,7 +80,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             new[] { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }
                                 .ToList()),
                         states: ImmutableDictionary.Create<Address, IValue>())
-                }.Select((sa, nonce) => Transaction.Create<NCAction>(nonce + 1, AdminPrivateKey, null, new[] { sa }))),
+                }.Select((sa, nonce) => Transaction.Create(nonce + 1, AdminPrivateKey, null, new[] { sa }))),
                 blockAction: blockAction,
                 privateKey: AdminPrivateKey);
 
