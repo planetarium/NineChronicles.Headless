@@ -8,6 +8,7 @@ using GraphQL.Types;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
+using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
@@ -78,19 +79,41 @@ namespace NineChronicles.Headless.Tests
         {
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock();
-            var blockchain = BlockChain<PolymorphicAction<ActionBase>>.Create(
-                new BlockPolicy<PolymorphicAction<ActionBase>>(),
-                new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
-                store,
-                stateStore,
-                genesisBlock);
+            var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock();
+            var policy = new BlockPolicy<NCAction>();
+            BlockChain<NCAction> blockchain = CreateBlockChain(store, stateStore, genesisBlock, policy);
             return new StandaloneContext
             {
                 BlockChain = blockchain,
                 Store = store,
             };
         }
+
+        private static BlockChain<NCAction> CreateBlockChain(
+            IStore store,
+            IStateStore stateStore,
+            Block genesisBlock,
+            BlockPolicy<NCAction> policy) => 
+            BlockChain<NCAction>.Create(
+                policy: policy,
+                stagePolicy: new VolatileStagePolicy<NCAction>(),
+                store: store,
+                stateStore: stateStore,
+                genesisBlock: genesisBlock,
+                actionEvaluator: new ActionEvaluator(
+                    policyBlockActionGetter: _ => policy.BlockAction,
+                    blockChainStates: new BlockChainStates(store, stateStore),
+                    genesisHash: genesisBlock.Hash,
+                    nativeTokenPredicate: policy.NativeTokens.Contains,
+                    actionTypeLoader: new StaticActionLoader(
+                        new[]
+                        {
+                            typeof(ActionBase).Assembly,
+                        }
+                    ),
+                    feeCalculator: null
+                )
+            );
 
         public static StandaloneContext CreateStandaloneContext(
             InitializeStates initializeStates,
@@ -101,18 +124,13 @@ namespace NineChronicles.Headless.Tests
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
                 transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(
-                    0, minerPrivateKey, null, new PolymorphicAction<ActionBase>[]
+                    0, minerPrivateKey, null, new NCAction[]
                     {
                         initializeStates,
                     })),
                 privateKey: minerPrivateKey
             );
-            var blockchain = BlockChain<PolymorphicAction<ActionBase>>.Create(
-                new BlockPolicy<PolymorphicAction<ActionBase>>(),
-                new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
-                store,
-                stateStore,
-                genesisBlock);
+            var blockchain = CreateBlockChain(store, stateStore, genesisBlock, new BlockPolicy<NCAction>());
             return new StandaloneContext
             {
                 BlockChain = blockchain,

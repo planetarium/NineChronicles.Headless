@@ -21,7 +21,6 @@ using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Libplanet.Tx;
 using Nekoyume.Action;
-using Nekoyume.BlockChain.Policy;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common;
 using Xunit;
@@ -42,23 +41,38 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             _store = new DefaultStore(null);
             _stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
+
+            IBlockPolicy<NCAction> policy = NineChroniclesNodeService.GetTestBlockPolicy();
+            Block genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
+                transactions: new IAction[]
+                    {
+                        new Initialize(
+                            new ValidatorSet(
+                                new[] { new Validator(_proposer.PublicKey, BigInteger.One) }
+                                    .ToList()),
+                            states: ImmutableDictionary.Create<Address, IValue>())
+                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa }))
+                    .ToImmutableList(),
+                blockAction: policy.BlockAction,
+                privateKey: new PrivateKey()
+            );
             _blockChain = BlockChain<NCAction>.Create(
-                NineChroniclesNodeService.GetTestBlockPolicy(),
-                new VolatileStagePolicy<NCAction>(),
-                _store,
-                _stateStore,
-                BlockChain<NCAction>.ProposeGenesisBlock(
-                    transactions: new IAction[]
-                        {
-                            new Initialize(
-                                new ValidatorSet(
-                                    new[] { new Validator(_proposer.PublicKey, BigInteger.One) }
-                                        .ToList()),
-                                states: ImmutableDictionary.Create<Address, IValue>())
-                        }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa }))
-                        .ToImmutableList(),
-                    blockAction: NineChroniclesNodeService.GetTestBlockPolicy().BlockAction,
-                    privateKey: new PrivateKey()));
+                policy: policy,
+                stagePolicy: new VolatileStagePolicy<NCAction>(),
+                store: _store,
+                stateStore: _stateStore,
+                genesisBlock: genesisBlock,
+                actionEvaluator: new ActionEvaluator(
+                    policyBlockActionGetter: _ => policy.BlockAction,
+                    blockChainStates: new BlockChainStates(_store, _stateStore),
+                    genesisHash: genesisBlock.Hash,
+                    nativeTokenPredicate: policy.NativeTokens.Contains,
+                    actionTypeLoader: new StaticActionLoader(new [] {
+                        typeof(ActionBase).Assembly,
+                    }),
+                    feeCalculator: null
+                )
+            );
             _service = ServiceBuilder.CreateNineChroniclesNodeService(_blockChain.Genesis, new PrivateKey());
         }
 
