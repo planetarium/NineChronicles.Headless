@@ -60,6 +60,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Extensions.Remote
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lib9c.StateService", "Lib9c.StateService\Lib9c.StateService.csproj", "{CE7AE7C8-1C77-4993-892C-31CE362E4BA7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Extensions.ForkableActionEvaluator", "Libplanet.Extensions.ForkableActionEvaluator\Libplanet.Extensions.ForkableActionEvaluator.csproj", "{8DBD6B71-1863-417A-8569-269300733496}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Extensions.ForkableActionEvaluator.Tests", "Libplanet.Extensions.ForkableActionEvaluator.Tests\Libplanet.Extensions.ForkableActionEvaluator.Tests.csproj", "{490D20B6-FC0C-4459-8412-17777DB95931}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Extensions.ActionEvaluatorCommonComponents", "Libplanet.Extensions.ActionEvaluatorCommonComponents\Libplanet.Extensions.ActionEvaluatorCommonComponents.csproj", "{F022D1F4-AE22-45C4-AE12-B821256B1700}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Extensions.ActionEvaluatorCommonComponents.Tests", "Libplanet.Extensions.ActionEvaluatorCommonComponents.Tests\Libplanet.Extensions.ActionEvaluatorCommonComponents.Tests.csproj", "{35E5F94A-5825-428B-AB4B-6CD1795A17A3}"
@@ -439,6 +443,34 @@ Global
 		{CE7AE7C8-1C77-4993-892C-31CE362E4BA7}.Release|x86.Build.0 = Release|Any CPU
 		{CE7AE7C8-1C77-4993-892C-31CE362E4BA7}.DevEx|Any CPU.ActiveCfg = Debug|Any CPU
 		{CE7AE7C8-1C77-4993-892C-31CE362E4BA7}.DevEx|Any CPU.Build.0 = Debug|Any CPU
+		{8DBD6B71-1863-417A-8569-269300733496}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DBD6B71-1863-417A-8569-269300733496}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8DBD6B71-1863-417A-8569-269300733496}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8DBD6B71-1863-417A-8569-269300733496}.Debug|x64.Build.0 = Debug|Any CPU
+		{8DBD6B71-1863-417A-8569-269300733496}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8DBD6B71-1863-417A-8569-269300733496}.Debug|x86.Build.0 = Debug|Any CPU
+		{8DBD6B71-1863-417A-8569-269300733496}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8DBD6B71-1863-417A-8569-269300733496}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8DBD6B71-1863-417A-8569-269300733496}.Release|x64.ActiveCfg = Release|Any CPU
+		{8DBD6B71-1863-417A-8569-269300733496}.Release|x64.Build.0 = Release|Any CPU
+		{8DBD6B71-1863-417A-8569-269300733496}.Release|x86.ActiveCfg = Release|Any CPU
+		{8DBD6B71-1863-417A-8569-269300733496}.Release|x86.Build.0 = Release|Any CPU
+		{8DBD6B71-1863-417A-8569-269300733496}.DevEx|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DBD6B71-1863-417A-8569-269300733496}.DevEx|Any CPU.Build.0 = Debug|Any CPU
+		{490D20B6-FC0C-4459-8412-17777DB95931}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{490D20B6-FC0C-4459-8412-17777DB95931}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{490D20B6-FC0C-4459-8412-17777DB95931}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{490D20B6-FC0C-4459-8412-17777DB95931}.Debug|x64.Build.0 = Debug|Any CPU
+		{490D20B6-FC0C-4459-8412-17777DB95931}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{490D20B6-FC0C-4459-8412-17777DB95931}.Debug|x86.Build.0 = Debug|Any CPU
+		{490D20B6-FC0C-4459-8412-17777DB95931}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{490D20B6-FC0C-4459-8412-17777DB95931}.Release|Any CPU.Build.0 = Release|Any CPU
+		{490D20B6-FC0C-4459-8412-17777DB95931}.Release|x64.ActiveCfg = Release|Any CPU
+		{490D20B6-FC0C-4459-8412-17777DB95931}.Release|x64.Build.0 = Release|Any CPU
+		{490D20B6-FC0C-4459-8412-17777DB95931}.Release|x86.ActiveCfg = Release|Any CPU
+		{490D20B6-FC0C-4459-8412-17777DB95931}.Release|x86.Build.0 = Release|Any CPU
+		{490D20B6-FC0C-4459-8412-17777DB95931}.DevEx|Any CPU.ActiveCfg = Debug|Any CPU
+		{490D20B6-FC0C-4459-8412-17777DB95931}.DevEx|Any CPU.Build.0 = Debug|Any CPU
 		{F022D1F4-AE22-45C4-AE12-B821256B1700}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F022D1F4-AE22-45C4-AE12-B821256B1700}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F022D1F4-AE22-45C4-AE12-B821256B1700}.Debug|x64.ActiveCfg = Debug|Any CPU
