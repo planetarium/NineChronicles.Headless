@@ -15,6 +15,7 @@ using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
+using Libplanet.Extensions.ForkableActionEvaluator;
 using Libplanet.Extensions.RemoteActionEvaluator;
 using Libplanet.Net;
 using Libplanet.Net.Consensus;
@@ -117,28 +118,40 @@ namespace Libplanet.Headless.Hosting
             }
 
             var blockChainStates = new BlockChainStates(Store, StateStore);
-#pragma warning disable S1075
-            const string REMOTE_ACTION_EVALUATOR_URL = "http://localhost:5157/evaluation";
-#pragma warning restore S1075
-            IActionEvaluator actionEvaluator = useRemoteActionEvaluator
-                ? new RemoteActionEvaluator(new Uri(REMOTE_ACTION_EVALUATOR_URL), blockChainStates)
-                : new ActionEvaluator(
-                    blockHeader =>
-                    {
-                        var blockActionType = actionLoader
-                            .LoadAllActionTypes(blockHeader.Index)
-                            .FirstOrDefault(t => t.FullName == "Nekoyume.Action.RewardGold");
-                        return blockActionType is { } t ? (IAction)Activator.CreateInstance(t) : null;
-                    },
-                    blockChainStates: blockChainStates,
-                    trieGetter: hash => StateStore.GetStateRoot(
-                        Store.GetBlockDigest(hash)?.StateRootHash
+            IActionEvaluator BuildActionEvaluator(IActionEvaluatorConfiguration actionEvaluatorConfiguration)
+            {
+                return actionEvaluatorConfiguration switch
+                {
+                    RemoteActionEvaluatorConfiguration remoteActionEvaluatorConfiguration => new RemoteActionEvaluator(
+                        new Uri(remoteActionEvaluatorConfiguration.StateServiceEndpoint), blockChainStates),
+                    DefaultActionEvaluatorConfiguration _ => new ActionEvaluator(
+                        blockHeader =>
+                        {
+                            var blockActionType = actionLoader
+                                .LoadAllActionTypes(blockHeader.Index)
+                                .FirstOrDefault(t => t.FullName == "Nekoyume.Action.RewardGold");
+                            return blockActionType is { } t ? (IAction)Activator.CreateInstance(t) : null;
+                        },
+                        blockChainStates: blockChainStates,
+                        trieGetter: hash => StateStore.GetStateRoot(
+                            Store.GetBlockDigest(hash)?.StateRootHash
+                        ),
+                        genesisHash: genesisBlock.Hash,
+                        nativeTokenPredicate: blockPolicy.NativeTokens.Contains,
+                        actionTypeLoader: actionLoader,
+                        feeCalculator: null
                     ),
-                    genesisHash: genesisBlock.Hash,
-                    nativeTokenPredicate: blockPolicy.NativeTokens.Contains,
-                    actionTypeLoader: actionLoader,
-                    feeCalculator: null
-                );
+                    ForkableActionEvaluatorConfiguration forkableActionEvaluatorConfiguration => new
+                        ForkableActionEvaluator(
+                            forkableActionEvaluatorConfiguration.Pairs.Select(pair => (
+                                (pair.Item1.Start, pair.Item1.End), BuildActionEvaluator(pair.Item2)
+                            ))
+                        ),
+                    _ => throw new InvalidOperationException("Unexpected type."),
+                };
+            }
+
+            IActionEvaluator actionEvaluator = BuildActionEvaluator(properties.ActionEvaluatorConfiguration);
 
             if (Store.GetCanonicalChainId() is { })
             {

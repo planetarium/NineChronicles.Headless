@@ -83,6 +83,9 @@ namespace Libplanet.Headless.Hosting
 
 #nullable enable
         public DynamicActionTypeLoaderConfiguration? DynamicActionTypeLoader { get; init; } = null;
+
+        public IActionEvaluatorConfiguration ActionEvaluatorConfiguration { get; init; } =
+            new DefaultActionEvaluatorConfiguration();
 #nullable disable
     }
 }

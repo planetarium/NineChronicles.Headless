@@ -81,7 +81,8 @@ namespace NineChronicles.Headless.Properties
                 int maximumPollPeers = int.MaxValue,
                 ushort? consensusPort = null,
                 string? consensusPrivateKeyString = null,
-                string[]? consensusSeedStrings = null)
+                string[]? consensusSeedStrings = null,
+                IActionEvaluatorConfiguration? actionEvaluatorConfiguration = null)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
@@ -129,6 +130,7 @@ namespace NineChronicles.Headless.Properties
                 ConsensusPort = consensusPort,
                 ConsensusSeeds = consensusSeeds,
                 ConsensusPrivateKey = consensusPrivateKey,
+                ActionEvaluatorConfiguration = actionEvaluatorConfiguration ?? new DefaultActionEvaluatorConfiguration(),
             };
         }
 
