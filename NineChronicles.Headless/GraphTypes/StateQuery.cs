@@ -534,7 +534,10 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var agentAddress = context.GetArgument<Address>("avatarAddress");
                     var index = context.GetArgument<int>("slot");
-
+                    if(index < 0 || index > 3)
+                    {
+                        throw new Exception("Invalid Slot Index");
+                    }
                     var deriveAddress = CombinationSlotState.DeriveAddress(agentAddress, index);
                     if (context.Source.GetState(deriveAddress) is Dictionary state)
                     {
