@@ -3,7 +3,7 @@ using Bencodex.Types;
 using Libplanet.Action;
 using Libplanet.Crypto;
 
-namespace Libplanet.Extensions.RemoteActionEvaluator.Tests;
+namespace Libplanet.Extensions.ActionEvaluatorCommonComponents.Tests;
 
 public class ActionEvaluationSerializerTest
 {

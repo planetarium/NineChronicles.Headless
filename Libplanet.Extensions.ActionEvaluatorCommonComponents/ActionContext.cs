@@ -4,7 +4,7 @@ using Libplanet.Assets;
 using Libplanet.Blocks;
 using Libplanet.Tx;
 
-namespace Libplanet.Extensions.RemoteActionEvaluator;
+namespace Libplanet.Extensions.ActionEvaluatorCommonComponents;
 
 public class ActionContext : IActionContext
 {

@@ -1,8 +1,8 @@
 using Libplanet.Action;
 
-namespace Libplanet.Extensions.RemoteActionEvaluator;
+namespace Libplanet.Extensions.ActionEvaluatorCommonComponents;
 
-internal class Random : System.Random, IRandom
+public class Random : System.Random, IRandom
 {
     public Random(int seed)
         : base(seed)

@@ -6,7 +6,7 @@ using Libplanet.Blocks;
 using Libplanet.Tx;
 using Boolean = Bencodex.Types.Boolean;
 
-namespace Libplanet.Extensions.RemoteActionEvaluator;
+namespace Libplanet.Extensions.ActionEvaluatorCommonComponents;
 
 public static class ActionContextMarshaller
 {

@@ -8,6 +8,7 @@
   
   <ItemGroup>
     <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet\Libplanet.csproj" />
+    <ProjectReference Include="..\Libplanet.Extensions.ActionEvaluatorCommonComponents\Libplanet.Extensions.ActionEvaluatorCommonComponents.csproj" />
   </ItemGroup>
 
   <ItemGroup>

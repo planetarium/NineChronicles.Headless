@@ -4,7 +4,7 @@ using Bencodex.Types;
 using Libplanet.Action;
 using Libplanet.Assets;
 
-namespace Libplanet.Extensions.RemoteActionEvaluator;
+namespace Libplanet.Extensions.ActionEvaluatorCommonComponents;
 
 public static class AccountStateDeltaMarshaller
 {
