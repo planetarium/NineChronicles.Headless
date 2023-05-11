@@ -2,7 +2,7 @@ using Bencodex;
 using Bencodex.Types;
 using Libplanet.Tx;
 
-namespace Libplanet.Extensions.RemoteActionEvaluator;
+namespace Libplanet.Extensions.ActionEvaluatorCommonComponents;
 
 public static class TransactionMarshaller
 {

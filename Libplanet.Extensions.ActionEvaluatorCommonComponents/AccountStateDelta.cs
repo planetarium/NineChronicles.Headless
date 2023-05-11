@@ -6,7 +6,7 @@ using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Consensus;
 
-namespace Libplanet.Extensions.RemoteActionEvaluator;
+namespace Libplanet.Extensions.ActionEvaluatorCommonComponents;
 
 public class AccountStateDelta : IAccountStateDelta, IValidatorSupportStateDelta
 {
@@ -30,13 +30,13 @@ public class AccountStateDelta : IAccountStateDelta, IValidatorSupportStateDelta
     public IImmutableSet<Currency> TotalSupplyUpdatedCurrencies =>
         _totalSupplies.Keys.ToImmutableHashSet();
 
-    internal AccountStateGetter StateGetter { get; set; }
+    public AccountStateGetter StateGetter { get; set; }
 
-    internal AccountBalanceGetter BalanceGetter { get; set; }
+    public AccountBalanceGetter BalanceGetter { get; set; }
 
-    internal TotalSupplyGetter TotalSupplyGetter { get; set; }
+    public TotalSupplyGetter TotalSupplyGetter { get; set; }
 
-    internal ValidatorSetGetter ValidatorSetGetter { get; set; }
+    public ValidatorSetGetter ValidatorSetGetter { get; set; }
 
 
     public AccountStateDelta()

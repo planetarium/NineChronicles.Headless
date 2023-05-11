@@ -1,7 +1,7 @@
 using Bencodex.Types;
 using Libplanet.Action;
 
-namespace Libplanet.Extensions.RemoteActionEvaluator;
+namespace Libplanet.Extensions.ActionEvaluatorCommonComponents;
 
 public class ActionEvaluation : IActionEvaluation
 {
