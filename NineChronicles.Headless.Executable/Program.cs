@@ -17,6 +17,8 @@ using Serilog;
 using Serilog.Formatting.Compact;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -27,6 +29,7 @@ using Libplanet.Action;
 // import necessary for sentry exception filters
 using Libplanet.Blocks;
 using Libplanet.Headless;
+using Libplanet.Headless.Hosting;
 using Libplanet.Net.Transports;
 using Nekoyume.Action;
 using OpenTelemetry;
@@ -58,10 +61,6 @@ namespace NineChronicles.Headless.Executable
                     services.AddSingleton<IKeyStore>(Web3KeyStore.DefaultKeyStore);
                 })
                 .RunAsync<Program>(args);
-        }
-
-        static void ConfigureSentryOptions(SentryOptions o)
-        {
         }
 
         [PrimaryCommand]
@@ -236,6 +235,41 @@ namespace NineChronicles.Headless.Executable
                 .Destructure.UsingAttributes();
             var headlessConfig = new Configuration();
             configuration.Bind("Headless", headlessConfig);
+
+            IActionEvaluatorConfiguration? GetActionEvaluatorConfiguration(IConfiguration configuration)
+            {
+                if (!(configuration.GetValue<ActionEvaluatorType>("Type") is { } actionEvaluatorType))
+                {
+                    return null;
+                }
+
+                return actionEvaluatorType switch
+                {
+                    ActionEvaluatorType.Default => new DefaultActionEvaluatorConfiguration(),
+                    ActionEvaluatorType.RemoteActionEvaluator => new RemoteActionEvaluatorConfiguration
+                    {
+                        StateServiceEndpoint = configuration.GetValue<string>("StateServiceEndpoint"),
+                    },
+                    ActionEvaluatorType.ForkableActionEvaluator => new ForkableActionEvaluatorConfiguration
+                    {
+                        Pairs = (configuration.GetValue<List<IConfiguration>>("Pairs") ??
+                                 throw new KeyNotFoundException()).Select(pair =>
+                        {
+                            var range = pair.GetValue<ForkableActionEvaluatorRange>("Range") ??
+                                        throw new KeyNotFoundException();
+                            var actionEvaluatorConfiguration =
+                                GetActionEvaluatorConfiguration(configuration.GetSection("ActionEvaluator")) ??
+                                throw new KeyNotFoundException();
+                            return (range, actionEvaluatorConfiguration);
+                        }).ToImmutableArray()
+                    },
+                    _ => throw new InvalidOperationException("Unexpected type."),
+                };
+            }
+
+            var actionEvaluatorConfiguration =
+                GetActionEvaluatorConfiguration(configuration.GetSection("Headless").GetSection("ActionEvaluator"));
+
             headlessConfig.Overwrite(
                 appProtocolVersionToken, trustedAppProtocolVersionSigners, genesisBlockPath, host, port,
                 swarmPrivateKeyString, storeType, storePath, noReduceStore, noMiner, minerCount,
@@ -362,7 +396,8 @@ namespace NineChronicles.Headless.Executable
                         consensusPort: headlessConfig.ConsensusPort,
                         consensusPrivateKeyString: headlessConfig.ConsensusPrivateKeyString,
                         consensusSeedStrings: headlessConfig.ConsensusSeedStrings,
-                        maximumPollPeers: headlessConfig.MaximumPollPeers
+                        maximumPollPeers: headlessConfig.MaximumPollPeers,
+                        actionEvaluatorConfiguration: actionEvaluatorConfiguration
                     );
 
                 if (headlessConfig.RpcServer)
@@ -410,7 +445,7 @@ namespace NineChronicles.Headless.Executable
                     else if (actionTypeLoaderConfiguration.StaticActionTypeLoader is { } staticActionTypeLoaderConf)
                     {
                         var assemblies = staticActionTypeLoaderConf.Assemblies?.Select(x => Assembly.Load(File.ReadAllBytes(x))).ToHashSet()
-                            ?? throw new CommandExitedException(-1);
+                                         ?? throw new CommandExitedException(-1);
                         actionLoader = new StaticActionLoader(assemblies);
                     }
                     else
@@ -491,6 +526,10 @@ namespace NineChronicles.Headless.Executable
                 throw;
             }
 #endif
+        }
+
+        static void ConfigureSentryOptions(SentryOptions o)
+        {
         }
     }
 }
