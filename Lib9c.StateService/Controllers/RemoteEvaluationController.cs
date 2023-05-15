@@ -3,6 +3,7 @@ using System.Reflection;
 using Bencodex;
 using Bencodex.Types;
 using Libplanet.Action;
+using Libplanet.Extensions.ActionEvaluatorCommonComponents;
 using Libplanet.Extensions.RemoteActionEvaluator;
 using Microsoft.AspNetCore.Mvc;
 using Nekoyume.Action;
