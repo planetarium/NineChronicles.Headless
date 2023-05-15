@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Libplanet.Extensions.ActionEvaluatorCommonComponents\Libplanet.Extensions.ActionEvaluatorCommonComponents.csproj" />
+    <ProjectReference Include="..\Libplanet.Extensions.SandboxedActionEvaluator.Abstractions\Libplanet.Extensions.SandboxedActionEvaluator.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>
