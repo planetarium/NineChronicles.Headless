@@ -232,7 +232,7 @@ namespace NineChronicles.Headless.Executable
                     path: Environment.GetEnvironmentVariable("JSON_LOG_PATH") ?? "./logs/remote-headless_9c-network_remote-headless.json",
                     retainedFileCountLimit: 5,
                     rollOnFileSizeLimit: true,
-                    fileSizeLimitBytes: 524_288_000)
+                    fileSizeLimitBytes: 104_857_600)
                 .Destructure.UsingAttributes();
             var headlessConfig = new Configuration();
             configuration.Bind("Headless", headlessConfig);
