@@ -23,6 +23,7 @@ using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Microsoft.Extensions.Hosting;
+using Nekoyume;
 using NineChronicles.RPC.Shared.Exceptions;
 using Nito.AsyncEx;
 using Serilog;
@@ -170,7 +171,7 @@ namespace Libplanet.Headless.Hosting
                         genesisHash: genesisBlock.Hash,
                         nativeTokenPredicate: blockPolicy.NativeTokens.Contains,
                         actionTypeLoader: actionTypeLoader,
-                        feeCalculator: null
+                        feeCalculator: new FeeCalculator()
                     )
                 );
             }
@@ -199,7 +200,7 @@ namespace Libplanet.Headless.Hosting
                         genesisHash: genesisBlock.Hash,
                         nativeTokenPredicate: blockPolicy.NativeTokens.Contains,
                         actionTypeLoader: actionTypeLoader,
-                        feeCalculator: null
+                        feeCalculator: new FeeCalculator()
                     )
                 );
             }
