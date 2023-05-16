@@ -222,7 +222,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 properties,
                 blockPolicy: new BlockPolicy<T>(),
                 stagePolicy: new VolatileStagePolicy<T>(),
-                renderers: new[] { new DummyRenderer<T>() },
+                renderers: new[] { new DummyRenderer() },
                 preloadProgress: preloadProgress,
                 exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),
                 preloadStatusHandlerAction: isPreloadStart => { },

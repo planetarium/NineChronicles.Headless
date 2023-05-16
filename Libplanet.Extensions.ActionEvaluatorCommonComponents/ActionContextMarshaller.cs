@@ -28,11 +28,6 @@ public static class ActionContextMarshaller
             .Add("signer", actionContext.Signer.ToHex())
             .Add("previous_states", AccountStateDeltaMarshaller.Marshal(actionContext.PreviousStates));
 
-        if (actionContext.GenesisHash is { } genesisHash)
-        {
-            dictionary = dictionary.Add("genesis_hash", genesisHash.ByteArray);
-        }
-
         if (actionContext.TxId is { } txId)
         {
             dictionary = dictionary.Add("tx_id", txId.ByteArray);
