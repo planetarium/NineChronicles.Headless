@@ -299,9 +299,7 @@ namespace NineChronicles.Headless.Executable.Commands
                             outputSw?.WriteLine(msg);
 
                             var actionEvaluator = GetActionEvaluator(
-                                blockChain,
-                                stateStore,
-                                blockChain.Genesis.Hash);
+                                blockChain, blockChain.Genesis.Hash);
                             var actionEvaluations = actionEvaluator.Evaluate(block);
                             LoggingActionEvaluations(actionEvaluations, outputSw);
 
@@ -446,7 +444,6 @@ namespace NineChronicles.Headless.Executable.Commands
 
         private ActionEvaluator GetActionEvaluator(
             BlockChain<NCAction> blockChain,
-            IStateStore stateStore,
             BlockHash genesisBlockHash)
         {
             var policy = new BlockPolicySource(Logger.None).GetPolicy();
@@ -459,7 +456,6 @@ namespace NineChronicles.Headless.Executable.Commands
             return new ActionEvaluator(
                 _ => policy.BlockAction,
                 blockChainStates: blockChain,
-                trieGetter: hash => stateStore.GetStateRoot(blockChain[hash].StateRootHash),
                 genesisHash: genesisBlockHash,
                 nativeTokenPredicate: policy.NativeTokens.Contains,
                 actionTypeLoader: actionLoader,

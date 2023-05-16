@@ -6,6 +6,7 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet.Action;
+using Libplanet.Blocks;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
@@ -78,13 +79,22 @@ namespace NineChronicles.Headless.Tests
         {
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock();
+            var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock();
+            var policy = new BlockPolicy<NCAction>();
+            var actionEvaluator = new ActionEvaluator(
+                _ => policy.BlockAction,
+                new BlockChainStates(store, stateStore),
+                genesisBlock.Hash,
+                policy.NativeTokens.Contains,
+                new StaticActionLoader(new[] { typeof(ActionBase).Assembly }),
+                null);
             var blockchain = BlockChain<PolymorphicAction<ActionBase>>.Create(
                 new BlockPolicy<PolymorphicAction<ActionBase>>(),
                 new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
                 store,
                 stateStore,
-                genesisBlock);
+                genesisBlock,
+                actionEvaluator);
             return new StandaloneContext
             {
                 BlockChain = blockchain,
@@ -101,18 +111,27 @@ namespace NineChronicles.Headless.Tests
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
                 transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(
-                    0, minerPrivateKey, null, new PolymorphicAction<ActionBase>[]
+                    0, minerPrivateKey, null, new NCAction[]
                     {
                         initializeStates,
                     })),
                 privateKey: minerPrivateKey
             );
+            var policy = new BlockPolicy<NCAction>();
+            var actionEvaluator = new ActionEvaluator(
+                _ => policy.BlockAction,
+                new BlockChainStates(store, stateStore),
+                genesisBlock.Hash,
+                policy.NativeTokens.Contains,
+                new StaticActionLoader(new[] { typeof(ActionBase).Assembly }),
+                null);
             var blockchain = BlockChain<PolymorphicAction<ActionBase>>.Create(
                 new BlockPolicy<PolymorphicAction<ActionBase>>(),
                 new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
                 store,
                 stateStore,
-                genesisBlock);
+                genesisBlock,
+                actionEvaluator);
             return new StandaloneContext
             {
                 BlockChain = blockchain,
