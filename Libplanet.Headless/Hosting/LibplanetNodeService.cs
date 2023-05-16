@@ -200,7 +200,7 @@ namespace Libplanet.Headless.Hosting
                         genesisHash: genesisBlock.Hash,
                         nativeTokenPredicate: blockPolicy.NativeTokens.Contains,
                         actionTypeLoader: actionTypeLoader,
-                        feeCalculator: new FeeCalculator()
+                        feeCalculator: null
                     )
                 );
             }
