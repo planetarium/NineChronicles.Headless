@@ -39,7 +39,6 @@ public class RemoteEvaluationController : ControllerBase
                 context => new RewardGold(),
                 blockChainStates,
                 null,
-                null,
                 _ => false,
                 new StaticActionLoader(ImmutableHashSet<Assembly>.Empty.Add(typeof(ActionBase).Assembly), typeof(ActionBase)),
                 null);

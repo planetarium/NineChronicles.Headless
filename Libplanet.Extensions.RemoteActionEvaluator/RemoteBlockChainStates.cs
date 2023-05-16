@@ -8,6 +8,7 @@ using Libplanet.Blockchain;
 using Libplanet.Blocks;
 using Libplanet.Consensus;
 using Libplanet.Crypto;
+using Libplanet.Store.Trie;
 
 namespace Libplanet.Extensions.RemoteActionEvaluator
 {
@@ -149,6 +150,11 @@ namespace Libplanet.Extensions.RemoteActionEvaluator
                 .Select(x =>
                     new Validator(new PublicKey(ByteUtil.ParseHex(x.PublicKey)), x.Power))
                 .ToList());
+        }
+
+        public ITrie? GetTrie(BlockHash offset)
+        {
+            throw new NotSupportedException();
         }
 
         private class GetStatesResponseType

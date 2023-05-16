@@ -16,6 +16,8 @@ using Serilog.Core;
 using Xunit;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Lib9cUtils = Lib9c.DevExtensions.Utils;
+using Libplanet.Action;
+using Nekoyume.Action;
 
 namespace NineChronicles.Headless.Executable.Tests.Commands
 {
@@ -35,7 +37,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         }
 
         [Theory]
-        // [InlineData(StoreType.Default)]  // Balance() loads loads only RocksDB 
+        // [InlineData(StoreType.Default)]  // Balance() loads loads only RocksDB
         [InlineData(StoreType.RocksDb)]
         public void Balance(StoreType storeType)
         {
@@ -48,12 +50,20 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var stateStore = new TrieStateStore(stateKeyValueStore);
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
             IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
+            ActionEvaluator actionEvaluator = new ActionEvaluator(
+                _ => blockPolicy.BlockAction,
+                new BlockChainStates(store, stateStore),
+                genesisBlock.Hash,
+                blockPolicy.NativeTokens.Contains,
+                new StaticActionLoader(new[] { typeof(ActionBase).Assembly }, typeof(ActionBase)),
+                null);
             BlockChain<NCAction> chain = BlockChain<NCAction>.Create(
                 blockPolicy,
                 stagePolicy,
                 store,
                 stateStore,
-                genesisBlock);
+                genesisBlock,
+                actionEvaluator);
             Guid chainId = chain.Id;
             store.Dispose();
             stateStore.Dispose();

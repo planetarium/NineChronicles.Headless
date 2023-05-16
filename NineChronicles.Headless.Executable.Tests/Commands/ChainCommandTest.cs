@@ -100,12 +100,20 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<PolymorphicAction<ActionBase>>();
             IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetTestPolicy();
+            ActionEvaluator actionEvaluator = new ActionEvaluator(
+                _ => blockPolicy.BlockAction,
+                new BlockChainStates(store, stateStore),
+                genesisBlock.Hash,
+                blockPolicy.NativeTokens.Contains,
+                new StaticActionLoader(new[] { typeof(ActionBase).Assembly }),
+                null);
             BlockChain<NCAction> chain = BlockChain<NCAction>.Create(
                 blockPolicy,
                 stagePolicy,
                 store,
                 stateStore,
-                genesisBlock);
+                genesisBlock,
+                actionEvaluator);
 
             var action = new HackAndSlash
             {
@@ -156,12 +164,20 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
             IBlockPolicy<NCAction> blockPolicy = new BlockPolicy<NCAction>();
+            ActionEvaluator actionEvaluator = new ActionEvaluator(
+                _ => blockPolicy.BlockAction,
+                new BlockChainStates(store, stateStore),
+                genesisBlock.Hash,
+                blockPolicy.NativeTokens.Contains,
+                new StaticActionLoader(new[] { typeof(ActionBase).Assembly }),
+                null);
             BlockChain<NCAction> chain = BlockChain<NCAction>.Create(
                 blockPolicy,
                 stagePolicy,
                 store,
                 stateStore,
-                genesisBlock);
+                genesisBlock,
+                actionEvaluator);
             Guid chainId = chain.Id;
 
             var action = new HackAndSlash
@@ -218,12 +234,20 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var stateStore = new TrieStateStore(stateKeyValueStore);
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
             IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
+            ActionEvaluator actionEvaluator = new ActionEvaluator(
+                _ => blockPolicy.BlockAction,
+                new BlockChainStates(store, stateStore),
+                genesisBlock.Hash,
+                blockPolicy.NativeTokens.Contains,
+                new StaticActionLoader(new[] { typeof(ActionBase).Assembly }),
+                null);
             BlockChain<NCAction> chain = BlockChain<NCAction>.Create(
                 blockPolicy,
                 stagePolicy,
                 store,
                 stateStore,
-                genesisBlock);
+                genesisBlock,
+                actionEvaluator);
             int prevStatesCount = stateKeyValueStore.ListKeys().Count();
             stateKeyValueStore.Set(
                 new KeyBytes("alpha", Encoding.UTF8),
@@ -255,12 +279,20 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var stateStore = new TrieStateStore(stateKeyValueStore);
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
             IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
+            ActionEvaluator actionEvaluator = new ActionEvaluator(
+                _ => blockPolicy.BlockAction,
+                new BlockChainStates(store, stateStore),
+                genesisBlock.Hash,
+                blockPolicy.NativeTokens.Contains,
+                new StaticActionLoader(new[] { typeof(ActionBase).Assembly }),
+                null);
             BlockChain<NCAction> chain = BlockChain<NCAction>.Create(
                 blockPolicy,
                 stagePolicy,
                 store,
                 stateStore,
-                genesisBlock);
+                genesisBlock,
+                actionEvaluator);
             var action = new HackAndSlash
             {
                 Costumes = new List<Guid>(),

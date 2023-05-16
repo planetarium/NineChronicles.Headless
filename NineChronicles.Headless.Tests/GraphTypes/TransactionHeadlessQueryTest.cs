@@ -42,23 +42,34 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             _store = new DefaultStore(null);
             _stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
+            IBlockPolicy<NCAction> policy = NineChroniclesNodeService.GetTestBlockPolicy();
+            Block genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
+                transactions: new IAction[]
+                    {
+                        new Initialize(
+                            new ValidatorSet(
+                                new[] { new Validator(_proposer.PublicKey, BigInteger.One) }
+                                    .ToList()),
+                            states: ImmutableDictionary.Create<Address, IValue>())
+                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa }))
+                    .ToImmutableList(),
+                blockAction: policy.BlockAction,
+                privateKey: new PrivateKey()
+            );
+            var actionEvaluator = new ActionEvaluator(
+                _ => policy.BlockAction,
+                new BlockChainStates(_store, _stateStore),
+                genesisBlock.Hash,
+                policy.NativeTokens.Contains,
+                new StaticActionLoader(new[] { typeof(ActionBase).Assembly }),
+                null);
             _blockChain = BlockChain<NCAction>.Create(
                 NineChroniclesNodeService.GetTestBlockPolicy(),
                 new VolatileStagePolicy<NCAction>(),
                 _store,
                 _stateStore,
-                BlockChain<NCAction>.ProposeGenesisBlock(
-                    transactions: new IAction[]
-                        {
-                            new Initialize(
-                                new ValidatorSet(
-                                    new[] { new Validator(_proposer.PublicKey, BigInteger.One) }
-                                        .ToList()),
-                                states: ImmutableDictionary.Create<Address, IValue>())
-                        }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa }))
-                        .ToImmutableList(),
-                    blockAction: NineChroniclesNodeService.GetTestBlockPolicy().BlockAction,
-                    privateKey: new PrivateKey()));
+                genesisBlock,
+                actionEvaluator);
             _service = ServiceBuilder.CreateNineChroniclesNodeService(_blockChain.Genesis, new PrivateKey());
         }
 

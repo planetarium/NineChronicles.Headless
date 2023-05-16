@@ -133,9 +133,6 @@ namespace Libplanet.Headless.Hosting
                             return blockActionType is { } t ? (IAction)Activator.CreateInstance(t) : null;
                         },
                         blockChainStates: blockChainStates,
-                        trieGetter: hash => StateStore.GetStateRoot(
-                            Store.GetBlockDigest(hash)?.StateRootHash
-                        ),
                         genesisHash: genesisBlock.Hash,
                         nativeTokenPredicate: blockPolicy.NativeTokens.Contains,
                         actionTypeLoader: actionLoader,
@@ -185,9 +182,6 @@ namespace Libplanet.Headless.Hosting
                             return blockActionType is { } t ? (IAction)Activator.CreateInstance(t) : null;
                         },
                         blockChainStates: blockChainStates,
-                        trieGetter: hash => StateStore.GetStateRoot(
-                            Store.GetBlockDigest(hash)?.StateRootHash
-                        ),
                         genesisHash: genesisBlock.Hash,
                         nativeTokenPredicate: blockPolicy.NativeTokens.Contains,
                         actionTypeLoader: actionLoader,
