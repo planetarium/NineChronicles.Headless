@@ -126,7 +126,6 @@ namespace NineChronicles.Headless.Executable.Commands
                     ? BlockChain<NCAction>.DetermineGenesisStateRootHash(
                         preEvalBlock,
                         policy.BlockAction,
-                        policy.NativeTokens.Contains,
                         out delta)
                     : chain.DetermineBlockStateRootHash(
                         preEvalBlock,

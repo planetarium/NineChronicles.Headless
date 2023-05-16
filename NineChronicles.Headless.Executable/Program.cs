@@ -26,6 +26,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 // import necessary for sentry exception filters
 using Libplanet.Blocks;
 using Libplanet.Headless;
@@ -411,26 +412,14 @@ namespace NineChronicles.Headless.Executable
                     properties.LogActionRenders = true;
                 }
 
-                IActionLoader MakeStaticActionLoader() => new StaticActionLoader(
-                    Assembly.GetEntryAssembly() is { } entryAssembly
+                IActionLoader MakeSingleActionLoader()
+                {
+                    var actionLoader = new SingleActionLoader(typeof(PolymorphicAction<ActionBase>));
 #if LIB9C_DEV_EXTENSIONS
-                        ? new[]
-                        {
-                            typeof(ActionBase).Assembly,
-                            typeof(Lib9c.DevExtensions.Action.CreateOrReplaceAvatar).Assembly,
-                            entryAssembly
-                        }
-                        : new[]
-                        {
-                            typeof(ActionBase).Assembly,
-                            typeof(Lib9c.DevExtensions.Action.CreateOrReplaceAvatar).Assembly
-                        },
-#else
-                        ? new[] { typeof(ActionBase).Assembly, entryAssembly }
-                        : new[] { typeof(ActionBase).Assembly },
+                    PolymorphicAction<ActionBase>.ReloadLoader(new[] { typeof(ActionBase).Assembly, typeof(Utils).Assembly });
 #endif
-                    typeof(ActionBase)
-                );
+                    return actionLoader;
+                }
 
                 IActionLoader actionLoader;
                 if (headlessConfig.ActionTypeLoader is { } actionTypeLoaderConfiguration)
@@ -444,23 +433,16 @@ namespace NineChronicles.Headless.Executable
                     }
                     else if (actionTypeLoaderConfiguration.StaticActionTypeLoader is { } staticActionTypeLoaderConf)
                     {
-                        var assemblies = staticActionTypeLoaderConf.Assemblies?.Select(x => Assembly.Load(File.ReadAllBytes(x))).ToHashSet()
-                                         ?? throw new CommandExitedException(-1);
-                        actionLoader = new StaticActionLoader(assemblies);
+                        throw new NotSupportedException();
                     }
                     else
                     {
-                        actionLoader = MakeStaticActionLoader();
+                        actionLoader = MakeSingleActionLoader();
                     }
                 }
                 else
                 {
-                    actionLoader = MakeStaticActionLoader();
-                }
-
-                if (actionLoader is StaticActionLoader staticActionLoader)
-                {
-                    PolymorphicAction<ActionBase>.ActionTypeLoader = staticActionLoader;
+                    actionLoader = MakeSingleActionLoader();
                 }
 
                 var minerPrivateKey = string.IsNullOrEmpty(headlessConfig.MinerPrivateKeyString)

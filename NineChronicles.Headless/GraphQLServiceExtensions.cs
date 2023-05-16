@@ -78,7 +78,6 @@ namespace NineChronicles.Headless
             {
                 Name = "LibplanetStateQuery",
             });
-            services.TryAddSingleton<BlockPolicyType<T>>();
 
             return services;
         }

@@ -13,6 +13,7 @@ using Bencodex.Types;
 using GraphQL.Execution;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Action.Sys;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
@@ -503,7 +504,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
 
-            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Test, StaticActionLoaderSingleton.Instance);
+            var service = new NineChroniclesNodeService(
+                userPrivateKey, properties, blockPolicy, NetworkType.Test, StaticActionLoaderSingleton.Instance);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using Bencodex.Json;
@@ -11,10 +10,10 @@ using Bencodex.Types;
 using Cocona;
 using Cocona.Help;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
-using Libplanet.Headless;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Tx;
@@ -116,8 +115,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     signature: tx.Signature,
                     actions: actions.Cast<IAction>().ToImmutableList(),
                     rehearsal: false,
-                    previousBlockStatesTrie: null,
-                    nativeTokenPredicate: _ => true
+                    previousBlockStatesTrie: null
                 );
                 var actionNum = 1;
                 foreach (var actionEvaluation in actionEvaluations)
@@ -447,17 +445,11 @@ namespace NineChronicles.Headless.Executable.Commands
             BlockHash genesisBlockHash)
         {
             var policy = new BlockPolicySource(Logger.None).GetPolicy();
-            IActionLoader actionLoader = new StaticActionLoader(
-                Assembly.GetEntryAssembly() is { } entryAssembly
-                    ? new[] { typeof(NCAction).Assembly, entryAssembly }
-                    : new[] { typeof(NCAction).Assembly },
-                typeof(NCAction)
-            );
+            IActionLoader actionLoader = new SingleActionLoader(typeof(NCAction));
             return new ActionEvaluator(
                 _ => policy.BlockAction,
                 blockChainStates: blockChain,
                 genesisHash: genesisBlockHash,
-                nativeTokenPredicate: policy.NativeTokens.Contains,
                 actionTypeLoader: actionLoader,
                 feeCalculator: null);
         }

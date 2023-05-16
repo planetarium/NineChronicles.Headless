@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;
@@ -125,16 +124,9 @@ namespace Libplanet.Headless.Hosting
                     RemoteActionEvaluatorConfiguration remoteActionEvaluatorConfiguration => new RemoteActionEvaluator(
                         new Uri(remoteActionEvaluatorConfiguration.StateServiceEndpoint), blockChainStates),
                     DefaultActionEvaluatorConfiguration _ => new ActionEvaluator(
-                        blockHeader =>
-                        {
-                            var blockActionType = actionLoader
-                                .LoadAllActionTypes(blockHeader.Index)
-                                .FirstOrDefault(t => t.FullName == "Nekoyume.Action.RewardGold");
-                            return blockActionType is { } t ? (IAction)Activator.CreateInstance(t) : null;
-                        },
+                        _ => blockPolicy.BlockAction,
                         blockChainStates: blockChainStates,
                         genesisHash: genesisBlock.Hash,
-                        nativeTokenPredicate: blockPolicy.NativeTokens.Contains,
                         actionTypeLoader: actionLoader,
                         feeCalculator: null
                     ),
@@ -174,16 +166,9 @@ namespace Libplanet.Headless.Hosting
                     renderers: renderers,
                     blockChainStates: blockChainStates,
                     actionEvaluator: new ActionEvaluator(
-                        blockHeader =>
-                        {
-                            var blockActionType = actionLoader
-                                .LoadAllActionTypes(blockHeader.Index)
-                                .FirstOrDefault(t => t.FullName == "Nekoyume.Action.RewardGold");
-                            return blockActionType is { } t ? (IAction)Activator.CreateInstance(t) : null;
-                        },
+                        _ => blockPolicy.BlockAction,
                         blockChainStates: blockChainStates,
                         genesisHash: genesisBlock.Hash,
-                        nativeTokenPredicate: blockPolicy.NativeTokens.Contains,
                         actionTypeLoader: actionLoader,
                         feeCalculator: null
                     )
@@ -208,14 +193,14 @@ namespace Libplanet.Headless.Hosting
                     Properties.TrustedAppProtocolVersionSigners?.ToImmutableHashSet() ?? ImmutableHashSet<PublicKey>.Empty,
                 DifferentAppProtocolVersionEncountered = Properties.DifferentAppProtocolVersionEncountered,
             };
-            var hostOptions = new Net.HostOptions(Properties.Host, shuffledIceServers, Properties.Port ?? default);
-            var swarmOptions = new SwarmOptions
+            var hostOptions = new Net.Options.HostOptions(Properties.Host, shuffledIceServers, Properties.Port ?? default);
+            var swarmOptions = new Net.Options.SwarmOptions
             {
                 BranchpointThreshold = 50,
                 MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
                 BucketSize = Properties.BucketSize,
                 MaximumPollPeers = Properties.MaximumPollPeers,
-                TimeoutOptions = new TimeoutOptions
+                TimeoutOptions = new Net.Options.TimeoutOptions
                 {
                     MaxTimeout = TimeSpan.FromSeconds(50),
                     GetBlockHashesTimeout = TimeSpan.FromSeconds(50),
@@ -241,7 +226,7 @@ namespace Libplanet.Headless.Hosting
                 consensusTransport = NetMQTransport.Create(
                     Properties.ConsensusPrivateKey,
                     appProtocolVersionOptions,
-                    new Net.HostOptions(Properties.Host, shuffledIceServers, (int)Properties.ConsensusPort),
+                    new Net.Options.HostOptions(Properties.Host, shuffledIceServers, (int)Properties.ConsensusPort),
                     swarmOptions.MessageTimestampBuffer).ConfigureAwait(false).GetAwaiter().GetResult();
                 consensusReactorOption = new ConsensusReactorOption
                 {

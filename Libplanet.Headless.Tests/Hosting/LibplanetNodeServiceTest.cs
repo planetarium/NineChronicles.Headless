@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Reflection;
-using System.Security.Cryptography;
-using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
@@ -23,13 +22,7 @@ namespace Libplanet.Headless.Tests.Hosting
         {
             var genesisBlock = BlockChain<DummyAction>.ProposeGenesisBlock();
 
-            IActionLoader actionLoader = new StaticActionLoader(
-                Assembly.GetEntryAssembly() is { } entryAssembly
-                    ? new[] { typeof(DummyAction).Assembly, entryAssembly }
-                    : new[] { typeof(DummyAction).Assembly },
-                typeof(DummyAction)
-            );
-
+            IActionLoader actionLoader = new SingleActionLoader(typeof(DummyAction));
             var service = new LibplanetNodeService<DummyAction>(
                 new LibplanetNodeServiceProperties()
                 {
@@ -58,13 +51,7 @@ namespace Libplanet.Headless.Tests.Hosting
         {
             Assert.Throws<ArgumentException>(() =>
             {
-                IActionLoader actionLoader = new StaticActionLoader(
-                    Assembly.GetEntryAssembly() is { } entryAssembly
-                        ? new[] { typeof(DummyAction).Assembly, entryAssembly }
-                        : new[] { typeof(DummyAction).Assembly },
-                    typeof(DummyAction)
-                );
-
+                IActionLoader actionLoader = new SingleActionLoader(typeof(DummyAction));
                 var service = new LibplanetNodeService<DummyAction>(
                     new LibplanetNodeServiceProperties()
                     {

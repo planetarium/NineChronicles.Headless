@@ -6,10 +6,10 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Action.Sys;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
@@ -104,8 +104,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
                 genesisBlock.Hash,
-                blockPolicy.NativeTokens.Contains,
-                new StaticActionLoader(new[] { typeof(ActionBase).Assembly }),
+                new SingleActionLoader(typeof(NCAction)),
                 null);
             BlockChain<NCAction> chain = BlockChain<NCAction>.Create(
                 blockPolicy,
@@ -168,8 +167,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
                 genesisBlock.Hash,
-                blockPolicy.NativeTokens.Contains,
-                new StaticActionLoader(new[] { typeof(ActionBase).Assembly }),
+                new SingleActionLoader(typeof(NCAction)),
                 null);
             BlockChain<NCAction> chain = BlockChain<NCAction>.Create(
                 blockPolicy,
@@ -238,8 +236,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
                 genesisBlock.Hash,
-                blockPolicy.NativeTokens.Contains,
-                new StaticActionLoader(new[] { typeof(ActionBase).Assembly }),
+                new SingleActionLoader(typeof(NCAction)),
                 null);
             BlockChain<NCAction> chain = BlockChain<NCAction>.Create(
                 blockPolicy,
@@ -283,8 +280,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
                 genesisBlock.Hash,
-                blockPolicy.NativeTokens.Contains,
-                new StaticActionLoader(new[] { typeof(ActionBase).Assembly }),
+                new SingleActionLoader(typeof(NCAction)),
                 null);
             BlockChain<NCAction> chain = BlockChain<NCAction>.Create(
                 blockPolicy,

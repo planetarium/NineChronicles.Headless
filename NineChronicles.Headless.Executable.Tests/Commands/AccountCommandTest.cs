@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Bencodex;
 using Libplanet;
+using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
@@ -54,8 +55,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
                 genesisBlock.Hash,
-                blockPolicy.NativeTokens.Contains,
-                new StaticActionLoader(new[] { typeof(ActionBase).Assembly }, typeof(ActionBase)),
+                new SingleActionLoader(typeof(NCAction)),
                 null);
             BlockChain<NCAction> chain = BlockChain<NCAction>.Create(
                 blockPolicy,
