@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using Bencodex.Types;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Blocks;
 using Serilog;
 

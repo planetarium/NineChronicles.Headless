@@ -3,6 +3,7 @@ using System.Reflection;
 using Bencodex;
 using Bencodex.Types;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Extensions.ActionEvaluatorCommonComponents;
 using Libplanet.Extensions.RemoteActionEvaluator;
 using Microsoft.AspNetCore.Mvc;
@@ -39,8 +40,7 @@ public class RemoteEvaluationController : ControllerBase
                 context => new RewardGold(),
                 blockChainStates,
                 null,
-                _ => false,
-                new StaticActionLoader(ImmutableHashSet<Assembly>.Empty.Add(typeof(ActionBase).Assembly), typeof(ActionBase)),
+                new SingleActionLoader(typeof(PolymorphicAction<ActionBase>)),
                 null);
         return Ok(new RemoteEvaluationResponse
         {

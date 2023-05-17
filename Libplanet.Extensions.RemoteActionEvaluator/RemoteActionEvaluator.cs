@@ -3,6 +3,7 @@ using System.Diagnostics.Contracts;
 using System.Net.Http.Json;
 using Bencodex.Types;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blocks;

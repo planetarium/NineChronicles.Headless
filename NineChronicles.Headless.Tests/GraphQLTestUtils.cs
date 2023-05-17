@@ -6,7 +6,7 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet.Action;
-using Libplanet.Blocks;
+using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
@@ -85,8 +85,7 @@ namespace NineChronicles.Headless.Tests
                 _ => policy.BlockAction,
                 new BlockChainStates(store, stateStore),
                 genesisBlock.Hash,
-                policy.NativeTokens.Contains,
-                new StaticActionLoader(new[] { typeof(ActionBase).Assembly }),
+                new SingleActionLoader(typeof(NCAction)),
                 null);
             var blockchain = BlockChain<PolymorphicAction<ActionBase>>.Create(
                 new BlockPolicy<PolymorphicAction<ActionBase>>(),
@@ -122,8 +121,7 @@ namespace NineChronicles.Headless.Tests
                 _ => policy.BlockAction,
                 new BlockChainStates(store, stateStore),
                 genesisBlock.Hash,
-                policy.NativeTokens.Contains,
-                new StaticActionLoader(new[] { typeof(ActionBase).Assembly }),
+                new SingleActionLoader(typeof(NCAction)),
                 null);
             var blockchain = BlockChain<PolymorphicAction<ActionBase>>.Create(
                 new BlockPolicy<PolymorphicAction<ActionBase>>(),

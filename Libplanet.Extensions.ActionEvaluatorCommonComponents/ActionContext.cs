@@ -41,14 +41,13 @@ public class ActionContext : IActionContext
         throw new NotImplementedException();
     }
 
-    public bool IsNativeToken(Currency currency)
-    {
-        throw new NotImplementedException();
-    }
-
     public IActionContext GetUnconsumedContext()
     {
         return new ActionContext(GenesisHash, Signer, TxId, Miner, BlockIndex, Rehearsal, PreviousStates,
             new Random(Random.Seed), PreviousStateRootHash, BlockAction);
     }
+
+    public long GasUsed() => 0;
+
+    public long GasLimit() => 0;
 }

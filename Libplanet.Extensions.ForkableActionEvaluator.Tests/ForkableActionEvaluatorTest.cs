@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using Bencodex.Types;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Extensions.ActionEvaluatorCommonComponents;

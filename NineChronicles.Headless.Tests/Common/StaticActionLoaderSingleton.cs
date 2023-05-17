@@ -1,15 +1,10 @@
-using System.Reflection;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Nekoyume.Action;
 
 namespace NineChronicles.Headless.Tests.Common;
 
 public static class StaticActionLoaderSingleton
 {
-    public static readonly StaticActionLoader Instance = new StaticActionLoader(
-        Assembly.GetEntryAssembly() is { } entryAssembly
-            ? new[] { typeof(ActionBase).Assembly, entryAssembly }
-            : new[] { typeof(ActionBase).Assembly },
-        typeof(ActionBase)
-    );
+    public static readonly IActionLoader Instance = new SingleActionLoader(typeof(PolymorphicAction<ActionBase>));
 }

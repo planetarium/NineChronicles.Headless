@@ -24,8 +24,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 setId
                 itemId
                 stat {
-                    type
-                    value
+                    statType
+                    baseValue
+                    additionalValue
+                    totalValue
                 }
                 statsMap {
                     hP

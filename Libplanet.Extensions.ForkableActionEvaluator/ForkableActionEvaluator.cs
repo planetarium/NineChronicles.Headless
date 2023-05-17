@@ -1,4 +1,5 @@
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Blocks;
 
 namespace Libplanet.Extensions.ForkableActionEvaluator;

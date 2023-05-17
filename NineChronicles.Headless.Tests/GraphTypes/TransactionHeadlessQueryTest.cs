@@ -11,6 +11,7 @@ using GraphQL.Execution;
 using GraphQL.NewtonsoftJson;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Action.Sys;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
@@ -21,7 +22,6 @@ using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Libplanet.Tx;
 using Nekoyume.Action;
-using Nekoyume.BlockChain.Policy;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common;
 using Xunit;
@@ -60,8 +60,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 _ => policy.BlockAction,
                 new BlockChainStates(_store, _stateStore),
                 genesisBlock.Hash,
-                policy.NativeTokens.Contains,
-                new StaticActionLoader(new[] { typeof(ActionBase).Assembly }),
+                new SingleActionLoader(typeof(NCAction)),
                 null);
             _blockChain = BlockChain<NCAction>.Create(
                 NineChroniclesNodeService.GetTestBlockPolicy(),
