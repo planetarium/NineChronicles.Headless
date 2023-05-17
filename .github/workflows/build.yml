@@ -27,9 +27,3 @@ jobs:
       - name: Build and test
         run: |
           dotnet test --configuration ${{ matrix.configuration }} --no-restore
-
-  build-and-test:
-    needs: [build-and-tests]
-    runs-on: ubuntu-20.04
-    steps:
-      - run: echo done
