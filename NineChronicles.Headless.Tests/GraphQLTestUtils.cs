@@ -84,7 +84,6 @@ namespace NineChronicles.Headless.Tests
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
                 new BlockChainStates(store, stateStore),
-                genesisBlock.Hash,
                 new SingleActionLoader(typeof(NCAction)),
                 null);
             var blockchain = BlockChain<PolymorphicAction<ActionBase>>.Create(
@@ -120,7 +119,6 @@ namespace NineChronicles.Headless.Tests
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
                 new BlockChainStates(store, stateStore),
-                genesisBlock.Hash,
                 new SingleActionLoader(typeof(NCAction)),
                 null);
             var blockchain = BlockChain<PolymorphicAction<ActionBase>>.Create(

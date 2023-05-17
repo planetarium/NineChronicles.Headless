@@ -74,7 +74,7 @@ namespace Libplanet.Headless.Hosting
             LibplanetNodeServiceProperties properties,
             IBlockPolicy<T> blockPolicy,
             IStagePolicy<T> stagePolicy,
-            IEnumerable<IRenderer<T>> renderers,
+            IEnumerable<IRenderer> renderers,
             Progress<PreloadState> preloadProgress,
             Action<RPCException, string> exceptionHandlerAction,
             Action<bool> preloadStatusHandlerAction,
@@ -110,9 +110,9 @@ namespace Libplanet.Headless.Hosting
                 // Log the outmost (before delayed) events as well as
                 // the innermost (after delayed) events:
                 ILogger logger = Log.ForContext("SubLevel", " RAW-RENDER-EVENT");
-                renderers = renderers.Select(r => r is IActionRenderer<T> ar
-                    ? new LoggedActionRenderer<T>(ar, logger, LogEventLevel.Debug)
-                    : new LoggedRenderer<T>(r, logger, LogEventLevel.Debug)
+                renderers = renderers.Select(r => r is IActionRenderer ar
+                    ? new LoggedActionRenderer(ar, logger, LogEventLevel.Debug)
+                    : new LoggedRenderer(r, logger, LogEventLevel.Debug)
                 );
             }
 
@@ -126,7 +126,6 @@ namespace Libplanet.Headless.Hosting
                     DefaultActionEvaluatorConfiguration _ => new ActionEvaluator(
                         _ => blockPolicy.BlockAction,
                         blockChainStates: blockChainStates,
-                        genesisHash: genesisBlock.Hash,
                         actionTypeLoader: actionLoader,
                         feeCalculator: null
                     ),
@@ -168,7 +167,6 @@ namespace Libplanet.Headless.Hosting
                     actionEvaluator: new ActionEvaluator(
                         _ => blockPolicy.BlockAction,
                         blockChainStates: blockChainStates,
-                        genesisHash: genesisBlock.Hash,
                         actionTypeLoader: actionLoader,
                         feeCalculator: null
                     )
@@ -302,7 +300,7 @@ namespace Libplanet.Headless.Hosting
         {
             _stopRequested = true;
             await Swarm.StopAsync(cancellationToken);
-            foreach (IRenderer<T> renderer in BlockChain.Renderers)
+            foreach (IRenderer renderer in BlockChain.Renderers)
             {
                 if (renderer is IDisposable disposableRenderer)
                 {

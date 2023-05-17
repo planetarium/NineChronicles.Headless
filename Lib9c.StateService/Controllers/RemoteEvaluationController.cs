@@ -39,7 +39,6 @@ public class RemoteEvaluationController : ControllerBase
             new ActionEvaluator(
                 context => new RewardGold(),
                 blockChainStates,
-                null,
                 new SingleActionLoader(typeof(PolymorphicAction<ActionBase>)),
                 null);
         return Ok(new RemoteEvaluationResponse

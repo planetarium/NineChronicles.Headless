@@ -59,7 +59,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
                 new BlockChainStates(_store, _stateStore),
-                genesisBlock.Hash,
                 new SingleActionLoader(typeof(NCAction)),
                 null);
             _blockChain = BlockChain<NCAction>.Create(
