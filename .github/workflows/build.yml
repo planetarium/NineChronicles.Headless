@@ -4,11 +4,15 @@ on: [push, pull_request]
 
 jobs:
   build-and-tests:
+    name: "build-and-tests (${{ matrix.configuration }})"
     strategy:
       matrix:
         os:
           - ubuntu-20.04
           - windows-latest
+        configuration:
+          - Release
+          - DevEx
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
@@ -22,7 +26,7 @@ jobs:
         run: dotnet restore
       - name: Build and test
         run: |
-          dotnet test --configuration Release --no-restore
+          dotnet test --configuration ${{ matrix.configuration }} --no-restore
 
   build-and-test:
     needs: [build-and-tests]
