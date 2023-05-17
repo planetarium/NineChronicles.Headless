@@ -22,9 +22,7 @@ jobs:
         run: dotnet restore
       - name: Build and test
         run: |
-          dotnet test --configuration Release --no-restore --verbosity normal NineChronicles.Headless.Tests
-          dotnet test --configuration Release --no-restore --verbosity normal NineChronicles.Headless.Executable.Tests
-          dotnet test --configuration Release --no-restore --verbosity normal Libplanet.Headless.Tests
+          dotnet test --configuration Release --no-restore
 
   build-and-test:
     needs: [build-and-tests]
