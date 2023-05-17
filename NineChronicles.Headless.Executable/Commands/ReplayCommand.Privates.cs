@@ -475,6 +475,11 @@ namespace NineChronicles.Headless.Executable.Commands
             public bool IsNativeToken(Currency currency) =>
                 _nativeTokenPredicate is { } && _nativeTokenPredicate(currency);
 
+            public void UseGas(long gas)
+            {
+                throw new NotImplementedException();
+            }
+
             public IActionContext GetUnconsumedContext() =>
                 new ActionContext(
                     GenesisHash,
@@ -488,6 +493,16 @@ namespace NineChronicles.Headless.Executable.Commands
                     _previousBlockStatesTrie,
                     BlockAction,
                     _nativeTokenPredicate);
+
+            public long GasUsed()
+            {
+                throw new NotImplementedException();
+            }
+
+            public long GasLimit()
+            {
+                throw new NotImplementedException();
+            }
 
             private IImmutableDictionary<string, IValue?> GetUpdatedRawStates(
                 IAccountStateDelta delta)

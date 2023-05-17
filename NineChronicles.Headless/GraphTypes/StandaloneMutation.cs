@@ -198,7 +198,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     Address recipient = context.GetArgument<Address>("recipient");
                     string? memo = context.GetArgument<string?>("memo");
-                    Transaction tx = Transaction.Create(
+                    Transaction tx = Transaction.Create<NCAction>(
                         context.GetArgument<long>("txNonce"),
                         privateKey,
                         blockChain.Genesis.Hash,

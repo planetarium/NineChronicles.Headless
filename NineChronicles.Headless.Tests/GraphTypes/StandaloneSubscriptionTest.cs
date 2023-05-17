@@ -92,7 +92,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                     }
                                     .ToList()),
                             states: ImmutableDictionary.Create<Address, IValue>())
-                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa }))
+                    }.Select((sa, nonce) => Transaction.Create<NCAction>(nonce, new PrivateKey(), null, new[] { sa }))
                     .ToImmutableList(),
                 privateKey: new PrivateKey());
             var validators = new List<PrivateKey>

@@ -100,7 +100,7 @@ namespace NineChronicles.Headless.Tests
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
-                transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(
+                transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create<NCAction>(
                     0, minerPrivateKey, null, new PolymorphicAction<ActionBase>[]
                     {
                         initializeStates,

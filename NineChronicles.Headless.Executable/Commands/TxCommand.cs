@@ -81,7 +81,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 return (NCAction)action;
             }).ToList();
 
-            Transaction tx = Transaction.Create(
+            Transaction tx = Transaction.Create<NCAction>(
                 nonce: nonce,
                 privateKey: new PrivateKey(ByteUtil.ParseHex(privateKey)),
                 genesisHash: BlockHash.FromString(genesisHash),

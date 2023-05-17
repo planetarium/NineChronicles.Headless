@@ -93,7 +93,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                             ),
                             states: ImmutableDictionary.Create<Address, IValue>()
                         )
-                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa }))
+                    }.Select((sa, nonce) => Transaction.Create<NCAction>(nonce, new PrivateKey(), null, new[] { sa }))
                     .ToImmutableList());
             IStore store = storeType.CreateStore(_storePath);
             var stateStore = new TrieStateStore(new RocksDBKeyValueStore(Path.Combine(_storePath, "states")));
@@ -149,7 +149,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                             ),
                             states: ImmutableDictionary.Create<Address, IValue>()
                         )
-                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa }))
+                    }.Select((sa, nonce) => Transaction.Create<NCAction>(nonce, new PrivateKey(), null, new[] { sa }))
                     .ToImmutableList());
             IStore store = storeType.CreateStore(_storePath);
             var stateStore = new TrieStateStore(new RocksDBKeyValueStore(Path.Combine(_storePath, "states")));
