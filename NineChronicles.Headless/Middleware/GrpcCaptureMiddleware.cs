@@ -6,6 +6,7 @@ using Libplanet.Action;
 using Libplanet.Tx;
 using Nekoyume.Action;
 using Serilog;
+using static NineChronicles.Headless.NCActionUtils;
 
 namespace NineChronicles.Headless.Middleware
 {
@@ -33,9 +34,9 @@ namespace NineChronicles.Headless.Middleware
 
             if (context.Method is "/IBlockChainService/PutTransaction" && request is byte[] txBytes)
             {
-                Transaction<PolymorphicAction<ActionBase>> tx =
-                    Transaction<PolymorphicAction<ActionBase>>.Deserialize(txBytes);
-                var action = tx.CustomActions?[0].GetInnerActionTypeName() ?? "NoAction";
+                Transaction tx =
+                    Transaction.Deserialize(txBytes);
+                var action = ToAction(tx.Actions[0]).GetInnerActionTypeName() ?? "NoAction";
                 var httpContext = context.GetHttpContext();
                 var ipAddress = httpContext.Connection.RemoteIpAddress + ":" + httpContext.Connection.RemotePort;
                 _logger.Information(

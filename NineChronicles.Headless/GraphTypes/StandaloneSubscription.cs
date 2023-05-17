@@ -239,7 +239,7 @@ namespace NineChronicles.Headless.GraphTypes
         {
             return _subject.AsObservable();
         }
-        private void RenderBlock((Block<PolymorphicAction<ActionBase>> OldTip, Block<PolymorphicAction<ActionBase>> NewTip) pair)
+        private void RenderBlock((Block OldTip, Block NewTip) pair)
         {
             _tipHeader = pair.NewTip.Header;
             _subject.OnNext(
