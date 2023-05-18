@@ -19,6 +19,7 @@ using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.Executable.IO;
+using static NineChronicles.Headless.NCActionUtils;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
@@ -80,12 +81,12 @@ namespace NineChronicles.Headless.Executable.Commands
                 return (NCAction)action;
             }).ToList();
 
-            Transaction<NCAction> tx = Transaction<NCAction>.Create(
+            Transaction tx = Transaction.Create(
                 nonce: nonce,
                 privateKey: new PrivateKey(ByteUtil.ParseHex(privateKey)),
                 genesisHash: BlockHash.FromString(genesisHash),
                 timestamp: DateTimeOffset.Parse(timestamp),
-                customActions: parsedActions
+                actions: parsedActions
             );
             byte[] raw = tx.Serialize();
 
@@ -112,9 +113,9 @@ namespace NineChronicles.Headless.Executable.Commands
         {
             byte[] genesisBytes = File.ReadAllBytes(genesisBlock);
             var genesisDict = (Bencodex.Types.Dictionary)_codec.Decode(genesisBytes);
-            IReadOnlyList<Transaction<NCAction>> genesisTxs =
-                BlockMarshaler.UnmarshalBlockTransactions<NCAction>(genesisDict);
-            var initStates = (InitializeStates)genesisTxs.Single().CustomActions!.Single().InnerAction;
+            IReadOnlyList<Transaction> genesisTxs =
+                BlockMarshaler.UnmarshalBlockTransactions(genesisDict);
+            var initStates = (InitializeStates)ToAction(genesisTxs.Single().Actions!.Single()).InnerAction;
             Currency currency = new GoldCurrencyState(initStates.GoldCurrency).Currency;
 
             var action = new TransferAsset(

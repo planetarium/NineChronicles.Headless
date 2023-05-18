@@ -22,7 +22,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
     {
         public static PrivateKey AdminKey = new PrivateKey();
         public static PrivateKey ValidatorKey = new PrivateKey();
-        public static Block<NCAction> MineGenesisBlock(
+        public static Block MineGenesisBlock(
             Address? targetAddress = null,
             int? targetCurrency = null,
             Dictionary<PublicKey, BigInteger>? genesisValidatorSet = null)
@@ -77,7 +77,7 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
                 .LoadInDescendingEndBlockOrder(goldDistributionPath);
             AdminState adminState =
                 new AdminState(new Address(genesisConfig.AdminAddress), genesisConfig.AdminValidUntil);
-            Block<NCAction> genesisBlock = BlockHelper.ProposeGenesisBlock(
+            Block genesisBlock = BlockHelper.ProposeGenesisBlock(
                 tableSheets,
                 goldDistributions,
                 pendingActivationStates.ToArray(),

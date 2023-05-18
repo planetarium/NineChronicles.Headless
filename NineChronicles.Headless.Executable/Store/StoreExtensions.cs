@@ -9,9 +9,8 @@ namespace NineChronicles.Headless.Executable.Store
 {
     public static class StoreExtensions
     {
-        public static Block<T> GetGenesisBlock<T>(
+        public static Block GetGenesisBlock(
             this IStore store)
-            where T : IAction, new()
         {
             Guid? chainId = store.GetCanonicalChainId();
             if (chainId is null)
@@ -20,7 +19,7 @@ namespace NineChronicles.Headless.Executable.Store
             }
 
             BlockHash genesisBlockHash = store.IterateIndexes(chainId.Value).First();
-            Block<T> genesisBlock = store.GetBlock<T>(genesisBlockHash);
+            Block genesisBlock = store.GetBlock(genesisBlockHash);
             return genesisBlock;
         }
     }

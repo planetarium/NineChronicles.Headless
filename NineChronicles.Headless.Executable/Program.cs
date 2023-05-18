@@ -24,6 +24,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 // import necessary for sentry exception filters
 using Libplanet.Blocks;
 using Libplanet.Headless;
@@ -376,63 +377,44 @@ namespace NineChronicles.Headless.Executable
                     properties.LogActionRenders = true;
                 }
 
-                IActionTypeLoader MakeStaticActionTypeLoader() => new StaticActionTypeLoader(
-                    Assembly.GetEntryAssembly() is { } entryAssembly
+                IActionLoader MakeSingleActionLoader()
+                {
+                    var actionLoader = new SingleActionLoader(typeof(PolymorphicAction<ActionBase>));
 #if LIB9C_DEV_EXTENSIONS
-                        ? new[]
-                        {
-                            typeof(ActionBase).Assembly,
-                            typeof(Lib9c.DevExtensions.Action.CreateOrReplaceAvatar).Assembly,
-                            entryAssembly
-                        }
-                        : new[]
-                        {
-                            typeof(ActionBase).Assembly,
-                            typeof(Lib9c.DevExtensions.Action.CreateOrReplaceAvatar).Assembly
-                        },
-#else
-                        ? new[] { typeof(ActionBase).Assembly, entryAssembly }
-                        : new[] { typeof(ActionBase).Assembly },
+                    PolymorphicAction<ActionBase>.ReloadLoader(new[] { typeof(ActionBase).Assembly, typeof(Lib9c.DevExtensions.Utils).Assembly });
 #endif
-                    typeof(ActionBase)
-                );
+                    return actionLoader;
+                }
 
-                IActionTypeLoader actionTypeLoader;
+                IActionLoader actionLoader;
                 if (headlessConfig.ActionTypeLoader is { } actionTypeLoaderConfiguration)
                 {
                     if (actionTypeLoaderConfiguration.DynamicActionTypeLoader is { } dynamicActionTypeLoaderConf)
                     {
-                        actionTypeLoader = new DynamicActionTypeLoader(
+                        actionLoader = new DynamicActionLoader(
                             dynamicActionTypeLoaderConf.BasePath,
                             dynamicActionTypeLoaderConf.AssemblyFileName,
                             dynamicActionTypeLoaderConf.HardForks.OrderBy(pair => pair.SinceBlockIndex));
                     }
                     else if (actionTypeLoaderConfiguration.StaticActionTypeLoader is { } staticActionTypeLoaderConf)
                     {
-                        var assemblies = staticActionTypeLoaderConf.Assemblies?.Select(x => Assembly.Load(File.ReadAllBytes(x))).ToHashSet()
-                            ?? throw new CommandExitedException(-1);
-                        actionTypeLoader = new StaticActionTypeLoader(assemblies);
+                        throw new NotSupportedException();
                     }
                     else
                     {
-                        actionTypeLoader = MakeStaticActionTypeLoader();
+                        actionLoader = MakeSingleActionLoader();
                     }
                 }
                 else
                 {
-                    actionTypeLoader = MakeStaticActionTypeLoader();
-                }
-
-                if (actionTypeLoader is StaticActionTypeLoader staticActionTypeLoader)
-                {
-                    PolymorphicAction<ActionBase>.ActionTypeLoader = staticActionTypeLoader;
+                    actionLoader = MakeSingleActionLoader();
                 }
 
                 var minerPrivateKey = string.IsNullOrEmpty(headlessConfig.MinerPrivateKeyString)
                     ? null
                     : new PrivateKey(ByteUtil.ParseHex(headlessConfig.MinerPrivateKeyString));
                 TimeSpan minerBlockInterval = TimeSpan.FromMilliseconds(headlessConfig.MinerBlockIntervalMilliseconds);
-                var nineChroniclesProperties = new NineChroniclesNodeServiceProperties(actionTypeLoader)
+                var nineChroniclesProperties = new NineChroniclesNodeServiceProperties(actionLoader)
                 {
                     MinerPrivateKey = minerPrivateKey,
                     Libplanet = properties,
