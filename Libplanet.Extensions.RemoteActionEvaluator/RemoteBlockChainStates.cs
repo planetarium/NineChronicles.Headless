@@ -154,7 +154,7 @@ namespace Libplanet.Extensions.RemoteActionEvaluator
 
         public ITrie? GetTrie(BlockHash offset)
         {
-            throw new NotSupportedException();
+            return null;
         }
 
         private class GetStatesResponseType
