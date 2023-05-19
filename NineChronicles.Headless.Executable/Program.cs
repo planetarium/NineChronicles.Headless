@@ -416,7 +416,7 @@ namespace NineChronicles.Headless.Executable
                 {
                     var actionLoader = new SingleActionLoader(typeof(PolymorphicAction<ActionBase>));
 #if LIB9C_DEV_EXTENSIONS
-                    PolymorphicAction<ActionBase>.ReloadLoader(new[] { typeof(ActionBase).Assembly, typeof(Utils).Assembly });
+                    PolymorphicAction<ActionBase>.ReloadLoader(new[] { typeof(ActionBase).Assembly, typeof(Lib9c.DevExtensions.Utils).Assembly });
 #endif
                     return actionLoader;
                 }

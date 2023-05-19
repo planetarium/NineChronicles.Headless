@@ -15,6 +15,11 @@ public class ActionEvaluationSerializerTest
             .SetState(addresses[0], Null.Value)
             .SetState(addresses[1], (Text)"foo")
             .SetState(addresses[2], new List((Text)"bar"));
+        outputStates.ValidatorSetGetter = () => new Consensus.ValidatorSet();
+
+        var previousStates = new AccountStateDelta();
+        previousStates.ValidatorSetGetter = () => new Consensus.ValidatorSet();
+
         var actionEvaluation = new ActionEvaluation(
             Null.Value,
             new ActionContext(null,
@@ -23,7 +28,7 @@ public class ActionEvaluationSerializerTest
                 addresses[1],
                 0,
                 false,
-                new AccountStateDelta(),
+                previousStates,
                 new Random(123),
                 null,
                 true),
