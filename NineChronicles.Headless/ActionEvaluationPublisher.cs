@@ -302,54 +302,15 @@ namespace NineChronicles.Headless
                         {
                             try
                             {
-                                NineChroniclesActionType? pa = null;
+                                NineChroniclesActionType? pa = ev.Action is RewardGold
+                                    ? null
+                                    : new PolymorphicAction<ActionBase>(ev.Action);
                                 var extra = new Dictionary<string, IValue>();
-                                if (!(ev.Action is RewardGold))
-                                {
-                                    pa = new PolymorphicAction<ActionBase>(ev.Action);
-                                    if (ev.Action is BattleArena ba && ev.Exception is null)
-                                    {
-                                        if (ba.ExtraMyArenaPlayerDigest is { } myDigest)
-                                        {
-                                            extra[nameof(BattleArena.ExtraMyArenaPlayerDigest)] = myDigest.Serialize();
-                                        }
 
-                                        if (ba.ExtraEnemyArenaPlayerDigest is { } enemyDigest)
-                                        {
-                                            extra[nameof(BattleArena.ExtraEnemyArenaPlayerDigest)] = enemyDigest.Serialize();
-                                        }
-
-                                        if (ba.ExtraPreviousMyScore is { } myScore)
-                                        {
-                                            extra[nameof(BattleArena.ExtraPreviousMyScore)] = myScore.Serialize();
-                                        }
-                                    }
-
-                                    if (ev.Action is Buy buy)
-                                    {
-                                        extra[nameof(Buy.errors)] = new List(
-                                            buy.errors
-                                                .Select(tuple => new List(tuple.orderId.Serialize(), tuple.errorCode.Serialize()))
-                                        );
-                                    }
-
-                                    if (ev.Action is BattleGrandFinale grandFinale && ev.Exception is null)
-                                    {
-                                        if (grandFinale.ExtraMyArenaPlayerDigest is { } myDigest)
-                                        {
-                                            extra[nameof(BattleGrandFinale.ExtraMyArenaPlayerDigest)] = myDigest.Serialize();
-                                        }
-
-                                        if (grandFinale.ExtraEnemyArenaPlayerDigest is { } enemyDigest)
-                                        {
-                                            extra[nameof(BattleGrandFinale.ExtraEnemyArenaPlayerDigest)] = enemyDigest.Serialize();
-                                        }
-                                    }
-                                }
                                 var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputStates, ev.Exception, ev.PreviousStates, ev.RandomSeed, extra);
                                 var encoded = MessagePackSerializer.Serialize(eval);
                                 var c = new MemoryStream();
-                                using (var df = new DeflateStream(c, CompressionLevel.Fastest))
+                                await using (var df = new DeflateStream(c, CompressionLevel.Fastest))
                                 {
                                     df.Write(encoded, 0, encoded.Length);
                                 }
