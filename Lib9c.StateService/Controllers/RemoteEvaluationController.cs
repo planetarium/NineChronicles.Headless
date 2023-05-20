@@ -6,7 +6,6 @@ using Libplanet.Action;
 using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Extensions.ActionEvaluatorCommonComponents;
-using Libplanet.Extensions.RemoteActionEvaluator;
 using Microsoft.AspNetCore.Mvc;
 using Nekoyume.Action;
 
