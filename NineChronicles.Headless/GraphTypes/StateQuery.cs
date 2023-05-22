@@ -511,7 +511,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var agentAddress = context.GetArgument<Address>("agentAddress");
-                    var contractAddress = agentAddress.Derive(nameof(BringEinheri));
+                    var contractAddress = agentAddress.GetPledgeAddress();
                     Address? address = null;
                     bool contracted = false;
                     if (context.Source.GetState(contractAddress) is List l)
