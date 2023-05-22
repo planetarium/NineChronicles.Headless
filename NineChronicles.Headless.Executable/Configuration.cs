@@ -81,6 +81,7 @@ namespace NineChronicles.Headless.Executable
         public string? ConsensusPrivateKeyString { get; set; }
         public string[]? ConsensusSeedStrings { get; set; }
         public ushort? ConsensusPort { get; set; }
+        public double? ConsensusTargetBlockInterval { get; set; }
 
         public string SentryDsn { get; set; } = "";
 
@@ -131,6 +132,7 @@ namespace NineChronicles.Headless.Executable
             ushort? consensusPort,
             string? consensusPrivateKeyString,
             string[]? consensusSeedStrings,
+            double? consensusTargetBlockInterval,
             string? sentryDsn,
             double? sentryTraceSampleRate
         )
@@ -180,6 +182,7 @@ namespace NineChronicles.Headless.Executable
             ConsensusPort = consensusPort ?? ConsensusPort;
             ConsensusSeedStrings = consensusSeedStrings ?? ConsensusSeedStrings;
             ConsensusPrivateKeyString = consensusPrivateKeyString ?? ConsensusPrivateKeyString;
+            ConsensusTargetBlockInterval = consensusTargetBlockInterval ?? ConsensusTargetBlockInterval;
             SentryDsn = sentryDsn ?? SentryDsn;
             SentryTraceSampleRate = sentryTraceSampleRate ?? SentryTraceSampleRate;
         }
