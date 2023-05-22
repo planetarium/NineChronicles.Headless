@@ -82,7 +82,7 @@ namespace NineChronicles.Headless.Properties
                 ushort? consensusPort = null,
                 string? consensusPrivateKeyString = null,
                 string[]? consensusSeedStrings = null,
-                double? consensusTargetBlockInterval = null,
+                double? consensusTargetBlockIntervalMilliseconds = null,
                 IActionEvaluatorConfiguration? actionEvaluatorConfiguration = null)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
@@ -131,7 +131,7 @@ namespace NineChronicles.Headless.Properties
                 ConsensusPort = consensusPort,
                 ConsensusSeeds = consensusSeeds,
                 ConsensusPrivateKey = consensusPrivateKey,
-                ConsensusTargetBlockInterval = consensusTargetBlockInterval,
+                ConsensusTargetBlockIntervalMilliseconds = consensusTargetBlockIntervalMilliseconds,
                 ActionEvaluatorConfiguration = actionEvaluatorConfiguration ?? new DefaultActionEvaluatorConfiguration(),
             };
         }

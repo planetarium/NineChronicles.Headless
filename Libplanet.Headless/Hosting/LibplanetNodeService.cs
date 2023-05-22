@@ -233,7 +233,7 @@ namespace Libplanet.Headless.Hosting
                     ConsensusPort = (int)Properties.ConsensusPort,
                     ConsensusPrivateKey = Properties.ConsensusPrivateKey,
                     ConsensusWorkers = 500,
-                    TargetBlockInterval = TimeSpan.FromSeconds(Properties.ConsensusTargetBlockInterval ?? 7),
+                    TargetBlockInterval = TimeSpan.FromMilliseconds(Properties.ConsensusTargetBlockIntervalMilliseconds ?? 7000),
                 };
             }
 
