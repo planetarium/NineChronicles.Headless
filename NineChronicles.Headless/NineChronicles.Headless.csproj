@@ -41,7 +41,7 @@
     <PackageReference Include="MagicOnion.Server.HttpGateway" Version="5.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="Sentry" Version="3.23.0" />
-    <PackageReference Include="Sentry.AspNetCore.Grpc" Version="3.22.0" />
+    <PackageReference Include="Sentry.AspNetCore.Grpc" Version="3.31.0" />
     <PackageReference Include="Sentry.DiagnosticSource" Version="3.22.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
     <PackageReference Include="GraphQL" Version="4.7.1" />
