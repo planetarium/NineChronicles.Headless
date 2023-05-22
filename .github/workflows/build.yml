@@ -4,11 +4,15 @@ on: [push, pull_request]
 
 jobs:
   build-and-tests:
+    name: "build-and-tests (${{ matrix.configuration }})"
     strategy:
       matrix:
         os:
           - ubuntu-20.04
           - windows-latest
+        configuration:
+          - Release
+          - DevEx
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
@@ -17,17 +21,9 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 6.0.*
+          dotnet-version: 7.0.*
       - name: Install dependencies
         run: dotnet restore
       - name: Build and test
         run: |
-          dotnet test --configuration Release --no-restore --verbosity normal NineChronicles.Headless.Tests
-          dotnet test --configuration Release --no-restore --verbosity normal NineChronicles.Headless.Executable.Tests
-          dotnet test --configuration Release --no-restore --verbosity normal Libplanet.Headless.Tests
-
-  build-and-test:
-    needs: [build-and-tests]
-    runs-on: ubuntu-20.04
-    steps:
-      - run: echo done
+          dotnet test --configuration ${{ matrix.configuration }} --no-restore

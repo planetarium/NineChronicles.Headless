@@ -4,8 +4,8 @@ using Bencodex;
 using Bencodex.Types;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
+using Libplanet.Blockchain;
 using Libplanet.Extensions.ActionEvaluatorCommonComponents;
-using Libplanet.Extensions.RemoteActionEvaluator;
 using Microsoft.AspNetCore.Mvc;
 using Nekoyume.Action;
 
@@ -15,11 +15,16 @@ namespace Lib9c.StateService.Controllers;
 [Route("/evaluation")]
 public class RemoteEvaluationController : ControllerBase
 {
+    private readonly IBlockChainStates _blockChainStates;
     private readonly ILogger<RemoteEvaluationController> _logger;
     private readonly Codec _codec;
 
-    public RemoteEvaluationController(ILogger<RemoteEvaluationController> logger, Codec codec)
+    public RemoteEvaluationController(
+        IBlockChainStates blockChainStates,
+        ILogger<RemoteEvaluationController> logger,
+        Codec codec)
     {
+        _blockChainStates = blockChainStates;
         _logger = logger;
         _codec = codec;
     }
@@ -34,11 +39,10 @@ public class RemoteEvaluationController : ControllerBase
         }
 
         var preEvaluationBlock = PreEvaluationBlockMarshaller.Unmarshal(dictionary);
-        var blockChainStates = new RemoteBlockChainStates(new Uri("http://localhost:31280/graphql/explorer"));
         var actionEvaluator =
             new ActionEvaluator(
                 context => new RewardGold(),
-                blockChainStates,
+                _blockChainStates,
                 new SingleActionLoader(typeof(PolymorphicAction<ActionBase>)),
                 null);
         return Ok(new RemoteEvaluationResponse
