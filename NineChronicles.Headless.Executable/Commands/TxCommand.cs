@@ -7,6 +7,7 @@ using Bencodex;
 using Bencodex.Types;
 using Cocona;
 using CsvHelper;
+using Lib9c;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
@@ -48,7 +49,11 @@ namespace NineChronicles.Headless.Executable.Commands
             string[] actions,
             [Option("bytes", new[] { 'b' },
                 Description = "Print raw bytes instead of base64.  No trailing LF appended.")]
-            bool bytes = false
+            bool bytes = false,
+            [Option("gas-limit", Description = "Print raw bytes instead of base64.  No trailing LF appended.")]
+            long? gasLimit = null,
+            [Option("max-gas-price", Description = "Print raw bytes instead of base64.  No trailing LF appended.")]
+            long? maxGasPrice = null
         )
         {
             List<NCAction> parsedActions = actions.Select(a =>
@@ -86,7 +91,9 @@ namespace NineChronicles.Headless.Executable.Commands
                 privateKey: new PrivateKey(ByteUtil.ParseHex(privateKey)),
                 genesisHash: BlockHash.FromString(genesisHash),
                 timestamp: DateTimeOffset.Parse(timestamp),
-                actions: parsedActions
+                actions: parsedActions,
+                gasLimit: gasLimit,
+                maxGasPrice: maxGasPrice.HasValue ? maxGasPrice.Value * Currencies.Mead : null
             );
             byte[] raw = tx.Serialize();
 
