@@ -274,7 +274,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
                         try
                         {
-                            blockChain.DetermineBlockStateRootHash(block,
+                            var rootHash = blockChain.DetermineBlockStateRootHash(block,
                                 out IReadOnlyList<IActionEvaluation> actionEvaluations);
 
                             if (verbose)
@@ -283,6 +283,14 @@ namespace NineChronicles.Headless.Executable.Commands
                                 _console.Out.WriteLine(msg);
                                 outputSw?.WriteLine(msg);
                                 LoggingActionEvaluations(actionEvaluations, outputSw);
+                            }
+
+                            if (!rootHash.Equals(block.StateRootHash))
+                            {
+                                throw new InvalidBlockStateRootHashException(
+                                    $"Expected {block.StateRootHash} but {rootHash}",
+                                    block.StateRootHash,
+                                    rootHash);
                             }
                         }
                         catch (InvalidBlockStateRootHashException)
