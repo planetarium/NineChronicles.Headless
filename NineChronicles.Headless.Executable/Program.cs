@@ -193,6 +193,9 @@ namespace NineChronicles.Headless.Executable
             [Option("consensus-seed",
                 Description = "A list of seed peers to join the block consensus.")]
             string[]? consensusSeedStrings = null,
+            [Option("consensus-target-block-interval",
+                Description = "A target block interval used in consensus context. The unit is millisecond.")]
+            double? consensusTargetBlockIntervalMilliseconds = null,
             [Option("config", new[] { 'C' },
                 Description = "Absolute path of \"appsettings.json\" file to provide headless configurations.")]
             string? configPath = "appsettings.json",
@@ -280,7 +283,7 @@ namespace NineChronicles.Headless.Executable
                 logActionRenders, confirmations,
                 txLifeTime, messageTimeout, tipTimeout, demandBuffer, skipPreload,
                 minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers,
-                consensusPort, consensusPrivateKeyString, consensusSeedStrings,
+                consensusPort, consensusPrivateKeyString, consensusSeedStrings, consensusTargetBlockIntervalMilliseconds,
                 sentryDsn, sentryTraceSampleRate
             );
 
@@ -397,6 +400,7 @@ namespace NineChronicles.Headless.Executable
                         consensusPort: headlessConfig.ConsensusPort,
                         consensusPrivateKeyString: headlessConfig.ConsensusPrivateKeyString,
                         consensusSeedStrings: headlessConfig.ConsensusSeedStrings,
+                        consensusTargetBlockIntervalMilliseconds: headlessConfig.ConsensusTargetBlockIntervalMilliseconds,
                         maximumPollPeers: headlessConfig.MaximumPollPeers,
                         actionEvaluatorConfiguration: actionEvaluatorConfiguration
                     );

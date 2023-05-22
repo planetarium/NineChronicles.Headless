@@ -17,6 +17,8 @@ namespace Libplanet.Headless.Hosting
 
         public ushort? ConsensusPort { get; set; }
 
+        public double? ConsensusTargetBlockIntervalMilliseconds { get; set; }
+
         public PrivateKey SwarmPrivateKey { get; set; }
 
         public PrivateKey ConsensusPrivateKey { get; set; }
