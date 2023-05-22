@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Libplanet.Extensions.RemoteBlockChainStates\Libplanet.Extensions.RemoteBlockChainStates.csproj" />
     <ProjectReference Include="..\Libplanet.Extensions.ActionEvaluatorCommonComponents\Libplanet.Extensions.ActionEvaluatorCommonComponents.csproj" />
+    <ProjectReference Include="..\Lib9c.StateService.Shared\Lib9c.StateService.Shared.csproj" />
     <ProjectReference Include="..\Lib9c\Lib9c\Lib9c.csproj" />
   </ItemGroup>
 

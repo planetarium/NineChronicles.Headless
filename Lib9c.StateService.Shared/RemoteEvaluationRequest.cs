@@ -1,4 +1,4 @@
-namespace Lib9c.StateService;
+namespace Lib9c.StateService.Shared;
 
 public class RemoteEvaluationRequest
 {

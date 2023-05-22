@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Reflection;
 using Bencodex;
 using Bencodex.Types;
+using Lib9c.StateService.Shared;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
