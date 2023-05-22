@@ -1,4 +1,4 @@
-namespace Libplanet.Extensions.RemoteActionEvaluator;
+namespace Lib9c.StateService;
 
 public class RemoteEvaluationRequest
 {

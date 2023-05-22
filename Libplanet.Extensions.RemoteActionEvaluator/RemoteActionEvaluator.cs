@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.Net.Http.Json;
 using Bencodex.Types;
+using Lib9c.StateService;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
 using Libplanet.Assets;
