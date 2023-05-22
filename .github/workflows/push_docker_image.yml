@@ -10,6 +10,7 @@ on:
       - previewnet
       - qa-*
       - 2022q3-worldboss
+      - tmp-bridge-block-interval
     tags:
       - v*
   workflow_dispatch:
