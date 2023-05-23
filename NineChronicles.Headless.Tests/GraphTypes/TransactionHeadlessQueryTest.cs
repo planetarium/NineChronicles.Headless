@@ -32,7 +32,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 {
     public class TransactionHeadlessQueryTest
     {
-        private readonly BlockChain<NCAction> _blockChain;
+        private readonly BlockChain _blockChain;
         private readonly IStore _store;
         private readonly IStateStore _stateStore;
         private readonly NineChroniclesNodeService _service;
@@ -42,8 +42,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             _store = new DefaultStore(null);
             _stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            IBlockPolicy<NCAction> policy = NineChroniclesNodeService.GetTestBlockPolicy();
-            Block genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
+            IBlockPolicy policy = NineChroniclesNodeService.GetTestBlockPolicy();
+            var actionEvaluator = new ActionEvaluator(
+                _ => policy.BlockAction,
+                new BlockChainStates(_store, _stateStore),
+                new SingleActionLoader(typeof(NCAction)),
+                null);
+            Block genesisBlock = BlockChain.ProposeGenesisBlock(
+                actionEvaluator,
                 transactions: new IAction[]
                     {
                         new Initialize(
@@ -56,14 +62,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 blockAction: policy.BlockAction,
                 privateKey: new PrivateKey()
             );
-            var actionEvaluator = new ActionEvaluator(
-                _ => policy.BlockAction,
-                new BlockChainStates(_store, _stateStore),
-                new SingleActionLoader(typeof(NCAction)),
-                null);
-            _blockChain = BlockChain<NCAction>.Create(
-                NineChroniclesNodeService.GetTestBlockPolicy(),
-                new VolatileStagePolicy<NCAction>(),
+            _blockChain = BlockChain.Create(
+                policy,
+                new VolatileStagePolicy(),
                 _store,
                 _stateStore,
                 genesisBlock,

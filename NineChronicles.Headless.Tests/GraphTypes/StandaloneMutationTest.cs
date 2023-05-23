@@ -1,6 +1,7 @@
 using GraphQL;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Action.Sys;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
@@ -8,9 +9,10 @@ using Libplanet.Blocks;
 using Libplanet.Consensus;
 using Libplanet.Crypto;
 using Libplanet.KeyStore;
+using Libplanet.Store;
+using Libplanet.Store.Trie;
 using Libplanet.Tx;
 using Nekoyume.Action;
-using Nekoyume.BlockChain.Policy;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -980,36 +982,43 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Address adminAddress,
             Currency curreny,
             IImmutableSet<Address> activatedAccounts,
-            RankingState0? rankingState = null
-        ) => BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
-            transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(0,
-                AdminPrivateKey, null, new PolymorphicAction<ActionBase>[]
-                {
-                    new InitializeStates(
-                        rankingState: rankingState ?? new RankingState0(),
-                        shopState: new ShopState(),
-                        gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
-                        redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                            .Add("address", RedeemCodeState.Address.Serialize())
-                            .Add("map", Bencodex.Types.Dictionary.Empty)
+            RankingState0? rankingState = null)
+        {
+            var actionEvaluator = new ActionEvaluator(
+                _ => ServiceBuilder.BlockPolicy.BlockAction,
+                new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
+                new SingleActionLoader(typeof(PolymorphicAction<ActionBase>)),
+                null);
+            return BlockChain.ProposeGenesisBlock(
+                actionEvaluator,
+                transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(0,
+                    AdminPrivateKey, null, new PolymorphicAction<ActionBase>[]
+                    {
+                        new InitializeStates(
+                            rankingState: rankingState ?? new RankingState0(),
+                            shopState: new ShopState(),
+                            gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
+                            redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                                .Add("address", RedeemCodeState.Address.Serialize())
+                                .Add("map", Bencodex.Types.Dictionary.Empty)
+                            ),
+                            adminAddressState: new AdminState(adminAddress, 1500000),
+                            activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
+                            goldCurrencyState: new GoldCurrencyState(curreny),
+                            goldDistributions: new GoldDistribution[0],
+                            tableSheets: _sheets,
+                            pendingActivationStates: new PendingActivationState[] { }
                         ),
-                        adminAddressState: new AdminState(adminAddress, 1500000),
-                        activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-                        goldCurrencyState: new GoldCurrencyState(curreny),
-                        goldDistributions: new GoldDistribution[0],
-                        tableSheets: _sheets,
-                        pendingActivationStates: new PendingActivationState[] { }
-                    ),
-                })).AddRange(new IAction[]
-            {
-                new Initialize(
-                    new ValidatorSet(
-                        new[] { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }
-                            .ToList()),
-                    states: ImmutableDictionary.Create<Address, IValue>())
-            }.Select((sa, nonce) => Transaction.Create(nonce + 1, AdminPrivateKey, null, new[] { sa }))),
-            blockAction: ServiceBuilder.BlockPolicy.BlockAction,
-            privateKey: AdminPrivateKey
-        );
+                    })).AddRange(new IAction[]
+                    {
+                        new Initialize(
+                            new ValidatorSet(
+                                new[] { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }
+                                    .ToList()),
+                            states: ImmutableDictionary.Create<Address, IValue>())
+                    }.Select((sa, nonce) => Transaction.Create(nonce + 1, AdminPrivateKey, null, new[] { sa }))),
+                blockAction: ServiceBuilder.BlockPolicy.BlockAction,
+                privateKey: AdminPrivateKey);
+        }
     }
 }

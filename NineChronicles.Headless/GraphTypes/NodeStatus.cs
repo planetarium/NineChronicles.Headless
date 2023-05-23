@@ -176,8 +176,7 @@ namespace NineChronicles.Headless.GraphTypes
             );
         }
 
-        private IEnumerable<Block> GetTopmostBlocks<T>(BlockChain<T> blockChain, int offset)
-            where T : IAction, new()
+        private IEnumerable<Block> GetTopmostBlocks(BlockChain blockChain, int offset)
         {
             Block block = blockChain.Tip;
 

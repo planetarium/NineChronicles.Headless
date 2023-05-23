@@ -7,7 +7,6 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
-using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blocks;
@@ -71,7 +70,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -162,7 +161,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: _ => new NodeStatusType(standaloneContext)
             );
 
-            Field<NonNullGraphType<Libplanet.Explorer.Queries.ExplorerQuery<NCAction>>>(
+            Field<NonNullGraphType<Libplanet.Explorer.Queries.ExplorerQuery>>(
                 name: "chainQuery",
                 deprecationReason: "Use /graphql/explorer",
                 resolve: context => new { }
@@ -192,7 +191,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -224,7 +223,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -235,7 +234,7 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            Field<TransactionType<NCAction>>(
+            Field<TransactionType>(
                 name: "getTx",
                 deprecationReason: "The root query is not the best place for getTx so it was moved. " +
                                    "Use transaction.getTx()",
@@ -245,7 +244,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -283,7 +282,7 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Get monster collection status by address.",
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -362,7 +361,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");

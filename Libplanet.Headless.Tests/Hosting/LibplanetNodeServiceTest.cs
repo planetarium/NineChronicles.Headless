@@ -11,6 +11,9 @@ using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
+using Libplanet.State;
+using Libplanet.Store;
+using Libplanet.Store.Trie;
 using Xunit;
 
 namespace Libplanet.Headless.Tests.Hosting
@@ -20,9 +23,18 @@ namespace Libplanet.Headless.Tests.Hosting
         [Fact]
         public void Constructor()
         {
-            var genesisBlock = BlockChain<DummyAction>.ProposeGenesisBlock();
-
-            IActionLoader actionLoader = new SingleActionLoader(typeof(DummyAction));
+            var policy = new BlockPolicy();
+            var stagePolicy = new VolatileStagePolicy();
+            var blockChainStates = new BlockChainStates(
+                new MemoryStore(),
+                new TrieStateStore(new MemoryKeyValueStore()));
+            var actionLoader = new SingleActionLoader(typeof(DummyAction));
+            var actionEvaluator = new ActionEvaluator(
+                _ => policy.BlockAction,
+                blockChainStates,
+                actionLoader,
+                null);
+            var genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
             var service = new LibplanetNodeService<DummyAction>(
                 new LibplanetNodeServiceProperties()
                 {
@@ -34,8 +46,8 @@ namespace Libplanet.Headless.Tests.Hosting
                     Host = IPAddress.Loopback.ToString(),
                     IceServers = new List<IceServer>(),
                 },
-                blockPolicy: new BlockPolicy<DummyAction>(),
-                stagePolicy: new VolatileStagePolicy<DummyAction>(),
+                blockPolicy: policy,
+                stagePolicy: stagePolicy,
                 renderers: null,
                 preloadProgress: null,
                 exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),
@@ -62,8 +74,8 @@ namespace Libplanet.Headless.Tests.Hosting
                         Host = IPAddress.Loopback.ToString(),
                         IceServers = new List<IceServer>(),
                     },
-                    blockPolicy: new BlockPolicy<DummyAction>(),
-                    stagePolicy: new VolatileStagePolicy<DummyAction>(),
+                    blockPolicy: new BlockPolicy(),
+                    stagePolicy: new VolatileStagePolicy(),
                     renderers: null,
                     preloadProgress: null,
                     exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),

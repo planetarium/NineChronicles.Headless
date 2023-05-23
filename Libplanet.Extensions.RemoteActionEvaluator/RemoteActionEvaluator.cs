@@ -11,6 +11,7 @@ using Libplanet.Blockchain;
 using Libplanet.Blocks;
 using Libplanet.Consensus;
 using Libplanet.Extensions.ActionEvaluatorCommonComponents;
+using Libplanet.State;
 
 namespace Libplanet.Extensions.RemoteActionEvaluator;
 

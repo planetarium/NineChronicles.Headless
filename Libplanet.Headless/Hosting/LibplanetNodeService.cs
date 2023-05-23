@@ -40,9 +40,9 @@ namespace Libplanet.Headless.Hosting
 
         public readonly IStateStore StateStore;
 
-        public readonly BlockChain<T> BlockChain;
+        public readonly BlockChain BlockChain;
 
-        public readonly Swarm<T> Swarm;
+        public readonly Swarm Swarm;
 
         public readonly LibplanetNodeServiceProperties Properties;
 
@@ -56,7 +56,7 @@ namespace Libplanet.Headless.Hosting
 
         private Action<bool> _preloadStatusHandlerAction;
 
-        protected Progress<PreloadState> PreloadProgress;
+        protected Progress<BlockSyncState> PreloadProgress;
 
         protected bool IgnoreBootstrapFailure;
 
@@ -72,10 +72,10 @@ namespace Libplanet.Headless.Hosting
 
         public LibplanetNodeService(
             LibplanetNodeServiceProperties properties,
-            IBlockPolicy<T> blockPolicy,
-            IStagePolicy<T> stagePolicy,
+            IBlockPolicy blockPolicy,
+            IStagePolicy stagePolicy,
             IEnumerable<IRenderer> renderers,
-            Progress<PreloadState> preloadProgress,
+            Progress<BlockSyncState> preloadProgress,
             Action<RPCException, string> exceptionHandlerAction,
             Action<bool> preloadStatusHandlerAction,
             IActionLoader actionLoader,
@@ -143,7 +143,7 @@ namespace Libplanet.Headless.Hosting
 
             if (Store.GetCanonicalChainId() is { })
             {
-                BlockChain = new BlockChain<T>(
+                BlockChain = new BlockChain(
                     policy: blockPolicy,
                     store: Store,
                     stagePolicy: stagePolicy,
@@ -156,7 +156,7 @@ namespace Libplanet.Headless.Hosting
             }
             else
             {
-                BlockChain = BlockChain<T>.Create(
+                BlockChain = BlockChain.Create(
                     policy: blockPolicy,
                     store: Store,
                     stagePolicy: stagePolicy,
@@ -240,10 +240,10 @@ namespace Libplanet.Headless.Hosting
             Log.Debug(
                 "Initializing {Swarm}. {Reactor}: {Validator}",
                 nameof(Swarm),
-                nameof(ConsensusReactor<T>),
+                nameof(ConsensusReactor),
                 !(consensusReactorOption is null));
 
-            Swarm = new Swarm<T>(
+            Swarm = new Swarm(
                 BlockChain,
                 Properties.SwarmPrivateKey,
                 transport,
@@ -372,7 +372,7 @@ namespace Libplanet.Headless.Hosting
                     cancellationToken: cancellationToken);
 
             // We assume the first phase of preloading is BlockHashDownloadState...
-            ((IProgress<PreloadState>)PreloadProgress)?.Report(new BlockHashDownloadState());
+            ((IProgress<BlockSyncState>)PreloadProgress)?.Report(new BlockHashDownloadState());
 
             if (peers.Any())
             {

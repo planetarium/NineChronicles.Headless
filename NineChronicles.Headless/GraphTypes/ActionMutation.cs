@@ -11,7 +11,6 @@ using Nekoyume.Model.State;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using Libplanet.Action;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -141,7 +140,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.Swarm.BlockChain;
+                        BlockChain? blockChain = service.Swarm.BlockChain;
                         if (blockChain is null)
                         {
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
@@ -208,7 +207,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.BlockChain;
+                        BlockChain? blockChain = service.BlockChain;
                         if (blockChain is null)
                         {
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
@@ -412,7 +411,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.BlockChain;
+                        BlockChain? blockChain = service.BlockChain;
                         if (blockChain is null)
                         {
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
@@ -455,7 +454,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.BlockChain;
+                        BlockChain? blockChain = service.BlockChain;
                         if (blockChain is null)
                         {
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
@@ -498,7 +497,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.BlockChain;
+                        BlockChain? blockChain = service.BlockChain;
                         if (blockChain is null)
                         {
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");

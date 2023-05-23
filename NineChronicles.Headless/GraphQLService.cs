@@ -135,8 +135,8 @@ namespace NineChronicles.Headless
                     .AddWebSockets()
                     .AddDataLoader()
                     .AddGraphTypes(typeof(StandaloneSchema))
-                    .AddGraphTypes(typeof(LibplanetExplorerSchema<NCAction>))
-                    .AddLibplanetExplorer<NCAction>()
+                    .AddGraphTypes(typeof(LibplanetExplorerSchema))
+                    .AddLibplanetExplorer()
                     .AddUserContextBuilder<UserContextBuilder>()
                     .AddGraphQLAuthorization(
                         options => options.AddPolicy(
@@ -206,9 +206,9 @@ namespace NineChronicles.Headless
                 app.UseWebSockets();
                 app.UseGraphQLWebSockets<StandaloneSchema>("/graphql");
                 app.UseGraphQL<StandaloneSchema>("/graphql");
-                app.UseGraphQL<LibplanetExplorerSchema<NCAction>>("/graphql/explorer");
+                app.UseGraphQL<LibplanetExplorerSchema>("/graphql/explorer");
 
-                // Prints 
+                // Prints
                 app.UseMiddleware<GraphQLSchemaMiddleware<StandaloneSchema>>("/schema.graphql");
 
                 app.UseOpenTelemetryPrometheusScrapingEndpoint();

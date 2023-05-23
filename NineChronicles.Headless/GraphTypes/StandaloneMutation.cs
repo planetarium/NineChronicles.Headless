@@ -60,7 +60,7 @@ namespace NineChronicles.Headless.GraphTypes
                         byte[] bytes = Convert.FromBase64String(context.GetArgument<string>("payload"));
                         Transaction tx = Transaction.Deserialize(bytes);
                         NineChroniclesNodeService? service = standaloneContext.NineChroniclesNodeService;
-                        BlockChain<NCAction>? blockChain = service?.Swarm.BlockChain;
+                        BlockChain? blockChain = service?.Swarm.BlockChain;
 
                         if (blockChain is null)
                         {
@@ -109,7 +109,7 @@ namespace NineChronicles.Headless.GraphTypes
                         byte[] bytes = Convert.FromBase64String(context.GetArgument<string>("payload"));
                         Transaction tx = Transaction.Deserialize(bytes);
                         NineChroniclesNodeService? service = standaloneContext.NineChroniclesNodeService;
-                        BlockChain<NCAction>? blockChain = service?.Swarm.BlockChain;
+                        BlockChain? blockChain = service?.Swarm.BlockChain;
 
                         if (blockChain is null)
                         {
@@ -189,7 +189,7 @@ namespace NineChronicles.Headless.GraphTypes
                         return null;
                     }
 
-                    BlockChain<NCAction> blockChain = service.BlockChain;
+                    BlockChain blockChain = service.BlockChain;
                     var currency = new GoldCurrencyState(
                         (Dictionary)blockChain.GetState(new Address(context.GetArgument<string>("currencyAddress")))
                     ).Currency;
@@ -247,7 +247,7 @@ namespace NineChronicles.Headless.GraphTypes
                         return null;
                     }
 
-                    BlockChain<NCAction> blockChain = service.BlockChain;
+                    BlockChain blockChain = service.BlockChain;
                     var currency = new GoldCurrencyState(
                         (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
                     ).Currency;
@@ -288,7 +288,7 @@ namespace NineChronicles.Headless.GraphTypes
                         byte[] bytes = ByteUtil.ParseHex(context.GetArgument<string>("payload"));
                         Transaction tx = Transaction.Deserialize(bytes);
                         NineChroniclesNodeService? service = standaloneContext.NineChroniclesNodeService;
-                        BlockChain<NCAction>? blockChain = service?.Swarm.BlockChain;
+                        BlockChain? blockChain = service?.Swarm.BlockChain;
 
                         if (blockChain is null)
                         {

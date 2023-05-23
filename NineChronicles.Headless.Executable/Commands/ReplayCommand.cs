@@ -15,9 +15,10 @@ using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
 using Libplanet.RocksDBStore;
+using Libplanet.State;
 using Libplanet.Store;
 using Libplanet.Tx;
-using Nekoyume.BlockChain.Policy;
+using Nekoyume.Blockchain.Policy;
 using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Executable.Store;
 using Serilog.Core;
@@ -382,7 +383,7 @@ namespace NineChronicles.Headless.Executable.Commands
         private (
             IStore store,
             IStateStore stateStore,
-            BlockChain<NCAction> blockChain) LoadBlockchain(string storePath)
+            BlockChain blockChain) LoadBlockchain(string storePath)
         {
             // Load store and genesis block.
             if (!Directory.Exists(storePath))
@@ -407,18 +408,26 @@ namespace NineChronicles.Headless.Executable.Commands
 
             // Make BlockChain and blocks.
             var policy = new BlockPolicySource(Logger.None).GetPolicy();
-            var stagePolicy = new VolatileStagePolicy<NCAction>();
+            var stagePolicy = new VolatileStagePolicy();
             var stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(storePath, "states"));
             var stateStore = new TrieStateStore(stateKeyValueStore);
+            var blockChainStates = new BlockChainStates(store, stateStore);
+            var actionEvaluator = new ActionEvaluator(
+                _ => policy.BlockAction,
+                blockChainStates,
+                new SingleActionLoader(typeof(NCAction)),
+                null);
             return (
                 store,
                 stateStore,
-                new BlockChain<NCAction>(
+                new BlockChain(
                     policy,
                     stagePolicy,
                     store,
                     stateStore,
-                    genesisBlock));
+                    genesisBlock,
+                    blockChainStates,
+                    actionEvaluator));
         }
 
         private Transaction LoadTx(string txPath)
@@ -447,7 +456,7 @@ namespace NineChronicles.Headless.Executable.Commands
             return TxMarshaler.UnmarshalTransaction(txDict);
         }
 
-        private ActionEvaluator GetActionEvaluator(BlockChain<NCAction> blockChain)
+        private ActionEvaluator GetActionEvaluator(BlockChain blockChain)
         {
             var policy = new BlockPolicySource(Logger.None).GetPolicy();
             IActionLoader actionLoader = new SingleActionLoader(typeof(NCAction));

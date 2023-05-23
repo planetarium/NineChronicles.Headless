@@ -16,6 +16,7 @@ using GraphQL.NewtonsoftJson;
 using GraphQL.Subscription;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Action.Sys;
 using Libplanet.Assets;
 using Libplanet.Blocks;
@@ -24,13 +25,11 @@ using Libplanet.Consensus;
 using Libplanet.Crypto;
 using Libplanet.Headless;
 using Libplanet.Net;
+using Libplanet.Store;
+using Libplanet.Store.Trie;
 using Libplanet.Tx;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
-using Nekoyume.BlockChain.Policy;
-using Nekoyume.TableData;
-using NineChronicles.Headless.GraphTypes;
-using NineChronicles.Headless.GraphTypes.States;
 using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
 using Xunit.Abstractions;
@@ -80,7 +79,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var genesisBlock = BlockChain<EmptyAction>.ProposeGenesisBlock(
+            var actionEvaluator = new ActionEvaluator(
+                _ => null,
+                new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
+                new SingleActionLoader(typeof(EmptyAction)),
+                null);
+            var genesisBlock = BlockChain.ProposeGenesisBlock(
+                actionEvaluator,
                 transactions: new IAction[]
                     {
                         new Initialize(
@@ -111,7 +116,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 genesisBlock,
                 apv,
                 apvPrivateKey.PublicKey,
-                new Progress<PreloadState>(state =>
+                new Progress<BlockSyncState>(state =>
                 {
                     StandaloneContextFx.PreloadStateSubject.OnNext(state);
                 }),

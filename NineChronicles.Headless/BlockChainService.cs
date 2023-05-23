@@ -36,8 +36,8 @@ namespace NineChronicles.Headless
     public class BlockChainService : ServiceBase<IBlockChainService>, IBlockChainService
     {
         private static readonly Codec Codec = new Codec();
-        private BlockChain<NCAction> _blockChain;
-        private Swarm<NCAction> _swarm;
+        private BlockChain _blockChain;
+        private Swarm _swarm;
         private RpcContext _context;
         private Codec _codec;
         private LibplanetNodeServiceProperties _libplanetNodeServiceProperties;
@@ -45,8 +45,8 @@ namespace NineChronicles.Headless
         private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
 
         public BlockChainService(
-            BlockChain<NCAction> blockChain,
-            Swarm<NCAction> swarm,
+            BlockChain blockChain,
+            Swarm swarm,
             RpcContext context,
             LibplanetNodeServiceProperties libplanetNodeServiceProperties,
             ActionEvaluationPublisher actionEvaluationPublisher,

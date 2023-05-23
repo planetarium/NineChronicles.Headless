@@ -8,7 +8,6 @@ using Libplanet.Action;
 using Libplanet.Tx;
 using Libplanet;
 using Libplanet.Explorer.GraphTypes;
-using Nekoyume.Action;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
@@ -27,7 +26,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -38,7 +37,7 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            Field<TransactionType<NCAction>>(
+            Field<TransactionType>(
                 name: "getTx",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<TxIdType>>
@@ -46,7 +45,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -79,7 +78,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -141,7 +140,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -203,7 +202,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");

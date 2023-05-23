@@ -62,7 +62,7 @@ namespace NineChronicles.Headless.Executable.Commands
         {
             using Logger logger = Utils.ConfigureLogger(verbose);
             TextWriter stderr = _console.Error;
-            (BlockChain<NCAction> chain, IStore store, _, _) =
+            (BlockChain chain, IStore store, _, _) =
                 Utils.GetBlockChain(logger, storePath, chainId);
 
             HashSet<ItemSubType>? itemTypes = null;

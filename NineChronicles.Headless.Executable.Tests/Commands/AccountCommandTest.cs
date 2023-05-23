@@ -9,7 +9,7 @@ using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
-using Nekoyume.BlockChain.Policy;
+using Nekoyume.Blockchain.Policy;
 using NineChronicles.Headless.Executable.Commands;
 using NineChronicles.Headless.Executable.Store;
 using NineChronicles.Headless.Executable.Tests.IO;
@@ -49,14 +49,14 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             Block genesisBlock = GenesisHelper.MineGenesisBlock(targetAddress, targetCurrency);
             var stateKeyValueStore = new RocksDBKeyValueStore(statesPath);
             var stateStore = new TrieStateStore(stateKeyValueStore);
-            IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
-            IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
+            IStagePolicy stagePolicy = new VolatileStagePolicy();
+            IBlockPolicy blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
                 new SingleActionLoader(typeof(NCAction)),
                 null);
-            BlockChain<NCAction> chain = BlockChain<NCAction>.Create(
+            BlockChain chain = BlockChain.Create(
                 blockPolicy,
                 stagePolicy,
                 store,

@@ -20,13 +20,14 @@ using Libplanet.Blockchain;
 using Libplanet.Blocks;
 using Libplanet.Consensus;
 using Libplanet.Crypto;
+using Libplanet.Headless.Hosting;
 using Libplanet.KeyStore;
 using Libplanet.Net;
-using Libplanet.Headless.Hosting;
+using Libplanet.Store;
+using Libplanet.Store.Trie;
 using Libplanet.Tx;
 using Nekoyume;
 using Nekoyume.Action;
-using Nekoyume.BlockChain.Policy;
 using Nekoyume.Helper;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
@@ -37,7 +38,6 @@ using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
 using Xunit.Abstractions;
 using static NineChronicles.Headless.NCActionUtils;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -117,7 +117,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var genesisBlock = BlockChain<EmptyAction>.ProposeGenesisBlock();
+            var actionEvaluator = new ActionEvaluator(
+                _ => null,
+                new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
+                new SingleActionLoader(typeof(PolymorphicAction<ActionBase>)),
+                null);
+            var genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
 
             // 에러로 인하여 NineChroniclesNodeService 를 사용할 수 없습니다. https://git.io/JfS0M
             // 따라서 LibplanetNodeService로 비슷한 환경을 맞춥니다.
@@ -441,8 +446,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 new Libplanet.Consensus.Validator(ProposerPrivateKey.PublicKey, BigInteger.One),
             }.ToList());
+            var actionEvaluator = new ActionEvaluator(
+                _ => null,
+                new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
+                new SingleActionLoader(typeof(PolymorphicAction<ActionBase>)),
+                null);
             Block genesis =
-                BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
+                BlockChain.ProposeGenesisBlock(
+                    actionEvaluator,
                     transactions: ImmutableList<Transaction>.Empty
                         .Add(Transaction.Create(0, ProposerPrivateKey, null,
                             new PolymorphicAction<ActionBase>[]
@@ -831,8 +842,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 pendingActivation,
             };
+            var actionEvaluator = new ActionEvaluator(
+                _ => null,
+                new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
+                new SingleActionLoader(typeof(PolymorphicAction<ActionBase>)),
+                null);
             Block genesis =
-                BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
+                BlockChain.ProposeGenesisBlock(
+                    actionEvaluator,
                     transactions: ImmutableList<Transaction>.Empty.Add(
                         Transaction.Create(0, new PrivateKey(), null,
                             new PolymorphicAction<ActionBase>[]
@@ -911,8 +928,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var activatedAccounts = ImmutableHashSet<Address>.Empty;
             var pendingActivationStates = new List<PendingActivationState>();
 
+            var actionEvaluator = new ActionEvaluator(
+                _ => null,
+                new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
+                new SingleActionLoader(typeof(PolymorphicAction<ActionBase>)),
+                null);
             Block genesis =
-                BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
+                BlockChain.ProposeGenesisBlock(
+                    actionEvaluator,
                     transactions: ImmutableList<Transaction>.Empty
                         .Add(Transaction.Create(
                             0,
@@ -987,8 +1010,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var activatedAccounts = ImmutableHashSet<Address>.Empty;
             var pendingActivationStates = new List<PendingActivationState>();
 
+            var actionEvaluator = new ActionEvaluator(
+                _ => null,
+                new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
+                new SingleActionLoader(typeof(PolymorphicAction<ActionBase>)),
+                null);
             Block genesis =
-                BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
+                BlockChain.ProposeGenesisBlock(
+                    actionEvaluator,
                     transactions: ImmutableList<Transaction>.Empty.Add(
                         Transaction.Create(0, new PrivateKey(), null,
                             new PolymorphicAction<ActionBase>[]
@@ -1087,8 +1116,14 @@ decimalPlaces
                 new Libplanet.Consensus.Validator(ProposerPrivateKey.PublicKey, BigInteger.One),
                 new Libplanet.Consensus.Validator(privateKey.PublicKey, BigInteger.One),
             }.ToList());
+            var actionEvaluator = new ActionEvaluator(
+                _ => blockPolicy.BlockAction,
+                new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
+                new SingleActionLoader(typeof(PolymorphicAction<ActionBase>)),
+                null);
             Block genesis =
-                BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
+                BlockChain.ProposeGenesisBlock(
+                    actionEvaluator,
                     transactions: ImmutableList<Transaction>.Empty
                         .Add(
                             Transaction.Create(0, ProposerPrivateKey, null,

@@ -35,7 +35,7 @@ namespace NineChronicles.Headless.Tests
                 services.AddSingleton(standaloneContext);
             }
 
-            services.AddLibplanetExplorer<NCAction>();
+            services.AddLibplanetExplorer();
 
             var serviceProvider = services.BuildServiceProvider();
             return ExecuteQueryAsync<TObjectGraphType>(
@@ -79,16 +79,16 @@ namespace NineChronicles.Headless.Tests
         {
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock();
-            var policy = new BlockPolicy<NCAction>();
+            var policy = new BlockPolicy();
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
                 new BlockChainStates(store, stateStore),
                 new SingleActionLoader(typeof(NCAction)),
                 null);
-            var blockchain = BlockChain<PolymorphicAction<ActionBase>>.Create(
-                new BlockPolicy<PolymorphicAction<ActionBase>>(),
-                new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
+            var genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
+            var blockchain = BlockChain.Create(
+                new BlockPolicy(),
+                new VolatileStagePolicy(),
                 store,
                 stateStore,
                 genesisBlock,
@@ -107,7 +107,14 @@ namespace NineChronicles.Headless.Tests
         {
             var store = new DefaultStore(null);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
+            var policy = new BlockPolicy();
+            var actionEvaluator = new ActionEvaluator(
+                _ => policy.BlockAction,
+                new BlockChainStates(store, stateStore),
+                new SingleActionLoader(typeof(NCAction)),
+                null);
+            var genesisBlock = BlockChain.ProposeGenesisBlock(
+                actionEvaluator,
                 transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(
                     0, minerPrivateKey, null, new NCAction[]
                     {
@@ -115,15 +122,9 @@ namespace NineChronicles.Headless.Tests
                     })),
                 privateKey: minerPrivateKey
             );
-            var policy = new BlockPolicy<NCAction>();
-            var actionEvaluator = new ActionEvaluator(
-                _ => policy.BlockAction,
-                new BlockChainStates(store, stateStore),
-                new SingleActionLoader(typeof(NCAction)),
-                null);
-            var blockchain = BlockChain<PolymorphicAction<ActionBase>>.Create(
-                new BlockPolicy<PolymorphicAction<ActionBase>>(),
-                new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
+            var blockchain = BlockChain.Create(
+                new BlockPolicy(),
+                new VolatileStagePolicy(),
                 store,
                 stateStore,
                 genesisBlock,
