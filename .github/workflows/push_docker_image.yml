@@ -10,6 +10,7 @@ on:
       - previewnet
       - qa-*
       - 2022q3-worldboss
+      - test/mead
     tags:
       - v*
   workflow_dispatch:
