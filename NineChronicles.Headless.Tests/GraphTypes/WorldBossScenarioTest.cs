@@ -132,7 +132,7 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
     }}
 }}";
 
-            var stateQueryResult = await ExecuteQueryAsync<StateQuery>(stateQuery, source: _stateContext);
+            var stateQueryResult = await ExecuteQueryAsync<AvatarStateQuery>(stateQuery, source: _stateContext);
             var raiderStateData =
                 ((Dictionary<string, object>)((ExecutionNode)stateQueryResult.Data!).ToValue()!)[
                     "raiderState"];
@@ -191,7 +191,7 @@ raiderAddress(avatarAddress: ""{_avatarAddress}"", raidId: {raidId})
     }}
 }}";
 
-            var stateQueryResult = await ExecuteQueryAsync<StateQuery>(stateQuery, source: _stateContext);
+            var stateQueryResult = await ExecuteQueryAsync<AvatarStateQuery>(stateQuery, source: _stateContext);
             var worldBossStateData =
                 ((Dictionary<string, object>)((ExecutionNode)stateQueryResult.Data!).ToValue()!)[
                     "worldBossState"];
@@ -241,7 +241,7 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
     }}
 }}";
 
-            var stateQueryResult = await ExecuteQueryAsync<StateQuery>(stateQuery, source: _stateContext);
+            var stateQueryResult = await ExecuteQueryAsync<AvatarStateQuery>(stateQuery, source: _stateContext);
             var stateData =
                 ((Dictionary<string, object>)((ExecutionNode)stateQueryResult.Data!).ToValue()!)[
                     "worldBossKillRewardRecord"];
@@ -291,7 +291,7 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
     raiderList(raiderListAddress: ""{raiderListAddress}"")
 }}";
 
-            var stateQueryResult = await ExecuteQueryAsync<StateQuery>(stateQuery, source: _stateContext);
+            var stateQueryResult = await ExecuteQueryAsync<AvatarStateQuery>(stateQuery, source: _stateContext);
             var stateData =
                 ((Dictionary<string, object>)((ExecutionNode)stateQueryResult.Data!).ToValue()!)[
                     "raiderList"];
@@ -353,7 +353,7 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
                 queryArgs += ", prev: true";
             }
             var raidIdQuery = @$"query {{ raidId({queryArgs}) }}";
-            var raidIdQueryResult = await ExecuteQueryAsync<StateQuery>(raidIdQuery, source: _stateContext);
+            var raidIdQueryResult = await ExecuteQueryAsync<AvatarStateQuery>(raidIdQuery, source: _stateContext);
             var raidIdData = (Dictionary<string, object>)((ExecutionNode)raidIdQueryResult.Data!).ToValue()!;
             var raidId = raidIdData["raidId"];
             Assert.Equal(1, raidId);

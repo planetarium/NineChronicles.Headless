@@ -816,7 +816,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             );
 
             string query = $@"query {{
-                stateQuery {{
+                avatarStateQuery {{
                     avatar(avatarAddress: ""{avatarAddress}"") {{
                         name
                     }}
@@ -1074,20 +1074,20 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
             var query = $@"query {{
-stateQuery {{ balance(address: ""{adminAddress}"", currency: {{ decimalPlaces: 18, ticker: ""CRYSTAL"" }})
-{{
-quantity
-currency {{
-ticker
-minters
-decimalPlaces
-}}
-}}
-}}
-}}";
+                avatarStateQuery {{
+                    balance(address: ""{adminAddress}"", currency: {{ decimalPlaces: 18, ticker: ""CRYSTAL"" }}) {{
+                        quantity
+                        currency {{
+                            ticker
+                            minters
+                            decimalPlaces
+                        }}
+                    }}
+                }}
+            }}";
             var queryResult = await ExecuteQueryAsync(query);
             Assert.Null(queryResult.Errors);
-            var data = (Dictionary<string, object>)((Dictionary<string, object>)((Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!)["stateQuery"])["balance"];
+            var data = (Dictionary<string, object>)((Dictionary<string, object>)((Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!)["avatarStateQuery"])["balance"];
             Assert.Equal("0", data["quantity"]);
             var currencyData = (Dictionary<string, object>)data["currency"];
 #pragma warning disable CS0618

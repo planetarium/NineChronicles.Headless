@@ -17,11 +17,9 @@ using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
-using Libplanet.Headless;
 using Nekoyume.Model;
 using NineChronicles.Headless.GraphTypes.States;
 using static NineChronicles.Headless.NCActionUtils;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -31,7 +29,7 @@ namespace NineChronicles.Headless.GraphTypes
         {
             bool useSecretToken = configuration[GraphQLService.SecretTokenKey] is { };
 
-            Field<NonNullGraphType<StateQuery>>(name: "stateQuery", arguments: new QueryArguments(
+            Field<NonNullGraphType<AvatarStateQuery>>(name: "avatarStateQuery", arguments: new QueryArguments(
                 new QueryArgument<ByteStringType>
                 {
                     Name = "hash",
