@@ -13,7 +13,7 @@ public partial class ActionQuery
     private void RegisterMead()
     {
         Field<NonNullGraphType<ByteStringType>>(
-            "bringEinheri",
+            "requestPledge",
             arguments: new QueryArguments
             {
                 new QueryArgument<NonNullGraphType<AddressType>>
@@ -24,47 +24,47 @@ public partial class ActionQuery
             resolve: context =>
             {
                 var agentAddress = context.GetArgument<Address>("agentAddress");
-                NCAction action = new BringEinheri
+                NCAction action = new RequestPledge
                 {
-                    EinheriAddress = agentAddress,
+                    AgentAddress = agentAddress,
                 };
                 return Encode(context, action);
             }
         );
         Field<NonNullGraphType<ByteStringType>>(
-            "takeSides",
+            "approvePledge",
             arguments: new QueryArguments
             {
                 new QueryArgument<NonNullGraphType<AddressType>>
                 {
-                    Name = "valkyrieAddress",
+                    Name = "patronAddress",
                 }
             },
             resolve: context =>
             {
-                var valkyrieAddress = context.GetArgument<Address>("valkyrieAddress");
-                NCAction action = new TakeSides
+                var patronAddress = context.GetArgument<Address>("patronAddress");
+                NCAction action = new ApprovePledge
                 {
-                    ValkyrieAddress = valkyrieAddress,
+                    PatronAddress = patronAddress
                 };
                 return Encode(context, action);
             }
         );
         Field<NonNullGraphType<ByteStringType>>(
-            "releaseEinheri",
+            "endPledge",
             arguments: new QueryArguments
             {
                 new QueryArgument<NonNullGraphType<AddressType>>
                 {
-                    Name = "einheriAddress",
+                    Name = "agentAddress",
                 }
             },
             resolve: context =>
             {
-                var eienhriAddress = context.GetArgument<Address>("einheriAddress");
-                NCAction action = new ReleaseEinheri
+                var agentAddress = context.GetArgument<Address>("agentAddress");
+                NCAction action = new EndPledge
                 {
-                    EinheriAddress = eienhriAddress,
+                    AgentAddress = agentAddress
                 };
                 return Encode(context, action);
             }

@@ -7,6 +7,7 @@ using Libplanet.Blockchain;
 using Libplanet.Action;
 using Libplanet.Tx;
 using Libplanet;
+using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -199,6 +200,15 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "nonce",
                         Description = "The nonce for Transaction.",
+                    },
+                    new QueryArgument<LongGraphType>
+                    {
+                        Name = "gasLimit",
+                        Description = "The gas limit for Transaction.",
+                    },
+                    new QueryArgument<FungibleAssetValueInputType>
+                    {
+                        Name = "maxGasPrice"
                     }
                 ),
                 resolve: context =>
@@ -219,11 +229,15 @@ namespace NineChronicles.Headless.GraphTypes
                     var publicKey = new PublicKey(ByteUtil.ParseHex(context.GetArgument<string>("publicKey")));
                     Address signer = publicKey.ToAddress();
                     long nonce = context.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
+                    long? gasLimit = context.GetArgument<long?>("gasLimit");
+                    FungibleAssetValue? maxGasPrice = context.GetArgument<FungibleAssetValue?>("maxGasPrice");
                     UnsignedTx unsignedTransaction =
                         new UnsignedTx(
                             new TxInvoice(
                                 genesisHash: blockChain.Genesis.Hash,
-                                actions: new TxActionList(new[] { action })),
+                                actions: new TxActionList(new[] { action }),
+                                gasLimit: gasLimit,
+                                maxGasPrice: maxGasPrice),
                             new TxSigningMetadata(publicKey, nonce));
                     return unsignedTransaction.SerializeUnsignedTx().ToArray();
                 });
