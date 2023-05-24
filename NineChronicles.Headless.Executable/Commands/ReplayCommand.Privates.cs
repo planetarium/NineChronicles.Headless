@@ -11,11 +11,11 @@ using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blocks;
 using Libplanet.Consensus;
+using Libplanet.State;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Libplanet.Tx;
 using Serilog;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
 {

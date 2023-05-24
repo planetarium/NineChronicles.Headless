@@ -9,7 +9,6 @@ using Libplanet.Explorer.Queries;
 using Libplanet.Explorer.Schemas;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless
 {
@@ -55,26 +54,25 @@ namespace NineChronicles.Headless
 
         public static IServiceCollection AddBlockChainContext(this IServiceCollection services)
         {
-            services.TryAddSingleton<IBlockChainContext<NCAction>, BlockChainContext>();
+            services.TryAddSingleton<IBlockChainContext, BlockChainContext>();
 
             return services;
         }
 
-        public static IServiceCollection AddLibplanetExplorer<T>(this IServiceCollection services)
-            where T : IAction, new()
+        public static IServiceCollection AddLibplanetExplorer(this IServiceCollection services)
         {
             services.AddLibplanetScalarTypes();
             services.AddBlockChainContext();
-            services.AddSingleton<LibplanetExplorerSchema<T>>();
+            services.AddSingleton<LibplanetExplorerSchema>();
 
-            services.TryAddSingleton<ActionType<T>>();
-            services.TryAddSingleton<BlockType<T>>();
-            services.TryAddSingleton<TransactionType<T>>();
-            services.TryAddSingleton<NodeStateType<T>>();
-            services.TryAddSingleton<BlockQuery<T>>();
-            services.TryAddSingleton<TransactionQuery<T>>();
-            services.TryAddSingleton<ExplorerQuery<T>>();
-            services.TryAddSingleton(_ => new StateQuery<T>()
+            services.TryAddSingleton<ActionType>();
+            services.TryAddSingleton<BlockType>();
+            services.TryAddSingleton<TransactionType>();
+            services.TryAddSingleton<NodeStateType>();
+            services.TryAddSingleton<BlockQuery>();
+            services.TryAddSingleton<TransactionQuery>();
+            services.TryAddSingleton<ExplorerQuery>();
+            services.TryAddSingleton(_ => new StateQuery()
             {
                 Name = "LibplanetStateQuery",
             });

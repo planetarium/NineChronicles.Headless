@@ -3,7 +3,7 @@ using GraphQL.Types;
 using Libplanet;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+
 
 namespace NineChronicles.Headless.GraphTypes;
 
@@ -23,7 +23,7 @@ public partial class ActionQuery
             resolve: context =>
             {
                 var avatarAddress = context.GetArgument<Address>("avatarAddress");
-                NCAction action = new DailyReward
+                ActionBase action = new DailyReward
                 {
                     avatarAddress = avatarAddress
                 };

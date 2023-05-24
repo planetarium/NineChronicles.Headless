@@ -18,7 +18,6 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using Lib9c.Renderers;
 using Libplanet;
-using Libplanet.Action;
 using Libplanet.Blocks;
 using Libplanet.Tx;
 using MagicOnion.Client;
@@ -29,7 +28,6 @@ using Nekoyume.Model.State;
 using Nekoyume.Shared.Hubs;
 using Sentry;
 using Serilog;
-using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless
 {
@@ -302,9 +300,9 @@ namespace NineChronicles.Headless
                         {
                             try
                             {
-                                NineChroniclesActionType? pa = ev.Action is RewardGold
+                                ActionBase? pa = ev.Action is RewardGold
                                     ? null
-                                    : new PolymorphicAction<ActionBase>(ev.Action);
+                                    : ev.Action;
                                 var extra = new Dictionary<string, IValue>();
 
                                 var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputStates, ev.Exception, ev.PreviousStates, ev.RandomSeed, extra);
@@ -353,10 +351,10 @@ namespace NineChronicles.Headless
                     .Subscribe(
                         async ev =>
                         {
-                            PolymorphicAction<ActionBase>? pa = null;
+                            ActionBase? pa = null;
                             if (!(ev.Action is RewardGold))
                             {
-                                pa = new PolymorphicAction<ActionBase>(ev.Action);
+                                pa = ev.Action;
                             }
                             try
                             {

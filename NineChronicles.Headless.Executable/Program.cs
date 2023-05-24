@@ -25,6 +25,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Lib9c.DevExtensions.Action.Loader;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
 // import necessary for sentry exception filters
@@ -32,7 +33,7 @@ using Libplanet.Blocks;
 using Libplanet.Headless;
 using Libplanet.Headless.Hosting;
 using Libplanet.Net.Transports;
-using Nekoyume.Action;
+using Nekoyume.Action.Loader;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 
@@ -418,9 +419,10 @@ namespace NineChronicles.Headless.Executable
 
                 IActionLoader MakeSingleActionLoader()
                 {
-                    var actionLoader = new SingleActionLoader(typeof(PolymorphicAction<ActionBase>));
+                    IActionLoader actionLoader;
+                    actionLoader = new NCActionLoader();
 #if LIB9C_DEV_EXTENSIONS
-                    PolymorphicAction<ActionBase>.ReloadLoader(new[] { typeof(ActionBase).Assembly, typeof(Lib9c.DevExtensions.Utils).Assembly });
+                    actionLoader = new NCDevActionLoader();
 #endif
                     return actionLoader;
                 }

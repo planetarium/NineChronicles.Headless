@@ -1,14 +1,12 @@
-using System.Collections.Immutable;
-using System.Reflection;
 using Bencodex;
 using Bencodex.Types;
 using Lib9c.StateService.Shared;
 using Libplanet.Action;
-using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Extensions.ActionEvaluatorCommonComponents;
 using Microsoft.AspNetCore.Mvc;
 using Nekoyume.Action;
+using Nekoyume.Action.Loader;
 
 namespace Lib9c.StateService.Controllers;
 
@@ -44,7 +42,7 @@ public class RemoteEvaluationController : ControllerBase
             new ActionEvaluator(
                 context => new RewardGold(),
                 _blockChainStates,
-                new SingleActionLoader(typeof(PolymorphicAction<ActionBase>)),
+                new NCActionLoader(),
                 null);
         return Ok(new RemoteEvaluationResponse
         {

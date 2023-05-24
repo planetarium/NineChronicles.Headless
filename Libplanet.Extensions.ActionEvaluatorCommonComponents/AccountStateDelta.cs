@@ -5,6 +5,7 @@ using Bencodex.Types;
 using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Consensus;
+using Libplanet.State;
 
 namespace Libplanet.Extensions.ActionEvaluatorCommonComponents;
 
