@@ -23,11 +23,11 @@ using NineChronicles.Headless.GraphTypes.States.Models.Table;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    public class AvatarStateQuery : ObjectGraphType<StateContext>
+    public class StateQuery : ObjectGraphType<StateContext>
     {
-        public AvatarStateQuery()
+        public StateQuery()
         {
-            Name = "AvatarStateQuery";
+            Name = "StateQuery";
             Field<AvatarStateType>(
                 name: "avatar",
                 description: "State for avatar.",

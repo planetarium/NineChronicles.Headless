@@ -134,7 +134,6 @@ namespace NineChronicles.Headless
                     .AddWebSockets()
                     .AddDataLoader()
                     .AddGraphTypes(typeof(StandaloneSchema))
-                    .AddGraphTypes(typeof(LibplanetExplorerSchema))
                     .AddLibplanetExplorer()
                     .AddUserContextBuilder<UserContextBuilder>()
                     .AddGraphQLAuthorization(

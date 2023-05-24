@@ -29,7 +29,7 @@ namespace NineChronicles.Headless.GraphTypes
         {
             bool useSecretToken = configuration[GraphQLService.SecretTokenKey] is { };
 
-            Field<NonNullGraphType<AvatarStateQuery>>(name: "avatarStateQuery", arguments: new QueryArguments(
+            Field<NonNullGraphType<StateQuery>>(name: "stateQuery", arguments: new QueryArguments(
                 new QueryArgument<ByteStringType>
                 {
                     Name = "hash",
