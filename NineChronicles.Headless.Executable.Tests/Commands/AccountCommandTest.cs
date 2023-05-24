@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using Bencodex;
 using Libplanet;
-using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
@@ -15,10 +14,9 @@ using NineChronicles.Headless.Executable.Store;
 using NineChronicles.Headless.Executable.Tests.IO;
 using Serilog.Core;
 using Xunit;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Lib9cUtils = Lib9c.DevExtensions.Utils;
 using Libplanet.Action;
-using Nekoyume.Action;
+using Nekoyume.Action.Loader;
 
 namespace NineChronicles.Headless.Executable.Tests.Commands
 {
@@ -54,7 +52,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
-                new SingleActionLoader(typeof(NCAction)),
+                new NCActionLoader(),
                 null);
             BlockChain chain = BlockChain.Create(
                 blockPolicy,

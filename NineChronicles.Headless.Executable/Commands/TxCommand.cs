@@ -8,19 +8,16 @@ using Bencodex.Types;
 using Cocona;
 using CsvHelper;
 using Libplanet;
-using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Tx;
 using Nekoyume.Action;
-using Nekoyume.Action.Factory;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.Executable.IO;
 using static NineChronicles.Headless.NCActionUtils;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
@@ -51,7 +48,7 @@ namespace NineChronicles.Headless.Executable.Commands
             bool bytes = false
         )
         {
-            List<NCAction> parsedActions = actions.Select(a =>
+            List<ActionBase> parsedActions = actions.Select(a =>
             {
                 if (File.Exists(a))
                 {
@@ -78,7 +75,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 };
                 action.LoadPlainValue(plainValue);
 
-                return (NCAction)action;
+                return action;
             }).ToList();
 
             Transaction tx = Transaction.Create(
@@ -115,7 +112,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var genesisDict = (Bencodex.Types.Dictionary)_codec.Decode(genesisBytes);
             IReadOnlyList<Transaction> genesisTxs =
                 BlockMarshaler.UnmarshalBlockTransactions(genesisDict);
-            var initStates = (InitializeStates)ToAction(genesisTxs.Single().Actions!.Single()).InnerAction;
+            var initStates = (InitializeStates)ToAction(genesisTxs.Single().Actions!.Single());
             Currency currency = new GoldCurrencyState(initStates.GoldCurrency).Currency;
 
             var action = new TransferAsset(

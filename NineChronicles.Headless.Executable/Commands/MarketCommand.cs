@@ -18,7 +18,6 @@ using Nekoyume.Model.Item;
 using NineChronicles.Headless.Executable.IO;
 using Serilog.Core;
 using static NineChronicles.Headless.NCActionUtils;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
@@ -106,19 +105,18 @@ namespace NineChronicles.Headless.Executable.Commands
                 stderr.WriteLine("Scanning block #{0} {1}...", block.Index, block.Hash);
                 stderr.Flush();
 
-                IEnumerable<(Transaction, NCAction)> actions = block.Transactions
+                IEnumerable<(Transaction, ActionBase)> actions = block.Transactions
                     .Reverse()
                     .Where(tx => includeFails ||
                                  !(chain.GetTxExecution(block.Hash, tx.Id) is { } e) ||
                                  e is TxSuccess)
                     .SelectMany(tx => tx.Actions is { } ca
                         ? ca.Reverse().Select(a => (tx, ToAction(a)))
-                        : Enumerable.Empty<(Transaction, NCAction)>());
+                        : Enumerable.Empty<(Transaction, ActionBase)>());
 
                 foreach (var (tx, act) in actions)
                 {
-                    ActionBase a = act.InnerAction;
-                    IEnumerable<Order> orders = act.InnerAction switch
+                    IEnumerable<Order> orders = act switch
                     {
                         IBuy0 b0 => new Order[]
                         {

@@ -10,7 +10,6 @@ using Nekoyume.Action;
 using NineChronicles.Headless.GraphTypes;
 using Xunit;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -51,8 +50,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var craftQueryData = (Dictionary<string, object>)data["craftQuery"];
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)craftQueryData["eventConsumableItemCrafts"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<EventConsumableItemCrafts>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<EventConsumableItemCrafts>(actionBase);
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(eventScheduleId, action.EventScheduleId);
             Assert.Equal(eventConsumableItemRecipeId, action.EventConsumableItemRecipeId);
@@ -100,8 +99,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var craftQueryData = (Dictionary<string, object>)data["craftQuery"];
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)craftQueryData["eventMaterialItemCrafts"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<EventMaterialItemCrafts>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<EventMaterialItemCrafts>(actionBase);
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(eventScheduleId, action.EventScheduleId);
             Assert.Equal(eventMaterialItemRecipeId, action.EventMaterialItemRecipeId);

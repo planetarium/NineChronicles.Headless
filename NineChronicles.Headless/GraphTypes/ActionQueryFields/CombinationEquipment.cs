@@ -3,7 +3,6 @@ using GraphQL.Types;
 using Libplanet;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes;
 
@@ -53,7 +52,7 @@ public partial class ActionQuery
                 var subRecipeId = context.GetArgument<int?>("subRecipeId");
                 var payByCrystal = context.GetArgument<bool>("payByCrystal");
                 var useHammerPoint = context.GetArgument<bool>("useHammerPoint");
-                NCAction action = new CombinationEquipment
+                ActionBase action = new CombinationEquipment
                 {
                     avatarAddress = avatarAddress,
                     slotIndex = slotIndex,

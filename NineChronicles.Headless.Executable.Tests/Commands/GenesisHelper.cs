@@ -13,7 +13,6 @@ using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.Blockchain.Policy;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Lib9cUtils = Lib9c.DevExtensions.Utils;
 
 namespace NineChronicles.Headless.Executable.Tests.Commands

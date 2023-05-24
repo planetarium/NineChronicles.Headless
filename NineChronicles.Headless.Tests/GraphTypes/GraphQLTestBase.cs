@@ -17,6 +17,7 @@ using Libplanet.Store.Trie;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Nekoyume.Action;
+using Nekoyume.Action.Loader;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using Nekoyume.Blockchain.Policy;
@@ -35,7 +36,6 @@ using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet.Tx;
 using Xunit.Abstractions;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -59,12 +59,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var actionEvaluator = new ActionEvaluator(
                 _ => blockAction,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new SingleActionLoader(typeof(NCAction)),
+                new NCActionLoader(),
                 null);
             var genesisBlock = BlockChain.ProposeGenesisBlock(
                 actionEvaluator,
                 transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(0,
-                    AdminPrivateKey, null, new NCAction[]
+                    AdminPrivateKey, null, new ActionBase[]
                     {
                         new InitializeStates(
                             rankingState: new RankingState0(),
@@ -193,7 +193,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             return task;
         }
 
-        protected LibplanetNodeService<T> CreateLibplanetNodeService<T>(
+        protected LibplanetNodeService CreateLibplanetNodeService(
             Block genesisBlock,
             AppProtocolVersion appProtocolVersion,
             PublicKey appProtocolVersionSigner,
@@ -201,7 +201,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             IEnumerable<BoundPeer>? peers = null,
             ImmutableList<BoundPeer>? consensusSeeds = null,
             ImmutableList<BoundPeer>? consensusPeers = null)
-            where T : IAction, new()
         {
             var consensusPrivateKey = new PrivateKey();
 
@@ -225,7 +224,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ConsensusPeers = consensusPeers ?? ImmutableList<BoundPeer>.Empty,
             };
 
-            return new LibplanetNodeService<T>(
+            return new LibplanetNodeService(
                 properties,
                 blockPolicy: new BlockPolicy(),
                 stagePolicy: new VolatileStagePolicy(),

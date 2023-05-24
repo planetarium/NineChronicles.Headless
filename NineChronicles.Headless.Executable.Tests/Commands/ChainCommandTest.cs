@@ -23,6 +23,7 @@ using Libplanet.Store.Trie;
 using Libplanet.Tx;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Action.Loader;
 using Nekoyume.Blockchain.Policy;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
@@ -31,7 +32,6 @@ using NineChronicles.Headless.Executable.Store;
 using NineChronicles.Headless.Executable.Tests.IO;
 using Serilog.Core;
 using Xunit;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Lib9cUtils = Lib9c.DevExtensions.Utils;
 
 namespace NineChronicles.Headless.Executable.Tests.Commands
@@ -61,7 +61,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var actionEvaluator = new ActionEvaluator(
                 _ => new BlockPolicy().BlockAction,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new SingleActionLoader(typeof(NCAction)),
+                new NCActionLoader(),
                 null);
             Block genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
             IStore store = storeType.CreateStore(_storePath);
@@ -96,7 +96,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
-                new SingleActionLoader(typeof(NCAction)),
+                new NCActionLoader(),
                 null);
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
                 actionEvaluator,
@@ -129,7 +129,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 RuneInfos = new List<RuneSlotInfo>(),
             };
 
-            chain.MakeTransaction(proposer, new PolymorphicAction<ActionBase>[] { action });
+            chain.MakeTransaction(proposer, new ActionBase[] { action });
             Block block = chain.ProposeBlock(proposer);
             chain.Append(block, GenerateBlockCommit(block, proposer));
             store.Dispose();
@@ -158,7 +158,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
-                new SingleActionLoader(typeof(NCAction)),
+                new NCActionLoader(),
                 null);
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
                 actionEvaluator,
@@ -195,7 +195,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
             for (var i = 0; i < 2; i++)
             {
-                chain.MakeTransaction(proposer, new NCAction[] { action });
+                chain.MakeTransaction(proposer, new ActionBase[] { action });
                 if (chain.Tip.Index < 1)
                 {
                     Block block = chain.ProposeBlock(proposer);
@@ -238,7 +238,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
-                new SingleActionLoader(typeof(NCAction)),
+                new NCActionLoader(),
                 null);
             BlockChain chain = BlockChain.Create(
                 blockPolicy,
@@ -281,7 +281,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
-                new SingleActionLoader(typeof(NCAction)),
+                new NCActionLoader(),
                 null);
             BlockChain chain = BlockChain.Create(
                 blockPolicy,
@@ -304,7 +304,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
             for (var i = 0; i < 2; i++)
             {
-                chain.MakeTransaction(GenesisHelper.ValidatorKey, new NCAction[] { action });
+                chain.MakeTransaction(GenesisHelper.ValidatorKey, new ActionBase[] { action });
                 Block block = chain.ProposeBlock(
                     GenesisHelper.ValidatorKey,
                     lastCommit: GenerateBlockCommit(chain.Tip, GenesisHelper.ValidatorKey));

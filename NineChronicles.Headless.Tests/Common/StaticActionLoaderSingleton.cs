@@ -1,10 +1,9 @@
-using Libplanet.Action;
 using Libplanet.Action.Loader;
-using Nekoyume.Action;
+using Nekoyume.Action.Loader;
 
 namespace NineChronicles.Headless.Tests.Common;
 
 public static class StaticActionLoaderSingleton
 {
-    public static readonly IActionLoader Instance = new SingleActionLoader(typeof(PolymorphicAction<ActionBase>));
+    public static readonly IActionLoader Instance = new NCActionLoader();
 }

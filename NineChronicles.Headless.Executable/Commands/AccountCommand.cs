@@ -15,7 +15,6 @@ using Nekoyume.Model.State;
 using NineChronicles.Headless.Executable.IO;
 using Serilog.Core;
 using static NineChronicles.Headless.NCActionUtils;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
@@ -75,7 +74,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 IEnumerable<Address> addrs = digest.TxIds
                     .Select(txId => store.GetTransaction(new TxId(txId.ToArray())))
                     .SelectMany(tx => tx.Actions is { } ca
-                        ? ca.Select(a => ToAction(a).InnerAction)
+                        ? ca.Select(a => ToAction(a))
                             .SelectMany(a =>
                             {
                                 if (a is TransferAsset t)

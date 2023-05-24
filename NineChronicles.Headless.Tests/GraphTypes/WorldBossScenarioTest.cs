@@ -6,13 +6,8 @@ using System.Threading.Tasks;
 using Bencodex.Types;
 using GraphQL.Execution;
 using Libplanet;
-using Libplanet.Action;
 using Libplanet.Assets;
-using Libplanet.Blockchain;
-using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
-using Libplanet.Store;
-using Libplanet.Store.Trie;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
@@ -21,7 +16,6 @@ using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.GraphTypes.States;
 using Xunit;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {

@@ -35,7 +35,7 @@ namespace Libplanet.Headless.Tests.Hosting
                 actionLoader,
                 null);
             var genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
-            var service = new LibplanetNodeService<DummyAction>(
+            var service = new LibplanetNodeService(
                 new LibplanetNodeServiceProperties()
                 {
                     AppProtocolVersion = new AppProtocolVersion(),
@@ -64,7 +64,7 @@ namespace Libplanet.Headless.Tests.Hosting
             Assert.Throws<ArgumentException>(() =>
             {
                 IActionLoader actionLoader = new SingleActionLoader(typeof(DummyAction));
-                var service = new LibplanetNodeService<DummyAction>(
+                var service = new LibplanetNodeService(
                     new LibplanetNodeServiceProperties()
                     {
                         AppProtocolVersion = new AppProtocolVersion(),

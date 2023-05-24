@@ -22,14 +22,13 @@ using System.Diagnostics.Metrics;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using StrictRenderer = Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer;
 
 namespace NineChronicles.Headless
 {
     public class NineChroniclesNodeService : IHostedService, IDisposable
     {
-        private LibplanetNodeService<NCAction> NodeService { get; set; }
+        private LibplanetNodeService NodeService { get; set; }
 
         private LibplanetNodeServiceProperties Properties { get; }
 
@@ -130,7 +129,7 @@ namespace NineChronicles.Headless
                 renderers.Add(strictRenderer);
             }
 
-            NodeService = new LibplanetNodeService<NCAction>(
+            NodeService = new LibplanetNodeService(
                 Properties,
                 blockPolicy,
                 stagePolicy,

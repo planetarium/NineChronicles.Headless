@@ -10,7 +10,6 @@ using Libplanet.Headless;
 using Libplanet.Store;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes;
-using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless
 {

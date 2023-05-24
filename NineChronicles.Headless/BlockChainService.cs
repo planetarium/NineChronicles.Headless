@@ -27,7 +27,6 @@ using Libplanet.Headless;
 using Nekoyume.Model.State;
 using Sentry;
 using static NineChronicles.Headless.NCActionUtils;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using NodeExceptionType = Libplanet.Headless.NodeExceptionType;
 using Transaction = Libplanet.Tx.Transaction;
 
@@ -68,7 +67,9 @@ namespace NineChronicles.Headless
                 Transaction tx =
                     Transaction.Deserialize(txBytes);
 
-                var actionName = ToAction(tx.Actions[0])?.GetInnerActionTypeName() ?? "NoAction";
+                var actionName = ToAction(tx.Actions[0]) is { } action
+                    ? $"{action}"
+                    : "NoAction";
                 var txId = tx.Id.ToString();
                 var sentryTrace = SentrySdk.StartTransaction(
                     actionName,

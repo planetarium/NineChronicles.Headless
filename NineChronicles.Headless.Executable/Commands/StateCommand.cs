@@ -13,7 +13,6 @@ using Cocona;
 using Lib9c.DevExtensions;
 using Libplanet;
 using Libplanet.Action;
-using Libplanet.Action.Loader;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
@@ -21,9 +20,9 @@ using Libplanet.Blocks;
 using Libplanet.State;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
+using Nekoyume.Action.Loader;
 using NineChronicles.Headless.Executable.IO;
 using Serilog.Core;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
@@ -110,7 +109,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
                 blockChainStates,
-                new SingleActionLoader(typeof(NCAction)),
+                new NCActionLoader(),
                 null);
 
             foreach (BlockHash blockHash in blockHashes)

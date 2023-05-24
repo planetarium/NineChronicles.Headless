@@ -18,7 +18,7 @@ using Libplanet.Extensions.Cocona;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
-using Nekoyume.Action;
+using Nekoyume.Action.Loader;
 using Nekoyume.Blockchain.Policy;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -26,7 +26,6 @@ using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Executable.Store;
 using Serilog.Core;
 using static NineChronicles.Headless.NCActionUtils;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
@@ -133,7 +132,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 blockChainStates,
-                new SingleActionLoader(typeof(NCAction)),
+                new NCActionLoader(),
                 null);
             BlockChain chain = new BlockChain(
                 blockPolicy,
@@ -179,7 +178,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     foreach (var action in tx.Actions!)
                     {
                         var actionTypeAttribute =
-                            Attribute.GetCustomAttribute(ToAction(action).InnerAction.GetType(), typeOfActionTypeAttribute)
+                            Attribute.GetCustomAttribute(ToAction(action).GetType(), typeOfActionTypeAttribute)
                                 as ActionTypeAttribute;
                         if (actionTypeAttribute is null)
                         {

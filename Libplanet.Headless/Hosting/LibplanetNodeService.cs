@@ -31,8 +31,7 @@ using Serilog.Events;
 
 namespace Libplanet.Headless.Hosting
 {
-    public class LibplanetNodeService<T> : BackgroundService, IDisposable
-        where T : IAction, new()
+    public class LibplanetNodeService : BackgroundService, IDisposable
     {
         private static readonly Codec Codec = new Codec();
 
@@ -631,7 +630,7 @@ namespace Libplanet.Headless.Hosting
 
         public override void Dispose()
         {
-            Log.Debug($"Disposing {nameof(LibplanetNodeService<T>)}...");
+            Log.Debug($"Disposing {nameof(LibplanetNodeService)}...");
 
             Swarm?.Dispose();
             Log.Debug("Swarm disposed.");

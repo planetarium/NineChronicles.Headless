@@ -4,14 +4,13 @@ using System.Linq;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet.Blockchain;
-using Libplanet.Action;
 using Libplanet.Tx;
 using Libplanet;
 using Libplanet.Explorer.GraphTypes;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Store;
+using Nekoyume.Action;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -86,10 +85,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     string plainValueString = context.GetArgument<string>("plainValue");
                     var plainValue = new Bencodex.Codec().Decode(System.Convert.FromBase64String(plainValueString));
-#pragma warning disable 612
-                    var action = new NCAction();
-#pragma warning restore 612
-                    action.LoadPlainValue(plainValue);
+                    var action = NCActionUtils.ToAction(plainValue);
 
                     var publicKey = new PublicKey(Convert.FromBase64String(context.GetArgument<string>("publicKey")));
                     Address signer = publicKey.ToAddress();
@@ -210,10 +206,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     string plainValueString = context.GetArgument<string>("plainValue");
                     var plainValue = new Bencodex.Codec().Decode(ByteUtil.ParseHex(plainValueString));
-#pragma warning disable 612
-                    var action = new NCAction();
-#pragma warning restore 612
-                    action.LoadPlainValue(plainValue);
+                    var action = NCActionUtils.ToAction(plainValue);
 
                     var publicKey = new PublicKey(ByteUtil.ParseHex(context.GetArgument<string>("publicKey")));
                     Address signer = publicKey.ToAddress();

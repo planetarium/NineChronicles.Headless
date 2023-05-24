@@ -11,7 +11,6 @@ using GraphQL.Execution;
 using GraphQL.NewtonsoftJson;
 using Libplanet;
 using Libplanet.Action;
-using Libplanet.Action.Loader;
 using Libplanet.Action.Sys;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
@@ -22,11 +21,11 @@ using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Libplanet.Tx;
 using Nekoyume.Action;
+using Nekoyume.Action.Loader;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common;
 using Xunit;
 using static NineChronicles.Headless.NCActionUtils;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -46,7 +45,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
                 new BlockChainStates(_store, _stateStore),
-                new SingleActionLoader(typeof(NCAction)),
+                new NCActionLoader(),
                 null);
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
                 actionEvaluator,
@@ -88,7 +87,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 data
             );
 
-            _blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { });
+            _blockChain.MakeTransaction(userPrivateKey, new ActionBase[] { });
             queryResult = await ExecuteAsync(query);
             data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(
@@ -136,7 +135,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 tail = 4,
                 name = "action",
             };
-            var transaction = _blockChain.MakeTransaction(userPrivateKey, new PolymorphicAction<ActionBase>[] { action });
+            var transaction = _blockChain.MakeTransaction(userPrivateKey, new ActionBase[] { action });
             _blockChain.StageTransaction(transaction);
             Block block = _blockChain.ProposeBlock(_proposer);
             _blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, _proposer));
@@ -164,7 +163,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             PublicKey publicKey = privateKey.PublicKey;
             Address signer = publicKey.ToAddress();
             long expectedNonce = nonce ?? _blockChain.GetNextTxNonce(signer);
-            NCAction action = new CreateAvatar2
+            ActionBase action = new CreateAvatar2
             {
                 index = 0,
                 hair = 1,
@@ -273,7 +272,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 0,
                 privateKey,
                 _blockChain.Genesis.Hash,
-                ImmutableArray<NCAction>.Empty);
+                ImmutableArray<ActionBase>.Empty);
             _blockChain.StageTransaction(tx);
             var queryFormat = @"query {{
                 transactionResult(txId: ""{0}"") {{
@@ -299,7 +298,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 0,
                 privateKey,
                 _blockChain.Genesis.Hash,
-                ImmutableArray<NCAction>.Empty);
+                ImmutableArray<ActionBase>.Empty);
             var queryFormat = @"query {{
                 transactionResult(txId: ""{0}"") {{
                     blockHash
@@ -322,7 +321,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var privateKey = new PrivateKey();
             // Because `AddActivatedAccount` doesn't need any prerequisites.
             var action = new AddActivatedAccount(default);
-            Transaction tx = _blockChain.MakeTransaction(privateKey, new NCAction[] { action });
+            Transaction tx = _blockChain.MakeTransaction(privateKey, new ActionBase[] { action });
             Block block = _blockChain.ProposeBlock(_proposer);
             _blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, _proposer));
             var queryFormat = @"query {{

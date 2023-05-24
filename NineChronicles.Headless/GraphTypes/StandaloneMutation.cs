@@ -13,7 +13,6 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Serilog;
 using System;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -202,7 +201,7 @@ namespace NineChronicles.Headless.GraphTypes
                         context.GetArgument<long>("txNonce"),
                         privateKey,
                         blockChain.Genesis.Hash,
-                        new NCAction[]
+                        new ActionBase[]
                         {
                             new TransferAsset(
                                 privateKey.ToAddress(),
@@ -258,7 +257,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     Transaction tx = blockChain.MakeTransaction(
                         privateKey,
-                        new NCAction[]
+                        new ActionBase[]
                         {
                             new TransferAsset(
                                 privateKey.ToAddress(),
