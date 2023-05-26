@@ -514,13 +514,15 @@ namespace NineChronicles.Headless.GraphTypes
                     var contractAddress = agentAddress.GetPledgeAddress();
                     Address? address = null;
                     bool contracted = false;
+                    int mead = 0;
                     if (context.Source.GetState(contractAddress) is List l)
                     {
                         address = l[0].ToAddress();
                         contracted = l[1].ToBoolean();
+                        mead = l[2].ToInteger();
                     }
 
-                    return (address, contracted);
+                    return (address, contracted, mead);
                 }
             );
         }

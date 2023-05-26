@@ -2,7 +2,6 @@ using GraphQL;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Explorer.GraphTypes;
-using Nekoyume;
 using Nekoyume.Action;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
@@ -19,14 +18,21 @@ public partial class ActionQuery
                 new QueryArgument<NonNullGraphType<AddressType>>
                 {
                     Name = "agentAddress",
+                },
+                new QueryArgument<IntGraphType>
+                {
+                    Name = "mead",
+                    DefaultValue = RequestPledge.RefillMead
                 }
             },
             resolve: context =>
             {
                 var agentAddress = context.GetArgument<Address>("agentAddress");
+                int mead = context.GetArgument<int>("mead");
                 NCAction action = new RequestPledge
                 {
                     AgentAddress = agentAddress,
+                    Mead = mead,
                 };
                 return Encode(context, action);
             }
