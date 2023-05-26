@@ -14,15 +14,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models;
 public class MeadContractTypeTest
 {
     [Theory]
-    [InlineData(false, false)]
-    [InlineData(true, true)]
-    [InlineData(true, false)]
-    public async Task Query(bool exist, bool contracted)
+    [InlineData(false, false, 0)]
+    [InlineData(true, true, 1)]
+    [InlineData(true, false, 2)]
+    public async Task Query(bool exist, bool contracted, int mead)
     {
         const string query = @"
         {
             patronAddress
             contracted
+            mead
         }";
 
         Address? address = null;
@@ -30,7 +31,7 @@ public class MeadContractTypeTest
         {
             address = new PrivateKey().ToAddress();
         }
-        (Address?, bool) contract = (address, contracted);
+        (Address?, bool, int) contract = (address, contracted, mead);
         var queryResult = await ExecuteQueryAsync<MeadContractType>(query, source: contract);
         var data = (Dictionary<string, object?>)((ExecutionNode)queryResult.Data!).ToValue()!;
 
@@ -39,6 +40,7 @@ public class MeadContractTypeTest
             {
                 ["patronAddress"] = address is null ? null : address.ToString(),
                 ["contracted"] = contracted,
+                ["mead"] = mead,
             },
             data
         );

@@ -96,6 +96,7 @@ query {{
             action.LoadPlainValue(rawAction);
             var innerAction = Assert.IsType<RequestPledge>(action.InnerAction);
             Assert.Equal(address, innerAction.AgentAddress);
+            Assert.Equal(RequestPledge.RefillMead, innerAction.Mead);
         }
     }
 }

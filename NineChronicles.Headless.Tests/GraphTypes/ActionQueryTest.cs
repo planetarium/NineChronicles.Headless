@@ -931,5 +931,61 @@ actionPoint: {actionPoint},
             Assert.Equal(slotIndex, action.slotIndex);
             Assert.Equal(recipeId, action.recipeId);
         }
+
+        [Theory]
+        [InlineData(null, 4)]
+        [InlineData(100, 100)]
+        public async Task RequestPledge(int? mead, int expected)
+        {
+            var agentAddress = new PrivateKey().ToAddress();
+
+            var query = mead.HasValue
+                ? $"{{requestPledge(agentAddress: \"{agentAddress}\", mead: {mead})}}"
+                : $"{{requestPledge(agentAddress: \"{agentAddress}\")}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["requestPledge"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<RequestPledge>(polymorphicAction.InnerAction);
+            Assert.Equal(agentAddress, action.AgentAddress);
+            Assert.Equal(expected, action.Mead);
+        }
+
+        [Fact]
+        public async Task ApprovePledge()
+        {
+            var patronAddress = new PrivateKey().ToAddress();
+
+            var query = $"{{approvePledge(patronAddress: \"{patronAddress}\")}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["approvePledge"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<ApprovePledge>(polymorphicAction.InnerAction);
+            Assert.Equal(patronAddress, action.PatronAddress);
+        }
+
+        [Fact]
+        public async Task EndPledge()
+        {
+            var agentAddress = new PrivateKey().ToAddress();
+
+            var query = $"{{endPledge(agentAddress: \"{agentAddress}\")}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["endPledge"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<EndPledge>(polymorphicAction.InnerAction);
+            Assert.Equal(agentAddress, action.AgentAddress);
+        }
     }
 }
