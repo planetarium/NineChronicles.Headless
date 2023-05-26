@@ -21,7 +21,7 @@ public class MeadContractTypeTest
     {
         const string query = @"
         {
-            valkyrieAddress
+            patronAddress
             contracted
         }";
 
@@ -37,7 +37,7 @@ public class MeadContractTypeTest
         Assert.Equal(
             new Dictionary<string, object?>
             {
-                ["valkyrieAddress"] = address is null ? null : address.ToString(),
+                ["patronAddress"] = address is null ? null : address.ToString(),
                 ["contracted"] = contracted,
             },
             data
