@@ -1,4 +1,5 @@
 using Lib9c.Renderers;
+using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;
@@ -8,31 +9,21 @@ using Libplanet.Headless.Hosting;
 using Libplanet.Net;
 using Libplanet.Store;
 using Microsoft.Extensions.Hosting;
-using Nekoyume.Action;
 using Nekoyume.BlockChain;
 using Nekoyume.BlockChain.Policy;
-using Nekoyume.Model.State;
 using NineChronicles.Headless.Properties;
 using NineChronicles.RPC.Shared.Exceptions;
 using Nito.AsyncEx;
 using Serilog;
 using Serilog.Events;
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics.Metrics;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
-using StrictRenderer =
-    Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer<Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>>;
-using Libplanet.Blocks;
-using Libplanet;
-using Libplanet.Action;
-using Libplanet.Assets;
+using StrictRenderer = Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer;
 
 namespace NineChronicles.Headless
 {
@@ -40,7 +31,7 @@ namespace NineChronicles.Headless
     {
         private LibplanetNodeService<NCAction> NodeService { get; set; }
 
-        private LibplanetNodeServiceProperties<NCAction> Properties { get; }
+        private LibplanetNodeServiceProperties Properties { get; }
 
         public BlockRenderer BlockRenderer { get; }
 
@@ -77,10 +68,10 @@ namespace NineChronicles.Headless
 
         public NineChroniclesNodeService(
             PrivateKey? minerPrivateKey,
-            LibplanetNodeServiceProperties<NCAction> properties,
+            LibplanetNodeServiceProperties properties,
             IBlockPolicy<NCAction> blockPolicy,
             NetworkType networkType,
-            IActionTypeLoader actionTypeLoader,
+            IActionLoader actionLoader,
             Progress<PreloadState>? preloadProgress = null,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false,
@@ -100,7 +91,7 @@ namespace NineChronicles.Headless
             ActionRenderer = blockPolicySource.ActionRenderer;
             ExceptionRenderer = new ExceptionRenderer();
             NodeStatusRenderer = new NodeStatusRenderer();
-            var renderers = new List<IRenderer<NCAction>>();
+            var renderers = new List<IRenderer>();
             var strictRenderer = new StrictRenderer(onError: exc =>
                 ExceptionRenderer.RenderException(
                     RPCException.InvalidRenderException,
@@ -118,10 +109,9 @@ namespace NineChronicles.Headless
                 renderers.Add(blockPolicySource.BlockRenderer);
                 // The following "nullRenderer" does nothing.  It's just for filling
                 // the LoggedActionRenderer<T>() constructor's parameter:
-                IActionRenderer<NCAction> nullRenderer =
-                    new AnonymousActionRenderer<NCAction>();
+                IActionRenderer nullRenderer = new AnonymousActionRenderer();
                 renderers.Add(
-                    new LoggedActionRenderer<NCAction>(
+                    new LoggedActionRenderer(
                         nullRenderer,
                         Log.Logger,
                         logLevel
@@ -155,12 +145,10 @@ namespace NineChronicles.Headless
                 {
                     NodeStatusRenderer.PreloadStatus(isPreloadStarted);
                 },
-                actionTypeLoader,
+                actionLoader,
                 ignoreBootstrapFailure,
                 ignorePreloadFailure
             );
-
-            strictRenderer.BlockChain = NodeService.BlockChain ?? throw new Exception("BlockChain is null.");
         }
 
         public static NineChroniclesNodeService Create(
@@ -201,13 +189,13 @@ namespace NineChronicles.Headless
 
             var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(
                 properties.NetworkType,
-                properties.ActionTypeLoader);
+                properties.ActionLoader);
             var service = new NineChroniclesNodeService(
                 properties.MinerPrivateKey,
                 properties.Libplanet,
                 blockPolicy,
                 properties.NetworkType,
-                properties.ActionTypeLoader,
+                properties.ActionLoader,
                 preloadProgress: progress,
                 ignoreBootstrapFailure: properties.IgnoreBootstrapFailure,
                 ignorePreloadFailure: properties.IgnorePreloadFailure,
@@ -228,13 +216,33 @@ namespace NineChronicles.Headless
             meter.CreateObservableGauge(
                 "ninechronicles_subscriber_addresses_count",
                 () => context.AgentAddresses.Count);
+            meter.CreateObservableGauge(
+                "ninechronicles_tx_count",
+                () => service.BlockChain.Tip.Transactions.Count,
+                description: "The count of the tip block's transactions.");
+            meter.CreateObservableGauge(
+                "ninechronicles_block_interval",
+                () =>
+                {
+                    var currentBlockHash = service.BlockChain.Tip.Hash;
+                    var nullablePreviousBlockHash = service.BlockChain[currentBlockHash].PreviousHash;
+                    if (nullablePreviousBlockHash is { } previousBlockHash)
+                    {
+                        return (service.BlockChain[currentBlockHash].Timestamp -
+                                service.BlockChain[previousBlockHash].Timestamp).TotalSeconds;
+                    }
+
+                    // When the tip is genesis block...
+                    return 0;
+                },
+                description: "The block interval between tip block and tip - 1 block.");
 
             return service;
         }
 
-        internal static IBlockPolicy<NCAction> GetBlockPolicy(NetworkType networkType, IActionTypeLoader actionTypeLoader)
+        internal static IBlockPolicy<NCAction> GetBlockPolicy(NetworkType networkType, IActionLoader actionLoader)
         {
-            var source = new BlockPolicySource(Log.Logger, LogEventLevel.Debug, actionTypeLoader);
+            var source = new BlockPolicySource(Log.Logger, LogEventLevel.Debug, actionLoader);
             return networkType switch
             {
                 NetworkType.Main => source.GetPolicy(),

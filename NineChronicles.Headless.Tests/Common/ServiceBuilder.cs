@@ -22,12 +22,12 @@ namespace NineChronicles.Headless.Tests.Common
             NineChroniclesNodeService.GetTestBlockPolicy();
 
         public static NineChroniclesNodeService CreateNineChroniclesNodeService(
-            Block<PolymorphicAction<ActionBase>> genesis,
+            Block genesis,
             PrivateKey? privateKey = null
         )
         {
             var storePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-            var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+            var properties = new LibplanetNodeServiceProperties
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
                 AppProtocolVersion = default,
@@ -55,7 +55,7 @@ namespace NineChronicles.Headless.Tests.Common
                 properties,
                 BlockPolicy,
                 NetworkType.Test,
-                StaticActionTypeLoaderSingleton.Instance);
+                StaticActionLoaderSingleton.Instance);
         }
     }
 }

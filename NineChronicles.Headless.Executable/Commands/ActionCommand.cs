@@ -113,14 +113,17 @@ namespace NineChronicles.Headless.Executable.Commands
             var typeIds = assembly.GetTypes()
                 .Where(IsTarget)
                 .Select(type => ActionTypeAttribute.ValueOf(type))
-                .OrderBy(type => type);
+                .Where(v => v is Text)
+                .Cast<Text>()
+                .Select(v => v.Value).ToArray();
 
-            foreach (string? typeId in typeIds)
+            foreach (string? typeId in typeIds
+                         .OrderBy(type => type))
             {
                 _console.Out.WriteLine(typeId);
             }
 
-            return typeIds;
+            return typeIds.OrderBy(type => type);
         }
 
 

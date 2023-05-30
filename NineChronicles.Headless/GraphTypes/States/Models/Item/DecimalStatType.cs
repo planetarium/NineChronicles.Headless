@@ -9,9 +9,11 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
         public DecimalStatType()
         {
             Field<NonNullGraphType<StatTypeEnumType>>(
-                nameof(DecimalStat.Type),
-                resolve: context => context.Source.Type);
-            Field<NonNullGraphType<DecimalGraphType>>(nameof(DecimalStat.Value));
+                nameof(DecimalStat.StatType),
+                resolve: context => context.Source.StatType);
+            Field<NonNullGraphType<DecimalGraphType>>(nameof(DecimalStat.BaseValue));
+            Field<NonNullGraphType<DecimalGraphType>>(nameof(DecimalStat.AdditionalValue));
+            Field<NonNullGraphType<DecimalGraphType>>(nameof(DecimalStat.TotalValue));
         }
     }
 }

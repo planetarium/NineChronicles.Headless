@@ -29,11 +29,16 @@ query {{
             var data = Assert.IsType<Dictionary<string, object>>(((ExecutionNode)result.Data!).ToValue());
             var actionTxQueryData = Assert.IsType<Dictionary<string, object>>(data["actionTxQuery"]);
             var stake = Assert.IsType<string>(actionTxQueryData["stake"]);
-            var tx = TxMarshaler.DeserializeUnsignedTx<PolymorphicAction<ActionBase>>(ByteUtil.ParseHex(stake));
+            var tx = TxMarshaler.DeserializeUnsignedTx(ByteUtil.ParseHex(stake));
             Assert.Equal(publicKey, tx.PublicKey);
             Assert.Equal(publicKey.ToAddress(), tx.Signer);
             Assert.Equal(0, tx.Nonce);
-            Assert.IsType<Stake>(Assert.IsType<PolymorphicAction<ActionBase>>(Assert.Single(tx.Actions)).InnerAction);
+            var rawAction = Assert.Single(tx.Actions);
+#pragma warning disable CS0612
+            var action = new PolymorphicAction<ActionBase>();
+#pragma warning restore CS0612
+            action.LoadPlainValue(rawAction);
+            Assert.IsType<Stake>(action.InnerAction);
         }
 
         [InlineData("2022-11-18T00:00:00+0000")]
@@ -54,7 +59,7 @@ query {{
             var data = Assert.IsType<Dictionary<string, object>>(((ExecutionNode)result.Data!).ToValue());
             var actionTxQueryData = Assert.IsType<Dictionary<string, object>>(data["actionTxQuery"]);
             var stake = Assert.IsType<string>(actionTxQueryData["stake"]);
-            var tx = TxMarshaler.DeserializeUnsignedTx<PolymorphicAction<ActionBase>>(ByteUtil.ParseHex(stake));
+            var tx = TxMarshaler.DeserializeUnsignedTx(ByteUtil.ParseHex(stake));
             Assert.Equal(DateTimeOffset.Parse(timestamp), tx.Timestamp);
         }
     }

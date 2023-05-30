@@ -2,20 +2,19 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using Libplanet;
-using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
-using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Libplanet.Headless;
 
 namespace NineChronicles.Headless.Properties
 {
     public class NineChroniclesNodeServiceProperties
     {
-        public NineChroniclesNodeServiceProperties(IActionTypeLoader actionTypeLoader)
+        public NineChroniclesNodeServiceProperties(IActionLoader actionLoader)
         {
-            ActionTypeLoader = actionTypeLoader;
+            ActionLoader = actionLoader;
         }
 
         /// <summary>
@@ -25,7 +24,7 @@ namespace NineChronicles.Headless.Properties
         /// <seealso cref="LibplanetNodeServiceProperties{T}.SwarmPrivateKey"/>
         public PrivateKey? MinerPrivateKey { get; set; }
 
-        public LibplanetNodeServiceProperties<NineChroniclesActionType>? Libplanet { get; set; }
+        public LibplanetNodeServiceProperties? Libplanet { get; set; }
 
         public NetworkType NetworkType { get; set; } = NetworkType.Main;
 
@@ -50,9 +49,9 @@ namespace NineChronicles.Headless.Properties
 
         public int TxQuotaPerSigner { get; set; }
 
-        public IActionTypeLoader ActionTypeLoader { get; init; }
+        public IActionLoader ActionLoader { get; init; }
 
-        public static LibplanetNodeServiceProperties<NineChroniclesActionType>
+        public static LibplanetNodeServiceProperties
             GenerateLibplanetNodeServiceProperties(
                 string? appProtocolVersionToken = null,
                 string? genesisBlockPath = null,
@@ -82,7 +81,8 @@ namespace NineChronicles.Headless.Properties
                 int maximumPollPeers = int.MaxValue,
                 ushort? consensusPort = null,
                 string? consensusPrivateKeyString = null,
-                string[]? consensusSeedStrings = null)
+                string[]? consensusSeedStrings = null,
+                IActionEvaluatorConfiguration? actionEvaluatorConfiguration = null)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
@@ -98,7 +98,7 @@ namespace NineChronicles.Headless.Properties
             var peers = peerStrings.Select(PropertyParser.ParsePeer).ToImmutableArray();
             var consensusSeeds = consensusSeedStrings?.Select(PropertyParser.ParsePeer).ToImmutableList();
 
-            return new LibplanetNodeServiceProperties<NineChroniclesActionType>
+            return new LibplanetNodeServiceProperties
             {
                 Host = swarmHost,
                 Port = swarmPort,
@@ -130,6 +130,7 @@ namespace NineChronicles.Headless.Properties
                 ConsensusPort = consensusPort,
                 ConsensusSeeds = consensusSeeds,
                 ConsensusPrivateKey = consensusPrivateKey,
+                ActionEvaluatorConfiguration = actionEvaluatorConfiguration ?? new DefaultActionEvaluatorConfiguration(),
             };
         }
 
