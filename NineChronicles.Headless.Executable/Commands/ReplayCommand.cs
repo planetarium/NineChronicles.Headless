@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using Bencodex.Json;
@@ -11,10 +10,10 @@ using Bencodex.Types;
 using Cocona;
 using Cocona.Help;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
-using Libplanet.Headless;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Tx;
@@ -22,6 +21,7 @@ using Nekoyume.BlockChain.Policy;
 using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Executable.Store;
 using Serilog.Core;
+using static NineChronicles.Headless.NCActionUtils;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
@@ -103,9 +103,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     () => blockChain.GetValidatorSet(
                         previousBlock.Hash),
                     tx.Signer);
-                var actions = tx.SystemAction is { } sa
-                    ? ImmutableList.Create(sa)
-                    : ImmutableList.CreateRange(tx.CustomActions!.Cast<IAction>());
+                var actions = tx.Actions.Select(a => ToAction(a));
                 var actionEvaluations = EvaluateActions(
                     genesisHash: blockChain.Genesis.Hash,
                     preEvaluationHash: targetBlock.PreEvaluationHash.ByteArray,
@@ -115,10 +113,9 @@ namespace NineChronicles.Headless.Executable.Commands
                     miner: targetBlock.Miner,
                     signer: tx.Signer,
                     signature: tx.Signature,
-                    actions: actions,
+                    actions: actions.Cast<IAction>().ToImmutableList(),
                     rehearsal: false,
-                    previousBlockStatesTrie: null,
-                    nativeTokenPredicate: _ => true
+                    previousBlockStatesTrie: null
                 );
                 var actionNum = 1;
                 foreach (var actionEvaluation in actionEvaluations)
@@ -277,8 +274,8 @@ namespace NineChronicles.Headless.Executable.Commands
 
                         try
                         {
-                            blockChain.DetermineBlockStateRootHash(block,
-                                out IReadOnlyList<ActionEvaluation> actionEvaluations);
+                            var rootHash = blockChain.DetermineBlockStateRootHash(block,
+                                out IReadOnlyList<IActionEvaluation> actionEvaluations);
 
                             if (verbose)
                             {
@@ -286,6 +283,14 @@ namespace NineChronicles.Headless.Executable.Commands
                                 _console.Out.WriteLine(msg);
                                 outputSw?.WriteLine(msg);
                                 LoggingActionEvaluations(actionEvaluations, outputSw);
+                            }
+
+                            if (!rootHash.Equals(block.StateRootHash))
+                            {
+                                throw new InvalidBlockStateRootHashException(
+                                    $"Expected {block.StateRootHash} but {rootHash}",
+                                    block.StateRootHash,
+                                    rootHash);
                             }
                         }
                         catch (InvalidBlockStateRootHashException)
@@ -299,10 +304,7 @@ namespace NineChronicles.Headless.Executable.Commands
                             _console.Out.WriteLine(msg);
                             outputSw?.WriteLine(msg);
 
-                            var actionEvaluator = GetActionEvaluator(
-                                blockChain,
-                                stateStore,
-                                blockChain.Genesis.Hash);
+                            var actionEvaluator = GetActionEvaluator(blockChain);
                             var actionEvaluations = actionEvaluator.Evaluate(block);
                             LoggingActionEvaluations(actionEvaluations, outputSw);
 
@@ -401,7 +403,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var genesisBlockHash = store.IndexBlockHash(chainId, 0) ??
                                    throw new CommandExitedException(
                                        $"The given blockIndex {0} does not found", -1);
-            var genesisBlock = store.GetBlock<NCAction>(genesisBlockHash);
+            var genesisBlock = store.GetBlock(genesisBlockHash);
 
             // Make BlockChain and blocks.
             var policy = new BlockPolicySource(Logger.None).GetPolicy();
@@ -419,7 +421,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     genesisBlock));
         }
 
-        private Transaction<NCAction> LoadTx(string txPath)
+        private Transaction LoadTx(string txPath)
         {
             using var stream = new FileStream(txPath, FileMode.Open);
             stream.Seek(0, SeekOrigin.Begin);
@@ -442,28 +444,17 @@ namespace NineChronicles.Headless.Executable.Commands
                     -1);
             }
 
-            return TxMarshaler.UnmarshalTransaction<NCAction>(txDict);
+            return TxMarshaler.UnmarshalTransaction(txDict);
         }
 
-        private ActionEvaluator GetActionEvaluator(
-            BlockChain<NCAction> blockChain,
-            IStateStore stateStore,
-            BlockHash genesisBlockHash)
+        private ActionEvaluator GetActionEvaluator(BlockChain<NCAction> blockChain)
         {
             var policy = new BlockPolicySource(Logger.None).GetPolicy();
-            IActionTypeLoader actionTypeLoader = new StaticActionTypeLoader(
-                Assembly.GetEntryAssembly() is { } entryAssembly
-                    ? new[] { typeof(NCAction).Assembly, entryAssembly }
-                    : new[] { typeof(NCAction).Assembly },
-                typeof(NCAction)
-            );
+            IActionLoader actionLoader = new SingleActionLoader(typeof(NCAction));
             return new ActionEvaluator(
                 _ => policy.BlockAction,
                 blockChainStates: blockChain,
-                trieGetter: hash => stateStore.GetStateRoot(blockChain[hash].StateRootHash),
-                genesisHash: genesisBlockHash,
-                nativeTokenPredicate: policy.NativeTokens.Contains,
-                actionTypeLoader: actionTypeLoader,
+                actionTypeLoader: actionLoader,
                 feeCalculator: null);
         }
 
@@ -490,16 +481,43 @@ namespace NineChronicles.Headless.Executable.Commands
         }
 
         private void LoggingActionEvaluations(
-            IReadOnlyList<ActionEvaluation> actionEvaluations,
+            IReadOnlyList<IActionEvaluation> actionEvaluations,
             TextWriter? textWriter)
         {
             var count = actionEvaluations.Count;
             for (var i = 0; i < count; i++)
             {
                 var actionEvaluation = actionEvaluations[i];
-                var actionType = actionEvaluation.Action is NCAction nca
-                    ? ActionTypeAttribute.ValueOf(nca.InnerAction.GetType())
-                    : actionEvaluation.Action.GetType().Name;
+                NCAction? DecodeAction(IValue plainValue)
+                {
+                    try
+                    {
+#pragma warning disable CS0612
+                        var action = new NCAction();
+#pragma warning restore CS0612
+                        action.LoadPlainValue(plainValue);
+                        return action;
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+
+                string? actionType;
+                if (DecodeAction(actionEvaluation.Action) is { } nca)
+                {
+                    actionType = ActionTypeAttribute.ValueOf(nca.InnerAction.GetType())?.ToString();
+                }
+                else if (actionEvaluation.Action is Dictionary dictionary && dictionary.ContainsKey("type_id"))
+                {
+                    actionType = dictionary["type_id"].ToString();
+                }
+                else
+                {
+                    actionType = actionEvaluation.Action.GetType().Name;
+                }
+
                 var prefix = $"--- action evaluation {i + 1}/{count}:";
                 var msg = prefix +
                           $" tx-id({actionEvaluation.InputContext.TxId})" +

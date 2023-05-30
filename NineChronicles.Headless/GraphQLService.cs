@@ -127,8 +127,8 @@ namespace NineChronicles.Headless
                             options.EnableMetrics = true;
                             options.UnhandledExceptionDelegate = context =>
                             {
-                                Console.Error.WriteLine(context.Exception.ToString());
-                                Console.Error.WriteLine(context.ErrorMessage);
+                                Log.Error(context.Exception.ToString());
+                                Log.Error(context.ErrorMessage);
                             };
                         })
                     .AddSystemTextJson()

@@ -51,7 +51,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             const int repeat = 10;
             foreach (long index in Enumerable.Range(1, repeat))
             {
-                Block<PolymorphicAction<ActionBase>> block = BlockChain.ProposeBlock(
+                Block block = BlockChain.ProposeBlock(
                     ProposerPrivateKey,
                     lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
                 BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
@@ -92,7 +92,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                     }
                                     .ToList()),
                             states: ImmutableDictionary.Create<Address, IValue>())
-                    }.Select((sa, nonce) => Transaction<EmptyAction>.Create(nonce, new PrivateKey(), null, sa))
+                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa }))
                     .ToImmutableList(),
                 privateKey: new PrivateKey());
             var validators = new List<PrivateKey>
@@ -103,11 +103,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             // 에러로 인하여 NineChroniclesNodeService 를 사용할 수 없습니다. https://git.io/JfS0M
             // 따라서 LibplanetNodeService로 비슷한 환경을 맞춥니다.
             // 1. 노드를 생성합니다.
-            var seedNode = CreateLibplanetNodeService(genesisBlock, apv, apvPrivateKey.PublicKey);
+            var seedNode = CreateLibplanetNodeService<PolymorphicAction<ActionBase>>(genesisBlock, apv, apvPrivateKey.PublicKey);
             await StartAsync(seedNode.Swarm, cts.Token);
 
             // 2. Progress를 넘겨 preloadProgress subscription 과 연결합니다.
-            var service = CreateLibplanetNodeService(
+            var service = CreateLibplanetNodeService<PolymorphicAction<ActionBase>>(
                 genesisBlock,
                 apv,
                 apvPrivateKey.PublicKey,
@@ -117,7 +117,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }),
                 new[] { seedNode.Swarm.AsPeer });
 
-            Block<EmptyAction> block = seedNode.BlockChain.ProposeBlock(ProposerPrivateKey);
+            Block block = seedNode.BlockChain.ProposeBlock(ProposerPrivateKey);
             seedNode.BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, validators));
             var result = await ExecuteSubscriptionQueryAsync("subscription { preloadProgress { currentPhase totalPhase extra { type currentCount totalCount } } }");
             Assert.IsType<SubscriptionExecutionResult>(result);

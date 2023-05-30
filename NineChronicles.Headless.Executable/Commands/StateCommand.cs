@@ -79,8 +79,8 @@ namespace NineChronicles.Headless.Executable.Commands
                 chainId,
                 useMemoryKvStore is string p ? new MemoryKeyValueStore(p, stderr) : null
             );
-            Block<NCAction> bottom = Utils.ParseBlockOffset(chain, bottommost, 0);
-            Block<NCAction> top = Utils.ParseBlockOffset(chain, topmost);
+            Block bottom = Utils.ParseBlockOffset(chain, bottommost, 0);
+            Block top = Utils.ParseBlockOffset(chain, topmost);
 
             stderr.WriteLine("It will execute all actions (tx actions & block actions)");
             stderr.WriteLine(
@@ -91,7 +91,7 @@ namespace NineChronicles.Headless.Executable.Commands
             stderr.WriteLine("    ...to the block #{0} {1}.", top.Index, top.Hash);
 
             IBlockPolicy<NCAction> policy = chain.Policy;
-            (Block<NCAction>, string)? invalidStateRootHashBlock = null;
+            (Block, string)? invalidStateRootHashBlock = null;
             long totalBlocks = top.Index - bottom.Index + 1;
             long blocksExecuted = 0L;
             long txsExecuted = 0L;
@@ -108,9 +108,9 @@ namespace NineChronicles.Headless.Executable.Commands
                     throw new CommandExitedException(1);
                 }
 
-                Block<NCAction> block =
-                    store.GetBlock<NCAction>(blockHash);
-                var preEvalBlock = new PreEvaluationBlock<NCAction>(
+                Block block =
+                    store.GetBlock(blockHash);
+                var preEvalBlock = new PreEvaluationBlock(
                     block,
                     block.Transactions
                 );
@@ -121,12 +121,11 @@ namespace NineChronicles.Headless.Executable.Commands
                     block.Index,
                     block.Hash
                 );
-                IReadOnlyList<ActionEvaluation> delta;
+                IReadOnlyList<IActionEvaluation> delta;
                 HashDigest<SHA256> stateRootHash = block.Index < 1
                     ? BlockChain<NCAction>.DetermineGenesisStateRootHash(
                         preEvalBlock,
                         policy.BlockAction,
-                        policy.NativeTokens.Contains,
                         out delta)
                     : chain.DetermineBlockStateRootHash(
                         preEvalBlock,
@@ -224,7 +223,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 storePath,
                 chainId
             );
-            Block<NCAction> checkBlock = Utils.ParseBlockOffset(chain, block);
+            Block checkBlock = Utils.ParseBlockOffset(chain, block);
             HashDigest<SHA256> stateRootHash = checkBlock.StateRootHash;
             ITrie stateRoot = stateStore.GetStateRoot(stateRootHash);
             bool exist = stateRoot.Recorded;
@@ -243,7 +242,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             logger.Information("Finding the latest ancestor block having its states...");
 
-            bool WillGoFurther(Block<NCAction> b)
+            bool WillGoFurther(Block b)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -284,11 +283,11 @@ namespace NineChronicles.Headless.Executable.Commands
             throw new CommandExitedException(1);
         }
 
-        private static Block<NCAction>? BisectBlocks(
+        private static Block? BisectBlocks(
             BlockChain<NCAction> chain,
             long start,
             long end,
-            Predicate<Block<NCAction>> willGoFurther
+            Predicate<Block> willGoFurther
         )
         {
             long tip = chain.Tip.Index;
@@ -301,7 +300,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 idx = Math.Min(upper, idx);
                 idx = Math.Max(lower, idx);
 
-                Block<NCAction> b = chain[idx];
+                Block b = chain[idx];
                 if (willGoFurther(b))
                 {
                     long nextStart = idx == end ? idx + dir : idx;
@@ -430,7 +429,7 @@ namespace NineChronicles.Headless.Executable.Commands
         }
 
         private static ImmutableDictionary<string, IValue> GetTotalDelta(
-            IReadOnlyList<ActionEvaluation> actionEvaluations,
+            IReadOnlyList<IActionEvaluation> actionEvaluations,
             Func<Address, string> toStateKey,
             Func<(Address, Currency), string> toFungibleAssetKey,
             Func<Currency, string> toTotalSupplyKey,
