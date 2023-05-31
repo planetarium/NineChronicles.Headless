@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GraphQL.Execution;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Skill;
 using Nekoyume.Model.Stat;
@@ -46,16 +47,19 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     statPowerRatio
                     referencedStatType
                 }
+                requiredBlockIndex
             }";
 
             var row = Fixtures.TableSheetsFX.EquipmentItemSheet.OrderedList.First(r => r.ItemSubType == ItemSubType.Weapon);
-            var equipment = new Weapon(row, Guid.NewGuid(), 0);
+            var equipment = new Weapon(row, Guid.NewGuid(), 10L);
             var skillRow = Fixtures.TableSheetsFX.SkillSheet.OrderedList.First();
             var skill = SkillFactory.Get(skillRow, 1, 1, 100, StatType.HP);
             equipment.Skills.Add(skill);
 
             var queryResult = await ExecuteQueryAsync<EquipmentType>(query, source: equipment);
             Assert.Null(queryResult.Errors);
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            Assert.Equal(10L, data["requiredBlockIndex"]);
         }
     }
 }
