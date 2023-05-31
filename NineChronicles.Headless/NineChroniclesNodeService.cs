@@ -9,8 +9,8 @@ using Libplanet.Headless.Hosting;
 using Libplanet.Net;
 using Libplanet.Store;
 using Microsoft.Extensions.Hosting;
-using Nekoyume.BlockChain;
-using Nekoyume.BlockChain.Policy;
+using Nekoyume.Blockchain;
+using Nekoyume.Blockchain.Policy;
 using NineChronicles.Headless.Properties;
 using NineChronicles.RPC.Shared.Exceptions;
 using Nito.AsyncEx;
@@ -22,14 +22,13 @@ using System.Diagnostics.Metrics;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using StrictRenderer = Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer;
 
 namespace NineChronicles.Headless
 {
     public class NineChroniclesNodeService : IHostedService, IDisposable
     {
-        private LibplanetNodeService<NCAction> NodeService { get; set; }
+        private LibplanetNodeService NodeService { get; set; }
 
         private LibplanetNodeServiceProperties Properties { get; }
 
@@ -45,9 +44,9 @@ namespace NineChronicles.Headless
 
         public AsyncManualResetEvent PreloadEnded => NodeService.PreloadEnded;
 
-        public Swarm<NCAction> Swarm => NodeService.Swarm;
+        public Swarm Swarm => NodeService.Swarm;
 
-        public BlockChain<NCAction> BlockChain => NodeService.BlockChain;
+        public BlockChain BlockChain => NodeService.BlockChain;
 
         public IStore Store => NodeService.Store;
 
@@ -69,10 +68,10 @@ namespace NineChronicles.Headless
         public NineChroniclesNodeService(
             PrivateKey? minerPrivateKey,
             LibplanetNodeServiceProperties properties,
-            IBlockPolicy<NCAction> blockPolicy,
+            IBlockPolicy blockPolicy,
             NetworkType networkType,
             IActionLoader actionLoader,
-            Progress<PreloadState>? preloadProgress = null,
+            Progress<BlockSyncState>? preloadProgress = null,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false,
             bool strictRendering = false,
@@ -85,7 +84,7 @@ namespace NineChronicles.Headless
 
             LogEventLevel logLevel = LogEventLevel.Debug;
             var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
-            IStagePolicy<NCAction> stagePolicy = new StagePolicy(txLifeTime, txQuotaPerSigner);
+            IStagePolicy stagePolicy = new NCStagePolicy(txLifeTime, txQuotaPerSigner);
 
             BlockRenderer = blockPolicySource.BlockRenderer;
             ActionRenderer = blockPolicySource.ActionRenderer;
@@ -130,7 +129,7 @@ namespace NineChronicles.Headless
                 renderers.Add(strictRenderer);
             }
 
-            NodeService = new LibplanetNodeService<NCAction>(
+            NodeService = new LibplanetNodeService(
                 Properties,
                 blockPolicy,
                 stagePolicy,
@@ -161,7 +160,7 @@ namespace NineChronicles.Headless
                 throw new ArgumentNullException(nameof(context));
             }
 
-            Progress<PreloadState> progress = new Progress<PreloadState>(state =>
+            Progress<BlockSyncState> progress = new Progress<BlockSyncState>(state =>
             {
                 context.PreloadStateSubject.OnNext(state);
             });
@@ -240,7 +239,7 @@ namespace NineChronicles.Headless
             return service;
         }
 
-        internal static IBlockPolicy<NCAction> GetBlockPolicy(NetworkType networkType, IActionLoader actionLoader)
+        internal static IBlockPolicy GetBlockPolicy(NetworkType networkType, IActionLoader actionLoader)
         {
             var source = new BlockPolicySource(Log.Logger, LogEventLevel.Debug, actionLoader);
             return networkType switch
@@ -254,7 +253,7 @@ namespace NineChronicles.Headless
             };
         }
 
-        internal static IBlockPolicy<NCAction> GetTestBlockPolicy() =>
+        internal static IBlockPolicy GetTestBlockPolicy() =>
             new BlockPolicySource(Log.Logger, LogEventLevel.Debug).GetTestPolicy();
 
         public Task<bool> CheckPeer(string addr) => NodeService?.CheckPeer(addr) ?? throw new InvalidOperationException();

@@ -5,11 +5,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet\Libplanet.csproj" />
-    <ProjectReference Include="..\Libplanet.Extensions.ActionEvaluatorCommonComponents\Libplanet.Extensions.ActionEvaluatorCommonComponents.csproj" />
-    <ProjectReference Include="..\Lib9c.StateService.Shared\Lib9c.StateService.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GraphQL.Client" Version="5.1.1" />
+    <PackageReference Include="GraphQL.Client.Serializer.SystemTextJson" Version="5.1.1" />
   </ItemGroup>
 
 </Project>

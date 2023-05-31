@@ -10,7 +10,7 @@ using Libplanet.Consensus;
 using Libplanet.Crypto;
 using Libplanet.Store.Trie;
 
-namespace Libplanet.Extensions.RemoteActionEvaluator
+namespace Libplanet.Extensions.RemoteBlockChainStates
 {
     public class RemoteBlockChainStates : IBlockChainStates
     {
@@ -154,7 +154,7 @@ namespace Libplanet.Extensions.RemoteActionEvaluator
 
         public ITrie? GetTrie(BlockHash offset)
         {
-            throw new NotSupportedException();
+            return null;
         }
 
         private class GetStatesResponseType

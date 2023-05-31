@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL.Execution;
 using Libplanet;
-using Libplanet.Action;
 using Libplanet.Crypto;
 using Libplanet.Tx;
 using Nekoyume.Action;
+using Nekoyume.Action.Loader;
 using Xunit;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
@@ -34,11 +34,8 @@ query {{
             Assert.Equal(publicKey.ToAddress(), tx.Signer);
             Assert.Equal(0, tx.Nonce);
             var rawAction = Assert.Single(tx.Actions);
-#pragma warning disable CS0612
-            var action = new PolymorphicAction<ActionBase>();
-#pragma warning restore CS0612
-            action.LoadPlainValue(rawAction);
-            Assert.IsType<Stake>(action.InnerAction);
+            var action = new NCActionLoader().LoadAction(0, rawAction);
+            Assert.IsType<Stake>(action);
         }
 
         [InlineData("2022-11-18T00:00:00+0000")]

@@ -11,8 +11,6 @@ using Nekoyume.Model.State;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using Libplanet.Action;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -84,7 +82,7 @@ namespace NineChronicles.Headless.GraphTypes
                             name = avatarName,
                         };
 
-                        var actions = new NCAction[] { action };
+                        var actions = new ActionBase[] { action };
                         Transaction tx = blockChain.MakeTransaction(privateKey, actions);
                         return tx.Id;
                     }
@@ -141,7 +139,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.Swarm.BlockChain;
+                        BlockChain? blockChain = service.Swarm.BlockChain;
                         if (blockChain is null)
                         {
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
@@ -167,7 +165,7 @@ namespace NineChronicles.Headless.GraphTypes
                             RuneInfos = runeSlotInfos,
                         };
 
-                        var actions = new NCAction[] { action };
+                        var actions = new ActionBase[] { action };
                         Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
                         return tx.Id;
                     }
@@ -208,7 +206,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.BlockChain;
+                        BlockChain? blockChain = service.BlockChain;
                         if (blockChain is null)
                         {
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
@@ -227,7 +225,7 @@ namespace NineChronicles.Headless.GraphTypes
                             subRecipeId = subRecipeId
                         };
 
-                        var actions = new NCAction[] { action };
+                        var actions = new ActionBase[] { action };
                         Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
                         return tx.Id;
                     }
@@ -291,7 +289,7 @@ namespace NineChronicles.Headless.GraphTypes
                             materialId = materialId,
                         };
 
-                        var actions = new NCAction[] { action };
+                        var actions = new ActionBase[] { action };
                         Transaction tx = blockChain.MakeTransaction(privatekey, actions);
                         return tx.Id;
                     }
@@ -334,7 +332,7 @@ namespace NineChronicles.Headless.GraphTypes
                             avatarAddress = avatarAddress
                         };
 
-                        var actions = new NCAction[] { action };
+                        var actions = new ActionBase[] { action };
                         Transaction tx = blockChain.MakeTransaction(privateKey, actions);
                         return tx.Id;
                     }
@@ -376,7 +374,7 @@ namespace NineChronicles.Headless.GraphTypes
                             avatarAddress = avatarAddress
                         };
 
-                        var actions = new NCAction[] { action };
+                        var actions = new ActionBase[] { action };
                         Transaction tx = blockChain.MakeTransaction(privateKey, actions);
                         return tx.Id;
                     }
@@ -412,7 +410,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.BlockChain;
+                        BlockChain? blockChain = service.BlockChain;
                         if (blockChain is null)
                         {
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
@@ -429,7 +427,7 @@ namespace NineChronicles.Headless.GraphTypes
                             slotIndex = slotIndex,
                         };
 
-                        var actions = new NCAction[] { action };
+                        var actions = new ActionBase[] { action };
                         Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
                         return tx.Id;
                     }
@@ -455,7 +453,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.BlockChain;
+                        BlockChain? blockChain = service.BlockChain;
                         if (blockChain is null)
                         {
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
@@ -472,7 +470,7 @@ namespace NineChronicles.Headless.GraphTypes
                             level = level,
                         };
 
-                        var actions = new NCAction[] { action };
+                        var actions = new ActionBase[] { action };
                         Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
                         return tx.Id;
                     }
@@ -498,7 +496,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.BlockChain;
+                        BlockChain? blockChain = service.BlockChain;
                         if (blockChain is null)
                         {
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
@@ -519,7 +517,7 @@ namespace NineChronicles.Headless.GraphTypes
                             avatarAddress = avatarAddress,
                         };
 
-                        var actions = new NCAction[] { action };
+                        var actions = new ActionBase[] { action };
                         Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
                         return tx.Id;
                     }

@@ -5,7 +5,6 @@ using GraphQL.Types;
 using Libplanet;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes;
 
@@ -72,7 +71,7 @@ public partial class ActionQuery
                     int actionPoint = context.GetArgument<int>("actionPoint");
                     int apStoneCount = context.GetArgument<int?>("apStoneCount") ?? 0;
 
-                    NCAction action = new HackAndSlashSweep
+                    ActionBase action = new HackAndSlashSweep
                     {
                         avatarAddress = avatarAddress,
                         worldId = worldId,

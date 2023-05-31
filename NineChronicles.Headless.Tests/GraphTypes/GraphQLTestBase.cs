@@ -1,6 +1,7 @@
 using GraphQL;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Action.Sys;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
@@ -11,12 +12,15 @@ using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
 using Libplanet.KeyStore;
 using Libplanet.Net;
+using Libplanet.Store;
+using Libplanet.Store.Trie;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Nekoyume.Action;
+using Nekoyume.Action.Loader;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
-using Nekoyume.BlockChain.Policy;
+using Nekoyume.Blockchain.Policy;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common;
 using Serilog;
@@ -32,7 +36,6 @@ using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet.Tx;
 using Xunit.Abstractions;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -53,9 +56,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var sheets = TableSheetsImporter.ImportSheets();
             var blockAction = new RewardGold();
-            var genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
+            var actionEvaluator = new ActionEvaluator(
+                _ => blockAction,
+                new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
+                new NCActionLoader(),
+                null);
+            var genesisBlock = BlockChain.ProposeGenesisBlock(
+                actionEvaluator,
                 transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(0,
-                    AdminPrivateKey, null, new NCAction[]
+                    AdminPrivateKey, null, new ActionBase[]
                     {
                         new InitializeStates(
                             rankingState: new RankingState0(),
@@ -117,7 +126,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             services.AddSingleton(StandaloneContextFx);
             services.AddSingleton<IConfiguration>(configuration);
             services.AddGraphTypes();
-            services.AddLibplanetExplorer<NCAction>();
+            services.AddLibplanetExplorer();
             services.AddSingleton(ncService);
             services.AddSingleton(ncService.Store);
             ServiceProvider serviceProvider = services.BuildServiceProvider();
@@ -144,7 +153,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         protected StandaloneContext StandaloneContextFx { get; }
 
-        protected BlockChain<NCAction> BlockChain =>
+        protected BlockChain BlockChain =>
             StandaloneContextFx.BlockChain!;
 
         protected IKeyStore KeyStore =>
@@ -170,11 +179,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Schema = Schema,
             });
         }
-        protected async Task<Task> StartAsync<T>(
-            Swarm<T> swarm,
-            CancellationToken cancellationToken = default
-        )
-            where T : IAction, new()
+        protected async Task<Task> StartAsync(
+            Swarm swarm,
+            CancellationToken cancellationToken = default)
         {
             Task task = swarm.StartAsync(
                 dialTimeout: TimeSpan.FromMilliseconds(200),
@@ -186,15 +193,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             return task;
         }
 
-        protected LibplanetNodeService<T> CreateLibplanetNodeService<T>(
+        protected LibplanetNodeService CreateLibplanetNodeService(
             Block genesisBlock,
             AppProtocolVersion appProtocolVersion,
             PublicKey appProtocolVersionSigner,
-            Progress<PreloadState>? preloadProgress = null,
+            Progress<BlockSyncState>? preloadProgress = null,
             IEnumerable<BoundPeer>? peers = null,
             ImmutableList<BoundPeer>? consensusSeeds = null,
             ImmutableList<BoundPeer>? consensusPeers = null)
-            where T : IAction, new()
         {
             var consensusPrivateKey = new PrivateKey();
 
@@ -218,10 +224,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ConsensusPeers = consensusPeers ?? ImmutableList<BoundPeer>.Empty,
             };
 
-            return new LibplanetNodeService<T>(
+            return new LibplanetNodeService(
                 properties,
-                blockPolicy: new BlockPolicy<T>(),
-                stagePolicy: new VolatileStagePolicy<T>(),
+                blockPolicy: new BlockPolicy(),
+                stagePolicy: new VolatileStagePolicy(),
                 renderers: new[] { new DummyRenderer() },
                 preloadProgress: preloadProgress,
                 exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),

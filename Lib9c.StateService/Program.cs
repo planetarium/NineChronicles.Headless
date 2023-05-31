@@ -1,6 +1,10 @@
 using Bencodex;
+using Libplanet.Blockchain;
+using Libplanet.Extensions.RemoteBlockChainStates;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddEnvironmentVariables();
 
 // Add services to the container.
 
@@ -10,6 +14,13 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<Codec>();
+
+builder.Services.AddSingleton<IBlockChainStates, RemoteBlockChainStates>(_ =>
+{
+    const string DefaultEndpoint = "http://localhost:31280/graphql/explorer";
+    var endpoint = builder.Configuration.GetValue<string>("RemoteBlockChainStatesEndpoint") ?? DefaultEndpoint;
+    return new RemoteBlockChainStates(new Uri(endpoint));
+});
 
 var app = builder.Build();
 
