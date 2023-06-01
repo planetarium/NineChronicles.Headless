@@ -35,15 +35,8 @@ namespace NineChronicles.Headless.Middleware
         {
             var identity = await base.ResolveIdentityAsync(httpContext);
 
-            if (httpContext.Request.Protocol == "HTTP/2")
-            {
-                identity.ClientIp = identity.ClientIp + "/" + httpContext.Connection.RemotePort;
-                return identity;
-            }
-
             if (httpContext.Request.Protocol == "HTTP/1.1")
             {
-                identity.ClientIp = identity.ClientIp + "/" + httpContext.Connection.RemotePort;
                 httpContext.Request.EnableBuffering();
                 var body = await new StreamReader(httpContext.Request.Body).ReadToEndAsync();
                 httpContext.Request.Body.Seek(0, SeekOrigin.Begin);
