@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
@@ -71,6 +72,38 @@ public partial class ActionQuery
                 NCAction action = new EndPledge
                 {
                     AgentAddress = agentAddress
+                };
+                return Encode(context, action);
+            }
+        );
+        Field<NonNullGraphType<ByteStringType>>(
+            "createPledge",
+            arguments: new QueryArguments
+            {
+                new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "patronAddress"
+                },
+                new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>
+                {
+                    Name = "agentAddresses"
+                },
+                new QueryArgument<IntGraphType>
+                {
+                    Name = "mead",
+                    DefaultValue = RequestPledge.RefillMead
+                }
+            },
+            resolve: context =>
+            {
+                var patronAddress = context.GetArgument<Address>("patronAddress");
+                var agentAddresses = context.GetArgument<List<Address>>("agentAddresses");
+                var mead = context.GetArgument<int>("mead");
+                NCAction action = new CreatePledge
+                {
+                    PatronAddress = patronAddress,
+                    AgentAddresses = agentAddresses,
+                    Mead = mead,
                 };
                 return Encode(context, action);
             }
