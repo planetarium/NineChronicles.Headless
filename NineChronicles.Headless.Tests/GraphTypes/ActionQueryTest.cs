@@ -3,16 +3,19 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL.Execution;
+using Lib9c;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Crypto;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Action.Garages;
 using Nekoyume.Helper;
 using Nekoyume.Model;
 using Nekoyume.Model.EnumType;
@@ -929,6 +932,51 @@ actionPoint: {actionPoint},
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(slotIndex, action.slotIndex);
             Assert.Equal(recipeId, action.recipeId);
+        }
+
+        [Fact]
+        public async Task LoadIntoMyGarages()
+        {
+            var fungibleAssetValues = new[]
+            {
+                (balanceAddr: new PrivateKey().ToAddress(), value: new FungibleAssetValue(Currencies.Crystal, 1, 0)),
+                (balanceAddr: new PrivateKey().ToAddress(), value: new FungibleAssetValue(Currencies.Crystal, 1, 0)),
+            };
+            var fungibleAssetValuesString = string.Join(",", fungibleAssetValues.Select(tuple =>
+                $"{{balanceAddr: \"{tuple.balanceAddr.ToHex()}\"," +
+                $"value: {{currency: {{ ticker: \"{tuple.value.Currency.Ticker}\" }}," +
+                $"majorUnit: {tuple.value.MajorUnit}," +
+                $"minorUnit: {tuple.value.MinorUnit}}}}}"));
+            var inventoryAddr = new PrivateKey().ToAddress();
+            var fungibleIdAndCounts = new[]
+            {
+                (fungibleId: new HashDigest<SHA256>(), count: 1),
+                (fungibleId: new HashDigest<SHA256>(), count: 1),
+            };
+            var fungibleIdAndCountsString = string.Join(",", fungibleIdAndCounts.Select(tuple =>
+                $"{{fungibleId: {{value: \"{tuple.fungibleId.ToString()}\"}}, count: {tuple.count}}}"));
+            var expectedAction = new LoadIntoMyGarages(
+                fungibleAssetValues,
+                inventoryAddr,
+                fungibleIdAndCounts);
+            var query = "{loadIntoMyGarages(args: {" +
+                $"fungibleAssetValues: [{fungibleAssetValuesString}], " +
+                $"inventoryAddr: \"{inventoryAddr.ToHex()}\", " +
+                $"fungibleIdAndCounts: [{fungibleIdAndCountsString}]" +
+                "})}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(
+                query,
+                standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["loadIntoMyGarages"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<LoadIntoMyGarages>(actionBase);
+            Assert.Equal(expectedAction.FungibleAssetValues, action.FungibleAssetValues);
+            Assert.Equal(expectedAction.InventoryAddr, action.InventoryAddr);
+            Assert.Equal(expectedAction.FungibleIdAndCounts, action.FungibleIdAndCounts);
         }
     }
 }
