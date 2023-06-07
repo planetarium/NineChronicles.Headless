@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using GraphQL;
+using Lib9c;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
@@ -31,7 +32,8 @@ namespace NineChronicles.Headless.GraphTypes
             long nonce = context.Parent!.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
             DateTimeOffset? timestamp = context.Parent!.GetArgument<DateTimeOffset?>("timestamp");
             long? gasLimit = context.Parent!.GetArgument<long?>("gasLimit");
-            FungibleAssetValue? maxGasPrice = context.Parent!.GetArgument<FungibleAssetValue?>("maxGasPrice");
+            // FIXME use DefaultValue in argument
+            FungibleAssetValue? maxGasPrice = context.Parent!.GetArgument<FungibleAssetValue?>("maxGasPrice") ?? 1 * Currencies.Mead;
             UnsignedTx unsignedTransaction =
                 new UnsignedTx(
                     new TxInvoice(
