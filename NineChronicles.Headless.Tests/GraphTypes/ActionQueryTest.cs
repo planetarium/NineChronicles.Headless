@@ -987,5 +987,29 @@ actionPoint: {actionPoint},
             var action = Assert.IsType<EndPledge>(polymorphicAction.InnerAction);
             Assert.Equal(agentAddress, action.AgentAddress);
         }
+
+        [Theory]
+        [InlineData(null, 4)]
+        [InlineData(1, 1)]
+        public async Task CreatePledge(int? mead, int expected)
+        {
+            var agentAddress = new PrivateKey().ToAddress();
+
+            var query = mead.HasValue
+                ? $"{{createPledge(patronAddress: \"{MeadConfig.PatronAddress}\", agentAddresses: [\"{agentAddress}\"], mead: {mead})}}"
+                : $"{{createPledge(patronAddress: \"{MeadConfig.PatronAddress}\", agentAddresses: [\"{agentAddress}\"])}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["createPledge"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<CreatePledge>(polymorphicAction.InnerAction);
+            var actualAddress = Assert.Single(action.AgentAddresses);
+            Assert.Equal(agentAddress, actualAddress);
+            Assert.Equal(MeadConfig.PatronAddress, action.PatronAddress);
+            Assert.Equal(expected, action.Mead);
+        }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using GraphQL;
 using GraphQL.Types;
+using Lib9c;
 using Libplanet.Blockchain;
 using Libplanet.Action;
 using Libplanet.Tx;
@@ -205,10 +206,12 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "gasLimit",
                         Description = "The gas limit for Transaction.",
+                        DefaultValue = RequestPledge.RefillMead,
                     },
                     new QueryArgument<FungibleAssetValueInputType>
                     {
-                        Name = "maxGasPrice"
+                        Name = "maxGasPrice",
+                        DefaultValue = 1 * Currencies.Mead
                     }
                 ),
                 resolve: context =>

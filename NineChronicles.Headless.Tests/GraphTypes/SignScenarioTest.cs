@@ -11,6 +11,7 @@ using Libplanet.Crypto;
 using Libplanet.Extensions.Cocona;
 using Libplanet.KeyStore;
 using Libplanet.Tx;
+using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Helper;
 using NineChronicles.Headless.Executable.Commands;
@@ -51,16 +52,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(recipient, action.Recipient);
             Assert.Equal(sender, action.Sender);
             Assert.Equal(FungibleAssetValue.Parse(CrystalCalculator.CRYSTAL, "17.5"), action.Amount);
-            if (gas)
-            {
-                Assert.Equal(1, signedTx.GasLimit);
-                Assert.Equal(1 * Currencies.Mead, signedTx.MaxGasPrice);
-            }
-            else
-            {
-                Assert.Null(signedTx.GasLimit);
-                Assert.Null(signedTx.MaxGasPrice);
-            }
             await StageTransaction(signedTx, hex);
         }
 
@@ -87,16 +78,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.All(new[] { equipmentId, costumeId, foodId }, id => Assert.Equal(guid, id));
             Assert.True(action.PayNcg);
             Assert.Single(action.RuneInfos);
-            if (gas)
-            {
-                Assert.Equal(1, signedTx.GasLimit);
-                Assert.Equal(1 * Currencies.Mead, signedTx.MaxGasPrice);
-            }
-            else
-            {
-                Assert.Null(signedTx.GasLimit);
-                Assert.Null(signedTx.MaxGasPrice);
-            }
             await StageTransaction(signedTx, hex);
         }
 
@@ -114,16 +95,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             (Transaction signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue, gas);
             var action = Assert.IsType<ClaimRaidReward>(ToAction(signedTx.Actions!.Single()).InnerAction);
             Assert.Equal(avatarAddress, action.AvatarAddress);
-            if (gas)
-            {
-                Assert.Equal(1, signedTx.GasLimit);
-                Assert.Equal(1 * Currencies.Mead, signedTx.MaxGasPrice);
-            }
-            else
-            {
-                Assert.Null(signedTx.GasLimit);
-                Assert.Null(signedTx.MaxGasPrice);
-            }
             await StageTransaction(signedTx, hex);
         }
 
@@ -141,16 +112,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             (Transaction signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue, gas);
             var action = Assert.IsType<ClaimWordBossKillReward>(ToAction(signedTx.Actions!.Single()).InnerAction);
             Assert.Equal(avatarAddress, action.AvatarAddress);
-            if (gas)
-            {
-                Assert.Equal(1, signedTx.GasLimit);
-                Assert.Equal(1 * Currencies.Mead, signedTx.MaxGasPrice);
-            }
-            else
-            {
-                Assert.Null(signedTx.GasLimit);
-                Assert.Null(signedTx.MaxGasPrice);
-            }
             await StageTransaction(signedTx, hex);
         }
 
@@ -172,16 +133,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
             Assert.Equal(Currency.Legacy("CRYSTAL", 0, null) * 100, action.Assets.Single());
 #pragma warning restore CS0618
-            if (gas)
-            {
-                Assert.Equal(1, signedTx.GasLimit);
-                Assert.Equal(1 * Currencies.Mead, signedTx.MaxGasPrice);
-            }
-            else
-            {
-                Assert.Null(signedTx.GasLimit);
-                Assert.Null(signedTx.MaxGasPrice);
-            }
             await StageTransaction(signedTx, hex);
         }
 
@@ -200,16 +151,24 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var action = Assert.IsType<TransferAssets>(ToAction(signedTx.Actions!.Single()).InnerAction);
             Assert.Equal(sender, action.Sender);
             Assert.Equal(2, action.Recipients.Count);
-            if (gas)
-            {
-                Assert.Equal(1, signedTx.GasLimit);
-                Assert.Equal(1 * Currencies.Mead, signedTx.MaxGasPrice);
-            }
-            else
-            {
-                Assert.Null(signedTx.GasLimit);
-                Assert.Null(signedTx.MaxGasPrice);
-            }
+            await StageTransaction(signedTx, hex);
+        }
+
+        [Fact]
+        public async Task SignTransaction_CreatePledge()
+        {
+            var privateKey = new PrivateKey();
+            var sender = privateKey.ToAddress();
+            // Create Action.
+            var args = $"patronAddress: \"{MeadConfig.PatronAddress}\", agentAddresses: [\"{sender}\"]";
+            object plainValue = await GetAction("createPledge", args);
+
+            (Transaction signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue, true);
+            var action = Assert.IsType<CreatePledge>(ToAction(signedTx.Actions!.Single()).InnerAction);
+            Assert.Equal(sender, action.AgentAddresses.Single());
+            Assert.Equal(MeadConfig.PatronAddress, action.PatronAddress);
+            Assert.Equal(1, signedTx.GasLimit);
+            Assert.Equal(1 * Currencies.Mead, signedTx.MaxGasPrice);
             await StageTransaction(signedTx, hex);
         }
 
@@ -278,6 +237,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 "signTransaction"];
             byte[] result = ByteUtil.ParseHex(hex);
             Transaction signedTx = Transaction.Deserialize(result);
+            long expectedGasLimit = gas ? 1 : 4;
 
             Assert.Equal(unsignedTx.PublicKey, signedTx.PublicKey);
             Assert.Equal(unsignedTx.Signer, signedTx.Signer);
@@ -286,6 +246,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(unsignedTx.Timestamp, signedTx.Timestamp);
             Assert.Single(unsignedTx.Actions);
             Assert.Single(signedTx.Actions!);
+            Assert.Equal(expectedGasLimit, signedTx.GasLimit);
+            Assert.Equal(1 * Currencies.Mead, signedTx.MaxGasPrice);
             return (signedTx, hex);
         }
 

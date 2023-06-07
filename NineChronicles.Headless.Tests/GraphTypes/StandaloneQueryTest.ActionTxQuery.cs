@@ -34,8 +34,8 @@ query {{
             Assert.Equal(publicKey, tx.PublicKey);
             Assert.Equal(publicKey.ToAddress(), tx.Signer);
             Assert.Equal(0, tx.Nonce);
-            Assert.Null(tx.GasLimit);
-            Assert.Null(tx.MaxGasPrice);
+            Assert.Equal(4, tx.GasLimit);
+            Assert.Equal(1 * Currencies.Mead, tx.MaxGasPrice);
             var rawAction = Assert.Single(tx.Actions);
 #pragma warning disable CS0612
             var action = new PolymorphicAction<ActionBase>();
