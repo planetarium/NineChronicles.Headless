@@ -211,6 +211,7 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<FungibleAssetValueInputType>
                     {
                         Name = "maxGasPrice",
+                        DefaultValue = 1 * Currencies.Mead
                     }
                 ),
                 resolve: context =>
@@ -232,8 +233,7 @@ namespace NineChronicles.Headless.GraphTypes
                     Address signer = publicKey.ToAddress();
                     long nonce = context.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
                     long? gasLimit = context.GetArgument<long?>("gasLimit");
-                    // FIXME use DefaultValue in argument
-                    FungibleAssetValue? maxGasPrice = context.GetArgument<FungibleAssetValue?>("maxGasPrice") ?? 1 * Currencies.Mead;
+                    FungibleAssetValue? maxGasPrice = context.GetArgument<FungibleAssetValue?>("maxGasPrice");
                     UnsignedTx unsignedTransaction =
                         new UnsignedTx(
                             new TxInvoice(

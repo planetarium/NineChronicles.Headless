@@ -463,7 +463,8 @@ namespace NineChronicles.Headless.GraphTypes
                     },
                     new QueryArgument<FungibleAssetValueInputType>
                     {
-                        Name = "maxGasPrice"
+                        Name = "maxGasPrice",
+                        DefaultValue = 1 * Currencies.Mead
                     }
                 ),
                 resolve: context => new ActionTxQuery(standaloneContext));

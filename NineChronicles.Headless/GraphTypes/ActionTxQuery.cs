@@ -32,8 +32,7 @@ namespace NineChronicles.Headless.GraphTypes
             long nonce = context.Parent!.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
             DateTimeOffset? timestamp = context.Parent!.GetArgument<DateTimeOffset?>("timestamp");
             long? gasLimit = context.Parent!.GetArgument<long?>("gasLimit");
-            // FIXME use DefaultValue in argument
-            FungibleAssetValue? maxGasPrice = context.Parent!.GetArgument<FungibleAssetValue?>("maxGasPrice") ?? 1 * Currencies.Mead;
+            FungibleAssetValue? maxGasPrice = context.Parent!.GetArgument<FungibleAssetValue?>("maxGasPrice");
             UnsignedTx unsignedTransaction =
                 new UnsignedTx(
                     new TxInvoice(
