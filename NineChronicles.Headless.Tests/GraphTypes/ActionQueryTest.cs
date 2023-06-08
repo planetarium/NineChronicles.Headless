@@ -55,8 +55,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 activatedAccountsState: new ActivatedAccountsState(),
 #pragma warning disable CS0618
                 // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
-                goldCurrencyState:
-                new GoldCurrencyState(Currency.Legacy("NCG", 2, minerPrivateKey.ToAddress())),
+                goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, minerPrivateKey.ToAddress())),
 #pragma warning restore CS0618
                 goldDistributions: Array.Empty<GoldDistribution>(),
                 tableSheets: new Dictionary<string, string>(),
@@ -943,10 +942,10 @@ actionPoint: {actionPoint},
                 (balanceAddr: new PrivateKey().ToAddress(), value: new FungibleAssetValue(Currencies.Crystal, 1, 0)),
             };
             var fungibleAssetValuesString = string.Join(",", fungibleAssetValues.Select(tuple =>
-                $"{{balanceAddr: \"{tuple.balanceAddr.ToHex()}\"," +
-                $"value: {{currency: {{ ticker: \"{tuple.value.Currency.Ticker}\" }}," +
-                $"majorUnit: {tuple.value.MajorUnit}," +
-                $"minorUnit: {tuple.value.MinorUnit}}}}}"));
+                $"{{ balanceAddr: \"{tuple.balanceAddr.ToHex()}\", " +
+                $"value: {{ currency: {{ ticker: \"{tuple.value.Currency.Ticker}\" }}, " +
+                $"majorUnit: {tuple.value.MajorUnit}, " +
+                $"minorUnit: {tuple.value.MinorUnit} }} }}"));
             var inventoryAddr = new PrivateKey().ToAddress();
             var fungibleIdAndCounts = new[]
             {
@@ -954,16 +953,16 @@ actionPoint: {actionPoint},
                 (fungibleId: new HashDigest<SHA256>(), count: 1),
             };
             var fungibleIdAndCountsString = string.Join(",", fungibleIdAndCounts.Select(tuple =>
-                $"{{fungibleId: {{value: \"{tuple.fungibleId.ToString()}\"}}, count: {tuple.count}}}"));
+                $"{{ fungibleId: {{ value: \"{tuple.fungibleId.ToString()}\"}}, count: {tuple.count} }}"));
             var expectedAction = new LoadIntoMyGarages(
                 fungibleAssetValues,
                 inventoryAddr,
                 fungibleIdAndCounts);
-            var query = "{loadIntoMyGarages(args: {" +
+            var query = "{ loadIntoMyGarages(args: { " +
                 $"fungibleAssetValues: [{fungibleAssetValuesString}], " +
                 $"inventoryAddr: \"{inventoryAddr.ToHex()}\", " +
                 $"fungibleIdAndCounts: [{fungibleIdAndCountsString}]" +
-                "})}";
+                "}) }";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(
                 query,
                 standaloneContext: _standaloneContext);
@@ -974,10 +973,11 @@ actionPoint: {actionPoint},
             Assert.IsType<Dictionary>(plainValue);
             var actionBase = DeserializeNCAction(plainValue);
             var action = Assert.IsType<LoadIntoMyGarages>(actionBase);
-            Assert.Equal(expectedAction.FungibleAssetValues, action.FungibleAssetValues);
+            Assert.True(expectedAction.FungibleAssetValues.SequenceEqual(action.FungibleAssetValues));
             Assert.Equal(expectedAction.InventoryAddr, action.InventoryAddr);
-            Assert.Equal(expectedAction.FungibleIdAndCounts, action.FungibleIdAndCounts);
-        
+            Assert.True(expectedAction.FungibleIdAndCounts.SequenceEqual(action.FungibleIdAndCounts));
+        }
+
         [Fact]
         public async Task DeliverToOthersGarages()
         {
@@ -1021,7 +1021,7 @@ actionPoint: {actionPoint},
             Assert.True(expectedAction.FungibleAssetValues.SequenceEqual(action.FungibleAssetValues));
             Assert.True(expectedAction.FungibleIdAndCounts.SequenceEqual(action.FungibleIdAndCounts));
         }
-        
+
         [Fact]
         public async Task UnloadFromMyGarages()
         {

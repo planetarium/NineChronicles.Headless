@@ -28,7 +28,7 @@ namespace NineChronicles.Headless.GraphTypes
                           "https://github.com/planetarium/lib9c/blob/main/Lib9c/Currencies.cs";
             Field<NonNullGraphType<StringGraphType>>(
                 name: "ticker",
-                description: "Ticker");
+                description: "Ticker.");
         }
 
         public override object ParseDictionary(IDictionary<string, object?> value)

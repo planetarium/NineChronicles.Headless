@@ -14,10 +14,10 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "currency");
             Field<NonNullGraphType<BigIntGraphType>>(
                 name: "majorUnit",
-                description: "Major unit of currency");
+                description: "Major unit of currency quantity.");
             Field<NonNullGraphType<BigIntGraphType>>(
                 name: "minorUnit",
-                description: "Minor unit of currency");
+                description: "Minor unit of currency quantity.");
         }
 
         public override object ParseDictionary(IDictionary<string, object?> value)
