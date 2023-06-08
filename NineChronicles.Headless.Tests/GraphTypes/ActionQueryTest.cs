@@ -977,6 +977,50 @@ actionPoint: {actionPoint},
             Assert.Equal(expectedAction.FungibleAssetValues, action.FungibleAssetValues);
             Assert.Equal(expectedAction.InventoryAddr, action.InventoryAddr);
             Assert.Equal(expectedAction.FungibleIdAndCounts, action.FungibleIdAndCounts);
+        
+        [Fact]
+        public async Task DeliverToOthersGarages()
+        {
+            var recipientAgentAddr = new PrivateKey().ToAddress();
+            var fungibleAssetValues = new[]
+            {
+                new FungibleAssetValue(Currencies.Crystal, 1, 0),
+                new FungibleAssetValue(Currencies.Crystal, 1, 0),
+            };
+            var fungibleAssetValuesString = string.Join(",", fungibleAssetValues.Select(fav =>
+                $"{{ currency: {{ ticker: \"{fav.Currency.Ticker}\" }}, " +
+                $"majorUnit: {fav.MajorUnit}, " +
+                $"minorUnit: {fav.MinorUnit} }}"));
+            var fungibleIdAndCounts = new[]
+            {
+                (fungibleId: new HashDigest<SHA256>(), count: 1),
+                (fungibleId: new HashDigest<SHA256>(), count: 1),
+            };
+            var fungibleIdAndCountsString = string.Join(",", fungibleIdAndCounts.Select(tuple =>
+                $"{{ fungibleId: {{ value: \"{tuple.fungibleId.ToString()}\"}}, count: {tuple.count} }}"));
+            var expectedAction = new DeliverToOthersGarages(
+                recipientAgentAddr,
+                fungibleAssetValues,
+                fungibleIdAndCounts);
+            var query = "{ deliverToOthersGarages(args: { " +
+                $"recipientAgentAddr: \"{recipientAgentAddr.ToHex()}\", " +
+                $"fungibleAssetValues: [{fungibleAssetValuesString}], " +
+                $"fungibleIdAndCounts: [{fungibleIdAndCountsString}] " +
+                "}) }";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(
+                query,
+                standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["deliverToOthersGarages"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<DeliverToOthersGarages>(actionBase);
+            Assert.Equal(expectedAction.RecipientAgentAddr, action.RecipientAgentAddr);
+            Assert.True(expectedAction.FungibleAssetValues.SequenceEqual(action.FungibleAssetValues));
+            Assert.True(expectedAction.FungibleIdAndCounts.SequenceEqual(action.FungibleIdAndCounts));
+        }
         }
     }
 }

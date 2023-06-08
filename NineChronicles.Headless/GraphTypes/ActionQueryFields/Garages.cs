@@ -38,5 +38,29 @@ public partial class ActionQuery
                 return Encode(context, action);
             }
         );
+
+        Field<NonNullGraphType<ByteStringType>>(
+            "deliverToOthersGarages",
+            arguments: new QueryArguments(
+                new QueryArgument<DeliverToOthersGaragesArgsInputType>
+                {
+                    Name = "args",
+                    Description = "The arguments of the \"DeliverToOthersGarages\" action constructor.",
+                }
+            ),
+            resolve: context =>
+            {
+                var args = context.GetArgument<(
+                    Address recipientAgentAddr,
+                    IEnumerable<FungibleAssetValue>? fungibleAssetValues,
+                    IEnumerable<(HashDigest<SHA256> fungibleId, int count)>? fungibleIdAndCounts
+                    )>("args");
+                ActionBase action = new DeliverToOthersGarages(
+                    args.recipientAgentAddr,
+                    args.fungibleAssetValues,
+                    args.fungibleIdAndCounts);
+                return Encode(context, action);
+            }
+        );
     }
 }
