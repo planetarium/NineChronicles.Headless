@@ -62,5 +62,29 @@ public partial class ActionQuery
                 return Encode(context, action);
             }
         );
+        
+        Field<NonNullGraphType<ByteStringType>>(
+            "unloadFromMyGarages",
+            arguments: new QueryArguments(
+                new QueryArgument<UnloadFromMyGaragesArgsInputType>
+                {
+                    Name = "args",
+                    Description = "The arguments of the \"UnloadFromMyGarages\" action constructor.",
+                }
+            ),
+            resolve: context =>
+            {
+                var args = context.GetArgument<(
+                    IEnumerable<(Address balanceAddr, FungibleAssetValue value)>? fungibleAssetValues,
+                    Address? inventoryAddr,
+                    IEnumerable<(HashDigest<SHA256> fungibleId, int count)>? fungibleIdAndCounts
+                    )>("args");
+                ActionBase action = new UnloadFromMyGarages(
+                    args.fungibleAssetValues,
+                    args.inventoryAddr,
+                    args.fungibleIdAndCounts);
+                return Encode(context, action);
+            }
+        );
     }
 }

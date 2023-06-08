@@ -1021,6 +1021,50 @@ actionPoint: {actionPoint},
             Assert.True(expectedAction.FungibleAssetValues.SequenceEqual(action.FungibleAssetValues));
             Assert.True(expectedAction.FungibleIdAndCounts.SequenceEqual(action.FungibleIdAndCounts));
         }
+        
+        [Fact]
+        public async Task UnloadFromMyGarages()
+        {
+            var fungibleAssetValues = new[]
+            {
+                (balanceAddr: new PrivateKey().ToAddress(), value: new FungibleAssetValue(Currencies.Crystal, 1, 0)),
+                (balanceAddr: new PrivateKey().ToAddress(), value: new FungibleAssetValue(Currencies.Crystal, 1, 0)),
+            };
+            var fungibleAssetValuesString = string.Join(",", fungibleAssetValues.Select(tuple =>
+                $"{{ balanceAddr: \"{tuple.balanceAddr.ToHex()}\", " +
+                $"value: {{ currency: {{ ticker: \"{tuple.value.Currency.Ticker}\" }}, " +
+                $"majorUnit: {tuple.value.MajorUnit}, " +
+                $"minorUnit: {tuple.value.MinorUnit} }} }}"));
+            var inventoryAddr = new PrivateKey().ToAddress();
+            var fungibleIdAndCounts = new[]
+            {
+                (fungibleId: new HashDigest<SHA256>(), count: 1),
+                (fungibleId: new HashDigest<SHA256>(), count: 1),
+            };
+            var fungibleIdAndCountsString = string.Join(",", fungibleIdAndCounts.Select(tuple =>
+                $"{{ fungibleId: {{ value: \"{tuple.fungibleId.ToString()}\"}}, count: {tuple.count} }}"));
+            var expectedAction = new LoadIntoMyGarages(
+                fungibleAssetValues,
+                inventoryAddr,
+                fungibleIdAndCounts);
+            var query = "{ unloadFromMyGarages(args: { " +
+                $"fungibleAssetValues: [{fungibleAssetValuesString}], " +
+                $"inventoryAddr: \"{inventoryAddr.ToHex()}\", " +
+                $"fungibleIdAndCounts: [{fungibleIdAndCountsString}]" +
+                "}) }";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(
+                query,
+                standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["unloadFromMyGarages"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<UnloadFromMyGarages>(actionBase);
+            Assert.True(expectedAction.FungibleAssetValues.SequenceEqual(action.FungibleAssetValues));
+            Assert.Equal(expectedAction.InventoryAddr, action.InventoryAddr);
+            Assert.True(expectedAction.FungibleIdAndCounts.SequenceEqual(action.FungibleIdAndCounts));
         }
     }
 }
