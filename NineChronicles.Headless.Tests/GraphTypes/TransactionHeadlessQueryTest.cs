@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -9,10 +10,12 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Execution;
 using GraphQL.NewtonsoftJson;
+using Lib9c;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
 using Libplanet.Action.Sys;
+using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
@@ -21,9 +24,15 @@ using Libplanet.Crypto;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Libplanet.Tx;
+using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.BlockChain.Policy;
+using Nekoyume.Model;
+using Nekoyume.Model.State;
+using NineChronicles.Headless.Executable.Tests.Commands;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common;
+using Serilog.Core;
 using Xunit;
 using static NineChronicles.Headless.NCActionUtils;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -37,32 +46,75 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         private readonly IStateStore _stateStore;
         private readonly NineChroniclesNodeService _service;
         private readonly PrivateKey _proposer = new PrivateKey();
+        private readonly PrivateKey _agent = new PrivateKey();
 
         public TransactionHeadlessQueryTest()
         {
             _store = new DefaultStore(null);
             _stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            IBlockPolicy<NCAction> policy = NineChroniclesNodeService.GetTestBlockPolicy();
-            Block genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
-                transactions: new IAction[]
+            var blockPolicySource = new BlockPolicySource(Logger.None);
+            var actionTypeLoader = new SingleActionLoader(typeof(PolymorphicAction<ActionBase>));
+            IBlockPolicy<PolymorphicAction<ActionBase>> policy = blockPolicySource.GetPolicy();
+            IStagePolicy<PolymorphicAction<ActionBase>> stagePolicy =
+                new VolatileStagePolicy<PolymorphicAction<ActionBase>>();
+            var mint = new PrepareRewardAssets
+            {
+                RewardPoolAddress = MeadConfig.PatronAddress,
+                Assets = new List<FungibleAssetValue>
+                {
+                    100000 * Currencies.Mead,
+                },
+            };
+            var cp = new CreatePledge
+            {
+                PatronAddress = MeadConfig.PatronAddress,
+                AgentAddresses = new List<Address>
+                {
+                    _agent.ToAddress(),
+                },
+                Mead = 1
+            };
+
+            Dictionary<string, string> tableSheets = TableSheetsImporter.ImportSheets();
+            var goldDistributionPath = Path.GetTempFileName();
+            File.WriteAllText(goldDistributionPath, @"Address,AmountPerBlock,StartBlock,EndBlock
+F9A15F870701268Bd7bBeA6502eB15F4997f32f9,1000000,0,0
+F9A15F870701268Bd7bBeA6502eB15F4997f32f9,100,1,100000
+Fb90278C67f9b266eA309E6AE8463042f5461449,3000,3600,13600
+Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
+");
+            goldDistributionPath = goldDistributionPath.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            GoldDistribution[] goldDistributions = GoldDistribution
+                .LoadInDescendingEndBlockOrder(goldDistributionPath);
+            AdminState adminState =
+                new AdminState(_proposer.ToAddress(), 150000);
+            Block genesisBlock = BlockHelper.ProposeGenesisBlock(
+                tableSheets,
+                goldDistributions,
+                new PendingActivationState[] { },
+                adminState,
+                null,
+                ImmutableHashSet<Address>.Empty,
+                new Dictionary<PublicKey, BigInteger>
+                {
                     {
-                        new Initialize(
-                            new ValidatorSet(
-                                new[] { new Validator(_proposer.PublicKey, BigInteger.One) }
-                                    .ToList()),
-                            states: ImmutableDictionary.Create<Address, IValue>())
-                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa }))
-                    .ToImmutableList(),
-                blockAction: policy.BlockAction,
-                privateKey: new PrivateKey()
+                        _proposer.PublicKey, BigInteger.One
+                    }
+                },
+                false,
+                null,
+                _proposer,
+                DateTimeOffset.MinValue,
+                new ActionBase[] { mint, cp }
             );
+            
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
                 new BlockChainStates(_store, _stateStore),
                 new SingleActionLoader(typeof(NCAction)),
                 null);
             _blockChain = BlockChain<NCAction>.Create(
-                NineChroniclesNodeService.GetTestBlockPolicy(),
+                policy,
                 new VolatileStagePolicy<NCAction>(),
                 _store,
                 _stateStore,
@@ -340,6 +392,29 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal("SUCCESS", txStatus);
         }
 
+        [Fact]
+        public void Test()
+        {
+            var mead = Currencies.Mead;
+            Assert.Equal(0* mead, _blockChain.GetBalance(_proposer.ToAddress(), mead));
+            Assert.Equal(1* mead, _blockChain.GetBalance(_agent.ToAddress(), mead));
+            var action = new CreatePledge
+            {
+                AgentAddresses = new List<Address>
+                {
+                    new PrivateKey().ToAddress(),
+                },
+                PatronAddress = MeadConfig.PatronAddress,
+                Mead = 4
+            };
+            _blockChain.MakeTransaction(_agent, new PolymorphicAction<ActionBase>[] { action }, maxGasPrice: 1 * mead, gasLimit: 1);
+            // _blockChain.MakeTransaction(_agent, new PolymorphicAction<ActionBase>[] { action }, maxGasPrice: 1 * mead, gasLimit: 1);
+            // _blockChain.MakeTransaction(_agent, new PolymorphicAction<ActionBase>[] { action }, maxGasPrice: 1 * mead, gasLimit: 1);
+            Block block = _blockChain.ProposeBlock(_proposer);
+            _blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, _proposer));
+            Assert.Equal(1* mead, _blockChain.GetBalance(_agent.ToAddress(), mead));
+            Assert.Equal(2, _blockChain.Count);
+        }
         private Task<ExecutionResult> ExecuteAsync(string query)
         {
             return GraphQLTestUtils.ExecuteQueryAsync<TransactionHeadlessQuery>(query, standaloneContext: new StandaloneContext
