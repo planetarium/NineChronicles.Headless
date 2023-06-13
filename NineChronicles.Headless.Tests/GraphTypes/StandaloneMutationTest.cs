@@ -24,7 +24,9 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using GraphQL.Execution;
+using Lib9c;
 using Lib9c.Tests;
+using Nekoyume;
 using NineChronicles.Headless.Executable.Commands;
 using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Executable.Tests.IO;
@@ -976,6 +978,36 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.True((Bencodex.Types.Boolean)state);
         }
 
+        [Fact]
+        public async Task StageTransaction()
+        {
+            Block genesis =
+                MakeGenesisBlock(
+                    default,
+#pragma warning disable CS0618
+                    // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                    Currency.Legacy("NCG", 2, null),
+#pragma warning restore CS0618
+                    ImmutableHashSet<Address>.Empty
+                );
+            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, ProposerPrivateKey);
+
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
+
+            var pk = new PrivateKey();
+            NCAction action = new ApprovePledge
+            {
+                PatronAddress = new PrivateKey().ToAddress()
+            };
+            var tx = Transaction.Create(0, pk, BlockChain.Genesis.Hash, new []{ action });
+            var payload = ByteUtil.Hex(tx.Serialize());
+            var stageTxMutation = $"mutation {{ stageTransaction(payload: \"{payload}\") }}";
+            var stageTxResult = await ExecuteQueryAsync(stageTxMutation);
+            var error = Assert.Single(stageTxResult.Errors!);
+            Assert.Contains("gas", error.Message);
+        }
+
         private Block MakeGenesisBlock(
             Address adminAddress,
             Currency curreny,
@@ -1000,6 +1032,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                         tableSheets: _sheets,
                         pendingActivationStates: new PendingActivationState[] { }
                     ),
+                    new PrepareRewardAssets
+                    {
+                        RewardPoolAddress = MeadConfig.PatronAddress,
+                        Assets = new List<FungibleAssetValue>
+                        {
+                            1 * Currencies.Mead
+                        }
+                    }
                 })).AddRange(new IAction[]
             {
                 new Initialize(
