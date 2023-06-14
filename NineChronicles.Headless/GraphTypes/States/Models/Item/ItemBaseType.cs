@@ -31,6 +31,18 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
                 nameof(ItemBase.ElementalType),
                 description: "Item elemental."
             );
+            Field<LongGraphType>(
+                "requiredBlockIndex",
+                resolve: context =>
+                {
+                    if (context.Source is ITradableItem tradableItem)
+                    {
+                        return tradableItem.RequiredBlockIndex;
+                    }
+
+                    return null;
+                }
+            );
         }
     }
 }

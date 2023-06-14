@@ -10,6 +10,7 @@ using Cocona;
 using Cocona.Help;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
@@ -17,15 +18,14 @@ using Libplanet.Extensions.Cocona;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
-using Nekoyume.Action;
-using Nekoyume.BlockChain.Policy;
+using Nekoyume.Action.Loader;
+using Nekoyume.Blockchain.Policy;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Executable.Store;
 using Serilog.Core;
 using static NineChronicles.Headless.NCActionUtils;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
@@ -113,8 +113,8 @@ namespace NineChronicles.Headless.Executable.Commands
                 throw new CommandExitedException($"The given STORE-PATH, {storePath} seems not existed.", -1);
             }
 
-            IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<PolymorphicAction<ActionBase>>();
-            IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
+            IStagePolicy stagePolicy = new VolatileStagePolicy();
+            IBlockPolicy blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
             IStore store = storeType.CreateStore(storePath);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             if (!(store.GetCanonicalChainId() is { } chainId))
@@ -128,12 +128,20 @@ namespace NineChronicles.Headless.Executable.Commands
             }
 
             Block genesisBlock = store.GetBlock(gHash);
-            BlockChain<NCAction> chain = new BlockChain<NCAction>(
+            var blockChainStates = new BlockChainStates(store, stateStore);
+            var actionEvaluator = new ActionEvaluator(
+                _ => blockPolicy.BlockAction,
+                blockChainStates,
+                new NCActionLoader(),
+                null);
+            BlockChain chain = new BlockChain(
                 blockPolicy,
                 stagePolicy,
                 store,
                 stateStore,
-                genesisBlock);
+                genesisBlock,
+                blockChainStates,
+                actionEvaluator);
 
             long height = chain.Tip.Index;
             if (offset + limit > (int)height)
@@ -170,7 +178,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     foreach (var action in tx.Actions!)
                     {
                         var actionTypeAttribute =
-                            Attribute.GetCustomAttribute(ToAction(action).InnerAction.GetType(), typeOfActionTypeAttribute)
+                            Attribute.GetCustomAttribute(ToAction(action).GetType(), typeOfActionTypeAttribute)
                                 as ActionTypeAttribute;
                         if (actionTypeAttribute is null)
                         {

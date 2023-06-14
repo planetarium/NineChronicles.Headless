@@ -1,15 +1,12 @@
 using System;
 using System.Linq;
 using GraphQL;
-using Lib9c;
 using Libplanet;
-using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Crypto;
 using Libplanet.Tx;
 using Nekoyume.Action;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -19,10 +16,10 @@ namespace NineChronicles.Headless.GraphTypes
         {
         }
 
-        internal override byte[] Encode(IResolveFieldContext context, NCAction action)
+        internal override byte[] Encode(IResolveFieldContext context, ActionBase action)
         {
             var publicKey = new PublicKey(ByteUtil.ParseHex(context.Parent!.GetArgument<string>("publicKey")));
-            if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+            if (!(standaloneContext.BlockChain is BlockChain blockChain))
             {
                 throw new ExecutionError(
                     $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");

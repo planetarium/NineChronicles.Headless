@@ -23,7 +23,8 @@ using Libplanet.Store.Trie;
 using Libplanet.Tx;
 using Nekoyume;
 using Nekoyume.Action;
-using Nekoyume.BlockChain.Policy;
+using Nekoyume.Action.Loader;
+using Nekoyume.Blockchain.Policy;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.Executable.Commands;
@@ -31,7 +32,6 @@ using NineChronicles.Headless.Executable.Store;
 using NineChronicles.Headless.Executable.Tests.IO;
 using Serilog.Core;
 using Xunit;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Lib9cUtils = Lib9c.DevExtensions.Utils;
 
 namespace NineChronicles.Headless.Executable.Tests.Commands
@@ -58,7 +58,12 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [InlineData(StoreType.RocksDb)]
         public void Tip(StoreType storeType)
         {
-            Block genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock();
+            var actionEvaluator = new ActionEvaluator(
+                _ => new BlockPolicy().BlockAction,
+                new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
+                new NCActionLoader(),
+                null);
+            Block genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
             IStore store = storeType.CreateStore(_storePath);
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
@@ -84,7 +89,17 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         public void Inspect(StoreType storeType)
         {
             var proposer = new PrivateKey();
-            Block genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
+            IStore store = storeType.CreateStore(_storePath);
+            IStateStore stateStore = new TrieStateStore(new RocksDBKeyValueStore(Path.Combine(_storePath, "states")));
+            IStagePolicy stagePolicy = new VolatileStagePolicy();
+            IBlockPolicy blockPolicy = new BlockPolicySource(Logger.None).GetTestPolicy();
+            ActionEvaluator actionEvaluator = new ActionEvaluator(
+                _ => blockPolicy.BlockAction,
+                new BlockChainStates(store, stateStore),
+                new NCActionLoader(),
+                null);
+            Block genesisBlock = BlockChain.ProposeGenesisBlock(
+                actionEvaluator,
                 transactions: new IAction[]
                     {
                         new Initialize(
@@ -95,17 +110,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                         )
                     }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa }))
                     .ToImmutableList());
-            IStore store = storeType.CreateStore(_storePath);
-            var stateStore = new TrieStateStore(new RocksDBKeyValueStore(Path.Combine(_storePath, "states")));
-
-            IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<PolymorphicAction<ActionBase>>();
-            IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetTestPolicy();
-            ActionEvaluator actionEvaluator = new ActionEvaluator(
-                _ => blockPolicy.BlockAction,
-                new BlockChainStates(store, stateStore),
-                new SingleActionLoader(typeof(NCAction)),
-                null);
-            BlockChain<NCAction> chain = BlockChain<NCAction>.Create(
+            BlockChain chain = BlockChain.Create(
                 blockPolicy,
                 stagePolicy,
                 store,
@@ -124,7 +129,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 RuneInfos = new List<RuneSlotInfo>(),
             };
 
-            chain.MakeTransaction(proposer, new PolymorphicAction<ActionBase>[] { action });
+            chain.MakeTransaction(proposer, new ActionBase[] { action });
             Block block = chain.ProposeBlock(proposer);
             chain.Append(block, GenerateBlockCommit(block, proposer));
             store.Dispose();
@@ -146,7 +151,17 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         public void Truncate(StoreType storeType)
         {
             var proposer = new PrivateKey();
-            Block genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock(
+            IStore store = storeType.CreateStore(_storePath);
+            IStateStore stateStore = new TrieStateStore(new RocksDBKeyValueStore(Path.Combine(_storePath, "states")));
+            IStagePolicy stagePolicy = new VolatileStagePolicy();
+            IBlockPolicy blockPolicy = new BlockPolicySource(Logger.None).GetTestPolicy();
+            ActionEvaluator actionEvaluator = new ActionEvaluator(
+                _ => blockPolicy.BlockAction,
+                new BlockChainStates(store, stateStore),
+                new NCActionLoader(),
+                null);
+            Block genesisBlock = BlockChain.ProposeGenesisBlock(
+                actionEvaluator,
                 transactions: new IAction[]
                     {
                         new Initialize(
@@ -157,17 +172,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                         )
                     }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa }))
                     .ToImmutableList());
-            IStore store = storeType.CreateStore(_storePath);
-            var stateStore = new TrieStateStore(new RocksDBKeyValueStore(Path.Combine(_storePath, "states")));
-
-            IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
-            IBlockPolicy<NCAction> blockPolicy = new BlockPolicy<NCAction>();
-            ActionEvaluator actionEvaluator = new ActionEvaluator(
-                _ => blockPolicy.BlockAction,
-                new BlockChainStates(store, stateStore),
-                new SingleActionLoader(typeof(NCAction)),
-                null);
-            BlockChain<NCAction> chain = BlockChain<NCAction>.Create(
+            BlockChain chain = BlockChain.Create(
                 blockPolicy,
                 stagePolicy,
                 store,
@@ -190,7 +195,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
             for (var i = 0; i < 2; i++)
             {
-                chain.MakeTransaction(proposer, new NCAction[] { action });
+                chain.MakeTransaction(proposer, new ActionBase[] { action });
                 if (chain.Tip.Index < 1)
                 {
                     Block block = chain.ProposeBlock(proposer);
@@ -228,14 +233,14 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var genesisBlock = MineGenesisBlock();
             var stateKeyValueStore = new RocksDBKeyValueStore(statesPath);
             var stateStore = new TrieStateStore(stateKeyValueStore);
-            IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
-            IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
+            IStagePolicy stagePolicy = new VolatileStagePolicy();
+            IBlockPolicy blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
-                new SingleActionLoader(typeof(NCAction)),
+                new NCActionLoader(),
                 null);
-            BlockChain<NCAction> chain = BlockChain<NCAction>.Create(
+            BlockChain chain = BlockChain.Create(
                 blockPolicy,
                 stagePolicy,
                 store,
@@ -271,14 +276,14 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var genesisBlock = MineGenesisBlock();
             var stateKeyValueStore = new RocksDBKeyValueStore(statesPath);
             var stateStore = new TrieStateStore(stateKeyValueStore);
-            IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
-            IBlockPolicy<NCAction> blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
+            IStagePolicy stagePolicy = new VolatileStagePolicy();
+            IBlockPolicy blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
-                new SingleActionLoader(typeof(NCAction)),
+                new NCActionLoader(),
                 null);
-            BlockChain<NCAction> chain = BlockChain<NCAction>.Create(
+            BlockChain chain = BlockChain.Create(
                 blockPolicy,
                 stagePolicy,
                 store,
@@ -299,7 +304,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
             for (var i = 0; i < 2; i++)
             {
-                chain.MakeTransaction(GenesisHelper.ValidatorKey, new NCAction[] { action });
+                chain.MakeTransaction(GenesisHelper.ValidatorKey, new ActionBase[] { action });
                 Block block = chain.ProposeBlock(
                     GenesisHelper.ValidatorKey,
                     lastCommit: GenerateBlockCommit(chain.Tip, GenesisHelper.ValidatorKey));

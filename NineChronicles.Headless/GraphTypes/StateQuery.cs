@@ -278,24 +278,38 @@ namespace NineChronicles.Headless.GraphTypes
                 "stakeRewards",
                 resolve: context =>
                 {
-                    var sheetAddress = Addresses.GetSheetAddress<StakeRegularRewardSheet>();
-                    var fixedSheetAddress = Addresses.GetSheetAddress<StakeRegularFixedRewardSheet>();
-                    IValue? sheetValue = context.Source.GetState(sheetAddress);
-                    IValue? fixedSheetValue = context.Source.GetState(fixedSheetAddress);
-                    if (sheetValue is Text sv && fixedSheetValue is Text fsv)
-                    {
-                        var stakeRegularRewardSheet = new StakeRegularRewardSheet();
-                        stakeRegularRewardSheet.Set(sv);
-                        var stakeRegularFixedRewardSheet = new StakeRegularFixedRewardSheet();
-                        stakeRegularFixedRewardSheet.Set(fsv);
+                    StakeRegularRewardSheet stakeRegularRewardSheet;
+                    StakeRegularFixedRewardSheet stakeRegularFixedRewardSheet;
 
-                        return (stakeRegularRewardSheet, stakeRegularFixedRewardSheet);
+                    if (context.Source.BlockIndex < StakeState.StakeRewardSheetV2Index)
+                    {
+                        stakeRegularRewardSheet = new StakeRegularRewardSheet();
+                        stakeRegularRewardSheet.Set(ClaimStakeReward.StakeRegularRewardSheetV1Data);
+                        stakeRegularFixedRewardSheet = new StakeRegularFixedRewardSheet();
+                        stakeRegularFixedRewardSheet.Set(ClaimStakeReward.StakeRegularFixedRewardSheetV1Data);
+                    }
+                    else
+                    {
+                        IReadOnlyList<IValue?> values = context.Source.GetStates(new[]
+                        {
+                            Addresses.GetSheetAddress<StakeRegularRewardSheet>(),
+                            Addresses.GetSheetAddress<StakeRegularFixedRewardSheet>()
+                        });
+
+                        if (!(values[0] is Text sv && values[1] is Text fsv))
+                        {
+                            return null;
+                        }
+
+                        stakeRegularRewardSheet = new StakeRegularRewardSheet();
+                        stakeRegularRewardSheet.Set(sv);
+                        stakeRegularFixedRewardSheet = new StakeRegularFixedRewardSheet();
+                        stakeRegularFixedRewardSheet.Set(fsv);
                     }
 
-                    return null;
+                    return (stakeRegularRewardSheet, stakeRegularFixedRewardSheet);
                 }
             );
-
             Field<CrystalMonsterCollectionMultiplierSheetType>(
                 name: nameof(CrystalMonsterCollectionMultiplierSheet),
                 resolve: context =>

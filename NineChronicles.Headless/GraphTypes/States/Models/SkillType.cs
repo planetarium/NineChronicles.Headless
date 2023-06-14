@@ -16,6 +16,10 @@ namespace NineChronicles.Headless.GraphTypes.States.Models
                 resolve: context => context.Source.SkillRow.ElementalType);
             Field<NonNullGraphType<IntGraphType>>(nameof(Skill.Power));
             Field<NonNullGraphType<IntGraphType>>(nameof(Skill.Chance));
+            Field<NonNullGraphType<IntGraphType>>(nameof(Skill.StatPowerRatio));
+            Field<NonNullGraphType<StatTypeEnumType>>(
+                "referencedStatType",
+                resolve: context => context.Source.ReferencedStatType);
         }
     }
 }

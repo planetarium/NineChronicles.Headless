@@ -1,7 +1,6 @@
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
-using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blocks;
 using Libplanet.Explorer.GraphTypes;
@@ -11,7 +10,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -176,8 +174,7 @@ namespace NineChronicles.Headless.GraphTypes
             );
         }
 
-        private IEnumerable<Block> GetTopmostBlocks<T>(BlockChain<T> blockChain, int offset)
-            where T : IAction, new()
+        private IEnumerable<Block> GetTopmostBlocks(BlockChain blockChain, int offset)
         {
             Block block = blockChain.Tip;
 

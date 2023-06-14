@@ -14,7 +14,6 @@ using Nekoyume.Action;
 using Nekoyume.Action.Factory;
 using Nekoyume.Model;
 using NineChronicles.Headless.Executable.IO;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
 {

@@ -1,13 +1,14 @@
 using System;
 using System.IO;
-using System.Security.Cryptography;
-using Libplanet;
+using Libplanet.Action;
 using Libplanet.Blockchain;
+using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
 using Libplanet.Store;
+using Libplanet.Store.Trie;
+using Nekoyume.Action.Loader;
 using NineChronicles.Headless.Executable.Store;
 using Xunit;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Tests.Store
 {
@@ -27,7 +28,12 @@ namespace NineChronicles.Headless.Executable.Tests.Store
         public void GetGenesisBlock(StoreType storeType)
         {
             IStore store = storeType.CreateStore(_storePath);
-            Block genesisBlock = BlockChain<NCAction>.ProposeGenesisBlock();
+            IActionEvaluator actionEvaluator = new ActionEvaluator(
+                _ => new BlockPolicy().BlockAction,
+                new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
+                new NCActionLoader(),
+                null);
+            Block genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
             store.PutBlock(genesisBlock);
