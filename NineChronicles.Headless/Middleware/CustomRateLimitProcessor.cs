@@ -24,7 +24,7 @@ namespace NineChronicles.Headless.Middleware
 
             if (_options.IpWhitelist != null && IpParser.ContainsIp(
                     _options.IpWhitelist,
-                    requestIdentity.ClientIp.Split("/").FirstOrDefault()))
+                    requestIdentity.ClientIp))
             {
                 return true;
             }

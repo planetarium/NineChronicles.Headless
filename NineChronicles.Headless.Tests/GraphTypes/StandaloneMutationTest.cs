@@ -1,6 +1,7 @@
 using GraphQL;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Action.Sys;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
@@ -8,9 +9,11 @@ using Libplanet.Blocks;
 using Libplanet.Consensus;
 using Libplanet.Crypto;
 using Libplanet.KeyStore;
+using Libplanet.Store;
+using Libplanet.Store.Trie;
 using Libplanet.Tx;
 using Nekoyume.Action;
-using Nekoyume.BlockChain.Policy;
+using Nekoyume.Action.Loader;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -33,7 +36,6 @@ using NineChronicles.Headless.Executable.Tests.IO;
 using Xunit;
 using Xunit.Abstractions;
 using static NineChronicles.Headless.NCActionUtils;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -117,7 +119,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var privateKey = new PrivateKey();
             (ActivationKey activationKey, PendingActivationState pendingActivation) =
                 ActivationKey.Create(privateKey, nonce);
-            NCAction action = new CreatePendingActivation(pendingActivation);
+            ActionBase action = new CreatePendingActivation(pendingActivation);
             BlockChain.MakeTransaction(AdminPrivateKey, new[] { action });
             Block block = BlockChain.ProposeBlock(
                 ProposerPrivateKey,
@@ -206,8 +208,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     id: transferTxId,
                     filtered: true);
                 Assert.NotNull(tx);
-                Assert.IsType<TransferAsset>(ToAction(tx!.Actions!.Single()).InnerAction);
-                TransferAsset transferAsset = (TransferAsset)ToAction(tx.Actions!.Single()).InnerAction;
+                Assert.IsType<TransferAsset>(ToAction(tx!.Actions!.Single()));
+                TransferAsset transferAsset = (TransferAsset)ToAction(tx.Actions!.Single());
                 Assert.Equal(memo, transferAsset.Memo);
 
                 var expectedResult = new Dictionary<string, object>
@@ -327,7 +329,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, data!);
             Assert.Single(tx.Actions);
-            var action = (CreateAvatar)ToAction(tx.Actions!.First()).InnerAction;
+            var action = (CreateAvatar)ToAction(tx.Actions!.First());
             Assert.Equal(name, action.name);
             Assert.Equal(index, action.index);
             Assert.Equal(hair, action.hair);
@@ -420,7 +422,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, data);
             Assert.Single(tx.Actions);
-            var action = (HackAndSlash)ToAction(tx.Actions!.First()).InnerAction;
+            var action = (HackAndSlash)ToAction(tx.Actions!.First());
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(worldId, action.WorldId);
             Assert.Equal(stageId, action.StageId);
@@ -506,7 +508,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, data);
             Assert.Single(tx.Actions);
-            var action = (DailyReward)ToAction(tx.Actions!.First()).InnerAction;
+            var action = (DailyReward)ToAction(tx.Actions!.First());
             Assert.Equal(avatarAddress, action.avatarAddress);
         }
 
@@ -541,7 +543,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, data);
             Assert.Single(tx.Actions);
-            var action = (ChargeActionPoint)ToAction(tx.Actions!.First()).InnerAction;
+            var action = (ChargeActionPoint)ToAction(tx.Actions!.First());
             Assert.Equal(avatarAddress, action.avatarAddress);
         }
 
@@ -572,7 +574,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, data);
             Assert.Single(tx.Actions);
-            var action = (CombinationEquipment)ToAction(tx.Actions!.First()).InnerAction;
+            var action = (CombinationEquipment)ToAction(tx.Actions!.First());
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(recipeId, action.recipeId);
             Assert.Equal(slotIndex, action.slotIndex);
@@ -630,7 +632,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, data);
             Assert.Single(tx.Actions);
-            var action = (ItemEnhancement)ToAction(tx.Actions!.First()).InnerAction;
+            var action = (ItemEnhancement)ToAction(tx.Actions!.First());
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(itemId, action.itemId);
             Assert.Equal(materialId, action.materialId);
@@ -682,7 +684,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, data);
             Assert.Single(tx.Actions);
-            var action = (CombinationConsumable)ToAction(tx.Actions!.First()).InnerAction;
+            var action = (CombinationConsumable)ToAction(tx.Actions!.First());
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(recipeId, action.recipeId);
             Assert.Equal(slotIndex, action.slotIndex);
@@ -713,7 +715,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }
             }";
 
-            PolymorphicAction<ActionBase> createAvatar = new CreateAvatar2
+            ActionBase createAvatar = new CreateAvatar2
             {
                 index = 0,
                 hair = 0,
@@ -744,7 +746,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, data);
             Assert.Single(tx.Actions);
-            var action = (MonsterCollect)ToAction(tx.Actions!.First()).InnerAction;
+            var action = (MonsterCollect)ToAction(tx.Actions!.First());
             Assert.Equal(1, action.level);
         }
 
@@ -759,7 +761,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }}
             }}";
 
-            PolymorphicAction<ActionBase> createAvatar = new CreateAvatar2
+            ActionBase createAvatar = new CreateAvatar2
             {
                 index = 0,
                 hair = 0,
@@ -790,7 +792,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             Assert.Equal(expected, data);
             Assert.Single(tx.Actions);
-            var action = (ClaimMonsterCollectionReward)ToAction(tx.Actions!.First()).InnerAction;
+            var action = (ClaimMonsterCollectionReward)ToAction(tx.Actions!.First());
             Assert.Equal(avatarAddress, action.avatarAddress);
         }
 
@@ -805,7 +807,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         //         }
         //     }";
         //
-        //     PolymorphicAction<ActionBase> createAvatar = new CreateAvatar2
+        //     ActionBase createAvatar = new CreateAvatar2
         //     {
         //         index = 0,
         //         hair = 0,
@@ -873,7 +875,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     0,
                     service.MinerPrivateKey!,
                     genesis.Hash,
-                    new PolymorphicAction<ActionBase>[] { }
+                    new ActionBase[] { }
                 );
             string base64Encoded = Convert.ToBase64String(tx.Serialize());
             query = $"mutation {{ stageTx(payload: \"{base64Encoded}\") }}";
@@ -920,7 +922,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     0,
                     service.MinerPrivateKey!,
                     genesis.Hash,
-                    new PolymorphicAction<ActionBase>[] { }
+                    new ActionBase[] { }
                 );
             string base64Encoded = Convert.ToBase64String(tx.Serialize());
             query = $"mutation {{ stageTxV2(payload: \"{base64Encoded}\") }}";
@@ -947,7 +949,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var privateKey = new PrivateKey();
             (ActivationKey activationKey, PendingActivationState pendingActivation) =
                 ActivationKey.Create(privateKey, nonce);
-            NCAction action = new CreatePendingActivation(pendingActivation);
+            ActionBase action = new CreatePendingActivation(pendingActivation);
             BlockChain.MakeTransaction(AdminPrivateKey, new[] { action });
             Block block = BlockChain.ProposeBlock(
                 ProposerPrivateKey,
@@ -977,7 +979,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             IValue? state = BlockChain.GetState(privateKey.ToAddress().Derive(ActivationKey.DeriveKey));
             Assert.True((Bencodex.Types.Boolean)state);
         }
-
+        
         [Fact]
         public async Task StageTransaction()
         {
@@ -996,7 +998,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
             var pk = new PrivateKey();
-            NCAction action = new ApprovePledge
+            ActionBase action = new ApprovePledge
             {
                 PatronAddress = new PrivateKey().ToAddress()
             };
@@ -1012,44 +1014,50 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Address adminAddress,
             Currency curreny,
             IImmutableSet<Address> activatedAccounts,
-            RankingState0? rankingState = null
-        ) => BlockChain<PolymorphicAction<ActionBase>>.ProposeGenesisBlock(
-            transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(0,
-                AdminPrivateKey, null, new PolymorphicAction<ActionBase>[]
-                {
-                    new InitializeStates(
-                        rankingState: rankingState ?? new RankingState0(),
-                        shopState: new ShopState(),
-                        gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
-                        redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                            .Add("address", RedeemCodeState.Address.Serialize())
-                            .Add("map", Bencodex.Types.Dictionary.Empty)
-                        ),
-                        adminAddressState: new AdminState(adminAddress, 1500000),
-                        activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-                        goldCurrencyState: new GoldCurrencyState(curreny),
-                        goldDistributions: new GoldDistribution[0],
-                        tableSheets: _sheets,
-                        pendingActivationStates: new PendingActivationState[] { }
-                    ),
-                    new PrepareRewardAssets
+            RankingState0? rankingState = null)
+        {
+            var actionEvaluator = new ActionEvaluator(
+                _ => ServiceBuilder.BlockPolicy.BlockAction,
+                new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
+                new NCActionLoader(),
+                null);
+            return BlockChain.ProposeGenesisBlock(
+                actionEvaluator,
+                transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(0,
+                    AdminPrivateKey, null, new ActionBase[]
                     {
-                        RewardPoolAddress = MeadConfig.PatronAddress,
-                        Assets = new List<FungibleAssetValue>
+                        new InitializeStates(
+                            rankingState: rankingState ?? new RankingState0(),
+                            shopState: new ShopState(),
+                            gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
+                            redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                                .Add("address", RedeemCodeState.Address.Serialize())
+                                .Add("map", Bencodex.Types.Dictionary.Empty)
+                            ),
+                            adminAddressState: new AdminState(adminAddress, 1500000),
+                            activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
+                            goldCurrencyState: new GoldCurrencyState(curreny),
+                            goldDistributions: new GoldDistribution[0],
+                            tableSheets: _sheets,
+                            pendingActivationStates: new PendingActivationState[] { }
+                        ),
+                        new PrepareRewardAssets
                         {
-                            1 * Currencies.Mead
-                        }
-                    }
-                })).AddRange(new IAction[]
-            {
-                new Initialize(
-                    new ValidatorSet(
-                        new[] { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }
-                            .ToList()),
-                    states: ImmutableDictionary.Create<Address, IValue>())
-            }.Select((sa, nonce) => Transaction.Create(nonce + 1, AdminPrivateKey, null, new[] { sa }))),
-            blockAction: ServiceBuilder.BlockPolicy.BlockAction,
-            privateKey: AdminPrivateKey
-        );
+                            RewardPoolAddress = MeadConfig.PatronAddress,
+                            Assets = new List<FungibleAssetValue>
+                            {
+                                1 * Currencies.Mead
+                            }
+                        }                        
+                    })).AddRange(new IAction[]
+                    {
+                        new Initialize(
+                            new ValidatorSet(
+                                new[] { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }
+                                    .ToList()),
+                            states: ImmutableDictionary.Create<Address, IValue>())
+                    }.Select((sa, nonce) => Transaction.Create(nonce + 1, AdminPrivateKey, null, new[] { sa }))),
+                privateKey: AdminPrivateKey);
+        }
     }
 }

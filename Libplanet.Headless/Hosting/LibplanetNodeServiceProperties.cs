@@ -17,6 +17,8 @@ namespace Libplanet.Headless.Hosting
 
         public ushort? ConsensusPort { get; set; }
 
+        public double? ConsensusTargetBlockIntervalMilliseconds { get; set; }
+
         public PrivateKey SwarmPrivateKey { get; set; }
 
         public PrivateKey ConsensusPrivateKey { get; set; }
@@ -83,6 +85,9 @@ namespace Libplanet.Headless.Hosting
 
 #nullable enable
         public DynamicActionTypeLoaderConfiguration? DynamicActionTypeLoader { get; init; } = null;
+
+        public IActionEvaluatorConfiguration ActionEvaluatorConfiguration { get; init; } =
+            new DefaultActionEvaluatorConfiguration();
 #nullable disable
     }
 }

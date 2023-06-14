@@ -6,7 +6,6 @@ using Libplanet.Action.Loader;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
-using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Libplanet.Headless;
 
 namespace NineChronicles.Headless.Properties
@@ -82,7 +81,9 @@ namespace NineChronicles.Headless.Properties
                 int maximumPollPeers = int.MaxValue,
                 ushort? consensusPort = null,
                 string? consensusPrivateKeyString = null,
-                string[]? consensusSeedStrings = null)
+                string[]? consensusSeedStrings = null,
+                double? consensusTargetBlockIntervalMilliseconds = null,
+                IActionEvaluatorConfiguration? actionEvaluatorConfiguration = null)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
@@ -130,6 +131,8 @@ namespace NineChronicles.Headless.Properties
                 ConsensusPort = consensusPort,
                 ConsensusSeeds = consensusSeeds,
                 ConsensusPrivateKey = consensusPrivateKey,
+                ConsensusTargetBlockIntervalMilliseconds = consensusTargetBlockIntervalMilliseconds,
+                ActionEvaluatorConfiguration = actionEvaluatorConfiguration ?? new DefaultActionEvaluatorConfiguration(),
             };
         }
 

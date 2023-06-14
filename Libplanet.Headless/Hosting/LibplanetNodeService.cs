@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
@@ -16,6 +14,8 @@ using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
+using Libplanet.Extensions.ForkableActionEvaluator;
+using Libplanet.Extensions.RemoteActionEvaluator;
 using Libplanet.Net;
 using Libplanet.Net.Consensus;
 using Libplanet.Net.Protocols;
@@ -31,8 +31,7 @@ using Serilog.Events;
 
 namespace Libplanet.Headless.Hosting
 {
-    public class LibplanetNodeService<T> : BackgroundService, IDisposable
-        where T : IAction, new()
+    public class LibplanetNodeService : BackgroundService, IDisposable
     {
         private static readonly Codec Codec = new Codec();
 
@@ -40,9 +39,9 @@ namespace Libplanet.Headless.Hosting
 
         public readonly IStateStore StateStore;
 
-        public readonly BlockChain<T> BlockChain;
+        public readonly BlockChain BlockChain;
 
-        public readonly Swarm<T> Swarm;
+        public readonly Swarm Swarm;
 
         public readonly LibplanetNodeServiceProperties Properties;
 
@@ -56,7 +55,7 @@ namespace Libplanet.Headless.Hosting
 
         private Action<bool> _preloadStatusHandlerAction;
 
-        protected Progress<PreloadState> PreloadProgress;
+        protected Progress<BlockSyncState> PreloadProgress;
 
         protected bool IgnoreBootstrapFailure;
 
@@ -72,15 +71,16 @@ namespace Libplanet.Headless.Hosting
 
         public LibplanetNodeService(
             LibplanetNodeServiceProperties properties,
-            IBlockPolicy<T> blockPolicy,
-            IStagePolicy<T> stagePolicy,
+            IBlockPolicy blockPolicy,
+            IStagePolicy stagePolicy,
             IEnumerable<IRenderer> renderers,
-            Progress<PreloadState> preloadProgress,
+            Progress<BlockSyncState> preloadProgress,
             Action<RPCException, string> exceptionHandlerAction,
             Action<bool> preloadStatusHandlerAction,
             IActionLoader actionLoader,
             bool ignoreBootstrapFailure = false,
-            bool ignorePreloadFailure = false
+            bool ignorePreloadFailure = false,
+            bool useRemoteActionEvaluator = false
         )
         {
             if (blockPolicy is null)
@@ -116,15 +116,33 @@ namespace Libplanet.Headless.Hosting
             }
 
             var blockChainStates = new BlockChainStates(Store, StateStore);
+            IActionEvaluator BuildActionEvaluator(IActionEvaluatorConfiguration actionEvaluatorConfiguration)
+            {
+                return actionEvaluatorConfiguration switch
+                {
+                    RemoteActionEvaluatorConfiguration remoteActionEvaluatorConfiguration => new RemoteActionEvaluator(
+                        new Uri(remoteActionEvaluatorConfiguration.StateServiceEndpoint), blockChainStates),
+                    DefaultActionEvaluatorConfiguration _ => new ActionEvaluator(
+                        _ => blockPolicy.BlockAction,
+                        blockChainStates: blockChainStates,
+                        actionTypeLoader: actionLoader,
+                        feeCalculator: null
+                    ),
+                    ForkableActionEvaluatorConfiguration forkableActionEvaluatorConfiguration => new
+                        ForkableActionEvaluator(
+                            forkableActionEvaluatorConfiguration.Pairs.Select(pair => (
+                                (pair.Item1.Start, pair.Item1.End), BuildActionEvaluator(pair.Item2)
+                            ))
+                        ),
+                    _ => throw new InvalidOperationException("Unexpected type."),
+                };
+            }
 
-            ActionEvaluator actionEvaluator = new ActionEvaluator(
-                    _ => blockPolicy.BlockAction,
-                    blockChainStates: blockChainStates,
-                    actionTypeLoader: actionLoader,
-                    feeCalculator: null);
+            IActionEvaluator actionEvaluator = BuildActionEvaluator(properties.ActionEvaluatorConfiguration);
+
             if (Store.GetCanonicalChainId() is { })
             {
-                BlockChain = new BlockChain<T>(
+                BlockChain = new BlockChain(
                     policy: blockPolicy,
                     store: Store,
                     stagePolicy: stagePolicy,
@@ -137,7 +155,7 @@ namespace Libplanet.Headless.Hosting
             }
             else
             {
-                BlockChain = BlockChain<T>.Create(
+                BlockChain = BlockChain.Create(
                     policy: blockPolicy,
                     store: Store,
                     stagePolicy: stagePolicy,
@@ -209,17 +227,17 @@ namespace Libplanet.Headless.Hosting
                     ConsensusPort = (int)Properties.ConsensusPort,
                     ConsensusPrivateKey = Properties.ConsensusPrivateKey,
                     ConsensusWorkers = 500,
-                    TargetBlockInterval = TimeSpan.FromSeconds(7)
+                    TargetBlockInterval = TimeSpan.FromMilliseconds(Properties.ConsensusTargetBlockIntervalMilliseconds ?? 7000),
                 };
             }
 
             Log.Debug(
                 "Initializing {Swarm}. {Reactor}: {Validator}",
                 nameof(Swarm),
-                nameof(ConsensusReactor<T>),
+                nameof(ConsensusReactor),
                 !(consensusReactorOption is null));
 
-            Swarm = new Swarm<T>(
+            Swarm = new Swarm(
                 BlockChain,
                 Properties.SwarmPrivateKey,
                 transport,
@@ -348,7 +366,7 @@ namespace Libplanet.Headless.Hosting
                     cancellationToken: cancellationToken);
 
             // We assume the first phase of preloading is BlockHashDownloadState...
-            ((IProgress<PreloadState>)PreloadProgress)?.Report(new BlockHashDownloadState());
+            ((IProgress<BlockSyncState>)PreloadProgress)?.Report(new BlockHashDownloadState());
 
             if (peers.Any())
             {
@@ -607,7 +625,7 @@ namespace Libplanet.Headless.Hosting
 
         public override void Dispose()
         {
-            Log.Debug($"Disposing {nameof(LibplanetNodeService<T>)}...");
+            Log.Debug($"Disposing {nameof(LibplanetNodeService)}...");
 
             Swarm?.Dispose();
             Log.Debug("Swarm disposed.");

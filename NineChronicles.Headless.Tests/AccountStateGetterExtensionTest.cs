@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Bencodex.Types;
 using Libplanet;
-using Libplanet.Action;
+using Libplanet.State;
 using Nekoyume.Action;
 using Xunit;
 using static Lib9c.SerializeKeys;

@@ -4,7 +4,6 @@ using GraphQL.Types;
 using Libplanet;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes;
 
@@ -30,7 +29,7 @@ public partial class ActionQuery
             {
                 var agentAddress = context.GetArgument<Address>("agentAddress");
                 int mead = context.GetArgument<int>("mead");
-                NCAction action = new RequestPledge
+                ActionBase action = new RequestPledge
                 {
                     AgentAddress = agentAddress,
                     Mead = mead,
@@ -50,7 +49,7 @@ public partial class ActionQuery
             resolve: context =>
             {
                 var patronAddress = context.GetArgument<Address>("patronAddress");
-                NCAction action = new ApprovePledge
+                ActionBase action = new ApprovePledge
                 {
                     PatronAddress = patronAddress
                 };
@@ -69,7 +68,7 @@ public partial class ActionQuery
             resolve: context =>
             {
                 var agentAddress = context.GetArgument<Address>("agentAddress");
-                NCAction action = new EndPledge
+                ActionBase action = new EndPledge
                 {
                     AgentAddress = agentAddress
                 };
@@ -99,7 +98,7 @@ public partial class ActionQuery
                 var patronAddress = context.GetArgument<Address>("patronAddress");
                 var agentAddresses = context.GetArgument<List<Address>>("agentAddresses");
                 var mead = context.GetArgument<int>("mead");
-                NCAction action = new CreatePledge
+                ActionBase action = new CreatePledge
                 {
                     PatronAddress = patronAddress,
                     AgentAddresses = agentAddresses,

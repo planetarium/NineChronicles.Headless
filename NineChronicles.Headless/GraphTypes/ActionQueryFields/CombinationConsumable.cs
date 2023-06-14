@@ -3,7 +3,6 @@ using GraphQL.Types;
 using Libplanet;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes;
 
@@ -35,7 +34,7 @@ public partial class ActionQuery
                 var avatarAddress = context.GetArgument<Address>("avatarAddress");
                 var slotIndex = context.GetArgument<int>("slotIndex");
                 var recipeId = context.GetArgument<int>("recipeId");
-                NCAction action = new CombinationConsumable
+                ActionBase action = new CombinationConsumable
                 {
                     avatarAddress = avatarAddress,
                     slotIndex = slotIndex,

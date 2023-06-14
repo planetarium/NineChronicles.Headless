@@ -3,13 +3,14 @@ using Bencodex.Types;
 using GraphQL.Types;
 using Libplanet.Action;
 using Libplanet.Explorer.GraphTypes;
+using Libplanet.State;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States.Models;
 using NineChronicles.Headless.GraphTypes.States.Models.World;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
 using NineChronicles.Headless.GraphTypes.States.Models.Mail;
 using NineChronicles.Headless.GraphTypes.States.Models.Quest;
-using Nekoyume.BlockChain.Policy;
+using Nekoyume.Blockchain.Policy;
 using Nekoyume;
 
 namespace NineChronicles.Headless.GraphTypes.States

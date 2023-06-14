@@ -42,7 +42,7 @@ namespace NineChronicles.Headless.GraphTypes
             }
         }
 
-        class PreloadStateType : ObjectGraphType<PreloadState>
+        class PreloadStateType : ObjectGraphType<BlockSyncState>
         {
             private sealed class PreloadStateExtra
             {
@@ -71,7 +71,7 @@ namespace NineChronicles.Headless.GraphTypes
             public PreloadStateType()
             {
                 Field<NonNullGraphType<LongGraphType>>(name: "currentPhase", resolve: context => context.Source.CurrentPhase);
-                Field<NonNullGraphType<LongGraphType>>(name: "totalPhase", resolve: context => PreloadState.TotalPhase);
+                Field<NonNullGraphType<LongGraphType>>(name: "totalPhase", resolve: context => BlockSyncState.TotalPhase);
                 Field<NonNullGraphType<PreloadStateExtraType>>(name: "extra", resolve: context =>
                 {
                     var preloadState = context.Source;
@@ -123,8 +123,8 @@ namespace NineChronicles.Headless.GraphTypes
             {
                 Name = "preloadProgress",
                 Type = typeof(PreloadStateType),
-                Resolver = new FuncFieldResolver<PreloadState>(context => (context.Source as PreloadState)!),
-                Subscriber = new EventStreamResolver<PreloadState>(context => StandaloneContext.PreloadStateSubject.AsObservable()),
+                Resolver = new FuncFieldResolver<BlockSyncState>(context => (context.Source as BlockSyncState)!),
+                Subscriber = new EventStreamResolver<BlockSyncState>(context => StandaloneContext.PreloadStateSubject.AsObservable()),
             });
             AddField(new EventStreamFieldType
             {
@@ -260,7 +260,7 @@ namespace NineChronicles.Headless.GraphTypes
             sw.Start();
             Log.Debug("StandaloneSubscription.RenderBlock started");
 
-            BlockChain<PolymorphicAction<ActionBase>> blockChain = StandaloneContext.NineChroniclesNodeService.BlockChain;
+            BlockChain blockChain = StandaloneContext.NineChroniclesNodeService.BlockChain;
             Currency currency =
                 new GoldCurrencyState(
                     (Dictionary)blockChain.GetState(Addresses.GoldCurrency, _tipHeader.Hash)
@@ -296,7 +296,7 @@ namespace NineChronicles.Headless.GraphTypes
         }
 
         private void RenderForAgent(
-            BlockChain<PolymorphicAction<ActionBase>> blockChain,
+            BlockChain blockChain,
             BlockHeader tipHeader,
             Address address,
             Currency currency,

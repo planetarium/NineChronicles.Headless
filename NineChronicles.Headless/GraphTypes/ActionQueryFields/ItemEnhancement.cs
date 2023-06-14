@@ -4,7 +4,6 @@ using GraphQL.Types;
 using Libplanet;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes;
 
@@ -42,7 +41,7 @@ public partial class ActionQuery
                 var slotIndex = context.GetArgument<int>("slotIndex");
                 var itemId = context.GetArgument<Guid>("itemId");
                 var materialId = context.GetArgument<Guid>("materialId");
-                NCAction action = new ItemEnhancement
+                ActionBase action = new ItemEnhancement
                 {
                     avatarAddress = avatarAddress,
                     slotIndex = slotIndex,

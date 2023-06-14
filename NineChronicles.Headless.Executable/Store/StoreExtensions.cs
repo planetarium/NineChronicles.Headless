@@ -9,8 +9,7 @@ namespace NineChronicles.Headless.Executable.Store
 {
     public static class StoreExtensions
     {
-        public static Block GetGenesisBlock(
-            this IStore store)
+        public static Block GetGenesisBlock(this IStore store)
         {
             Guid? chainId = store.GetCanonicalChainId();
             if (chainId is null)

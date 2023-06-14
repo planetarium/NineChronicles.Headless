@@ -5,7 +5,6 @@ using GraphQL.Types;
 using Libplanet;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes;
 
@@ -77,7 +76,7 @@ public partial class ActionQuery
                         throw new InvalidOperationException("BlockChain not found in the context");
                     }
 
-                    NCAction action = new HackAndSlash
+                    ActionBase action = new HackAndSlash
                     {
                         AvatarAddress = avatarAddress,
                         WorldId = worldId,

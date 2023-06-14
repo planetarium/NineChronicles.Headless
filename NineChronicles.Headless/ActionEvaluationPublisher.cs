@@ -18,7 +18,6 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using Lib9c.Renderers;
 using Libplanet;
-using Libplanet.Action;
 using Libplanet.Blocks;
 using Libplanet.Tx;
 using MagicOnion.Client;
@@ -29,7 +28,6 @@ using Nekoyume.Model.State;
 using Nekoyume.Shared.Hubs;
 using Sentry;
 using Serilog;
-using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless
 {
@@ -302,54 +300,15 @@ namespace NineChronicles.Headless
                         {
                             try
                             {
-                                NineChroniclesActionType? pa = null;
+                                ActionBase? pa = ev.Action is RewardGold
+                                    ? null
+                                    : ev.Action;
                                 var extra = new Dictionary<string, IValue>();
-                                if (!(ev.Action is RewardGold))
-                                {
-                                    pa = new PolymorphicAction<ActionBase>(ev.Action);
-                                    if (ev.Action is BattleArena ba && ev.Exception is null)
-                                    {
-                                        if (ba.ExtraMyArenaPlayerDigest is { } myDigest)
-                                        {
-                                            extra[nameof(BattleArena.ExtraMyArenaPlayerDigest)] = myDigest.Serialize();
-                                        }
 
-                                        if (ba.ExtraEnemyArenaPlayerDigest is { } enemyDigest)
-                                        {
-                                            extra[nameof(BattleArena.ExtraEnemyArenaPlayerDigest)] = enemyDigest.Serialize();
-                                        }
-
-                                        if (ba.ExtraPreviousMyScore is { } myScore)
-                                        {
-                                            extra[nameof(BattleArena.ExtraPreviousMyScore)] = myScore.Serialize();
-                                        }
-                                    }
-
-                                    if (ev.Action is Buy buy)
-                                    {
-                                        extra[nameof(Buy.errors)] = new List(
-                                            buy.errors
-                                                .Select(tuple => new List(tuple.orderId.Serialize(), tuple.errorCode.Serialize()))
-                                        );
-                                    }
-
-                                    if (ev.Action is BattleGrandFinale grandFinale && ev.Exception is null)
-                                    {
-                                        if (grandFinale.ExtraMyArenaPlayerDigest is { } myDigest)
-                                        {
-                                            extra[nameof(BattleGrandFinale.ExtraMyArenaPlayerDigest)] = myDigest.Serialize();
-                                        }
-
-                                        if (grandFinale.ExtraEnemyArenaPlayerDigest is { } enemyDigest)
-                                        {
-                                            extra[nameof(BattleGrandFinale.ExtraEnemyArenaPlayerDigest)] = enemyDigest.Serialize();
-                                        }
-                                    }
-                                }
                                 var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputStates, ev.Exception, ev.PreviousStates, ev.RandomSeed, extra);
                                 var encoded = MessagePackSerializer.Serialize(eval);
                                 var c = new MemoryStream();
-                                using (var df = new DeflateStream(c, CompressionLevel.Fastest))
+                                await using (var df = new DeflateStream(c, CompressionLevel.Fastest))
                                 {
                                     df.Write(encoded, 0, encoded.Length);
                                 }
@@ -392,10 +351,10 @@ namespace NineChronicles.Headless
                     .Subscribe(
                         async ev =>
                         {
-                            PolymorphicAction<ActionBase>? pa = null;
+                            ActionBase? pa = null;
                             if (!(ev.Action is RewardGold))
                             {
-                                pa = new PolymorphicAction<ActionBase>(ev.Action);
+                                pa = ev.Action;
                             }
                             try
                             {
