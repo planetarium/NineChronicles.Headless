@@ -875,24 +875,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     0,
                     service.MinerPrivateKey!,
                     genesis.Hash,
-                    new ActionBase[] { }
+                    new ActionBase[] { },
+                    gasLimit: 4,
+                    maxGasPrice: 1 * Currencies.Mead
                 );
             string base64Encoded = Convert.ToBase64String(tx.Serialize());
             query = $"mutation {{ stageTx(payload: \"{base64Encoded}\") }}";
             result = await ExecuteQueryAsync(query);
-            data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
-            Assert.Null(result.Errors);
-            Assert.Equal(
-                new Dictionary<string, object>
-                {
-                    ["stageTx"] = true,
-                },
-                data
-            );
-            Block mined =
-                BlockChain.ProposeBlock(service.MinerPrivateKey);
-            BlockChain.Append(mined, GenerateBlockCommit(mined.Index, mined.Hash, GenesisValidators));
-            Assert.Contains(tx, mined.Transactions);
+            // Failed stageTransaction because Insufficient Gas fee.
+            Assert.Single(result.Errors!);
         }
 
         [Fact]
@@ -922,24 +913,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     0,
                     service.MinerPrivateKey!,
                     genesis.Hash,
-                    new ActionBase[] { }
+                    new ActionBase[] { },
+                    gasLimit: 4,
+                    maxGasPrice: 1 * Currencies.Mead
                 );
             string base64Encoded = Convert.ToBase64String(tx.Serialize());
             query = $"mutation {{ stageTxV2(payload: \"{base64Encoded}\") }}";
             result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
-            Assert.Null(result.Errors);
-            Assert.Equal(
-                new Dictionary<string, object>
-                {
-                    ["stageTxV2"] = tx.Id.ToHex(),
-                },
-                data
-            );
-            Block mined =
-                BlockChain.ProposeBlock(service.MinerPrivateKey!);
-            BlockChain.Append(mined, GenerateBlockCommit(mined.Index, mined.Hash, GenesisValidators));
-            Assert.Contains(tx, mined.Transactions);
+            // Failed stageTransaction because Insufficient Gas fee.
+            Assert.Single(result.Errors!);
         }
 
         [Fact]
