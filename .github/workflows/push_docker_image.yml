@@ -11,8 +11,9 @@ on:
       - qa-*
       - 2022q3-worldboss
       - release/*
+      - boscohyun-feature-garage-with-monster-collection
     tags:
-      - *
+      - "*"
   workflow_dispatch:
     inputs:
       imageTag:
