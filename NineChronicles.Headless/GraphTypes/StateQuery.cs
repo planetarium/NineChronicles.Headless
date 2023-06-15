@@ -538,7 +538,7 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         throw new Exception("Invalid Slot Index");
                     }
-                    var deriveAddress = CombinationSlotState.DeriveAddress(agentAddress, index);
+                    var deriveAddress = CombinationSlotState.DeriveAddress(avatarAddress, index);
                     if (context.Source.GetState(deriveAddress) is Dictionary state)
                     {
                         return new CombinationSlotState(state);
