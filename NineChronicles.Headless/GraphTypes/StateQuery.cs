@@ -532,7 +532,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    var agentAddress = context.GetArgument<Address>("avatarAddress");
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var index = context.GetArgument<int>("slot");
                     if(index < 0 || index > 3)
                     {
