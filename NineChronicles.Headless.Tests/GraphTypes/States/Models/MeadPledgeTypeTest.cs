@@ -11,18 +11,18 @@ using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 
 namespace NineChronicles.Headless.Tests.GraphTypes.States.Models;
 
-public class MeadContractTypeTest
+public class MeadPledgeTypeTest
 {
     [Theory]
     [InlineData(false, false, 0)]
     [InlineData(true, true, 1)]
     [InlineData(true, false, 2)]
-    public async Task Query(bool exist, bool contracted, int mead)
+    public async Task Query(bool exist, bool approved, int mead)
     {
         const string query = @"
         {
             patronAddress
-            contracted
+            approved
             mead
         }";
 
@@ -31,15 +31,15 @@ public class MeadContractTypeTest
         {
             address = new PrivateKey().ToAddress();
         }
-        (Address?, bool, int) contract = (address, contracted, mead);
-        var queryResult = await ExecuteQueryAsync<MeadContractType>(query, source: contract);
+        (Address?, bool, int) contract = (address, approved, mead);
+        var queryResult = await ExecuteQueryAsync<MeadPledgeType>(query, source: contract);
         var data = (Dictionary<string, object?>)((ExecutionNode)queryResult.Data!).ToValue()!;
 
         Assert.Equal(
             new Dictionary<string, object?>
             {
                 ["patronAddress"] = address is null ? null : address.ToString(),
-                ["contracted"] = contracted,
+                ["approved"] = approved,
                 ["mead"] = mead,
             },
             data

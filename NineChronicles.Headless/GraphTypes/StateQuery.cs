@@ -516,8 +516,8 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return null;
                 });
-            Field<NonNullGraphType<MeadContractType>>(
-                "contracted",
+            Field<NonNullGraphType<MeadPledgeType>>(
+                "pledge",
                 arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
                 {
                     Name = "agentAddress"
@@ -525,18 +525,18 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var agentAddress = context.GetArgument<Address>("agentAddress");
-                    var contractAddress = agentAddress.GetPledgeAddress();
+                    var pledgeAddress = agentAddress.GetPledgeAddress();
                     Address? address = null;
-                    bool contracted = false;
+                    bool approved = false;
                     int mead = 0;
-                    if (context.Source.GetState(contractAddress) is List l)
+                    if (context.Source.GetState(pledgeAddress) is List l)
                     {
                         address = l[0].ToAddress();
-                        contracted = l[1].ToBoolean();
+                        approved = l[1].ToBoolean();
                         mead = l[2].ToInteger();
                     }
 
-                    return (address, contracted, mead);
+                    return (address, approved, mead);
                 }
             );
         }
