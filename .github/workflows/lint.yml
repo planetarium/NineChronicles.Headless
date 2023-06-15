@@ -25,6 +25,6 @@ jobs:
                 set -evx
 
                 FILES=(appsettings.mainnet.json appsettings.internal.json appsettings.previewnet.json appsettings.json)
-                for file in ${FILES[@]}; do
+                for file in "${FILES[@]}"; do
                   ajv validate -s appsettings-schema.json -d "$file"
                 done
