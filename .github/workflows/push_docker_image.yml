@@ -12,7 +12,7 @@ on:
       - 2022q3-worldboss
       - release/*
     tags:
-      - *
+      - "*"
   workflow_dispatch:
     inputs:
       imageTag:
