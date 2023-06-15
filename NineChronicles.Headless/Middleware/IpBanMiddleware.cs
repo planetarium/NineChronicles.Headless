@@ -54,7 +54,7 @@ namespace NineChronicles.Headless.Middleware
                 {
                     _logger.Information($"[IP-RATE-LIMITER] IP {remoteIp} has been banned");
                     var message = _options.Value.IpBanResponse!.Content!;
-                    context.Response.StatusCode = (int) _options.Value.IpBanResponse!.StatusCode!;
+                    context.Response.StatusCode = (int)_options.Value.IpBanResponse!.StatusCode!;
                     context.Response.ContentType = _options.Value.IpBanResponse!.ContentType!;
                     return context.Response.WriteAsync(message);
                 }
