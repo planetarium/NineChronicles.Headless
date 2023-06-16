@@ -18,6 +18,27 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public partial class ActionQuery
     {
+        private FungibleAssetValue getFungibleAssetValue(
+            CurrencyEnum curr, BigInteger majorUnit, BigInteger minorUnit)
+        {
+            Currency currency;
+            switch (curr)
+            {
+                case CurrencyEnum.NCG:
+                    currency = new GoldCurrencyState(
+                        (Dictionary)standaloneContext.BlockChain!.GetState(GoldCurrencyState.Address)
+                    ).Currency;
+                    break;
+                case CurrencyEnum.CRYSTAL:
+                    currency = CrystalCalculator.CRYSTAL;
+                    break;
+                default:
+                    throw new ExecutionError($"Unsupported Currency type {curr}");
+            }
+
+            return new FungibleAssetValue(currency, majorUnit, minorUnit);
+        }
+
         private void RegisterGarages()
         {
             Field<NonNullGraphType<ByteStringType>>(
@@ -51,25 +72,9 @@ namespace NineChronicles.Headless.GraphTypes
                     // Here. and This is the input type of action.
                     var fungibleAssetValues = new List<(Address balanceAddr, FungibleAssetValue value)>();
 
-                    foreach (var (addr, (curr, majorUnit, minorUnit))
-                             in addressAndFavList)
+                    foreach (var (addr, (curr, majorUnit, minorUnit)) in addressAndFavList)
                     {
-                        Currency currency;
-                        switch (curr)
-                        {
-                            case CurrencyEnum.NCG:
-                                currency = new GoldCurrencyState(
-                                    (Dictionary)standaloneContext.BlockChain!.GetState(GoldCurrencyState.Address)
-                                ).Currency;
-                                break;
-                            case CurrencyEnum.CRYSTAL:
-                                currency = CrystalCalculator.CRYSTAL;
-                                break;
-                            default:
-                                throw new ExecutionError($"Unsupported Currency type {curr}");
-                        }
-
-                        FungibleAssetValue fav = new FungibleAssetValue(currency, majorUnit, minorUnit);
+                        var fav = getFungibleAssetValue(curr, majorUnit, minorUnit);
                         fungibleAssetValues.Add((addr, fav));
                     }
 
@@ -89,23 +94,42 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<ByteStringType>>(
                 "deliverToOthersGarages",
                 arguments: new QueryArguments(
-                    new QueryArgument<DeliverToOthersGaragesArgsInputType>
+                    new QueryArgument<NonNullGraphType<AddressType>>
                     {
-                        Name = "args",
-                        Description = "The arguments of the \"DeliverToOthersGarages\" action constructor.",
+                        Name = "recipientAgentAddr",
+                        Description = "Recipient agent address",
+                    },
+                    new QueryArgument<ListGraphType<NonNullGraphType<GarageFungibleAssetValueInputType>>>
+                    {
+                        Name = "fungibleAssetValues",
+                        Description = "Array of currency ticket and quantity to deliver."
+                    },
+                    new QueryArgument<ListGraphType<NonNullGraphType<FungibleIdAndCountInputType>>>
+                    {
+                        Name = "fungibleIdAndCounts",
+                        Description = "Array of Fungible ID and count to deliver."
                     }
                 ),
                 resolve: context =>
                 {
-                    var args = context.GetArgument<(
-                        Address recipientAgentAddr,
-                        IEnumerable<FungibleAssetValue>? fungibleAssetValues,
-                        IEnumerable<(HashDigest<SHA256> fungibleId, int count)>? fungibleIdAndCounts
-                        )>("args");
+                    var recipientAgentAddr = context.GetArgument<Address>("recipientAgentAddr");
+                    var fungibleAssetValueList = context.GetArgument<
+                        IEnumerable<(CurrencyEnum CurrencyEnum, BigInteger majorUnit, BigInteger minorUnit)>
+                    >("fungibleAssetValues");
+                    var fungibleAssetValues = new List<FungibleAssetValue>();
+                    foreach (var (curr, majorUnit, minorUnit) in fungibleAssetValueList)
+                    {
+                        fungibleAssetValues.Add(getFungibleAssetValue(curr, majorUnit, minorUnit));
+                    }
+
+                    var fungibleIdAndCounts =
+                        context.GetArgument<IEnumerable<(HashDigest<SHA256> fungibleId, int count)>?>(
+                            "fungibleIdAndCounts");
+
                     ActionBase action = new DeliverToOthersGarages(
-                        args.recipientAgentAddr,
-                        args.fungibleAssetValues,
-                        args.fungibleIdAndCounts);
+                        recipientAgentAddr,
+                        fungibleAssetValues,
+                        fungibleIdAndCounts);
                     return Encode(context, action);
                 }
             );

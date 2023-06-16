@@ -22,7 +22,7 @@ namespace NineChronicles.Headless.GraphTypes.ActionArgs.Garages
                 name: "recipientAgentAddr",
                 description: "Recipient agent address.");
 
-            Field<ListGraphType<NonNullGraphType<SimplifyFungibleAssetValueInputType>>>(
+            Field<ListGraphType<NonNullGraphType<GarageFungibleAssetValueInputType>>>(
                 name: "fungibleAssetValues",
                 description: "Array of currency ticker and quantity.");
 
