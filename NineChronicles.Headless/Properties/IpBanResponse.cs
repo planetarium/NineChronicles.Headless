@@ -8,5 +8,4 @@ namespace NineChronicles.Headless.Properties
 
         public int? StatusCode { get; set; } = 403;
     }
-
 }
