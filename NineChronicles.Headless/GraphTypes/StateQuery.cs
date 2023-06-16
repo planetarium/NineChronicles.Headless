@@ -10,7 +10,10 @@ using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Arena;
 using Nekoyume.Extensions;
+using Nekoyume.Model;
+using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -346,7 +349,136 @@ namespace NineChronicles.Headless.GraphTypes
                     return null;
                 }
             );
+            Field<NonNullGraphType<DecimalGraphType>>(
+                name: "arenaPercentageCalculator",
+                description: "Calculate Win percentage between two avatars.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "Avatar address."
+                    },
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "enemyAvatarAddress",
+                        Description = "Enemy Avatar address."
+                    }
+                ),
+                resolve: context =>
+                {
+                    Address myAvatarAddress = context.GetArgument<Address>("avatarAddress");
+                    Address enemyAvatarAddress = context.GetArgument<Address>("enemyAvatarAddress");
+                    var sheets = context.Source.GetSheets(sheetTypes: new[]
+                    {
+                        typeof(ArenaSheet),
+                        typeof(CostumeStatSheet),
+                        typeof(ItemRequirementSheet),
+                        typeof(EquipmentItemRecipeSheet),
+                        typeof(EquipmentItemSubRecipeSheetV2),
+                        typeof(EquipmentItemOptionSheet),
+                        typeof(RuneListSheet),
+                        typeof(MaterialItemSheet),
+                        typeof(SkillSheet),
+                        typeof(SkillBuffSheet),
+                        typeof(StatBuffSheet),
+                        typeof(SkillActionBuffSheet),
+                        typeof(ActionBuffSheet),
+                        typeof(CharacterSheet),
+                        typeof(CharacterLevelSheet),
+                        typeof(EquipmentItemSetEffectSheet),
+                        typeof(WeeklyArenaRewardSheet),
+                        typeof(RuneOptionSheet),
+                    });
+                    var myAvatar = context.Source.GetAvatarStateV2(myAvatarAddress);
+                    var enemyAvatar = context.Source.GetAvatarStateV2(enemyAvatarAddress);
 
+                    //sheets
+                    var arenaSheets = sheets.GetArenaSimulatorSheets();
+                    var characterSheet = sheets.GetSheet<CharacterSheet>();
+
+                    if (!characterSheet.TryGetValue(myAvatar.characterId, out var characterRow) || !characterSheet.TryGetValue(enemyAvatar.characterId, out var characterRow2))
+                    {
+                        throw new SheetRowNotFoundException("CharacterSheet", myAvatar.characterId);
+                    }
+
+                    //MyAvatar                
+                    var myArenaAvatarStateAdr = ArenaAvatarState.DeriveAddress(myAvatarAddress);
+                    var myArenaAvatarState = context.Source.GetArenaAvatarState(myArenaAvatarStateAdr, myAvatar);
+                    List<Guid> myArenaEquipementList = myAvatar.inventory.Equipments.Where(f=>myArenaAvatarState.Equipments.Contains(f.ItemId)).Select(n => n.ItemId).ToList();
+                    List<Guid> myArenaCostumeList = myAvatar.inventory.Costumes.Where(f=>myArenaAvatarState.Costumes.Contains(f.ItemId)).Select(n => n.ItemId).ToList();
+
+                    var myRuneSlotStateAddress = RuneSlotState.DeriveAddress(myAvatarAddress, BattleType.Arena);
+                    var myRuneSlotState = context.Source.TryGetState(myRuneSlotStateAddress, out List myRawRuneSlotState)
+                        ? new RuneSlotState(myRawRuneSlotState)
+                        : new RuneSlotState(BattleType.Arena);
+
+                    var myRuneStates = new List<RuneState>();
+                    var myRuneSlotInfos = myRuneSlotState.GetEquippedRuneSlotInfos();
+                    foreach (var address in myRuneSlotInfos.Select(info => RuneState.DeriveAddress(myAvatarAddress, info.RuneId)))
+                    {
+                        if (context.Source.TryGetState(address, out List rawRuneState))
+                        {
+                            myRuneStates.Add(new RuneState(rawRuneState));
+                        }
+                    }
+
+                    //Enemy
+                    var enemyArenaAvatarStateAdr = ArenaAvatarState.DeriveAddress(enemyAvatarAddress);
+                    var enemyArenaAvatarState = context.Source.GetArenaAvatarState(enemyArenaAvatarStateAdr, enemyAvatar);
+                    List<Guid> enemyArenaEquipementList = enemyAvatar.inventory.Equipments.Where(f=>enemyArenaAvatarState.Equipments.Contains(f.ItemId)).Select(n => n.ItemId).ToList();
+                    List<Guid> enemyArenaCostumeList = enemyAvatar.inventory.Costumes.Where(f=>enemyArenaAvatarState.Costumes.Contains(f.ItemId)).Select(n => n.ItemId).ToList();
+
+                    var enemyRuneSlotStateAddress = RuneSlotState.DeriveAddress(enemyAvatarAddress, BattleType.Arena);
+                    var enemyRuneSlotState = context.Source.TryGetState(enemyRuneSlotStateAddress, out List enemyRawRuneSlotState)
+                        ? new RuneSlotState(enemyRawRuneSlotState)
+                        : new RuneSlotState(BattleType.Arena);
+
+                    var enemyRuneStates = new List<RuneState>();
+                    var enemyRuneSlotInfos = enemyRuneSlotState.GetEquippedRuneSlotInfos();
+                    foreach (var address in enemyRuneSlotInfos.Select(info => RuneState.DeriveAddress(enemyAvatarAddress, info.RuneId)))
+                    {
+                        if (context.Source.TryGetState(address, out List rawRuneState))
+                        {
+                            enemyRuneStates.Add(new RuneState(rawRuneState));
+                        }
+                    }
+
+                    var myArenaPlayerDigest = new ArenaPlayerDigest(
+                        myAvatar,
+                        myArenaEquipementList,
+                        myArenaCostumeList,
+                        myRuneStates);
+
+                    var enemyArenaPlayerDigest = new ArenaPlayerDigest(
+                        enemyAvatar,
+                        enemyArenaEquipementList,
+                        enemyArenaCostumeList,
+                        enemyRuneStates);
+
+                    Random rnd  =new Random();          
+
+                    int win = 0;
+                    int loss = 0;
+
+                    for (var i = 0; i < 1000; i++)
+                    {
+                        LocalRandom iRandom = new LocalRandom(rnd.Next());
+                        var simulator = new ArenaSimulator(iRandom);
+                        var log = simulator.Simulate(
+                            myArenaPlayerDigest,
+                            enemyArenaPlayerDigest,
+                            arenaSheets);
+                        if(log.Result.ToString() == "Win")
+                        {
+                            win++;
+                        }
+                        else
+                        {
+                            loss++;
+                        }        
+                    }
+                    return Math.Round(((decimal)win / 1000) * 100m, 2);
+                });
             Field<ListGraphType<IntGraphType>>(
                 "unlockedWorldIds",
                 description: "List of unlocked world sheet row ids.",
@@ -514,7 +646,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return null;
-                });
+            });
         }
     }
 }
