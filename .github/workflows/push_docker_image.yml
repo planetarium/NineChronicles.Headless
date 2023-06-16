@@ -10,9 +10,9 @@ on:
       - previewnet
       - qa-*
       - 2022q3-worldboss
-      - test/mead
+      - release/*
     tags:
-      - v*
+      - "*"
   workflow_dispatch:
     inputs:
       imageTag:
