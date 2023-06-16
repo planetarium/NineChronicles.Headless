@@ -647,37 +647,6 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return null;
             });
-            Field<CombinationSlotStateType>(
-                "CombinationSlot",
-                description: "Allows you to see crafting slot data.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "avatarAddress",
-                        Description = "Address of avatar."
-                    },
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "slot",
-                        Description = "Slot index 0-3"
-                    }
-                ),
-                resolve: context =>
-                {
-                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
-                    var index = context.GetArgument<int>("slot");
-                    if(index < 0 || index > 3)
-                    {
-                        throw new Exception("Invalid Slot Index");
-                    }
-                    var deriveAddress = CombinationSlotState.DeriveAddress(avatarAddress, index);
-                    if (context.Source.GetState(deriveAddress) is Dictionary state)
-                    {
-                        return new CombinationSlotState(state);
-                    }
-
-                    return null;
-            });
         }
     }
 }
