@@ -954,14 +954,17 @@ actionPoint: {actionPoint},
             };
             var fungibleIdAndCountsString = string.Join(",", fungibleIdAndCounts.Select(tuple =>
                 $"{{ fungibleId: {{ value: \"{tuple.fungibleId.ToString()}\"}}, count: {tuple.count} }}"));
+            var memo = "memo";
             var expectedAction = new LoadIntoMyGarages(
                 fungibleAssetValues,
                 inventoryAddr,
-                fungibleIdAndCounts);
+                fungibleIdAndCounts,
+                memo);
             var query = "{ loadIntoMyGarages(args: { " +
                 $"fungibleAssetValues: [{fungibleAssetValuesString}], " +
                 $"inventoryAddr: \"{inventoryAddr.ToHex()}\", " +
-                $"fungibleIdAndCounts: [{fungibleIdAndCountsString}]" +
+                $"fungibleIdAndCounts: [{fungibleIdAndCountsString}]," +
+                $"memo: \"{memo}\"" +
                 "}) }";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(
                 query,
@@ -976,6 +979,7 @@ actionPoint: {actionPoint},
             Assert.True(expectedAction.FungibleAssetValues.SequenceEqual(action.FungibleAssetValues));
             Assert.Equal(expectedAction.InventoryAddr, action.InventoryAddr);
             Assert.True(expectedAction.FungibleIdAndCounts.SequenceEqual(action.FungibleIdAndCounts));
+            Assert.Equal(expectedAction.Memo, action.Memo);
         }
 
         [Fact]
@@ -998,14 +1002,17 @@ actionPoint: {actionPoint},
             };
             var fungibleIdAndCountsString = string.Join(",", fungibleIdAndCounts.Select(tuple =>
                 $"{{ fungibleId: {{ value: \"{tuple.fungibleId.ToString()}\"}}, count: {tuple.count} }}"));
+            var memo = "memo";
             var expectedAction = new DeliverToOthersGarages(
                 recipientAgentAddr,
                 fungibleAssetValues,
-                fungibleIdAndCounts);
+                fungibleIdAndCounts,
+                memo);
             var query = "{ deliverToOthersGarages(args: { " +
                 $"recipientAgentAddr: \"{recipientAgentAddr.ToHex()}\", " +
                 $"fungibleAssetValues: [{fungibleAssetValuesString}], " +
                 $"fungibleIdAndCounts: [{fungibleIdAndCountsString}] " +
+                $"memo: \"{memo}\"" +
                 "}) }";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(
                 query,
@@ -1020,6 +1027,7 @@ actionPoint: {actionPoint},
             Assert.Equal(expectedAction.RecipientAgentAddr, action.RecipientAgentAddr);
             Assert.True(expectedAction.FungibleAssetValues.SequenceEqual(action.FungibleAssetValues));
             Assert.True(expectedAction.FungibleIdAndCounts.SequenceEqual(action.FungibleIdAndCounts));
+            Assert.Equal(expectedAction.Memo, action.Memo);
         }
 
         [Fact]
@@ -1043,14 +1051,17 @@ actionPoint: {actionPoint},
             };
             var fungibleIdAndCountsString = string.Join(",", fungibleIdAndCounts.Select(tuple =>
                 $"{{ fungibleId: {{ value: \"{tuple.fungibleId.ToString()}\"}}, count: {tuple.count} }}"));
+            var memo = "memo";
             var expectedAction = new LoadIntoMyGarages(
                 fungibleAssetValues,
                 inventoryAddr,
-                fungibleIdAndCounts);
+                fungibleIdAndCounts,
+                memo);
             var query = "{ unloadFromMyGarages(args: { " +
                 $"fungibleAssetValues: [{fungibleAssetValuesString}], " +
                 $"inventoryAddr: \"{inventoryAddr.ToHex()}\", " +
                 $"fungibleIdAndCounts: [{fungibleIdAndCountsString}]" +
+                $"memo: \"{memo}\"" +
                 "}) }";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(
                 query,
@@ -1065,6 +1076,7 @@ actionPoint: {actionPoint},
             Assert.True(expectedAction.FungibleAssetValues.SequenceEqual(action.FungibleAssetValues));
             Assert.Equal(expectedAction.InventoryAddr, action.InventoryAddr);
             Assert.True(expectedAction.FungibleIdAndCounts.SequenceEqual(action.FungibleIdAndCounts));
+            Assert.Equal(expectedAction.Memo, action.Memo);
         }
     }
 }

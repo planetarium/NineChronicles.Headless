@@ -1154,7 +1154,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                 Transaction.Create(nonce + 1, ProposerPrivateKey, null,
                                     new[] { sa }))
                         ),
-                    blockAction: blockPolicy.BlockAction,
                     privateKey: ProposerPrivateKey
                 );
 

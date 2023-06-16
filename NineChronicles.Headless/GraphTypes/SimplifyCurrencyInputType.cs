@@ -34,10 +34,13 @@ namespace NineChronicles.Headless.GraphTypes
         public override object ParseDictionary(IDictionary<string, object?> value)
         {
             var ticker = (string)value["ticker"]!;
-            var currency = Currencies.GetCurrency(ticker);
-            if (currency is not null)
+            try
             {
-                return currency;
+                return Currencies.GetMinterlessCurrency(ticker);
+            }
+            catch
+            {
+                // ignore.
             }
 
             if (ticker == "NCG")

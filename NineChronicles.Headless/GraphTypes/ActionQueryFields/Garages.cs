@@ -57,7 +57,12 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<ListGraphType<NonNullGraphType<FungibleIdAndCountInputType>>>
                     {
                         Name = "fungibleIdAndCounts",
-                        Description = "Array of fungible ID and count"
+                        Description = "Array of fungible ID and count",
+                    },
+                    new QueryArgument<StringGraphType>
+                    {
+                        Name = "memo",
+                        Description = "Memo",
                     }
                 ),
                 resolve: context =>
@@ -80,11 +85,13 @@ namespace NineChronicles.Headless.GraphTypes
                     var fungibleIdAndCounts =
                         context.GetArgument<IEnumerable<(HashDigest<SHA256> fungibleId, int count)>?>(
                             "fungibleIdAndCounts");
+                    var memo = context.GetArgument<string?>("memo");
 
                     ActionBase action = new LoadIntoMyGarages(
                         fungibleAssetValues,
                         inventoryAddr,
-                        fungibleIdAndCounts);
+                        fungibleIdAndCounts,
+                        memo);
                     return Encode(context, action);
                 }
             );
@@ -100,12 +107,17 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<ListGraphType<NonNullGraphType<GarageFungibleAssetValueInputType>>>
                     {
                         Name = "fungibleAssetValues",
-                        Description = "Array of currency ticket and quantity to deliver."
+                        Description = "Array of currency ticket and quantity to deliver.",
                     },
                     new QueryArgument<ListGraphType<NonNullGraphType<FungibleIdAndCountInputType>>>
                     {
                         Name = "fungibleIdAndCounts",
-                        Description = "Array of Fungible ID and count to deliver."
+                        Description = "Array of Fungible ID and count to deliver.",
+                    },
+                    new QueryArgument<StringGraphType>
+                    {
+                        Name = "memo",
+                        Description = "Memo",
                     }
                 ),
                 resolve: context =>
@@ -123,11 +135,13 @@ namespace NineChronicles.Headless.GraphTypes
                     var fungibleIdAndCounts =
                         context.GetArgument<IEnumerable<(HashDigest<SHA256> fungibleId, int count)>?>(
                             "fungibleIdAndCounts");
+                    var memo = context.GetArgument<string?>("memo");
 
                     ActionBase action = new DeliverToOthersGarages(
                         recipientAgentAddr,
                         fungibleAssetValues,
-                        fungibleIdAndCounts);
+                        fungibleIdAndCounts,
+                        memo);
                     return Encode(context, action);
                 }
             );
@@ -138,17 +152,22 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<ListGraphType<NonNullGraphType<GarageAddressAndFungibleAssetValueInputType>>>
                     {
                         Name = "addressAndFungibleAssetValues",
-                        Description = "Array of balance address and currency ticker and quantity to send."
+                        Description = "Array of balance address and currency ticker and quantity to send.",
                     },
                     new QueryArgument<AddressType>
                     {
                         Name = "inventoryAddr",
-                        Description = "Inventory address to receive items."
+                        Description = "Inventory address to receive items.",
                     },
                     new QueryArgument<ListGraphType<NonNullGraphType<FungibleIdAndCountInputType>>>
                     {
                         Name = "fungibleIdAndCounts",
-                        Description = "Array of fungible ID and count to send."
+                        Description = "Array of fungible ID and count to send.",
+                    },
+                    new QueryArgument<StringGraphType>
+                    {
+                        Name = "memo",
+                        Description = "Memo",
                     }
                 ),
                 resolve: context =>
@@ -168,11 +187,13 @@ namespace NineChronicles.Headless.GraphTypes
                     var fungibleIdAndCounts =
                         context.GetArgument<IEnumerable<(HashDigest<SHA256> fungibleId, int count)>?>(
                             "fungibleIdAndCounts");
+                    var memo = context.GetArgument<string?>("memo");
 
                     ActionBase action = new UnloadFromMyGarages(
                         fungibleAssetValues,
                         inventoryAddr,
-                        fungibleIdAndCounts);
+                        fungibleIdAndCounts,
+                        memo);
                     return Encode(context, action);
                 }
             );
