@@ -18,7 +18,7 @@ namespace NineChronicles.Headless.GraphTypes.ActionArgs.Garages
         {
             Name = "UnloadFromMyGaragesArgsInput";
 
-            Field<ListGraphType<NonNullGraphType<BalanceAddressAndSimplifyFungibleAssetValueTupleInputType>>>(
+            Field<ListGraphType<NonNullGraphType<GarageAddressAndFungibleAssetValueInputType>>>(
                 name: "fungibleAssetValues",
                 description: "Array of balance address and currency ticker and quantity.");
 

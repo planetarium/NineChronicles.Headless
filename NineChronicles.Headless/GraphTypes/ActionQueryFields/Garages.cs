@@ -11,7 +11,6 @@ using Nekoyume.Action;
 using Nekoyume.Action.Garages;
 using Nekoyume.Helper;
 using Nekoyume.Model.State;
-using NineChronicles.Headless.GraphTypes.ActionArgs.Garages;
 using NineChronicles.Headless.GraphTypes.Input;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -61,8 +60,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "Array of fungible ID and count"
                     }
                 ),
-                resolve:
-                context =>
+                resolve: context =>
                 {
                     // This transforms to (Address, FungibleAssetValue) and goes to....
                     var addressAndFavList = context
@@ -137,23 +135,44 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<ByteStringType>>(
                 "unloadFromMyGarages",
                 arguments: new QueryArguments(
-                    new QueryArgument<UnloadFromMyGaragesArgsInputType>
+                    new QueryArgument<ListGraphType<NonNullGraphType<GarageAddressAndFungibleAssetValueInputType>>>
                     {
-                        Name = "args",
-                        Description = "The arguments of the \"UnloadFromMyGarages\" action constructor.",
+                        Name = "addressAndungibleAssetValues",
+                        Description = "Array of balance address and currency ticker and quantity to send."
+                    },
+                    new QueryArgument<AddressType>
+                    {
+                        Name = "inventoryAddr",
+                        Description = "Inventory address to receive items."
+                    },
+                    new QueryArgument<ListGraphType<NonNullGraphType<FungibleIdAndCountInputType>>>
+                    {
+                        Name = "fungibleIdAndCounts",
+                        Description = "Array of fungible ID and count to send."
                     }
                 ),
                 resolve: context =>
                 {
-                    var args = context.GetArgument<(
-                        IEnumerable<(Address balanceAddr, FungibleAssetValue value)>? fungibleAssetValues,
-                        Address? inventoryAddr,
-                        IEnumerable<(HashDigest<SHA256> fungibleId, int count)>? fungibleIdAndCounts
-                        )>("args");
+                    var addressAndFavList = context
+                        .GetArgument<IEnumerable<(Address balanceAddr,
+                            (CurrencyEnum Currency, BigInteger majorUnit, BigInteger minorUnit)
+                            )>>("addressAndFungibleAssetValues");
+                    var fungibleAssetValues = new List<(Address balanceAddr, FungibleAssetValue value)>();
+                    foreach (var (addr, (curr, majorUnit, minorUnit)) in addressAndFavList)
+                    {
+                        var fav = getFungibleAssetValue(curr, majorUnit, minorUnit);
+                        fungibleAssetValues.Add((addr, fav));
+                    }
+
+                    var inventoryAddr = context.GetArgument<Address?>("inventoryAddr");
+                    var fungibleIdAndCounts =
+                        context.GetArgument<IEnumerable<(HashDigest<SHA256> fungibleId, int count)>?>(
+                            "fungibleIdAndCounts");
+
                     ActionBase action = new UnloadFromMyGarages(
-                        args.fungibleAssetValues,
-                        args.inventoryAddr,
-                        args.fungibleIdAndCounts);
+                        fungibleAssetValues,
+                        inventoryAddr,
+                        fungibleIdAndCounts);
                     return Encode(context, action);
                 }
             );
