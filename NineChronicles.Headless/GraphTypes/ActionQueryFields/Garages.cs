@@ -137,7 +137,7 @@ namespace NineChronicles.Headless.GraphTypes
                 arguments: new QueryArguments(
                     new QueryArgument<ListGraphType<NonNullGraphType<GarageAddressAndFungibleAssetValueInputType>>>
                     {
-                        Name = "addressAndungibleAssetValues",
+                        Name = "addressAndFungibleAssetValues",
                         Description = "Array of balance address and currency ticker and quantity to send."
                     },
                     new QueryArgument<AddressType>

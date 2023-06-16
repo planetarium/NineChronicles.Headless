@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 namespace NineChronicles.Headless.GraphTypes.Input
 {
     public class FungibleIdAndCountInputType :
-        InputObjectGraphType<(HashDigest<SHA256> fungibleId, uint count)>
+        InputObjectGraphType<(HashDigest<SHA256> fungibleId, int count)>
     {
         public FungibleIdAndCountInputType()
         {
@@ -16,7 +16,7 @@ namespace NineChronicles.Headless.GraphTypes.Input
                 name: "fungibleId",
                 description: "Fungible ID");
 
-            Field<UIntGraphType>(
+            Field<IntGraphType>(
                 name: "count",
                 description: "Count");
         }
@@ -24,7 +24,7 @@ namespace NineChronicles.Headless.GraphTypes.Input
         public override object ParseDictionary(IDictionary<string, object?> value)
         {
             var fungibleId = (HashDigest<SHA256>)value["fungibleId"]!;
-            var count = (uint)value["count"]!;
+            var count = (int)value["count"]!;
             return (fungibleId, count);
         }
     }
