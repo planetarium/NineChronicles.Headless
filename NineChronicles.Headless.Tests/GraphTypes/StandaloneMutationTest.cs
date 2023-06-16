@@ -845,7 +845,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             Block genesis =
                 MakeGenesisBlock(
-                    default,
+                    AdminAddress,
 #pragma warning disable CS0618
                     // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
                     Currency.Legacy("NCG", 2, null),
@@ -891,7 +891,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             Block genesis =
                 MakeGenesisBlock(
-                    default,
+                    AdminAddress,
 #pragma warning disable CS0618
                     // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
                     Currency.Legacy("NCG", 2, null),
@@ -967,7 +967,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             Block genesis =
                 MakeGenesisBlock(
-                    default,
+                    AdminAddress,
 #pragma warning disable CS0618
                     // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
                     Currency.Legacy("NCG", 2, null),

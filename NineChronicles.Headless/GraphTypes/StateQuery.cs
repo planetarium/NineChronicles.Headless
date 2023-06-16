@@ -284,9 +284,9 @@ namespace NineChronicles.Headless.GraphTypes
                     if (context.Source.BlockIndex < StakeState.StakeRewardSheetV2Index)
                     {
                         stakeRegularRewardSheet = new StakeRegularRewardSheet();
-                        stakeRegularRewardSheet.Set(ClaimStakeReward.StakeRegularRewardSheetV1Data);
+                        stakeRegularRewardSheet.Set(ClaimStakeReward.V1.StakeRegularRewardSheetCsv);
                         stakeRegularFixedRewardSheet = new StakeRegularFixedRewardSheet();
-                        stakeRegularFixedRewardSheet.Set(ClaimStakeReward.StakeRegularFixedRewardSheetV1Data);
+                        stakeRegularFixedRewardSheet.Set(ClaimStakeReward.V1.StakeRegularFixedRewardSheetCsv);
                     }
                     else
                     {
