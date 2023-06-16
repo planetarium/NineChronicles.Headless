@@ -1,4 +1,5 @@
 using Lib9c.Renderers;
+using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;
@@ -8,37 +9,26 @@ using Libplanet.Headless.Hosting;
 using Libplanet.Net;
 using Libplanet.Store;
 using Microsoft.Extensions.Hosting;
-using Nekoyume.Action;
-using Nekoyume.BlockChain;
-using Nekoyume.BlockChain.Policy;
-using Nekoyume.Model.State;
+using Nekoyume.Blockchain;
+using Nekoyume.Blockchain.Policy;
 using NineChronicles.Headless.Properties;
 using NineChronicles.RPC.Shared.Exceptions;
 using Nito.AsyncEx;
 using Serilog;
 using Serilog.Events;
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics.Metrics;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
-using StrictRenderer =
-    Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer<Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>>;
-using Libplanet.Blocks;
-using Libplanet;
-using Libplanet.Action;
-using Libplanet.Assets;
+using StrictRenderer = Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer;
 
 namespace NineChronicles.Headless
 {
     public class NineChroniclesNodeService : IHostedService, IDisposable
     {
-        private LibplanetNodeService<NCAction> NodeService { get; set; }
+        private LibplanetNodeService NodeService { get; set; }
 
         private LibplanetNodeServiceProperties Properties { get; }
 
@@ -54,9 +44,9 @@ namespace NineChronicles.Headless
 
         public AsyncManualResetEvent PreloadEnded => NodeService.PreloadEnded;
 
-        public Swarm<NCAction> Swarm => NodeService.Swarm;
+        public Swarm Swarm => NodeService.Swarm;
 
-        public BlockChain<NCAction> BlockChain => NodeService.BlockChain;
+        public BlockChain BlockChain => NodeService.BlockChain;
 
         public IStore Store => NodeService.Store;
 
@@ -78,10 +68,10 @@ namespace NineChronicles.Headless
         public NineChroniclesNodeService(
             PrivateKey? minerPrivateKey,
             LibplanetNodeServiceProperties properties,
-            IBlockPolicy<NCAction> blockPolicy,
+            IBlockPolicy blockPolicy,
             NetworkType networkType,
-            IActionTypeLoader actionTypeLoader,
-            Progress<PreloadState>? preloadProgress = null,
+            IActionLoader actionLoader,
+            Progress<BlockSyncState>? preloadProgress = null,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false,
             bool strictRendering = false,
@@ -94,13 +84,13 @@ namespace NineChronicles.Headless
 
             LogEventLevel logLevel = LogEventLevel.Debug;
             var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
-            IStagePolicy<NCAction> stagePolicy = new StagePolicy(txLifeTime, txQuotaPerSigner);
+            IStagePolicy stagePolicy = new NCStagePolicy(txLifeTime, txQuotaPerSigner);
 
             BlockRenderer = blockPolicySource.BlockRenderer;
             ActionRenderer = blockPolicySource.ActionRenderer;
             ExceptionRenderer = new ExceptionRenderer();
             NodeStatusRenderer = new NodeStatusRenderer();
-            var renderers = new List<IRenderer<NCAction>>();
+            var renderers = new List<IRenderer>();
             var strictRenderer = new StrictRenderer(onError: exc =>
                 ExceptionRenderer.RenderException(
                     RPCException.InvalidRenderException,
@@ -118,10 +108,9 @@ namespace NineChronicles.Headless
                 renderers.Add(blockPolicySource.BlockRenderer);
                 // The following "nullRenderer" does nothing.  It's just for filling
                 // the LoggedActionRenderer<T>() constructor's parameter:
-                IActionRenderer<NCAction> nullRenderer =
-                    new AnonymousActionRenderer<NCAction>();
+                IActionRenderer nullRenderer = new AnonymousActionRenderer();
                 renderers.Add(
-                    new LoggedActionRenderer<NCAction>(
+                    new LoggedActionRenderer(
                         nullRenderer,
                         Log.Logger,
                         logLevel
@@ -140,7 +129,7 @@ namespace NineChronicles.Headless
                 renderers.Add(strictRenderer);
             }
 
-            NodeService = new LibplanetNodeService<NCAction>(
+            NodeService = new LibplanetNodeService(
                 Properties,
                 blockPolicy,
                 stagePolicy,
@@ -155,12 +144,10 @@ namespace NineChronicles.Headless
                 {
                     NodeStatusRenderer.PreloadStatus(isPreloadStarted);
                 },
-                actionTypeLoader,
+                actionLoader,
                 ignoreBootstrapFailure,
                 ignorePreloadFailure
             );
-
-            strictRenderer.BlockChain = NodeService.BlockChain ?? throw new Exception("BlockChain is null.");
         }
 
         public static NineChroniclesNodeService Create(
@@ -173,7 +160,7 @@ namespace NineChronicles.Headless
                 throw new ArgumentNullException(nameof(context));
             }
 
-            Progress<PreloadState> progress = new Progress<PreloadState>(state =>
+            Progress<BlockSyncState> progress = new Progress<BlockSyncState>(state =>
             {
                 context.PreloadStateSubject.OnNext(state);
             });
@@ -201,13 +188,13 @@ namespace NineChronicles.Headless
 
             var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(
                 properties.NetworkType,
-                properties.ActionTypeLoader);
+                properties.ActionLoader);
             var service = new NineChroniclesNodeService(
                 properties.MinerPrivateKey,
                 properties.Libplanet,
                 blockPolicy,
                 properties.NetworkType,
-                properties.ActionTypeLoader,
+                properties.ActionLoader,
                 preloadProgress: progress,
                 ignoreBootstrapFailure: properties.IgnoreBootstrapFailure,
                 ignorePreloadFailure: properties.IgnorePreloadFailure,
@@ -252,9 +239,9 @@ namespace NineChronicles.Headless
             return service;
         }
 
-        internal static IBlockPolicy<NCAction> GetBlockPolicy(NetworkType networkType, IActionTypeLoader actionTypeLoader)
+        internal static IBlockPolicy GetBlockPolicy(NetworkType networkType, IActionLoader actionLoader)
         {
-            var source = new BlockPolicySource(Log.Logger, LogEventLevel.Debug, actionTypeLoader);
+            var source = new BlockPolicySource(Log.Logger, LogEventLevel.Debug, actionLoader);
             return networkType switch
             {
                 NetworkType.Main => source.GetPolicy(),
@@ -266,7 +253,7 @@ namespace NineChronicles.Headless
             };
         }
 
-        internal static IBlockPolicy<NCAction> GetTestBlockPolicy() =>
+        internal static IBlockPolicy GetTestBlockPolicy() =>
             new BlockPolicySource(Log.Logger, LogEventLevel.Debug).GetTestPolicy();
 
         public Task<bool> CheckPeer(string addr) => NodeService?.CheckPeer(addr) ?? throw new InvalidOperationException();

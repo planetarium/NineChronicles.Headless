@@ -2,20 +2,19 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using Libplanet;
-using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
-using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Libplanet.Headless;
 
 namespace NineChronicles.Headless.Properties
 {
     public class NineChroniclesNodeServiceProperties
     {
-        public NineChroniclesNodeServiceProperties(IActionTypeLoader actionTypeLoader)
+        public NineChroniclesNodeServiceProperties(IActionLoader actionLoader)
         {
-            ActionTypeLoader = actionTypeLoader;
+            ActionLoader = actionLoader;
         }
 
         /// <summary>
@@ -50,7 +49,7 @@ namespace NineChronicles.Headless.Properties
 
         public int TxQuotaPerSigner { get; set; }
 
-        public IActionTypeLoader ActionTypeLoader { get; init; }
+        public IActionLoader ActionLoader { get; init; }
 
         public static LibplanetNodeServiceProperties
             GenerateLibplanetNodeServiceProperties(
@@ -82,7 +81,9 @@ namespace NineChronicles.Headless.Properties
                 int maximumPollPeers = int.MaxValue,
                 ushort? consensusPort = null,
                 string? consensusPrivateKeyString = null,
-                string[]? consensusSeedStrings = null)
+                string[]? consensusSeedStrings = null,
+                double? consensusTargetBlockIntervalMilliseconds = null,
+                IActionEvaluatorConfiguration? actionEvaluatorConfiguration = null)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
@@ -130,6 +131,8 @@ namespace NineChronicles.Headless.Properties
                 ConsensusPort = consensusPort,
                 ConsensusSeeds = consensusSeeds,
                 ConsensusPrivateKey = consensusPrivateKey,
+                ConsensusTargetBlockIntervalMilliseconds = consensusTargetBlockIntervalMilliseconds,
+                ActionEvaluatorConfiguration = actionEvaluatorConfiguration ?? new DefaultActionEvaluatorConfiguration(),
             };
         }
 

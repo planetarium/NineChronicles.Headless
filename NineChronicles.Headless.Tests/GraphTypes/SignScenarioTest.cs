@@ -20,8 +20,6 @@ using Xunit;
 using Xunit.Abstractions;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 using static NineChronicles.Headless.NCActionUtils;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
-
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -44,7 +42,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             object plainValue = await GetAction("transferAsset", args);
 
             (Transaction signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
-            var action = Assert.IsType<TransferAsset>(ToAction(signedTx.Actions!.Single()).InnerAction);
+            var action = Assert.IsType<TransferAsset>(ToAction(signedTx.Actions!.Single()));
             Assert.Equal(recipient, action.Recipient);
             Assert.Equal(sender, action.Sender);
             Assert.Equal(FungibleAssetValue.Parse(CrystalCalculator.CRYSTAL, "17.5"), action.Amount);
@@ -64,7 +62,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             object plainValue = await GetAction("raid", args);
 
             (Transaction signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
-            var action = Assert.IsType<Raid>(ToAction(signedTx.Actions!.Single()).InnerAction);
+            var action = Assert.IsType<Raid>(ToAction(signedTx.Actions!.Single()));
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Guid equipmentId = Assert.Single(action.EquipmentIds);
             Guid costumeId = Assert.Single(action.CostumeIds);
@@ -85,7 +83,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             object plainValue = await GetAction("claimRaidReward", args);
 
             (Transaction signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
-            var action = Assert.IsType<ClaimRaidReward>(ToAction(signedTx.Actions!.Single()).InnerAction);
+            var action = Assert.IsType<ClaimRaidReward>(ToAction(signedTx.Actions!.Single()));
             Assert.Equal(avatarAddress, action.AvatarAddress);
             await StageTransaction(signedTx, hex);
         }
@@ -100,7 +98,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             object plainValue = await GetAction("claimWorldBossKillReward", args);
 
             (Transaction signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
-            var action = Assert.IsType<ClaimWordBossKillReward>(ToAction(signedTx.Actions!.Single()).InnerAction);
+            var action = Assert.IsType<ClaimWordBossKillReward>(ToAction(signedTx.Actions!.Single()));
             Assert.Equal(avatarAddress, action.AvatarAddress);
             await StageTransaction(signedTx, hex);
         }
@@ -115,7 +113,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             object plainValue = await GetAction("prepareRewardAssets", args);
 
             (Transaction signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
-            var action = Assert.IsType<PrepareRewardAssets>(ToAction(signedTx.Actions!.Single()).InnerAction);
+            var action = Assert.IsType<PrepareRewardAssets>(ToAction(signedTx.Actions!.Single()));
             Assert.Equal(rewardPoolAddress, action.RewardPoolAddress);
 #pragma warning disable CS0618
             // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
@@ -134,7 +132,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             object plainValue = await GetAction("transferAssets", args);
 
             (Transaction signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue);
-            var action = Assert.IsType<TransferAssets>(ToAction(signedTx.Actions!.Single()).InnerAction);
+            var action = Assert.IsType<TransferAssets>(ToAction(signedTx.Actions!.Single()));
             Assert.Equal(sender, action.Sender);
             Assert.Equal(2, action.Recipients.Count);
             await StageTransaction(signedTx, hex);

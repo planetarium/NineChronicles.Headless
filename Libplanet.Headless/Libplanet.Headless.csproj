@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7</TargetFramework>
+    <TargetFramework>net6</TargetFramework>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CodeAnalysisRuleSet>..\NineChronicles.Headless.Common.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
@@ -23,5 +23,7 @@
     <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet.RocksDBStore\Libplanet.RocksDBStore.csproj" />
     <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet.Net\Libplanet.Net.csproj" />
     <ProjectReference Include="..\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared.csproj" />
+    <ProjectReference Include="..\Libplanet.Extensions.RemoteActionEvaluator\Libplanet.Extensions.RemoteActionEvaluator.csproj" />
+    <ProjectReference Include="..\Libplanet.Extensions.ForkableActionEvaluator\Libplanet.Extensions.ForkableActionEvaluator.csproj" />
   </ItemGroup>
 </Project>

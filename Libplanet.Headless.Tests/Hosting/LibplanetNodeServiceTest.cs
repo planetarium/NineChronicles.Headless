@@ -3,15 +3,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Reflection;
-using System.Security.Cryptography;
-using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
+using Libplanet.State;
+using Libplanet.Store;
+using Libplanet.Store.Trie;
 using Xunit;
 
 namespace Libplanet.Headless.Tests.Hosting
@@ -21,16 +23,19 @@ namespace Libplanet.Headless.Tests.Hosting
         [Fact]
         public void Constructor()
         {
-            var genesisBlock = BlockChain<DummyAction>.ProposeGenesisBlock();
-
-            IActionTypeLoader actionTypeLoader = new StaticActionTypeLoader(
-                Assembly.GetEntryAssembly() is { } entryAssembly
-                    ? new[] { typeof(DummyAction).Assembly, entryAssembly }
-                    : new[] { typeof(DummyAction).Assembly },
-                typeof(DummyAction)
-            );
-
-            var service = new LibplanetNodeService<DummyAction>(
+            var policy = new BlockPolicy();
+            var stagePolicy = new VolatileStagePolicy();
+            var blockChainStates = new BlockChainStates(
+                new MemoryStore(),
+                new TrieStateStore(new MemoryKeyValueStore()));
+            var actionLoader = new SingleActionLoader(typeof(DummyAction));
+            var actionEvaluator = new ActionEvaluator(
+                _ => policy.BlockAction,
+                blockChainStates,
+                actionLoader,
+                null);
+            var genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
+            var service = new LibplanetNodeService(
                 new LibplanetNodeServiceProperties()
                 {
                     AppProtocolVersion = new AppProtocolVersion(),
@@ -41,13 +46,13 @@ namespace Libplanet.Headless.Tests.Hosting
                     Host = IPAddress.Loopback.ToString(),
                     IceServers = new List<IceServer>(),
                 },
-                blockPolicy: new BlockPolicy<DummyAction>(),
-                stagePolicy: new VolatileStagePolicy<DummyAction>(),
+                blockPolicy: policy,
+                stagePolicy: stagePolicy,
                 renderers: null,
                 preloadProgress: null,
                 exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),
                 preloadStatusHandlerAction: isPreloadStart => { },
-                actionTypeLoader: actionTypeLoader
+                actionLoader: actionLoader
             );
 
             Assert.NotNull(service);
@@ -58,14 +63,8 @@ namespace Libplanet.Headless.Tests.Hosting
         {
             Assert.Throws<ArgumentException>(() =>
             {
-                IActionTypeLoader actionTypeLoader = new StaticActionTypeLoader(
-                    Assembly.GetEntryAssembly() is { } entryAssembly
-                        ? new[] { typeof(DummyAction).Assembly, entryAssembly }
-                        : new[] { typeof(DummyAction).Assembly },
-                    typeof(DummyAction)
-                );
-
-                var service = new LibplanetNodeService<DummyAction>(
+                IActionLoader actionLoader = new SingleActionLoader(typeof(DummyAction));
+                var service = new LibplanetNodeService(
                     new LibplanetNodeServiceProperties()
                     {
                         AppProtocolVersion = new AppProtocolVersion(),
@@ -75,13 +74,13 @@ namespace Libplanet.Headless.Tests.Hosting
                         Host = IPAddress.Loopback.ToString(),
                         IceServers = new List<IceServer>(),
                     },
-                    blockPolicy: new BlockPolicy<DummyAction>(),
-                    stagePolicy: new VolatileStagePolicy<DummyAction>(),
+                    blockPolicy: new BlockPolicy(),
+                    stagePolicy: new VolatileStagePolicy(),
                     renderers: null,
                     preloadProgress: null,
                     exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),
                     preloadStatusHandlerAction: isPreloadStart => { },
-                    actionTypeLoader: actionTypeLoader
+                    actionLoader: actionLoader
                 );
             });
         }

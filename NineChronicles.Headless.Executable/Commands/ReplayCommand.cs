@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using Bencodex.Json;
@@ -11,19 +10,21 @@ using Bencodex.Types;
 using Cocona;
 using Cocona.Help;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
-using Libplanet.Headless;
 using Libplanet.RocksDBStore;
+using Libplanet.State;
 using Libplanet.Store;
 using Libplanet.Tx;
-using Nekoyume.BlockChain.Policy;
+using Nekoyume.Action;
+using Nekoyume.Action.Loader;
+using Nekoyume.Blockchain.Policy;
 using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Executable.Store;
 using Serilog.Core;
 using static NineChronicles.Headless.NCActionUtils;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
@@ -116,8 +117,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     signature: tx.Signature,
                     actions: actions.Cast<IAction>().ToImmutableList(),
                     rehearsal: false,
-                    previousBlockStatesTrie: null,
-                    nativeTokenPredicate: _ => true
+                    previousBlockStatesTrie: null
                 );
                 var actionNum = 1;
                 foreach (var actionEvaluation in actionEvaluations)
@@ -141,9 +141,9 @@ namespace NineChronicles.Headless.Executable.Commands
                         continue;
                     }
 
-                    if (actionEvaluation.Action is NCAction nca)
+                    if (actionEvaluation.Action is ActionBase nca)
                     {
-                        var type = nca.InnerAction.GetType();
+                        var type = nca.GetType();
                         var actionType = ActionTypeAttribute.ValueOf(type);
                         msg = $"- action #{actionNum}: {type.Name}(\"{actionType}\")";
                         _console.Out.WriteLine(msg);
@@ -276,7 +276,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
                         try
                         {
-                            blockChain.DetermineBlockStateRootHash(block,
+                            var rootHash = blockChain.DetermineBlockStateRootHash(block,
                                 out IReadOnlyList<IActionEvaluation> actionEvaluations);
 
                             if (verbose)
@@ -285,6 +285,14 @@ namespace NineChronicles.Headless.Executable.Commands
                                 _console.Out.WriteLine(msg);
                                 outputSw?.WriteLine(msg);
                                 LoggingActionEvaluations(actionEvaluations, outputSw);
+                            }
+
+                            if (!rootHash.Equals(block.StateRootHash))
+                            {
+                                throw new InvalidBlockStateRootHashException(
+                                    $"Expected {block.StateRootHash} but {rootHash}",
+                                    block.StateRootHash,
+                                    rootHash);
                             }
                         }
                         catch (InvalidBlockStateRootHashException)
@@ -298,10 +306,7 @@ namespace NineChronicles.Headless.Executable.Commands
                             _console.Out.WriteLine(msg);
                             outputSw?.WriteLine(msg);
 
-                            var actionEvaluator = GetActionEvaluator(
-                                blockChain,
-                                stateStore,
-                                blockChain.Genesis.Hash);
+                            var actionEvaluator = GetActionEvaluator(blockChain);
                             var actionEvaluations = actionEvaluator.Evaluate(block);
                             LoggingActionEvaluations(actionEvaluations, outputSw);
 
@@ -379,7 +384,7 @@ namespace NineChronicles.Headless.Executable.Commands
         private (
             IStore store,
             IStateStore stateStore,
-            BlockChain<NCAction> blockChain) LoadBlockchain(string storePath)
+            BlockChain blockChain) LoadBlockchain(string storePath)
         {
             // Load store and genesis block.
             if (!Directory.Exists(storePath))
@@ -404,18 +409,26 @@ namespace NineChronicles.Headless.Executable.Commands
 
             // Make BlockChain and blocks.
             var policy = new BlockPolicySource(Logger.None).GetPolicy();
-            var stagePolicy = new VolatileStagePolicy<NCAction>();
+            var stagePolicy = new VolatileStagePolicy();
             var stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(storePath, "states"));
             var stateStore = new TrieStateStore(stateKeyValueStore);
+            var blockChainStates = new BlockChainStates(store, stateStore);
+            var actionEvaluator = new ActionEvaluator(
+                _ => policy.BlockAction,
+                blockChainStates,
+                new NCActionLoader(),
+                null);
             return (
                 store,
                 stateStore,
-                new BlockChain<NCAction>(
+                new BlockChain(
                     policy,
                     stagePolicy,
                     store,
                     stateStore,
-                    genesisBlock));
+                    genesisBlock,
+                    blockChainStates,
+                    actionEvaluator));
         }
 
         private Transaction LoadTx(string txPath)
@@ -444,25 +457,14 @@ namespace NineChronicles.Headless.Executable.Commands
             return TxMarshaler.UnmarshalTransaction(txDict);
         }
 
-        private ActionEvaluator GetActionEvaluator(
-            BlockChain<NCAction> blockChain,
-            IStateStore stateStore,
-            BlockHash genesisBlockHash)
+        private ActionEvaluator GetActionEvaluator(BlockChain blockChain)
         {
             var policy = new BlockPolicySource(Logger.None).GetPolicy();
-            IActionTypeLoader actionTypeLoader = new StaticActionTypeLoader(
-                Assembly.GetEntryAssembly() is { } entryAssembly
-                    ? new[] { typeof(NCAction).Assembly, entryAssembly }
-                    : new[] { typeof(NCAction).Assembly },
-                typeof(NCAction)
-            );
+            IActionLoader actionLoader = new NCActionLoader();
             return new ActionEvaluator(
                 _ => policy.BlockAction,
                 blockChainStates: blockChain,
-                trieGetter: hash => stateStore.GetStateRoot(blockChain[hash].StateRootHash),
-                genesisHash: genesisBlockHash,
-                nativeTokenPredicate: policy.NativeTokens.Contains,
-                actionTypeLoader: actionTypeLoader,
+                actionTypeLoader: actionLoader,
                 feeCalculator: null);
         }
 
@@ -496,15 +498,11 @@ namespace NineChronicles.Headless.Executable.Commands
             for (var i = 0; i < count; i++)
             {
                 var actionEvaluation = actionEvaluations[i];
-                NCAction? DecodeAction(IValue plainValue)
+                ActionBase? DecodeAction(IValue plainValue)
                 {
                     try
                     {
-#pragma warning disable CS0612
-                        var action = new NCAction();
-#pragma warning restore CS0612
-                        action.LoadPlainValue(plainValue);
-                        return action;
+                        return NCActionUtils.ToAction(plainValue);
                     }
                     catch
                     {
@@ -513,9 +511,9 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 string? actionType;
-                if (DecodeAction(actionEvaluation.Action) is { } nca)
+                if (DecodeAction(actionEvaluation.Action) is { } action)
                 {
-                    actionType = ActionTypeAttribute.ValueOf(nca.InnerAction.GetType())?.ToString();
+                    actionType = ActionTypeAttribute.ValueOf(action.GetType())?.ToString();
                 }
                 else if (actionEvaluation.Action is Dictionary dictionary && dictionary.ContainsKey("type_id"))
                 {

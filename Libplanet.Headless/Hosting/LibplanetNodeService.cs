@@ -3,18 +3,19 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
+using Libplanet.Extensions.ForkableActionEvaluator;
+using Libplanet.Extensions.RemoteActionEvaluator;
 using Libplanet.Net;
 using Libplanet.Net.Consensus;
 using Libplanet.Net.Protocols;
@@ -30,8 +31,7 @@ using Serilog.Events;
 
 namespace Libplanet.Headless.Hosting
 {
-    public class LibplanetNodeService<T> : BackgroundService, IDisposable
-        where T : IAction, new()
+    public class LibplanetNodeService : BackgroundService, IDisposable
     {
         private static readonly Codec Codec = new Codec();
 
@@ -39,9 +39,9 @@ namespace Libplanet.Headless.Hosting
 
         public readonly IStateStore StateStore;
 
-        public readonly BlockChain<T> BlockChain;
+        public readonly BlockChain BlockChain;
 
-        public readonly Swarm<T> Swarm;
+        public readonly Swarm Swarm;
 
         public readonly LibplanetNodeServiceProperties Properties;
 
@@ -55,7 +55,7 @@ namespace Libplanet.Headless.Hosting
 
         private Action<bool> _preloadStatusHandlerAction;
 
-        protected Progress<PreloadState> PreloadProgress;
+        protected Progress<BlockSyncState> PreloadProgress;
 
         protected bool IgnoreBootstrapFailure;
 
@@ -71,15 +71,16 @@ namespace Libplanet.Headless.Hosting
 
         public LibplanetNodeService(
             LibplanetNodeServiceProperties properties,
-            IBlockPolicy<T> blockPolicy,
-            IStagePolicy<T> stagePolicy,
-            IEnumerable<IRenderer<T>> renderers,
-            Progress<PreloadState> preloadProgress,
+            IBlockPolicy blockPolicy,
+            IStagePolicy stagePolicy,
+            IEnumerable<IRenderer> renderers,
+            Progress<BlockSyncState> preloadProgress,
             Action<RPCException, string> exceptionHandlerAction,
             Action<bool> preloadStatusHandlerAction,
-            IActionTypeLoader actionTypeLoader,
+            IActionLoader actionLoader,
             bool ignoreBootstrapFailure = false,
-            bool ignorePreloadFailure = false
+            bool ignorePreloadFailure = false,
+            bool useRemoteActionEvaluator = false
         )
         {
             if (blockPolicy is null)
@@ -108,17 +109,40 @@ namespace Libplanet.Headless.Hosting
                 // Log the outmost (before delayed) events as well as
                 // the innermost (after delayed) events:
                 ILogger logger = Log.ForContext("SubLevel", " RAW-RENDER-EVENT");
-                renderers = renderers.Select(r => r is IActionRenderer<T> ar
-                    ? new LoggedActionRenderer<T>(ar, logger, LogEventLevel.Debug)
-                    : new LoggedRenderer<T>(r, logger, LogEventLevel.Debug)
+                renderers = renderers.Select(r => r is IActionRenderer ar
+                    ? new LoggedActionRenderer(ar, logger, LogEventLevel.Debug)
+                    : new LoggedRenderer(r, logger, LogEventLevel.Debug)
                 );
             }
 
             var blockChainStates = new BlockChainStates(Store, StateStore);
+            IActionEvaluator BuildActionEvaluator(IActionEvaluatorConfiguration actionEvaluatorConfiguration)
+            {
+                return actionEvaluatorConfiguration switch
+                {
+                    RemoteActionEvaluatorConfiguration remoteActionEvaluatorConfiguration => new RemoteActionEvaluator(
+                        new Uri(remoteActionEvaluatorConfiguration.StateServiceEndpoint), blockChainStates),
+                    DefaultActionEvaluatorConfiguration _ => new ActionEvaluator(
+                        _ => blockPolicy.BlockAction,
+                        blockChainStates: blockChainStates,
+                        actionTypeLoader: actionLoader,
+                        feeCalculator: null
+                    ),
+                    ForkableActionEvaluatorConfiguration forkableActionEvaluatorConfiguration => new
+                        ForkableActionEvaluator(
+                            forkableActionEvaluatorConfiguration.Pairs.Select(pair => (
+                                (pair.Item1.Start, pair.Item1.End), BuildActionEvaluator(pair.Item2)
+                            ))
+                        ),
+                    _ => throw new InvalidOperationException("Unexpected type."),
+                };
+            }
+
+            IActionEvaluator actionEvaluator = BuildActionEvaluator(properties.ActionEvaluatorConfiguration);
 
             if (Store.GetCanonicalChainId() is { })
             {
-                BlockChain = new BlockChain<T>(
+                BlockChain = new BlockChain(
                     policy: blockPolicy,
                     store: Store,
                     stagePolicy: stagePolicy,
@@ -126,28 +150,12 @@ namespace Libplanet.Headless.Hosting
                     genesisBlock: genesisBlock,
                     renderers: renderers,
                     blockChainStates: blockChainStates,
-                    actionEvaluator: new ActionEvaluator(
-                        blockHeader =>
-                        {
-                            var blockActionType = actionTypeLoader
-                                .LoadAllActionTypes(new ActionTypeLoaderContext(blockHeader.Index))
-                                .FirstOrDefault(t => t.FullName == "Nekoyume.Action.RewardGold");
-                            return blockActionType is { } t ? (IAction)Activator.CreateInstance(t) : null;
-                        },
-                        blockChainStates: blockChainStates,
-                        trieGetter: hash => StateStore.GetStateRoot(
-                            Store.GetBlockDigest(hash)?.StateRootHash
-                        ),
-                        genesisHash: genesisBlock.Hash,
-                        nativeTokenPredicate: blockPolicy.NativeTokens.Contains,
-                        actionTypeLoader: actionTypeLoader,
-                        feeCalculator: null
-                    )
+                    actionEvaluator: actionEvaluator
                 );
             }
             else
             {
-                BlockChain = BlockChain<T>.Create(
+                BlockChain = BlockChain.Create(
                     policy: blockPolicy,
                     store: Store,
                     stagePolicy: stagePolicy,
@@ -156,20 +164,9 @@ namespace Libplanet.Headless.Hosting
                     renderers: renderers,
                     blockChainStates: blockChainStates,
                     actionEvaluator: new ActionEvaluator(
-                        blockHeader =>
-                        {
-                            var blockActionType = actionTypeLoader
-                                .LoadAllActionTypes(new ActionTypeLoaderContext(blockHeader.Index))
-                                .FirstOrDefault(t => t.FullName == "Nekoyume.Action.RewardGold");
-                            return blockActionType is { } t ? (IAction)Activator.CreateInstance(t) : null;
-                        },
+                        _ => blockPolicy.BlockAction,
                         blockChainStates: blockChainStates,
-                        trieGetter: hash => StateStore.GetStateRoot(
-                            Store.GetBlockDigest(hash)?.StateRootHash
-                        ),
-                        genesisHash: genesisBlock.Hash,
-                        nativeTokenPredicate: blockPolicy.NativeTokens.Contains,
-                        actionTypeLoader: actionTypeLoader,
+                        actionTypeLoader: actionLoader,
                         feeCalculator: null
                     )
                 );
@@ -193,14 +190,14 @@ namespace Libplanet.Headless.Hosting
                     Properties.TrustedAppProtocolVersionSigners?.ToImmutableHashSet() ?? ImmutableHashSet<PublicKey>.Empty,
                 DifferentAppProtocolVersionEncountered = Properties.DifferentAppProtocolVersionEncountered,
             };
-            var hostOptions = new Net.HostOptions(Properties.Host, shuffledIceServers, Properties.Port ?? default);
-            var swarmOptions = new SwarmOptions
+            var hostOptions = new Net.Options.HostOptions(Properties.Host, shuffledIceServers, Properties.Port ?? default);
+            var swarmOptions = new Net.Options.SwarmOptions
             {
                 BranchpointThreshold = 50,
                 MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
                 BucketSize = Properties.BucketSize,
                 MaximumPollPeers = Properties.MaximumPollPeers,
-                TimeoutOptions = new TimeoutOptions
+                TimeoutOptions = new Net.Options.TimeoutOptions
                 {
                     MaxTimeout = TimeSpan.FromSeconds(50),
                     GetBlockHashesTimeout = TimeSpan.FromSeconds(50),
@@ -226,7 +223,7 @@ namespace Libplanet.Headless.Hosting
                 consensusTransport = NetMQTransport.Create(
                     Properties.ConsensusPrivateKey,
                     appProtocolVersionOptions,
-                    new Net.HostOptions(Properties.Host, shuffledIceServers, (int)Properties.ConsensusPort),
+                    new Net.Options.HostOptions(Properties.Host, shuffledIceServers, (int)Properties.ConsensusPort),
                     swarmOptions.MessageTimestampBuffer).ConfigureAwait(false).GetAwaiter().GetResult();
                 consensusReactorOption = new ConsensusReactorOption
                 {
@@ -235,17 +232,17 @@ namespace Libplanet.Headless.Hosting
                     ConsensusPort = (int)Properties.ConsensusPort,
                     ConsensusPrivateKey = Properties.ConsensusPrivateKey,
                     ConsensusWorkers = 500,
-                    TargetBlockInterval = TimeSpan.FromSeconds(7)
+                    TargetBlockInterval = TimeSpan.FromMilliseconds(Properties.ConsensusTargetBlockIntervalMilliseconds ?? 7000),
                 };
             }
 
             Log.Debug(
                 "Initializing {Swarm}. {Reactor}: {Validator}",
                 nameof(Swarm),
-                nameof(ConsensusReactor<T>),
+                nameof(ConsensusReactor),
                 !(consensusReactorOption is null));
 
-            Swarm = new Swarm<T>(
+            Swarm = new Swarm(
                 BlockChain,
                 Properties.SwarmPrivateKey,
                 transport,
@@ -302,7 +299,7 @@ namespace Libplanet.Headless.Hosting
         {
             _stopRequested = true;
             await Swarm.StopAsync(cancellationToken);
-            foreach (IRenderer<T> renderer in BlockChain.Renderers)
+            foreach (IRenderer renderer in BlockChain.Renderers)
             {
                 if (renderer is IDisposable disposableRenderer)
                 {
@@ -374,7 +371,7 @@ namespace Libplanet.Headless.Hosting
                     cancellationToken: cancellationToken);
 
             // We assume the first phase of preloading is BlockHashDownloadState...
-            ((IProgress<PreloadState>)PreloadProgress)?.Report(new BlockHashDownloadState());
+            ((IProgress<BlockSyncState>)PreloadProgress)?.Report(new BlockHashDownloadState());
 
             if (peers.Any())
             {
@@ -633,7 +630,7 @@ namespace Libplanet.Headless.Hosting
 
         public override void Dispose()
         {
-            Log.Debug($"Disposing {nameof(LibplanetNodeService<T>)}...");
+            Log.Debug($"Disposing {nameof(LibplanetNodeService)}...");
 
             Swarm?.Dispose();
             Log.Debug("Swarm disposed.");

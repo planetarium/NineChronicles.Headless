@@ -8,8 +8,9 @@ using Libplanet.Blockchain;
 using Libplanet.Blocks;
 using Libplanet.Consensus;
 using Libplanet.Crypto;
+using Libplanet.Store.Trie;
 
-namespace Libplanet.Extensions.RemoteActionEvaluator
+namespace Libplanet.Extensions.RemoteBlockChainStates
 {
     public class RemoteBlockChainStates : IBlockChainStates
     {
@@ -41,7 +42,8 @@ namespace Libplanet.Extensions.RemoteActionEvaluator
                         offsetBlockHash = ByteUtil.Hex(offset.ByteArray),
                     })).Result;
             var codec = new Codec();
-            return response.Data.StateQuery.States.Select(codec.Decode).ToList();
+            return response.Data.StateQuery.States
+                .Select(nullableState => nullableState is { } state ? codec.Decode(state) : null).ToList();
         }
 
         public FungibleAssetValue GetBalance(Address address, Currency currency, BlockHash offset)
@@ -50,7 +52,7 @@ namespace Libplanet.Extensions.RemoteActionEvaluator
             {
                 ticker = currency.Ticker,
                 decimalPlaces = currency.DecimalPlaces,
-                minters = currency.Minters.Select(addr => addr.ToString()).ToArray(),
+                minters = currency.Minters?.Select(addr => addr.ToString()).ToArray(),
                 totalSupplyTrackable = currency.TotalSupplyTrackable,
                 maximumSupplyMajorUnit = currency.MaximumSupply.Value.MajorUnit,
                 maximumSupplyMinorUnit = currency.MaximumSupply.Value.MinorUnit,
@@ -58,7 +60,7 @@ namespace Libplanet.Extensions.RemoteActionEvaluator
             {
                 ticker = currency.Ticker,
                 decimalPlaces = currency.DecimalPlaces,
-                minters = currency.Minters.Select(addr => addr.ToString()).ToArray(),
+                minters = currency.Minters?.Select(addr => addr.ToString()).ToArray(),
                 totalSupplyTrackable = currency.TotalSupplyTrackable,
             };
             var response = _graphQlHttpClient.SendQueryAsync<GetBalanceResponseType>(
@@ -148,6 +150,11 @@ namespace Libplanet.Extensions.RemoteActionEvaluator
                 .Select(x =>
                     new Validator(new PublicKey(ByteUtil.ParseHex(x.PublicKey)), x.Power))
                 .ToList());
+        }
+
+        public ITrie? GetTrie(BlockHash offset)
+        {
+            return null;
         }
 
         private class GetStatesResponseType

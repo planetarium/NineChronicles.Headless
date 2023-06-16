@@ -1,6 +1,7 @@
 using System;
 using Bencodex.Types;
 using Libplanet.Action;
+using Libplanet.State;
 
 namespace NineChronicles.Headless.Tests.Common.Actions
 {

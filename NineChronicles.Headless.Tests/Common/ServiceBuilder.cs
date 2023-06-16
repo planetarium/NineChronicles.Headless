@@ -1,10 +1,8 @@
 using System;
-using Libplanet.Action;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
-using Nekoyume.Action;
 using System.Collections.Immutable;
 using System.IO;
 using Libplanet.Blockchain.Policies;
@@ -18,7 +16,7 @@ namespace NineChronicles.Headless.Tests.Common
 
         public const int MaximumTransactions = 100;
 
-        public static IBlockPolicy<PolymorphicAction<ActionBase>> BlockPolicy =>
+        public static IBlockPolicy BlockPolicy =>
             NineChroniclesNodeService.GetTestBlockPolicy();
 
         public static NineChroniclesNodeService CreateNineChroniclesNodeService(
@@ -55,7 +53,7 @@ namespace NineChronicles.Headless.Tests.Common
                 properties,
                 BlockPolicy,
                 NetworkType.Test,
-                StaticActionTypeLoaderSingleton.Instance);
+                StaticActionLoaderSingleton.Instance);
         }
     }
 }

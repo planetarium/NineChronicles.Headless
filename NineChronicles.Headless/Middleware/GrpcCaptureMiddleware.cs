@@ -36,12 +36,14 @@ namespace NineChronicles.Headless.Middleware
             {
                 Transaction tx =
                     Transaction.Deserialize(txBytes);
-                var action = ToAction(tx.Actions[0]).GetInnerActionTypeName() ?? "NoAction";
+                var actionName = ToAction(tx.Actions[0]) is { } action
+                    ? $"{action}"
+                    : "NoAction";
                 var httpContext = context.GetHttpContext();
                 var ipAddress = httpContext.Connection.RemoteIpAddress + ":" + httpContext.Connection.RemotePort;
                 _logger.Information(
                     "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method} Agent: {Agent} Action: {Action}",
-                    ipAddress, context.Method, tx.Signer, action);
+                    ipAddress, context.Method, tx.Signer, actionName);
             }
 
             return await base.UnaryServerHandler(request, context, continuation);

@@ -8,7 +8,6 @@ using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Action;
 using NineChronicles.Headless.GraphTypes.Input;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -105,7 +104,7 @@ namespace NineChronicles.Headless.GraphTypes
                         throw exception;
                     }
 
-                    var action = (NCAction)(GameAction)result!;
+                    var action = (GameAction)result!;
                     return Encode(context, action);
                 });
         }

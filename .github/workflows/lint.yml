@@ -10,7 +10,7 @@ jobs:
             - name: Setup .NET Core
               uses: actions/setup-dotnet@v3
               with:
-                  dotnet-version: 6.0.*
+                  dotnet-version: 6.0.x
             - name: dotnet format
               run: dotnet format --exclude Lib9c --exclude NineChronicles.RPC.Shared -v=d --no-restore --verify-no-changes
     validate-appsettings-json:
@@ -25,6 +25,6 @@ jobs:
                 set -evx
 
                 FILES=(appsettings.mainnet.json appsettings.internal.json appsettings.previewnet.json appsettings.json)
-                for file in ${FILES[@]}; do
+                for file in "${FILES[@]}"; do
                   ajv validate -s appsettings-schema.json -d "$file"
                 done

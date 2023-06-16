@@ -15,7 +15,6 @@ using Nekoyume.Model.State;
 using NineChronicles.Headless.Executable.IO;
 using Serilog.Core;
 using static NineChronicles.Headless.NCActionUtils;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
@@ -47,7 +46,7 @@ namespace NineChronicles.Headless.Executable.Commands
         )
         {
             using Logger logger = Utils.ConfigureLogger(verbose);
-            (BlockChain<NCAction> chain, IStore store, _, _) =
+            (BlockChain chain, IStore store, _, _) =
                 Utils.GetBlockChain(logger, storePath, chainId);
 
             Block offset = Utils.ParseBlockOffset(chain, block);
@@ -75,7 +74,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 IEnumerable<Address> addrs = digest.TxIds
                     .Select(txId => store.GetTransaction(new TxId(txId.ToArray())))
                     .SelectMany(tx => tx.Actions is { } ca
-                        ? ca.Select(a => ToAction(a).InnerAction)
+                        ? ca.Select(a => ToAction(a))
                             .SelectMany(a =>
                             {
                                 if (a is TransferAsset t)

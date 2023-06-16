@@ -11,11 +11,11 @@ using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blocks;
 using Libplanet.Consensus;
+using Libplanet.State;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Libplanet.Tx;
 using Serilog;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
@@ -410,7 +410,6 @@ namespace NineChronicles.Headless.Executable.Commands
         {
             private readonly int _randomSeed;
             private readonly ITrie? _previousBlockStatesTrie;
-            private readonly Predicate<Currency>? _nativeTokenPredicate;
             private HashDigest<SHA256>? _previousStateRootHash;
 
             public ActionContext(
@@ -423,8 +422,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 int randomSeed,
                 bool rehearsal = false,
                 ITrie? previousBlockStatesTrie = null,
-                bool blockAction = false,
-                Predicate<Currency>? nativeTokenPredicate = null)
+                bool blockAction = false)
             {
                 GenesisHash = genesisHash;
                 Signer = signer;
@@ -437,7 +435,6 @@ namespace NineChronicles.Headless.Executable.Commands
                 _randomSeed = randomSeed;
                 _previousBlockStatesTrie = previousBlockStatesTrie;
                 BlockAction = blockAction;
-                _nativeTokenPredicate = nativeTokenPredicate;
             }
 
             public BlockHash? GenesisHash { get; }
@@ -472,9 +469,6 @@ namespace NineChronicles.Headless.Executable.Commands
                 // NOTE: Not implemented yet. See also Lib9c.Tests.Action.ActionContext.PutLog().
             }
 
-            public bool IsNativeToken(Currency currency) =>
-                _nativeTokenPredicate is { } && _nativeTokenPredicate(currency);
-
             public IActionContext GetUnconsumedContext() =>
                 new ActionContext(
                     GenesisHash,
@@ -486,8 +480,11 @@ namespace NineChronicles.Headless.Executable.Commands
                     _randomSeed,
                     Rehearsal,
                     _previousBlockStatesTrie,
-                    BlockAction,
-                    _nativeTokenPredicate);
+                    BlockAction);
+
+            public long GasUsed() => 0;
+
+            public long GasLimit() => 0;
 
             private IImmutableDictionary<string, IValue?> GetUpdatedRawStates(
                 IAccountStateDelta delta)
@@ -570,7 +567,6 @@ namespace NineChronicles.Headless.Executable.Commands
             Address signer,
             byte[] signature,
             IImmutableList<IAction> actions,
-            Predicate<Currency> nativeTokenPredicate,
             bool rehearsal = false,
             ITrie? previousBlockStatesTrie = null,
             bool blockAction = false,
@@ -588,8 +584,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     randomSeed: randomSeed,
                     rehearsal: rehearsal,
                     previousBlockStatesTrie: previousBlockStatesTrie,
-                    blockAction: blockAction,
-                    nativeTokenPredicate: nativeTokenPredicate);
+                    blockAction: blockAction);
             }
 
             byte[] hashedSignature;

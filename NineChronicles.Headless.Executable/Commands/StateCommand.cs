@@ -17,11 +17,12 @@ using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
+using Libplanet.State;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
+using Nekoyume.Action.Loader;
 using NineChronicles.Headless.Executable.IO;
 using Serilog.Core;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
@@ -69,7 +70,7 @@ namespace NineChronicles.Headless.Executable.Commands
             CancellationToken cancellationToken = GetInterruptSignalCancellationToken();
             TextWriter stderr = _console.Error;
             (
-                BlockChain<NCAction> chain,
+                BlockChain chain,
                 IStore store,
                 IKeyValueStore stateKvStore,
                 IStateStore stateStore
@@ -90,7 +91,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 bottom.Hash);
             stderr.WriteLine("    ...to the block #{0} {1}.", top.Index, top.Hash);
 
-            IBlockPolicy<NCAction> policy = chain.Policy;
+            IBlockPolicy policy = chain.Policy;
             (Block, string)? invalidStateRootHashBlock = null;
             long totalBlocks = top.Index - bottom.Index + 1;
             long blocksExecuted = 0L;
@@ -101,6 +102,16 @@ namespace NineChronicles.Headless.Executable.Commands
                 (int)bottom.Index,
                 (int)(top.Index - bottom.Index + 1L)
             );
+
+            var blockChainStates = new BlockChainStates(
+                new MemoryStore(),
+                new TrieStateStore(new Libplanet.Store.Trie.MemoryKeyValueStore()));
+            var actionEvaluator = new ActionEvaluator(
+                _ => policy.BlockAction,
+                blockChainStates,
+                new NCActionLoader(),
+                null);
+
             foreach (BlockHash blockHash in blockHashes)
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -123,10 +134,10 @@ namespace NineChronicles.Headless.Executable.Commands
                 );
                 IReadOnlyList<IActionEvaluation> delta;
                 HashDigest<SHA256> stateRootHash = block.Index < 1
-                    ? BlockChain<NCAction>.DetermineGenesisStateRootHash(
+                    ? BlockChain.DetermineGenesisStateRootHash(
+                        actionEvaluator,
                         preEvalBlock,
                         policy.BlockAction,
-                        policy.NativeTokens.Contains,
                         out delta)
                     : chain.DetermineBlockStateRootHash(
                         preEvalBlock,
@@ -215,7 +226,7 @@ namespace NineChronicles.Headless.Executable.Commands
             CancellationToken cancellationToken = GetInterruptSignalCancellationToken();
             TextWriter stderr = _console.Error;
             (
-                BlockChain<NCAction> chain,
+                BlockChain chain,
                 IStore store,
                 IKeyValueStore stateKvStore,
                 IStateStore stateStore
@@ -285,7 +296,7 @@ namespace NineChronicles.Headless.Executable.Commands
         }
 
         private static Block? BisectBlocks(
-            BlockChain<NCAction> chain,
+            BlockChain chain,
             long start,
             long end,
             Predicate<Block> willGoFurther

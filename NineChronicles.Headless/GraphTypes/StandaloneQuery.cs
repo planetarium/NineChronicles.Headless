@@ -7,7 +7,6 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
-using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blocks;
@@ -18,11 +17,9 @@ using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
-using Libplanet.Headless;
 using Nekoyume.Model;
 using NineChronicles.Headless.GraphTypes.States;
 using static NineChronicles.Headless.NCActionUtils;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -71,7 +68,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -121,7 +118,7 @@ namespace NineChronicles.Headless.GraphTypes
                         .Select(store.GetTransaction);
                     var filteredTransactions = txs.Where(tx =>
                         tx.Actions!.Count == 1 &&
-                        ToAction(tx.Actions.First()).InnerAction is ITransferAsset transferAsset &&
+                        ToAction(tx.Actions.First()) is ITransferAsset transferAsset &&
                         (!recipient.HasValue || transferAsset.Recipient == recipient) &&
                         transferAsset.Amount.Currency.Ticker == "NCG" &&
                         store.GetTxExecution(blockHash, tx.Id) is TxSuccess);
@@ -146,7 +143,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var histories = filteredTransactions.Select(tx =>
                         ToTransferNCGHistory((TxSuccess)store.GetTxExecution(blockHash, tx.Id),
-                            ((ITransferAsset)ToAction(tx.Actions!.Single()).InnerAction).Memo));
+                            ((ITransferAsset)ToAction(tx.Actions!.Single())).Memo));
 
                     return histories;
                 });
@@ -162,7 +159,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: _ => new NodeStatusType(standaloneContext)
             );
 
-            Field<NonNullGraphType<Libplanet.Explorer.Queries.ExplorerQuery<NCAction>>>(
+            Field<NonNullGraphType<Libplanet.Explorer.Queries.ExplorerQuery>>(
                 name: "chainQuery",
                 deprecationReason: "Use /graphql/explorer",
                 resolve: context => new { }
@@ -192,7 +189,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -224,7 +221,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -235,7 +232,7 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            Field<TransactionType<NCAction>>(
+            Field<TransactionType>(
                 name: "getTx",
                 deprecationReason: "The root query is not the best place for getTx so it was moved. " +
                                    "Use transaction.getTx()",
@@ -245,7 +242,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -283,7 +280,7 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Get monster collection status by address.",
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -362,7 +359,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");

@@ -6,7 +6,6 @@ using GraphQL.Execution;
 using Libplanet;
 using Libplanet.Assets;
 using Nekoyume;
-using Nekoyume.BlockChain.Policy;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
 using Xunit;
