@@ -163,7 +163,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             (Transaction signedTx, string hex) = await GetSignedTransaction(privateKey, plainValue, true);
             var action = Assert.IsType<CreatePledge>(ToAction(signedTx.Actions!.Single()));
-            Assert.Equal(sender, action.AgentAddresses.Single());
+            var agentAddresses = action.AgentAddresses.Single();
+            Assert.Equal(sender, agentAddresses.Item1);
+            Assert.Equal(sender.GetPledgeAddress(), agentAddresses.Item2);
             Assert.Equal(MeadConfig.PatronAddress, action.PatronAddress);
             Assert.Equal(1, signedTx.GasLimit);
             Assert.Equal(1 * Currencies.Mead, signedTx.MaxGasPrice);

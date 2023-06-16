@@ -1005,8 +1005,9 @@ actionPoint: {actionPoint},
             Assert.IsType<Dictionary>(plainValue);
             var polymorphicAction = DeserializeNCAction(plainValue);
             var action = Assert.IsType<CreatePledge>(polymorphicAction);
-            var actualAddress = Assert.Single(action.AgentAddresses);
-            Assert.Equal(agentAddress, actualAddress);
+            var actualAddresses = Assert.Single(action.AgentAddresses);
+            Assert.Equal(agentAddress, actualAddresses.Item1);
+            Assert.Equal(agentAddress.GetPledgeAddress(), actualAddresses.Item2);
             Assert.Equal(MeadConfig.PatronAddress, action.PatronAddress);
             Assert.Equal(expected, action.Mead);
         }

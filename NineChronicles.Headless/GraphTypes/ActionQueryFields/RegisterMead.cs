@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
@@ -98,10 +99,11 @@ public partial class ActionQuery
                 var patronAddress = context.GetArgument<Address>("patronAddress");
                 var agentAddresses = context.GetArgument<List<Address>>("agentAddresses");
                 var mead = context.GetArgument<int>("mead");
+                List<(Address, Address)> addresses = agentAddresses.Select(a => (a, a.GetPledgeAddress())).ToList();
                 ActionBase action = new CreatePledge
                 {
                     PatronAddress = patronAddress,
-                    AgentAddresses = agentAddresses,
+                    AgentAddresses = addresses,
                     Mead = mead,
                 };
                 return Encode(context, action);
