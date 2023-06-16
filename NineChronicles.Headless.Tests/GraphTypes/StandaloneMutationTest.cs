@@ -961,7 +961,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             IValue? state = BlockChain.GetState(privateKey.ToAddress().Derive(ActivationKey.DeriveKey));
             Assert.True((Bencodex.Types.Boolean)state);
         }
-        
+
         [Fact]
         public async Task StageTransaction()
         {
@@ -984,7 +984,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 PatronAddress = new PrivateKey().ToAddress()
             };
-            var tx = Transaction.Create(0, pk, BlockChain.Genesis.Hash, new []{ action });
+            var tx = Transaction.Create(0, pk, BlockChain.Genesis.Hash, new[] { action });
             var payload = ByteUtil.Hex(tx.Serialize());
             var stageTxMutation = $"mutation {{ stageTransaction(payload: \"{payload}\") }}";
             var stageTxResult = await ExecuteQueryAsync(stageTxMutation);
@@ -1030,7 +1030,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             {
                                 1 * Currencies.Mead
                             }
-                        }                        
+                        }
                     })).AddRange(new IAction[]
                     {
                         new Initialize(

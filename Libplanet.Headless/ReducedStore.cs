@@ -16,7 +16,7 @@ namespace Libplanet.Headless
     /// <list type="bullet">
     /// <item><description><see cref="PutTxExecution(TxSuccess)"/></description></item>
     /// </list>
-    /// </summary>
+    /// </summary>.
     public sealed class ReducedStore : IStore
     {
         public ReducedStore(IStore internalStore)

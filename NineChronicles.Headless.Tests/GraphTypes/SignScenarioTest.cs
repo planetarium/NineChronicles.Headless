@@ -20,8 +20,8 @@ using NineChronicles.Headless.Executable.Tests.KeyStore;
 using NineChronicles.Headless.GraphTypes;
 using Xunit;
 using Xunit.Abstractions;
-using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 using static NineChronicles.Headless.NCActionUtils;
+using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {

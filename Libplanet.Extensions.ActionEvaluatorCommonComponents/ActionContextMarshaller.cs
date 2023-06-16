@@ -32,7 +32,7 @@ public static class ActionContextMarshaller
         {
             dictionary = dictionary.Add("tx_id", txId.ByteArray);
         }
-        
+
         return dictionary;
     }
 

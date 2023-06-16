@@ -83,7 +83,7 @@ query {{
             Assert.Equal(publicKey, tx.PublicKey);
             Assert.Equal(publicKey.ToAddress(), tx.Signer);
             Assert.Equal(0, tx.Nonce);
-            Assert.NotNull(tx.Timestamp);
+            Assert.IsType<DateTimeOffset>(tx.Timestamp);
             Assert.Equal(1, tx.GasLimit);
             Assert.Equal(1 * Currencies.Mead, tx.MaxGasPrice);
             var rawAction = Assert.Single(tx.Actions);
