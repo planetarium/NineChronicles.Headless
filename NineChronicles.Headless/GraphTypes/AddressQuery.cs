@@ -90,20 +90,13 @@ namespace NineChronicles.Headless.GraphTypes
                     }),
                 resolve: context =>
                 {
-                    var currency = context.GetArgument<CurrencyEnum>("currency");
-                    switch (currency)
+                    var currencyEnum = context.GetArgument<CurrencyEnum>("currency");
+                    if (!standaloneContext.TryGetCurrency(currencyEnum, out var currency))
                     {
-                        case CurrencyEnum.NCG:
-                            var blockchain = standaloneContext.BlockChain!;
-                            var goldCurrencyStateDict =
-                                (Dictionary)blockchain.GetState(Addresses.GoldCurrency);
-                            var goldCurrencyState = new GoldCurrencyState(goldCurrencyStateDict);
-                            return goldCurrencyState.Currency.Minters;
-                        case CurrencyEnum.CRYSTAL:
-                            return CrystalCalculator.CRYSTAL.Minters;
-                        default:
-                            throw new SwitchExpressionException(currency);
+                        throw new ExecutionError($"Currency {currencyEnum} is not found.");
                     }
+
+                    return currency!.Value.Minters;
                 });
         }
     }

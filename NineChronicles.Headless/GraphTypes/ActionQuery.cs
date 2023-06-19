@@ -7,7 +7,6 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
-using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
@@ -188,15 +187,13 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var sender = context.GetArgument<Address>("sender");
                     var recipient = context.GetArgument<Address>("recipient");
-                    Currency currency = context.GetArgument<CurrencyEnum>("currency") switch
+                    var currencyEnum = context.GetArgument<CurrencyEnum>("currency");
+                    if (!standaloneContext.TryGetCurrency(currencyEnum, out var currency))
                     {
-                        CurrencyEnum.NCG => new GoldCurrencyState(
-                            (Dictionary)standaloneContext.BlockChain!.GetState(GoldCurrencyState.Address)
-                        ).Currency,
-                        CurrencyEnum.CRYSTAL => CrystalCalculator.CRYSTAL,
-                        _ => throw new ExecutionError("Unsupported Currency type.")
-                    };
-                    var amount = FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
+                        throw new ExecutionError($"Currency {currencyEnum} is not found.");
+                    }
+
+                    var amount = FungibleAssetValue.Parse(currency!.Value, context.GetArgument<string>("amount"));
                     var memo = context.GetArgument<string?>("memo");
                     ActionBase action = new TransferAsset(sender, recipient, amount, memo);
                     return Encode(context, action);
