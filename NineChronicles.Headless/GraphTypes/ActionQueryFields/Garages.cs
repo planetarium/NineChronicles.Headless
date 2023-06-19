@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using System.Numerics;
 using System.Security.Cryptography;
-using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
@@ -9,44 +7,20 @@ using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
 using Nekoyume.Action.Garages;
-using Nekoyume.Helper;
-using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.Input;
 
 namespace NineChronicles.Headless.GraphTypes
 {
     public partial class ActionQuery
     {
-        private FungibleAssetValue getFungibleAssetValue(
-            CurrencyEnum curr, BigInteger majorUnit, BigInteger minorUnit)
-        {
-            Currency currency;
-            switch (curr)
-            {
-                case CurrencyEnum.NCG:
-                    currency = new GoldCurrencyState(
-                        (Dictionary)standaloneContext.BlockChain!.GetState(GoldCurrencyState.Address)
-                    ).Currency;
-                    break;
-                case CurrencyEnum.CRYSTAL:
-                    currency = CrystalCalculator.CRYSTAL;
-                    break;
-                default:
-                    throw new ExecutionError($"Unsupported Currency type {curr}");
-            }
-
-            return new FungibleAssetValue(currency, majorUnit, minorUnit);
-        }
-
         private void RegisterGarages()
         {
             Field<NonNullGraphType<ByteStringType>>(
                 "loadIntoMyGarages",
                 arguments: new QueryArguments(
-                    new QueryArgument<ListGraphType<
-                        NonNullGraphType<GarageAddressAndFungibleAssetValueInputType>>>
+                    new QueryArgument<ListGraphType<NonNullGraphType<BalanceInputType>>>
                     {
-                        Name = "addressAndFungibleAssetValues",
+                        Name = "fungibleAssetValues",
                         Description = "Array of balance address and currency ticker and quantity.",
                     },
                     new QueryArgument<AddressType>
@@ -67,24 +41,30 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    // This transforms to (Address, FungibleAssetValue) and goes to....
-                    var addressAndFavList = context
-                        .GetArgument<IEnumerable<(Address balanceAddr,
-                            (CurrencyEnum Currency, BigInteger majorUnit, BigInteger minorUnit)
-                            )>>("addressAndFungibleAssetValues");
-                    // Here. and This is the input type of action.
-                    var fungibleAssetValues = new List<(Address balanceAddr, FungibleAssetValue value)>();
-
-                    foreach (var (addr, (curr, majorUnit, minorUnit)) in addressAndFavList)
+                    var balanceInputList = context.GetArgument<IEnumerable<(
+                        Address balanceAddr,
+                        (string currencyTicker, string value))>?>("fungibleAssetValues");
+                    List<(Address address, FungibleAssetValue fungibleAssetValue)>? fungibleAssetValues = null;
+                    if (balanceInputList is not null)
                     {
-                        var fav = getFungibleAssetValue(curr, majorUnit, minorUnit);
-                        fungibleAssetValues.Add((addr, fav));
+                        fungibleAssetValues = new List<(Address address, FungibleAssetValue fungibleAssetValue)>();
+                        foreach (var (balanceAddr, (currencyTicker, value)) in balanceInputList)
+                        {
+                            if (StandaloneContext.TryGetFungibleAssetValue(currencyTicker, value, out var fav))
+                            {
+                                fungibleAssetValues.Add((balanceAddr, fav!.Value));    
+                            }
+                            else
+                            {
+                                throw new ExecutionError($"Invalid currency ticker: {currencyTicker}");
+                            }
+                        }
                     }
 
                     var inventoryAddr = context.GetArgument<Address?>("inventoryAddr");
-                    var fungibleIdAndCounts =
-                        context.GetArgument<IEnumerable<(HashDigest<SHA256> fungibleId, int count)>?>(
-                            "fungibleIdAndCounts");
+                    var fungibleIdAndCounts = context.GetArgument<IEnumerable<(
+                        HashDigest<SHA256> fungibleId,
+                        int count)>?>("fungibleIdAndCounts");
                     var memo = context.GetArgument<string?>("memo");
 
                     ActionBase action = new LoadIntoMyGarages(
@@ -104,7 +84,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Name = "recipientAgentAddr",
                         Description = "Recipient agent address",
                     },
-                    new QueryArgument<ListGraphType<NonNullGraphType<GarageFungibleAssetValueInputType>>>
+                    new QueryArgument<ListGraphType<NonNullGraphType<SimplifyFungibleAssetValueInputType>>>
                     {
                         Name = "fungibleAssetValues",
                         Description = "Array of currency ticket and quantity to deliver.",
@@ -123,18 +103,29 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var recipientAgentAddr = context.GetArgument<Address>("recipientAgentAddr");
-                    var fungibleAssetValueList = context.GetArgument<
-                        IEnumerable<(CurrencyEnum CurrencyEnum, BigInteger majorUnit, BigInteger minorUnit)>
-                    >("fungibleAssetValues");
-                    var fungibleAssetValues = new List<FungibleAssetValue>();
-                    foreach (var (curr, majorUnit, minorUnit) in fungibleAssetValueList)
+                    var fungibleAssetValueInputList = context.GetArgument<IEnumerable<(
+                        string currencyTicker,
+                        string value)>?>("fungibleAssetValues");
+                    List<FungibleAssetValue>? fungibleAssetValues = null;
+                    if (fungibleAssetValueInputList is not null)
                     {
-                        fungibleAssetValues.Add(getFungibleAssetValue(curr, majorUnit, minorUnit));
+                        fungibleAssetValues = new List<FungibleAssetValue>();
+                        foreach (var (currencyTicker, value) in fungibleAssetValueInputList)
+                        {
+                            if (StandaloneContext.TryGetFungibleAssetValue(currencyTicker, value, out var fav))
+                            {
+                                fungibleAssetValues.Add(fav!.Value);    
+                            }
+                            else
+                            {
+                                throw new ExecutionError($"Invalid currency ticker: {currencyTicker}");
+                            }
+                        }
                     }
 
-                    var fungibleIdAndCounts =
-                        context.GetArgument<IEnumerable<(HashDigest<SHA256> fungibleId, int count)>?>(
-                            "fungibleIdAndCounts");
+                    var fungibleIdAndCounts = context.GetArgument<IEnumerable<(
+                        HashDigest<SHA256> fungibleId,
+                        int count)>?>("fungibleIdAndCounts");
                     var memo = context.GetArgument<string?>("memo");
 
                     ActionBase action = new DeliverToOthersGarages(
@@ -149,9 +140,9 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<ByteStringType>>(
                 "unloadFromMyGarages",
                 arguments: new QueryArguments(
-                    new QueryArgument<ListGraphType<NonNullGraphType<GarageAddressAndFungibleAssetValueInputType>>>
+                    new QueryArgument<ListGraphType<NonNullGraphType<BalanceInputType>>>
                     {
-                        Name = "addressAndFungibleAssetValues",
+                        Name = "fungibleAssetValues",
                         Description = "Array of balance address and currency ticker and quantity to send.",
                     },
                     new QueryArgument<AddressType>
@@ -172,21 +163,30 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    var addressAndFavList = context
-                        .GetArgument<IEnumerable<(Address balanceAddr,
-                            (CurrencyEnum Currency, BigInteger majorUnit, BigInteger minorUnit)
-                            )>>("addressAndFungibleAssetValues");
-                    var fungibleAssetValues = new List<(Address balanceAddr, FungibleAssetValue value)>();
-                    foreach (var (addr, (curr, majorUnit, minorUnit)) in addressAndFavList)
+                    var balanceInputList = context.GetArgument<IEnumerable<(
+                        Address balanceAddr,
+                        (string currencyTicker, string value))>?>("fungibleAssetValues");
+                    List<(Address address, FungibleAssetValue fungibleAssetValue)>? fungibleAssetValues = null;
+                    if (balanceInputList is not null)
                     {
-                        var fav = getFungibleAssetValue(curr, majorUnit, minorUnit);
-                        fungibleAssetValues.Add((addr, fav));
+                        fungibleAssetValues = new List<(Address address, FungibleAssetValue fungibleAssetValue)>();
+                        foreach (var (addr, (currencyTicker, value)) in balanceInputList)
+                        {
+                            if (StandaloneContext.TryGetFungibleAssetValue(currencyTicker, value, out var fav))
+                            {
+                                fungibleAssetValues.Add((addr, fav!.Value));    
+                            }
+                            else
+                            {
+                                throw new ExecutionError($"Invalid currency ticker: {currencyTicker}");
+                            }
+                        }
                     }
 
                     var inventoryAddr = context.GetArgument<Address?>("inventoryAddr");
-                    var fungibleIdAndCounts =
-                        context.GetArgument<IEnumerable<(HashDigest<SHA256> fungibleId, int count)>?>(
-                            "fungibleIdAndCounts");
+                    var fungibleIdAndCounts = context.GetArgument<IEnumerable<(
+                        HashDigest<SHA256> fungibleId,
+                        int count)>?>("fungibleIdAndCounts");
                     var memo = context.GetArgument<string?>("memo");
 
                     ActionBase action = new UnloadFromMyGarages(

@@ -13,6 +13,7 @@ using Lib9c;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Crypto;
+using Microsoft.Extensions.Primitives;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Action.Garages;
@@ -933,138 +934,246 @@ actionPoint: {actionPoint},
             Assert.Equal(recipeId, action.recipeId);
         }
 
-        [Fact]
-        public async Task LoadIntoMyGarages()
+        [Theory]
+        [MemberData(nameof(GetMemberDataOfLoadIntoMyGarages))]
+        public async Task LoadIntoMyGarages(
+            IEnumerable<(Address balanceAddr, FungibleAssetValue value)>? fungibleAssetValues,
+            Address? inventoryAddr,
+            IEnumerable<(HashDigest<SHA256> fungibleId, int count)>? fungibleIdAndCounts,
+            string? memo)
         {
-            var fungibleAssetValues = new[]
-            {
-                (balanceAddr: new PrivateKey().ToAddress(), value: new FungibleAssetValue(Currencies.Crystal, 1, 0)),
-                (balanceAddr: new PrivateKey().ToAddress(), value: new FungibleAssetValue(Currencies.Crystal, 1, 0)),
-            };
-            var fungibleAssetValuesString = string.Join(",", fungibleAssetValues.Select(tuple =>
-                $"{{ balanceAddr: \"{tuple.balanceAddr.ToHex()}\", " +
-                $"value: {{ currency: {{ ticker: \"{tuple.value.Currency.Ticker}\" }}, " +
-                $"majorUnit: {tuple.value.MajorUnit}, " +
-                $"minorUnit: {tuple.value.MinorUnit} }} }}"));
-            var inventoryAddr = new PrivateKey().ToAddress();
-            var fungibleIdAndCounts = new[]
-            {
-                (fungibleId: new HashDigest<SHA256>(), count: 1),
-                (fungibleId: new HashDigest<SHA256>(), count: 1),
-            };
-            var fungibleIdAndCountsString = string.Join(",", fungibleIdAndCounts.Select(tuple =>
-                $"{{ fungibleId: {{ value: \"{tuple.fungibleId.ToString()}\"}}, count: {tuple.count} }}"));
-            var memo = "memo";
             var expectedAction = new LoadIntoMyGarages(
                 fungibleAssetValues,
                 inventoryAddr,
                 fungibleIdAndCounts,
                 memo);
-            var query = "{ loadIntoMyGarages(args: { " +
-                $"fungibleAssetValues: [{fungibleAssetValuesString}], " +
-                $"inventoryAddr: \"{inventoryAddr.ToHex()}\", " +
-                $"fungibleIdAndCounts: [{fungibleIdAndCountsString}]," +
-                $"memo: \"{memo}\"" +
-                "}) }";
+            var sb = new StringBuilder("{ loadIntoMyGarages(");
+            if (fungibleAssetValues is not null)
+            {
+                sb.Append("fungibleAssetValues: [");
+                sb.Append(string.Join(",", fungibleAssetValues.Select(tuple =>
+                    $"{{ balanceAddr: \"{tuple.balanceAddr.ToHex()}\", " +
+                    $"value: {{ currencyTicker: \"{tuple.value.Currency.Ticker}\"," +
+                    $"value: \"{tuple.value.GetQuantityString()}\" }} }}")));
+                sb.Append("],");
+            }
+
+            if (inventoryAddr is not null)
+            {
+                sb.Append($"inventoryAddr: \"{inventoryAddr.Value.ToHex()}\",");
+            }
+
+            if (fungibleIdAndCounts is not null)
+            {
+                sb.Append("fungibleIdAndCounts: [");
+                sb.Append(string.Join(",", fungibleIdAndCounts.Select(tuple =>
+                    $"{{ fungibleId: {{ value: \"{tuple.fungibleId.ToString()}\" }}, " +
+                    $"count: {tuple.count} }}")));
+                sb.Append("],");
+            }
+
+            if (memo is not null)
+            {
+                sb.Append($"memo: \"{memo}\"");
+            }
+
+            // Remove last ',' if exists.
+            if (sb[^1] == ',')
+            {
+                sb.Remove(sb.Length - 1, 1);
+            }
+
+            sb.Append(") }");
             var queryResult = await ExecuteQueryAsync<ActionQuery>(
-                query,
+                sb.ToString(),
                 standaloneContext: _standaloneContext);
             Assert.Null(queryResult.Errors);
-
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["loadIntoMyGarages"]));
             Assert.IsType<Dictionary>(plainValue);
             var actionBase = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<LoadIntoMyGarages>(actionBase);
-            Assert.True(expectedAction.FungibleAssetValues.SequenceEqual(action.FungibleAssetValues));
-            Assert.Equal(expectedAction.InventoryAddr, action.InventoryAddr);
-            Assert.True(expectedAction.FungibleIdAndCounts.SequenceEqual(action.FungibleIdAndCounts));
-            Assert.Equal(expectedAction.Memo, action.Memo);
+            var actualAction = Assert.IsType<LoadIntoMyGarages>(actionBase);
+            Assert.True(expectedAction.FungibleAssetValues?.SequenceEqual(actualAction.FungibleAssetValues) ??
+                        actualAction.FungibleAssetValues is null);
+            Assert.Equal(expectedAction.InventoryAddr, actualAction.InventoryAddr);
+            Assert.True(expectedAction.FungibleIdAndCounts?.SequenceEqual(actualAction.FungibleIdAndCounts) ??
+                        actualAction.FungibleIdAndCounts is null);
+            Assert.Equal(expectedAction.Memo, actualAction.Memo);
         }
 
-        [Fact]
-        public async Task DeliverToOthersGarages()
+        private static IEnumerable<object[]> GetMemberDataOfLoadIntoMyGarages()
         {
-            var recipientAgentAddr = new PrivateKey().ToAddress();
-            var fungibleAssetValues = new[]
+            yield return new object[]
             {
-                new FungibleAssetValue(Currencies.Crystal, 1, 0),
-                new FungibleAssetValue(Currencies.Crystal, 1, 0),
+                null,
+                null,
+                null,
+                "memo",
             };
-            var fungibleAssetValuesString = string.Join(",", fungibleAssetValues.Select(fav =>
-                $"{{ currency: {{ ticker: \"{fav.Currency.Ticker}\" }}, " +
-                $"majorUnit: {fav.MajorUnit}, " +
-                $"minorUnit: {fav.MinorUnit} }}"));
-            var fungibleIdAndCounts = new[]
+            yield return new object[]
             {
-                (fungibleId: new HashDigest<SHA256>(), count: 1),
-                (fungibleId: new HashDigest<SHA256>(), count: 1),
+                new[]
+                {
+                    (
+                        address: new PrivateKey().ToAddress(),
+                        fungibleAssetValue: new FungibleAssetValue(Currencies.Garage, 1, 0)
+                    ),
+                    (
+                        address: new PrivateKey().ToAddress(),
+                        fungibleAssetValue: new FungibleAssetValue(Currencies.Garage, 1, 0)
+                    ),
+                },
+                new PrivateKey().ToAddress(),
+                new[]
+                {
+                    (fungibleId: new HashDigest<SHA256>(), count: 1),
+                    (fungibleId: new HashDigest<SHA256>(), count: 1),
+                },
+                "memo",
             };
-            var fungibleIdAndCountsString = string.Join(",", fungibleIdAndCounts.Select(tuple =>
-                $"{{ fungibleId: {{ value: \"{tuple.fungibleId.ToString()}\"}}, count: {tuple.count} }}"));
-            var memo = "memo";
+        }
+
+        [Theory]
+        [MemberData(nameof(GetMemberDataOfDeliverToOthersGarages))]
+        public async Task DeliverToOthersGarages(
+            Address recipientAgentAddr,
+            IEnumerable<FungibleAssetValue>? fungibleAssetValues,
+            IEnumerable<(HashDigest<SHA256> fungibleId, int count)>? fungibleIdAndCounts,
+            string? memo)
+        {
             var expectedAction = new DeliverToOthersGarages(
                 recipientAgentAddr,
                 fungibleAssetValues,
                 fungibleIdAndCounts,
                 memo);
-            var query = "{ deliverToOthersGarages(args: { " +
-                $"recipientAgentAddr: \"{recipientAgentAddr.ToHex()}\", " +
-                $"fungibleAssetValues: [{fungibleAssetValuesString}], " +
-                $"fungibleIdAndCounts: [{fungibleIdAndCountsString}] " +
-                $"memo: \"{memo}\"" +
-                "}) }";
+            var sb = new StringBuilder("{ deliverToOthersGarages(");
+            sb.Append($"recipientAgentAddr: \"{recipientAgentAddr.ToHex()}\",");
+            if (fungibleAssetValues is not null)
+            {
+                sb.Append("fungibleAssetValues: [");
+                sb.Append(string.Join(",", fungibleAssetValues.Select(tuple =>
+                    $"{{ currencyTicker: \"{tuple.Currency.Ticker}\", " +
+                    $"value: \"{tuple.GetQuantityString()}\" }}")));
+                sb.Append("],");
+            }
+            
+            if (fungibleIdAndCounts is not null)
+            {
+                sb.Append("fungibleIdAndCounts: [");
+                sb.Append(string.Join(",", fungibleIdAndCounts.Select(tuple =>
+                    $"{{ fungibleId: {{ value: \"{tuple.fungibleId.ToString()}\" }}, " +
+                    $"count: {tuple.count} }}")));
+                sb.Append("],");
+            }
+            
+            if (memo is not null)
+            {
+                sb.Append($"memo: \"{memo}\"");
+            }
+            
+            // Remove last ',' if exists.
+            if (sb[^1] == ',')
+            {
+                sb.Remove(sb.Length - 1, 1);
+            }
+            
+            sb.Append(") }");
+
             var queryResult = await ExecuteQueryAsync<ActionQuery>(
-                query,
+                sb.ToString(),
                 standaloneContext: _standaloneContext);
             Assert.Null(queryResult.Errors);
-
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["deliverToOthersGarages"]));
             Assert.IsType<Dictionary>(plainValue);
             var actionBase = DeserializeNCAction(plainValue);
             var action = Assert.IsType<DeliverToOthersGarages>(actionBase);
             Assert.Equal(expectedAction.RecipientAgentAddr, action.RecipientAgentAddr);
-            Assert.True(expectedAction.FungibleAssetValues.SequenceEqual(action.FungibleAssetValues));
-            Assert.True(expectedAction.FungibleIdAndCounts.SequenceEqual(action.FungibleIdAndCounts));
+            Assert.True(expectedAction.FungibleAssetValues?.SequenceEqual(action.FungibleAssetValues) ??
+                        action.FungibleAssetValues is null);
+            Assert.True(expectedAction.FungibleIdAndCounts?.SequenceEqual(action.FungibleIdAndCounts) ??
+                        action.FungibleIdAndCounts is null);
             Assert.Equal(expectedAction.Memo, action.Memo);
         }
-
-        [Fact]
-        public async Task UnloadFromMyGarages()
+        
+        private static IEnumerable<object[]> GetMemberDataOfDeliverToOthersGarages()
         {
-            var fungibleAssetValues = new[]
+            yield return new object[]
             {
-                (balanceAddr: new PrivateKey().ToAddress(), value: new FungibleAssetValue(Currencies.Crystal, 1, 0)),
-                (balanceAddr: new PrivateKey().ToAddress(), value: new FungibleAssetValue(Currencies.Crystal, 1, 0)),
+                new PrivateKey().ToAddress(),
+                null,
+                null,
+                null,
             };
-            var fungibleAssetValuesString = string.Join(",", fungibleAssetValues.Select(tuple =>
-                $"{{ balanceAddr: \"{tuple.balanceAddr.ToHex()}\", " +
-                $"value: {{ currency: {{ ticker: \"{tuple.value.Currency.Ticker}\" }}, " +
-                $"majorUnit: {tuple.value.MajorUnit}, " +
-                $"minorUnit: {tuple.value.MinorUnit} }} }}"));
-            var inventoryAddr = new PrivateKey().ToAddress();
-            var fungibleIdAndCounts = new[]
+            yield return new object[]
             {
-                (fungibleId: new HashDigest<SHA256>(), count: 1),
-                (fungibleId: new HashDigest<SHA256>(), count: 1),
+                new PrivateKey().ToAddress(),
+                new[]
+                {
+                    new FungibleAssetValue(Currencies.Garage, 1, 0),
+                    new FungibleAssetValue(Currencies.Garage, 1, 0),
+                },
+                new[]
+                {
+                    (fungibleId: new HashDigest<SHA256>(), count: 1),
+                    (fungibleId: new HashDigest<SHA256>(), count: 1),
+                },
+                "memo",
             };
-            var fungibleIdAndCountsString = string.Join(",", fungibleIdAndCounts.Select(tuple =>
-                $"{{ fungibleId: {{ value: \"{tuple.fungibleId.ToString()}\"}}, count: {tuple.count} }}"));
-            var memo = "memo";
-            var expectedAction = new LoadIntoMyGarages(
+        }
+
+        [Theory]
+        [MemberData(nameof(GetMemberDataOfUnloadFromMyGarages))]
+        public async Task UnloadFromMyGarages(
+            IEnumerable<(Address balanceAddr, FungibleAssetValue value)>? fungibleAssetValues,
+            Address? inventoryAddr,
+            IEnumerable<(HashDigest<SHA256> fungibleId, int count)>? fungibleIdAndCounts,
+            string? memo)
+        {
+            var expectedAction = new UnloadFromMyGarages(
                 fungibleAssetValues,
                 inventoryAddr,
                 fungibleIdAndCounts,
                 memo);
-            var query = "{ unloadFromMyGarages(args: { " +
-                $"fungibleAssetValues: [{fungibleAssetValuesString}], " +
-                $"inventoryAddr: \"{inventoryAddr.ToHex()}\", " +
-                $"fungibleIdAndCounts: [{fungibleIdAndCountsString}]" +
-                $"memo: \"{memo}\"" +
-                "}) }";
+            var sb = new StringBuilder("{ unloadFromMyGarages(");
+            if (fungibleAssetValues is not null)
+            {
+                sb.Append("fungibleAssetValues: [");
+                sb.Append(string.Join(",", fungibleAssetValues.Select(tuple =>
+                    $"{{ balanceAddr: \"{tuple.balanceAddr.ToHex()}\", " +
+                    $"value: {{ currencyTicker: \"{tuple.value.Currency.Ticker}\"," +
+                    $"value: \"{tuple.value.GetQuantityString()}\" }} }}")));
+                sb.Append("],");
+            }
+
+            if (inventoryAddr is not null)
+            {
+                sb.Append($"inventoryAddr: \"{inventoryAddr.Value.ToHex()}\",");
+            }
+
+            if (fungibleIdAndCounts is not null)
+            {
+                sb.Append("fungibleIdAndCounts: [");
+                sb.Append(string.Join(",", fungibleIdAndCounts.Select(tuple =>
+                    $"{{ fungibleId: {{ value: \"{tuple.fungibleId.ToString()}\" }}, " +
+                    $"count: {tuple.count} }}")));
+                sb.Append("],");
+            }
+
+            if (memo is not null)
+            {
+                sb.Append($"memo: \"{memo}\"");
+            }
+
+            // Remove last ',' if exists.
+            if (sb[^1] == ',')
+            {
+                sb.Remove(sb.Length - 1, 1);
+            }
+
+            sb.Append(") }");
             var queryResult = await ExecuteQueryAsync<ActionQuery>(
-                query,
+                sb.ToString(),
                 standaloneContext: _standaloneContext);
             Assert.Null(queryResult.Errors);
 
@@ -1073,10 +1182,44 @@ actionPoint: {actionPoint},
             Assert.IsType<Dictionary>(plainValue);
             var actionBase = DeserializeNCAction(plainValue);
             var action = Assert.IsType<UnloadFromMyGarages>(actionBase);
-            Assert.True(expectedAction.FungibleAssetValues.SequenceEqual(action.FungibleAssetValues));
+            Assert.True(expectedAction.FungibleAssetValues?.SequenceEqual(action.FungibleAssetValues) ??
+                        action.FungibleAssetValues is null);
             Assert.Equal(expectedAction.InventoryAddr, action.InventoryAddr);
-            Assert.True(expectedAction.FungibleIdAndCounts.SequenceEqual(action.FungibleIdAndCounts));
+            Assert.True(expectedAction.FungibleIdAndCounts?.SequenceEqual(action.FungibleIdAndCounts) ??
+                        action.FungibleIdAndCounts is null);
             Assert.Equal(expectedAction.Memo, action.Memo);
+        }
+        
+        private static IEnumerable<object[]> GetMemberDataOfUnloadFromMyGarages()
+        {
+            yield return new object[]
+            {
+                null,
+                null,
+                null,
+                "memo",
+            };
+            yield return new object[]
+            {
+                new[]
+                {
+                    (
+                        address: new PrivateKey().ToAddress(),
+                        fungibleAssetValue: new FungibleAssetValue(Currencies.Garage, 1, 0)
+                    ),
+                    (
+                        address: new PrivateKey().ToAddress(),
+                        fungibleAssetValue: new FungibleAssetValue(Currencies.Garage, 1, 0)
+                    ),
+                },
+                new PrivateKey().ToAddress(),
+                new[]
+                {
+                    (fungibleId: new HashDigest<SHA256>(), count: 1),
+                    (fungibleId: new HashDigest<SHA256>(), count: 1),
+                },
+                "memo",
+            };
         }
     }
 }
