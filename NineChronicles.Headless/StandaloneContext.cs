@@ -141,6 +141,7 @@ namespace NineChronicles.Headless
             if (TryGetCurrency(ticker, out var currency))
             {
                 fungibleAssetValue = FungibleAssetValue.Parse(currency!.Value, value);
+                return true;
             }
 
             fungibleAssetValue = null;
