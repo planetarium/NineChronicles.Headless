@@ -12,18 +12,19 @@ namespace NineChronicles.Headless.GraphTypes.Input
         {
             Name = "FungibleIdAndCountInput";
 
-            Field<HashDigestInputType<SHA256>>(
+            Field<NonNullGraphType<StringGraphType>>(
                 name: "fungibleId",
                 description: "Fungible ID");
 
-            Field<IntGraphType>(
+            Field<NonNullGraphType<IntGraphType>>(
                 name: "count",
                 description: "Count");
         }
 
         public override object ParseDictionary(IDictionary<string, object?> value)
         {
-            var fungibleId = (HashDigest<SHA256>)value["fungibleId"]!;
+            var hexDigest = (string)value["fungibleId"]!;
+            var fungibleId =  HashDigest<SHA256>.FromString(hexDigest);
             var count = (int)value["count"]!;
             return (fungibleId, count);
         }

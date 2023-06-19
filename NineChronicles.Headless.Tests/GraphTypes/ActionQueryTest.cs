@@ -967,7 +967,7 @@ actionPoint: {actionPoint},
             {
                 sb.Append("fungibleIdAndCounts: [");
                 sb.Append(string.Join(",", fungibleIdAndCounts.Select(tuple =>
-                    $"{{ fungibleId: {{ value: \"{tuple.fungibleId.ToString()}\" }}, " +
+                    $"{{ fungibleId: \"{tuple.fungibleId.ToString()}\", " +
                     $"count: {tuple.count} }}")));
                 sb.Append("],");
             }
@@ -1061,7 +1061,7 @@ actionPoint: {actionPoint},
             {
                 sb.Append("fungibleIdAndCounts: [");
                 sb.Append(string.Join(",", fungibleIdAndCounts.Select(tuple =>
-                    $"{{ fungibleId: {{ value: \"{tuple.fungibleId.ToString()}\" }}, " +
+                    $"{{ fungibleId: \"{tuple.fungibleId.ToString()}\", " +
                     $"count: {tuple.count} }}")));
                 sb.Append("],");
             }
@@ -1155,7 +1155,7 @@ actionPoint: {actionPoint},
             {
                 sb.Append("fungibleIdAndCounts: [");
                 sb.Append(string.Join(",", fungibleIdAndCounts.Select(tuple =>
-                    $"{{ fungibleId: {{ value: \"{tuple.fungibleId.ToString()}\" }}, " +
+                    $"{{ fungibleId: \"{tuple.fungibleId.ToString()}\", " +
                     $"count: {tuple.count} }}")));
                 sb.Append("],");
             }
