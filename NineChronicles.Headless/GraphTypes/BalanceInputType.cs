@@ -1,26 +1,27 @@
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using GraphQL.Types;
 using Libplanet;
-using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    public class GarageAddressAndFungibleAssetValueInputType :
-        InputObjectGraphType<(Address balanceAddr, GarageFungibleAssetValueInputType fav)>
+    public class BalanceInputType : InputObjectGraphType<(
+        Address balanceAddr,
+        SimplifyFungibleAssetValueInputType valueTuple)>
     {
-        public GarageAddressAndFungibleAssetValueInputType()
+        public BalanceInputType()
         {
-            Name = "GarageAddressAndFungibleAssetValueInput";
+            Name = "BalanceInput";
 
             Field<AddressType>(
                 name: "balanceAddr",
                 description: "Balance Address."
             );
 
-            Field<GarageFungibleAssetValueInputType>(
-                name: "fungibleAssetValue",
+            Field<SimplifyFungibleAssetValueInputType>(
+                name: "value",
                 description: "Fungible asset value ticker and amount."
             );
         }
@@ -28,8 +29,8 @@ namespace NineChronicles.Headless.GraphTypes
         public override object ParseDictionary(IDictionary<string, object?> value)
         {
             var addr = (Address)value["balanceAddr"]!;
-            var fav = ((CurrencyEnum, BigInteger, BigInteger))value["fungibleAssetValue"]!;
-            return (addr, fav);
+            var favTuple = ((string currencyTicker, string value))value["value"]!;
+            return (addr, favTuple);
         }
     }
 }
