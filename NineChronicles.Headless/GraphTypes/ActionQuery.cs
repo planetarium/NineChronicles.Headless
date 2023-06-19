@@ -21,12 +21,12 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public partial class ActionQuery : ObjectGraphType
     {
-        private static readonly Codec Codec = new Codec();
-        internal StandaloneContext standaloneContext { get; set; }
+        private static readonly Codec Codec = new();
+        internal StandaloneContext StandaloneContext { get; set; }
 
         public ActionQuery(StandaloneContext standaloneContext)
         {
-            this.standaloneContext = standaloneContext;
+            StandaloneContext = standaloneContext;
 
             Field<ByteStringType>(
                 name: "stake",
