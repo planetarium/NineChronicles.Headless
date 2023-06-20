@@ -70,5 +70,19 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Assert.Equal(expectedAddresses, addressList);
             }
         }
+
+        [Fact]
+        public async Task PledgeAddress()
+        {
+            var address = new Address("0x8ff5e1c64860af7d88b019837a378fbbec75c7d9");
+            var query =
+                $"{{ pledgeAddress(agentAddress: \"{address}\") }}";
+            var result = await ExecuteQueryAsync<AddressQuery>(
+                query,
+                standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!)
+                .ToValue()!;
+            Assert.Equal("0xdfEA67DEB20E2e2Bb3AcB6Bc7C858Cb7De3deB78", data["pledgeAddress"]);
+        }
     }
 }
