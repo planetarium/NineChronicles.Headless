@@ -6,6 +6,7 @@ using Bencodex;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
+using Lib9c;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
@@ -20,6 +21,7 @@ using Nekoyume.TableData;
 using Nekoyume.Model;
 using NineChronicles.Headless.GraphTypes.States;
 using static NineChronicles.Headless.NCActionUtils;
+using Transaction = Libplanet.Tx.Transaction;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -448,6 +450,17 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "timestamp",
                         Description = "The time this transaction is created.",
+                    },
+                    new QueryArgument<LongGraphType>
+                    {
+                        Name = "gasLimit",
+                        Description = "The gas limit for Transaction.",
+                        DefaultValue = RequestPledge.DefaultRefillMead,
+                    },
+                    new QueryArgument<FungibleAssetValueInputType>
+                    {
+                        Name = "maxGasPrice",
+                        DefaultValue = 1 * Currencies.Mead
                     }
                 ),
                 resolve: context => new ActionTxQuery(standaloneContext));

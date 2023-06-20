@@ -163,12 +163,7 @@ namespace Libplanet.Headless.Hosting
                     genesisBlock: genesisBlock,
                     renderers: renderers,
                     blockChainStates: blockChainStates,
-                    actionEvaluator: new ActionEvaluator(
-                        _ => blockPolicy.BlockAction,
-                        blockChainStates: blockChainStates,
-                        actionTypeLoader: actionLoader,
-                        feeCalculator: null
-                    )
+                    actionEvaluator: actionEvaluator
                 );
             }
 

@@ -6,6 +6,8 @@ using GraphQL.Execution;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
+using Nekoyume;
+using Nekoyume.Action;
 using Nekoyume.Helper;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
@@ -34,6 +36,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 monsterCollectionLevel
                 hasTradedItem
                 crystal
+                pledge {
+                    patronAddress
+                    approved
+                    mead
+                }
             }";
 #pragma warning disable CS0618
             // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
@@ -49,6 +56,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
 
             Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(agentState.address, 0);
             MonsterCollectionState monsterCollectionState = new MonsterCollectionState(monsterCollectionAddress, 7, 0, Fixtures.TableSheetsFX.MonsterCollectionRewardSheet);
+            Address pledgeAddress = agentState.address.GetPledgeAddress();
 
             IValue? GetStateMock(Address address)
             {
@@ -65,6 +73,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 if (Fixtures.AvatarAddress == address)
                 {
                     return Fixtures.AvatarStateFX.Serialize();
+                }
+
+                if (pledgeAddress == address)
+                {
+                    return List.Empty
+                        .Add(MeadConfig.PatronAddress.Serialize())
+                        .Add(true.Serialize())
+                        .Add(4.Serialize());
                 }
 
                 return null;
@@ -107,6 +123,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 ["monsterCollectionLevel"] = 7L,
                 ["hasTradedItem"] = false,
                 ["crystal"] = crystalDecimalString,
+                ["pledge"] = new Dictionary<string, object>
+                {
+                    ["patronAddress"] = MeadConfig.PatronAddress.ToString(),
+                    ["approved"] = true,
+                    ["mead"] = 4
+                }
             };
             Assert.Equal(expected, data);
         }

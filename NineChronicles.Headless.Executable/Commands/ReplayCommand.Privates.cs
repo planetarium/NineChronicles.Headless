@@ -45,6 +45,8 @@ namespace NineChronicles.Headless.Executable.Commands
                                 .Select(kv => kv.Key.Item2)
                                 .ToImmutableHashSet());
 
+            public IImmutableDictionary<Address, IImmutableSet<Currency>> TotalUpdatedFungibleAssets { get; } = new Dictionary<Address, IImmutableSet<Currency>>().ToImmutableDictionary();
+
             public IImmutableSet<Currency> TotalSupplyUpdatedCurrencies =>
                 UpdatedTotalSupply.Keys.ToImmutableHashSet();
 
@@ -467,6 +469,10 @@ namespace NineChronicles.Headless.Executable.Commands
             public void PutLog(string log)
             {
                 // NOTE: Not implemented yet. See also Lib9c.Tests.Action.ActionContext.PutLog().
+            }
+
+            public void UseGas(long gas)
+            {
             }
 
             public IActionContext GetUnconsumedContext() =>

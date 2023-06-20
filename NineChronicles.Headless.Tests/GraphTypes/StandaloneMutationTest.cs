@@ -27,7 +27,9 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using GraphQL.Execution;
+using Lib9c;
 using Lib9c.Tests;
+using Nekoyume;
 using NineChronicles.Headless.Executable.Commands;
 using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Executable.Tests.IO;
@@ -843,7 +845,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             Block genesis =
                 MakeGenesisBlock(
-                    default,
+                    AdminAddress,
 #pragma warning disable CS0618
                     // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
                     Currency.Legacy("NCG", 2, null),
@@ -873,24 +875,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     0,
                     service.MinerPrivateKey!,
                     genesis.Hash,
-                    new ActionBase[] { }
+                    new ActionBase[] { },
+                    gasLimit: 4,
+                    maxGasPrice: 1 * Currencies.Mead
                 );
             string base64Encoded = Convert.ToBase64String(tx.Serialize());
             query = $"mutation {{ stageTx(payload: \"{base64Encoded}\") }}";
             result = await ExecuteQueryAsync(query);
-            data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
-            Assert.Null(result.Errors);
-            Assert.Equal(
-                new Dictionary<string, object>
-                {
-                    ["stageTx"] = true,
-                },
-                data
-            );
-            Block mined =
-                BlockChain.ProposeBlock(service.MinerPrivateKey);
-            BlockChain.Append(mined, GenerateBlockCommit(mined.Index, mined.Hash, GenesisValidators));
-            Assert.Contains(tx, mined.Transactions);
+            // Failed stageTransaction because Insufficient Gas fee.
+            Assert.Single(result.Errors!);
         }
 
         [Fact]
@@ -898,7 +891,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             Block genesis =
                 MakeGenesisBlock(
-                    default,
+                    AdminAddress,
 #pragma warning disable CS0618
                     // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
                     Currency.Legacy("NCG", 2, null),
@@ -920,24 +913,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     0,
                     service.MinerPrivateKey!,
                     genesis.Hash,
-                    new ActionBase[] { }
+                    new ActionBase[] { },
+                    gasLimit: 4,
+                    maxGasPrice: 1 * Currencies.Mead
                 );
             string base64Encoded = Convert.ToBase64String(tx.Serialize());
             query = $"mutation {{ stageTxV2(payload: \"{base64Encoded}\") }}";
             result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
-            Assert.Null(result.Errors);
-            Assert.Equal(
-                new Dictionary<string, object>
-                {
-                    ["stageTxV2"] = tx.Id.ToHex(),
-                },
-                data
-            );
-            Block mined =
-                BlockChain.ProposeBlock(service.MinerPrivateKey!);
-            BlockChain.Append(mined, GenerateBlockCommit(mined.Index, mined.Hash, GenesisValidators));
-            Assert.Contains(tx, mined.Transactions);
+            // Failed stageTransaction because Insufficient Gas fee.
+            Assert.Single(result.Errors!);
         }
 
         [Fact]
@@ -978,6 +962,36 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.True((Bencodex.Types.Boolean)state);
         }
 
+        [Fact]
+        public async Task StageTransaction()
+        {
+            Block genesis =
+                MakeGenesisBlock(
+                    AdminAddress,
+#pragma warning disable CS0618
+                    // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                    Currency.Legacy("NCG", 2, null),
+#pragma warning restore CS0618
+                    ImmutableHashSet<Address>.Empty
+                );
+            NineChroniclesNodeService service = ServiceBuilder.CreateNineChroniclesNodeService(genesis, ProposerPrivateKey);
+
+            StandaloneContextFx.NineChroniclesNodeService = service;
+            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
+
+            var pk = new PrivateKey();
+            ActionBase action = new ApprovePledge
+            {
+                PatronAddress = new PrivateKey().ToAddress()
+            };
+            var tx = Transaction.Create(0, pk, BlockChain.Genesis.Hash, new[] { action });
+            var payload = ByteUtil.Hex(tx.Serialize());
+            var stageTxMutation = $"mutation {{ stageTransaction(payload: \"{payload}\") }}";
+            var stageTxResult = await ExecuteQueryAsync(stageTxMutation);
+            var error = Assert.Single(stageTxResult.Errors!);
+            Assert.Contains("gas", error.Message);
+        }
+
         private Block MakeGenesisBlock(
             Address adminAddress,
             Currency curreny,
@@ -1009,6 +1023,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             tableSheets: _sheets,
                             pendingActivationStates: new PendingActivationState[] { }
                         ),
+                        new PrepareRewardAssets
+                        {
+                            RewardPoolAddress = MeadConfig.PatronAddress,
+                            Assets = new List<FungibleAssetValue>
+                            {
+                                1 * Currencies.Mead
+                            }
+                        }
                     })).AddRange(new IAction[]
                     {
                         new Initialize(
@@ -1017,7 +1039,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                     .ToList()),
                             states: ImmutableDictionary.Create<Address, IValue>())
                     }.Select((sa, nonce) => Transaction.Create(nonce + 1, AdminPrivateKey, null, new[] { sa }))),
-                blockAction: ServiceBuilder.BlockPolicy.BlockAction,
                 privateKey: AdminPrivateKey);
         }
     }
