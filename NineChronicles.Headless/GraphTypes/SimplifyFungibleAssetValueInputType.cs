@@ -35,9 +35,9 @@ namespace NineChronicles.Headless.GraphTypes
             {
                 if (value.ContainsKey("currencyTicker"))
                 {
-                    throw new ExecutionError("currencyEnum and currencyTicker cannot be specified at the same time.");    
+                    throw new ExecutionError("currencyEnum and currencyTicker cannot be specified at the same time.");
                 }
-                
+
                 var currencyTicker = ((CurrencyEnum)currencyEnum!).ToString();
                 return (currencyTicker, value: value2);
             }

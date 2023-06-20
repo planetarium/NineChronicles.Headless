@@ -24,7 +24,7 @@ namespace NineChronicles.Headless.GraphTypes.Input
         public override object ParseDictionary(IDictionary<string, object?> value)
         {
             var hexDigest = (string)value["fungibleId"]!;
-            var fungibleId =  HashDigest<SHA256>.FromString(hexDigest);
+            var fungibleId = HashDigest<SHA256>.FromString(hexDigest);
             var count = (int)value["count"]!;
             return (fungibleId, count);
         }

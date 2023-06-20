@@ -13,7 +13,6 @@ using Lib9c;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Crypto;
-using Microsoft.Extensions.Primitives;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Action.Garages;
@@ -1056,7 +1055,7 @@ actionPoint: {actionPoint},
                     $"value: \"{tuple.GetQuantityString()}\" }}")));
                 sb.Append("],");
             }
-            
+
             if (fungibleIdAndCounts is not null)
             {
                 sb.Append("fungibleIdAndCounts: [");
@@ -1065,18 +1064,18 @@ actionPoint: {actionPoint},
                     $"count: {tuple.count} }}")));
                 sb.Append("],");
             }
-            
+
             if (memo is not null)
             {
                 sb.Append($"memo: \"{memo}\"");
             }
-            
+
             // Remove last ',' if exists.
             if (sb[^1] == ',')
             {
                 sb.Remove(sb.Length - 1, 1);
             }
-            
+
             sb.Append(") }");
 
             var queryResult = await ExecuteQueryAsync<ActionQuery>(
@@ -1095,7 +1094,7 @@ actionPoint: {actionPoint},
                         action.FungibleIdAndCounts is null);
             Assert.Equal(expectedAction.Memo, action.Memo);
         }
-        
+
         private static IEnumerable<object[]> GetMemberDataOfDeliverToOthersGarages()
         {
             yield return new object[]
@@ -1189,7 +1188,7 @@ actionPoint: {actionPoint},
                         action.FungibleIdAndCounts is null);
             Assert.Equal(expectedAction.Memo, action.Memo);
         }
-        
+
         private static IEnumerable<object[]> GetMemberDataOfUnloadFromMyGarages()
         {
             yield return new object[]

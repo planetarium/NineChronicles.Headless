@@ -52,7 +52,7 @@ namespace NineChronicles.Headless.GraphTypes
                         {
                             if (StandaloneContext.TryGetFungibleAssetValue(currencyTicker, value, out var fav))
                             {
-                                fungibleAssetValues.Add((balanceAddr, fav!.Value));    
+                                fungibleAssetValues.Add((balanceAddr, fav!.Value));
                             }
                             else
                             {
@@ -114,7 +114,7 @@ namespace NineChronicles.Headless.GraphTypes
                         {
                             if (StandaloneContext.TryGetFungibleAssetValue(currencyTicker, value, out var fav))
                             {
-                                fungibleAssetValues.Add(fav!.Value);    
+                                fungibleAssetValues.Add(fav!.Value);
                             }
                             else
                             {
@@ -174,7 +174,7 @@ namespace NineChronicles.Headless.GraphTypes
                         {
                             if (StandaloneContext.TryGetFungibleAssetValue(currencyTicker, value, out var fav))
                             {
-                                fungibleAssetValues.Add((addr, fav!.Value));    
+                                fungibleAssetValues.Add((addr, fav!.Value));
                             }
                             else
                             {
