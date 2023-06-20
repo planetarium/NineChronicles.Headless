@@ -475,9 +475,11 @@ namespace NineChronicles.Headless.Executable.Commands
             TextWriter? textWriter,
             string prefix = "")
         {
+            // FIXME: IncompleteBlockStatesException has been removed.
+            // Probably need a proper fix.
             if (e is not UnexpectedlyTerminatedActionException
                 {
-                    InnerException: IncompleteBlockStatesException
+                    InnerException: ArgumentException
                 })
             {
                 return;
