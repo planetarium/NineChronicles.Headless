@@ -1017,7 +1017,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                     .ToList()),
                             states: ImmutableDictionary.Create<Address, IValue>())
                     }.Select((sa, nonce) => Transaction.Create(nonce + 1, AdminPrivateKey, null, new[] { sa }))),
-                blockAction: ServiceBuilder.BlockPolicy.BlockAction,
                 privateKey: AdminPrivateKey);
         }
     }

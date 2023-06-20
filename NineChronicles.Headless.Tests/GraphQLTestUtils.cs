@@ -14,8 +14,10 @@ using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Libplanet.Tx;
 using Microsoft.Extensions.DependencyInjection;
+using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Action.Loader;
+using Nekoyume.Model.State;
 
 namespace NineChronicles.Headless.Tests
 {
@@ -125,10 +127,13 @@ namespace NineChronicles.Headless.Tests
                 stateStore,
                 genesisBlock,
                 actionEvaluator);
+            var ncg = new GoldCurrencyState((Dictionary)blockchain.GetState(Addresses.GoldCurrency))
+                .Currency;
             return new StandaloneContext
             {
                 BlockChain = blockchain,
                 Store = store,
+                NCG = ncg,
             };
         }
     }

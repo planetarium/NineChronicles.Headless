@@ -58,7 +58,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             states: ImmutableDictionary.Create<Address, IValue>())
                     }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa }))
                     .ToImmutableList(),
-                blockAction: policy.BlockAction,
                 privateKey: new PrivateKey()
             );
             _blockChain = BlockChain.Create(

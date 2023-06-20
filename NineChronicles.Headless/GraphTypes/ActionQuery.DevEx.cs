@@ -66,7 +66,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }),
                 resolve: context =>
                 {
-                    if (standaloneContext.BlockChain is not { } chain)
+                    if (StandaloneContext.BlockChain is not { } chain)
                     {
                         throw new InvalidOperationException(
                             "BlockChain not found in the context");

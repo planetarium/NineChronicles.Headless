@@ -71,7 +71,7 @@ public partial class ActionQuery
                         context.GetArgument<List<RuneSlotInfo>?>("runeSlotInfos") ?? new List<RuneSlotInfo>();
                     int? stageBuffId = context.GetArgument<int?>("stageBuffId");
 
-                    if (!(standaloneContext.BlockChain is { } chain))
+                    if (!(StandaloneContext.BlockChain is { } chain))
                     {
                         throw new InvalidOperationException("BlockChain not found in the context");
                     }
