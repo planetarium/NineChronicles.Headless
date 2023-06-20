@@ -47,9 +47,9 @@ namespace NineChronicles.Headless.Executable.Commands
             [Option("bytes", new[] { 'b' },
                 Description = "Print raw bytes instead of base64.  No trailing LF appended.")]
             bool bytes = false,
-            [Option("gas-limit", Description = "Print raw bytes instead of base64.  No trailing LF appended.")]
+            [Option("gas-limit", Description = "limit of the total amount of transaction gas fee.")]
             long? gasLimit = null,
-            [Option("max-gas-price", Description = "Print raw bytes instead of base64.  No trailing LF appended.")]
+            [Option("max-gas-price", Description = "maximum amount of transaction gas fee.")]
             long? maxGasPrice = null
         )
         {

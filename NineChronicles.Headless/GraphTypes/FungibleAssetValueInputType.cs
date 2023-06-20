@@ -46,17 +46,19 @@ namespace NineChronicles.Headless.GraphTypes
         {
             if (value is FungibleAssetValue fav)
             {
-                var minters = new List<StringValue>();
+                IValue mintersValue = new NullValue();
                 if (fav.Currency.Minters is not null)
                 {
+                    var minters = new List<StringValue>();
                     minters.AddRange(fav.Currency.Minters.Select(minter => new StringValue(minter.ToString())));
+                    mintersValue = new ListValue(minters);
                 }
                 return new ObjectValue(new List<ObjectField>
                 {
                     new("quantity", new BigIntValue(fav.RawValue)),
                     new("ticker", new StringValue(fav.Currency.Ticker)),
                     new("decimalPlaces", new IntValue(fav.Currency.DecimalPlaces)),
-                    new("minters", new ListValue(minters)),
+                    new("minters", mintersValue),
                 });
             }
 

@@ -4,7 +4,7 @@ using Libplanet.Explorer.GraphTypes;
 
 namespace NineChronicles.Headless.GraphTypes.States.Models;
 
-public class MeadPledgeType : ObjectGraphType<(Address?, bool, int)>
+public class MeadPledgeType : ObjectGraphType<(Address? Address, bool Approved, int Mead)>
 {
     public MeadPledgeType()
     {

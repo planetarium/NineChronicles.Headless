@@ -149,7 +149,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                         mead = l[2].ToInteger();
                     }
 
-                    return (address, contracted: approved, mead);
+                    return (address, approved, mead);
                 }
             );
         }
