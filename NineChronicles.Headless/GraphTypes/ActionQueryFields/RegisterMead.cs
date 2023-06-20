@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
@@ -22,7 +23,7 @@ public partial class ActionQuery
                 new QueryArgument<IntGraphType>
                 {
                     Name = "mead",
-                    DefaultValue = RequestPledge.RefillMead
+                    DefaultValue = RequestPledge.DefaultRefillMead
                 }
             },
             resolve: context =>
@@ -32,7 +33,7 @@ public partial class ActionQuery
                 ActionBase action = new RequestPledge
                 {
                     AgentAddress = agentAddress,
-                    Mead = mead,
+                    RefillMead = mead,
                 };
                 return Encode(context, action);
             }
@@ -90,18 +91,19 @@ public partial class ActionQuery
                 new QueryArgument<IntGraphType>
                 {
                     Name = "mead",
-                    DefaultValue = RequestPledge.RefillMead
+                    DefaultValue = RequestPledge.DefaultRefillMead
                 }
             },
             resolve: context =>
             {
                 var patronAddress = context.GetArgument<Address>("patronAddress");
                 var agentAddresses = context.GetArgument<List<Address>>("agentAddresses");
+                var addresses = agentAddresses.Select(a => (a, a.GetPledgeAddress())).ToList();
                 var mead = context.GetArgument<int>("mead");
                 ActionBase action = new CreatePledge
                 {
                     PatronAddress = patronAddress,
-                    AgentAddresses = agentAddresses,
+                    AgentAddresses = addresses,
                     Mead = mead,
                 };
                 return Encode(context, action);

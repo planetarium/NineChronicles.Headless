@@ -201,7 +201,7 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "gasLimit",
                         Description = "The gas limit for Transaction.",
-                        DefaultValue = RequestPledge.RefillMead,
+                        DefaultValue = RequestPledge.DefaultRefillMead,
                     },
                     new QueryArgument<FungibleAssetValueInputType>
                     {

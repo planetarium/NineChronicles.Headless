@@ -89,7 +89,7 @@ query {{
             var rawAction = Assert.Single(tx.Actions);
             var action = Assert.IsType<RequestPledge>(new NCActionLoader().LoadAction(0, rawAction));
             Assert.Equal(address, action.AgentAddress);
-            Assert.Equal(RequestPledge.RefillMead, action.Mead);
+            Assert.Equal(RequestPledge.DefaultRefillMead, action.RefillMead);
         }
     }
 }
