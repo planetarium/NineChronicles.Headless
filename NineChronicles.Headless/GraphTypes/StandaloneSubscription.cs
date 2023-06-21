@@ -263,13 +263,13 @@ namespace NineChronicles.Headless.GraphTypes
             BlockChain blockChain = StandaloneContext.NineChroniclesNodeService.BlockChain;
             Currency currency =
                 new GoldCurrencyState(
-                    (Dictionary)blockChain.GetState(Addresses.GoldCurrency, _tipHeader.Hash)
+                    (Dictionary)blockChain.GetStates(new[] { Addresses.GoldCurrency }, _tipHeader.Hash)[0]
                 ).Currency;
             var rewardSheet = new MonsterCollectionRewardSheet();
-            var csv = blockChain.GetState(
-                Addresses.GetSheetAddress<MonsterCollectionRewardSheet>(),
+            var csv = blockChain.GetStates(
+                new[] { Addresses.GetSheetAddress<MonsterCollectionRewardSheet>() },
                 _tipHeader.Hash
-            ).ToDotnetString();
+            )[0].ToDotnetString();
             rewardSheet.Set(csv);
             Log.Debug($"StandaloneSubscription.RenderBlock target addresses. (count: {StandaloneContext.AgentAddresses.Count})");
             StandaloneContext.AgentAddresses
@@ -306,13 +306,13 @@ namespace NineChronicles.Headless.GraphTypes
         {
             FungibleAssetValue agentBalance = blockChain.GetBalance(address, currency, tipHeader.Hash);
             balanceSubject.OnNext(agentBalance.GetQuantityString(true));
-            if (blockChain.GetState(address, tipHeader.Hash) is Dictionary rawAgent)
+            if (blockChain.GetStates(new[] { address }, tipHeader.Hash)[0] is Dictionary rawAgent)
             {
                 AgentState agentState = new AgentState(rawAgent);
                 Address deriveAddress =
                     MonsterCollectionState.DeriveAddress(address, agentState.MonsterCollectionRound);
                 if (agentState.avatarAddresses.Any() &&
-                    blockChain.GetState(deriveAddress, tipHeader.Hash) is Dictionary collectDict)
+                    blockChain.GetStates(new[] { deriveAddress }, tipHeader.Hash)[0] is Dictionary collectDict)
                 {
                     var monsterCollectionState = new MonsterCollectionState(collectDict);
                     List<MonsterCollectionRewardSheet.RewardInfo> rewards = monsterCollectionState.CalculateRewards(
@@ -349,7 +349,7 @@ namespace NineChronicles.Headless.GraphTypes
             foreach (var (address, subjects) in StandaloneContext.AgentAddresses)
             {
                 if (eval.Signer.Equals(address) &&
-                    service.BlockChain.GetState(address, _tipHeader?.Hash) is Dictionary agentDict)
+                    service.BlockChain.GetStates(new[] { address }, _tipHeader?.Hash)[0] is Dictionary agentDict)
                 {
                     var agentState = new AgentState(agentDict);
                     Address deriveAddress = MonsterCollectionState.DeriveAddress(address, agentState.MonsterCollectionRound);

@@ -111,7 +111,7 @@ namespace NineChronicles.Headless
         {
             var address = new Address(addressBytes);
             var hash = new BlockHash(blockHashBytes);
-            IValue state = _blockChain.GetState(address, hash);
+            IValue state = _blockChain.GetStates(new[] { address }, hash)[0];
             // FIXME: Null과 null 구분해서 반환해야 할 듯
             byte[] encoded = _codec.Encode(state ?? new Null());
             return new UnaryResult<byte[]>(encoded);
