@@ -95,10 +95,12 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [InlineData(ClaimStakeReward2.ObsoletedIndex - 1, null, false)]
         [InlineData(ClaimStakeReward2.ObsoletedIndex, null, true)]
         [InlineData(ClaimStakeReward2.ObsoletedIndex + 1, null, false)]
+        [InlineData(ClaimStakeReward3.ObsoleteBlockIndex - 1, null, true)]
         [InlineData(long.MaxValue, null, true)]
         [InlineData(null, 1, false)]
         [InlineData(null, 2, true)]
         [InlineData(null, 3, false)]
+        [InlineData(null, 4, true)]
         public void Sign_ClaimStakeReward(long? blockIndex, int? actionVersion, bool gas)
         {
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());

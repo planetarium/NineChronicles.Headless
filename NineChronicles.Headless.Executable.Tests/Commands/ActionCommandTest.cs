@@ -91,7 +91,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 var rawAction = Convert.FromBase64String(File.ReadAllText(filePath));
                 var decoded = (List)_codec.Decode(rawAction);
                 string type = (Text)decoded[0];
-                Assert.Equal(nameof(Nekoyume.Action.ClaimMonsterCollectionReward), type);
+                Assert.Equal(nameof(ClaimMonsterCollectionReward), type);
 
                 Dictionary plainValue = (Dictionary)decoded[1];
                 var action = new ClaimMonsterCollectionReward();
@@ -188,9 +188,10 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
         [Theory]
         [InlineData(0L, typeof(ClaimStakeReward2))]
-        [InlineData(Nekoyume.Action.ClaimStakeReward2.ObsoletedIndex - 1, typeof(ClaimStakeReward2))]
-        [InlineData(Nekoyume.Action.ClaimStakeReward2.ObsoletedIndex, typeof(ClaimStakeReward2))]
-        [InlineData(Nekoyume.Action.ClaimStakeReward2.ObsoletedIndex + 1, typeof(ClaimStakeReward))]
+        [InlineData(ClaimStakeReward2.ObsoletedIndex, typeof(ClaimStakeReward2))]
+        [InlineData(ClaimStakeReward2.ObsoletedIndex + 1, typeof(ClaimStakeReward3))]
+        [InlineData(ClaimStakeReward3.ObsoleteBlockIndex, typeof(ClaimStakeReward3))]
+        [InlineData(ClaimStakeReward3.ObsoleteBlockIndex + 1, typeof(ClaimStakeReward))]
         [InlineData(long.MaxValue, typeof(ClaimStakeReward))]
         public void ClaimStakeRewardWithBlockIndex(long blockIndex, Type expectedActionType)
         {
@@ -207,16 +208,17 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var plainValue = Assert.IsType<Dictionary>(decoded[1]);
             var action = ClaimStakeRewardFactory.CreateByBlockIndex(blockIndex, addr);
             Assert.NotNull(action);
-            Assert.Equal(action.GetType(), expectedActionType);
+            var actionType = action.GetType();
+            Assert.Equal(expectedActionType, actionType);
             action.LoadPlainValue(plainValue);
             string type = (Text)decoded[0];
-            Assert.Equal(action.GetType().Name, type);
+            Assert.Equal(type, actionType.Name);
         }
 
         [Theory]
         [InlineData(0, 0, -1)]
-        [InlineData(1, 3, 0)]
-        [InlineData(4, 4, -1)]
+        [InlineData(1, 4, 0)]
+        [InlineData(5, 5, -1)]
         public void ClaimStakeRewardWithActionVersion(
             int actionVersionMin,
             int actionVersionMax,
