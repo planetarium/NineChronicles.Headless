@@ -73,6 +73,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     // FIXME: This `ClaimStakeReward` cases need to reduce to one case.
                     nameof(ClaimStakeReward1) => new ClaimStakeReward1(),
                     nameof(ClaimStakeReward2) => new ClaimStakeReward2(),
+                    nameof(ClaimStakeReward3) => new ClaimStakeReward3(),
                     nameof(ClaimStakeReward) => new ClaimStakeReward(),
                     nameof(TransferAsset) => new TransferAsset(),
                     nameof(MigrateMonsterCollection) => new MigrateMonsterCollection(),
