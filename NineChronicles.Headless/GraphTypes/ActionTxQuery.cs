@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using GraphQL;
 using Libplanet;
+using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Crypto;
 using Libplanet.Tx;
@@ -27,12 +28,16 @@ namespace NineChronicles.Headless.GraphTypes
             Address signer = publicKey.ToAddress();
             long nonce = context.Parent!.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
             DateTimeOffset? timestamp = context.Parent!.GetArgument<DateTimeOffset?>("timestamp");
+            long? gasLimit = context.Parent!.GetArgument<long?>("gasLimit");
+            FungibleAssetValue? maxGasPrice = context.Parent!.GetArgument<FungibleAssetValue?>("maxGasPrice");
             UnsignedTx unsignedTransaction =
                 new UnsignedTx(
                     new TxInvoice(
                         genesisHash: blockChain.Genesis.Hash,
                         timestamp: timestamp,
-                        actions: new TxActionList(new[] { action })),
+                        actions: new TxActionList(new[] { action }),
+                        gasLimit: gasLimit,
+                        maxGasPrice: maxGasPrice),
                     new TxSigningMetadata(publicKey: publicKey, nonce: nonce));
 
             return unsignedTransaction.SerializeUnsignedTx().ToArray();

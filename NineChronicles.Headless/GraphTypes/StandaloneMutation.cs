@@ -314,7 +314,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                     catch (Exception e)
                     {
-                        throw new ExecutionError("An unexpected exception occurred.", e);
+                        throw new ExecutionError($"An unexpected exception occurred. {e.Message}");
                     }
                 }
             );

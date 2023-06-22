@@ -17,6 +17,7 @@ using Nekoyume.TableData;
 using Nekoyume.TableData.Crystal;
 using NineChronicles.Headless.GraphTypes.Abstractions;
 using NineChronicles.Headless.GraphTypes.States;
+using NineChronicles.Headless.GraphTypes.States.Models;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
 using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
 using NineChronicles.Headless.GraphTypes.States.Models.Table;
@@ -515,6 +516,29 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return null;
                 });
+            Field<NonNullGraphType<MeadPledgeType>>(
+                "pledge",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "agentAddress"
+                }),
+                resolve: context =>
+                {
+                    var agentAddress = context.GetArgument<Address>("agentAddress");
+                    var pledgeAddress = agentAddress.GetPledgeAddress();
+                    Address? address = null;
+                    bool approved = false;
+                    int mead = 0;
+                    if (context.Source.GetState(pledgeAddress) is List l)
+                    {
+                        address = l[0].ToAddress();
+                        approved = l[1].ToBoolean();
+                        mead = l[2].ToInteger();
+                    }
+
+                    return (address, approved, mead);
+                }
+            );
         }
     }
 }

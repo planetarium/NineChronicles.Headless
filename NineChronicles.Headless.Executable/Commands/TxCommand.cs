@@ -7,6 +7,7 @@ using Bencodex;
 using Bencodex.Types;
 using Cocona;
 using CsvHelper;
+using Lib9c;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Blocks;
@@ -45,7 +46,11 @@ namespace NineChronicles.Headless.Executable.Commands
             string[] actions,
             [Option("bytes", new[] { 'b' },
                 Description = "Print raw bytes instead of base64.  No trailing LF appended.")]
-            bool bytes = false
+            bool bytes = false,
+            [Option("gas-limit", Description = "limit of the allowed transaction gas fee.")]
+            long? gasLimit = null,
+            [Option("max-gas-price", Description = "maximum price per gas fee.")]
+            long? maxGasPrice = null
         )
         {
             List<ActionBase> parsedActions = actions.Select(a =>
@@ -68,6 +73,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     // FIXME: This `ClaimStakeReward` cases need to reduce to one case.
                     nameof(ClaimStakeReward1) => new ClaimStakeReward1(),
                     nameof(ClaimStakeReward2) => new ClaimStakeReward2(),
+                    nameof(ClaimStakeReward3) => new ClaimStakeReward3(),
                     nameof(ClaimStakeReward) => new ClaimStakeReward(),
                     nameof(TransferAsset) => new TransferAsset(),
                     nameof(MigrateMonsterCollection) => new MigrateMonsterCollection(),
@@ -83,6 +89,8 @@ namespace NineChronicles.Headless.Executable.Commands
                 privateKey: new PrivateKey(ByteUtil.ParseHex(privateKey)),
                 genesisHash: BlockHash.FromString(genesisHash),
                 timestamp: DateTimeOffset.Parse(timestamp),
+                gasLimit: gasLimit,
+                maxGasPrice: maxGasPrice.HasValue ? maxGasPrice.Value * Currencies.Mead : null,
                 actions: parsedActions
             );
             byte[] raw = tx.Serialize();

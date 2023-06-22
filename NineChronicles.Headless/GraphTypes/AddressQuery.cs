@@ -5,6 +5,7 @@ using GraphQL.Types;
 using Libplanet;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
+using Nekoyume.Action;
 using Nekoyume.Helper;
 using Nekoyume.Model.State;
 
@@ -97,6 +98,20 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return currency!.Value.Minters;
+                });
+            Field<NonNullGraphType<AddressType>>(
+                name: "pledgeAddress",
+                description: "pledge information address.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "agentAddress",
+                        Description = "address of agent state."
+                    }),
+                resolve: context =>
+                {
+                    var agentAddress = context.GetArgument<Address>("agentAddress");
+                    return agentAddress.GetPledgeAddress();
                 });
         }
     }

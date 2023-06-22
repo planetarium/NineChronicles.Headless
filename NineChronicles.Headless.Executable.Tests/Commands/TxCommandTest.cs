@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Lib9c;
 using Libplanet;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
@@ -39,7 +40,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
             var actionCommand = new ActionCommand(_console);
             actionCommand.ActivateAccount(activationKey.Encode(), ByteUtil.Hex(nonce), filePath);
-            Assert_Tx(txNonce, filePath);
+            Assert_Tx(txNonce, filePath, false);
         }
 
         [Fact]
@@ -48,7 +49,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
             var actionCommand = new ActionCommand(_console);
             actionCommand.MonsterCollect(1, filePath);
-            Assert_Tx(1, filePath);
+            Assert_Tx(1, filePath, false);
         }
 
         [Fact]
@@ -58,14 +59,14 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var actionCommand = new ActionCommand(_console);
             var avatarAddress = new Address();
             actionCommand.ClaimMonsterCollectionReward(avatarAddress.ToHex(), filePath);
-            Assert_Tx(1, filePath);
+            Assert_Tx(1, filePath, false);
         }
 
         [Theory]
-        [InlineData(1)]
-        [InlineData(10)]
-        [InlineData(100)]
-        public void Sign_TransferAsset(int amount)
+        [InlineData(1, false)]
+        [InlineData(10, true)]
+        [InlineData(100, false)]
+        public void Sign_TransferAsset(int amount, bool gas)
         {
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
             var actionCommand = new ActionCommand(_console);
@@ -74,29 +75,33 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 new PrivateKey().ToAddress().ToHex(),
                 Convert.ToString(amount),
                 filePath);
-            Assert_Tx(1, filePath);
+            Assert_Tx(1, filePath, gas);
         }
 
-        [Fact]
-        public void Sign_Stake()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void Sign_Stake(bool gas)
         {
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
             var actionCommand = new ActionCommand(_console);
             actionCommand.Stake(1, filePath);
-            Assert_Tx(1, filePath);
+            Assert_Tx(1, filePath, gas);
         }
 
         [Theory]
-        [InlineData(null, null)]
-        [InlineData(0, null)]
-        [InlineData(ClaimStakeReward2.ObsoletedIndex - 1, null)]
-        [InlineData(ClaimStakeReward2.ObsoletedIndex, null)]
-        [InlineData(ClaimStakeReward2.ObsoletedIndex + 1, null)]
-        [InlineData(long.MaxValue, null)]
-        [InlineData(null, 1)]
-        [InlineData(null, 2)]
-        [InlineData(null, 3)]
-        public void Sign_ClaimStakeReward(long? blockIndex, int? actionVersion)
+        [InlineData(null, null, false)]
+        [InlineData(0, null, true)]
+        [InlineData(ClaimStakeReward2.ObsoletedIndex - 1, null, false)]
+        [InlineData(ClaimStakeReward2.ObsoletedIndex, null, true)]
+        [InlineData(ClaimStakeReward2.ObsoletedIndex + 1, null, false)]
+        [InlineData(ClaimStakeReward3.ObsoleteBlockIndex - 1, null, true)]
+        [InlineData(long.MaxValue, null, true)]
+        [InlineData(null, 1, false)]
+        [InlineData(null, 2, true)]
+        [InlineData(null, 3, false)]
+        [InlineData(null, 4, true)]
+        public void Sign_ClaimStakeReward(long? blockIndex, int? actionVersion, bool gas)
         {
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
             var actionCommand = new ActionCommand(_console);
@@ -106,7 +111,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 filePath,
                 blockIndex,
                 actionVersion);
-            Assert_Tx(1, filePath);
+            Assert_Tx(1, filePath, gas);
         }
 
         [Fact]
@@ -116,15 +121,22 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var actionCommand = new ActionCommand(_console);
             var avatarAddress = new Address();
             actionCommand.MigrateMonsterCollection(avatarAddress.ToHex(), filePath);
-            Assert_Tx(1, filePath);
+            Assert_Tx(1, filePath, false);
         }
 
-        private void Assert_Tx(long txNonce, string filePath)
+        private void Assert_Tx(long txNonce, string filePath, bool gas)
         {
             var timeStamp = DateTimeOffset.FromUnixTimeSeconds(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
             var hashHex = ByteUtil.Hex(_blockHash.ByteArray);
+            long? gasLimit = null;
+            long? maxGasPrice = null;
+            if (gas)
+            {
+                gasLimit = 1L;
+                maxGasPrice = 1L;
+            }
             _command.Sign(ByteUtil.Hex(_privateKey.ByteArray), txNonce, hashHex, timeStamp.ToString(),
-                new[] { filePath });
+                new[] { filePath }, gasLimit: gasLimit, maxGasPrice: maxGasPrice);
             var output = _console.Out.ToString();
             var rawTx = Convert.FromBase64String(output!);
             var tx = Transaction.Deserialize(rawTx);
@@ -132,6 +144,16 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             Assert.Equal(_blockHash, tx.GenesisHash);
             Assert.Equal(_privateKey.ToAddress(), tx.Signer);
             Assert.Equal(timeStamp, tx.Timestamp);
+            if (gas)
+            {
+                Assert.Equal(1, tx.GasLimit);
+                Assert.Equal(1 * Currencies.Mead, tx.MaxGasPrice);
+            }
+            else
+            {
+                Assert.Null(tx.GasLimit);
+                Assert.Null(tx.MaxGasPrice);
+            }
         }
     }
 }

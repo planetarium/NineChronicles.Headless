@@ -42,6 +42,11 @@ public class ActionContext : IActionContext
         throw new NotImplementedException();
     }
 
+    public void UseGas(long gas)
+    {
+        throw new NotImplementedException();
+    }
+
     public IActionContext GetUnconsumedContext()
     {
         return new ActionContext(GenesisHash, Signer, TxId, Miner, BlockIndex, Rehearsal, PreviousStates,

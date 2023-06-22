@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Bencodex;
 using Libplanet;
+using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;

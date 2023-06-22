@@ -934,7 +934,87 @@ actionPoint: {actionPoint},
         }
 
         [Theory]
-        [MemberData(nameof(GetMemberDataOfLoadIntoMyGarages))]
+        [InlineData(null, 4)]
+        [InlineData(100, 100)]
+        public async Task RequestPledge(int? mead, int expected)
+        {
+            var agentAddress = new PrivateKey().ToAddress();
+
+            var query = mead.HasValue
+                ? $"{{requestPledge(agentAddress: \"{agentAddress}\", mead: {mead})}}"
+                : $"{{requestPledge(agentAddress: \"{agentAddress}\")}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["requestPledge"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<RequestPledge>(polymorphicAction);
+            Assert.Equal(agentAddress, action.AgentAddress);
+            Assert.Equal(expected, action.RefillMead);
+        }
+
+        [Fact]
+        public async Task ApprovePledge()
+        {
+            var patronAddress = new PrivateKey().ToAddress();
+
+            var query = $"{{approvePledge(patronAddress: \"{patronAddress}\")}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["approvePledge"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<ApprovePledge>(polymorphicAction);
+            Assert.Equal(patronAddress, action.PatronAddress);
+        }
+
+        [Fact]
+        public async Task EndPledge()
+        {
+            var agentAddress = new PrivateKey().ToAddress();
+
+            var query = $"{{endPledge(agentAddress: \"{agentAddress}\")}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["endPledge"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<EndPledge>(polymorphicAction);
+            Assert.Equal(agentAddress, action.AgentAddress);
+        }
+
+        [Theory]
+        [InlineData(null, 4)]
+        [InlineData(1, 1)]
+        public async Task CreatePledge(int? mead, int expected)
+        {
+            var agentAddress = new PrivateKey().ToAddress();
+
+            var query = mead.HasValue
+                ? $"{{createPledge(patronAddress: \"{MeadConfig.PatronAddress}\", agentAddresses: [\"{agentAddress}\"], mead: {mead})}}"
+                : $"{{createPledge(patronAddress: \"{MeadConfig.PatronAddress}\", agentAddresses: [\"{agentAddress}\"])}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["createPledge"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<CreatePledge>(polymorphicAction);
+            var addressTuple = Assert.Single(action.AgentAddresses);
+            Assert.Equal(agentAddress, addressTuple.Item1);
+            Assert.Equal(MeadConfig.PatronAddress, action.PatronAddress);
+            Assert.Equal(expected, action.Mead);
+        }
+
+		[Theory]
+		[MemberData(nameof(GetMemberDataOfLoadIntoMyGarages))]
         public async Task LoadIntoMyGarages(
             IEnumerable<(Address balanceAddr, FungibleAssetValue value)>? fungibleAssetValues,
             Address? inventoryAddr,

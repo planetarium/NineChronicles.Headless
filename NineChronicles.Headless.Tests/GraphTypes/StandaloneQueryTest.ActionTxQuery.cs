@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL.Execution;
+using Lib9c;
 using Libplanet;
 using Libplanet.Crypto;
 using Libplanet.Tx;
@@ -33,6 +34,8 @@ query {{
             Assert.Equal(publicKey, tx.PublicKey);
             Assert.Equal(publicKey.ToAddress(), tx.Signer);
             Assert.Equal(0, tx.Nonce);
+            Assert.Equal(4, tx.GasLimit);
+            Assert.Equal(1 * Currencies.Mead, tx.MaxGasPrice);
             var rawAction = Assert.Single(tx.Actions);
             var action = new NCActionLoader().LoadAction(0, rawAction);
             Assert.IsType<Stake>(action);
@@ -58,6 +61,35 @@ query {{
             var stake = Assert.IsType<string>(actionTxQueryData["stake"]);
             var tx = TxMarshaler.DeserializeUnsignedTx(ByteUtil.ParseHex(stake));
             Assert.Equal(DateTimeOffset.Parse(timestamp), tx.Timestamp);
+        }
+
+        [Fact]
+        public async Task ActionTxQuery_With_Gas()
+        {
+            var publicKey = new PrivateKey().PublicKey;
+            var address = new PrivateKey().ToAddress();
+            long nonce = 0;
+            var result = await ExecuteQueryAsync($@"
+query {{
+    actionTxQuery(publicKey: ""{publicKey.ToString()}"", nonce: {nonce}, gasLimit: 1, maxGasPrice: {{ quantity: 1, decimalPlaces: 18, ticker: ""Mead"" }}) {{
+        requestPledge(agentAddress: ""{address}"")
+    }}
+}}");
+            Assert.Null(result.Errors);
+            var data = Assert.IsType<Dictionary<string, object>>(((ExecutionNode)result.Data!).ToValue());
+            var actionTxQueryData = Assert.IsType<Dictionary<string, object>>(data["actionTxQuery"]);
+            var stake = Assert.IsType<string>(actionTxQueryData["requestPledge"]);
+            var tx = TxMarshaler.DeserializeUnsignedTx(ByteUtil.ParseHex(stake));
+            Assert.Equal(publicKey, tx.PublicKey);
+            Assert.Equal(publicKey.ToAddress(), tx.Signer);
+            Assert.Equal(0, tx.Nonce);
+            Assert.IsType<DateTimeOffset>(tx.Timestamp);
+            Assert.Equal(1, tx.GasLimit);
+            Assert.Equal(1 * Currencies.Mead, tx.MaxGasPrice);
+            var rawAction = Assert.Single(tx.Actions);
+            var action = Assert.IsType<RequestPledge>(new NCActionLoader().LoadAction(0, rawAction));
+            Assert.Equal(address, action.AgentAddress);
+            Assert.Equal(RequestPledge.DefaultRefillMead, action.RefillMead);
         }
     }
 }

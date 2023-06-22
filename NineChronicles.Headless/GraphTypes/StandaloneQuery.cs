@@ -6,6 +6,7 @@ using Bencodex;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
+using Lib9c;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
@@ -20,6 +21,7 @@ using Nekoyume.TableData;
 using Nekoyume.Model;
 using NineChronicles.Headless.GraphTypes.States;
 using static NineChronicles.Headless.NCActionUtils;
+using Transaction = Libplanet.Tx.Transaction;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -80,7 +82,7 @@ namespace NineChronicles.Headless.GraphTypes
                         ? blockChain.Tip.Hash
                         : new BlockHash(blockHashByteArray);
 
-                    var state = blockChain.GetState(address, blockHash);
+                    var state = blockChain.GetStates(new[] { address }, blockHash)[0];
 
                     return new Codec().Encode(state);
                 }
@@ -306,23 +308,23 @@ namespace NineChronicles.Headless.GraphTypes
 
                     BlockHash offset = blockChain.Tip.Hash;
 #pragma warning disable S3247
-                    if (blockChain.GetState(agentAddress, offset) is Dictionary agentDict)
+                    if (blockChain.GetStates(new[] { agentAddress }, offset)[0] is Dictionary agentDict)
 #pragma warning restore S3247
                     {
                         AgentState agentState = new AgentState(agentDict);
                         Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
                         Currency currency = new GoldCurrencyState(
-                            (Dictionary)blockChain.GetState(Addresses.GoldCurrency, offset)
+                            (Dictionary)blockChain.GetStates(new[] { Addresses.GoldCurrency }, offset)[0]
                             ).Currency;
 
                         FungibleAssetValue balance = blockChain.GetBalance(agentAddress, currency, offset);
-                        if (blockChain.GetState(deriveAddress, offset) is Dictionary mcDict)
+                        if (blockChain.GetStates(new[] { deriveAddress }, offset)[0] is Dictionary mcDict)
                         {
                             var rewardSheet = new MonsterCollectionRewardSheet();
-                            var csv = blockChain.GetState(
-                                Addresses.GetSheetAddress<MonsterCollectionRewardSheet>(),
+                            var csv = blockChain.GetStates(
+                                new[] { Addresses.GetSheetAddress<MonsterCollectionRewardSheet>() },
                                 offset
-                            ).ToDotnetString();
+                            )[0].ToDotnetString();
                             rewardSheet.Set(csv);
                             var monsterCollectionState = new MonsterCollectionState(mcDict);
                             long tipIndex = blockChain.Tip.Index;
@@ -448,6 +450,17 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "timestamp",
                         Description = "The time this transaction is created.",
+                    },
+                    new QueryArgument<LongGraphType>
+                    {
+                        Name = "gasLimit",
+                        Description = "The gas limit for Transaction.",
+                        DefaultValue = RequestPledge.DefaultRefillMead,
+                    },
+                    new QueryArgument<FungibleAssetValueInputType>
+                    {
+                        Name = "maxGasPrice",
+                        DefaultValue = 1 * Currencies.Mead
                     }
                 ),
                 resolve: context => new ActionTxQuery(standaloneContext));

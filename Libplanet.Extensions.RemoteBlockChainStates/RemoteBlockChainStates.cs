@@ -24,7 +24,7 @@ namespace Libplanet.Extensions.RemoteBlockChainStates
                 new GraphQLHttpClient(_explorerEndpoint, new SystemTextJsonSerializer());
         }
 
-        public IReadOnlyList<IValue?> GetStates(IReadOnlyList<Address> addresses, BlockHash offset)
+        public IReadOnlyList<IValue?> GetStates(IReadOnlyList<Address> addresses, BlockHash? offset)
         {
             var response = _graphQlHttpClient.SendQueryAsync<GetStatesResponseType>(
                 new GraphQLRequest(
@@ -39,14 +39,16 @@ namespace Libplanet.Extensions.RemoteBlockChainStates
                     variables: new
                     {
                         addresses = addresses.Select(x => x.ToString()).ToArray(),
-                        offsetBlockHash = ByteUtil.Hex(offset.ByteArray),
+                        offsetBlockHash = offset is { } hash
+                            ? ByteUtil.Hex(hash.ByteArray)
+                            : throw new NotSupportedException(),
                     })).Result;
             var codec = new Codec();
             return response.Data.StateQuery.States
                 .Select(nullableState => nullableState is { } state ? codec.Decode(state) : null).ToList();
         }
 
-        public FungibleAssetValue GetBalance(Address address, Currency currency, BlockHash offset)
+        public FungibleAssetValue GetBalance(Address address, Currency currency, BlockHash? offset)
         {
             object? currencyInput = currency.TotalSupplyTrackable ? new
             {
@@ -80,13 +82,15 @@ namespace Libplanet.Extensions.RemoteBlockChainStates
                 {
                     owner = address.ToString(),
                     currency = currencyInput,
-                    offsetBlockHash = ByteUtil.Hex(offset.ByteArray),
+                    offsetBlockHash = offset is { } hash
+                        ? ByteUtil.Hex(hash.ByteArray)
+                        : throw new NotSupportedException(),
                 })).Result;
 
             return FungibleAssetValue.Parse(currency, response.Data.StateQuery.Balance.String.Split()[0]);
         }
 
-        public FungibleAssetValue GetTotalSupply(Currency currency, BlockHash offset)
+        public FungibleAssetValue GetTotalSupply(Currency currency, BlockHash? offset)
         {
             object? currencyInput = currency.TotalSupplyTrackable ? new
             {
@@ -119,13 +123,15 @@ namespace Libplanet.Extensions.RemoteBlockChainStates
                     variables: new
                     {
                         currency = currencyInput,
-                        offsetBlockHash = ByteUtil.Hex(offset.ByteArray),
+                        offsetBlockHash = offset is { } hash
+                            ? ByteUtil.Hex(hash.ByteArray)
+                            : throw new NotSupportedException(),
                     })).Result;
 
             return FungibleAssetValue.Parse(currency, response.Data.StateQuery.TotalSupply.String.Split()[0]);
         }
 
-        public ValidatorSet GetValidatorSet(BlockHash offset)
+        public ValidatorSet GetValidatorSet(BlockHash? offset)
         {
             var response = _graphQlHttpClient.SendQueryAsync<GetValidatorsResponseType>(
                 new GraphQLRequest(
@@ -143,13 +149,20 @@ namespace Libplanet.Extensions.RemoteBlockChainStates
                     operationName: "GetValidators",
                     variables: new
                     {
-                        offsetBlockHash = ByteUtil.Hex(offset.ByteArray),
+                        offsetBlockHash = offset is { } hash
+                            ? ByteUtil.Hex(hash.ByteArray)
+                            : throw new NotSupportedException(),
                     })).Result;
 
             return new ValidatorSet(response.Data.StateQuery.Validators
                 .Select(x =>
                     new Validator(new PublicKey(ByteUtil.ParseHex(x.PublicKey)), x.Power))
                 .ToList());
+        }
+
+        public IBlockStates GetBlockStates(BlockHash? offset)
+        {
+            throw new NotSupportedException();
         }
 
         public ITrie? GetTrie(BlockHash offset)
