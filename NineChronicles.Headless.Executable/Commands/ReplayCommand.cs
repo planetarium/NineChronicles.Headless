@@ -103,13 +103,13 @@ namespace NineChronicles.Headless.Executable.Commands
                         currency,
                         previousBlock.Hash),
                     () => blockChain.GetValidatorSet(
-                        previousBlock.Hash),
-                    tx.Signer);
+                        previousBlock.Hash));
                 var actions = tx.Actions.Select(a => ToAction(a));
                 var actionEvaluations = EvaluateActions(
                     genesisHash: blockChain.Genesis.Hash,
                     preEvaluationHash: targetBlock.PreEvaluationHash.ByteArray,
-                    blockIndex: blockIndex,
+                    blockIndex: targetBlock.Index,
+                    blockProtocolVersion: targetBlock.ProtocolVersion,
                     txid: tx.Id,
                     previousStates: previousStates,
                     miner: targetBlock.Miner,

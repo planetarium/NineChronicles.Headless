@@ -9,8 +9,17 @@ namespace Libplanet.Extensions.ActionEvaluatorCommonComponents;
 
 public class ActionContext : IActionContext
 {
-    public ActionContext(BlockHash? genesisHash, Address signer, TxId? txId, Address miner, long blockIndex,
-        bool rehearsal, AccountStateDelta previousStates, IRandom random, HashDigest<SHA256>? previousStateRootHash,
+    public ActionContext(
+        BlockHash? genesisHash,
+        Address signer,
+        TxId? txId,
+        Address miner,
+        long blockIndex,
+        int blockProtocolVersion,
+        bool rehearsal,
+        AccountStateDelta previousStates,
+        IRandom random,
+        HashDigest<SHA256>? previousStateRootHash,
         bool blockAction)
     {
         GenesisHash = genesisHash;
@@ -18,6 +27,7 @@ public class ActionContext : IActionContext
         TxId = txId;
         Miner = miner;
         BlockIndex = blockIndex;
+        BlockProtocolVersion = blockProtocolVersion;
         Rehearsal = rehearsal;
         PreviousStates = previousStates;
         Random = random;
@@ -30,6 +40,7 @@ public class ActionContext : IActionContext
     public TxId? TxId { get; }
     public Address Miner { get; init; }
     public long BlockIndex { get; init; }
+    public int BlockProtocolVersion { get; init; }
     public bool Rehearsal { get; init; }
     public AccountStateDelta PreviousStates { get; init; }
     IAccountStateDelta IActionContext.PreviousStates => PreviousStates;
@@ -49,8 +60,18 @@ public class ActionContext : IActionContext
 
     public IActionContext GetUnconsumedContext()
     {
-        return new ActionContext(GenesisHash, Signer, TxId, Miner, BlockIndex, Rehearsal, PreviousStates,
-            new Random(Random.Seed), PreviousStateRootHash, BlockAction);
+        return new ActionContext(
+            GenesisHash,
+            Signer,
+            TxId,
+            Miner,
+            BlockIndex,
+            BlockProtocolVersion,
+            Rehearsal,
+            PreviousStates,
+            new Random(Random.Seed),
+            PreviousStateRootHash,
+            BlockAction);
     }
 
     public long GasUsed() => 0;
