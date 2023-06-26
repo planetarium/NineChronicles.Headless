@@ -1,11 +1,13 @@
 using System;
 using System.IO;
+using System.Linq;
 using Lib9c;
 using Libplanet;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Tx;
 using Nekoyume.Action;
+using Nekoyume.Action.Loader;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.Executable.Commands;
@@ -128,15 +130,13 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         {
             var timeStamp = DateTimeOffset.FromUnixTimeSeconds(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
             var hashHex = ByteUtil.Hex(_blockHash.ByteArray);
-            long? gasLimit = null;
             long? maxGasPrice = null;
             if (gas)
             {
-                gasLimit = 1L;
                 maxGasPrice = 1L;
             }
             _command.Sign(ByteUtil.Hex(_privateKey.ByteArray), txNonce, hashHex, timeStamp.ToString(),
-                new[] { filePath }, gasLimit: gasLimit, maxGasPrice: maxGasPrice);
+                new[] { filePath }, maxGasPrice: maxGasPrice);
             var output = _console.Out.ToString();
             var rawTx = Convert.FromBase64String(output!);
             var tx = Transaction.Deserialize(rawTx);
@@ -144,14 +144,19 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             Assert.Equal(_blockHash, tx.GenesisHash);
             Assert.Equal(_privateKey.ToAddress(), tx.Signer);
             Assert.Equal(timeStamp, tx.Timestamp);
+            ActionBase action = (ActionBase)new NCActionLoader().LoadAction(1L, tx.Actions.Single());
+            long expectedGasLimit = 1L;
+            if (action is ITransferAsset || action is ITransferAssets)
+            {
+                expectedGasLimit = 4L;
+            }
+            Assert.Equal(expectedGasLimit, tx.GasLimit);
             if (gas)
             {
-                Assert.Equal(1, tx.GasLimit);
                 Assert.Equal(1 * Currencies.Mead, tx.MaxGasPrice);
             }
             else
             {
-                Assert.Null(tx.GasLimit);
                 Assert.Null(tx.MaxGasPrice);
             }
         }
