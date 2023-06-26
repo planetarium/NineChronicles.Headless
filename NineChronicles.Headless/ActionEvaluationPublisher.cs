@@ -327,7 +327,7 @@ namespace NineChronicles.Headless
                                             Nekoyume.Model.EnumType.BattleType.Arena);
                                     if (previousStates.GetState(enemyRuneSlotStateAddress) is { } eRuneSlot)
                                     {
-                                        previousStates = previousStates.SetState(enemyItemSlotStateAddress, eRuneSlot);
+                                        previousStates = previousStates.SetState(enemyRuneSlotStateAddress, eRuneSlot);
                                         var runeSlot = new RuneSlotState(eRuneSlot as List);
                                         var enemyRuneSlotInfos = runeSlot.GetEquippedRuneSlotInfos();
                                         var runeAddresses = enemyRuneSlotInfos.Select(info =>
