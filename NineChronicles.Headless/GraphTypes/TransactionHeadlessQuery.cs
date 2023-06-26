@@ -197,6 +197,12 @@ namespace NineChronicles.Headless.GraphTypes
                         Name = "nonce",
                         Description = "The nonce for Transaction.",
                     },
+                    new QueryArgument<LongGraphType>
+                    {
+                        Name = "gasLimit",
+                        Description = "The gas limit for Transaction.",
+                        DefaultValue = RequestPledge.DefaultRefillMead,
+                    },
                     new QueryArgument<FungibleAssetValueInputType>
                     {
                         Name = "maxGasPrice",
