@@ -309,9 +309,17 @@ namespace NineChronicles.Headless
                                 var previousStates = ev.PreviousStates;
                                 if (pa is IBattleArenaV1 battleArena)
                                 {
-                                    if (previousStates.GetState(battleArena.EnemyAvatarAddress) is { } eAvatar)
+                                    var enemyAvatarAddress = battleArena.EnemyAvatarAddress;
+                                    if (previousStates.GetState(enemyAvatarAddress) is List eAvatar)
                                     {
-                                        previousStates = previousStates.SetState(battleArena.EnemyAvatarAddress, eAvatar);
+                                        const string inventoryKey = "inventory";
+                                        previousStates = previousStates.SetState(enemyAvatarAddress, eAvatar);
+                                        if (previousStates.GetState(enemyAvatarAddress.Derive(inventoryKey)) is { } inventory)
+                                        {
+                                            previousStates = previousStates.SetState(
+                                                enemyAvatarAddress.Derive(inventoryKey),
+                                                inventory);
+                                        }
                                     }
 
                                     var enemyItemSlotStateAddress =
