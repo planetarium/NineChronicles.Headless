@@ -310,7 +310,7 @@ namespace NineChronicles.Headless
                                 if (pa is IBattleArenaV1 battleArena)
                                 {
                                     var enemyAvatarAddress = battleArena.EnemyAvatarAddress;
-                                    if (previousStates.GetState(enemyAvatarAddress) is List eAvatar)
+                                    if (previousStates.GetState(enemyAvatarAddress) is {} eAvatar)
                                     {
                                         const string inventoryKey = "inventory";
                                         previousStates = previousStates.SetState(enemyAvatarAddress, eAvatar);
