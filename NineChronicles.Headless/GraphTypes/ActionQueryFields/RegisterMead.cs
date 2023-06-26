@@ -109,5 +109,71 @@ public partial class ActionQuery
                 return Encode(context, action);
             }
         );
+        Field<NonNullGraphType<ByteStringType>>(
+            "createPledge2",
+            arguments: new QueryArguments
+            {
+                new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "patronAddress"
+                },
+                new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>
+                {
+                    Name = "agentAddresses"
+                },
+                new QueryArgument<IntGraphType>
+                {
+                    Name = "mead",
+                    DefaultValue = RequestPledge.DefaultRefillMead
+                }
+            },
+            resolve: context =>
+            {
+                var patronAddress = context.GetArgument<Address>("patronAddress");
+                var agentAddresses = context.GetArgument<List<Address>>("agentAddresses");
+                var addresses = agentAddresses.Select(a => (a, a.GetPledgeAddress())).ToList();
+                var mead = context.GetArgument<int>("mead");
+                ActionBase action = new CreatePledge2
+                {
+                    PatronAddress = patronAddress,
+                    AgentAddresses = addresses,
+                    Mead = mead,
+                };
+                return Encode(context, action);
+            }
+        );
+        Field<NonNullGraphType<ByteStringType>>(
+            "createPledge3",
+            arguments: new QueryArguments
+            {
+                new QueryArgument<NonNullGraphType<AddressType>>
+                {
+                    Name = "patronAddress"
+                },
+                new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>
+                {
+                    Name = "agentAddresses"
+                },
+                new QueryArgument<IntGraphType>
+                {
+                    Name = "mead",
+                    DefaultValue = RequestPledge.DefaultRefillMead
+                }
+            },
+            resolve: context =>
+            {
+                var patronAddress = context.GetArgument<Address>("patronAddress");
+                var agentAddresses = context.GetArgument<List<Address>>("agentAddresses");
+                var addresses = agentAddresses.Select(a => (a, a.GetPledgeAddress())).ToList();
+                var mead = context.GetArgument<int>("mead");
+                ActionBase action = new CreatePledge3
+                {
+                    PatronAddress = patronAddress,
+                    AgentAddresses = addresses,
+                    Mead = mead,
+                };
+                return Encode(context, action);
+            }
+        );
     }
 }
