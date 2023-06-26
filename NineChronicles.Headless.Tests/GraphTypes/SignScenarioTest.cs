@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Bencodex.Types;
 using GraphQL.Execution;
 using Lib9c;
 using Libplanet;
@@ -13,6 +14,7 @@ using Libplanet.KeyStore;
 using Libplanet.Tx;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Action.Loader;
 using Nekoyume.Helper;
 using NineChronicles.Headless.Executable.Commands;
 using NineChronicles.Headless.Executable.Tests.IO;
@@ -204,7 +206,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             // Create unsigned Transaction.
             var unsignedQuery = gas ? $@"query {{
-                    unsignedTransaction(publicKey: ""{hexedPublicKey}"", plainValue: ""{plainValue}"", nonce: {nonce}, gasLimit: 1, maxGasPrice: {{ quantity: 1, decimalPlaces: 18, ticker: ""Mead"" }})
+                    unsignedTransaction(publicKey: ""{hexedPublicKey}"", plainValue: ""{plainValue}"", nonce: {nonce}, maxGasPrice: {{ quantity: 1, decimalPlaces: 18, ticker: ""Mead"" }})
                 }}" : $@"query {{
                     unsignedTransaction(publicKey: ""{hexedPublicKey}"", plainValue: ""{plainValue}"", nonce: {nonce})
                 }}";
@@ -235,7 +237,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 "signTransaction"];
             byte[] result = ByteUtil.ParseHex(hex);
             Transaction signedTx = Transaction.Deserialize(result);
-            long expectedGasLimit = gas ? 1 : 4;
+            IValue rawAction = signedTx.Actions.Single();
+            ActionBase action = (ActionBase)new NCActionLoader().LoadAction(1L, rawAction);
+            long expectedGasLimit = action is ITransferAsset or ITransferAssets ? 4 : 1;
 
             Assert.Equal(unsignedTx.PublicKey, signedTx.PublicKey);
             Assert.Equal(unsignedTx.Signer, signedTx.Signer);
