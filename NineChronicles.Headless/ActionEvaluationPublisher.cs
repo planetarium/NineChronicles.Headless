@@ -16,6 +16,7 @@ using Bencodex;
 using Bencodex.Types;
 using Grpc.Core;
 using Grpc.Net.Client;
+using Lib9c.Abstractions;
 using Lib9c.Renderers;
 using Libplanet;
 using Libplanet.Blocks;
@@ -305,7 +306,43 @@ namespace NineChronicles.Headless
                                     : ev.Action;
                                 var extra = new Dictionary<string, IValue>();
 
-                                var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputStates, ev.Exception, ev.PreviousStates, ev.RandomSeed, extra);
+                                var previousStates = ev.PreviousStates;
+                                if (pa is IBattleArenaV1 battleArena)
+                                {
+                                    if (previousStates.GetState(battleArena.EnemyAvatarAddress) is { } eAvatar)
+                                    {
+                                        previousStates = previousStates.SetState(battleArena.EnemyAvatarAddress, eAvatar);
+                                    }
+
+                                    var enemyItemSlotStateAddress =
+                                        ItemSlotState.DeriveAddress(battleArena.EnemyAvatarAddress,
+                                            Nekoyume.Model.EnumType.BattleType.Arena);
+                                    if (previousStates.GetState(enemyItemSlotStateAddress) is { } eItemSlot)
+                                    {
+                                        previousStates = previousStates.SetState(enemyItemSlotStateAddress, eItemSlot);
+                                    }
+
+                                    var enemyRuneSlotStateAddress =
+                                        RuneSlotState.DeriveAddress(battleArena.EnemyAvatarAddress,
+                                            Nekoyume.Model.EnumType.BattleType.Arena);
+                                    if (previousStates.GetState(enemyRuneSlotStateAddress) is { } eRuneSlot)
+                                    {
+                                        previousStates = previousStates.SetState(enemyItemSlotStateAddress, eRuneSlot);
+                                        var runeSlot = new RuneSlotState(eRuneSlot as List);
+                                        var enemyRuneSlotInfos = runeSlot.GetEquippedRuneSlotInfos();
+                                        var runeAddresses = enemyRuneSlotInfos.Select(info =>
+                                            RuneState.DeriveAddress(battleArena.EnemyAvatarAddress, info.RuneId));
+                                        foreach (var address in runeAddresses)
+                                        {
+                                            if (previousStates.GetState(address) is { } rune)
+                                            {
+                                                previousStates = previousStates.SetState(address, rune);
+                                            }
+                                        }
+                                    }
+                                }
+
+                                var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputStates, ev.Exception, previousStates, ev.RandomSeed, extra);
                                 var encoded = MessagePackSerializer.Serialize(eval);
                                 var c = new MemoryStream();
                                 await using (var df = new DeflateStream(c, CompressionLevel.Fastest))
