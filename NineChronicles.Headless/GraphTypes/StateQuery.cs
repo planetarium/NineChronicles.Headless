@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
+using Lib9c;
 using Lib9c.Model.Order;
 using Libplanet;
 using Libplanet.Assets;
@@ -537,6 +539,32 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return (address, approved, mead);
+                }
+            );
+
+            Field<GarageStateType>(
+                "garage",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "address",
+                        Description = "Address to get GARAGE token balance and fungible items"
+                    },
+                    new QueryArgument<ListGraphType<StringGraphType>>
+                    {
+                        Name = "fungibleItemIds",
+                        Description = "List of fungible item IDs to get stock in garage"
+                    }
+                ),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("address");
+                    var balance = context.Source.GetBalance(address, Currencies.Garage);
+                    var fungibleItemIdList = context.GetArgument<IEnumerable<string>>("fungibleItemIds");
+                    IEnumerable<Address> fungibleItemAddressList = fungibleItemIdList.Select(fungibleItemId =>
+                        Addresses.GetGarageAddress(address, HashDigest<SHA256>.FromString(fungibleItemId)));
+                    var fungibleItemList = context.Source.GetStates(fungibleItemAddressList.ToArray());
+                    return (balance, fungibleItemList);
                 }
             );
         }
