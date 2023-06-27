@@ -7,8 +7,9 @@ using System.Text.Json;
 using Bencodex;
 using Bencodex.Types;
 using Cocona;
+using Lib9c;
 using Libplanet;
-using Libplanet.Action;
+using Libplanet.Assets;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Extensions.Cocona;
@@ -16,7 +17,6 @@ using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.Executable.IO;
-using Serilog;
 using Lib9cUtils = Lib9c.DevExtensions.Utils;
 
 namespace NineChronicles.Headless.Executable.Commands
@@ -94,12 +94,15 @@ namespace NineChronicles.Headless.Executable.Commands
             }
         }
 
-        private void ProcessAdmin(AdminConfig? config, PrivateKey initialMinter, out AdminState adminState)
+        private void ProcessAdmin(AdminConfig? config, PrivateKey initialMinter,
+            out AdminState adminState, out List<ActionBase> meadActions)
         {
             // FIXME: If the `adminState` is not required inside `MineGenesisBlock`,
             //        this logic will be much lighter.
             _console.Out.WriteLine("\nProcessing admin for genesis...");
             adminState = new AdminState(new Address(), 0);
+            meadActions = new List<ActionBase>();
+            
             if (config is null)
             {
                 _console.Out.WriteLine("AdminConfig not provided. Skip admin setting...");
@@ -112,10 +115,26 @@ namespace NineChronicles.Headless.Executable.Commands
                 {
                     _console.Out.WriteLine("Admin address not provided. Give admin privilege to initialMinter");
                     adminState = new AdminState(initialMinter.ToAddress(), config.Value.ValidUntil);
+                    meadActions.Add(new PrepareRewardAssets
+                    {
+                        RewardPoolAddress = initialMinter.ToAddress(),
+                        Assets = new List<FungibleAssetValue>
+                        {
+                            10000 * Currencies.Mead,
+                        },
+                    });
                 }
                 else
                 {
                     adminState = new AdminState(new Address(config.Value.Address), config.Value.ValidUntil);
+                    meadActions.Add(new PrepareRewardAssets
+                    {
+                        RewardPoolAddress = new Address(config.Value.Address),
+                        Assets = new List<FungibleAssetValue>
+                        {
+                            10000 * Currencies.Mead,
+                        },
+                    });
                 }
             }
             else
@@ -197,12 +216,11 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 ProcessCurrency(genesisConfig.Currency, out var initialMinter, out var initialDepositList);
 
-                ProcessAdmin(genesisConfig.Admin, initialMinter, out var adminState);
+                ProcessAdmin(genesisConfig.Admin, initialMinter, out var adminState, out var meadActions);
 
                 ProcessValidator(genesisConfig.InitialValidatorSet, initialMinter, out var initialValidatorSet);
 
-                ProcessExtra(genesisConfig.Extra,
-                    out var pendingActivationStates);
+                ProcessExtra(genesisConfig.Extra, out var pendingActivationStates);
 
                 // Mine genesis block
                 _console.Out.WriteLine("\nMining genesis block...\n");
@@ -214,7 +232,8 @@ namespace NineChronicles.Headless.Executable.Commands
                     privateKey: initialMinter,
                     initialValidators: initialValidatorSet.ToDictionary(
                         item => new PublicKey(ByteUtil.ParseHex(item.PublicKey)),
-                        item => new BigInteger(item.Power))
+                        item => new BigInteger(item.Power)),
+                    actionBases: meadActions
                 );
 
                 Lib9cUtils.ExportBlock(block, "genesis-block");
