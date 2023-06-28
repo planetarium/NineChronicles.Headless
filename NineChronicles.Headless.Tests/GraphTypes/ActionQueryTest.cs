@@ -142,6 +142,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             IEnumerator IEnumerable.GetEnumerator() => _data.GetEnumerator();
         }
+
         [Theory]
         [InlineData("false", false)]
         [InlineData("true", true)]
@@ -150,11 +151,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             var avatarAddress = new PrivateKey().ToAddress();
             var equipmentId = Guid.NewGuid();
-            string queryArgs = $"avatarAddress: \"{avatarAddress.ToString()}\", equipmentIds: [{string.Format($"\"{equipmentId}\"")}]";
+            string queryArgs =
+                $"avatarAddress: \"{avatarAddress.ToString()}\", equipmentIds: [{string.Format($"\"{equipmentId}\"")}]";
             if (!string.IsNullOrEmpty(chargeApValue))
             {
                 queryArgs += $", chargeAp: {chargeApValue}";
             }
+
             string query = $@"
             {{
                 grinding({queryArgs})
@@ -241,6 +244,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 args += ", memo: \"memo\"";
             }
+
             var query = $"{{ transferAsset({args}) }}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
@@ -456,6 +460,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 assets += $", {{quantity: 100, decimalPlaces: 2, ticker: \"NCG\", minters: [\"{rewardPoolAddress}\"]}}";
             }
+
             var query = $"{{ prepareRewardAssets(rewardPoolAddress: \"{rewardPoolAddress}\", assets: [{assets}]) }}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
@@ -495,17 +500,21 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 var count = 0;
                 while (count < Nekoyume.Action.TransferAssets.RecipientsCapacity)
                 {
-                    recipients += $", {{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 18, ticker: \"CRYSTAL\" }} }}, {{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 0, ticker: \"RUNE_FENRIR1\" }} }}";
+                    recipients +=
+                        $", {{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 18, ticker: \"CRYSTAL\" }} }}, {{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 0, ticker: \"RUNE_FENRIR1\" }} }}";
                     count++;
                 }
             }
+
             var query = $"{{ transferAssets(sender: \"{sender}\", recipients: [{recipients}]) }}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
 
             if (exc)
             {
                 var error = Assert.Single(queryResult.Errors!);
-                Assert.Contains($"recipients must be less than or equal {Nekoyume.Action.TransferAssets.RecipientsCapacity}.", error.Message);
+                Assert.Contains(
+                    $"recipients must be less than or equal {Nekoyume.Action.TransferAssets.RecipientsCapacity}.",
+                    error.Message);
             }
             else
             {
@@ -1013,8 +1022,8 @@ actionPoint: {actionPoint},
             Assert.Equal(expected, action.Mead);
         }
 
-		[Theory]
-		[MemberData(nameof(GetMemberDataOfLoadIntoMyGarages))]
+        [Theory]
+        [MemberData(nameof(GetMemberDataOfLoadIntoMyGarages))]
         public async Task LoadIntoMyGarages(
             IEnumerable<(Address balanceAddr, FungibleAssetValue value)>? fungibleAssetValues,
             Address? inventoryAddr,
