@@ -102,7 +102,7 @@ namespace NineChronicles.Headless.Executable.Commands
             _console.Out.WriteLine("\nProcessing admin for genesis...");
             adminState = new AdminState(new Address(), 0);
             meadActions = new List<ActionBase>();
-            
+
             if (config is null)
             {
                 _console.Out.WriteLine("AdminConfig not provided. Skip admin setting...");

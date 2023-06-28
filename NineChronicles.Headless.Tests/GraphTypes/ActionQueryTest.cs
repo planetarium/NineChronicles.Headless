@@ -142,6 +142,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             IEnumerator IEnumerable.GetEnumerator() => _data.GetEnumerator();
         }
+
         [Theory]
         [InlineData("false", false)]
         [InlineData("true", true)]
@@ -150,11 +151,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             var avatarAddress = new PrivateKey().ToAddress();
             var equipmentId = Guid.NewGuid();
-            string queryArgs = $"avatarAddress: \"{avatarAddress.ToString()}\", equipmentIds: [{string.Format($"\"{equipmentId}\"")}]";
+            string queryArgs =
+                $"avatarAddress: \"{avatarAddress.ToString()}\", equipmentIds: [{string.Format($"\"{equipmentId}\"")}]";
             if (!string.IsNullOrEmpty(chargeApValue))
             {
                 queryArgs += $", chargeAp: {chargeApValue}";
             }
+
             string query = $@"
             {{
                 grinding({queryArgs})
@@ -241,6 +244,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 args += ", memo: \"memo\"";
             }
+
             var query = $"{{ transferAsset({args}) }}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
@@ -456,6 +460,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 assets += $", {{quantity: 100, decimalPlaces: 2, ticker: \"NCG\", minters: [\"{rewardPoolAddress}\"]}}";
             }
+
             var query = $"{{ prepareRewardAssets(rewardPoolAddress: \"{rewardPoolAddress}\", assets: [{assets}]) }}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
@@ -495,17 +500,21 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 var count = 0;
                 while (count < Nekoyume.Action.TransferAssets.RecipientsCapacity)
                 {
-                    recipients += $", {{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 18, ticker: \"CRYSTAL\" }} }}, {{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 0, ticker: \"RUNE_FENRIR1\" }} }}";
+                    recipients +=
+                        $", {{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 18, ticker: \"CRYSTAL\" }} }}, {{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 0, ticker: \"RUNE_FENRIR1\" }} }}";
                     count++;
                 }
             }
+
             var query = $"{{ transferAssets(sender: \"{sender}\", recipients: [{recipients}]) }}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
 
             if (exc)
             {
                 var error = Assert.Single(queryResult.Errors!);
-                Assert.Contains($"recipients must be less than or equal {Nekoyume.Action.TransferAssets.RecipientsCapacity}.", error.Message);
+                Assert.Contains(
+                    $"recipients must be less than or equal {Nekoyume.Action.TransferAssets.RecipientsCapacity}.",
+                    error.Message);
             }
             else
             {
@@ -1013,8 +1022,8 @@ actionPoint: {actionPoint},
             Assert.Equal(expected, action.Mead);
         }
 
-		[Theory]
-		[MemberData(nameof(GetMemberDataOfLoadIntoMyGarages))]
+        [Theory]
+        [MemberData(nameof(GetMemberDataOfLoadIntoMyGarages))]
         public async Task LoadIntoMyGarages(
             IEnumerable<(Address balanceAddr, FungibleAssetValue value)>? fungibleAssetValues,
             Address? inventoryAddr,
@@ -1204,17 +1213,18 @@ actionPoint: {actionPoint},
         [Theory]
         [MemberData(nameof(GetMemberDataOfUnloadFromMyGarages))]
         public async Task UnloadFromMyGarages(
+            Address recipientAvatarAddr,
             IEnumerable<(Address balanceAddr, FungibleAssetValue value)>? fungibleAssetValues,
-            Address? inventoryAddr,
             IEnumerable<(HashDigest<SHA256> fungibleId, int count)>? fungibleIdAndCounts,
             string? memo)
         {
             var expectedAction = new UnloadFromMyGarages(
+                recipientAvatarAddr,
                 fungibleAssetValues,
-                inventoryAddr,
                 fungibleIdAndCounts,
                 memo);
             var sb = new StringBuilder("{ unloadFromMyGarages(");
+            sb.Append($"recipientAvatarAddr: \"{recipientAvatarAddr.ToHex()}\",");
             if (fungibleAssetValues is not null)
             {
                 sb.Append("fungibleAssetValues: [");
@@ -1223,11 +1233,6 @@ actionPoint: {actionPoint},
                     $"value: {{ currencyTicker: \"{tuple.value.Currency.Ticker}\"," +
                     $"value: \"{tuple.value.GetQuantityString()}\" }} }}")));
                 sb.Append("],");
-            }
-
-            if (inventoryAddr is not null)
-            {
-                sb.Append($"inventoryAddr: \"{inventoryAddr.Value.ToHex()}\",");
             }
 
             if (fungibleIdAndCounts is not null)
@@ -1261,9 +1266,9 @@ actionPoint: {actionPoint},
             Assert.IsType<Dictionary>(plainValue);
             var actionBase = DeserializeNCAction(plainValue);
             var action = Assert.IsType<UnloadFromMyGarages>(actionBase);
+            Assert.Equal(expectedAction.RecipientAvatarAddr, action.RecipientAvatarAddr);
             Assert.True(expectedAction.FungibleAssetValues?.SequenceEqual(action.FungibleAssetValues) ??
                         action.FungibleAssetValues is null);
-            Assert.Equal(expectedAction.InventoryAddr, action.InventoryAddr);
             Assert.True(expectedAction.FungibleIdAndCounts?.SequenceEqual(action.FungibleIdAndCounts) ??
                         action.FungibleIdAndCounts is null);
             Assert.Equal(expectedAction.Memo, action.Memo);
@@ -1273,13 +1278,14 @@ actionPoint: {actionPoint},
         {
             yield return new object[]
             {
+                new PrivateKey().ToAddress(),
                 null,
                 null,
                 null,
-                "memo",
             };
             yield return new object[]
             {
+                new PrivateKey().ToAddress(),
                 new[]
                 {
                     (
@@ -1291,7 +1297,6 @@ actionPoint: {actionPoint},
                         fungibleAssetValue: new FungibleAssetValue(Currencies.Garage, 1, 0)
                     ),
                 },
-                new PrivateKey().ToAddress(),
                 new[]
                 {
                     (fungibleId: new HashDigest<SHA256>(), count: 1),

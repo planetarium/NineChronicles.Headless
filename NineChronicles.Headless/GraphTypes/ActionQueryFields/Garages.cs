@@ -140,15 +140,15 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<ByteStringType>>(
                 "unloadFromMyGarages",
                 arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "recipientAvatarAddr",
+                        Description = "Recipient avatar address",
+                    },
                     new QueryArgument<ListGraphType<NonNullGraphType<BalanceInputType>>>
                     {
                         Name = "fungibleAssetValues",
                         Description = "Array of balance address and currency ticker and quantity to send.",
-                    },
-                    new QueryArgument<AddressType>
-                    {
-                        Name = "inventoryAddr",
-                        Description = "Inventory address to receive items.",
                     },
                     new QueryArgument<ListGraphType<NonNullGraphType<FungibleIdAndCountInputType>>>
                     {
@@ -163,6 +163,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
+                    var recipientAvatarAddr = context.GetArgument<Address>("recipientAvatarAddr");
                     var balanceInputList = context.GetArgument<IEnumerable<(
                         Address balanceAddr,
                         (string currencyTicker, string value))>?>("fungibleAssetValues");
@@ -183,15 +184,14 @@ namespace NineChronicles.Headless.GraphTypes
                         }
                     }
 
-                    var inventoryAddr = context.GetArgument<Address?>("inventoryAddr");
                     var fungibleIdAndCounts = context.GetArgument<IEnumerable<(
                         HashDigest<SHA256> fungibleId,
                         int count)>?>("fungibleIdAndCounts");
                     var memo = context.GetArgument<string?>("memo");
 
                     ActionBase action = new UnloadFromMyGarages(
+                        recipientAvatarAddr,
                         fungibleAssetValues,
-                        inventoryAddr,
                         fungibleIdAndCounts,
                         memo);
                     return Encode(context, action);
