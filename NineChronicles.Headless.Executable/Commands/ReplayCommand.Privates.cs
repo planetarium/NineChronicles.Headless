@@ -66,14 +66,11 @@ namespace NineChronicles.Headless.Executable.Commands
 
             protected ValidatorSet? UpdatedValidatorSet { get; set; } = null;
 
-            protected Address Signer { get; set; }
-
             public AccountStateDeltaImpl(
                 AccountStateGetter accountStateGetter,
                 AccountBalanceGetter accountBalanceGetter,
                 TotalSupplyGetter totalSupplyGetter,
-                ValidatorSetGetter validatorSetGetter,
-                Address signer)
+                ValidatorSetGetter validatorSetGetter)
             {
                 StateGetter = accountStateGetter;
                 BalanceGetter = accountBalanceGetter;
@@ -82,7 +79,6 @@ namespace NineChronicles.Headless.Executable.Commands
                 UpdatedStates = ImmutableDictionary<Address, IValue>.Empty;
                 UpdatedFungibles = ImmutableDictionary<(Address, Currency), BigInteger>.Empty;
                 UpdatedTotalSupply = ImmutableDictionary<Currency, BigInteger>.Empty;
-                Signer = signer;
             }
 
             public IValue? GetState(Address address) =>
@@ -149,7 +145,8 @@ namespace NineChronicles.Headless.Executable.Commands
             public IAccountStateDelta SetState(Address address, IValue state) =>
                 UpdateStates(UpdatedStates.SetItem(address, state));
 
-            public IAccountStateDelta MintAsset(Address recipient, FungibleAssetValue value)
+            public IAccountStateDelta MintAsset(
+                IActionContext context, Address recipient, FungibleAssetValue value)
             {
                 if (value.Sign <= 0)
                 {
@@ -160,11 +157,11 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 Currency currency = value.Currency;
-                if (!currency.AllowsToMint(Signer))
+                if (!currency.AllowsToMint(context.Signer))
                 {
                     throw new CurrencyPermissionException(
-                        $"The account {Signer} has no permission to mint the currency {currency}.",
-                        Signer,
+                        $"The account {context.Signer} has no permission to mint currency {currency}.",
+                        context.Signer,
                         currency
                     );
                 }
@@ -193,7 +190,11 @@ namespace NineChronicles.Headless.Executable.Commands
                 );
             }
 
-            public IAccountStateDelta TransferAsset(Address sender, Address recipient, FungibleAssetValue value,
+            public IAccountStateDelta TransferAsset(
+                IActionContext context,
+                Address sender,
+                Address recipient,
+                FungibleAssetValue value,
                 bool allowNegativeBalance = false)
             {
                 if (value.Sign <= 0)
@@ -229,7 +230,8 @@ namespace NineChronicles.Headless.Executable.Commands
                 );
             }
 
-            public IAccountStateDelta BurnAsset(Address owner, FungibleAssetValue value)
+            public IAccountStateDelta BurnAsset(
+                IActionContext context, Address owner, FungibleAssetValue value)
             {
                 string msg;
 
@@ -242,11 +244,11 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 Currency currency = value.Currency;
-                if (!currency.AllowsToMint(Signer))
+                if (!currency.AllowsToMint(context.Signer))
                 {
-                    msg = $"The account {Signer} has no permission to burn assets of " +
+                    msg = $"The account {context.Signer} has no permission to burn assets of " +
                           $"the currency {currency}.";
-                    throw new CurrencyPermissionException(msg, Signer, currency);
+                    throw new CurrencyPermissionException(msg, context.Signer, currency);
                 }
 
                 FungibleAssetValue balance = GetBalance(owner, currency);
@@ -332,8 +334,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     StateGetter,
                     BalanceGetter,
                     TotalSupplyGetter,
-                    ValidatorSetGetter,
-                    Signer)
+                    ValidatorSetGetter)
                 {
                     UpdatedStates = updatedStates,
                     UpdatedFungibles = UpdatedFungibles,
@@ -349,8 +350,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     StateGetter,
                     BalanceGetter,
                     TotalSupplyGetter,
-                    ValidatorSetGetter,
-                    Signer)
+                    ValidatorSetGetter)
                 {
                     UpdatedStates = UpdatedStates,
                     UpdatedFungibles = updatedFungibleAssets,
@@ -383,8 +383,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     StateGetter,
                     BalanceGetter,
                     TotalSupplyGetter,
-                    ValidatorSetGetter,
-                    Signer)
+                    ValidatorSetGetter)
                 {
                     UpdatedStates = UpdatedStates,
                     UpdatedFungibles = UpdatedFungibles,
@@ -420,6 +419,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 TxId? txid,
                 Address miner,
                 long blockIndex,
+                int blockProtocolVersion,
                 IAccountStateDelta previousStates,
                 int randomSeed,
                 bool rehearsal = false,
@@ -431,6 +431,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 TxId = txid;
                 Miner = miner;
                 BlockIndex = blockIndex;
+                BlockProtocolVersion = blockProtocolVersion;
                 Rehearsal = rehearsal;
                 PreviousStates = previousStates;
                 Random = new Random(randomSeed);
@@ -448,6 +449,8 @@ namespace NineChronicles.Headless.Executable.Commands
             public Address Miner { get; }
 
             public long BlockIndex { get; }
+
+            public int BlockProtocolVersion { get; }
 
             public bool Rehearsal { get; }
 
@@ -482,6 +485,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     TxId,
                     Miner,
                     BlockIndex,
+                    BlockProtocolVersion,
                     PreviousStates,
                     _randomSeed,
                     Rehearsal,
@@ -567,6 +571,7 @@ namespace NineChronicles.Headless.Executable.Commands
             BlockHash? genesisHash,
             ImmutableArray<byte> preEvaluationHash,
             long blockIndex,
+            int blockProtocolVersion,
             TxId? txid,
             IAccountStateDelta previousStates,
             Address miner,
@@ -586,6 +591,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     txid: txid,
                     miner: miner,
                     blockIndex: blockIndex,
+                    blockProtocolVersion: blockProtocolVersion,
                     previousStates: prevStates,
                     randomSeed: randomSeed,
                     rehearsal: rehearsal,

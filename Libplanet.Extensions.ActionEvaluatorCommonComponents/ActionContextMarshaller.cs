@@ -24,6 +24,7 @@ public static class ActionContextMarshaller
             .Add("miner", actionContext.Miner.ToHex())
             .Add("rehearsal", actionContext.Rehearsal)
             .Add("block_index", actionContext.BlockIndex)
+            .Add("block_protocol_version", actionContext.BlockProtocolVersion)
             .Add("random_seed", actionContext.Random.Seed)
             .Add("signer", actionContext.Signer.ToHex())
             .Add("previous_states", AccountStateDeltaMarshaller.Marshal(actionContext.PreviousStates));
@@ -44,6 +45,7 @@ public static class ActionContextMarshaller
                 ? new BlockHash(genesisHashBinaryValue.ByteArray)
                 : null,
             blockIndex: (Integer)dictionary["block_index"],
+            blockProtocolVersion: (Integer)dictionary["block_protocol_version"],
             signer: new Address(((Text)dictionary["signer"]).Value),
             txId: dictionary.TryGetValue((Text)"tx_id", out IValue txIdValue) &&
                   txIdValue is Binary txIdBinaryValue
