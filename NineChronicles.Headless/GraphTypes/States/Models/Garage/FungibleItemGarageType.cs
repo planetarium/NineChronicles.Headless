@@ -3,7 +3,7 @@ using Nekoyume.Model.Garages;
 
 namespace NineChronicles.Headless.GraphTypes.States.Models.Garage;
 
-public class FungibleItemGarageType: ObjectGraphType<FungibleItemGarage>
+public class FungibleItemGarageType : ObjectGraphType<FungibleItemGarage>
 {
     public FungibleItemGarageType()
     {
