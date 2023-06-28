@@ -2,12 +2,11 @@ using System;
 using System.Linq;
 using GraphQL;
 using Libplanet;
-using Libplanet.Action;
+using Libplanet.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Crypto;
 using Libplanet.Tx;
 using Nekoyume.Action;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -17,10 +16,10 @@ namespace NineChronicles.Headless.GraphTypes
         {
         }
 
-        internal override byte[] Encode(IResolveFieldContext context, NCAction action)
+        internal override byte[] Encode(IResolveFieldContext context, ActionBase action)
         {
             var publicKey = new PublicKey(ByteUtil.ParseHex(context.Parent!.GetArgument<string>("publicKey")));
-            if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+            if (!(standaloneContext.BlockChain is BlockChain blockChain))
             {
                 throw new ExecutionError(
                     $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -29,12 +28,16 @@ namespace NineChronicles.Headless.GraphTypes
             Address signer = publicKey.ToAddress();
             long nonce = context.Parent!.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
             DateTimeOffset? timestamp = context.Parent!.GetArgument<DateTimeOffset?>("timestamp");
+            long? gasLimit = action is ITransferAsset or ITransferAssets ? RequestPledge.DefaultRefillMead : 1L;
+            FungibleAssetValue? maxGasPrice = context.Parent!.GetArgument<FungibleAssetValue?>("maxGasPrice");
             UnsignedTx unsignedTransaction =
                 new UnsignedTx(
                     new TxInvoice(
                         genesisHash: blockChain.Genesis.Hash,
                         timestamp: timestamp,
-                        actions: new TxActionList(new[] { action })),
+                        actions: new TxActionList(new[] { action }),
+                        gasLimit: gasLimit,
+                        maxGasPrice: maxGasPrice),
                     new TxSigningMetadata(publicKey: publicKey, nonce: nonce));
 
             return unsignedTransaction.SerializeUnsignedTx().ToArray();

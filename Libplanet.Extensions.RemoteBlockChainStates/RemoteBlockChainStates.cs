@@ -10,7 +10,7 @@ using Libplanet.Consensus;
 using Libplanet.Crypto;
 using Libplanet.Store.Trie;
 
-namespace Libplanet.Extensions.RemoteActionEvaluator
+namespace Libplanet.Extensions.RemoteBlockChainStates
 {
     public class RemoteBlockChainStates : IBlockChainStates
     {
@@ -24,7 +24,7 @@ namespace Libplanet.Extensions.RemoteActionEvaluator
                 new GraphQLHttpClient(_explorerEndpoint, new SystemTextJsonSerializer());
         }
 
-        public IReadOnlyList<IValue?> GetStates(IReadOnlyList<Address> addresses, BlockHash offset)
+        public IReadOnlyList<IValue?> GetStates(IReadOnlyList<Address> addresses, BlockHash? offset)
         {
             var response = _graphQlHttpClient.SendQueryAsync<GetStatesResponseType>(
                 new GraphQLRequest(
@@ -39,14 +39,16 @@ namespace Libplanet.Extensions.RemoteActionEvaluator
                     variables: new
                     {
                         addresses = addresses.Select(x => x.ToString()).ToArray(),
-                        offsetBlockHash = ByteUtil.Hex(offset.ByteArray),
+                        offsetBlockHash = offset is { } hash
+                            ? ByteUtil.Hex(hash.ByteArray)
+                            : throw new NotSupportedException(),
                     })).Result;
             var codec = new Codec();
             return response.Data.StateQuery.States
                 .Select(nullableState => nullableState is { } state ? codec.Decode(state) : null).ToList();
         }
 
-        public FungibleAssetValue GetBalance(Address address, Currency currency, BlockHash offset)
+        public FungibleAssetValue GetBalance(Address address, Currency currency, BlockHash? offset)
         {
             object? currencyInput = currency.TotalSupplyTrackable ? new
             {
@@ -80,13 +82,15 @@ namespace Libplanet.Extensions.RemoteActionEvaluator
                 {
                     owner = address.ToString(),
                     currency = currencyInput,
-                    offsetBlockHash = ByteUtil.Hex(offset.ByteArray),
+                    offsetBlockHash = offset is { } hash
+                        ? ByteUtil.Hex(hash.ByteArray)
+                        : throw new NotSupportedException(),
                 })).Result;
 
             return FungibleAssetValue.Parse(currency, response.Data.StateQuery.Balance.String.Split()[0]);
         }
 
-        public FungibleAssetValue GetTotalSupply(Currency currency, BlockHash offset)
+        public FungibleAssetValue GetTotalSupply(Currency currency, BlockHash? offset)
         {
             object? currencyInput = currency.TotalSupplyTrackable ? new
             {
@@ -119,13 +123,15 @@ namespace Libplanet.Extensions.RemoteActionEvaluator
                     variables: new
                     {
                         currency = currencyInput,
-                        offsetBlockHash = ByteUtil.Hex(offset.ByteArray),
+                        offsetBlockHash = offset is { } hash
+                            ? ByteUtil.Hex(hash.ByteArray)
+                            : throw new NotSupportedException(),
                     })).Result;
 
             return FungibleAssetValue.Parse(currency, response.Data.StateQuery.TotalSupply.String.Split()[0]);
         }
 
-        public ValidatorSet GetValidatorSet(BlockHash offset)
+        public ValidatorSet GetValidatorSet(BlockHash? offset)
         {
             var response = _graphQlHttpClient.SendQueryAsync<GetValidatorsResponseType>(
                 new GraphQLRequest(
@@ -143,7 +149,9 @@ namespace Libplanet.Extensions.RemoteActionEvaluator
                     operationName: "GetValidators",
                     variables: new
                     {
-                        offsetBlockHash = ByteUtil.Hex(offset.ByteArray),
+                        offsetBlockHash = offset is { } hash
+                            ? ByteUtil.Hex(hash.ByteArray)
+                            : throw new NotSupportedException(),
                     })).Result;
 
             return new ValidatorSet(response.Data.StateQuery.Validators
@@ -152,9 +160,14 @@ namespace Libplanet.Extensions.RemoteActionEvaluator
                 .ToList());
         }
 
-        public ITrie? GetTrie(BlockHash offset)
+        public IBlockStates GetBlockStates(BlockHash? offset)
         {
             throw new NotSupportedException();
+        }
+
+        public ITrie? GetTrie(BlockHash offset)
+        {
+            return null;
         }
 
         private class GetStatesResponseType

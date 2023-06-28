@@ -1,11 +1,10 @@
 using GraphQL.Types;
-using Libplanet.Action;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Tx;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    public class TransactionType<T> : ObjectGraphType<Transaction> where T : IAction, new()
+    public class TransactionType : ObjectGraphType<Transaction>
     {
         public TransactionType()
         {
@@ -44,7 +43,7 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Addresses whose states were affected by Actions.",
                 resolve: context => context.Source.UpdatedAddresses
             );
-            Field<NonNullGraphType<ListGraphType<ActionType<T>>>>(
+            Field<NonNullGraphType<ListGraphType<ActionType>>>(
                 nameof(Transaction.Actions),
                 description: "A list of actions in this transaction.",
                 resolve: context => context.Source.Actions

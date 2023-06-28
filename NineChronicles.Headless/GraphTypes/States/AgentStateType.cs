@@ -1,16 +1,16 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Bencodex.Types;
 using GraphQL.Types;
 using Libplanet;
-using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
+using Libplanet.State;
 using Nekoyume.Action;
 using Nekoyume.Helper;
 using Nekoyume.Model.Quest;
 using Nekoyume.Model.State;
+using NineChronicles.Headless.GraphTypes.States.Models;
 using static Lib9c.SerializeKeys;
 
 namespace NineChronicles.Headless.GraphTypes.States
@@ -133,6 +133,25 @@ namespace NineChronicles.Headless.GraphTypes.States
                     context.Source.AgentAddress,
                     CrystalCalculator.CRYSTAL
                 ).GetQuantityString(true));
+            Field<NonNullGraphType<MeadPledgeType>>(
+                "pledge",
+                description: "mead pledge information.",
+                resolve: context =>
+                {
+                    var pledgeAddress = context.Source.AgentAddress.GetPledgeAddress();
+                    Address? address = null;
+                    bool approved = false;
+                    int mead = 0;
+                    if (context.Source.GetState(pledgeAddress) is List l)
+                    {
+                        address = l[0].ToAddress();
+                        approved = l[1].ToBoolean();
+                        mead = l[2].ToInteger();
+                    }
+
+                    return (address, approved, mead);
+                }
+            );
         }
 
         private static bool IsTradeQuestCompleted(QuestList questList)

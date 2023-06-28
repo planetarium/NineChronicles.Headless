@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -9,11 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet\Libplanet.csproj" />
     <ProjectReference Include="..\Libplanet.Extensions.ActionEvaluatorCommonComponents\Libplanet.Extensions.ActionEvaluatorCommonComponents.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="GraphQL.Client" Version="5.1.1" />
-    <PackageReference Include="GraphQL.Client.Serializer.SystemTextJson" Version="5.1.1" />
+    <ProjectReference Include="..\Lib9c.StateService.Shared\Lib9c.StateService.Shared.csproj" />
   </ItemGroup>
 
 </Project>

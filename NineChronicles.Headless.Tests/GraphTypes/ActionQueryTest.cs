@@ -21,7 +21,6 @@ using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
 using Xunit;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -74,7 +73,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
-            NCAction action = new Stake(amount);
+            ActionBase action = new Stake(amount);
             var expected = new Dictionary<string, object>()
             {
                 ["stake"] = ByteUtil.Hex(_codec.Encode(action.PlainValue)),
@@ -83,7 +82,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var expectedPlainValue = _codec.Decode(ByteUtil.ParseHex((string)expected["stake"]));
             Assert.IsType<Dictionary>(plainValue);
             var dictionary = (Dictionary)plainValue;
-            Assert.IsType<Stake>(DeserializeNCAction(dictionary).InnerAction);
+            Assert.IsType<Stake>(DeserializeNCAction(dictionary));
             var actualAmount = ((Dictionary)dictionary["values"])["am"].ToBigInteger();
             var expectedAmount = ((Dictionary)((Dictionary)expectedPlainValue)["values"])["am"].ToBigInteger();
             Assert.Equal(expectedAmount, actualAmount);
@@ -103,7 +102,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["claimStakeReward"]));
             Assert.IsType<Dictionary>(plainValue);
             var dictionary = (Dictionary)plainValue;
-            Assert.IsAssignableFrom<IClaimStakeReward>(DeserializeNCAction(dictionary).InnerAction);
+            Assert.IsAssignableFrom<IClaimStakeReward>(DeserializeNCAction(dictionary));
         }
 
         [Fact]
@@ -119,7 +118,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["migrateMonsterCollection"]));
             var dictionary = Assert.IsType<Dictionary>(plainValue);
-            var action = Assert.IsType<MigrateMonsterCollection>(DeserializeNCAction(dictionary).InnerAction);
+            var action = Assert.IsType<MigrateMonsterCollection>(DeserializeNCAction(dictionary));
             Assert.Equal(avatarAddress, action.AvatarAddress);
         }
 
@@ -163,8 +162,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["grinding"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<Grinding>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<Grinding>(actionBase);
 
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Single(action.EquipmentIds);
@@ -185,8 +184,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["unlockEquipmentRecipe"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<UnlockEquipmentRecipe>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<UnlockEquipmentRecipe>(actionBase);
 
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(
@@ -212,8 +211,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["unlockWorld"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<UnlockWorld>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<UnlockWorld>(actionBase);
 
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(
@@ -245,8 +244,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["transferAsset"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<TransferAsset>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<TransferAsset>(actionBase);
             var rawState = _standaloneContext.BlockChain!.GetState(Addresses.GoldCurrency);
             var goldCurrencyState = new GoldCurrencyState((Dictionary)rawState);
             Currency currency = currencyType == "NCG" ? goldCurrencyState.Currency : CrystalCalculator.CRYSTAL;
@@ -292,8 +291,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["patchTableSheet"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<PatchTableSheet>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<PatchTableSheet>(actionBase);
 
             Assert.Equal(tableName, action.TableName);
 
@@ -366,8 +365,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["raid"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<Raid>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<Raid>(actionBase);
 
             Assert.Equal(avatarAddress, action.AvatarAddress);
             if (equipment)
@@ -423,8 +422,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["claimRaidReward"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<ClaimRaidReward>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<ClaimRaidReward>(actionBase);
 
             Assert.Equal(avatarAddress, action.AvatarAddress);
         }
@@ -438,8 +437,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["claimWorldBossKillReward"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<ClaimWordBossKillReward>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<ClaimWordBossKillReward>(actionBase);
 
             Assert.Equal(avatarAddress, action.AvatarAddress);
         }
@@ -460,8 +459,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["prepareRewardAssets"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<PrepareRewardAssets>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<PrepareRewardAssets>(actionBase);
 
             Assert.Equal(rewardPoolAddress, action.RewardPoolAddress);
             Assert.Equal(expectedCount, action.Assets.Count);
@@ -512,8 +511,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
                 var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["transferAssets"]));
                 Assert.IsType<Dictionary>(plainValue);
-                var polymorphicAction = DeserializeNCAction(plainValue);
-                var action = Assert.IsType<TransferAssets>(polymorphicAction.InnerAction);
+                var actionBase = DeserializeNCAction(plainValue);
+                var action = Assert.IsType<TransferAssets>(actionBase);
 
                 Assert.Equal(sender, action.Sender);
                 Assert.Equal(2, action.Recipients.Count);
@@ -541,8 +540,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["activateAccount"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<ActivateAccount>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<ActivateAccount>(actionBase);
 
             Assert.Equal(signature, action.Signature);
         }
@@ -607,8 +606,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["createAvatar"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<CreateAvatar>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<CreateAvatar>(actionBase);
             Assert.Equal(index, action.index);
             Assert.Equal(name, action.name);
             Assert.Equal(hair ?? 0, action.hair);
@@ -642,8 +641,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["runeEnhancement"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<RuneEnhancement>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<RuneEnhancement>(actionBase);
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(runeId, action.RuneId);
             Assert.Equal(tryCount ?? 1, action.TryCount);
@@ -700,8 +699,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["hackAndSlash"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<HackAndSlash>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<HackAndSlash>(actionBase);
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(worldId, action.WorldId);
             Assert.Equal(stageId, action.StageId);
@@ -750,8 +749,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var apStoneCount = 1;
 
             var args = @$"
-avatarAddress: ""{avatarAddress}"", 
-worldId: {worldId}, 
+avatarAddress: ""{avatarAddress}"",
+worldId: {worldId},
 stageId: {stageId},
 actionPoint: {actionPoint},
 ";
@@ -782,8 +781,8 @@ actionPoint: {actionPoint},
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["hackAndSlashSweep"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<HackAndSlashSweep>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<HackAndSlashSweep>(actionBase);
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(worldId, action.worldId);
             Assert.Equal(stageId, action.stageId);
@@ -817,8 +816,8 @@ actionPoint: {actionPoint},
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["dailyReward"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<DailyReward>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<DailyReward>(actionBase);
             Assert.Equal(avatarAddress, action.avatarAddress);
         }
 
@@ -850,8 +849,8 @@ actionPoint: {actionPoint},
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["combinationEquipment"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<CombinationEquipment>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<CombinationEquipment>(actionBase);
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(slotIndex, action.slotIndex);
             Assert.Equal(recipeId, action.recipeId);
@@ -883,8 +882,8 @@ actionPoint: {actionPoint},
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["itemEnhancement"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<ItemEnhancement>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<ItemEnhancement>(actionBase);
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(slotIndex, action.slotIndex);
             Assert.Equal(itemId, action.itemId);
@@ -904,8 +903,8 @@ actionPoint: {actionPoint},
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["rapidCombination"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<RapidCombination>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<RapidCombination>(actionBase);
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(slotIndex, action.slotIndex);
         }
@@ -925,11 +924,91 @@ actionPoint: {actionPoint},
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["combinationConsumable"]));
             Assert.IsType<Dictionary>(plainValue);
-            var polymorphicAction = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<CombinationConsumable>(polymorphicAction.InnerAction);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<CombinationConsumable>(actionBase);
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(slotIndex, action.slotIndex);
             Assert.Equal(recipeId, action.recipeId);
+        }
+
+        [Theory]
+        [InlineData(null, 4)]
+        [InlineData(100, 100)]
+        public async Task RequestPledge(int? mead, int expected)
+        {
+            var agentAddress = new PrivateKey().ToAddress();
+
+            var query = mead.HasValue
+                ? $"{{requestPledge(agentAddress: \"{agentAddress}\", mead: {mead})}}"
+                : $"{{requestPledge(agentAddress: \"{agentAddress}\")}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["requestPledge"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<RequestPledge>(polymorphicAction);
+            Assert.Equal(agentAddress, action.AgentAddress);
+            Assert.Equal(expected, action.RefillMead);
+        }
+
+        [Fact]
+        public async Task ApprovePledge()
+        {
+            var patronAddress = new PrivateKey().ToAddress();
+
+            var query = $"{{approvePledge(patronAddress: \"{patronAddress}\")}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["approvePledge"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<ApprovePledge>(polymorphicAction);
+            Assert.Equal(patronAddress, action.PatronAddress);
+        }
+
+        [Fact]
+        public async Task EndPledge()
+        {
+            var agentAddress = new PrivateKey().ToAddress();
+
+            var query = $"{{endPledge(agentAddress: \"{agentAddress}\")}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["endPledge"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<EndPledge>(polymorphicAction);
+            Assert.Equal(agentAddress, action.AgentAddress);
+        }
+
+        [Theory]
+        [InlineData(null, 4)]
+        [InlineData(1, 1)]
+        public async Task CreatePledge(int? mead, int expected)
+        {
+            var agentAddress = new PrivateKey().ToAddress();
+
+            var query = mead.HasValue
+                ? $"{{createPledge(patronAddress: \"{MeadConfig.PatronAddress}\", agentAddresses: [\"{agentAddress}\"], mead: {mead})}}"
+                : $"{{createPledge(patronAddress: \"{MeadConfig.PatronAddress}\", agentAddresses: [\"{agentAddress}\"])}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["createPledge"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<CreatePledge>(polymorphicAction);
+            var addressTuple = Assert.Single(action.AgentAddresses);
+            Assert.Equal(agentAddress, addressTuple.Item1);
+            Assert.Equal(MeadConfig.PatronAddress, action.PatronAddress);
+            Assert.Equal(expected, action.Mead);
         }
     }
 }

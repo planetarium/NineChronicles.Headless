@@ -33,11 +33,6 @@ public static class ActionContextMarshaller
             dictionary = dictionary.Add("tx_id", txId.ByteArray);
         }
 
-        if (actionContext.PreviousStateRootHash is { } previousStateRootHash)
-        {
-            dictionary = dictionary.Add("previous_state_root_hash", previousStateRootHash.ByteArray);
-        }
-
         return dictionary;
     }
 

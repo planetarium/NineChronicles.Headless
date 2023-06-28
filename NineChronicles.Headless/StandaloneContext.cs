@@ -10,19 +10,18 @@ using Libplanet.Headless;
 using Libplanet.Store;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes;
-using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless
 {
     public class StandaloneContext
     {
-        public BlockChain<NineChroniclesActionType>? BlockChain { get; set; }
+        public BlockChain? BlockChain { get; set; }
         public IKeyStore? KeyStore { get; set; }
         public bool BootstrapEnded { get; set; }
         public bool PreloadEnded { get; set; }
         public bool IsMining { get; set; }
         public ReplaySubject<NodeStatusType> NodeStatusSubject { get; } = new ReplaySubject<NodeStatusType>(1);
-        public ReplaySubject<PreloadState> PreloadStateSubject { get; } = new ReplaySubject<PreloadState>(5);
+        public ReplaySubject<BlockSyncState> PreloadStateSubject { get; } = new ReplaySubject<BlockSyncState>(5);
         public Subject<DifferentAppProtocolVersionEncounter> DifferentAppProtocolVersionEncounterSubject { get; }
             = new Subject<DifferentAppProtocolVersionEncounter>();
         public Subject<Notification> NotificationSubject { get; } = new Subject<Notification>();
@@ -44,7 +43,7 @@ namespace NineChronicles.Headless
 
         public IStore? Store { get; internal set; }
 
-        public Swarm<NineChroniclesActionType>? Swarm { get; internal set; }
+        public Swarm? Swarm { get; internal set; }
 
         internal TimeSpan DifferentAppProtocolVersionEncounterInterval { get; set; } = TimeSpan.FromSeconds(30);
 

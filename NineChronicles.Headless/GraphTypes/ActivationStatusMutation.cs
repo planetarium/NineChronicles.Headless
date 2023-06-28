@@ -5,7 +5,6 @@ using GraphQL.Types;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -49,7 +48,7 @@ namespace NineChronicles.Headless.GraphTypes
                         ActivateAccount action = activationKey.CreateActivateAccount(
                             pendingActivationState.Nonce);
 
-                        var actions = new NCAction[] { action };
+                        var actions = new ActionBase[] { action };
                         blockChain.MakeTransaction(privateKey, actions);
                     }
                     catch (ArgumentException ae)

@@ -3,16 +3,16 @@ using System.Collections.Immutable;
 using System.Linq;
 using GraphQL;
 using GraphQL.Types;
+using Lib9c;
 using Libplanet.Blockchain;
-using Libplanet.Action;
 using Libplanet.Tx;
 using Libplanet;
+using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
-using Nekoyume.Action;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Store;
+using Nekoyume.Action;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -27,7 +27,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -38,7 +38,7 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            Field<TransactionType<NCAction>>(
+            Field<TransactionType>(
                 name: "getTx",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<TxIdType>>
@@ -46,7 +46,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -79,7 +79,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -87,10 +87,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     string plainValueString = context.GetArgument<string>("plainValue");
                     var plainValue = new Bencodex.Codec().Decode(System.Convert.FromBase64String(plainValueString));
-#pragma warning disable 612
-                    var action = new NCAction();
-#pragma warning restore 612
-                    action.LoadPlainValue(plainValue);
+                    var action = NCActionUtils.ToAction(plainValue);
 
                     var publicKey = new PublicKey(Convert.FromBase64String(context.GetArgument<string>("publicKey")));
                     Address signer = publicKey.ToAddress();
@@ -141,7 +138,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -199,11 +196,16 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "nonce",
                         Description = "The nonce for Transaction.",
+                    },
+                    new QueryArgument<FungibleAssetValueInputType>
+                    {
+                        Name = "maxGasPrice",
+                        DefaultValue = 1 * Currencies.Mead
                     }
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -211,19 +213,20 @@ namespace NineChronicles.Headless.GraphTypes
 
                     string plainValueString = context.GetArgument<string>("plainValue");
                     var plainValue = new Bencodex.Codec().Decode(ByteUtil.ParseHex(plainValueString));
-#pragma warning disable 612
-                    var action = new NCAction();
-#pragma warning restore 612
-                    action.LoadPlainValue(plainValue);
+                    var action = NCActionUtils.ToAction(plainValue);
 
                     var publicKey = new PublicKey(ByteUtil.ParseHex(context.GetArgument<string>("publicKey")));
                     Address signer = publicKey.ToAddress();
                     long nonce = context.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
+                    long? gasLimit = action is ITransferAsset or ITransferAssets ? RequestPledge.DefaultRefillMead : 1L;
+                    FungibleAssetValue? maxGasPrice = context.GetArgument<FungibleAssetValue?>("maxGasPrice");
                     UnsignedTx unsignedTransaction =
                         new UnsignedTx(
                             new TxInvoice(
                                 genesisHash: blockChain.Genesis.Hash,
-                                actions: new TxActionList(new[] { action })),
+                                actions: new TxActionList(new[] { action }),
+                                gasLimit: gasLimit,
+                                maxGasPrice: maxGasPrice),
                             new TxSigningMetadata(publicKey, nonce));
                     return unsignedTransaction.SerializeUnsignedTx().ToArray();
                 });

@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blocks;
+using Libplanet.State;
 using Libplanet.Tx;
 
 namespace Libplanet.Extensions.ActionEvaluatorCommonComponents;
@@ -37,6 +38,11 @@ public class ActionContext : IActionContext
     public bool BlockAction { get; init; }
 
     public void PutLog(string log)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void UseGas(long gas)
     {
         throw new NotImplementedException();
     }

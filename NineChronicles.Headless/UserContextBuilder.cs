@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using GraphQL.Server.Transports.AspNetCore;
 using Libplanet.Explorer.Interfaces;
 using Microsoft.AspNetCore.Http;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless
 {
@@ -20,7 +19,7 @@ namespace NineChronicles.Headless
         {
             return new ValueTask<IDictionary<string, object?>>(new Dictionary<string, object?>
             {
-                [nameof(IBlockChainContext<NCAction>.Store)] = _standaloneContext.Store,
+                [nameof(IBlockChainContext.Store)] = _standaloneContext.Store,
             }).AsTask();
         }
     }

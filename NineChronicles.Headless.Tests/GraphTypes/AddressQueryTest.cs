@@ -4,19 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using GraphQL.Execution;
 using Libplanet;
-using Libplanet.Action;
 using Libplanet.Assets;
-using Libplanet.Blockchain;
-using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
-using Libplanet.Store;
-using Libplanet.Store.Trie;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes;
 using Xunit;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -75,6 +69,20 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 var addressList = objectList.Select(o => (string)o).ToArray();
                 Assert.Equal(expectedAddresses, addressList);
             }
+        }
+
+        [Fact]
+        public async Task PledgeAddress()
+        {
+            var address = new Address("0x8ff5e1c64860af7d88b019837a378fbbec75c7d9");
+            var query =
+                $"{{ pledgeAddress(agentAddress: \"{address}\") }}";
+            var result = await ExecuteQueryAsync<AddressQuery>(
+                query,
+                standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!)
+                .ToValue()!;
+            Assert.Equal("0xdfEA67DEB20E2e2Bb3AcB6Bc7C858Cb7De3deB78", data["pledgeAddress"]);
         }
     }
 }

@@ -11,11 +11,11 @@ using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blocks;
 using Libplanet.Consensus;
+using Libplanet.State;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Libplanet.Tx;
 using Serilog;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
@@ -44,6 +44,8 @@ namespace NineChronicles.Headless.Executable.Commands
                             (IImmutableSet<Currency>)g
                                 .Select(kv => kv.Key.Item2)
                                 .ToImmutableHashSet());
+
+            public IImmutableDictionary<Address, IImmutableSet<Currency>> TotalUpdatedFungibleAssets { get; } = new Dictionary<Address, IImmutableSet<Currency>>().ToImmutableDictionary();
 
             public IImmutableSet<Currency> TotalSupplyUpdatedCurrencies =>
                 UpdatedTotalSupply.Keys.ToImmutableHashSet();
@@ -467,6 +469,10 @@ namespace NineChronicles.Headless.Executable.Commands
             public void PutLog(string log)
             {
                 // NOTE: Not implemented yet. See also Lib9c.Tests.Action.ActionContext.PutLog().
+            }
+
+            public void UseGas(long gas)
+            {
             }
 
             public IActionContext GetUnconsumedContext() =>

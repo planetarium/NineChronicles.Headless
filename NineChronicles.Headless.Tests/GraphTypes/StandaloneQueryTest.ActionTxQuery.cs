@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL.Execution;
+using Lib9c;
 using Libplanet;
-using Libplanet.Action;
 using Libplanet.Crypto;
 using Libplanet.Tx;
 using Nekoyume.Action;
+using Nekoyume.Action.Loader;
 using Xunit;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
@@ -33,12 +34,11 @@ query {{
             Assert.Equal(publicKey, tx.PublicKey);
             Assert.Equal(publicKey.ToAddress(), tx.Signer);
             Assert.Equal(0, tx.Nonce);
+            Assert.Equal(1, tx.GasLimit);
+            Assert.Equal(1 * Currencies.Mead, tx.MaxGasPrice);
             var rawAction = Assert.Single(tx.Actions);
-#pragma warning disable CS0612
-            var action = new PolymorphicAction<ActionBase>();
-#pragma warning restore CS0612
-            action.LoadPlainValue(rawAction);
-            Assert.IsType<Stake>(action.InnerAction);
+            var action = new NCActionLoader().LoadAction(0, rawAction);
+            Assert.IsType<Stake>(action);
         }
 
         [InlineData("2022-11-18T00:00:00+0000")]
@@ -61,6 +61,35 @@ query {{
             var stake = Assert.IsType<string>(actionTxQueryData["stake"]);
             var tx = TxMarshaler.DeserializeUnsignedTx(ByteUtil.ParseHex(stake));
             Assert.Equal(DateTimeOffset.Parse(timestamp), tx.Timestamp);
+        }
+
+        [Fact]
+        public async Task ActionTxQuery_With_Gas()
+        {
+            var publicKey = new PrivateKey().PublicKey;
+            var address = new PrivateKey().ToAddress();
+            long nonce = 0;
+            var result = await ExecuteQueryAsync($@"
+query {{
+    actionTxQuery(publicKey: ""{publicKey.ToString()}"", nonce: {nonce}, maxGasPrice: {{ quantity: 1, decimalPlaces: 18, ticker: ""Mead"" }}) {{
+        requestPledge(agentAddress: ""{address}"")
+    }}
+}}");
+            Assert.Null(result.Errors);
+            var data = Assert.IsType<Dictionary<string, object>>(((ExecutionNode)result.Data!).ToValue());
+            var actionTxQueryData = Assert.IsType<Dictionary<string, object>>(data["actionTxQuery"]);
+            var stake = Assert.IsType<string>(actionTxQueryData["requestPledge"]);
+            var tx = TxMarshaler.DeserializeUnsignedTx(ByteUtil.ParseHex(stake));
+            Assert.Equal(publicKey, tx.PublicKey);
+            Assert.Equal(publicKey.ToAddress(), tx.Signer);
+            Assert.Equal(0, tx.Nonce);
+            Assert.IsType<DateTimeOffset>(tx.Timestamp);
+            Assert.Equal(1, tx.GasLimit);
+            Assert.Equal(1 * Currencies.Mead, tx.MaxGasPrice);
+            var rawAction = Assert.Single(tx.Actions);
+            var action = Assert.IsType<RequestPledge>(new NCActionLoader().LoadAction(0, rawAction));
+            Assert.Equal(address, action.AgentAddress);
+            Assert.Equal(RequestPledge.DefaultRefillMead, action.RefillMead);
         }
     }
 }

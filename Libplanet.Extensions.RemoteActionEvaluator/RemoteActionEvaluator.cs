@@ -2,6 +2,8 @@ using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.Net.Http.Json;
 using Bencodex.Types;
+using Lib9c.StateService;
+using Lib9c.StateService.Shared;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
 using Libplanet.Assets;
@@ -9,6 +11,7 @@ using Libplanet.Blockchain;
 using Libplanet.Blocks;
 using Libplanet.Consensus;
 using Libplanet.Extensions.ActionEvaluatorCommonComponents;
+using Libplanet.State;
 
 namespace Libplanet.Extensions.RemoteActionEvaluator;
 

@@ -7,6 +7,7 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
+using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
@@ -15,7 +16,6 @@ using Nekoyume.Helper;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -37,7 +37,7 @@ namespace NineChronicles.Headless.GraphTypes
                 }),
                 resolve: context => Encode(
                     context,
-                    (NCAction)new Stake(context.GetArgument<BigInteger>("amount"))));
+                    new Stake(context.GetArgument<BigInteger>("amount"))));
 
             Field<ByteStringType>(
                 name: "claimStakeReward",
@@ -71,7 +71,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }),
                 resolve: context => Encode(
                     context,
-                    (NCAction)new MigrateMonsterCollection(
+                    new MigrateMonsterCollection(
                         context.GetArgument<Address>("avatarAddress"))));
             Field<ByteStringType>(
                 name: "grinding",
@@ -97,7 +97,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var equipmentIds = context.GetArgument<List<Guid>>("equipmentIds");
                     var chargeAp = context.GetArgument<bool>("chargeAp");
-                    NCAction action = new Grinding
+                    ActionBase action = new Grinding
                     {
                         AvatarAddress = avatarAddress,
                         EquipmentIds = equipmentIds,
@@ -123,7 +123,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var recipeIds = context.GetArgument<List<int>>("recipeIds");
-                    NCAction action = new UnlockEquipmentRecipe
+                    ActionBase action = new UnlockEquipmentRecipe
                     {
                         AvatarAddress = avatarAddress,
                         RecipeIds = recipeIds,
@@ -148,7 +148,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var worldIds = context.GetArgument<List<int>>("worldIds");
-                    NCAction action = new UnlockWorld
+                    ActionBase action = new UnlockWorld
                     {
                         AvatarAddress = avatarAddress,
                         WorldIds = worldIds,
@@ -198,7 +198,7 @@ namespace NineChronicles.Headless.GraphTypes
                     };
                     var amount = FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
                     var memo = context.GetArgument<string?>("memo");
-                    NCAction action = new TransferAsset(sender, recipient, amount, memo);
+                    ActionBase action = new TransferAsset(sender, recipient, amount, memo);
                     return Encode(context, action);
                 });
             Field<NonNullGraphType<ByteStringType>>(
@@ -235,7 +235,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     // TODO validate row data.
-                    NCAction action = new PatchTableSheet
+                    ActionBase action = new PatchTableSheet
                     {
                         TableName = tableName,
                         TableCsv = tableCsv
@@ -291,7 +291,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var payNcg = context.GetArgument<bool>("payNcg");
                     var runeSlotInfos = context.GetArgument<List<RuneSlotInfo>>("runeSlotInfos");
 
-                    NCAction action = new Raid
+                    ActionBase action = new Raid
                     {
                         AvatarAddress = avatarAddress,
                         EquipmentIds = equipmentIds,
@@ -316,7 +316,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
 
-                    NCAction action = new ClaimRaidReward(avatarAddress);
+                    ActionBase action = new ClaimRaidReward(avatarAddress);
                     return Encode(context, action);
                 }
             );
@@ -333,7 +333,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
 
-                    NCAction action = new ClaimWordBossKillReward
+                    ActionBase action = new ClaimWordBossKillReward
                     {
                         AvatarAddress = avatarAddress,
                     };
@@ -359,7 +359,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var assets = context.GetArgument<List<FungibleAssetValue>>("assets");
                     var rewardPoolAddress = context.GetArgument<Address>("rewardPoolAddress");
 
-                    NCAction action = new PrepareRewardAssets
+                    ActionBase action = new PrepareRewardAssets
                     {
                         Assets = assets,
                         RewardPoolAddress = rewardPoolAddress,
@@ -398,7 +398,7 @@ namespace NineChronicles.Headless.GraphTypes
                             $"recipients must be less than or equal {TransferAssets.RecipientsCapacity}.");
                     }
 
-                    NCAction action = new TransferAssets(sender, recipients, memo);
+                    ActionBase action = new TransferAssets(sender, recipients, memo);
                     return Encode(context, action);
                 }
             );
@@ -421,8 +421,7 @@ namespace NineChronicles.Headless.GraphTypes
                         var action = activationKey.CreateActivateAccount(pending.Nonce);
                         if (pending.Verify(action))
                         {
-                            var pa = new NCAction(action);
-                            return Encode(context, pa);
+                            return Encode(context, action);
                         }
 
                         throw new ExecutionError("Failed to verify activateAccount action.");
@@ -489,7 +488,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var ear = context.GetArgument<int>("ear");
                     var tail = context.GetArgument<int>("tail");
 
-                    NCAction action = new CreateAvatar
+                    ActionBase action = new CreateAvatar
                     {
                         index = index,
                         name = name,
@@ -528,7 +527,7 @@ namespace NineChronicles.Headless.GraphTypes
                         throw new ExecutionError($"tryCount must be positive: {tryCount} is invalid.");
                     }
 
-                    NCAction action = new RuneEnhancement
+                    ActionBase action = new RuneEnhancement
                     {
                         AvatarAddress = avatarAddress,
                         RuneId = runeId,
@@ -544,6 +543,7 @@ namespace NineChronicles.Headless.GraphTypes
             RegisterItemEnhancement();
             RegisterRapidCombination();
             RegisterCombinationConsumable();
+            RegisterMead();
 
             Field<NonNullGraphType<CraftQuery>>(
                 name: "craftQuery",
@@ -556,7 +556,7 @@ namespace NineChronicles.Headless.GraphTypes
 #endif
         }
 
-        internal virtual byte[] Encode(IResolveFieldContext context, NCAction action)
+        internal virtual byte[] Encode(IResolveFieldContext context, ActionBase action)
         {
             return Codec.Encode(action.PlainValue);
         }

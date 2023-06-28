@@ -1,13 +1,12 @@
-using System.Collections.Immutable;
-using System.Reflection;
 using Bencodex;
 using Bencodex.Types;
+using Lib9c.StateService.Shared;
 using Libplanet.Action;
-using Libplanet.Action.Loader;
+using Libplanet.Blockchain;
 using Libplanet.Extensions.ActionEvaluatorCommonComponents;
-using Libplanet.Extensions.RemoteActionEvaluator;
 using Microsoft.AspNetCore.Mvc;
 using Nekoyume.Action;
+using Nekoyume.Action.Loader;
 
 namespace Lib9c.StateService.Controllers;
 
@@ -15,11 +14,16 @@ namespace Lib9c.StateService.Controllers;
 [Route("/evaluation")]
 public class RemoteEvaluationController : ControllerBase
 {
+    private readonly IBlockChainStates _blockChainStates;
     private readonly ILogger<RemoteEvaluationController> _logger;
     private readonly Codec _codec;
 
-    public RemoteEvaluationController(ILogger<RemoteEvaluationController> logger, Codec codec)
+    public RemoteEvaluationController(
+        IBlockChainStates blockChainStates,
+        ILogger<RemoteEvaluationController> logger,
+        Codec codec)
     {
+        _blockChainStates = blockChainStates;
         _logger = logger;
         _codec = codec;
     }
@@ -34,12 +38,11 @@ public class RemoteEvaluationController : ControllerBase
         }
 
         var preEvaluationBlock = PreEvaluationBlockMarshaller.Unmarshal(dictionary);
-        var blockChainStates = new RemoteBlockChainStates(new Uri("http://localhost:31280/graphql/explorer"));
         var actionEvaluator =
             new ActionEvaluator(
                 context => new RewardGold(),
-                blockChainStates,
-                new SingleActionLoader(typeof(PolymorphicAction<ActionBase>)),
+                _blockChainStates,
+                new NCActionLoader(),
                 null);
         return Ok(new RemoteEvaluationResponse
         {

@@ -7,7 +7,6 @@ using Libplanet;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
 using NineChronicles.Headless.GraphTypes.Input;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -54,7 +53,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var eventConsumableItemRecipeId = context.GetArgument<int>("eventConsumableItemRecipeId");
                     var slotIndex = context.GetArgument<int>("slotIndex");
 
-                    NCAction action = new EventConsumableItemCrafts
+                    ActionBase action = new EventConsumableItemCrafts
                     {
                         AvatarAddress = avatarAddress,
                         EventScheduleId = eventScheduleId,
@@ -103,7 +102,7 @@ namespace NineChronicles.Headless.GraphTypes
                             return dict;
                         }
                     );
-                    NCAction action = new EventMaterialItemCrafts
+                    ActionBase action = new EventMaterialItemCrafts
                     {
                         AvatarAddress = avatarAddress,
                         EventScheduleId = eventScheduleId,
@@ -115,7 +114,7 @@ namespace NineChronicles.Headless.GraphTypes
             );
         }
 
-        internal virtual byte[] Encode(IResolveFieldContext context, NCAction action)
+        internal virtual byte[] Encode(IResolveFieldContext context, ActionBase action)
         {
             return Codec.Encode(action.PlainValue);
         }

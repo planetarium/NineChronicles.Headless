@@ -16,7 +16,6 @@ using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Middleware;
 using NineChronicles.Headless.Properties;
 using Serilog;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless
 {
@@ -100,7 +99,7 @@ namespace NineChronicles.Headless
                 {
                     services.AddOptions();
                     services.AddMemoryCache();
-                    services.Configure<IpRateLimitOptions>(Configuration.GetSection("IpRateLimiting"));
+                    services.Configure<CustomIpRateLimitOptions>(Configuration.GetSection("IpRateLimiting"));
                     services.AddInMemoryRateLimiting();
                     services.AddMvc(options => options.EnableEndpointRouting = false);
                     services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
@@ -135,8 +134,7 @@ namespace NineChronicles.Headless
                     .AddWebSockets()
                     .AddDataLoader()
                     .AddGraphTypes(typeof(StandaloneSchema))
-                    .AddGraphTypes(typeof(LibplanetExplorerSchema<NCAction>))
-                    .AddLibplanetExplorer<NCAction>()
+                    .AddLibplanetExplorer()
                     .AddUserContextBuilder<UserContextBuilder>()
                     .AddGraphQLAuthorization(
                         options => options.AddPolicy(
@@ -173,6 +171,7 @@ namespace NineChronicles.Headless
                 if (Convert.ToBoolean(Configuration.GetSection("IpRateLimiting")["EnableEndpointRateLimiting"]))
                 {
                     app.UseMiddleware<CustomRateLimitMiddleware>();
+                    app.UseMiddleware<IpBanMiddleware>();
                     app.UseMvc();
                 }
 
@@ -206,9 +205,9 @@ namespace NineChronicles.Headless
                 app.UseWebSockets();
                 app.UseGraphQLWebSockets<StandaloneSchema>("/graphql");
                 app.UseGraphQL<StandaloneSchema>("/graphql");
-                app.UseGraphQL<LibplanetExplorerSchema<NCAction>>("/graphql/explorer");
+                app.UseGraphQL<LibplanetExplorerSchema>("/graphql/explorer");
 
-                // Prints 
+                // Prints
                 app.UseMiddleware<GraphQLSchemaMiddleware<StandaloneSchema>>("/schema.graphql");
 
                 app.UseOpenTelemetryPrometheusScrapingEndpoint();

@@ -13,10 +13,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models;
 
 public class OrderDigestListStateTypeTest
 {
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public async Task Query(bool exist)
+    [Fact]
+    public async Task Query()
     {
         const string query = @"
             {

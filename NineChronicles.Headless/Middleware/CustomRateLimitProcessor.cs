@@ -1,14 +1,15 @@
 using System.Linq;
 using AspNetCoreRateLimit;
+using NineChronicles.Headless.Properties;
 
 namespace NineChronicles.Headless.Middleware
 {
     public class CustomIpRateLimitProcessor : IpRateLimitProcessor
     {
-        private readonly IpRateLimitOptions _options;
+        private readonly CustomIpRateLimitOptions _options;
 
         public CustomIpRateLimitProcessor(
-            IpRateLimitOptions options,
+            CustomIpRateLimitOptions options,
             IIpPolicyStore policyStore,
             IProcessingStrategy processingStrategy) : base(options, policyStore, processingStrategy)
         {
@@ -24,7 +25,7 @@ namespace NineChronicles.Headless.Middleware
 
             if (_options.IpWhitelist != null && IpParser.ContainsIp(
                     _options.IpWhitelist,
-                    requestIdentity.ClientIp.Split("/").FirstOrDefault()))
+                    requestIdentity.ClientIp))
             {
                 return true;
             }

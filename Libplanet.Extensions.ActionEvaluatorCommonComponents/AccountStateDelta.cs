@@ -5,6 +5,7 @@ using Bencodex.Types;
 using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Consensus;
+using Libplanet.State;
 
 namespace Libplanet.Extensions.ActionEvaluatorCommonComponents;
 
@@ -25,6 +26,8 @@ public class AccountStateDelta : IAccountStateDelta, IValidatorSupportStateDelta
             g => g.Key,
             g => (IImmutableSet<Currency>)g.Select(kv => kv.Key.Item2).ToImmutableHashSet()
         );
+
+    public IImmutableDictionary<Address, IImmutableSet<Currency>> TotalUpdatedFungibleAssets { get; }
 #pragma warning restore LAA1002
 
     public IImmutableSet<Currency> TotalSupplyUpdatedCurrencies =>
