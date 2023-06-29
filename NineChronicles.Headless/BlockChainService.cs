@@ -91,6 +91,10 @@ namespace NineChronicles.Headless
                         _blockChain.StageTransaction(tx);
                         _swarm.BroadcastTxs(new[] { tx });
                     }
+                    else
+                    {
+                        Log.Debug("Skip StageTransaction({TxId}) reason: {Msg}", tx.Id, validationExc.Message);
+                    }
 
                     span.Finish();
                     sentryTrace.StartChild(
