@@ -96,8 +96,12 @@ namespace NineChronicles.Headless.GraphTypes
                         new UnsignedTx(
                             new TxInvoice(
                                 genesisHash: blockChain.Genesis.Hash,
-                                actions: new TxActionList(new[] { action })),
-                            new TxSigningMetadata(publicKey: publicKey, nonce: nonce));
+                                actions: new TxActionList(new[] { action }),
+                                gasLimit: action is ITransferAsset or ITransferAssets ? RequestPledge.DefaultRefillMead : 1L,
+                                maxGasPrice: 1 * Currencies.Mead
+                            ),
+                            new TxSigningMetadata(publicKey: publicKey, nonce: nonce)
+                        );
                     return Convert.ToBase64String(unsignedTransaction.SerializeUnsignedTx().ToArray());
                 });
 
