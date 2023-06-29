@@ -34,7 +34,7 @@ query {{
             Assert.Equal(publicKey, tx.PublicKey);
             Assert.Equal(publicKey.ToAddress(), tx.Signer);
             Assert.Equal(0, tx.Nonce);
-            Assert.Equal(4, tx.GasLimit);
+            Assert.Equal(1, tx.GasLimit);
             Assert.Equal(1 * Currencies.Mead, tx.MaxGasPrice);
             var rawAction = Assert.Single(tx.Actions);
             var action = new NCActionLoader().LoadAction(0, rawAction);
@@ -71,7 +71,7 @@ query {{
             long nonce = 0;
             var result = await ExecuteQueryAsync($@"
 query {{
-    actionTxQuery(publicKey: ""{publicKey.ToString()}"", nonce: {nonce}, gasLimit: 1, maxGasPrice: {{ quantity: 1, decimalPlaces: 18, ticker: ""Mead"" }}) {{
+    actionTxQuery(publicKey: ""{publicKey.ToString()}"", nonce: {nonce}, maxGasPrice: {{ quantity: 1, decimalPlaces: 18, ticker: ""Mead"" }}) {{
         requestPledge(agentAddress: ""{address}"")
     }}
 }}");

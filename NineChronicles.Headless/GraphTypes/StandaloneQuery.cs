@@ -451,12 +451,6 @@ namespace NineChronicles.Headless.GraphTypes
                         Name = "timestamp",
                         Description = "The time this transaction is created.",
                     },
-                    new QueryArgument<LongGraphType>
-                    {
-                        Name = "gasLimit",
-                        Description = "The gas limit for Transaction.",
-                        DefaultValue = RequestPledge.DefaultRefillMead,
-                    },
                     new QueryArgument<FungibleAssetValueInputType>
                     {
                         Name = "maxGasPrice",
