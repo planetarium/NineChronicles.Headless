@@ -83,8 +83,14 @@ namespace NineChronicles.Headless
                 {
                     Log.Debug("PutTransaction: (nonce: {nonce}, id: {id})", tx.Nonce, tx.Id);
                     Log.Debug("StagedTransactions: {txIds}", string.Join(", ", _blockChain.GetStagedTransactionIds()));
-                    _blockChain.StageTransaction(tx);
-                    _swarm.BroadcastTxs(new[] { tx });
+#pragma warning disable CS8632
+                    Exception? validationExc = _blockChain.Policy.ValidateNextBlockTx(_blockChain, tx);
+#pragma warning restore CS8632
+                    if (validationExc is null)
+                    {
+                        _blockChain.StageTransaction(tx);
+                        _swarm.BroadcastTxs(new[] { tx });
+                    }
 
                     span.Finish();
                     sentryTrace.StartChild(
