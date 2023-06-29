@@ -36,8 +36,8 @@ namespace NineChronicles.Headless.GraphTypes
                         genesisHash: blockChain.Genesis.Hash,
                         timestamp: timestamp,
                         actions: new TxActionList(new[] { action }),
-                        gasLimit: gasLimit,
-                        maxGasPrice: maxGasPrice),
+                        gasLimit: null,
+                        maxGasPrice: null),
                     new TxSigningMetadata(publicKey: publicKey, nonce: nonce));
 
             return unsignedTransaction.SerializeUnsignedTx().ToArray();
