@@ -28,7 +28,7 @@ namespace NineChronicles.Headless.GraphTypes
             Address signer = publicKey.ToAddress();
             long nonce = context.Parent!.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
             DateTimeOffset? timestamp = context.Parent!.GetArgument<DateTimeOffset?>("timestamp");
-            long? gasLimit = context.Parent!.GetArgument<long?>("gasLimit");
+            long? gasLimit = action is ITransferAsset or ITransferAssets ? RequestPledge.DefaultRefillMead : 1L;
             FungibleAssetValue? maxGasPrice = context.Parent!.GetArgument<FungibleAssetValue?>("maxGasPrice");
             UnsignedTx unsignedTransaction =
                 new UnsignedTx(
