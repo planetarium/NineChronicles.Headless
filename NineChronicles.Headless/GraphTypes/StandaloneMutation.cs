@@ -36,7 +36,8 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<ActivationStatusMutation>(
                 name: "activationStatus",
-                resolve: _ => new ActivationStatusMutation(nodeService));
+                resolve: _ => new ActivationStatusMutation(nodeService),
+                deprecationReason: "Since NCIP-15, it doesn't care account activation.");
 
             Field<ActionMutation>(
                 name: "action",
