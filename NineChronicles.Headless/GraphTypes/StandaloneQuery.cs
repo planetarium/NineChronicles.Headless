@@ -127,7 +127,9 @@ namespace NineChronicles.Headless.GraphTypes
 
                     TransferNCGHistory ToTransferNCGHistory(TxSuccess txSuccess, string? memo)
                     {
-                        var rawTransferNcgHistories = txSuccess.FungibleAssetsDelta.Select(pair =>
+                        var rawTransferNcgHistories = txSuccess.FungibleAssetsDelta
+                            .Where(pair => pair.Value.Values.Any(fav => fav.Currency.Ticker == "NCG"))
+                            .Select(pair =>
                                 (pair.Key, pair.Value.Values.First(fav => fav.Currency.Ticker == "NCG")))
                             .ToArray();
                         var ((senderAddress, _), (recipientAddress, amount)) =
