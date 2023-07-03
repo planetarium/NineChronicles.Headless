@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using GraphQL;
 using GraphQL.Types;
+using Bencodex.Types;
 using Lib9c;
 using Libplanet.Blockchain;
 using Libplanet.Tx;
@@ -168,10 +170,30 @@ namespace NineChronicles.Headless.GraphTypes
                         Block txExecutedBlock = blockChain[txExecutedBlockHash];
                         return execution switch
                         {
-                            TxSuccess txSuccess => new TxResult(TxStatus.SUCCESS, txExecutedBlock.Index,
-                                txExecutedBlock.Hash.ToString(), null, null, txSuccess.UpdatedStates, txSuccess.FungibleAssetsDelta, txSuccess.UpdatedFungibleAssets, txSuccess.ActionsLogsList),
-                            TxFailure txFailure => new TxResult(TxStatus.FAILURE, txExecutedBlock.Index,
-                                txExecutedBlock.Hash.ToString(), txFailure.ExceptionName, txFailure.ExceptionMetadata, null, null, null, null),
+                            TxSuccess txSuccess => new TxResult(
+                                TxStatus.SUCCESS,
+                                txExecutedBlock.Index,
+                                txExecutedBlock.Hash.ToString(),
+                                null,
+                                null,
+                                txSuccess.UpdatedStates
+                                    .Select(kv => new KeyValuePair<Address, IValue?>(
+                                        kv.Key,
+                                        kv.Value))
+                                    .ToImmutableDictionary(),
+                                txSuccess.FungibleAssetsDelta,
+                                txSuccess.UpdatedFungibleAssets,
+                                txSuccess.ActionsLogsList),
+                            TxFailure txFailure => new TxResult(
+                                TxStatus.FAILURE,
+                                txExecutedBlock.Index,
+                                txExecutedBlock.Hash.ToString(),
+                                txFailure.ExceptionName,
+                                txFailure.ExceptionMetadata,
+                                null,
+                                null,
+                                null,
+                                null),
                             _ => throw new NotImplementedException(
                                 $"{nameof(execution)} is not expected concrete class.")
                         };

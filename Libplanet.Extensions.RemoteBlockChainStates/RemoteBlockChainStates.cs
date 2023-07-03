@@ -24,6 +24,9 @@ namespace Libplanet.Extensions.RemoteBlockChainStates
                 new GraphQLHttpClient(_explorerEndpoint, new SystemTextJsonSerializer());
         }
 
+        public IValue? GetState(Address address, BlockHash? offset) =>
+            GetStates(new[] { address }, offset).First();
+
         public IReadOnlyList<IValue?> GetStates(IReadOnlyList<Address> addresses, BlockHash? offset)
         {
             var response = _graphQlHttpClient.SendQueryAsync<GetStatesResponseType>(
