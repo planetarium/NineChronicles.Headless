@@ -510,15 +510,13 @@ namespace NineChronicles.Headless
 
             private bool ContainsAddressToBroadcastLocal(ActionEvaluation<ActionBase> ev)
             {
-                var updatedAddresses =
-                    ev.OutputStates.UpdatedAddresses.Union(ev.OutputStates.UpdatedFungibleAssets.Keys);
+                var updatedAddresses = ev.OutputStates.Delta.UpdatedAddresses;
                 return _context.AddressesToSubscribe.Any(updatedAddresses.Add(ev.Signer).Contains);
             }
 
             private bool ContainsAddressToBroadcastRemoteClient(ActionEvaluation<ActionBase> ev)
             {
-                var updatedAddresses =
-                    ev.OutputStates.UpdatedAddresses.Union(ev.OutputStates.UpdatedFungibleAssets.Keys);
+                var updatedAddresses = ev.OutputStates.Delta.UpdatedAddresses;
                 return TargetAddresses.Any(updatedAddresses.Add(ev.Signer).Contains);
             }
         }
