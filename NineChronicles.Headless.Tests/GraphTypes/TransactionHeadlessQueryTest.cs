@@ -25,6 +25,7 @@ using Nekoyume.Action;
 using Nekoyume.Action.Loader;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common;
+using NineChronicles.Headless.Utils;
 using Xunit;
 using static NineChronicles.Headless.NCActionUtils;
 
@@ -343,11 +344,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         private Task<ExecutionResult> ExecuteAsync(string query)
         {
+            var currencyFactory = new CurrencyFactory(_blockChain.GetStates);
+            var fungibleAssetValueFactory = new FungibleAssetValueFactory(currencyFactory);
             return GraphQLTestUtils.ExecuteQueryAsync<TransactionHeadlessQuery>(query, standaloneContext: new StandaloneContext
             {
                 BlockChain = _blockChain,
                 Store = _store,
-                NineChroniclesNodeService = _service
+                NineChroniclesNodeService = _service,
+                CurrencyFactory = currencyFactory,
+                FungibleAssetValueFactory = fungibleAssetValueFactory,
             });
         }
 

@@ -14,6 +14,7 @@ using Libplanet.Store;
 using Nekoyume;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes;
+using NineChronicles.Headless.Utils;
 
 namespace NineChronicles.Headless
 {
@@ -26,17 +27,19 @@ namespace NineChronicles.Headless
         public bool IsMining { get; set; }
         public ReplaySubject<NodeStatusType> NodeStatusSubject { get; } = new ReplaySubject<NodeStatusType>(1);
         public ReplaySubject<BlockSyncState> PreloadStateSubject { get; } = new ReplaySubject<BlockSyncState>(5);
+
         public Subject<DifferentAppProtocolVersionEncounter> DifferentAppProtocolVersionEncounterSubject { get; }
             = new Subject<DifferentAppProtocolVersionEncounter>();
+
         public Subject<Notification> NotificationSubject { get; } = new Subject<Notification>();
         public Subject<NodeException> NodeExceptionSubject { get; } = new Subject<NodeException>();
         public NineChroniclesNodeService? NineChroniclesNodeService { get; set; }
 
         public ConcurrentDictionary<Address,
-                (ReplaySubject<MonsterCollectionStatus> statusSubject, ReplaySubject<MonsterCollectionState> stateSubject, ReplaySubject<string> balanceSubject)>
-            AgentAddresses
-        { get; } = new ConcurrentDictionary<Address,
-                (ReplaySubject<MonsterCollectionStatus>, ReplaySubject<MonsterCollectionState>, ReplaySubject<string>)>();
+                (ReplaySubject<MonsterCollectionStatus> statusSubject, ReplaySubject<MonsterCollectionState>
+                stateSubject, ReplaySubject<string> balanceSubject)>
+            AgentAddresses { get; } = new ConcurrentDictionary<Address,
+            (ReplaySubject<MonsterCollectionStatus>, ReplaySubject<MonsterCollectionState>, ReplaySubject<string>)>();
 
         public NodeStatusType NodeStatus => new NodeStatusType(this)
         {
@@ -49,7 +52,9 @@ namespace NineChronicles.Headless
 
         public Swarm? Swarm { get; internal set; }
 
-        public Currency? NCG { get; internal set; }
+        public CurrencyFactory? CurrencyFactory { get; set; }
+        
+        public FungibleAssetValueFactory? FungibleAssetValueFactory { get; set; }
 
         internal TimeSpan DifferentAppProtocolVersionEncounterInterval { get; set; } = TimeSpan.FromSeconds(30);
 
@@ -60,92 +65,5 @@ namespace NineChronicles.Headless
         internal TimeSpan MonsterCollectionStateInterval { get; set; } = TimeSpan.FromSeconds(30);
 
         internal TimeSpan MonsterCollectionStatusInterval { get; set; } = TimeSpan.FromSeconds(30);
-
-        public bool TryGetCurrency(CurrencyEnum currencyEnum, out Currency? currency)
-        {
-            return TryGetCurrency(currencyEnum.ToString(), out currency);
-        }
-
-        public bool TryGetCurrency(string ticker, out Currency? currency)
-        {
-            currency = ticker switch
-            {
-                "NCG" => GetNCG(),
-                _ => Currencies.GetMinterlessCurrency(ticker),
-            };
-            return currency is not null;
-        }
-
-        private Currency? GetNCG()
-        {
-            if (NCG is not null)
-            {
-                return NCG;
-            }
-
-            if (BlockChain?.GetState(Addresses.GoldCurrency) is
-                Dictionary goldCurrencyDict)
-            {
-                var goldCurrency = new GoldCurrencyState(goldCurrencyDict);
-                NCG = goldCurrency.Currency;
-            }
-
-            return NCG;
-        }
-
-        public bool TryGetFungibleAssetValue(
-            CurrencyEnum currencyEnum,
-            BigInteger majorUnit,
-            BigInteger minorUnit,
-            out FungibleAssetValue? fungibleAssetValue)
-        {
-            return TryGetFungibleAssetValue(
-                currencyEnum.ToString(),
-                majorUnit,
-                minorUnit,
-                out fungibleAssetValue);
-        }
-
-        public bool TryGetFungibleAssetValue(
-            string ticker,
-            BigInteger majorUnit,
-            BigInteger minorUnit,
-            out FungibleAssetValue? fungibleAssetValue)
-        {
-            if (TryGetCurrency(ticker, out var currency))
-            {
-                fungibleAssetValue = new FungibleAssetValue(currency!.Value, majorUnit, minorUnit);
-                return true;
-            }
-
-            fungibleAssetValue = null;
-            return false;
-        }
-
-        public bool TryGetFungibleAssetValue(
-            CurrencyEnum currencyEnum,
-            string value,
-            out FungibleAssetValue? fungibleAssetValue)
-        {
-            return TryGetFungibleAssetValue(
-                currencyEnum.ToString(),
-                value,
-                out fungibleAssetValue);
-        }
-
-        public bool TryGetFungibleAssetValue(
-            string ticker,
-            string value,
-            out FungibleAssetValue? fungibleAssetValue)
-        {
-            if (TryGetCurrency(ticker, out var currency))
-            {
-                fungibleAssetValue = FungibleAssetValue.Parse(currency!.Value, value);
-                return true;
-            }
-
-            fungibleAssetValue = null;
-            return false;
-        }
     }
 }
