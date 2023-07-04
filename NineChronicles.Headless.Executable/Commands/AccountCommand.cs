@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Bencodex;
 using Cocona;
-using Lib9c.DevExtensions;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
@@ -15,6 +14,7 @@ using Nekoyume.Model.State;
 using NineChronicles.Headless.Executable.IO;
 using Serilog.Core;
 using static NineChronicles.Headless.NCActionUtils;
+using DevExUtils = Lib9c.DevExtensions.Utils;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
@@ -45,11 +45,11 @@ namespace NineChronicles.Headless.Executable.Commands
             string? address = null
         )
         {
-            using Logger logger = Utils.ConfigureLogger(verbose);
+            using Logger logger = DevExUtils.ConfigureLogger(verbose);
             (BlockChain chain, IStore store, _, _) =
-                Utils.GetBlockChain(logger, storePath, chainId);
+                DevExUtils.GetBlockChain(logger, storePath, chainId);
 
-            Block offset = Utils.ParseBlockOffset(chain, block);
+            Block offset = DevExUtils.ParseBlockOffset(chain, block);
             _console.Error.WriteLine("The offset block: #{0} {1}.", offset.Index, offset.Hash);
 
             Bencodex.Types.Dictionary goldCurrencyStateDict = (Bencodex.Types.Dictionary)
@@ -59,7 +59,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             if (address is { } addrStr)
             {
-                Address addr = Utils.ParseAddress(addrStr);
+                Address addr = DevExUtils.ParseAddress(addrStr);
                 FungibleAssetValue balance = chain.GetBalance(addr, gold, offset.Hash);
                 _console.Out.WriteLine("{0}\t{1}", addr, balance);
                 return;

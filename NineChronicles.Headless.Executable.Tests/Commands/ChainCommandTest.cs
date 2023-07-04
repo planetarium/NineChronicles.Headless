@@ -9,12 +9,10 @@ using System.Text.Json;
 using Bencodex.Types;
 using Libplanet;
 using Libplanet.Action;
-using Libplanet.Action.Loader;
 using Libplanet.Action.Sys;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
-using Libplanet.Extensions.Cocona;
 using Libplanet.Consensus;
 using Libplanet.Crypto;
 using Libplanet.RocksDBStore;
@@ -33,6 +31,7 @@ using NineChronicles.Headless.Executable.Tests.IO;
 using Serilog.Core;
 using Xunit;
 using Lib9cUtils = Lib9c.DevExtensions.Utils;
+using CoconaUtils = Libplanet.Extensions.Cocona.Utils;
 
 namespace NineChronicles.Headless.Executable.Tests.Commands
 {
@@ -78,7 +77,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
             _command.Tip(storeType, _storePath);
             Assert.Equal(
-                Utils.SerializeHumanReadable(genesisBlock.Header),
+                CoconaUtils.SerializeHumanReadable(genesisBlock.Header),
                 _console.Out.ToString().Trim()
             );
         }

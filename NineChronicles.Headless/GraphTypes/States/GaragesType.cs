@@ -15,8 +15,8 @@ public class GaragesType : ObjectGraphType<GaragesType.Value>
     {
         public readonly Address AgentAddr;
         public readonly Address GarageBalancesAddr;
-        public readonly FungibleAssetValue[] FungibleAssetValues;
-        public readonly (FungibleItemGarage fungibleItemGarage, Address addr)[] FungibleItemGarages;
+        internal readonly FungibleAssetValue[] _fungibleAssetValues;
+        internal readonly (FungibleItemGarage fungibleItemGarage, Address addr)[] _fungibleItemGarages;
 
         public Value(
             Address agentAddr,
@@ -26,8 +26,8 @@ public class GaragesType : ObjectGraphType<GaragesType.Value>
         {
             AgentAddr = agentAddr;
             GarageBalancesAddr = garageBalancesAddr;
-            FungibleAssetValues = fungibleAssetValues.ToArray();
-            FungibleItemGarages = fungibleItemGarages.ToArray();
+            _fungibleAssetValues = fungibleAssetValues.ToArray();
+            _fungibleItemGarages = fungibleItemGarages.ToArray();
         }
     }
 
@@ -41,9 +41,9 @@ public class GaragesType : ObjectGraphType<GaragesType.Value>
             resolve: context => context.Source.GarageBalancesAddr);
         Field<ListGraphType<Libplanet.Explorer.GraphTypes.FungibleAssetValueType>>(
             name: "garageBalances",
-            resolve: context => context.Source.FungibleAssetValues);
+            resolve: context => context.Source._fungibleAssetValues);
         Field<ListGraphType<WithAddressType<FungibleItemGarageType, FungibleItemGarage>>>(
             name: "fungibleItemGarages",
-            resolve: context => context.Source.FungibleItemGarages);
+            resolve: context => context.Source._fungibleItemGarages);
     }
 }

@@ -12,11 +12,11 @@ using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Blocks;
 using Libplanet.Crypto;
-using Libplanet.Extensions.Cocona;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.Executable.IO;
+using CoconaUtils = Libplanet.Extensions.Cocona.Utils;
 using Lib9cUtils = Lib9c.DevExtensions.Utils;
 
 namespace NineChronicles.Headless.Executable.Commands
@@ -37,7 +37,7 @@ namespace NineChronicles.Headless.Executable.Commands
             _console.Out.WriteLine("\nProcessing data for genesis...");
             if (string.IsNullOrEmpty(config.TablePath))
             {
-                throw Utils.Error("TablePath is not set.");
+                throw CoconaUtils.Error("TablePath is not set.");
             }
 
             tableSheets = Lib9cUtils.ImportSheets(config.TablePath);
@@ -273,7 +273,7 @@ namespace NineChronicles.Headless.Executable.Commands
             }
             catch (Exception e)
             {
-                throw Utils.Error(e.Message);
+                throw CoconaUtils.Error(e.Message);
             }
         }
 

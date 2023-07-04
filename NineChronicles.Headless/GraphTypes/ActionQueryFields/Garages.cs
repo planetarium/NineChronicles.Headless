@@ -50,9 +50,9 @@ namespace NineChronicles.Headless.GraphTypes
                         fungibleAssetValues = new List<(Address address, FungibleAssetValue fungibleAssetValue)>();
                         foreach (var (balanceAddr, (currencyTicker, value)) in balanceInputList)
                         {
-                            if (StandaloneContext.TryGetFungibleAssetValue(currencyTicker, value, out var fav))
+                            if (StandaloneContext.FungibleAssetValueFactory!.TryGetFungibleAssetValue(currencyTicker, value, out var fav))
                             {
-                                fungibleAssetValues.Add((balanceAddr, fav!.Value));
+                                fungibleAssetValues.Add((balanceAddr, fav));
                             }
                             else
                             {
@@ -112,9 +112,9 @@ namespace NineChronicles.Headless.GraphTypes
                         fungibleAssetValues = new List<FungibleAssetValue>();
                         foreach (var (currencyTicker, value) in fungibleAssetValueInputList)
                         {
-                            if (StandaloneContext.TryGetFungibleAssetValue(currencyTicker, value, out var fav))
+                            if (StandaloneContext.FungibleAssetValueFactory!.TryGetFungibleAssetValue(currencyTicker, value, out var fav))
                             {
-                                fungibleAssetValues.Add(fav!.Value);
+                                fungibleAssetValues.Add(fav);
                             }
                             else
                             {
@@ -173,9 +173,9 @@ namespace NineChronicles.Headless.GraphTypes
                         fungibleAssetValues = new List<(Address address, FungibleAssetValue fungibleAssetValue)>();
                         foreach (var (addr, (currencyTicker, value)) in balanceInputList)
                         {
-                            if (StandaloneContext.TryGetFungibleAssetValue(currencyTicker, value, out var fav))
+                            if (StandaloneContext.FungibleAssetValueFactory!.TryGetFungibleAssetValue(currencyTicker, value, out var fav))
                             {
-                                fungibleAssetValues.Add((addr, fav!.Value));
+                                fungibleAssetValues.Add((addr, fav));
                             }
                             else
                             {

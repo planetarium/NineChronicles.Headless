@@ -92,12 +92,12 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var currencyEnum = context.GetArgument<CurrencyEnum>("currency");
-                    if (!standaloneContext.TryGetCurrency(currencyEnum, out var currency))
+                    if (!standaloneContext.CurrencyFactory!.TryGetCurrency(currencyEnum, out var currency))
                     {
                         throw new ExecutionError($"Currency {currencyEnum} is not found.");
                     }
 
-                    return currency!.Value.Minters;
+                    return currency.Minters;
                 });
             Field<NonNullGraphType<AddressType>>(
                 name: "pledgeAddress",

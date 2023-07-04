@@ -188,12 +188,13 @@ namespace NineChronicles.Headless.GraphTypes
                     var sender = context.GetArgument<Address>("sender");
                     var recipient = context.GetArgument<Address>("recipient");
                     var currencyEnum = context.GetArgument<CurrencyEnum>("currency");
-                    if (!standaloneContext.CurrencyFactory?.TryGetCurrency(currencyEnum, out var currency) ?? true)
+                    Currency currency = new Currency();
+                    if (!standaloneContext.CurrencyFactory?.TryGetCurrency(currencyEnum, out currency) ?? true)
                     {
                         throw new ExecutionError($"Currency {currencyEnum} is not found.");
                     }
 
-                    var amount = FungibleAssetValue.Parse(currency!.Value, context.GetArgument<string>("amount"));
+                    var amount = FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
                     var memo = context.GetArgument<string?>("memo");
                     ActionBase action = new TransferAsset(sender, recipient, amount, memo);
                     return Encode(context, action);
