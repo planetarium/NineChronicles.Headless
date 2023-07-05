@@ -14,12 +14,13 @@ namespace NineChronicles.Headless.Middleware
     {
         private readonly ILogger _logger;
         private StandaloneContext _standaloneContext;
-        private Dictionary<string, List<Address>> _ipSignerList = new();
+        private Dictionary<string, List<Address>> _ipSignerList;
 
-        public GrpcCaptureMiddleware(StandaloneContext standaloneContext)
+        public GrpcCaptureMiddleware(StandaloneContext standaloneContext, Dictionary<string, List<Address>> ipSignerList)
         {
             _logger = Log.Logger.ForContext<GrpcCaptureMiddleware>();
             _standaloneContext = standaloneContext;
+            _ipSignerList = ipSignerList;
         }
 
         public override async Task<TResponse> UnaryServerHandler<TRequest, TResponse>(
