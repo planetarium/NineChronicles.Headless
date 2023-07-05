@@ -59,7 +59,36 @@ namespace NineChronicles.Headless.GraphTypes
                     );
                 }
             );
+            Field<NonNullGraphType<SimultionQuery>>(name: "simulationQuery", arguments: new QueryArguments(
+                new QueryArgument<ByteStringType>
+                {
+                    Name = "hash",
+                    Description = "Offset block hash for query.",
+                }),
+                resolve: context =>
+                {
+                    BlockHash? blockHash = context.GetArgument<byte[]>("hash") switch
+                    {
+                        byte[] bytes => new BlockHash(bytes),
+                        null => standaloneContext.BlockChain?.Tip?.Hash,
+                    };
 
+                    if (!(standaloneContext.BlockChain is { } chain))
+                    {
+                        return null;
+                    }
+
+                    return new StateContext(
+                        chain.ToAccountStateGetter(blockHash),
+                        chain.ToAccountBalanceGetter(blockHash),
+                        blockHash switch
+                        {
+                            BlockHash bh => chain[bh].Index,
+                            null => chain.Tip.Index,
+                        }
+                    );
+                }
+            );
             Field<ByteStringType>(
                 name: "state",
                 arguments: new QueryArguments(
