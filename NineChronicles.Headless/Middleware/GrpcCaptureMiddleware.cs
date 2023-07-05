@@ -44,17 +44,13 @@ namespace NineChronicles.Headless.Middleware
                 else
                 {
                     _logger.Information(
-                        "[GRPC-REQUEST-CAPTURE] List already created for IP: {IP}",
-                        httpContext.Connection.RemoteIpAddress!.ToString());
+                        "[GRPC-REQUEST-CAPTURE] List already created for IP: {IP} Count: {Count}",
+                        httpContext.Connection.RemoteIpAddress!.ToString(),
+                    _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count);
                 }
 
                 _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Add(agent);
-                _logger.Information(
-                    "[GRPC-REQUEST-CAPTURE] IP: {IP} List Count: {Count}, AgentAddresses: {Agent}",
-                    httpContext.Connection.RemoteIpAddress!.ToString(),
-                    _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count,
-                    _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()]);
-                if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count > 0)
+                if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count > 100)
                 {
                     _logger.Information(
                         "[GRPC-REQUEST-CAPTURE] IP: {IP} List Count: {Count}, AgentAddresses: {Agent}",
