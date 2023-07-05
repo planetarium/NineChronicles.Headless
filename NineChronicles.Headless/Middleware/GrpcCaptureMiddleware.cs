@@ -46,7 +46,7 @@ namespace NineChronicles.Headless.Middleware
                     _logger.Information(
                         "[GRPC-REQUEST-CAPTURE] List already created for IP: {IP} Count: {Count}",
                         httpContext.Connection.RemoteIpAddress!.ToString(),
-                    _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count);
+                        _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count);
                 }
 
                 _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Add(agent);
