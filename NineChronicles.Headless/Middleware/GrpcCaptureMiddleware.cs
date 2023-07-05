@@ -33,11 +33,6 @@ namespace NineChronicles.Headless.Middleware
                 _logger.Information(
                     "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method} Agent: {Agent}",
                     ipAddress, context.Method, agent);
-                if (!_ipSignerList.ContainsKey(httpContext.Connection.RemoteIpAddress!.ToString()))
-                {
-                    _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()] = new List<Address>();
-                }
-
                 _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Add(agent);
                 if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count > 0)
                 {
