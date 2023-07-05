@@ -49,14 +49,16 @@ namespace NineChronicles.Headless.Middleware
 
                 _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Add(agent);
                 _logger.Information(
-                    "[GRPC-REQUEST-CAPTURE] IP: {IP} AgentAddresses: {Agent}",
+                    "[GRPC-REQUEST-CAPTURE] IP: {IP} List Count: {Count}, AgentAddresses: {Agent}",
                     httpContext.Connection.RemoteIpAddress!.ToString(),
+                    _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count,
                     _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()]);
                 if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count > 0)
                 {
                     _logger.Information(
-                        "[GRPC-REQUEST-CAPTURE] IP: {IP} AgentAddresses: {Agent}",
+                        "[GRPC-REQUEST-CAPTURE] IP: {IP} List Count: {Count}, AgentAddresses: {Agent}",
                         httpContext.Connection.RemoteIpAddress!.ToString(),
+                        _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count,
                         _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()]);
                 }
             }
