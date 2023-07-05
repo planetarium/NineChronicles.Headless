@@ -73,7 +73,7 @@ namespace NineChronicles.Headless
             return builder
                 .ConfigureServices(services =>
                 {
-                    Dictionary<string, List<Address>> ipSignerList = new();
+                    Dictionary<string, HashSet<Address>> ipSignerList = new();
                     services.AddSingleton(_ => context);
                     services.AddGrpc(options =>
                     {

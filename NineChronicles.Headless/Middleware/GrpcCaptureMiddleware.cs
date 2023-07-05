@@ -14,9 +14,9 @@ namespace NineChronicles.Headless.Middleware
     {
         private readonly ILogger _logger;
         private StandaloneContext _standaloneContext;
-        private Dictionary<string, List<Address>> _ipSignerList;
+        private Dictionary<string, HashSet<Address>> _ipSignerList;
 
-        public GrpcCaptureMiddleware(StandaloneContext standaloneContext, Dictionary<string, List<Address>> ipSignerList)
+        public GrpcCaptureMiddleware(StandaloneContext standaloneContext, Dictionary<string, HashSet<Address>> ipSignerList)
         {
             _logger = Log.Logger.ForContext<GrpcCaptureMiddleware>();
             _standaloneContext = standaloneContext;
@@ -39,7 +39,7 @@ namespace NineChronicles.Headless.Middleware
                     _logger.Information(
                         "[GRPC-REQUEST-CAPTURE] Creating a new list for IP: {IP}",
                         httpContext.Connection.RemoteIpAddress!.ToString());
-                    _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()] = new List<Address>();
+                    _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()] = new HashSet<Address>();
                 }
                 else
                 {
