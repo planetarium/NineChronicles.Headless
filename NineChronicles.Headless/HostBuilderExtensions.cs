@@ -59,7 +59,8 @@ namespace NineChronicles.Headless
 
         public static IHostBuilder UseNineChroniclesRPC(
             this IHostBuilder builder,
-            RpcNodeServiceProperties properties
+            RpcNodeServiceProperties properties,
+            StandaloneContext standaloneContext
         )
         {
             var context = new RpcContext
@@ -74,7 +75,7 @@ namespace NineChronicles.Headless
                     services.AddGrpc(options =>
                     {
                         options.MaxReceiveMessageSize = null;
-                        options.Interceptors.Add<GrpcCaptureMiddleware>();
+                        options.Interceptors.Add<GrpcCaptureMiddleware>(standaloneContext);
                     });
                     services.AddMagicOnion();
                     services.AddSingleton(provider =>

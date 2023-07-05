@@ -1,10 +1,10 @@
+using System.Collections.Generic;
 using Grpc.Core;
 using Grpc.Core.Interceptors;
 using System.Threading.Tasks;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Tx;
-using Nekoyume.Action;
 using Serilog;
 using static NineChronicles.Headless.NCActionUtils;
 
@@ -13,10 +13,13 @@ namespace NineChronicles.Headless.Middleware
     public class GrpcCaptureMiddleware : Interceptor
     {
         private readonly ILogger _logger;
+        private StandaloneContext _standaloneContext;
+        private Dictionary<string, List<Address>> _ipSignerList = new();
 
-        public GrpcCaptureMiddleware()
+        public GrpcCaptureMiddleware(StandaloneContext standaloneContext)
         {
             _logger = Log.Logger.ForContext<GrpcCaptureMiddleware>();
+            _standaloneContext = standaloneContext;
         }
 
         public override async Task<TResponse> UnaryServerHandler<TRequest, TResponse>(
@@ -30,6 +33,19 @@ namespace NineChronicles.Headless.Middleware
                 _logger.Information(
                     "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method} Agent: {Agent}",
                     ipAddress, context.Method, agent);
+                if (!_ipSignerList.ContainsKey(httpContext.Connection.RemoteIpAddress!.ToString()))
+                {
+                    _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()] = new List<Address>();
+                }
+
+                _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Add(agent);
+                if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count > 0)
+                {
+                    _logger.Information(
+                        "[GRPC-REQUEST-CAPTURE] IP: {IP} AgentAddresses: {Agent}",
+                        httpContext.Connection.RemoteIpAddress!.ToString(),
+                        _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()]);
+                }
             }
 
             if (context.Method is "/IBlockChainService/PutTransaction" && request is byte[] txBytes)

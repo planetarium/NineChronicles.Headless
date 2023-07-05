@@ -487,7 +487,8 @@ namespace NineChronicles.Headless.Executable
                                 headlessConfig.RpcListenHost,
                                 headlessConfig.RpcListenPort,
                                 headlessConfig.RpcRemoteServer == true
-                            )
+                            ),
+                        standaloneContext
                     );
                 }
 
