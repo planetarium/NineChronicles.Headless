@@ -14,13 +14,12 @@ namespace NineChronicles.Headless.Middleware
     {
         private readonly ILogger _logger;
         private StandaloneContext _standaloneContext;
-        private Dictionary<string, List<Address>> _ipSignerList;
+        private Dictionary<string, List<Address>> _ipSignerList = new();
 
         public GrpcCaptureMiddleware(StandaloneContext standaloneContext)
         {
             _logger = Log.Logger.ForContext<GrpcCaptureMiddleware>();
             _standaloneContext = standaloneContext;
-            _ipSignerList = new Dictionary<string, List<Address>>();
         }
 
         public override async Task<TResponse> UnaryServerHandler<TRequest, TResponse>(
@@ -34,6 +33,20 @@ namespace NineChronicles.Headless.Middleware
                 _logger.Information(
                     "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method} Agent: {Agent}",
                     ipAddress, context.Method, agent);
+                if (!_ipSignerList.ContainsKey(httpContext.Connection.RemoteIpAddress!.ToString()))
+                {
+                    _logger.Information(
+                        "[GRPC-REQUEST-CAPTURE] Creating a new list for IP: {IP}",
+                        httpContext.Connection.RemoteIpAddress!.ToString());
+                    _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()] = new List<Address>();
+                }
+                else
+                {
+                    _logger.Information(
+                        "[GRPC-REQUEST-CAPTURE] List already created for IP: {IP}",
+                        httpContext.Connection.RemoteIpAddress!.ToString());
+                }
+
                 _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Add(agent);
                 _logger.Information(
                     "[GRPC-REQUEST-CAPTURE] IP: {IP} AgentAddresses: {Agent}",
