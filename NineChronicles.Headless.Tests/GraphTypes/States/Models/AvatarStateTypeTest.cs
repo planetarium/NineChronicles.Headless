@@ -61,7 +61,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             const string query = @"
             {
                 address
-                combinationSlotStates {
+                combinationSlots {
                     address
                     unlockBlockIndex
                     unlockStage
@@ -123,7 +123,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 new Dictionary<string, object>
                 {
                     ["address"] = Fixtures.AvatarAddress.ToString(),
-                    ["combinationSlotStates"] = Fixtures.CombinationSlotStatesFx.Select(x => new Dictionary<string, object?>
+                    ["combinationSlots"] = Fixtures.CombinationSlotStatesFx.Select(x => new Dictionary<string, object?>
                     {
                         ["address"] = x.address.ToString(),
                         ["unlockBlockIndex"] = x.UnlockBlockIndex,
