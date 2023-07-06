@@ -111,7 +111,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                 description: "Address list of combination slot.",
                 resolve: context => context.Source.AvatarState.combinationSlotAddresses);
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<CombinationSlotStateType>>>>(
-                "combinationSlotState",
+                "combinationSlotStates",
                 description: "Combination slots.",
                 resolve: context =>
                 {
