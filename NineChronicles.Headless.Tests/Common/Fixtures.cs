@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Lib9c.Model.Order;
 using Lib9c.Tests;
 using Libplanet;
@@ -64,6 +65,12 @@ namespace NineChronicles.Headless.Tests
             }
             return shopState;
         }
+
+        public static readonly Address CombinationSlotAddress = AvatarStateFX.combinationSlotAddresses.First();
+        public static readonly CombinationSlotState CombinationSlotStateFx = new(
+            CombinationSlotAddress,
+            1
+        );
 
         public static ShardedShopStateV2 ShardedWeapon0ShopStateV2FX()
         {

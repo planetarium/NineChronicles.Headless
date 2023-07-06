@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using GraphQL.Execution;
@@ -53,6 +54,39 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             Assert.Equal(expected, data);
         }
 
+        [Theory]
+        [MemberData(nameof(CombinationSlotSteteMembers))]
+        public async Task QueryWithCombinationSlotState(AvatarState avatarState, Dictionary<string, object> expected)
+        {
+            const string query = @"
+            {
+                address
+                combinationSlotState {
+                    address
+                    unlockBlockIndex
+                    unlockStage
+                    startBlockIndex
+                    petId
+                }
+            }
+            ";
+            var queryResult = await ExecuteQueryAsync<AvatarStateType>(
+                query,
+                source: new AvatarStateType.AvatarStateContext(
+                    avatarState,
+                    addresses => addresses.Select(x =>
+                    {
+                        if (x == Fixtures.AvatarAddress) return Fixtures.AvatarStateFX.Serialize();
+                        if (x == Fixtures.UserAddress) return Fixtures.AgentStateFx.Serialize();
+                        if (x == Fixtures.CombinationSlotAddress) return Fixtures.CombinationSlotStateFx.Serialize();
+                        return null;
+                    }).ToList(),
+                    (_, _) => new FungibleAssetValue(),
+                    0));
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            Assert.Equal(expected, data);
+        }
+        
         public static IEnumerable<object[]> Members => new List<object[]>
         {
             new object[]
@@ -65,6 +99,29 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     ["index"] = 2,
                 },
             },
+        };
+
+        public static IEnumerable<object[]> CombinationSlotSteteMembers = new List<object[]>()
+        {
+            new object[]
+            {
+                Fixtures.AvatarStateFX,
+                new Dictionary<string, object>
+                {
+                    ["address"] = Fixtures.AvatarAddress.ToString(),
+                    ["combinationSlotState"] = new object[]
+                    {
+                        new Dictionary<string, object>
+                        {
+                            ["address"] = Fixtures.CombinationSlotAddress.ToString(),
+                            ["unlockBlockIndex"] = 0,
+                            ["unlockStage"] = 1,
+                            ["startBlockIndex"] = 0,
+                            ["petId"] = null
+                        }
+                    }
+                }
+            }
         };
     }
 }
