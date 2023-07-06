@@ -113,7 +113,8 @@ namespace NineChronicles.Headless.GraphTypes.States
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<CombinationSlotStateType>>>>(
                 "combinationSlotState",
                 description: "Combination slots.",
-                resolve: context => {
+                resolve: context =>
+                {
                     var addresses = context.Source.AvatarState.combinationSlotAddresses;
                     return context.Source.AccountStateGetter(addresses)
                         .OfType<Dictionary>()

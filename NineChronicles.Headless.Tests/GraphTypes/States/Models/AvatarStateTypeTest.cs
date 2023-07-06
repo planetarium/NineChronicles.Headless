@@ -74,19 +74,19 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 query,
                 source: new AvatarStateType.AvatarStateContext(
                     avatarState,
-                    addresses => addresses.Select(x =>
+                    addresses => addresses.Select(x => x switch
                     {
-                        if (x == Fixtures.AvatarAddress) return Fixtures.AvatarStateFX.Serialize();
-                        if (x == Fixtures.UserAddress) return Fixtures.AgentStateFx.Serialize();
-                        if (x == Fixtures.CombinationSlotAddress) return Fixtures.CombinationSlotStateFx.Serialize();
-                        return null;
+                        _ when x == Fixtures.AvatarAddress => Fixtures.AvatarStateFX.Serialize(),
+                        _ when x == Fixtures.UserAddress => Fixtures.AgentStateFx.Serialize(),
+                        _ when x == Fixtures.CombinationSlotAddress => Fixtures.CombinationSlotStateFx.Serialize(),
+                        _ => null
                     }).ToList(),
                     (_, _) => new FungibleAssetValue(),
                     0));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
         }
-        
+
         public static IEnumerable<object[]> Members => new List<object[]>
         {
             new object[]
