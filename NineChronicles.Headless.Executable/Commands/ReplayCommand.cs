@@ -3,17 +3,24 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Bencodex;
 using Bencodex.Json;
 using Bencodex.Types;
 using Cocona;
 using Cocona.Help;
+using GraphQL;
+using GraphQL.Client.Http;
+using GraphQL.Client.Serializer.SystemTextJson;
+using Libplanet;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
+using Libplanet.Extensions.RemoteBlockChainStates;
 using Libplanet.RocksDBStore;
 using Libplanet.State;
 using Libplanet.Store;
@@ -31,10 +38,16 @@ namespace NineChronicles.Headless.Executable.Commands
     public partial class ReplayCommand : CoconaLiteConsoleAppBase
     {
         private readonly IConsole _console;
+        private readonly GraphQLHttpClient _graphQlHttpClient;
 
         public ReplayCommand(IConsole console)
         {
             _console = console;
+#pragma warning disable S1075
+            _graphQlHttpClient = new GraphQLHttpClient(
+                new Uri("https://9c-main-full-state.planetarium.dev/graphql"),
+                new SystemTextJsonSerializer());
+#pragma warning restore S1075
         }
 
         [PrimaryCommand]
@@ -339,6 +352,87 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 disposables.Clear();
             }
+        }
+
+        [Command(Description = "Evaluate transactions with remote states")]
+        public int RemoteTx(
+            [Option("tx", new [] { 't' }, Description = "The transaction")]
+            string transactionId)
+        {
+            var transactionQuery = @"
+            query GetTransactionResult($id: ID!, $txId: TxId!)
+            {
+                chainQuery {
+                    transactionQuery {
+                        transaction(id: $id) {
+                            serializedPayload
+                        }
+                    }
+                }
+                transaction {
+                    transactionResult(txId: $txId) {
+                        txStatus
+                        blockIndex
+                        blockHash
+                    }
+                }
+            }
+            ";
+            var response = _graphQlHttpClient.SendQueryAsync<GetTransactionResponse>(
+                new GraphQLRequest(transactionQuery, operationName: "GetTransactionResult", variables: new
+                {
+                    id = transactionId,
+                    txId = transactionId,
+                })).Result;
+            var serializedTransaction = response.Data.ChainQuery?.TransactionQuery?.Transaction?.SerializedPayload;
+            if (serializedTransaction == null)
+            {
+                throw new CommandExitedException(
+                    $"Failed to get transaction with id: {transactionId}",
+                    -1
+                );
+            }
+            var transactionDict = new Codec().Decode(Convert.FromBase64String(serializedTransaction));
+            var transaction = TxMarshaler.UnmarshalTransaction((Dictionary)transactionDict);
+
+            var transactionResult = response.Data.Transaction?.TransactionResult;
+            if (transactionResult == null)
+            {
+                throw new CommandExitedException(
+                    $"Failed to get transaction result with txId: {transactionId}", 
+                    -1
+                );
+            }
+
+#pragma warning disable S1075
+            var blockChainState = new RemoteBlockChainStates(new Uri("https://9c-main-full-state.planetarium.dev/graphql/explorer"));
+#pragma warning restore S1075
+
+            var previousBlockHash = BlockHash.FromString("80dfbea0ac08ae8615a87e3419899e3408f35ab8cae91f242b5207f48ff5b835");
+            var previousBlockStates = new RemoteBlockStates(blockChainState, previousBlockHash);
+            var previousStates = AccountStateDelta.Create(previousBlockStates);
+            var actions = transaction.Actions.Select(x => ToAction(x));
+            var actionEvaluations = EvaluateActions(
+                preEvaluationHash: HashDigest<SHA256>.FromString("eee72b88455ffae1f8e5176e7888d348ae641864bf7858afb301671fda019e6f"),
+                blockIndex: transactionResult.BlockIndex ?? 0,
+                blockProtocolVersion: 0,
+                txid: transaction.Id,
+                previousStates: previousStates,
+                miner: new Address(),
+                signer: transaction.Signer,
+                signature: transaction.Signature,
+                actions: actions.Cast<IAction>().ToImmutableList()
+            );
+            
+            actionEvaluations.ToList().ForEach(x =>
+            {
+                _console.Out.WriteLine($"Action:{x.Action}");
+                _console.Out.WriteLine($"Exception {x.Exception?.InnerException?.Message}");
+                _console.Out.WriteLine($"Stacktrace {x.Exception?.InnerException?.StackTrace}");
+                _console.Out.WriteLine($"{string.Join(", ", x.OutputStates.UpdatedAddresses.Select(x => x.ToString()))}");
+            });
+
+            return 0;
         }
 
         private static (FileStream? fs, StreamWriter? sw) GetOutputFileStream(
