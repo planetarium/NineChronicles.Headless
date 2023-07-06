@@ -110,6 +110,15 @@ namespace NineChronicles.Headless.GraphTypes.States
                 nameof(AvatarState.combinationSlotAddresses),
                 description: "Address list of combination slot.",
                 resolve: context => context.Source.AvatarState.combinationSlotAddresses);
+            Field<NonNullGraphType<ListGraphType<NonNullGraphType<CombinationSlotStateType>>>>(
+                "combinationSlotState",
+                description: "Combination slots.",
+                resolve: context => {
+                    var addresses = context.Source.AvatarState.combinationSlotAddresses;
+                    return context.Source.AccountStateGetter(addresses)
+                        .OfType<Dictionary>()
+                        .Select(x => new CombinationSlotState(x));
+                });
             Field<NonNullGraphType<CollectionMapType>>(
                 nameof(AvatarState.itemMap),
                 description: "List of acquired item ID.",

@@ -24,6 +24,10 @@ namespace NineChronicles.Headless.GraphTypes.States
                 nameof(CombinationSlotState.StartBlockIndex),
                 description: "Block index at the combination started.",
                 resolve: context => context.Source.StartBlockIndex);
+            Field<IntGraphType>(
+                nameof(CombinationSlotState.PetId),
+                description: "Pet id used in equipment",
+                resolve: context => context.Source.PetId);
         }
     }
 }
