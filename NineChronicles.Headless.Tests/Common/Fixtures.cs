@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Lib9c.Model.Order;
 using Lib9c.Tests;
@@ -66,11 +67,8 @@ namespace NineChronicles.Headless.Tests
             return shopState;
         }
 
-        public static readonly Address CombinationSlotAddress = AvatarStateFX.combinationSlotAddresses.First();
-        public static readonly CombinationSlotState CombinationSlotStateFx = new(
-            CombinationSlotAddress,
-            1
-        );
+        public static readonly List<CombinationSlotState> CombinationSlotStatesFx =
+            AvatarStateFX.combinationSlotAddresses.Select(x => new CombinationSlotState(x, 0)).ToList();
 
         public static ShardedShopStateV2 ShardedWeapon0ShopStateV2FX()
         {

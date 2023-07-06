@@ -74,12 +74,26 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 query,
                 source: new AvatarStateType.AvatarStateContext(
                     avatarState,
-                    addresses => addresses.Select(x => x switch
+                    addresses => addresses.Select(x =>
                     {
-                        _ when x == Fixtures.AvatarAddress => Fixtures.AvatarStateFX.Serialize(),
-                        _ when x == Fixtures.UserAddress => Fixtures.AgentStateFx.Serialize(),
-                        _ when x == Fixtures.CombinationSlotAddress => Fixtures.CombinationSlotStateFx.Serialize(),
-                        _ => null
+                        if (x == Fixtures.AvatarAddress)
+                        {
+                            return Fixtures.AvatarStateFX.Serialize();
+                        }
+
+                        if (x == Fixtures.UserAddress)
+                        {
+                            return Fixtures.AgentStateFx.Serialize();
+                        }
+
+                        var combinationSlotAddressIndex =
+                            Fixtures.AvatarStateFX.combinationSlotAddresses.FindIndex(address => x == address);
+                        if (combinationSlotAddressIndex > -1)
+                        {
+                            return Fixtures.CombinationSlotStatesFx[combinationSlotAddressIndex].Serialize();
+                        }
+
+                        return null;
                     }).ToList(),
                     (_, _) => new FungibleAssetValue(),
                     0));
@@ -109,17 +123,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 new Dictionary<string, object>
                 {
                     ["address"] = Fixtures.AvatarAddress.ToString(),
-                    ["combinationSlotState"] = new object[]
+                    ["combinationSlotState"] = Fixtures.CombinationSlotStatesFx.Select(x => new Dictionary<string, object?>
                     {
-                        new Dictionary<string, object>
-                        {
-                            ["address"] = Fixtures.CombinationSlotAddress.ToString(),
-                            ["unlockBlockIndex"] = 0,
-                            ["unlockStage"] = 1,
-                            ["startBlockIndex"] = 0,
-                            ["petId"] = null
-                        }
-                    }
+                        ["address"] = x.address.ToString(),
+                        ["unlockBlockIndex"] = x.UnlockBlockIndex,
+                        ["unlockStage"] = x.UnlockStage,
+                        ["startBlockIndex"] = x.StartBlockIndex,
+                        ["petId"] = x.PetId
+                    }).ToArray<object>(),
                 }
             }
         };
