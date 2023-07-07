@@ -11,7 +11,6 @@ using Bencodex.Json;
 using Bencodex.Types;
 using Cocona;
 using Cocona.Help;
-using GraphQL;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.SystemTextJson;
 using Libplanet;
@@ -38,16 +37,10 @@ namespace NineChronicles.Headless.Executable.Commands
     public partial class ReplayCommand : CoconaLiteConsoleAppBase
     {
         private readonly IConsole _console;
-        private readonly GraphQLHttpClient _graphQlHttpClient;
 
         public ReplayCommand(IConsole console)
         {
             _console = console;
-#pragma warning disable S1075
-            _graphQlHttpClient = new GraphQLHttpClient(
-                new Uri("https://9c-main-full-state.planetarium.dev/graphql"),
-                new SystemTextJsonSerializer());
-#pragma warning restore S1075
         }
 
         [PrimaryCommand]
@@ -354,83 +347,68 @@ namespace NineChronicles.Headless.Executable.Commands
             }
         }
 
-        [Command(Description = "Evaluate transactions with remote states")]
+        [Command(Description = "Evaluate transaction with remote states")]
         public int RemoteTx(
-            [Option("tx", new [] { 't' }, Description = "The transaction")]
-            string transactionId)
+            [Option("tx", new[] { 't' }, Description = "The transaction id")]
+            string transactionId,
+            [Option("endpoint", new[] { 'e' }, Description = "GraphQL endpoint to get remote state")]
+            string endpoint)
         {
-            var transactionQuery = @"
-            query GetTransactionResult($id: ID!, $txId: TxId!)
-            {
-                chainQuery {
-                    transactionQuery {
-                        transaction(id: $id) {
-                            serializedPayload
-                        }
-                    }
-                }
-                transaction {
-                    transactionResult(txId: $txId) {
-                        txStatus
-                        blockIndex
-                        blockHash
-                    }
-                }
-            }
-            ";
-            var response = _graphQlHttpClient.SendQueryAsync<GetTransactionResponse>(
-                new GraphQLRequest(transactionQuery, operationName: "GetTransactionResult", variables: new
-                {
-                    id = transactionId,
-                    txId = transactionId,
-                })).Result;
-            var serializedTransaction = response.Data.ChainQuery?.TransactionQuery?.Transaction?.SerializedPayload;
-            if (serializedTransaction == null)
+            var graphQlClient = new GraphQLHttpClient(new Uri(endpoint), new SystemTextJsonSerializer());
+            var transactionResponse = GetTransactionData(graphQlClient, transactionId);
+            if (transactionResponse is null)
             {
                 throw new CommandExitedException(
-                    $"Failed to get transaction with id: {transactionId}",
-                    -1
-                );
+                    $"Failed to query transaction and transactionResult with id {transactionId}", -1);
             }
-            var transactionDict = new Codec().Decode(Convert.FromBase64String(serializedTransaction));
-            var transaction = TxMarshaler.UnmarshalTransaction((Dictionary)transactionDict);
 
-            var transactionResult = response.Data.Transaction?.TransactionResult;
-            if (transactionResult == null)
+            var transaction = GetTransactionFromQueryResult(transactionResponse);
+            if (transaction is null)
             {
-                throw new CommandExitedException(
-                    $"Failed to get transaction result with txId: {transactionId}", 
-                    -1
-                );
+                throw new CommandExitedException("Failed to get transaction from query", -1);
             }
 
-#pragma warning disable S1075
-            var blockChainState = new RemoteBlockChainStates(new Uri("https://9c-main-full-state.planetarium.dev/graphql/explorer"));
-#pragma warning restore S1075
+            var transactionResult = transactionResponse.Transaction?.TransactionResult;
+            if (transactionResult?.BlockHash is null)
+            {
+                throw new CommandExitedException("Failed to get transactionResult from query", -1);
+            }
 
-            var previousBlockHash = BlockHash.FromString("80dfbea0ac08ae8615a87e3419899e3408f35ab8cae91f242b5207f48ff5b835");
-            var previousBlockStates = new RemoteBlockStates(blockChainState, previousBlockHash);
-            var previousStates = AccountStateDelta.Create(previousBlockStates);
-            var actions = transaction.Actions.Select(x => ToAction(x));
+            var block = GetBlockData(graphQlClient, transactionResult.BlockHash)?.ChainQuery?.BlockQuery?.Block;
+            var previousBlockHashValue = block?.PreviousBlock?.Hash;
+            var preEvaluationHashValue = block?.PreEvaluationHash;
+            var minerValue = block?.Miner;
+            if (previousBlockHashValue is null || preEvaluationHashValue is null || minerValue is null)
+            {
+                throw new CommandExitedException("Failed to get block from query", -1);
+            }
+            var miner = new Address(minerValue);
+
+            var explorerEndpoint = $"{endpoint}/explorer";
+            var blockChainState = new RemoteBlockChainStates(new Uri(explorerEndpoint));
+
+            var previousBlockHash = BlockHash.FromString(previousBlockHashValue);
+            var previousStates = AccountStateDelta.Create(new RemoteBlockStates(blockChainState, previousBlockHash));
+
+            var actions = transaction.Actions
+                .Select(ToAction)
+                .Cast<IAction>()
+                .ToImmutableList();
             var actionEvaluations = EvaluateActions(
-                preEvaluationHash: HashDigest<SHA256>.FromString("eee72b88455ffae1f8e5176e7888d348ae641864bf7858afb301671fda019e6f"),
+                preEvaluationHash: HashDigest<SHA256>.FromString(preEvaluationHashValue),
                 blockIndex: transactionResult.BlockIndex ?? 0,
                 blockProtocolVersion: 0,
                 txid: transaction.Id,
                 previousStates: previousStates,
-                miner: new Address(),
+                miner: miner,
                 signer: transaction.Signer,
                 signature: transaction.Signature,
-                actions: actions.Cast<IAction>().ToImmutableList()
-            );
-            
-            actionEvaluations.ToList().ForEach(x =>
-            {
-                _console.Out.WriteLine($"Action:{x.Action}");
-                _console.Out.WriteLine($"Exception {x.Exception?.InnerException?.Message}");
-                _console.Out.WriteLine($"Stacktrace {x.Exception?.InnerException?.StackTrace}");
-                _console.Out.WriteLine($"{string.Join(", ", x.OutputStates.UpdatedAddresses.Select(x => x.ToString()))}");
-            });
+                actions: actions);
+
+            actionEvaluations
+                .Select((evaluation, index) => (evaluation, index))
+                .ToList()
+                .ForEach(x => PrintEvaluation(x.evaluation, x.index));
 
             return 0;
         }
@@ -624,6 +602,45 @@ namespace NineChronicles.Headless.Executable.Commands
                 msg = $"---- {actionEvaluation.Exception}";
                 _console.Out.WriteLine(msg);
                 textWriter?.WriteLine(msg);
+            }
+        }
+
+        private Transaction? GetTransactionFromQueryResult(GetTransactionDataResponse query)
+        {
+            var bencodexTransaction = query.ChainQuery?.TransactionQuery?.Transaction?.SerializedPayload;
+            if (bencodexTransaction is null)
+            {
+                return null;
+            }
+
+            var serializedTransaction = new Codec().Decode(Convert.FromBase64String(bencodexTransaction));
+
+            return TxMarshaler.UnmarshalTransaction((Dictionary)serializedTransaction);
+        }
+
+        private void PrintEvaluation(ActionEvaluation evaluation, int index)
+        {
+            var exception = evaluation.Exception?.InnerException ?? evaluation.Exception;
+            if (exception is not null)
+            {
+                _console.Out.WriteLine($"action #{index} exception: {exception}");
+                return;
+            }
+
+            if (evaluation.Action is ActionBase nca)
+            {
+                var type = nca.GetType();
+                var actionType = ActionTypeAttribute.ValueOf(type);
+                _console.Out.WriteLine($"- action #{index + 1}: {type.Name}(\"{actionType}\")");
+            }
+
+            var states = evaluation.OutputStates.Delta.States;
+            var indexedStates = states.Select((x, i) => (x.Key, x.Value, i: i));
+            foreach (var (updatedAddress, updatedState, addressIndex) in indexedStates)
+            {
+                _console.Out.WriteLine($"- action #{index + 1} updated address #{addressIndex + 1}({updatedAddress}) beginning...");
+                _console.Out.WriteLine(updatedState);
+                _console.Out.WriteLine($"- action #{index + 1} updated address #{addressIndex + 1}({updatedAddress}) end...");
             }
         }
     }
