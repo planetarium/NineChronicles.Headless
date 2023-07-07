@@ -188,8 +188,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var sender = context.GetArgument<Address>("sender");
                     var recipient = context.GetArgument<Address>("recipient");
                     var currencyEnum = context.GetArgument<CurrencyEnum>("currency");
-                    Currency currency = new Currency();
-                    if (!standaloneContext.CurrencyFactory?.TryGetCurrency(currencyEnum, out currency) ?? true)
+                    if (!standaloneContext.CurrencyFactory!.TryGetCurrency(currencyEnum, out var currency))
                     {
                         throw new ExecutionError($"Currency {currencyEnum} is not found.");
                     }
