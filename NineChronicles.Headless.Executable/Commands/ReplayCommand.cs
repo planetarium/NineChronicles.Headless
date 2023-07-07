@@ -50,8 +50,6 @@ namespace NineChronicles.Headless.Executable.Commands
 
         [Command(Description = "Evaluate tx and calculate result state")]
         public int Tx(
-            [Option('t', Description = "A JSON file path of tx.")]
-            string txPath,
             [Option('s', Description = "An absolute path of block storage.(rocksdb)")]
             string storePath,
             [Option('i', Description = "Target block height to evaluate tx. Tip as default. (Min: 1)" +
@@ -75,7 +73,17 @@ namespace NineChronicles.Headless.Executable.Commands
                     );
                 }
 
-                var tx = LoadTx(txPath);
+                // rawTx from graphql query https://9c-main-validator-1.nine-chronicles.com/graphql/explorer
+                // query {
+                // transactionQuery {
+                //    transaction(id: "27df384448b9b3972240e5ce17dc845dcfac12f0b10f6cc213fa02d4beeba37b") {
+                //        serializedPayload
+                //    }
+                //}
+                rawTx =
+                    "ZDE6UzcwOjBEAiAQX3Zhl/PXjCpsImckHouwFBpO+NZg5EoXh/cbdL2ZjwIgAr2oyn24Jh5AXc0+JJrhGaY+uGbbEArm80600FNK4RYxOmFsZHU3OnR5cGVfaWR1MTY6aGFja19hbmRfc2xhc2gyMXU2OnZhbHVlc2R1MTI6YXBTdG9uZUNvdW50dTE6MHUxMzphdmF0YXJBZGRyZXNzMjA6NK6zpgy7HlCHdi9hURvHd9QGuZR1ODpjb3N0dW1lc2xldTEwOmVxdWlwbWVudHNsMTY6pq/CPMdQvkuXFWy9+oIxcDE2Oup5rVC2IxVMgzoppTLrZiExNjrgzXZTMdUAS4AG67Q8RviWMTY6o/Aq19pd+UePJE7pfT/ecDE2OvzzPPeFIgBMueaWFt5JI2YxNjosQiX/2ZwoR7kxGMi7YXDSZXU1OmZvb2RzbGV1MjppZDE2OuxUr16XubRLtf00JJJfKch1MTpybGx1MTowdTU6MzAwMDFlZXU3OnN0YWdlSWR1MzoxNTB1MTQ6dG90YWxQbGF5Q291bnR1MTo0dTc6d29ybGRJZHUxOjNlZWUxOmczMjpFgiUNDaM7BneahHXSg9XdIQxoO5uZnXTQP6xPWPprzjE6bGkxZTE6bWxkdTEzOmRlY2ltYWxQbGFjZXMxOhJ1NzptaW50ZXJzbnU2OnRpY2tlcnU0Ok1lYWRlaTEwMDAwMDAwMDAwMDAwMDAwMDBlZTE6bmkyNTg3ZTE6cDY1OgRUHWJit1SK4Td702Z/DlR1VBgOlKR8Aa6Crw1lsXOMBHpqAakB2tsxIuqg5f2vo14Dz4Ni9/dmB7KVQ4abOtEMMTpzMjA6m+Apbk1byeLg6JRfJQ/buuxWgvsxOnR1Mjc6MjAyMy0wNy0wNFQwMjoyODo0My41MjEwMDZaMTp1bGVl";
+                byte[] bytes = Convert.FromBase64String(rawTx);
+                var tx = Transaction.Deserialize(bytes);
                 var msg = $"tx id: {tx.Id}";
                 _console.Out.WriteLine(msg);
                 outputSw?.WriteLine(msg);
