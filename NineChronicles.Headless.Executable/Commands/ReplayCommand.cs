@@ -23,6 +23,7 @@ using Nekoyume.Action.Loader;
 using Nekoyume.Blockchain.Policy;
 using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Executable.Store;
+using Serilog;
 using Serilog.Core;
 using static NineChronicles.Headless.NCActionUtils;
 
@@ -393,7 +394,8 @@ namespace NineChronicles.Headless.Executable.Commands
             var genesisBlock = store.GetBlock(genesisBlockHash);
 
             // Make BlockChain and blocks.
-            var policy = new BlockPolicySource(Logger.None).GetPolicy();
+            Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console().CreateLogger();
+            var policy = new BlockPolicySource(Log.Logger).GetPolicy();
             var stagePolicy = new VolatileStagePolicy();
             var stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(storePath, "states"));
             var stateStore = new TrieStateStore(stateKeyValueStore);
