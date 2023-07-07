@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Bencodex.Json;
@@ -15,8 +16,10 @@ using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Types.Blocks;
+using Libplanet.Extensions.ActionEvaluatorCommonComponents;
 using Libplanet.RocksDBStore;
 using Libplanet.Action.State;
+using Libplanet.Common;
 using Libplanet.Store;
 using Libplanet.Types.Tx;
 using Nekoyume.Action;
@@ -513,9 +516,11 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 var prefix = $"--- action evaluation {i + 1}/{count}:";
+                var delta = HashDigest<SHA256>.DeriveFrom(actionEvaluation.Serialize());
                 var msg = prefix +
                           $" tx-id({actionEvaluation.InputContext.TxId})" +
-                          $", action-type(\"{actionType}\")";
+                          $", action-type(\"{actionType}\")" +
+                          $", delta: {delta}";
                 if (actionEvaluation.Exception is null)
                 {
                     msg += ", no-exception";
