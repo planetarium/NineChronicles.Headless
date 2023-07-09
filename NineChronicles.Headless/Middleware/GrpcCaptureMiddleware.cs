@@ -84,7 +84,7 @@ namespace NineChronicles.Headless.Middleware
                     {
                         if (!_bannedAgentsTracker.ContainsKey(agent))
                         {
-                            _logger.Information($"[GRPC-REQUEST-CAPTURE] Banning Agent {agent} for {BanMinutes} minutes due to 100+ accounts associated with the same IP.");
+                            _logger.Information($"[GRPC-REQUEST-CAPTURE] Banning Agent {agent} for {BanMinutes} minutes due to {_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count} associated accounts.");
                             BanAgent(agent);
                             var ncStagePolicy = (NCStagePolicy)_standaloneContext.BlockChain!.StagePolicy;
                             ncStagePolicy.BannedAccounts = ncStagePolicy.BannedAccounts.Add(agent);
@@ -93,7 +93,7 @@ namespace NineChronicles.Headless.Middleware
                         {
                             if ((DateTimeOffset.Now - _bannedAgentsTracker[agent]).Minutes >= UnbanMinutes)
                             {
-                                _logger.Information($"[GRPC-REQUEST-CAPTURE] Banning Agent {agent} again for {BanMinutes} minutes due to 100+ accounts associated with the same IP.");
+                                _logger.Information($"[GRPC-REQUEST-CAPTURE] Banning Agent {agent} again for {BanMinutes} minutes due to {_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count} associated accounts.");
                                 BanAgent(agent);
                                 _bannedAgentsTracker[agent] = DateTimeOffset.Now;
                                 var ncStagePolicy = (NCStagePolicy)_standaloneContext.BlockChain!.StagePolicy;
@@ -101,7 +101,7 @@ namespace NineChronicles.Headless.Middleware
                             }
                             else
                             {
-                                _logger.Information($"[GRPC-REQUEST-CAPTURE] Agent {agent} in unban status for {UnbanMinutes - (DateTimeOffset.Now - _bannedAgentsTracker[agent]).Minutes} minutes.");
+                                _logger.Information($"[GRPC-REQUEST-CAPTURE] Agent {agent} is in unban status for {UnbanMinutes - (DateTimeOffset.Now - _bannedAgentsTracker[agent]).Minutes} minutes.");
                             }
                         }
                     }
@@ -117,7 +117,7 @@ namespace NineChronicles.Headless.Middleware
                         }
                         else
                         {
-                            _logger.Information($"[GRPC-REQUEST-CAPTURE] Agent {agent} in ban status for the next {BanMinutes - (DateTimeOffset.Now - _bannedAgents[agent]).Minutes} minutes.");
+                            _logger.Information($"[GRPC-REQUEST-CAPTURE] Agent {agent} is in ban status for the next {BanMinutes - (DateTimeOffset.Now - _bannedAgents[agent]).Minutes} minutes.");
                         }
                     }
 
