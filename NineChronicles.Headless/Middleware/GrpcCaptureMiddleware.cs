@@ -14,7 +14,9 @@ namespace NineChronicles.Headless.Middleware
 {
     public class GrpcCaptureMiddleware : Interceptor
     {
-        private const int BanMinutes = 5;
+        private const int BanMinutes = 1;
+        private const int UnbanMinutes = 1;
+        private static Dictionary<Address, DateTimeOffset> _bannedAgentsTracker = new();
         private static Dictionary<Address, DateTimeOffset> _bannedAgents = new();
         private readonly ILogger _logger;
         private StandaloneContext _standaloneContext;
@@ -80,19 +82,42 @@ namespace NineChronicles.Headless.Middleware
                 {
                     if (!_bannedAgents.ContainsKey(agent))
                     {
-                        _logger.Information($"[GRPC-REQUEST-CAPTURE] Banning Agent {agent} for {BanMinutes} minutes.");
-                        BanAgent(agent);
-                        var ncStagePolicy = (NCStagePolicy)_standaloneContext.BlockChain!.StagePolicy;
-                        ncStagePolicy.BannedAccounts = ncStagePolicy.BannedAccounts.Add(agent);
+                        if (!_bannedAgentsTracker.ContainsKey(agent))
+                        {
+                            _logger.Information($"[GRPC-REQUEST-CAPTURE] Banning Agent {agent} for {BanMinutes} minutes due to 100+ accounts associated with the same IP.");
+                            BanAgent(agent);
+                            var ncStagePolicy = (NCStagePolicy)_standaloneContext.BlockChain!.StagePolicy;
+                            ncStagePolicy.BannedAccounts = ncStagePolicy.BannedAccounts.Add(agent);
+                        }
+                        else
+                        {
+                            if ((DateTimeOffset.Now - _bannedAgentsTracker[agent]).Minutes >= UnbanMinutes)
+                            {
+                                _logger.Information($"[GRPC-REQUEST-CAPTURE] Banning Agent {agent} again for {BanMinutes} minutes due to 100+ accounts associated with the same IP.");
+                                BanAgent(agent);
+                                _bannedAgentsTracker[agent] = DateTimeOffset.Now;
+                                var ncStagePolicy = (NCStagePolicy)_standaloneContext.BlockChain!.StagePolicy;
+                                ncStagePolicy.BannedAccounts = ncStagePolicy.BannedAccounts.Add(agent);
+                            }
+                            else
+                            {
+                                _logger.Information($"[GRPC-REQUEST-CAPTURE] Agent {agent} in unban status for {UnbanMinutes - (DateTimeOffset.Now - _bannedAgentsTracker[agent]).Minutes} minutes.");
+                            }
+                        }
                     }
                     else
                     {
                         if ((DateTimeOffset.Now - _bannedAgents[agent]).Minutes >= BanMinutes)
                         {
                             _logger.Information($"[GRPC-REQUEST-CAPTURE] Unbanning Agent {agent} after {BanMinutes} minutes.");
-                            _bannedAgents[agent] = DateTimeOffset.Now.AddMinutes(5);
+                            UnbanAgent(agent);
+                            _bannedAgentsTracker[agent] = DateTimeOffset.Now;
                             var ncStagePolicy = (NCStagePolicy)_standaloneContext.BlockChain!.StagePolicy;
                             ncStagePolicy.BannedAccounts = ncStagePolicy.BannedAccounts.Remove(agent);
+                        }
+                        else
+                        {
+                            _logger.Information($"[GRPC-REQUEST-CAPTURE] Agent {agent} in ban status for the next {BanMinutes - (DateTimeOffset.Now - _bannedAgents[agent]).Minutes} minutes.");
                         }
                     }
 
