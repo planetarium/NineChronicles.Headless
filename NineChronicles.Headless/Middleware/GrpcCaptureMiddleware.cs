@@ -15,7 +15,7 @@ namespace NineChronicles.Headless.Middleware
     public class GrpcCaptureMiddleware : Interceptor
     {
         private const int BanMinutes = 5;
-        private const int UnbanMinutes = 3;
+        private const int UnbanMinutes = 5;
         private static Dictionary<Address, DateTimeOffset> _bannedAgentsTracker = new();
         private static Dictionary<Address, DateTimeOffset> _bannedAgents = new();
         private readonly ILogger _logger;
@@ -78,7 +78,7 @@ namespace NineChronicles.Headless.Middleware
                 var httpContext = context.GetHttpContext();
                 var ipAddress = httpContext.Connection.RemoteIpAddress + ":" + httpContext.Connection.RemotePort;
                 var agent = tx.Signer;
-                if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count > 0)
+                if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count > 100)
                 {
                     if (!_bannedAgents.ContainsKey(agent))
                     {
