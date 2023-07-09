@@ -14,8 +14,8 @@ namespace NineChronicles.Headless.Middleware
 {
     public class GrpcCaptureMiddleware : Interceptor
     {
-        private const int BanMinutes = 1;
-        private const int UnbanMinutes = 1;
+        private const int BanMinutes = 5;
+        private const int UnbanMinutes = 3;
         private static Dictionary<Address, DateTimeOffset> _bannedAgentsTracker = new();
         private static Dictionary<Address, DateTimeOffset> _bannedAgents = new();
         private readonly ILogger _logger;
