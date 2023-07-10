@@ -20,18 +20,25 @@ public partial class StateQuery
     {
         Field<GaragesType>(
             "garages",
+            description: "Get balances and fungible items in garages.\n" +
+                         "Use either `currencyEnums` or `currencyTickers` to get balances.",
             arguments: new QueryArguments(
                 new QueryArgument<NonNullGraphType<AddressType>>
                 {
                     Name = "agentAddr",
                     Description = "Agent address to get balances and fungible items in garages",
                 },
-                new QueryArgument<ListGraphType<NonNullGraphType<SimplifyCurrencyInputType>>>
+                new QueryArgument<ListGraphType<NonNullGraphType<CurrencyEnumType>>>
+                {
+                    Name = "currencyEnums",
+                    Description = "List of currency enums to get balances in garages",
+                },
+                new QueryArgument<ListGraphType<NonNullGraphType<StringGraphType>>>
                 {
                     Name = "currencyTickers",
                     Description = "List of currency tickers to get balances in garages",
                 },
-                new QueryArgument<ListGraphType<NonNullGraphType<FungibleItemIdInputType>>>
+                new QueryArgument<ListGraphType<NonNullGraphType<StringGraphType>>>
                 {
                     Name = "fungibleItemIds",
                     Description = "List of fungible item IDs to get fungible item in garages",
@@ -41,62 +48,65 @@ public partial class StateQuery
             {
                 var agentAddr = context.GetArgument<Address>("agentAddr");
                 var garageBalanceAddr = Addresses.GetGarageBalanceAddress(agentAddr);
-                var currencyTickers = context.GetArgument<string[]>("currencyTickers");
-                var fungibleAssetValues = new List<FungibleAssetValue>();
-                foreach (var currencyTicker in currencyTickers)
+                var currencyEnums = context.GetArgument<CurrencyEnum[]?>("currencyEnums");
+                var currencyTickers = context.GetArgument<string[]?>("currencyTickers");
+                var garageBalances = new List<FungibleAssetValue>();
+                if (currencyEnums is not null)
                 {
-                    if (!context.Source.CurrencyFactory.TryGetCurrency(currencyTicker, out var currency))
+                    if (currencyTickers is not null)
                     {
-                        throw new ExecutionError($"Invalid currency ticker: {currencyTicker}");
+                        throw new ExecutionError(
+                            "Use either `currencyEnums` or `currencyTickers` to get balances.");
                     }
 
-                    var balance = context.Source.GetBalance(garageBalanceAddr, currency);
-                    fungibleAssetValues.Add(balance);
-                }
-
-                var materialItemSheetAddr = Addresses.GetSheetAddress<MaterialItemSheet>();
-                var materialItemSheetValue = context.Source.GetState(materialItemSheetAddr);
-                if (materialItemSheetValue is null)
-                {
-                    throw new ExecutionError($"{nameof(MaterialItemSheet)} not found: {materialItemSheetAddr}");
-                }
-
-                var materialItemSheet = new MaterialItemSheet();
-                materialItemSheet.Set((Text)materialItemSheetValue);
-                var fungibleItemIdTuples =
-                    context.GetArgument<(string? fungibleItemId, int? itemSheetId)[]>("fungibleItemIds");
-                var fungibleItemGarageAddresses = fungibleItemIdTuples
-                    .Select(tuple =>
+                    foreach (var currencyEnum in currencyEnums)
                     {
-                        var (fungibleItemId, itemSheetId) = tuple;
-                        if (fungibleItemId is not null)
+                        if (!context.Source.CurrencyFactory.TryGetCurrency(currencyEnum, out var currency))
                         {
-                            return Addresses.GetGarageAddress(
-                                agentAddr,
-                                HashDigest<SHA256>.FromString(fungibleItemId));
+                            throw new ExecutionError($"Invalid currency enum: {currencyEnum}");
                         }
 
-                        if (itemSheetId is not null)
+                        var balance = context.Source.GetBalance(garageBalanceAddr, currency);
+                        garageBalances.Add(balance);
+                    }
+                }
+                else if (currencyTickers is not null)
+                {
+                    foreach (var currencyTicker in currencyTickers)
+                    {
+                        if (!context.Source.CurrencyFactory.TryGetCurrency(currencyTicker, out var currency))
                         {
-                            var row = materialItemSheet.OrderedList!.FirstOrDefault(r => r.Id == itemSheetId);
-                            if (row is null)
-                            {
-                                throw new ExecutionError($"Invalid item sheet id: {itemSheetId}");
-                            }
-
-                            return Addresses.GetGarageAddress(agentAddr, row.ItemId);
+                            throw new ExecutionError($"Invalid currency ticker: {currencyTicker}");
                         }
 
-                        throw new ExecutionError(
-                            $"Invalid argument: {nameof(fungibleItemId)} or {nameof(itemSheetId)} must be specified.");
-                    })
-                    .ToArray();
-                var fungibleItemGarages = context.Source.GetStates(fungibleItemGarageAddresses)
-                    .Select((value, i) => (new FungibleItemGarage(value), fungibleItemGarageAddresses[i]));
+                        var balance = context.Source.GetBalance(garageBalanceAddr, currency);
+                        garageBalances.Add(balance);
+                    }
+                }
+
+                IEnumerable<(FungibleItemGarage?, Address)> fungibleItemGarages;
+                var fungibleItemIds = context.GetArgument<string[]?>("fungibleItemIds");
+                if (fungibleItemIds is null)
+                {
+                    fungibleItemGarages = Enumerable.Empty<(FungibleItemGarage?, Address)>();
+                }
+                else
+                {
+                    var fungibleItemGarageAddresses = fungibleItemIds
+                        .Select(fungibleItemId => Addresses.GetGarageAddress(
+                            agentAddr,
+                            HashDigest<SHA256>.FromString(fungibleItemId)))
+                        .ToArray();
+                    fungibleItemGarages = context.Source.GetStates(fungibleItemGarageAddresses)
+                        .Select((value, i) => value is null or Null
+                            ? (null, fungibleItemGarageAddresses[i])
+                            : (new FungibleItemGarage(value), fungibleItemGarageAddresses[i]));
+                }
+
                 return new GaragesType.Value(
                     agentAddr,
                     garageBalanceAddr,
-                    fungibleAssetValues,
+                    garageBalances,
                     fungibleItemGarages);
             }
         );

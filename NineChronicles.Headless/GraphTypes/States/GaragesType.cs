@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using GraphQL.Types;
 using Libplanet;
 using Libplanet.Assets;
@@ -15,19 +14,19 @@ public class GaragesType : ObjectGraphType<GaragesType.Value>
     {
         public readonly Address AgentAddr;
         public readonly Address GarageBalancesAddr;
-        internal readonly FungibleAssetValue[] _fungibleAssetValues;
-        internal readonly (FungibleItemGarage fungibleItemGarage, Address addr)[] _fungibleItemGarages;
+        public readonly IEnumerable<FungibleAssetValue> GarageBalances;
+        public readonly IEnumerable<(FungibleItemGarage? fungibleItemGarage, Address addr)> FungibleItemGarages;
 
         public Value(
             Address agentAddr,
             Address garageBalancesAddr,
-            IEnumerable<FungibleAssetValue> fungibleAssetValues,
-            IEnumerable<(FungibleItemGarage fungibleItemGarage, Address addr)> fungibleItemGarages)
+            IEnumerable<FungibleAssetValue> garageBalances,
+            IEnumerable<(FungibleItemGarage? fungibleItemGarage, Address addr)> fungibleItemGarages)
         {
             AgentAddr = agentAddr;
             GarageBalancesAddr = garageBalancesAddr;
-            _fungibleAssetValues = fungibleAssetValues.ToArray();
-            _fungibleItemGarages = fungibleItemGarages.ToArray();
+            GarageBalances = garageBalances;
+            FungibleItemGarages = fungibleItemGarages;
         }
     }
 
@@ -41,9 +40,9 @@ public class GaragesType : ObjectGraphType<GaragesType.Value>
             resolve: context => context.Source.GarageBalancesAddr);
         Field<ListGraphType<Libplanet.Explorer.GraphTypes.FungibleAssetValueType>>(
             name: "garageBalances",
-            resolve: context => context.Source._fungibleAssetValues);
-        Field<ListGraphType<WithAddressType<FungibleItemGarageType, FungibleItemGarage>>>(
+            resolve: context => context.Source.GarageBalances);
+        Field<ListGraphType<FungibleItemGarageWithAddressType>>(
             name: "fungibleItemGarages",
-            resolve: context => context.Source._fungibleItemGarages);
+            resolve: context => context.Source.FungibleItemGarages);
     }
 }
