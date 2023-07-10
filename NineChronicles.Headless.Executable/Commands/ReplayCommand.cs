@@ -92,6 +92,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 disposables.Add(store);
                 disposables.Add(stateStore);
                 var previousBlock = blockChain[blockIndex - 1];
+                Program.InitSheets(blockChain);
                 var targetBlock = blockChain[blockIndex];
                 if (verbose)
                 {
@@ -249,7 +250,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     _console.Out.WriteLine(msg);
                     outputSw?.WriteLine(msg);
                 }
-
+                Program.InitSheets(blockChain);
                 var currentBlockIndex = startIndex.Value;
                 while (currentBlockIndex <= endIndex)
                 {

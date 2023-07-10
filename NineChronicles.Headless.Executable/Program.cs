@@ -23,17 +23,26 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Bencodex.Types;
 using Lib9c.DevExtensions.Action.Loader;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
+using Libplanet.Blockchain;
 // import necessary for sentry exception filters
 using Libplanet.Types.Blocks;
 using Libplanet.Headless;
 using Libplanet.Headless.Hosting;
 using Libplanet.Net.Transports;
+using Nekoyume;
+using Nekoyume.Action;
 using Nekoyume.Action.Loader;
+using Nekoyume.Model.State;
+using Nekoyume.TableData;
+using Nekoyume.TableData.Crystal;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 
@@ -479,6 +488,7 @@ namespace NineChronicles.Headless.Executable
                                 .AddPrometheusExporter());
                 });
                 hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, standaloneContext);
+                InitSheets(standaloneContext.BlockChain!);
                 if (headlessConfig.RpcServer)
                 {
                     hostBuilder.UseNineChroniclesRPC(
@@ -519,5 +529,126 @@ namespace NineChronicles.Headless.Executable
         static void ConfigureSentryOptions(SentryOptions o)
         {
         }
+
+        public static void InitSheets(BlockChain blockChain)
+        {
+            var sheets = new Dictionary<string, string>();
+            var sheetTypes = typeof(ISheet).Assembly
+                .GetTypes()
+                .Where(type => type.Namespace is { } @namespace &&
+                               @namespace.StartsWith($"{nameof(Nekoyume)}.{nameof(Nekoyume.TableData)}") &&
+                               !type.IsAbstract &&
+                               typeof(ISheet).IsAssignableFrom(type) &&
+                               type != typeof(QuestSheet) &&
+                               type != typeof(ItemSheet)).ToArray();
+            Dictionary<Type, (Address address, ISheet sheet)> result = sheetTypes.ToDictionary(
+                sheetType => sheetType,
+                sheetType => (Addresses.GetSheetAddress(sheetType.Name), (ISheet)null!));
+#pragma warning disable LAA1002
+            var addresses = result
+                .Select(tuple => tuple.Value.address)
+                .ToArray();
+#pragma warning restore LAA1002
+            var csvValues = blockChain.GetStates(addresses);
+            for (var i = 0; i < sheetTypes.Length; i++)
+            {
+                var sheetType = sheetTypes[i];
+                var csvValue = csvValues[i];
+                var sheetName = sheetType.Name;
+                if (csvValue is null)
+                {
+                    Log.Information("Skip get table({TableName})", sheetName);
+                    continue;
+                }
+
+                var csv = csvValue.ToDotnetString();
+                sheets[sheetName] = csv;
+            }
+
+            StaticSheets.StakeActionPointCoefficientSheet = new StakeActionPointCoefficientSheet();
+            StaticSheets.StakeActionPointCoefficientSheet.Set(sheets[nameof(StakeActionPointCoefficientSheet)]);
+            StaticSheets.WorldSheet = new WorldSheet();
+            StaticSheets.WorldSheet.Set(sheets[nameof(WorldSheet)]);
+            StaticSheets.StageSheet = new StageSheet();
+            var stageCsv = sheets[nameof(StageSheet)];
+            StaticSheets.StageSheet.Set(stageCsv);
+            StaticSheets.ItemRequirementSheet = new ItemRequirementSheet();
+            StaticSheets.ItemRequirementSheet.Set(sheets[nameof(ItemRequirementSheet)]);
+            StaticSheets.QuestRewardSheet = new QuestRewardSheet();
+            StaticSheets.QuestRewardSheet.Set(sheets[nameof(QuestRewardSheet)]);
+            StaticSheets.QuestItemRewardSheet = new QuestItemRewardSheet();
+            StaticSheets.QuestItemRewardSheet.Set(sheets[nameof(QuestItemRewardSheet)]);
+            StaticSheets.CrystalRandomBuffSheet = new CrystalRandomBuffSheet();
+            StaticSheets.CrystalRandomBuffSheet.Set(sheets[nameof(CrystalRandomBuffSheet)]);
+            StaticSheets.SkillSheet = new SkillSheet();
+            StaticSheets.SkillSheet.Set(sheets[nameof(SkillSheet)]);
+            StaticSheets.WorldUnlockSheet = new WorldUnlockSheet();
+            StaticSheets.WorldUnlockSheet.Set(sheets[nameof(WorldUnlockSheet)]);
+            StaticSheets.CrystalStageBuffGachaSheet = new CrystalStageBuffGachaSheet();
+            StaticSheets.CrystalStageBuffGachaSheet.Set(sheets[nameof(CrystalStageBuffGachaSheet)]);
+            StaticSheets.RuneListSheet = new RuneListSheet();
+            StaticSheets.RuneListSheet.Set(sheets[nameof(RuneListSheet)]);
+            StaticSheets.StageWaveSheet = new StageWaveSheet();
+            var swCsv = sheets[nameof(StageWaveSheet)];
+            StaticSheets.StageWaveSheet.Set(swCsv);
+            StaticSheets.EnemySkillSheet = new EnemySkillSheet();
+            StaticSheets.EnemySkillSheet.Set(sheets[nameof(EnemySkillSheet)]);
+            StaticSheets.CostumeStatSheet = new CostumeStatSheet();
+            StaticSheets.CostumeStatSheet.Set(sheets[nameof(CostumeStatSheet)]);
+            StaticSheets.ConsumableItemSheet = new ConsumableItemSheet();
+            StaticSheets.ConsumableItemSheet.Set(sheets[nameof(ConsumableItemSheet)]);
+            StaticSheets.CostumeItemSheet = new CostumeItemSheet();
+            StaticSheets.CostumeItemSheet.Set(sheets[nameof(CostumeItemSheet)]);
+            StaticSheets.EquipmentItemSheet = new EquipmentItemSheet();
+            StaticSheets.EquipmentItemSheet.Set(sheets[nameof(EquipmentItemSheet)]);
+            StaticSheets.MaterialItemSheet = new MaterialItemSheet();
+            StaticSheets.MaterialItemSheet.Set(sheets[nameof(MaterialItemSheet)]);
+            StaticSheets.WorldQuestSheet = new WorldQuestSheet();
+            StaticSheets.WorldQuestSheet.Set(sheets[nameof(WorldQuestSheet)]);
+            StaticSheets.CollectQuestSheet = new CollectQuestSheet();
+            StaticSheets.CollectQuestSheet.Set(sheets[nameof(CollectQuestSheet)]);
+            StaticSheets.CombinationQuestSheet = new CombinationQuestSheet();
+            StaticSheets.CombinationQuestSheet.Set(sheets[nameof(CombinationQuestSheet)]);
+            StaticSheets.TradeQuestSheet = new TradeQuestSheet();
+            StaticSheets.TradeQuestSheet.Set(sheets[nameof(TradeQuestSheet)]);
+            StaticSheets.MonsterQuestSheet = new MonsterQuestSheet();
+            StaticSheets.MonsterQuestSheet.Set(sheets[nameof(MonsterQuestSheet)]);
+            StaticSheets.ItemEnhancementQuestSheet = new ItemEnhancementQuestSheet();
+            StaticSheets.ItemEnhancementQuestSheet.Set(sheets[nameof(ItemEnhancementQuestSheet)]);
+            StaticSheets.GeneralQuestSheet = new GeneralQuestSheet();
+            StaticSheets.GeneralQuestSheet.Set(sheets[nameof(GeneralQuestSheet)]);
+            StaticSheets.ItemGradeQuestSheet = new ItemGradeQuestSheet();
+            StaticSheets.ItemGradeQuestSheet.Set(sheets[nameof(ItemGradeQuestSheet)]);
+            StaticSheets.ItemTypeCollectQuestSheet = new ItemTypeCollectQuestSheet();
+            StaticSheets.ItemTypeCollectQuestSheet.Set(sheets[nameof(ItemTypeCollectQuestSheet)]);
+            StaticSheets.GoldQuestSheet = new GoldQuestSheet();
+            StaticSheets.GoldQuestSheet.Set(sheets[nameof(GoldQuestSheet)]);
+            StaticSheets.CombinationEquipmentQuestSheet = new CombinationEquipmentQuestSheet();
+            StaticSheets.CombinationEquipmentQuestSheet.Set(sheets[nameof(CombinationEquipmentQuestSheet)]);
+            StaticSheets.SkillBuffSheet = new SkillBuffSheet();
+            StaticSheets.SkillBuffSheet.Set(sheets[nameof(SkillBuffSheet)]);
+            StaticSheets.StatBuffSheet = new StatBuffSheet();
+            StaticSheets.StatBuffSheet.Set(sheets[nameof(StatBuffSheet)]);
+            StaticSheets.SkillActionBuffSheet = new SkillActionBuffSheet();
+            StaticSheets.SkillActionBuffSheet.Set(sheets[nameof(SkillActionBuffSheet)]);
+            StaticSheets.ActionBuffSheet = new ActionBuffSheet();
+            StaticSheets.ActionBuffSheet.Set(sheets[nameof(ActionBuffSheet)]);
+            StaticSheets.CharacterSheet = new CharacterSheet();
+            StaticSheets.CharacterSheet.Set(sheets[nameof(CharacterSheet)]);
+            StaticSheets.CharacterLevelSheet = new CharacterLevelSheet();
+            StaticSheets.CharacterLevelSheet.Set(sheets[nameof(CharacterLevelSheet)]);
+            StaticSheets.EquipmentItemSetEffectSheet = new EquipmentItemSetEffectSheet();
+            StaticSheets.EquipmentItemSetEffectSheet.Set(sheets[nameof(EquipmentItemSetEffectSheet)]);
+            StaticSheets.RuneOptionSheet = new RuneOptionSheet();
+            StaticSheets.RuneOptionSheet.Set(sheets[nameof(RuneOptionSheet)]);
+            StaticSheets.EquipmentItemRecipeSheet = new EquipmentItemRecipeSheet();
+            StaticSheets.EquipmentItemRecipeSheet.Set(sheets[nameof(EquipmentItemRecipeSheet)]);
+            StaticSheets.EquipmentItemSubRecipeSheetV2 = new EquipmentItemSubRecipeSheetV2();
+            StaticSheets.EquipmentItemSubRecipeSheetV2.Set(sheets[nameof(EquipmentItemSubRecipeSheetV2)]);
+            StaticSheets.EquipmentItemOptionSheet = new EquipmentItemOptionSheet();
+            StaticSheets.EquipmentItemOptionSheet.Set(sheets[nameof(EquipmentItemOptionSheet)]);
+            StaticSheets.ItemSheetInitialize();
+            StaticSheets.QuestSheetInitialize();
+        }        
     }
 }
