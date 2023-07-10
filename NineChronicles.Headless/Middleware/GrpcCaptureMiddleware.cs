@@ -14,9 +14,9 @@ namespace NineChronicles.Headless.Middleware
 {
     public class GrpcCaptureMiddleware : Interceptor
     {
-        private const int BanMinutes = 5;
-        private const int UnbanMinutes = 5;
-        private static Dictionary<Address, DateTimeOffset> _bannedAgentsTracker = new();
+        private const int BanMinutes = 1;
+        private const int TxIntervalMinutes = 1;
+        private static Dictionary<Address, DateTimeOffset> _agentsTracker = new();
         private static Dictionary<Address, DateTimeOffset> _bannedAgents = new();
         private readonly ILogger _logger;
         private StandaloneContext _standaloneContext;
@@ -82,26 +82,25 @@ namespace NineChronicles.Headless.Middleware
                 {
                     if (!_bannedAgents.ContainsKey(agent))
                     {
-                        if (!_bannedAgentsTracker.ContainsKey(agent))
+                        if (!_agentsTracker.ContainsKey(agent))
                         {
-                            _logger.Information($"[GRPC-REQUEST-CAPTURE] Banning Agent {agent} for {BanMinutes} minutes due to {_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count} associated accounts.");
-                            BanAgent(agent);
-                            var ncStagePolicy = (NCStagePolicy)_standaloneContext.BlockChain!.StagePolicy;
-                            ncStagePolicy.BannedAccounts = ncStagePolicy.BannedAccounts.Add(agent);
+                            _logger.Information($"[GRPC-REQUEST-CAPTURE] Adding agent {agent} to the agent tracker.");
+                            _agentsTracker.Add(agent, DateTimeOffset.Now);
                         }
                         else
                         {
-                            if ((DateTimeOffset.Now - _bannedAgentsTracker[agent]).Minutes >= UnbanMinutes)
+                            if ((DateTimeOffset.Now - _agentsTracker[agent]).Minutes >= TxIntervalMinutes)
                             {
-                                _logger.Information($"[GRPC-REQUEST-CAPTURE] Banning Agent {agent} again for {BanMinutes} minutes due to {_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count} associated accounts.");
-                                BanAgent(agent);
-                                _bannedAgentsTracker[agent] = DateTimeOffset.Now;
-                                var ncStagePolicy = (NCStagePolicy)_standaloneContext.BlockChain!.StagePolicy;
-                                ncStagePolicy.BannedAccounts = ncStagePolicy.BannedAccounts.Add(agent);
+                                _logger.Information($"[GRPC-REQUEST-CAPTURE] Resetting Agent {agent}'s time because it has been more than {TxIntervalMinutes} minutes since the last transaction.");
+                                _agentsTracker[agent] = DateTimeOffset.Now;
                             }
                             else
                             {
-                                _logger.Information($"[GRPC-REQUEST-CAPTURE] Agent {agent} is in unban status for {UnbanMinutes - (DateTimeOffset.Now - _bannedAgentsTracker[agent]).Minutes} minutes.");
+                                _logger.Information($"[GRPC-REQUEST-CAPTURE] Banning Agent {agent} for {BanMinutes} minutes due to {_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count} associated accounts.");
+                                BanAgent(agent);
+                                _agentsTracker[agent] = DateTimeOffset.Now;
+                                var ncStagePolicy = (NCStagePolicy)_standaloneContext.BlockChain!.StagePolicy;
+                                ncStagePolicy.BannedAccounts = ncStagePolicy.BannedAccounts.Add(agent);
                             }
                         }
                     }
@@ -111,7 +110,8 @@ namespace NineChronicles.Headless.Middleware
                         {
                             _logger.Information($"[GRPC-REQUEST-CAPTURE] Unbanning Agent {agent} after {BanMinutes} minutes.");
                             UnbanAgent(agent);
-                            _bannedAgentsTracker[agent] = DateTimeOffset.Now;
+                            _agentsTracker[agent] = DateTimeOffset.Now.AddMinutes(-TxIntervalMinutes);
+                            _logger.Information($"[GRPC-REQUEST-CAPTURE] Current time: {DateTimeOffset.Now} Added time: {DateTimeOffset.Now.AddMinutes(-TxIntervalMinutes)}.");
                             var ncStagePolicy = (NCStagePolicy)_standaloneContext.BlockChain!.StagePolicy;
                             ncStagePolicy.BannedAccounts = ncStagePolicy.BannedAccounts.Remove(agent);
                         }
