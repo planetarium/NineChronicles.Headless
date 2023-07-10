@@ -56,7 +56,7 @@ namespace NineChronicles.Headless.GraphTypes
                         blockHash switch
                         {
                             BlockHash bh => chain[bh].Index,
-                            null => chain.Tip.Index,
+                            null => chain.Tip!.Index,
                         }
                     );
                 }

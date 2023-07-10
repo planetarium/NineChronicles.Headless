@@ -5,7 +5,6 @@ using System.Linq;
 using Bencodex;
 using Bencodex.Types;
 using Cocona;
-using Lib9c.DevExtensions;
 using Lib9c.Model.Order;
 using Libplanet;
 using Libplanet.Assets;
@@ -18,6 +17,7 @@ using Nekoyume.Model.Item;
 using NineChronicles.Headless.Executable.IO;
 using Serilog.Core;
 using static NineChronicles.Headless.NCActionUtils;
+using DevExUtils = Lib9c.DevExtensions.Utils;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
@@ -59,10 +59,10 @@ namespace NineChronicles.Headless.Executable.Commands
             Guid? chainId = null
         )
         {
-            using Logger logger = Utils.ConfigureLogger(verbose);
+            using Logger logger = DevExUtils.ConfigureLogger(verbose);
             TextWriter stderr = _console.Error;
             (BlockChain chain, IStore store, _, _) =
-                Utils.GetBlockChain(logger, storePath, chainId);
+                DevExUtils.GetBlockChain(logger, storePath, chainId);
 
             HashSet<ItemSubType>? itemTypes = null;
             if (itemType is { } t)
@@ -79,9 +79,9 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
             }
 
-            Block start = Utils.ParseBlockOffset(chain, from, defaultIndex: 0);
+            Block start = DevExUtils.ParseBlockOffset(chain, from, defaultIndex: 0);
             stderr.WriteLine("The bottom block to search: #{0} {1}.", start.Index, start.Hash);
-            Block end = Utils.ParseBlockOffset(chain, to);
+            Block end = DevExUtils.ParseBlockOffset(chain, to);
             stderr.WriteLine("The topmost block to search: #{0} {1}.", end.Index, end.Hash);
 
             Block block = end;

@@ -10,11 +10,9 @@ using Cocona;
 using Cocona.Help;
 using Libplanet;
 using Libplanet.Action;
-using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
-using Libplanet.Extensions.Cocona;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
@@ -26,6 +24,7 @@ using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Executable.Store;
 using Serilog.Core;
 using static NineChronicles.Headless.NCActionUtils;
+using CoconaUtils = Libplanet.Extensions.Cocona.Utils;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
@@ -81,7 +80,7 @@ namespace NineChronicles.Headless.Executable.Commands
             BlockHash tipHash = store.IndexBlockHash(chainId, -1)
                           ?? throw new CommandExitedException("The given chain seems empty.", -1);
             Block tip = store.GetBlock(tipHash);
-            _console.Out.WriteLine(Utils.SerializeHumanReadable(tip.Header));
+            _console.Out.WriteLine(CoconaUtils.SerializeHumanReadable(tip.Header));
             store.Dispose();
         }
 

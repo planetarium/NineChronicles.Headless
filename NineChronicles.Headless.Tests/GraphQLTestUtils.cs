@@ -14,8 +14,11 @@ using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Libplanet.Tx;
 using Microsoft.Extensions.DependencyInjection;
+using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Action.Loader;
+using Nekoyume.Model.State;
+using NineChronicles.Headless.Utils;
 
 namespace NineChronicles.Headless.Tests
 {
@@ -32,7 +35,7 @@ namespace NineChronicles.Headless.Tests
         {
             var services = new ServiceCollection();
             services.AddSingleton(typeof(TObjectGraphType));
-            if (!(standaloneContext is null))
+            if (standaloneContext is not null)
             {
                 services.AddSingleton(standaloneContext);
             }
@@ -69,7 +72,8 @@ namespace NineChronicles.Headless.Tests
         }
 
         // FIXME: Passing 0 index is bad.
-        public static ActionBase DeserializeNCAction(IValue value) => (ActionBase)_actionLoader.LoadAction(0, value);
+        public static ActionBase DeserializeNCAction(IValue value) =>
+            (ActionBase)_actionLoader.LoadAction(0, value);
 
         public static StandaloneContext CreateStandaloneContext()
         {
@@ -89,10 +93,14 @@ namespace NineChronicles.Headless.Tests
                 stateStore,
                 genesisBlock,
                 actionEvaluator);
+            var currencyFactory = new CurrencyFactory(blockchain.GetStates);
+            var fungibleAssetValueFactory = new FungibleAssetValueFactory(currencyFactory);
             return new StandaloneContext
             {
                 BlockChain = blockchain,
                 Store = store,
+                CurrencyFactory = currencyFactory,
+                FungibleAssetValueFactory = fungibleAssetValueFactory,
             };
         }
 
@@ -125,10 +133,16 @@ namespace NineChronicles.Headless.Tests
                 stateStore,
                 genesisBlock,
                 actionEvaluator);
+            var ncg = new GoldCurrencyState((Dictionary)blockchain.GetState(Addresses.GoldCurrency))
+                .Currency;
+            var currencyFactory = new CurrencyFactory(blockchain.GetStates, ncg);
+            var fungibleAssetValueFactory = new FungibleAssetValueFactory(currencyFactory);
             return new StandaloneContext
             {
                 BlockChain = blockchain,
                 Store = store,
+                CurrencyFactory = currencyFactory,
+                FungibleAssetValueFactory = fungibleAssetValueFactory,
             };
         }
     }
