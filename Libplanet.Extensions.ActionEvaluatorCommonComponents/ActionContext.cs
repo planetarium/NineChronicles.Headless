@@ -17,7 +17,7 @@ public class ActionContext : IActionContext
         long blockIndex,
         int blockProtocolVersion,
         bool rehearsal,
-        AccountStateDelta previousStates,
+        AccountStateDelta previousState,
         IRandom random,
         HashDigest<SHA256>? previousStateRootHash,
         bool blockAction)
@@ -29,7 +29,7 @@ public class ActionContext : IActionContext
         BlockIndex = blockIndex;
         BlockProtocolVersion = blockProtocolVersion;
         Rehearsal = rehearsal;
-        PreviousStates = previousStates;
+        PreviousState = previousState;
         Random = random;
         PreviousStateRootHash = previousStateRootHash;
         BlockAction = blockAction;
@@ -42,8 +42,8 @@ public class ActionContext : IActionContext
     public long BlockIndex { get; init; }
     public int BlockProtocolVersion { get; init; }
     public bool Rehearsal { get; init; }
-    public AccountStateDelta PreviousStates { get; init; }
-    IAccountStateDelta IActionContext.PreviousStates => PreviousStates;
+    public AccountStateDelta PreviousState { get; init; }
+    IAccountStateDelta IActionContext.PreviousState => PreviousState;
     public IRandom Random { get; init; }
     public HashDigest<SHA256>? PreviousStateRootHash { get; init; }
     public bool BlockAction { get; init; }
@@ -68,7 +68,7 @@ public class ActionContext : IActionContext
             BlockIndex,
             BlockProtocolVersion,
             Rehearsal,
-            PreviousStates,
+            PreviousState,
             new Random(Random.Seed),
             PreviousStateRootHash,
             BlockAction);

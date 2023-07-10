@@ -401,6 +401,7 @@ namespace NineChronicles.Headless.GraphTypes
             );
             Field<NonNullGraphType<ByteStringType>>(
                 "activateAccount",
+                deprecationReason: "Since NCIP-15, it doesn't care account activation.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>
                     {

@@ -448,14 +448,13 @@ namespace NineChronicles.Headless.Executable.Commands
             string validatorSetKey)
         {
             IImmutableSet<Address> stateUpdatedAddresses = actionEvaluations
-                .SelectMany(a => a.OutputStates.StateUpdatedAddresses)
+                .SelectMany(a => a.OutputState.Delta.StateUpdatedAddresses)
                 .ToImmutableHashSet();
             IImmutableSet<(Address, Currency)> updatedFungibleAssets = actionEvaluations
-                .SelectMany(a => a.OutputStates.UpdatedFungibleAssets
-                    .SelectMany(kv => kv.Value.Select(c => (kv.Key, c))))
+                .SelectMany(a => a.OutputState.Delta.UpdatedFungibleAssets)
                 .ToImmutableHashSet();
             IImmutableSet<Currency> updatedTotalSupplies = actionEvaluations
-                .SelectMany(a => a.OutputStates.TotalSupplyUpdatedCurrencies)
+                .SelectMany(a => a.OutputState.Delta.UpdatedTotalSupplyCurrencies)
                 .ToImmutableHashSet();
 
             if (actionEvaluations.Count == 0)
@@ -463,7 +462,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 return ImmutableDictionary<string, IValue>.Empty;
             }
 
-            IAccountStateDelta lastStates = actionEvaluations[actionEvaluations.Count - 1].OutputStates;
+            IAccountStateDelta lastStates = actionEvaluations[actionEvaluations.Count - 1].OutputState;
 
             ImmutableDictionary<string, IValue> totalDelta =
                 stateUpdatedAddresses.ToImmutableDictionary(

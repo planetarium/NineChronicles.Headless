@@ -29,9 +29,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             var expected = new Dictionary<string, object>()
             {
                 ["address"] = address.ToString(),
-                ["unlockBlockIndex"] = 0,
+                ["unlockBlockIndex"] = 0L,
                 ["unlockStage"] = 1,
-                ["startBlockIndex"] = 0,
+                ["startBlockIndex"] = 0L,
             };
             Assert.Equal(expected, data);
         }
