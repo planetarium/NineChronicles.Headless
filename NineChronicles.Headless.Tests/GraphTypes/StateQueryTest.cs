@@ -41,7 +41,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Address agentAddr,
             IEnumerable<CurrencyEnum>? currencyEnums,
             IEnumerable<string>? currencyTickers,
-            IEnumerable<string>? fungibleItemIds)
+            IEnumerable<string>? fungibleItemIds,
+            IEnumerable<bool>? setToNullForFungibleItemGarages)
         {
             var sb = new StringBuilder("{ garages(");
             sb.Append($"agentAddr: \"{agentAddr.ToString()}\"");
@@ -51,7 +52,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 sb.Append(string.Join(", ", currencyEnums));
                 sb.Append("]");
             }
-            else if (currencyTickers is not null)
+
+            if (currencyTickers is not null)
             {
                 sb.Append(", currencyTickers: [");
                 sb.Append(string.Join(", ", currencyTickers.Select(ticker => $"\"{ticker}\"")));
@@ -102,6 +104,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             }
 
                             var fungibleItemId = addrToFungibleItemIdDict[stateAddr];
+                            var index = fungibleItemIds.ToList().IndexOf(fungibleItemId);
+                            if (index >= 0 && setToNullForFungibleItemGarages?.ElementAt(index) == true)
+                            {
+                                arr[i] = null;
+                                continue;
+                            }
+
                             var material = new Material(Dictionary.Empty
                                 .SetItem("id", 400_000.Serialize())
                                 .SetItem("grade", 1.Serialize())
@@ -158,10 +167,31 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 var fungibleItemGarages =
                     ((object[])garages["fungibleItemGarages"]).OfType<Dictionary<string, object>>();
                 Assert.Equal(fungibleItemIds.Count(), fungibleItemGarages.Count());
-                foreach (var (fungibleItemId, fungibleItemGarage) in fungibleItemIds.Zip(fungibleItemGarages))
+                if (setToNullForFungibleItemGarages is null)
                 {
-                    var actual = ((Dictionary<string, object>)fungibleItemGarage["item"])["fungibleItemId"];
-                    Assert.Equal(fungibleItemId, actual);
+                    foreach (var (fungibleItemId, fungibleItemGarage) in fungibleItemIds
+                                 .Zip(fungibleItemGarages))
+                    {
+                        var actual = ((Dictionary<string, object>)fungibleItemGarage["item"])["fungibleItemId"];
+                        Assert.Equal(fungibleItemId, actual);
+                    }
+                }
+                else
+                {
+                    foreach (var ((fungibleItemId, setToNull), fungibleItemGarage) in fungibleItemIds
+                                 .Zip(setToNullForFungibleItemGarages)
+                                 .Zip(fungibleItemGarages))
+                    {
+                        if (setToNull)
+                        {
+                            Assert.Null(fungibleItemGarage["item"]);
+                        }
+                        else
+                        {
+                            var actual = ((Dictionary<string, object>)fungibleItemGarage["item"])["fungibleItemId"];
+                            Assert.Equal(fungibleItemId, actual);
+                        }
+                    }
                 }
             }
         }
@@ -175,11 +205,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 null,
                 null,
                 null,
+                null,
             };
             yield return new object[]
             {
                 agentAddr,
                 new[] { CurrencyEnum.NCG, CurrencyEnum.CRYSTAL, CurrencyEnum.GARAGE },
+                null,
                 null,
                 null,
             };
@@ -189,6 +221,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 null,
                 new[] { "NCG", "CRYSTAL", "GARAGE" },
                 null,
+                null,
             };
             yield return new object[]
             {
@@ -196,6 +229,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 null,
                 null,
                 new[] { new HashDigest<SHA256>().ToString() },
+                null,
+            };
+            yield return new object[]
+            {
+                agentAddr,
+                null,
+                null,
+                new[] { new HashDigest<SHA256>().ToString() },
+                new[] { true },
             };
             yield return new object[]
             {
@@ -203,6 +245,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new[] { CurrencyEnum.NCG, CurrencyEnum.CRYSTAL, CurrencyEnum.GARAGE },
                 null,
                 new[] { new HashDigest<SHA256>().ToString() },
+                null,
             };
             yield return new object[]
             {
@@ -210,6 +253,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 null,
                 new[] { "NCG", "CRYSTAL", "GARAGE" },
                 new[] { new HashDigest<SHA256>().ToString() },
+                null,
             };
         }
     }
