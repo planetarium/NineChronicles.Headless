@@ -78,7 +78,7 @@ namespace NineChronicles.Headless.Middleware
                 var httpContext = context.GetHttpContext();
                 var ipAddress = httpContext.Connection.RemoteIpAddress + ":" + httpContext.Connection.RemotePort;
                 var agent = tx.Signer;
-                if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count > 100)
+                if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count > 0)
                 {
                     if (!_bannedAgents.ContainsKey(agent))
                     {
