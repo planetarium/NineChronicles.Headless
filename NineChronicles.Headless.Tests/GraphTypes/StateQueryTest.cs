@@ -47,12 +47,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             sb.Append($"agentAddr: \"{agentAddr.ToString()}\"");
             if (currencyEnums is not null)
             {
-                if (currencyTickers is not null)
-                {
-                    throw new ExecutionError(
-                        "Use either `currencyEnums` or `currencyTickers` to get balances.");
-                }
-
                 sb.Append(", currencyEnums: [");
                 sb.Append(string.Join(", ", currencyEnums));
                 sb.Append("]");
