@@ -163,7 +163,7 @@ namespace Libplanet.Extensions.RemoteBlockChainStates
                 .ToList());
         }
 
-        public IBlockStates GetBlockStates(BlockHash? offset)
+        public IBlockState GetBlockState(BlockHash? offset)
         {
             throw new NotSupportedException();
         }

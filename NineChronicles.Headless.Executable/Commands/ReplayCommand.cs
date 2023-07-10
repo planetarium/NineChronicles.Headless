@@ -91,7 +91,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 // Evaluate tx.
-                IAccountState previousBlockStates = blockChain.GetBlockStates(previousBlock.Hash);
+                IAccountState previousBlockStates = blockChain.GetBlockState(previousBlock.Hash);
                 IAccountStateDelta previousStates = AccountStateDelta.Create(previousBlockStates);
                 var actions = tx.Actions.Select(a => ToAction(a));
                 var actionEvaluations = EvaluateActions(
@@ -136,7 +136,7 @@ namespace NineChronicles.Headless.Executable.Commands
                         outputSw?.WriteLine(msg);
                     }
 
-                    var states = actionEvaluation.OutputStates;
+                    var states = actionEvaluation.OutputState;
                     var addressNum = 1;
                     foreach (var (updatedAddress, updatedState) in states.Delta.States)
                     {

@@ -235,7 +235,7 @@ namespace NineChronicles.Headless.Controllers
                 return;
             }
             Address address = StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress();
-            if (eval.OutputStates.UpdatedAddresses.Contains(address) || eval.Signer == address)
+            if (eval.OutputState.Delta.UpdatedAddresses.Contains(address) || eval.Signer == address)
             {
                 if (eval.Signer == address)
                 {
