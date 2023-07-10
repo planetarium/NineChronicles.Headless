@@ -25,23 +25,23 @@ namespace NineChronicles.Headless
         public bool BootstrapEnded { get; set; }
         public bool PreloadEnded { get; set; }
         public bool IsMining { get; set; }
-        public ReplaySubject<NodeStatusType> NodeStatusSubject { get; } = new ReplaySubject<NodeStatusType>(1);
-        public ReplaySubject<BlockSyncState> PreloadStateSubject { get; } = new ReplaySubject<BlockSyncState>(5);
+        public ReplaySubject<NodeStatusType> NodeStatusSubject { get; } = new(1);
+        public ReplaySubject<BlockSyncState> PreloadStateSubject { get; } = new(5);
 
-        public Subject<DifferentAppProtocolVersionEncounter> DifferentAppProtocolVersionEncounterSubject { get; }
-            = new Subject<DifferentAppProtocolVersionEncounter>();
+        public Subject<DifferentAppProtocolVersionEncounter> DifferentAppProtocolVersionEncounterSubject { get; } =
+            new();
 
-        public Subject<Notification> NotificationSubject { get; } = new Subject<Notification>();
-        public Subject<NodeException> NodeExceptionSubject { get; } = new Subject<NodeException>();
+        public Subject<Notification> NotificationSubject { get; } = new();
+        public Subject<NodeException> NodeExceptionSubject { get; } = new();
         public NineChroniclesNodeService? NineChroniclesNodeService { get; set; }
 
         public ConcurrentDictionary<Address,
-                (ReplaySubject<MonsterCollectionStatus> statusSubject, ReplaySubject<MonsterCollectionState>
-                stateSubject, ReplaySubject<string> balanceSubject)>
-            AgentAddresses { get; } = new ConcurrentDictionary<Address,
+                (ReplaySubject<MonsterCollectionStatus> statusSubject, ReplaySubject<MonsterCollectionState> stateSubject, ReplaySubject<string> balanceSubject)>
+            AgentAddresses
+        { get; } = new ConcurrentDictionary<Address,
             (ReplaySubject<MonsterCollectionStatus>, ReplaySubject<MonsterCollectionState>, ReplaySubject<string>)>();
 
-        public NodeStatusType NodeStatus => new NodeStatusType(this)
+        public NodeStatusType NodeStatus => new(this)
         {
             BootstrapEnded = BootstrapEnded,
             PreloadEnded = PreloadEnded,
@@ -53,7 +53,7 @@ namespace NineChronicles.Headless
         public Swarm? Swarm { get; internal set; }
 
         public CurrencyFactory? CurrencyFactory { get; set; }
-        
+
         public FungibleAssetValueFactory? FungibleAssetValueFactory { get; set; }
 
         internal TimeSpan DifferentAppProtocolVersionEncounterInterval { get; set; } = TimeSpan.FromSeconds(30);
