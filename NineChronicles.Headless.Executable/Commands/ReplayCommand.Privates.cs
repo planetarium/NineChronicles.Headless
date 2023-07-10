@@ -564,7 +564,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 Address miner,
                 long blockIndex,
                 int blockProtocolVersion,
-                IAccountStateDelta previousStates,
+                IAccountStateDelta previousState,
                 int randomSeed,
                 bool rehearsal = false)
             {
@@ -574,7 +574,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 BlockIndex = blockIndex;
                 BlockProtocolVersion = blockProtocolVersion;
                 Rehearsal = rehearsal;
-                PreviousStates = previousStates;
+                PreviousState = previousState;
                 Random = new Random(randomSeed);
                 _randomSeed = randomSeed;
             }
@@ -591,7 +591,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public bool Rehearsal { get; }
 
-            public IAccountStateDelta PreviousStates { get; }
+            public IAccountStateDelta PreviousState { get; }
 
             public IRandom Random { get; }
 
@@ -613,7 +613,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     Miner,
                     BlockIndex,
                     BlockProtocolVersion,
-                    PreviousStates,
+                    PreviousState,
                     _randomSeed,
                     Rehearsal);
 
@@ -649,7 +649,7 @@ namespace NineChronicles.Headless.Executable.Commands
             ILogger? logger = null)
         {
             ActionContext CreateActionContext(
-                IAccountStateDelta prevStates,
+                IAccountStateDelta prevState,
                 int randomSeed)
             {
                 return new ActionContext(
@@ -658,7 +658,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     miner: miner,
                     blockIndex: blockIndex,
                     blockProtocolVersion: blockProtocolVersion,
-                    previousStates: prevStates,
+                    previousState: prevState,
                     randomSeed: randomSeed);
             }
 
@@ -743,7 +743,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 yield return new ActionEvaluation(
                     action: action,
                     inputContext: equivalentContext,
-                    outputStates: nextStates,
+                    outputState: nextStates,
                     exception: exc);
 
                 if (exc is { })

@@ -354,7 +354,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var agentState = new AgentState(agentDict);
                     Address deriveAddress = MonsterCollectionState.DeriveAddress(address, agentState.MonsterCollectionRound);
                     var subject = subjects.stateSubject;
-                    if (eval.OutputStates.GetState(deriveAddress) is Dictionary state)
+                    if (eval.OutputState.GetState(deriveAddress) is Dictionary state)
                     {
                         subject.OnNext(new MonsterCollectionState(state));
                     }
