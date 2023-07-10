@@ -74,7 +74,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             sb.Append(" currency { ticker } sign majorUnit minorUnit quantity string");
             sb.Append(" }");
             sb.Append(" fungibleItemGarages {");
-            sb.Append(" item { fungibleItemId } count");
+            sb.Append(" fungibleItemId addr item { fungibleItemId } count");
             sb.Append(" }");
             sb.Append("}}");
             var addrToFungibleItemIdDict = fungibleItemIds is null
@@ -172,6 +172,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     foreach (var (fungibleItemId, fungibleItemGarage) in fungibleItemIds
                                  .Zip(fungibleItemGarages))
                     {
+                        var actualFungibleItemId = fungibleItemGarage["fungibleItemId"];
+                        Assert.Equal(fungibleItemId, actualFungibleItemId);
+                        var actualAddr = fungibleItemGarage["addr"];
+                        Assert.Equal(
+                            Addresses.GetGarageAddress(
+                                agentAddr,
+                                HashDigest<SHA256>.FromString(fungibleItemId)).ToString(),
+                            actualAddr);
                         var actual = ((Dictionary<string, object>)fungibleItemGarage["item"])["fungibleItemId"];
                         Assert.Equal(fungibleItemId, actual);
                     }
@@ -182,6 +190,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                  .Zip(setToNullForFungibleItemGarages)
                                  .Zip(fungibleItemGarages))
                     {
+                        var actualFungibleItemId = fungibleItemGarage["fungibleItemId"];
+                        Assert.Equal(fungibleItemId, actualFungibleItemId);
+                        var actualAddr = fungibleItemGarage["addr"];
+                        Assert.Equal(
+                            Addresses.GetGarageAddress(
+                                agentAddr,
+                                HashDigest<SHA256>.FromString(fungibleItemId)).ToString(),
+                            actualAddr);
                         if (setToNull)
                         {
                             Assert.Null(fungibleItemGarage["item"]);
