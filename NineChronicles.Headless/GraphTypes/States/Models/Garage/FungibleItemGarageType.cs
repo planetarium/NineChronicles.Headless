@@ -16,16 +16,21 @@ public class FungibleItemGarageType : ObjectGraphType<FungibleItemGarage>
 }
 
 public class FungibleItemGarageWithAddressType :
-    ObjectGraphType<(FungibleItemGarage? fungibleItemGarage, Address addr)>
+    ObjectGraphType<(string fungibleItemId, Address addr, FungibleItemGarage? fungibleItemGarage)>
 {
     public FungibleItemGarageWithAddressType()
     {
+        Field<StringGraphType>(
+            name: "fungibleItemId",
+            resolve: context => context.Source.fungibleItemId);
+        Field<AddressType>(
+            name: "addr",
+            resolve: context => context.Source.addr);
         Field<FungibleItemType>(
             name: "item",
             resolve: context => context.Source.fungibleItemGarage?.Item);
         Field<IntGraphType>(
             name: "count",
             resolve: context => context.Source.fungibleItemGarage?.Count);
-        Field<AddressType>(name: "addr", resolve: context => context.Source.addr);
     }
 }

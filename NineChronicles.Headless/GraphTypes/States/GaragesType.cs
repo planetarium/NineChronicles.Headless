@@ -15,13 +15,16 @@ public class GaragesType : ObjectGraphType<GaragesType.Value>
         public readonly Address AgentAddr;
         public readonly Address GarageBalancesAddr;
         public readonly IEnumerable<FungibleAssetValue> GarageBalances;
-        public readonly IEnumerable<(FungibleItemGarage? fungibleItemGarage, Address addr)> FungibleItemGarages;
+
+        public readonly IEnumerable<(string fungibleItemId, Address addr, FungibleItemGarage? fungibleItemGarage)>
+            FungibleItemGarages;
 
         public Value(
             Address agentAddr,
             Address garageBalancesAddr,
             IEnumerable<FungibleAssetValue> garageBalances,
-            IEnumerable<(FungibleItemGarage? fungibleItemGarage, Address addr)> fungibleItemGarages)
+            IEnumerable<(string fungibleItemId, Address addr, FungibleItemGarage? fungibleItemGarage)>
+                fungibleItemGarages)
         {
             AgentAddr = agentAddr;
             GarageBalancesAddr = garageBalancesAddr;

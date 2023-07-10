@@ -9,7 +9,6 @@ using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Model.Garages;
-using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States;
 
 namespace NineChronicles.Headless.GraphTypes;
@@ -84,11 +83,11 @@ public partial class StateQuery
                     }
                 }
 
-                IEnumerable<(FungibleItemGarage?, Address)> fungibleItemGarages;
+                IEnumerable<(string, Address, FungibleItemGarage?)> fungibleItemGarages;
                 var fungibleItemIds = context.GetArgument<string[]?>("fungibleItemIds");
                 if (fungibleItemIds is null)
                 {
-                    fungibleItemGarages = Enumerable.Empty<(FungibleItemGarage?, Address)>();
+                    fungibleItemGarages = Enumerable.Empty<(string, Address, FungibleItemGarage?)>();
                 }
                 else
                 {
@@ -99,8 +98,8 @@ public partial class StateQuery
                         .ToArray();
                     fungibleItemGarages = context.Source.GetStates(fungibleItemGarageAddresses)
                         .Select((value, i) => value is null or Null
-                            ? (null, fungibleItemGarageAddresses[i])
-                            : (new FungibleItemGarage(value), fungibleItemGarageAddresses[i]));
+                            ? (fungibleItemIds[i], fungibleItemGarageAddresses[i], null)
+                            : (fungibleItemIds[i], fungibleItemGarageAddresses[i], new FungibleItemGarage(value)));
                 }
 
                 return new GaragesType.Value(
