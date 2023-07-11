@@ -617,7 +617,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     DateTimeOffset actionExecutionStarted = DateTimeOffset.Now;
                     nextStates = action.Execute(context);
                     TimeSpan spent = DateTimeOffset.Now - actionExecutionStarted;
-                    logger?.Verbose($"{action} execution spent {spent.TotalMilliseconds} ms.");
+                    Console.WriteLine($"{action} execution spent {spent.TotalMilliseconds} ms.");
                 }
                 catch (OutOfMemoryException e)
                 {
