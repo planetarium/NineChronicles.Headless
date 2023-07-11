@@ -103,6 +103,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [InlineData(null, 2, true)]
         [InlineData(null, 3, false)]
         [InlineData(null, 4, true)]
+        [InlineData(null, 5, false)]
         public void Sign_ClaimStakeReward(long? blockIndex, int? actionVersion, bool gas)
         {
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());

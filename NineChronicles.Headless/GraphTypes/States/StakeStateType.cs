@@ -56,27 +56,8 @@ namespace NineChronicles.Headless.GraphTypes.States
             Field<NonNullGraphType<LongGraphType>>(
                 "claimableBlockIndex",
                 description: "The block index the user can claim rewards.",
-                resolve: context =>
-                {
-                    var stakeState = context.Source.StakeState;
-                    if (context.Source.BlockIndex >= ActionObsoleteConfig.V100290ObsoleteIndex)
-                    {
-                        if (stakeState.ReceivedBlockIndex > 0)
-                        {
-                            long lastStep = Math.DivRem(
-                                stakeState.ReceivedBlockIndex - stakeState.StartedBlockIndex,
-                                StakeState.RewardInterval,
-                                out _
-                            );
-
-                            return stakeState.StartedBlockIndex + (lastStep + 1) * StakeState.RewardInterval;
-                        }
-
-                        return stakeState.StartedBlockIndex + StakeState.RewardInterval;
-                    }
-
-                    return Math.Max(stakeState.StartedBlockIndex, stakeState.ReceivedBlockIndex) + StakeState.RewardInterval;
-                });
+                resolve: context => context.Source.StakeState.GetClaimableBlockIndex(
+                    context.Source.BlockIndex));
             Field<NonNullGraphType<StakeAchievementsType>>(
                 nameof(StakeState.Achievements),
                 description: "The staking achievements.",
