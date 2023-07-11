@@ -191,7 +191,9 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [InlineData(ClaimStakeReward2.ObsoletedIndex, typeof(ClaimStakeReward2))]
         [InlineData(ClaimStakeReward2.ObsoletedIndex + 1, typeof(ClaimStakeReward3))]
         [InlineData(ClaimStakeReward3.ObsoleteBlockIndex, typeof(ClaimStakeReward3))]
-        [InlineData(ClaimStakeReward3.ObsoleteBlockIndex + 1, typeof(ClaimStakeReward))]
+        [InlineData(ClaimStakeReward3.ObsoleteBlockIndex + 1, typeof(ClaimStakeReward4))]
+        [InlineData(ClaimStakeReward4.ObsoleteBlockIndex, typeof(ClaimStakeReward4))]
+        [InlineData(ClaimStakeReward4.ObsoleteBlockIndex + 1, typeof(ClaimStakeReward))]
         [InlineData(long.MaxValue, typeof(ClaimStakeReward))]
         public void ClaimStakeRewardWithBlockIndex(long blockIndex, Type expectedActionType)
         {
@@ -217,8 +219,8 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
         [Theory]
         [InlineData(0, 0, -1)]
-        [InlineData(1, 4, 0)]
-        [InlineData(5, 5, -1)]
+        [InlineData(1, 5, 0)]
+        [InlineData(6, 6, -1)]
         public void ClaimStakeRewardWithActionVersion(
             int actionVersionMin,
             int actionVersionMax,
