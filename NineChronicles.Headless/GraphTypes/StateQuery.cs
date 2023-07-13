@@ -462,22 +462,36 @@ namespace NineChronicles.Headless.GraphTypes
             );
 
             Field<NonNullGraphType<FungibleAssetValueWithCurrencyType>>("balance",
-                description: "asset balance by currency.",
+                description: "asset balance by currency." +
+                             "Either currency or libplanetCurrency must be specified.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "address"
                     },
-                    new QueryArgument<NonNullGraphType<CurrencyInputType>>
+                    new QueryArgument<CurrencyInputType>
                     {
                         Name = "currency"
+                    },
+                    new QueryArgument<Libplanet.Explorer.GraphTypes.CurrencyInputType>
+                    {
+                        Name = "libplanetCurrency"
                     }
                 ),
                 resolve: context =>
                 {
                     var address = context.GetArgument<Address>("address");
-                    var currency = context.GetArgument<Currency>("currency");
-                    return context.Source.GetBalance(address, currency);
+                    var currency = context.GetArgument<Currency?>("currency");
+                    if (currency is null)
+                    {
+                        currency = context.GetArgument<Currency?>("libplanetCurrency");
+                        if (currency is null)
+                        {
+                            throw new ExecutionError("Either currency or libplanetCurrency must be specified.");
+                        }
+                    }
+
+                    return context.Source.GetBalance(address, currency.Value);
                 }
             );
 
