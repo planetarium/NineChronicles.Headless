@@ -38,7 +38,7 @@ public partial class ReplayCommand
 
     private GetTransactionDataResponse? GetBlockData(IGraphQLClient client, string hash)
     {
-        const string transactionQuery = @"
+        const string query = @"
         query GetBlockData($hash: ID!)
         {
             chainQuery { blockQuery {
@@ -54,7 +54,7 @@ public partial class ReplayCommand
         ";
 
         var request = new GraphQLRequest(
-            transactionQuery,
+            query,
             operationName: "GetBlockData",
             variables: new { hash });
 
