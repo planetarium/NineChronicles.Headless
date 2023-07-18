@@ -112,7 +112,7 @@ namespace Libplanet.Headless
             TxSuccess reducedTxSuccess = new TxSuccess(
                 txSuccess.BlockHash,
                 txSuccess.TxId,
-                updatedStates: ImmutableDictionary<Address, IValue>.Empty,
+                updatedStates: txSuccess.UpdatedStates.ToImmutableDictionary(pair => pair.Key, _ => (IValue)Null.Value),
                 fungibleAssetsDelta: txSuccess.FungibleAssetsDelta,
                 updatedFungibleAssets: txSuccess.UpdatedFungibleAssets,
                 actionsLogsList: txSuccess.ActionsLogsList
