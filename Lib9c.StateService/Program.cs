@@ -1,6 +1,9 @@
 using Bencodex;
 using Libplanet.Blockchain;
 using Libplanet.Extensions.RemoteBlockChainStates;
+using Serilog;
+
+Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console().CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
 
