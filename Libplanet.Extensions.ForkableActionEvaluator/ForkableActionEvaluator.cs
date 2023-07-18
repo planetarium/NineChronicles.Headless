@@ -8,12 +8,13 @@ public class ForkableActionEvaluator : IActionEvaluator
 {
     private readonly HardForkRouter _router;
 
-    public ForkableActionEvaluator(IEnumerable<((long StartIndex, long EndIndex) Range, IActionEvaluator ActionEvaluator)> pairs)
+    public ForkableActionEvaluator(IEnumerable<((long StartIndex, long EndIndex) Range, IActionEvaluator ActionEvaluator)> pairs, IActionLoader actionLoader)
     {
         _router = new HardForkRouter(pairs);
+        ActionLoader = actionLoader;
     }
 
-    public IActionLoader ActionLoader => throw new NotSupportedException();
+    public IActionLoader ActionLoader { get; }
 
     public IReadOnlyList<IActionEvaluation> Evaluate(IPreEvaluationBlock block)
     {
