@@ -36,7 +36,7 @@ public static class ActionEvaluationMarshaller
             .Add("logs", new List(actionEvaluation.Logs))
             .Add("output_states", AccountStateDeltaMarshaller.Marshal(actionEvaluation.OutputState))
             .Add("input_context", ActionContextMarshaller.Marshal(actionEvaluation.InputContext))
-            .Add("exception", actionEvaluation.Exception?.GetType().FullName is { } typeName ? (Text)typeName : Null.Value);
+            .Add("exception", (actionEvaluation.Exception?.InnerException ?? actionEvaluation.Exception)?.GetType().FullName is { } typeName ? (Text)typeName : Null.Value);
     }
 
     public static ActionEvaluation Unmarshal(IValue value)
