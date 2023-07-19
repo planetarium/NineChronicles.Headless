@@ -56,7 +56,7 @@ namespace NineChronicles.Headless.GraphTypes
                         blockHash switch
                         {
                             BlockHash bh => chain[bh].Index,
-                            null => chain.Tip.Index,
+                            null => chain.Tip!.Index,
                         }
                     );
                 }
@@ -177,6 +177,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<ActivationStatusQuery>>(
                     name: "activationStatus",
                     description: "Check if the provided address is activated.",
+                    deprecationReason: "Since NCIP-15, it doesn't care account activation.",
                     resolve: context => new ActivationStatusQuery(standaloneContext))
                 .AuthorizeWithLocalPolicyIf(useSecretToken);
 
@@ -355,6 +356,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "activated",
+                deprecationReason: "Since NCIP-15, it doesn't care account activation.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
@@ -389,6 +391,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<StringGraphType>>(
                 name: "activationKeyNonce",
+                deprecationReason: "Since NCIP-15, it doesn't care account activation.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>
                     {

@@ -27,6 +27,7 @@ public class ActionEvaluationSerializerTest
                 null,
                 addresses[1],
                 0,
+                0,
                 false,
                 previousStates,
                 new Random(123),
@@ -41,11 +42,12 @@ public class ActionEvaluationSerializerTest
         Assert.Equal(Null.Value, deserialized.Action);
         Assert.Equal(123, deserialized.InputContext.Random.Seed);
         Assert.Equal(0, deserialized.InputContext.BlockIndex);
+        Assert.Equal(0, deserialized.InputContext.BlockProtocolVersion);
         Assert.Equal(new[] { "one", "two" }, deserialized.Logs);
         Assert.Equal(addresses[0], deserialized.InputContext.Signer);
         Assert.Equal(addresses[1], deserialized.InputContext.Miner);
-        Assert.Equal(Null.Value, deserialized.OutputStates.GetState(addresses[0]));
-        Assert.Equal((Text)"foo", deserialized.OutputStates.GetState(addresses[1]));
-        Assert.Equal(new List((Text)"bar"), deserialized.OutputStates.GetState(addresses[2]));
+        Assert.Equal(Null.Value, deserialized.OutputState.GetState(addresses[0]));
+        Assert.Equal((Text)"foo", deserialized.OutputState.GetState(addresses[1]));
+        Assert.Equal(new List((Text)"bar"), deserialized.OutputState.GetState(addresses[2]));
     }
 }

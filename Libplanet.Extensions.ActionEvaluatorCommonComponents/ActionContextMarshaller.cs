@@ -24,9 +24,10 @@ public static class ActionContextMarshaller
             .Add("miner", actionContext.Miner.ToHex())
             .Add("rehearsal", actionContext.Rehearsal)
             .Add("block_index", actionContext.BlockIndex)
+            .Add("block_protocol_version", actionContext.BlockProtocolVersion)
             .Add("random_seed", actionContext.Random.Seed)
             .Add("signer", actionContext.Signer.ToHex())
-            .Add("previous_states", AccountStateDeltaMarshaller.Marshal(actionContext.PreviousStates));
+            .Add("previous_states", AccountStateDeltaMarshaller.Marshal(actionContext.PreviousState));
 
         if (actionContext.TxId is { } txId)
         {
@@ -44,6 +45,7 @@ public static class ActionContextMarshaller
                 ? new BlockHash(genesisHashBinaryValue.ByteArray)
                 : null,
             blockIndex: (Integer)dictionary["block_index"],
+            blockProtocolVersion: (Integer)dictionary["block_protocol_version"],
             signer: new Address(((Text)dictionary["signer"]).Value),
             txId: dictionary.TryGetValue((Text)"tx_id", out IValue txIdValue) &&
                   txIdValue is Binary txIdBinaryValue
@@ -55,7 +57,7 @@ public static class ActionContextMarshaller
             previousStateRootHash: dictionary.ContainsKey("previous_state_root_hash")
                 ? new HashDigest<SHA256>(((Binary)dictionary["previous_state_root_hash"]).ByteArray)
                 : null,
-            previousStates: AccountStateDeltaMarshaller.Unmarshal(dictionary["previous_states"]),
+            previousState: AccountStateDeltaMarshaller.Unmarshal(dictionary["previous_states"]),
             random: new Random((Integer)dictionary["random_seed"])
         );
     }

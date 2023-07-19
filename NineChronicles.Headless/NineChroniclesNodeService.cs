@@ -26,6 +26,7 @@ using Libplanet.Blocks;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Assets;
+using NineChronicles.Headless.Utils;
 using StrictRenderer = Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer;
 
 namespace NineChronicles.Headless
@@ -280,6 +281,10 @@ namespace NineChronicles.Headless
             standaloneContext.BlockChain = Swarm.BlockChain;
             standaloneContext.Store = Store;
             standaloneContext.Swarm = Swarm;
+            standaloneContext.CurrencyFactory =
+                new CurrencyFactory(standaloneContext.BlockChain.GetStates);
+            standaloneContext.FungibleAssetValueFactory =
+                new FungibleAssetValueFactory(standaloneContext.CurrencyFactory);
             BootstrapEnded.WaitAsync().ContinueWith((task) =>
             {
                 standaloneContext.BootstrapEnded = true;

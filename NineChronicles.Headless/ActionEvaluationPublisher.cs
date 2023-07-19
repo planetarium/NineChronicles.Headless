@@ -183,10 +183,7 @@ namespace NineChronicles.Headless
             private readonly Address _clientAddress;
 
             private IDisposable? _blockSubscribe;
-            private IDisposable? _reorgSubscribe;
-            private IDisposable? _reorgEndSubscribe;
             private IDisposable? _actionEveryRenderSubscribe;
-            private IDisposable? _actionEveryUnrenderSubscribe;
             private IDisposable? _everyExceptionSubscribe;
             private IDisposable? _nodeStatusSubscribe;
 
@@ -248,49 +245,6 @@ namespace NineChronicles.Headless
                             }
                         }
                     );
-                _reorgSubscribe = blockRenderer.ReorgSubject
-                    .SubscribeOn(NewThreadScheduler.Default)
-                    .ObserveOn(NewThreadScheduler.Default)
-                    .Subscribe(
-                    async ev =>
-                    {
-                        try
-                        {
-                            await _hub.ReportReorgAsync(
-                                Codec.Encode(ev.OldTip.MarshalBlock()),
-                                Codec.Encode(ev.NewTip.MarshalBlock()),
-                                Codec.Encode(ev.Branchpoint.MarshalBlock())
-                            );
-                        }
-                        catch (Exception e)
-                        {
-                            // FIXME add logger as property
-                            Log.Error(e, "Skip broadcasting reorg due to the unexpected exception");
-                        }
-                    }
-                );
-
-                _reorgEndSubscribe = blockRenderer.ReorgEndSubject
-                    .SubscribeOn(NewThreadScheduler.Default)
-                    .ObserveOn(NewThreadScheduler.Default)
-                    .Subscribe(
-                    async ev =>
-                    {
-                        try
-                        {
-                            await _hub.ReportReorgEndAsync(
-                                Codec.Encode(ev.OldTip.MarshalBlock()),
-                                Codec.Encode(ev.NewTip.MarshalBlock()),
-                                Codec.Encode(ev.Branchpoint.MarshalBlock())
-                            );
-                        }
-                        catch (Exception e)
-                        {
-                            // FIXME add logger as property
-                            Log.Error(e, "Skip broadcasting reorg end due to the unexpected exception");
-                        }
-                    }
-                );
 
                 _actionEveryRenderSubscribe = actionRenderer.EveryRender<ActionBase>()
                     .Where(ContainsAddressToBroadcast)
@@ -306,7 +260,7 @@ namespace NineChronicles.Headless
                                     : ev.Action;
                                 var extra = new Dictionary<string, IValue>();
 
-                                var previousStates = ev.PreviousStates;
+                                var previousStates = ev.PreviousState;
                                 if (pa is IBattleArenaV1 battleArena)
                                 {
                                     var enemyAvatarAddress = battleArena.EnemyAvatarAddress;
@@ -350,7 +304,7 @@ namespace NineChronicles.Headless
                                     }
                                 }
 
-                                var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputStates, ev.Exception, previousStates, ev.RandomSeed, extra);
+                                var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputState, ev.Exception, previousStates, ev.RandomSeed, extra);
                                 var encoded = MessagePackSerializer.Serialize(eval);
                                 var c = new MemoryStream();
                                 await using (var df = new DeflateStream(c, CompressionLevel.Fastest))
@@ -385,59 +339,6 @@ namespace NineChronicles.Headless
                                 var span = sentryTrace.GetLastActiveSpan();
                                 span?.Finish();
                                 sentryTrace.Finish();
-                            }
-                        }
-                    );
-
-                _actionEveryUnrenderSubscribe = actionRenderer.EveryUnrender<ActionBase>()
-                    .Where(ContainsAddressToBroadcast)
-                    .SubscribeOn(NewThreadScheduler.Default)
-                    .ObserveOn(NewThreadScheduler.Default)
-                    .Subscribe(
-                        async ev =>
-                        {
-                            ActionBase? pa = null;
-                            if (!(ev.Action is RewardGold))
-                            {
-                                pa = ev.Action;
-                            }
-                            try
-                            {
-                                var eval = new NCActionEvaluation(pa,
-                                    ev.Signer,
-                                    ev.BlockIndex,
-                                    ev.OutputStates,
-                                    ev.Exception,
-                                    ev.PreviousStates,
-                                    ev.RandomSeed,
-                                    new Dictionary<string, IValue>()
-                                );
-                                var encoded = MessagePackSerializer.Serialize(eval);
-                                var c = new MemoryStream();
-                                using (var df = new DeflateStream(c, CompressionLevel.Fastest))
-                                {
-                                    df.Write(encoded, 0, encoded.Length);
-                                }
-
-                                var compressed = c.ToArray();
-                                Log.Information(
-                                    "[{ClientAddress}] #{BlockIndex} Broadcasting unrender since the given action {Action}. eval size: {Size}",
-                                    _clientAddress,
-                                    ev.BlockIndex,
-                                    ev.Action.GetType(),
-                                    compressed.LongLength
-                                );
-                                await _hub.BroadcastRenderAsync(compressed);
-                            }
-                            catch (SerializationException se)
-                            {
-                                // FIXME add logger as property
-                                Log.Error(se, "Skip broadcasting unrender since the given action isn't serializable.");
-                            }
-                            catch (Exception e)
-                            {
-                                // FIXME add logger as property
-                                Log.Error(e, "Skip broadcasting unrender due to the unexpected exception");
                             }
                         }
                     );
@@ -492,10 +393,7 @@ namespace NineChronicles.Headless
             public async ValueTask DisposeAsync()
             {
                 _blockSubscribe?.Dispose();
-                _reorgSubscribe?.Dispose();
-                _reorgEndSubscribe?.Dispose();
                 _actionEveryRenderSubscribe?.Dispose();
-                _actionEveryUnrenderSubscribe?.Dispose();
                 _everyExceptionSubscribe?.Dispose();
                 _nodeStatusSubscribe?.Dispose();
                 await _hub.DisposeAsync();
@@ -510,15 +408,13 @@ namespace NineChronicles.Headless
 
             private bool ContainsAddressToBroadcastLocal(ActionEvaluation<ActionBase> ev)
             {
-                var updatedAddresses =
-                    ev.OutputStates.UpdatedAddresses.Union(ev.OutputStates.UpdatedFungibleAssets.Keys);
+                var updatedAddresses = ev.OutputState.Delta.UpdatedAddresses;
                 return _context.AddressesToSubscribe.Any(updatedAddresses.Add(ev.Signer).Contains);
             }
 
             private bool ContainsAddressToBroadcastRemoteClient(ActionEvaluation<ActionBase> ev)
             {
-                var updatedAddresses =
-                    ev.OutputStates.UpdatedAddresses.Union(ev.OutputStates.UpdatedFungibleAssets.Keys);
+                var updatedAddresses = ev.OutputState.Delta.UpdatedAddresses;
                 return TargetAddresses.Any(updatedAddresses.Add(ev.Signer).Contains);
             }
         }

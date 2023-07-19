@@ -91,33 +91,19 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 // Evaluate tx.
-                IAccountStateDelta previousStates = new AccountStateDeltaImpl(
-                    addresses => blockChain.GetStates(
-                        addresses,
-                        previousBlock.Hash),
-                    (address, currency) => blockChain.GetBalance(
-                        address,
-                        currency,
-                        previousBlock.Hash),
-                    currency => blockChain.GetTotalSupply(
-                        currency,
-                        previousBlock.Hash),
-                    () => blockChain.GetValidatorSet(
-                        previousBlock.Hash),
-                    tx.Signer);
+                IAccountState previousBlockStates = blockChain.GetBlockState(previousBlock.Hash);
+                IAccountStateDelta previousStates = AccountStateDelta.Create(previousBlockStates);
                 var actions = tx.Actions.Select(a => ToAction(a));
                 var actionEvaluations = EvaluateActions(
-                    genesisHash: blockChain.Genesis.Hash,
-                    preEvaluationHash: targetBlock.PreEvaluationHash.ByteArray,
-                    blockIndex: blockIndex,
+                    preEvaluationHash: targetBlock.PreEvaluationHash,
+                    blockIndex: targetBlock.Index,
+                    blockProtocolVersion: targetBlock.ProtocolVersion,
                     txid: tx.Id,
                     previousStates: previousStates,
                     miner: targetBlock.Miner,
                     signer: tx.Signer,
                     signature: tx.Signature,
-                    actions: actions.Cast<IAction>().ToImmutableList(),
-                    rehearsal: false,
-                    previousBlockStatesTrie: null
+                    actions: actions.Cast<IAction>().ToImmutableList()
                 );
                 var actionNum = 1;
                 foreach (var actionEvaluation in actionEvaluations)
@@ -150,13 +136,12 @@ namespace NineChronicles.Headless.Executable.Commands
                         outputSw?.WriteLine(msg);
                     }
 
-                    var states = actionEvaluation.OutputStates;
+                    var states = actionEvaluation.OutputState;
                     var addressNum = 1;
-                    foreach (var updatedAddress in states.UpdatedAddresses)
+                    foreach (var (updatedAddress, updatedState) in states.Delta.States)
                     {
                         if (verbose)
                         {
-                            var updatedState = states.GetState(updatedAddress);
                             msg = $"- action #{actionNum} updated address #{addressNum}({updatedAddress}) beginning..";
                             _console.Out.WriteLine(msg);
                             outputSw?.WriteLine(msg);

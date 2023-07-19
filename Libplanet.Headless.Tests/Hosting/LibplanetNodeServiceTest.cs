@@ -91,7 +91,7 @@ namespace Libplanet.Headless.Tests.Hosting
 
             IAccountStateDelta IAction.Execute(IActionContext context)
             {
-                return context.PreviousStates;
+                return context.PreviousState;
             }
 
             void IAction.LoadPlainValue(IValue plainValue)

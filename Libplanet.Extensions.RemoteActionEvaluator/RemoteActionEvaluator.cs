@@ -44,33 +44,33 @@ public class RemoteActionEvaluator : IActionEvaluator
         {
             if (i > 0)
             {
-                actionEvaluations[i].InputContext.PreviousStates.StateGetter =
-                    actionEvaluations[i - 1].OutputStates.GetStates;
-                actionEvaluations[i].InputContext.PreviousStates.BalanceGetter =
-                    actionEvaluations[i - 1].OutputStates.GetBalance;
-                actionEvaluations[i].InputContext.PreviousStates.TotalSupplyGetter =
-                    actionEvaluations[i - 1].OutputStates.GetTotalSupply;
-                actionEvaluations[i].InputContext.PreviousStates.ValidatorSetGetter =
-                    actionEvaluations[i - 1].OutputStates.GetValidatorSet;
+                actionEvaluations[i].InputContext.PreviousState.StateGetter =
+                    actionEvaluations[i - 1].OutputState.GetStates;
+                actionEvaluations[i].InputContext.PreviousState.BalanceGetter =
+                    actionEvaluations[i - 1].OutputState.GetBalance;
+                actionEvaluations[i].InputContext.PreviousState.TotalSupplyGetter =
+                    actionEvaluations[i - 1].OutputState.GetTotalSupply;
+                actionEvaluations[i].InputContext.PreviousState.ValidatorSetGetter =
+                    actionEvaluations[i - 1].OutputState.GetValidatorSet;
             }
             else
             {
                 (
-                    actionEvaluations[i].InputContext.PreviousStates.StateGetter,
-                    actionEvaluations[i].InputContext.PreviousStates.BalanceGetter,
-                    actionEvaluations[i].InputContext.PreviousStates.TotalSupplyGetter,
-                    actionEvaluations[i].InputContext.PreviousStates.ValidatorSetGetter
+                    actionEvaluations[i].InputContext.PreviousState.StateGetter,
+                    actionEvaluations[i].InputContext.PreviousState.BalanceGetter,
+                    actionEvaluations[i].InputContext.PreviousState.TotalSupplyGetter,
+                    actionEvaluations[i].InputContext.PreviousState.ValidatorSetGetter
                 ) = InitializeAccountGettersPair(block);
             }
 
-            actionEvaluations[i].OutputStates.StateGetter =
-                actionEvaluations[i].InputContext.PreviousStates.GetStates;
-            actionEvaluations[i].OutputStates.BalanceGetter =
-                actionEvaluations[i].InputContext.PreviousStates.GetBalance;
-            actionEvaluations[i].OutputStates.TotalSupplyGetter =
-                actionEvaluations[i].InputContext.PreviousStates.GetTotalSupply;
-            actionEvaluations[i].OutputStates.ValidatorSetGetter =
-                actionEvaluations[i].InputContext.PreviousStates.GetValidatorSet;
+            actionEvaluations[i].OutputState.StateGetter =
+                actionEvaluations[i].InputContext.PreviousState.GetStates;
+            actionEvaluations[i].OutputState.BalanceGetter =
+                actionEvaluations[i].InputContext.PreviousState.GetBalance;
+            actionEvaluations[i].OutputState.TotalSupplyGetter =
+                actionEvaluations[i].InputContext.PreviousState.GetTotalSupply;
+            actionEvaluations[i].OutputState.ValidatorSetGetter =
+                actionEvaluations[i].InputContext.PreviousState.GetValidatorSet;
         }
 
         return actionEvaluations;

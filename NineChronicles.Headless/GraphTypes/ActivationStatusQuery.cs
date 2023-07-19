@@ -15,8 +15,11 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public ActivationStatusQuery(StandaloneContext standaloneContext)
         {
+            DeprecationReason = "Since NCIP-15, it doesn't care account activation.";
+
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "activated",
+                deprecationReason: "Since NCIP-15, it doesn't care account activation.",
                 resolve: context =>
                 {
                     var service = standaloneContext.NineChroniclesNodeService;
@@ -72,6 +75,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "addressActivated",
+                deprecationReason: "Since NCIP-15, it doesn't care account activation.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {

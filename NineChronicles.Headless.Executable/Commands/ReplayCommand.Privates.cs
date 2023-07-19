@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Numerics;
 using System.Security.Cryptography;
@@ -22,123 +24,134 @@ namespace NineChronicles.Headless.Executable.Commands
     public partial class ReplayCommand : CoconaLiteConsoleAppBase
     {
         /// <summary>
-        /// Almost duplicate https://github.com/planetarium/libplanet/blob/main/Libplanet/Action/AccountStateDeltaImpl.cs.
+        /// Almost duplicate https://github.com/planetarium/libplanet/blob/main/Libplanet/State/AccountStateDelta.cs.
         /// </summary>
-        private class AccountStateDeltaImpl : IAccountStateDelta
+        [Pure]
+        private sealed class AccountStateDelta : IAccountStateDelta
         {
-            public IImmutableSet<Address> UpdatedAddresses =>
-                UpdatedStates.Keys.ToImmutableHashSet()
-                    .Union(UpdatedFungibles
-                        .Select(kv => kv.Key.Item1));
-
-            public IImmutableSet<Address> StateUpdatedAddresses =>
-                UpdatedStates.Keys.ToImmutableHashSet();
-
-            public IImmutableDictionary<Address, IImmutableSet<Currency>>
-                UpdatedFungibleAssets =>
-                UpdatedFungibles
-                    .GroupBy(kv => kv.Key.Item1)
-                    .ToImmutableDictionary(
-                        g => g.Key,
-                        g =>
-                            (IImmutableSet<Currency>)g
-                                .Select(kv => kv.Key.Item2)
-                                .ToImmutableHashSet());
-
-            public IImmutableDictionary<Address, IImmutableSet<Currency>> TotalUpdatedFungibleAssets { get; } = new Dictionary<Address, IImmutableSet<Currency>>().ToImmutableDictionary();
-
-            public IImmutableSet<Currency> TotalSupplyUpdatedCurrencies =>
-                UpdatedTotalSupply.Keys.ToImmutableHashSet();
-
-            protected AccountStateGetter StateGetter { get; set; }
-
-            protected AccountBalanceGetter BalanceGetter { get; set; }
-
-            protected TotalSupplyGetter TotalSupplyGetter { get; set; }
-
-            protected ValidatorSetGetter ValidatorSetGetter { get; set; }
-
-            protected IImmutableDictionary<Address, IValue> UpdatedStates { get; set; }
-
-            protected IImmutableDictionary<(Address, Currency), BigInteger> UpdatedFungibles { get; set; }
-
-            protected IImmutableDictionary<Currency, BigInteger> UpdatedTotalSupply { get; set; }
-
-            protected ValidatorSet? UpdatedValidatorSet { get; set; } = null;
-
-            protected Address Signer { get; set; }
-
-            public AccountStateDeltaImpl(
+            /// <summary>
+            /// Creates a null state delta from the given <paramref name="accountStateGetter"/>.
+            /// </summary>
+            /// <param name="accountStateGetter">A view to the &#x201c;epoch&#x201d; states.</param>
+            /// <param name="accountBalanceGetter">A view to the &#x201c;epoch&#x201d; asset balances.
+            /// </param>
+            /// <param name="totalSupplyGetter">A view to the &#x201c;epoch&#x201d; total supplies of
+            /// currencies.</param>
+            /// <param name="validatorSetGetter">A view to the &#x201c;epoch&#x201d; validator
+            /// set.</param>
+            private AccountStateDelta(
                 AccountStateGetter accountStateGetter,
                 AccountBalanceGetter accountBalanceGetter,
                 TotalSupplyGetter totalSupplyGetter,
-                ValidatorSetGetter validatorSetGetter,
-                Address signer)
+                ValidatorSetGetter validatorSetGetter)
             {
+                Delta = new AccountDelta();
                 StateGetter = accountStateGetter;
                 BalanceGetter = accountBalanceGetter;
                 TotalSupplyGetter = totalSupplyGetter;
                 ValidatorSetGetter = validatorSetGetter;
-                UpdatedStates = ImmutableDictionary<Address, IValue>.Empty;
-                UpdatedFungibles = ImmutableDictionary<(Address, Currency), BigInteger>.Empty;
-                UpdatedTotalSupply = ImmutableDictionary<Currency, BigInteger>.Empty;
-                Signer = signer;
+                TotalUpdatedFungibles = ImmutableDictionary<(Address, Currency), BigInteger>.Empty;
             }
 
-            public IValue? GetState(Address address) =>
-                UpdatedStates.TryGetValue(address, out IValue? value)
-                    ? value
-                    : StateGetter(new[] { address })[0];
+            /// <inheritdoc/>
+            public IAccountDelta Delta { get; private set; }
 
+            /// <inheritdoc/>
+            [Pure]
+            public IImmutableSet<Address> UpdatedAddresses =>
+                Delta.UpdatedAddresses;
+
+            /// <inheritdoc/>
+            public IImmutableSet<Address> StateUpdatedAddresses =>
+                Delta.StateUpdatedAddresses;
+
+            /// <inheritdoc/>
+            public IImmutableSet<(Address, Currency)> UpdatedFungibleAssets =>
+                Delta.UpdatedFungibleAssets;
+
+            /// <inheritdoc/>
+            public IImmutableSet<(Address, Currency)> TotalUpdatedFungibleAssets =>
+                TotalUpdatedFungibles.Keys.ToImmutableHashSet();
+
+            [Pure]
+            public IImmutableSet<Currency> UpdatedTotalSupplyCurrencies =>
+                Delta.UpdatedTotalSupplyCurrencies;
+
+            public IImmutableDictionary<(Address, Currency), BigInteger> TotalUpdatedFungibles
+            { get; private set; }
+
+            private AccountStateGetter StateGetter { get; set; }
+
+            private AccountBalanceGetter BalanceGetter { get; set; }
+
+            private TotalSupplyGetter TotalSupplyGetter { get; set; }
+
+            private ValidatorSetGetter ValidatorSetGetter { get; set; }
+
+            /// <inheritdoc/>
+            [Pure]
+            public IValue? GetState(Address address)
+            {
+                IValue? state = GetStates(new[] { address })[0];
+                return state;
+            }
+
+            /// <inheritdoc cref="IAccountState.GetStates(IReadOnlyList{Address})"/>
+            [Pure]
             public IReadOnlyList<IValue?> GetStates(IReadOnlyList<Address> addresses)
             {
                 int length = addresses.Count;
                 IValue?[] values = new IValue?[length];
-                var notFound = new List<Address>(length);
+                var notFoundIndices = new List<int>(length);
                 for (int i = 0; i < length; i++)
                 {
                     Address address = addresses[i];
-                    if (UpdatedStates.TryGetValue(address, out IValue? v))
+                    if (Delta.States.TryGetValue(address, out IValue? updatedValue))
                     {
-                        values[i] = v;
-                        continue;
+                        values[i] = updatedValue;
                     }
-
-                    notFound.Add(address);
+                    else
+                    {
+                        notFoundIndices.Add(i);
+                    }
                 }
 
-                IReadOnlyList<IValue?> restValues = StateGetter(notFound);
-                for (int i = 0, j = 0; i < length && j < notFound.Count; i++)
+                if (notFoundIndices.Count > 0)
                 {
-                    if (addresses[i].Equals(notFound[j]))
+                    IReadOnlyList<IValue?> restValues = StateGetter(
+                        notFoundIndices.Select(index => addresses[index]).ToArray());
+                    foreach ((var v, var i) in notFoundIndices.Select((v, i) => (v, i)))
                     {
-                        values[i] = restValues[j];
-                        j++;
+                        values[v] = restValues[i];
                     }
                 }
 
                 return values;
             }
 
-            public FungibleAssetValue GetBalance(
-                Address address,
-                Currency currency) =>
-                GetBalance(address, currency, UpdatedFungibles);
+            /// <inheritdoc/>
+            [Pure]
+            public IAccountStateDelta SetState(Address address, IValue state) =>
+                UpdateStates(Delta.States.SetItem(address, state));
 
+            /// <inheritdoc/>
+            [Pure]
+            public FungibleAssetValue GetBalance(Address address, Currency currency) =>
+                GetBalance(address, currency, Delta.Fungibles);
+
+            /// <inheritdoc/>
+            [Pure]
             public FungibleAssetValue GetTotalSupply(Currency currency)
             {
                 if (!currency.TotalSupplyTrackable)
                 {
-                    // throw TotalSupplyNotTrackableException.WithDefaultMessage(currency);
-                    var msg =
-                        $"The total supply value of the currency {currency} is not trackable because it"
-                        + " is a legacy untracked currency which might have been established before"
-                        + " the introduction of total supply tracking support.";
-                    throw new TotalSupplyNotTrackableException(msg, currency);
+                    throw new TotalSupplyNotTrackableException(
+                        $"Given currency {currency} is not trackable for its total supply",
+                        currency);
                 }
 
                 // Return dirty state if it exists.
-                if (UpdatedTotalSupply.TryGetValue(currency, out BigInteger totalSupplyValue))
+                if (Delta.TotalSupplies.TryGetValue(currency, out BigInteger totalSupplyValue))
                 {
                     return FungibleAssetValue.FromRawValue(currency, totalSupplyValue);
                 }
@@ -146,10 +159,15 @@ namespace NineChronicles.Headless.Executable.Commands
                 return TotalSupplyGetter(currency);
             }
 
-            public IAccountStateDelta SetState(Address address, IValue state) =>
-                UpdateStates(UpdatedStates.SetItem(address, state));
+            /// <inheritdoc/>
+            [Pure]
+            public ValidatorSet GetValidatorSet() =>
+                Delta.ValidatorSet ?? ValidatorSetGetter();
 
-            public IAccountStateDelta MintAsset(Address recipient, FungibleAssetValue value)
+            /// <inheritdoc/>
+            [Pure]
+            public IAccountStateDelta MintAsset(
+                IActionContext context, Address recipient, FungibleAssetValue value)
             {
                 if (value.Sign <= 0)
                 {
@@ -160,16 +178,18 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 Currency currency = value.Currency;
-                if (!currency.AllowsToMint(Signer))
+                if (!currency.AllowsToMint(context.Signer))
                 {
                     throw new CurrencyPermissionException(
-                        $"The account {Signer} has no permission to mint the currency {currency}.",
-                        Signer,
+                        $"The account {context.Signer} has no permission to mint currency {currency}.",
+                        context.Signer,
                         currency
                     );
                 }
 
                 FungibleAssetValue balance = GetBalance(recipient, currency);
+                (Address, Currency) assetKey = (recipient, currency);
+                BigInteger rawBalance = (balance + value).RawValue;
 
                 if (currency.TotalSupplyTrackable)
                 {
@@ -177,23 +197,260 @@ namespace NineChronicles.Headless.Executable.Commands
                     if (currency.MaximumSupply < currentTotalSupply + value)
                     {
                         var msg = $"The amount {value} attempted to be minted added to the current"
-                                  + $" total supply of {currentTotalSupply} exceeds the"
-                                  + $" maximum allowed supply of {currency.MaximumSupply}.";
+                                + $" total supply of {currentTotalSupply} exceeds the"
+                                + $" maximum allowed supply of {currency.MaximumSupply}.";
                         throw new SupplyOverflowException(msg, value);
                     }
 
                     return UpdateFungibleAssets(
-                        UpdatedFungibles.SetItem((recipient, currency), (balance + value).RawValue),
-                        UpdatedTotalSupply.SetItem(currency, (currentTotalSupply + value).RawValue)
+                        Delta.Fungibles.SetItem(assetKey, rawBalance),
+                        TotalUpdatedFungibles.SetItem(assetKey, rawBalance),
+                        Delta.TotalSupplies.SetItem(currency, (currentTotalSupply + value).RawValue)
                     );
                 }
 
                 return UpdateFungibleAssets(
-                    UpdatedFungibles.SetItem((recipient, currency), (balance + value).RawValue)
+                    Delta.Fungibles.SetItem(assetKey, rawBalance),
+                    TotalUpdatedFungibles.SetItem(assetKey, rawBalance)
                 );
             }
 
-            public IAccountStateDelta TransferAsset(Address sender, Address recipient, FungibleAssetValue value,
+            /// <inheritdoc/>
+            [Pure]
+            public IAccountStateDelta TransferAsset(
+                IActionContext context,
+                Address sender,
+                Address recipient,
+                FungibleAssetValue value,
+                bool allowNegativeBalance = false) => context.BlockProtocolVersion > 0
+                    ? TransferAssetV1(sender, recipient, value, allowNegativeBalance)
+                    : TransferAssetV0(sender, recipient, value, allowNegativeBalance);
+
+            /// <inheritdoc/>
+            [Pure]
+            public IAccountStateDelta BurnAsset(
+                IActionContext context, Address owner, FungibleAssetValue value)
+            {
+                string msg;
+
+                if (value.Sign <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(
+                        nameof(value),
+                        "The value to burn has to be greater than zero."
+                    );
+                }
+
+                Currency currency = value.Currency;
+                if (!currency.AllowsToMint(context.Signer))
+                {
+                    msg = $"The account {context.Signer} has no permission to burn assets of " +
+                        $"the currency {currency}.";
+                    throw new CurrencyPermissionException(msg, context.Signer, currency);
+                }
+
+                FungibleAssetValue balance = GetBalance(owner, currency);
+
+                if (balance < value)
+                {
+                    msg = $"The account {owner}'s balance of {currency} is insufficient to burn: " +
+                        $"{balance} < {value}.";
+                    throw new InsufficientBalanceException(msg, owner, balance);
+                }
+
+                (Address, Currency) assetKey = (owner, currency);
+                BigInteger rawBalance = (balance - value).RawValue;
+                if (currency.TotalSupplyTrackable)
+                {
+                    return UpdateFungibleAssets(
+                        Delta.Fungibles.SetItem(assetKey, rawBalance),
+                        TotalUpdatedFungibles.SetItem(assetKey, rawBalance),
+                        Delta.TotalSupplies.SetItem(
+                            currency,
+                            (GetTotalSupply(currency) - value).RawValue)
+                    );
+                }
+
+                return UpdateFungibleAssets(
+                    Delta.Fungibles.SetItem(assetKey, rawBalance),
+                    TotalUpdatedFungibles.SetItem(assetKey, rawBalance)
+                );
+            }
+
+            /// <inheritdoc/>
+            [Pure]
+            public IAccountStateDelta SetValidator(Validator validator)
+            {
+                return UpdateValidatorSet(GetValidatorSet().Update(validator));
+            }
+
+            /// <summary>
+            /// Creates a null state delta from given <paramref name="previousState"/>.
+            /// </summary>
+            /// <param name="previousState">The previous <see cref="IAccountState"/> to use as
+            /// a basis.</param>
+            /// <returns>A null state delta created from <paramref name="previousState"/>.
+            /// </returns>
+            internal static IAccountStateDelta Create(IAccountState previousState)
+            {
+                return new AccountStateDelta(
+                    previousState.GetStates,
+                    previousState.GetBalance,
+                    previousState.GetTotalSupply,
+                    previousState.GetValidatorSet);
+            }
+
+            /// <summary>
+            /// Creates a null state delta while inheriting <paramref name="stateDelta"/>s
+            /// total updated fungibles.
+            /// </summary>
+            /// <param name="stateDelta">The previous <see cref="IAccountStateDelta"/> to use.</param>
+            /// <returns>A null state delta that is of the same type as <paramref name="stateDelta"/>.
+            /// </returns>
+            /// <exception cref="ArgumentException">Thrown if given <paramref name="stateDelta"/>
+            /// is not <see cref="AccountStateDelta"/>.
+            /// </exception>
+            /// <remarks>
+            /// This inherits <paramref name="stateDelta"/>'s
+            /// <see cref="IAccountStateDelta.TotalUpdatedFungibleAssets"/>.
+            /// </remarks>
+            internal static IAccountStateDelta Flush(
+                IAccountStateDelta stateDelta)
+            {
+                if (stateDelta is AccountStateDelta impl)
+                {
+                    return new AccountStateDelta(
+                        stateDelta.GetStates,
+                        stateDelta.GetBalance,
+                        stateDelta.GetTotalSupply,
+                        stateDelta.GetValidatorSet)
+                    {
+                        TotalUpdatedFungibles = impl.TotalUpdatedFungibles,
+                    };
+                }
+                else
+                {
+                    throw new ArgumentException(
+                        $"Unknown type for {nameof(stateDelta)}: {stateDelta.GetType()}");
+                }
+            }
+
+            [Pure]
+            private FungibleAssetValue GetBalance(
+                Address address,
+                Currency currency,
+                IImmutableDictionary<(Address, Currency), BigInteger> balances) =>
+                balances.TryGetValue((address, currency), out BigInteger balance)
+                    ? FungibleAssetValue.FromRawValue(currency, balance)
+                    : BalanceGetter(address, currency);
+
+            [Pure]
+            private AccountStateDelta UpdateStates(
+                IImmutableDictionary<Address, IValue> updatedStates
+            ) =>
+                new AccountStateDelta(
+                    StateGetter,
+                    BalanceGetter,
+                    TotalSupplyGetter,
+                    ValidatorSetGetter)
+                {
+                    Delta = new AccountDelta(
+                        updatedStates,
+                        Delta.Fungibles,
+                        Delta.TotalSupplies,
+                        Delta.ValidatorSet),
+                    TotalUpdatedFungibles = TotalUpdatedFungibles,
+                };
+
+            [Pure]
+            private AccountStateDelta UpdateFungibleAssets(
+                IImmutableDictionary<(Address, Currency), BigInteger> updatedFungibleAssets,
+                IImmutableDictionary<(Address, Currency), BigInteger> totalUpdatedFungibles
+            ) =>
+                UpdateFungibleAssets(
+                    updatedFungibleAssets,
+                    totalUpdatedFungibles,
+                    Delta.TotalSupplies);
+
+            [Pure]
+            private AccountStateDelta UpdateFungibleAssets(
+                IImmutableDictionary<(Address, Currency), BigInteger> updatedFungibleAssets,
+                IImmutableDictionary<(Address, Currency), BigInteger> totalUpdatedFungibles,
+                IImmutableDictionary<Currency, BigInteger> updatedTotalSupply
+            ) =>
+                new AccountStateDelta(
+                    StateGetter,
+                    BalanceGetter,
+                    TotalSupplyGetter,
+                    ValidatorSetGetter)
+                {
+                    Delta = new AccountDelta(
+                        Delta.States,
+                        updatedFungibleAssets,
+                        updatedTotalSupply,
+                        Delta.ValidatorSet),
+                    TotalUpdatedFungibles = totalUpdatedFungibles,
+                };
+
+            [Pure]
+            private AccountStateDelta UpdateValidatorSet(
+                ValidatorSet updatedValidatorSet
+            ) =>
+                new AccountStateDelta(
+                    StateGetter,
+                    BalanceGetter,
+                    TotalSupplyGetter,
+                    ValidatorSetGetter)
+                {
+                    Delta = new AccountDelta(
+                        Delta.States,
+                        Delta.Fungibles,
+                        Delta.TotalSupplies,
+                        updatedValidatorSet),
+                    TotalUpdatedFungibles = TotalUpdatedFungibles,
+                };
+
+            [Pure]
+            private IAccountStateDelta TransferAssetV0(
+                Address sender,
+                Address recipient,
+                FungibleAssetValue value,
+                bool allowNegativeBalance = false)
+            {
+                if (value.Sign <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(
+                        nameof(value),
+                        "The value to transfer has to be greater than zero."
+                    );
+                }
+
+                Currency currency = value.Currency;
+                FungibleAssetValue senderBalance = GetBalance(sender, currency);
+                FungibleAssetValue recipientBalance = GetBalance(recipient, currency);
+
+                if (!allowNegativeBalance && senderBalance < value)
+                {
+                    var msg = $"The account {sender}'s balance of {currency} is insufficient to " +
+                            $"transfer: {senderBalance} < {value}.";
+                    throw new InsufficientBalanceException(msg, sender, senderBalance);
+                }
+
+                return UpdateFungibleAssets(
+                    Delta.Fungibles
+                        .SetItem((sender, currency), (senderBalance - value).RawValue)
+                        .SetItem((recipient, currency), (recipientBalance + value).RawValue),
+                    TotalUpdatedFungibles
+                        .SetItem((sender, currency), (senderBalance - value).RawValue)
+                        .SetItem((recipient, currency), (recipientBalance + value).RawValue)
+                );
+            }
+
+            [Pure]
+            private IAccountStateDelta TransferAssetV1(
+                Address sender,
+                Address recipient,
+                FungibleAssetValue value,
                 bool allowNegativeBalance = false)
             {
                 if (value.Sign <= 0)
@@ -210,199 +467,88 @@ namespace NineChronicles.Headless.Executable.Commands
                 if (!allowNegativeBalance && senderBalance < value)
                 {
                     var msg = $"The account {sender}'s balance of {currency} is insufficient to " +
-                              $"transfer: {senderBalance} < {value}.";
+                            $"transfer: {senderBalance} < {value}.";
                     throw new InsufficientBalanceException(msg, sender, senderBalance);
                 }
 
+                (Address, Currency) senderAssetKey = (sender, currency);
+                BigInteger senderRawBalance = (senderBalance - value).RawValue;
+
                 IImmutableDictionary<(Address, Currency), BigInteger> updatedFungibleAssets =
-                    UpdatedFungibles
-                        .SetItem((sender, currency), (senderBalance - value).RawValue);
+                    Delta.Fungibles.SetItem(senderAssetKey, senderRawBalance);
+                IImmutableDictionary<(Address, Currency), BigInteger> totalUpdatedFungibles =
+                    TotalUpdatedFungibles.SetItem(senderAssetKey, senderRawBalance);
 
                 FungibleAssetValue recipientBalance = GetBalance(
                     recipient,
                     currency,
                     updatedFungibleAssets);
+                (Address, Currency) recipientAssetKey = (recipient, currency);
+                BigInteger recipientRawBalance = (recipientBalance + value).RawValue;
 
                 return UpdateFungibleAssets(
-                    updatedFungibleAssets
-                        .SetItem((recipient, currency), (recipientBalance + value).RawValue)
+                    updatedFungibleAssets.SetItem(recipientAssetKey, recipientRawBalance),
+                    totalUpdatedFungibles.SetItem(recipientAssetKey, recipientRawBalance)
                 );
             }
+        }
 
-            public IAccountStateDelta BurnAsset(Address owner, FungibleAssetValue value)
+        /// <summary>
+        /// Almost duplicate https://github.com/planetarium/libplanet/blob/main/Libplanet/State/AccountDelta.cs.
+        /// </summary>
+        private sealed class AccountDelta : IAccountDelta
+        {
+            internal AccountDelta()
             {
-                string msg;
-
-                if (value.Sign <= 0)
-                {
-                    throw new ArgumentOutOfRangeException(
-                        nameof(value),
-                        "The value to burn has to be greater than zero."
-                    );
-                }
-
-                Currency currency = value.Currency;
-                if (!currency.AllowsToMint(Signer))
-                {
-                    msg = $"The account {Signer} has no permission to burn assets of " +
-                          $"the currency {currency}.";
-                    throw new CurrencyPermissionException(msg, Signer, currency);
-                }
-
-                FungibleAssetValue balance = GetBalance(owner, currency);
-
-                if (balance < value)
-                {
-                    msg = $"The account {owner}'s balance of {currency} is insufficient to burn: " +
-                          $"{balance} < {value}.";
-                    throw new InsufficientBalanceException(msg, owner, balance);
-                }
-
-                if (currency.TotalSupplyTrackable)
-                {
-                    return UpdateFungibleAssets(
-                        UpdatedFungibles.SetItem((owner, currency), (balance - value).RawValue),
-                        UpdatedTotalSupply.SetItem(
-                            currency,
-                            (GetTotalSupply(currency) - value).RawValue)
-                    );
-                }
-
-                return UpdateFungibleAssets(
-                    UpdatedFungibles.SetItem((owner, currency), (balance - value).RawValue)
-                );
+                States = ImmutableDictionary<Address, IValue>.Empty;
+                Fungibles = ImmutableDictionary<(Address, Currency), BigInteger>.Empty;
+                TotalSupplies = ImmutableDictionary<Currency, BigInteger>.Empty;
+                ValidatorSet = null;
             }
 
-            public IImmutableDictionary<Address, IValue?> GetUpdatedStates() =>
-                StateUpdatedAddresses.Select(address =>
-                    new KeyValuePair<Address, IValue?>(
-                        address,
-                        GetState(address)
-                    )
-                ).ToImmutableDictionary();
-
-            public IImmutableDictionary<(Address, Currency), FungibleAssetValue>
-                GetUpdatedBalances() =>
-                UpdatedFungibleAssets.SelectMany(kv =>
-                    kv.Value.Select(currency =>
-                        new KeyValuePair<(Address, Currency), FungibleAssetValue>(
-                            (kv.Key, currency),
-                            GetBalance(kv.Key, currency)
-                        )
-                    )
-                ).ToImmutableDictionary();
-
-            public IImmutableDictionary<Currency, FungibleAssetValue>
-                GetUpdatedTotalSupplies() =>
-                TotalSupplyUpdatedCurrencies.Select(currency =>
-                        new KeyValuePair<Currency, FungibleAssetValue>(
-                            currency,
-                            GetTotalSupply(currency)))
-                    .ToImmutableDictionary();
-
-            public IImmutableDictionary<string, IValue?> GetUpdatedRawStates() =>
-                GetUpdatedStates()
-                    .Select(pair =>
-                        new KeyValuePair<string, IValue?>(
-                            ToStateKey(pair.Key),
-                            pair.Value))
-                    .Union(
-                        GetUpdatedBalances().Select(pair =>
-                            new KeyValuePair<string, IValue?>(
-                                ToFungibleAssetKey(pair.Key),
-                                (Integer)pair.Value.RawValue)))
-                    .Union(
-                        GetUpdatedTotalSupplies().Select(pair =>
-                            new KeyValuePair<string, IValue?>(
-                                ToTotalSupplyKey(pair.Key),
-                                (Integer)pair.Value.RawValue))).ToImmutableDictionary();
-
-            protected virtual FungibleAssetValue GetBalance(
-                Address address,
-                Currency currency,
-                IImmutableDictionary<(Address, Currency), BigInteger> balances) =>
-                balances.TryGetValue((address, currency), out BigInteger balance)
-                    ? FungibleAssetValue.FromRawValue(currency, balance)
-                    : BalanceGetter(address, currency);
-
-            protected virtual AccountStateDeltaImpl UpdateStates(
-                IImmutableDictionary<Address, IValue> updatedStates
-            ) =>
-                new AccountStateDeltaImpl(
-                    StateGetter,
-                    BalanceGetter,
-                    TotalSupplyGetter,
-                    ValidatorSetGetter,
-                    Signer)
-                {
-                    UpdatedStates = updatedStates,
-                    UpdatedFungibles = UpdatedFungibles,
-                    UpdatedTotalSupply = UpdatedTotalSupply,
-                    UpdatedValidatorSet = UpdatedValidatorSet,
-                };
-
-            protected virtual AccountStateDeltaImpl UpdateFungibleAssets(
-                IImmutableDictionary<(Address, Currency), BigInteger> updatedFungibleAssets,
-                IImmutableDictionary<Currency, BigInteger> updatedTotalSupply
-            ) =>
-                new AccountStateDeltaImpl(
-                    StateGetter,
-                    BalanceGetter,
-                    TotalSupplyGetter,
-                    ValidatorSetGetter,
-                    Signer)
-                {
-                    UpdatedStates = UpdatedStates,
-                    UpdatedFungibles = updatedFungibleAssets,
-                    UpdatedTotalSupply = updatedTotalSupply,
-                    UpdatedValidatorSet = UpdatedValidatorSet,
-                };
-
-            protected virtual AccountStateDeltaImpl UpdateFungibleAssets(
-                IImmutableDictionary<(Address, Currency), BigInteger> updatedFungibleAssets
-            ) =>
-                UpdateFungibleAssets(updatedFungibleAssets, UpdatedTotalSupply);
-
-            public static string ToStateKey(Address address) =>
-                address.ToHex().ToLowerInvariant();
-
-            public static string ToFungibleAssetKey(Address address, Currency currency) =>
-                "_" + address.ToHex().ToLowerInvariant() +
-                "_" + ByteUtil.Hex(currency.Hash.ByteArray).ToLowerInvariant();
-
-            public static string ToFungibleAssetKey((Address, Currency) pair) =>
-                ToFungibleAssetKey(pair.Item1, pair.Item2);
-
-            public static string ToTotalSupplyKey(Currency currency) =>
-                "__" + ByteUtil.Hex(currency.Hash.ByteArray).ToLowerInvariant();
-
-            protected virtual AccountStateDeltaImpl UpdateValidatorSet(
-                ValidatorSet updatedValidatorSet
-            ) =>
-                new AccountStateDeltaImpl(
-                    StateGetter,
-                    BalanceGetter,
-                    TotalSupplyGetter,
-                    ValidatorSetGetter,
-                    Signer)
-                {
-                    UpdatedStates = UpdatedStates,
-                    UpdatedFungibles = UpdatedFungibles,
-                    UpdatedTotalSupply = UpdatedTotalSupply,
-                    UpdatedValidatorSet = updatedValidatorSet,
-                };
-
-            public virtual ValidatorSet GetValidatorSet() =>
-                UpdatedValidatorSet ?? ValidatorSetGetter();
-
-            public IAccountStateDelta SetValidator(Validator validator)
+            internal AccountDelta(
+                IImmutableDictionary<Address, IValue> statesDelta,
+                IImmutableDictionary<(Address, Currency), BigInteger> fungiblesDelta,
+                IImmutableDictionary<Currency, BigInteger> totalSuppliesDelta,
+                ValidatorSet? validatorSetDelta)
             {
-                Log.Debug(
-                    "Update validator {PublicKey} {Power} to validator set",
-                    validator.PublicKey,
-                    validator.Power);
-                return UpdateValidatorSet(GetValidatorSet().Update(validator));
+                States = statesDelta;
+                Fungibles = fungiblesDelta;
+                TotalSupplies = totalSuppliesDelta;
+                ValidatorSet = validatorSetDelta;
             }
+
+            /// <inheritdoc cref="IAccountDelta.UpdatedAddresses"/>
+            public IImmutableSet<Address> UpdatedAddresses =>
+                StateUpdatedAddresses.Union(FungibleUpdatedAddresses);
+
+            /// <inheritdoc cref="IAccountDelta.StateUpdatedAddresses"/>
+            public IImmutableSet<Address> StateUpdatedAddresses =>
+                States.Keys.ToImmutableHashSet();
+
+            /// <inheritdoc cref="IAccountDelta.States"/>
+            public IImmutableDictionary<Address, IValue> States { get; }
+
+            /// <inheritdoc cref="IAccountDelta.FungibleUpdatedAddresses"/>
+            public IImmutableSet<Address> FungibleUpdatedAddresses =>
+                Fungibles.Keys.Select(pair => pair.Item1).ToImmutableHashSet();
+
+            /// <inheritdoc cref="IAccountDelta.UpdatedFungibleAssets"/>
+            public IImmutableSet<(Address, Currency)> UpdatedFungibleAssets =>
+                Fungibles.Keys.ToImmutableHashSet();
+
+            /// <inheritdoc cref="IAccountDelta.Fungibles"/>
+            public IImmutableDictionary<(Address, Currency), BigInteger> Fungibles { get; }
+
+            /// <inheritdoc cref="IAccountDelta.UpdatedTotalSupplyCurrencies"/>
+            public IImmutableSet<Currency> UpdatedTotalSupplyCurrencies =>
+                TotalSupplies.Keys.ToImmutableHashSet();
+
+            /// <inheritdoc cref="IAccountDelta.TotalSupplies"/>
+            public IImmutableDictionary<Currency, BigInteger> TotalSupplies { get; }
+
+            /// <inheritdoc cref="IAccountDelta.ValidatorSet"/>
+            public ValidatorSet? ValidatorSet { get; }
         }
 
         /// <summary>
@@ -411,35 +557,27 @@ namespace NineChronicles.Headless.Executable.Commands
         private sealed class ActionContext : IActionContext
         {
             private readonly int _randomSeed;
-            private readonly ITrie? _previousBlockStatesTrie;
-            private HashDigest<SHA256>? _previousStateRootHash;
 
             public ActionContext(
-                BlockHash? genesisHash,
                 Address signer,
                 TxId? txid,
                 Address miner,
                 long blockIndex,
-                IAccountStateDelta previousStates,
+                int blockProtocolVersion,
+                IAccountStateDelta previousState,
                 int randomSeed,
-                bool rehearsal = false,
-                ITrie? previousBlockStatesTrie = null,
-                bool blockAction = false)
+                bool rehearsal = false)
             {
-                GenesisHash = genesisHash;
                 Signer = signer;
                 TxId = txid;
                 Miner = miner;
                 BlockIndex = blockIndex;
+                BlockProtocolVersion = blockProtocolVersion;
                 Rehearsal = rehearsal;
-                PreviousStates = previousStates;
+                PreviousState = previousState;
                 Random = new Random(randomSeed);
                 _randomSeed = randomSeed;
-                _previousBlockStatesTrie = previousBlockStatesTrie;
-                BlockAction = blockAction;
             }
-
-            public BlockHash? GenesisHash { get; }
 
             public Address Signer { get; }
 
@@ -449,22 +587,15 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public long BlockIndex { get; }
 
+            public int BlockProtocolVersion { get; }
+
             public bool Rehearsal { get; }
 
-            public IAccountStateDelta PreviousStates { get; }
+            public IAccountStateDelta PreviousState { get; }
 
             public IRandom Random { get; }
 
-            public HashDigest<SHA256>? PreviousStateRootHash =>
-                _previousStateRootHash ??= _previousBlockStatesTrie is null
-                    ? null
-                    : Set(
-                            _previousBlockStatesTrie!,
-                            GetUpdatedRawStates(PreviousStates))
-                        .Commit()
-                        .Hash;
-
-            public bool BlockAction { get; }
+            public bool BlockAction => TxId is null;
 
             public void PutLog(string log)
             {
@@ -477,76 +608,18 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public IActionContext GetUnconsumedContext() =>
                 new ActionContext(
-                    GenesisHash,
                     Signer,
                     TxId,
                     Miner,
                     BlockIndex,
-                    PreviousStates,
+                    BlockProtocolVersion,
+                    PreviousState,
                     _randomSeed,
-                    Rehearsal,
-                    _previousBlockStatesTrie,
-                    BlockAction);
+                    Rehearsal);
 
             public long GasUsed() => 0;
 
             public long GasLimit() => 0;
-
-            private IImmutableDictionary<string, IValue?> GetUpdatedRawStates(
-                IAccountStateDelta delta)
-            {
-                if (delta is not AccountStateDeltaImpl impl)
-                {
-                    return ImmutableDictionary<string, IValue?>.Empty;
-                }
-
-                return impl.GetUpdatedStates()
-                    .Select(pair =>
-                        new KeyValuePair<string, IValue?>(
-                            AccountStateDeltaImpl.ToStateKey(pair.Key),
-                            pair.Value))
-                    .Union(
-                        impl.GetUpdatedBalances().Select(pair =>
-                            new KeyValuePair<string, IValue?>(
-                                AccountStateDeltaImpl.ToFungibleAssetKey(pair.Key),
-                                (Integer)pair.Value.RawValue)))
-                    .Union(
-                        impl.GetUpdatedTotalSupplies().Select(pair =>
-                            new KeyValuePair<string, IValue?>(
-                                AccountStateDeltaImpl.ToTotalSupplyKey(pair.Key),
-                                (Integer)pair.Value.RawValue))).ToImmutableDictionary();
-            }
-
-            private ITrie Set(ITrie trie, IEnumerable<KeyValuePair<string, IValue?>> pairs)
-                => Set(
-                    trie,
-                    pairs.Select(pair =>
-                        new KeyValuePair<KeyBytes, IValue?>(
-                            StateStoreExtensions.EncodeKey(pair.Key),
-                            pair.Value
-                        )
-                    )
-                );
-
-            private ITrie Set(ITrie trie, IEnumerable<KeyValuePair<KeyBytes, IValue?>> pairs)
-            {
-                foreach (var pair in pairs)
-                {
-                    if (pair.Value is { } v)
-                    {
-                        trie = trie.Set(pair.Key, v);
-                    }
-                    else
-                    {
-                        throw new NotSupportedException(
-                            "Unsetting states is not supported yet.  " +
-                            "See also: https://github.com/planetarium/libplanet/issues/1383"
-                        );
-                    }
-                }
-
-                return trie;
-            }
         }
 
         private sealed class Random : System.Random, IRandom
@@ -564,33 +637,29 @@ namespace NineChronicles.Headless.Executable.Commands
         /// Almost duplicate https://github.com/planetarium/libplanet/blob/main/Libplanet/Action/ActionEvaluator.cs#L286.
         /// </summary>
         private static IEnumerable<ActionEvaluation> EvaluateActions(
-            BlockHash? genesisHash,
-            ImmutableArray<byte> preEvaluationHash,
+            HashDigest<SHA256> preEvaluationHash,
             long blockIndex,
+            int blockProtocolVersion,
             TxId? txid,
             IAccountStateDelta previousStates,
             Address miner,
             Address signer,
             byte[] signature,
             IImmutableList<IAction> actions,
-            bool rehearsal = false,
-            ITrie? previousBlockStatesTrie = null,
-            bool blockAction = false,
             ILogger? logger = null)
         {
-            ActionContext CreateActionContext(IAccountStateDelta prevStates, int randomSeed)
+            ActionContext CreateActionContext(
+                IAccountStateDelta prevState,
+                int randomSeed)
             {
                 return new ActionContext(
-                    genesisHash: genesisHash,
                     signer: signer,
                     txid: txid,
                     miner: miner,
                     blockIndex: blockIndex,
-                    previousStates: prevStates,
-                    randomSeed: randomSeed,
-                    rehearsal: rehearsal,
-                    previousBlockStatesTrie: previousBlockStatesTrie,
-                    blockAction: blockAction);
+                    blockProtocolVersion: blockProtocolVersion,
+                    previousState: prevState,
+                    randomSeed: randomSeed);
             }
 
             byte[] hashedSignature;
@@ -599,25 +668,26 @@ namespace NineChronicles.Headless.Executable.Commands
                 hashedSignature = hasher.ComputeHash(signature);
             }
 
-            byte[] preEvaluationHashBytes = preEvaluationHash.ToBuilder().ToArray();
-            int seed = ActionEvaluator.GenerateRandomSeed(
-                preEvaluationHashBytes,
-                hashedSignature,
-                signature,
-                0);
+            byte[] preEvaluationHashBytes = preEvaluationHash.ToByteArray();
+            int seed = ActionEvaluator.GenerateRandomSeed(preEvaluationHashBytes, hashedSignature, signature, 0);
 
             IAccountStateDelta states = previousStates;
             foreach (IAction action in actions)
             {
                 Exception? exc = null;
-                ActionContext context = CreateActionContext(states, seed);
-                IAccountStateDelta nextStates = context.PreviousStates;
+                IAccountStateDelta nextStates = states;
+                ActionContext context = CreateActionContext(nextStates, seed);
+
                 try
                 {
-                    DateTimeOffset actionExecutionStarted = DateTimeOffset.Now;
+                    Stopwatch stopwatch = new Stopwatch();
+                    stopwatch.Start();
                     nextStates = action.Execute(context);
-                    TimeSpan spent = DateTimeOffset.Now - actionExecutionStarted;
-                    logger?.Verbose($"{action} execution spent {spent.TotalMilliseconds} ms.");
+                    logger?
+                        .Information(
+                            "Action {Action} took {DurationMs} ms to execute",
+                            action,
+                            stopwatch.ElapsedMilliseconds);
                 }
                 catch (OutOfMemoryException e)
                 {
@@ -626,65 +696,44 @@ namespace NineChronicles.Headless.Executable.Commands
                     var message =
                         "Action {Action} of tx {TxId} of block #{BlockIndex} with " +
                         "pre-evaluation hash {PreEvaluationHash} threw an exception " +
-                        "during execution.";
+                        "during execution";
                     logger?.Error(
                         e,
                         message,
                         action,
                         txid,
                         blockIndex,
-                        ByteUtil.Hex(preEvaluationHash));
+                        ByteUtil.Hex(preEvaluationHash.ByteArray));
                     throw;
                 }
                 catch (Exception e)
                 {
-                    if (rehearsal)
-                    {
-                        var message =
-                            $"The action {action} threw an exception during its " +
-                            "rehearsal.  It is probably because the logic of the " +
-                            $"action {action} is not enough generic so that it " +
-                            "can cover every case including rehearsal mode.\n" +
-                            "The IActionContext.Rehearsal property also might be " +
-                            "useful to make the action can deal with the case of " +
-                            "rehearsal mode.\n" +
-                            "See also this exception's InnerException property.";
-                        exc = new UnexpectedlyTerminatedActionException(
-                            message, null, null, null, null, action, e);
-                    }
-                    else
-                    {
-                        var stateRootHash = context.PreviousStateRootHash;
-                        var message =
-                            "Action {Action} of tx {TxId} of block #{BlockIndex} with " +
-                            "pre-evaluation hash {PreEvaluationHash} and previous " +
-                            "state root hash {StateRootHash} threw an exception " +
-                            "during execution.";
-                        logger?.Error(
-                            e,
-                            message,
-                            action,
-                            txid,
-                            blockIndex,
-                            ByteUtil.Hex(preEvaluationHash),
-                            stateRootHash);
-                        var innerMessage =
-                            $"The action {action} (block #{blockIndex}, " +
-                            $"pre-evaluation hash {ByteUtil.Hex(preEvaluationHash)}, tx {txid}, " +
-                            $"previous state root hash {stateRootHash}) threw " +
-                            "an exception during execution.  " +
-                            "See also this exception's InnerException property.";
-                        logger?.Error(
-                            "{Message}\nInnerException: {ExcMessage}", innerMessage, e.Message);
-                        exc = new UnexpectedlyTerminatedActionException(
-                            innerMessage,
-                            new HashDigest<SHA256>(preEvaluationHash),
-                            blockIndex,
-                            txid,
-                            stateRootHash,
-                            action,
-                            e);
-                    }
+                    var message =
+                        "Action {Action} of tx {TxId} of block #{BlockIndex} with " +
+                        "pre-evaluation hash {PreEvaluationHash} threw an exception " +
+                        "during execution";
+                    logger?.Error(
+                        e,
+                        message,
+                        action,
+                        txid,
+                        blockIndex,
+                        ByteUtil.Hex(preEvaluationHash.ByteArray));
+                    var innerMessage =
+                        $"The action {action} (block #{blockIndex}, " +
+                        $"pre-evaluation hash {ByteUtil.Hex(preEvaluationHash.ByteArray)}, " +
+                        $"tx {txid} threw an exception during execution.  " +
+                        "See also this exception's InnerException property";
+                    logger?.Error(
+                        "{Message}\nInnerException: {ExcMessage}", innerMessage, e.Message);
+                    exc = new UnexpectedlyTerminatedActionException(
+                        innerMessage,
+                        preEvaluationHash,
+                        blockIndex,
+                        txid,
+                        null,
+                        action,
+                        e);
                 }
 
                 // As IActionContext.Random is stateful, we cannot reuse
@@ -694,7 +743,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 yield return new ActionEvaluation(
                     action: action,
                     inputContext: equivalentContext,
-                    outputStates: nextStates,
+                    outputState: nextStates,
                     exception: exc);
 
                 if (exc is { })

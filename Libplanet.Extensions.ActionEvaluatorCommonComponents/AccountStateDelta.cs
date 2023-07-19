@@ -9,29 +9,25 @@ using Libplanet.State;
 
 namespace Libplanet.Extensions.ActionEvaluatorCommonComponents;
 
-public class AccountStateDelta : IAccountStateDelta, IValidatorSupportStateDelta
+public class AccountStateDelta : IAccountStateDelta
 {
     private IImmutableDictionary<Address, IValue> _states;
-    private IImmutableDictionary<(Address, Currency), BigInteger> _balances;
+    private IImmutableDictionary<(Address, Currency), BigInteger> _fungibles;
     private IImmutableDictionary<Currency, BigInteger> _totalSupplies;
     private ValidatorSet? _validatorSet;
+    private IAccountDelta _delta;
 
-    public IImmutableSet<Address> UpdatedAddresses => _states.Keys.ToImmutableHashSet();
+    public IImmutableSet<Address> UpdatedAddresses => _delta.UpdatedAddresses;
 
-    public IImmutableSet<Address> StateUpdatedAddresses => _states.Keys.ToImmutableHashSet();
+    public IImmutableSet<Address> StateUpdatedAddresses => _delta.StateUpdatedAddresses;
+
+    public IImmutableSet<(Address, Currency)> UpdatedFungibleAssets => _delta.UpdatedFungibleAssets;
 
 #pragma warning disable LAA1002
-    public IImmutableDictionary<Address, IImmutableSet<Currency>> UpdatedFungibleAssets =>
-        _balances.GroupBy(kv => kv.Key.Item1).ToImmutableDictionary(
-            g => g.Key,
-            g => (IImmutableSet<Currency>)g.Select(kv => kv.Key.Item2).ToImmutableHashSet()
-        );
-
-    public IImmutableDictionary<Address, IImmutableSet<Currency>> TotalUpdatedFungibleAssets { get; }
+    public IImmutableSet<(Address, Currency)> TotalUpdatedFungibleAssets { get; }
 #pragma warning restore LAA1002
 
-    public IImmutableSet<Currency> TotalSupplyUpdatedCurrencies =>
-        _totalSupplies.Keys.ToImmutableHashSet();
+    public IImmutableSet<Currency> UpdatedTotalSupplyCurrencies => _delta.UpdatedTotalSupplyCurrencies;
 
     public AccountStateGetter StateGetter { get; set; }
 
@@ -53,47 +49,73 @@ public class AccountStateDelta : IAccountStateDelta, IValidatorSupportStateDelta
 
     public AccountStateDelta(
         IImmutableDictionary<Address, IValue> states,
-        IImmutableDictionary<(Address, Currency), BigInteger> balances,
+        IImmutableDictionary<(Address, Currency), BigInteger> fungibles,
         IImmutableDictionary<Currency, BigInteger> totalSupplies,
         ValidatorSet? validatorSet
     )
     {
+        _delta = new AccountDelta(
+            states,
+            fungibles,
+            totalSupplies,
+            validatorSet);
         _states = states;
-        _balances = balances;
+        _fungibles = fungibles;
         _totalSupplies = totalSupplies;
         _validatorSet = validatorSet;
     }
 
-    public AccountStateDelta(Dictionary states, List balances, Dictionary totalSupplies, IValue validatorSet)
+    public AccountStateDelta(Dictionary states, List fungibles, List totalSupplies, IValue validatorSet)
     {
         // This assumes `states` consists of only Binary keys:
-        _states = states.ToImmutableDictionary(
-            kv => new Address(kv.Key),
-            kv => kv.Value
-        );
+        _states = states
+            .ToImmutableDictionary(
+                kv => new Address(((Binary)kv.Key).ByteArray),
+                kv => kv.Value);
 
-        _balances = balances.Cast<Dictionary>().ToImmutableDictionary(
-            record => (new Address(((Binary)record["address"]).ByteArray),
-                new Currency((Dictionary)record["currency"])),
-            record => (BigInteger)(Integer)record["amount"]
-        );
+        _fungibles = fungibles
+            .Cast<Dictionary>()
+            .Select(dict =>
+                new KeyValuePair<(Address, Currency), BigInteger>(
+                    (
+                        new Address(((Binary)dict["address"]).ByteArray),
+                        new Currency(dict["currency"])
+                    ),
+                    new BigInteger((Integer)dict["amount"])
+                ))
+            .ToImmutableDictionary();
 
         // This assumes `totalSupplies` consists of only Binary keys:
-        _totalSupplies = totalSupplies.ToImmutableDictionary(
-            kv => new Currency(new Codec().Decode((Binary)kv.Key)),
-            kv => (BigInteger)(Integer)kv.Value
-        );
+        _totalSupplies = totalSupplies
+            .Cast<Dictionary>()
+            .Select(dict =>
+                new KeyValuePair<Currency, BigInteger>(
+                    new Currency(dict["currency"]),
+                    new BigInteger((Integer)dict["amount"])))
+            .ToImmutableDictionary();
 
-        _validatorSet = new ValidatorSet(validatorSet);
+        _validatorSet = validatorSet is Null
+            ? null
+            : new ValidatorSet(validatorSet);
+
+        _delta = new AccountDelta(
+            _states,
+            _fungibles,
+            _totalSupplies,
+            _validatorSet);
     }
 
     public AccountStateDelta(IValue serialized)
+        : this((Dictionary)serialized)
+    {
+    }
+
+    public AccountStateDelta(Dictionary dict)
         : this(
-            (Dictionary)((Dictionary)serialized)["states"],
-            (List)((Dictionary)serialized)["balances"],
-            (Dictionary)((Dictionary)serialized)["totalSupplies"],
-            ((Dictionary)serialized)["validatorSet"]
-        )
+            (Dictionary)dict["states"],
+            (List)dict["balances"],
+            (List)dict["totalSupplies"],
+            dict["validatorSet"])
     {
     }
 
@@ -101,6 +123,8 @@ public class AccountStateDelta : IAccountStateDelta, IValidatorSupportStateDelta
         : this((Dictionary)new Codec().Decode(bytes))
     {
     }
+
+    public IAccountDelta Delta => _delta;
 
     public IValue? GetState(Address address) =>
         _states.ContainsKey(address)
@@ -111,7 +135,7 @@ public class AccountStateDelta : IAccountStateDelta, IValidatorSupportStateDelta
         addresses.Select(GetState).ToArray();
 
     public IAccountStateDelta SetState(Address address, IValue state) =>
-        new AccountStateDelta(_states.SetItem(address, state), _balances, _totalSupplies, _validatorSet)
+        new AccountStateDelta(_states.SetItem(address, state), _fungibles, _totalSupplies, _validatorSet)
         {
             StateGetter = StateGetter,
             BalanceGetter = BalanceGetter,
@@ -121,7 +145,7 @@ public class AccountStateDelta : IAccountStateDelta, IValidatorSupportStateDelta
 
     public FungibleAssetValue GetBalance(Address address, Currency currency)
     {
-        if (!_balances.TryGetValue((address, currency), out BigInteger rawValue))
+        if (!_fungibles.TryGetValue((address, currency), out BigInteger rawValue))
         {
             return BalanceGetter(address, currency);
         }
@@ -149,7 +173,8 @@ public class AccountStateDelta : IAccountStateDelta, IValidatorSupportStateDelta
         return TotalSupplyGetter(currency);
     }
 
-    public IAccountStateDelta MintAsset(Address recipient, FungibleAssetValue value)
+    public IAccountStateDelta MintAsset(
+        IActionContext context, Address recipient, FungibleAssetValue value)
     {
         // FIXME: 트랜잭션 서명자를 알아내 currency.AllowsToMint() 확인해서 CurrencyPermissionException
         // 던지는 처리를 해야하는데 여기서 트랜잭션 서명자를 무슨 수로 가져올지 잘 모르겠음.
@@ -176,7 +201,7 @@ public class AccountStateDelta : IAccountStateDelta, IValidatorSupportStateDelta
 
             return new AccountStateDelta(
                 _states,
-                _balances.SetItem(
+                _fungibles.SetItem(
                     (recipient, value.Currency),
                     nextAmount.RawValue
                 ),
@@ -193,7 +218,7 @@ public class AccountStateDelta : IAccountStateDelta, IValidatorSupportStateDelta
 
         return new AccountStateDelta(
             _states,
-            _balances.SetItem(
+            _fungibles.SetItem(
                 (recipient, value.Currency),
                 nextAmount.RawValue
             ),
@@ -209,6 +234,7 @@ public class AccountStateDelta : IAccountStateDelta, IValidatorSupportStateDelta
     }
 
     public IAccountStateDelta TransferAsset(
+        IActionContext context,
         Address sender,
         Address recipient,
         FungibleAssetValue value,
@@ -232,7 +258,7 @@ public class AccountStateDelta : IAccountStateDelta, IValidatorSupportStateDelta
         Currency currency = value.Currency;
         FungibleAssetValue senderRemains = senderBalance - value;
         FungibleAssetValue recipientRemains = GetBalance(recipient, currency) + value;
-        var balances = _balances
+        var balances = _fungibles
             .SetItem((sender, currency), senderRemains.RawValue)
             .SetItem((recipient, currency), recipientRemains.RawValue);
         return new AccountStateDelta(_states, balances, _totalSupplies, _validatorSet)
@@ -244,7 +270,8 @@ public class AccountStateDelta : IAccountStateDelta, IValidatorSupportStateDelta
         };
     }
 
-    public IAccountStateDelta BurnAsset(Address owner, FungibleAssetValue value)
+    public IAccountStateDelta BurnAsset(
+        IActionContext context, Address owner, FungibleAssetValue value)
     {
         // FIXME: 트랜잭션 서명자를 알아내 currency.AllowsToMint() 확인해서 CurrencyPermissionException
         // 던지는 처리를 해야하는데 여기서 트랜잭션 서명자를 무슨 수로 가져올지 잘 모르겠음.
@@ -269,7 +296,7 @@ public class AccountStateDelta : IAccountStateDelta, IValidatorSupportStateDelta
         FungibleAssetValue nextValue = balance - value;
         return new AccountStateDelta(
             _states,
-            _balances.SetItem(
+            _fungibles.SetItem(
                 (owner, currency),
                 nextValue.RawValue
             ),
@@ -297,7 +324,7 @@ public class AccountStateDelta : IAccountStateDelta, IValidatorSupportStateDelta
     {
         return new AccountStateDelta(
             _states,
-            _balances,
+            _fungibles,
             _totalSupplies,
             GetValidatorSet().Update(validator)
         )

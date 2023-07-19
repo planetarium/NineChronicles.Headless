@@ -19,10 +19,10 @@ namespace NineChronicles.Headless.GraphTypes
         internal override byte[] Encode(IResolveFieldContext context, ActionBase action)
         {
             var publicKey = new PublicKey(ByteUtil.ParseHex(context.Parent!.GetArgument<string>("publicKey")));
-            if (!(standaloneContext.BlockChain is BlockChain blockChain))
+            if (!(StandaloneContext.BlockChain is BlockChain blockChain))
             {
                 throw new ExecutionError(
-                    $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    $"{nameof(Headless.StandaloneContext)}.{nameof(Headless.StandaloneContext.BlockChain)} was not set yet!");
             }
 
             Address signer = publicKey.ToAddress();

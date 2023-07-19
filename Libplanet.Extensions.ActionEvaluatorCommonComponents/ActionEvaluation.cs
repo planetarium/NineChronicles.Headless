@@ -9,13 +9,13 @@ public class ActionEvaluation : IActionEvaluation
     public ActionEvaluation(
         IValue action,
         ActionContext inputContext,
-        AccountStateDelta outputStates,
+        AccountStateDelta outputState,
         Exception? exception,
         List<string> logs)
     {
         Action = action;
         InputContext = inputContext;
-        OutputStates = outputStates;
+        OutputState = outputState;
         Exception = exception;
         Logs = logs;
     }
@@ -23,8 +23,8 @@ public class ActionEvaluation : IActionEvaluation
     public IValue Action { get; }
     public ActionContext InputContext { get; }
     IActionContext IActionEvaluation.InputContext => InputContext;
-    public AccountStateDelta OutputStates { get; }
-    IAccountStateDelta IActionEvaluation.OutputStates => OutputStates;
+    public AccountStateDelta OutputState { get; }
+    IAccountStateDelta IActionEvaluation.OutputState => OutputState;
     public Exception? Exception { get; }
     public List<string> Logs { get; }
 }
