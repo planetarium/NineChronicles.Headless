@@ -42,8 +42,7 @@ public class RemoteEvaluationController : ControllerBase
             new ActionEvaluator(
                 context => new RewardGold(),
                 _blockChainStates,
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
         return Ok(new RemoteEvaluationResponse
         {
             Evaluations = actionEvaluator.Evaluate(preEvaluationBlock).Select(ActionEvaluationMarshaller.Serialize)

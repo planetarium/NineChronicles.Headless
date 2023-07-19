@@ -45,9 +45,8 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         return new AvatarStateType.AvatarStateContext(
-                            context.Source.AccountStateGetter.GetAvatarState(address),
-                            context.Source.AccountStateGetter,
-                            context.Source.AccountBalanceGetter,
+                            context.Source.AccountState.GetAvatarState(address),
+                            context.Source.AccountState,
                             context.Source.BlockIndex);
                     }
                     catch (InvalidAddressException)
@@ -164,8 +163,7 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         return new AgentStateType.AgentStateContext(
                             new AgentState(state),
-                            context.Source.AccountStateGetter,
-                            context.Source.AccountBalanceGetter,
+                            context.Source.AccountState,
                             context.Source.BlockIndex
                         );
                     }
@@ -180,8 +178,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     return new StakeStateType.StakeStateContext(
                         new StakeState(state),
-                        ctx.AccountStateGetter,
-                        ctx.AccountBalanceGetter,
+                        ctx.AccountState,
                         ctx.BlockIndex
                     );
                 }
@@ -340,7 +337,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var address = avatarAddress.Derive("recipe_ids");
-                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] { address });
+                    IReadOnlyList<IValue?> values = context.Source.AccountState.GetStates(new[] { address });
                     if (values[0] is List rawRecipeIds)
                     {
                         return rawRecipeIds.ToList(StateExtensions.ToInteger);
@@ -362,7 +359,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var address = avatarAddress.Derive("world_ids");
-                    IReadOnlyList<IValue?> values = context.Source.AccountStateGetter(new[] { address });
+                    IReadOnlyList<IValue?> values = context.Source.AccountState.GetStates(new[] { address });
                     if (values[0] is List rawWorldIds)
                     {
                         return rawWorldIds.ToList(StateExtensions.ToInteger);

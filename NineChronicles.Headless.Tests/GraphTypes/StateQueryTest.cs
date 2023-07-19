@@ -22,6 +22,7 @@ using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.GraphTypes.States;
 using Xunit;
+using Lib9c.Tests.Action;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
@@ -41,7 +42,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Address agentAddr,
             IEnumerable<CurrencyEnum>? currencyEnums,
             IEnumerable<string>? currencyTickers,
-            IEnumerable<string>? fungibleItemIds,
+            IEnumerable<string> fungibleItemIds,
             IEnumerable<bool>? setToNullForFungibleItemGarages)
         {
             var sb = new StringBuilder("{ garages(");
@@ -84,55 +85,68 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                         agentAddr,
                         HashDigest<SHA256>.FromString(fungibleItemId)),
                     fungibleItemId => fungibleItemId);
+
+#pragma warning disable CS0618
+            var goldCurrency = Currency.Legacy(
+                "NCG",
+                2,
+                new Address("0x47D082a115c63E7b58B1532d20E631538eaFADde"));
+#pragma warning restore CS0618
+            MockState mockState = MockState.Empty;
+
+            // NCG
+            mockState = mockState
+                .SetState(
+                    Addresses.GoldCurrency,
+                    new GoldCurrencyState(goldCurrency).Serialize());
+
+            // Garage
+            // Assume fungibleItemIds and setToNullForFungibleItemGarages are
+            // of the same length if both not null
+            if (fungibleItemIds is { } fids)
+            {
+                foreach ((var fid, var i) in fids.Select((item, index) => (item, index)))
+                {
+                    if (setToNullForFungibleItemGarages is { } flags &&
+                        flags.ElementAt(i) == true)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        var material = new Material(Dictionary.Empty
+                            .SetItem("id", 400_000.Serialize())
+                            .SetItem("grade", 1.Serialize())
+                            .SetItem("item_type", ItemType.Material.Serialize())
+                            .SetItem("item_sub_type", ItemSubType.Hourglass.Serialize())
+                            .SetItem("elemental_type", ElementalType.Normal.Serialize())
+                            .SetItem("item_id", HashDigest<SHA256>.FromString(fid).Serialize()));
+
+                        mockState = mockState
+                            .SetState(
+                                Addresses.GetGarageAddress(
+                                    agentAddr,
+                                    HashDigest<SHA256>.FromString(fid)),
+                                new FungibleItemGarage(material, 10).Serialize());
+                    }
+                }
+            }
+
+            // FAVs
+            // FIXME: This might need fixing and additional testing;
+            // testing without setting up any balance passes the tests;
+            // also this is different from the original test setup as there is no way
+            // to allow state to have "infinite" FAVs with all possible addresses having FAVs
+            mockState = mockState
+                .SetBalance(agentAddr, new FungibleAssetValue(goldCurrency, 99, 99))
+                .SetBalance(agentAddr, new FungibleAssetValue(Currencies.Crystal, 99, 123456789012345678))
+                .SetBalance(agentAddr, new FungibleAssetValue(Currencies.Garage, 99, 123456789012345678))
+                .SetBalance(agentAddr, new FungibleAssetValue(Currencies.Mead, 99, 0));
+
             var queryResult = await ExecuteQueryAsync<StateQuery>(
                 sb.ToString(),
                 source: new StateContext(
-                    stateAddresses =>
-                    {
-                        var arr = new IValue?[stateAddresses.Count];
-                        for (var i = 0; i < stateAddresses.Count; i++)
-                        {
-                            var stateAddr = stateAddresses[i];
-                            if (stateAddr.Equals(Addresses.GoldCurrency))
-                            {
-                                var currency = Currency.Legacy(
-                                    "NCG",
-                                    2,
-                                    new Address("0x47D082a115c63E7b58B1532d20E631538eaFADde"));
-                                arr[i] = new GoldCurrencyState(currency).Serialize();
-                                continue;
-                            }
-
-                            var fungibleItemId = addrToFungibleItemIdDict[stateAddr];
-                            var index = fungibleItemIds.ToList().IndexOf(fungibleItemId);
-                            if (index >= 0 && setToNullForFungibleItemGarages?.ElementAt(index) == true)
-                            {
-                                arr[i] = null;
-                                continue;
-                            }
-
-                            var material = new Material(Dictionary.Empty
-                                .SetItem("id", 400_000.Serialize())
-                                .SetItem("grade", 1.Serialize())
-                                .SetItem("item_type", ItemType.Material.Serialize())
-                                .SetItem("item_sub_type", ItemSubType.Hourglass.Serialize())
-                                .SetItem("elemental_type", ElementalType.Normal.Serialize())
-                                .SetItem("item_id", HashDigest<SHA256>.FromString(fungibleItemId).Serialize()));
-                            var fig = new FungibleItemGarage(material, 10);
-                            arr[i] = fig.Serialize();
-                        }
-
-                        return arr;
-                    },
-                    (_, currency) => currency.Ticker switch
-                    {
-                        "NCG" => new FungibleAssetValue(currency, 99, 99),
-                        "CRYSTAL" or "GARAGE" => new FungibleAssetValue(
-                            currency,
-                            99,
-                            123456789012345678),
-                        _ => new FungibleAssetValue(currency, 99, 0),
-                    },
+                    mockState,
                     0L));
             Assert.Null(queryResult.Errors);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;

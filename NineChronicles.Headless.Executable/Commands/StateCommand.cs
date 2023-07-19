@@ -110,8 +110,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
                 blockChainStates,
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
 
             foreach (BlockHash blockHash in blockHashes)
             {
