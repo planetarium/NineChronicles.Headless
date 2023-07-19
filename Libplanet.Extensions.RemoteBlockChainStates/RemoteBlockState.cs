@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL;
@@ -28,6 +29,11 @@ public class RemoteBlockState : IBlockState
 
     public IReadOnlyList<IValue?> GetStates(IReadOnlyList<Address> addresses)
     {
+        if (BlockHash is null)
+        {
+            return addresses.Select(_ => (IValue?)null).ToImmutableList();
+        }
+
         var response = _graphQlHttpClient.SendQueryAsync<GetStatesResponseType>(
             new GraphQLRequest(
                 @"query GetStates($addresses: [Address!]!, $offsetBlockHash: ID!)
@@ -52,6 +58,11 @@ public class RemoteBlockState : IBlockState
 
     public FungibleAssetValue GetBalance(Address address, Currency currency)
     {
+        if (BlockHash is null)
+        {
+            return currency * 0;
+        }
+
         object? currencyInput = currency.TotalSupplyTrackable ? new
         {
             ticker = currency.Ticker,
@@ -94,6 +105,11 @@ public class RemoteBlockState : IBlockState
 
     public FungibleAssetValue GetTotalSupply(Currency currency)
     {
+        if (BlockHash is null)
+        {
+            return currency * 0;
+        }
+
         object? currencyInput = currency.TotalSupplyTrackable ? new
         {
             ticker = currency.Ticker,
@@ -135,6 +151,11 @@ public class RemoteBlockState : IBlockState
 
     public ValidatorSet GetValidatorSet()
     {
+        if (BlockHash is null)
+        {
+            return new ValidatorSet();
+        }
+
         var response = _graphQlHttpClient.SendQueryAsync<GetValidatorsResponseType>(
             new GraphQLRequest(
                 @"query GetValidators($offsetBlockHash: ID!)
