@@ -132,8 +132,7 @@ namespace Libplanet.Headless.Hosting
                         ForkableActionEvaluator(
                             forkableActionEvaluatorConfiguration.Pairs.Select(pair => (
                                 (pair.Item1.Start, pair.Item1.End), BuildActionEvaluator(pair.Item2)
-                            )),
-                            actionLoader
+                            ))
                         ),
                     _ => throw new InvalidOperationException("Unexpected type."),
                 };
