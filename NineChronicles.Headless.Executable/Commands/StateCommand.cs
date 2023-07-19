@@ -23,6 +23,7 @@ using Libplanet.Store.Trie;
 using Nekoyume.Action.Loader;
 using NineChronicles.Headless.Executable.IO;
 using Serilog.Core;
+using DevExUtils = Lib9c.DevExtensions.Utils;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
@@ -66,7 +67,7 @@ namespace NineChronicles.Headless.Executable.Commands
             string? useMemoryKvStore = null
         )
         {
-            using Logger logger = Utils.ConfigureLogger(verbose);
+            using Logger logger = DevExUtils.ConfigureLogger(verbose);
             CancellationToken cancellationToken = GetInterruptSignalCancellationToken();
             TextWriter stderr = _console.Error;
             (
@@ -74,14 +75,14 @@ namespace NineChronicles.Headless.Executable.Commands
                 IStore store,
                 IKeyValueStore stateKvStore,
                 IStateStore stateStore
-            ) = Utils.GetBlockChain(
+            ) = DevExUtils.GetBlockChain(
                 logger,
                 storePath,
                 chainId,
                 useMemoryKvStore is string p ? new MemoryKeyValueStore(p, stderr) : null
             );
-            Block bottom = Utils.ParseBlockOffset(chain, bottommost, 0);
-            Block top = Utils.ParseBlockOffset(chain, topmost);
+            Block bottom = DevExUtils.ParseBlockOffset(chain, bottommost, 0);
+            Block top = DevExUtils.ParseBlockOffset(chain, topmost);
 
             stderr.WriteLine("It will execute all actions (tx actions & block actions)");
             stderr.WriteLine(
@@ -221,7 +222,7 @@ namespace NineChronicles.Headless.Executable.Commands
             bool verbose = false
         )
         {
-            using Logger logger = Utils.ConfigureLogger(verbose);
+            using Logger logger = DevExUtils.ConfigureLogger(verbose);
             CancellationToken cancellationToken = GetInterruptSignalCancellationToken();
             TextWriter stderr = _console.Error;
             (
@@ -229,12 +230,12 @@ namespace NineChronicles.Headless.Executable.Commands
                 IStore store,
                 IKeyValueStore stateKvStore,
                 IStateStore stateStore
-            ) = Utils.GetBlockChain(
+            ) = DevExUtils.GetBlockChain(
                 logger,
                 storePath,
                 chainId
             );
-            Block checkBlock = Utils.ParseBlockOffset(chain, block);
+            Block checkBlock = DevExUtils.ParseBlockOffset(chain, block);
             HashDigest<SHA256> stateRootHash = checkBlock.StateRootHash;
             ITrie stateRoot = stateStore.GetStateRoot(stateRootHash);
             bool exist = stateRoot.Recorded;
@@ -447,13 +448,13 @@ namespace NineChronicles.Headless.Executable.Commands
             string validatorSetKey)
         {
             IImmutableSet<Address> stateUpdatedAddresses = actionEvaluations
-                .SelectMany(a => a.OutputStates.Delta.StateUpdatedAddresses)
+                .SelectMany(a => a.OutputState.Delta.StateUpdatedAddresses)
                 .ToImmutableHashSet();
             IImmutableSet<(Address, Currency)> updatedFungibleAssets = actionEvaluations
-                .SelectMany(a => a.OutputStates.Delta.UpdatedFungibleAssets)
+                .SelectMany(a => a.OutputState.Delta.UpdatedFungibleAssets)
                 .ToImmutableHashSet();
             IImmutableSet<Currency> updatedTotalSupplies = actionEvaluations
-                .SelectMany(a => a.OutputStates.Delta.UpdatedTotalSupplyCurrencies)
+                .SelectMany(a => a.OutputState.Delta.UpdatedTotalSupplyCurrencies)
                 .ToImmutableHashSet();
 
             if (actionEvaluations.Count == 0)
@@ -461,7 +462,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 return ImmutableDictionary<string, IValue>.Empty;
             }
 
-            IAccountStateDelta lastStates = actionEvaluations[actionEvaluations.Count - 1].OutputStates;
+            IAccountStateDelta lastStates = actionEvaluations[actionEvaluations.Count - 1].OutputState;
 
             ImmutableDictionary<string, IValue> totalDelta =
                 stateUpdatedAddresses.ToImmutableDictionary(

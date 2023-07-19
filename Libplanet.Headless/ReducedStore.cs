@@ -10,7 +10,7 @@ using Libplanet.Tx;
 namespace Libplanet.Headless
 {
     /// <summary>
-    /// A <see cref="IStore"> decorator that reduce space consumption by omitting input calls which
+    /// A <see cref="IStore"/> decorator that reduce space consumption by omitting input calls which
     /// are unused by Nine Chronicles.
     /// <para>Calls on this will be forwarded to its <see cref="InternalStore"/>, except for:</para>
     /// <list type="bullet">
@@ -112,7 +112,7 @@ namespace Libplanet.Headless
             TxSuccess reducedTxSuccess = new TxSuccess(
                 txSuccess.BlockHash,
                 txSuccess.TxId,
-                updatedStates: ImmutableDictionary<Address, IValue>.Empty,
+                updatedStates: txSuccess.UpdatedStates.ToImmutableDictionary(pair => pair.Key, _ => (IValue)Null.Value),
                 fungibleAssetsDelta: txSuccess.FungibleAssetsDelta,
                 updatedFungibleAssets: txSuccess.UpdatedFungibleAssets,
                 actionsLogsList: txSuccess.ActionsLogsList

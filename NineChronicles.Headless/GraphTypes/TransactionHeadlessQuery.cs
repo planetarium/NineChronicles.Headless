@@ -177,7 +177,7 @@ namespace NineChronicles.Headless.GraphTypes
                                 null,
                                 null,
                                 txSuccess.UpdatedStates
-                                    .Select(kv => new KeyValuePair<Address, IValue?>(
+                                    .Select(kv => new KeyValuePair<Address, IValue>(
                                         kv.Key,
                                         kv.Value))
                                     .ToImmutableDictionary(),

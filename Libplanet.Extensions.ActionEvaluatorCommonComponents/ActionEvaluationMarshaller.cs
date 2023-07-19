@@ -16,14 +16,14 @@ public static class ActionEvaluationMarshaller
     public static IEnumerable<Dictionary> Marshal(this IEnumerable<IActionEvaluation> actionEvaluations)
     {
         var actionEvaluationsArray = actionEvaluations.ToArray();
-        var outputStates = AccountStateDeltaMarshaller.Marshal(actionEvaluationsArray.Select(aev => aev.OutputStates));
-        var previousStates = AccountStateDeltaMarshaller.Marshal(actionEvaluationsArray.Select(aev => aev.InputContext.PreviousStates));
+        var outputStates = AccountStateDeltaMarshaller.Marshal(actionEvaluationsArray.Select(aev => aev.OutputState));
+        var previousStates = AccountStateDeltaMarshaller.Marshal(actionEvaluationsArray.Select(aev => aev.InputContext.PreviousState));
         foreach (var actionEvaluation in actionEvaluationsArray)
         {
             yield return Dictionary.Empty
                 .Add("action", actionEvaluation.Action)
                 .Add("logs", new List(actionEvaluation.Logs))
-                .Add("output_states", AccountStateDeltaMarshaller.Marshal(actionEvaluation.OutputStates))
+                .Add("output_states", AccountStateDeltaMarshaller.Marshal(actionEvaluation.OutputState))
                 .Add("input_context", ActionContextMarshaller.Marshal(actionEvaluation.InputContext))
                 .Add("exception", actionEvaluation.Exception?.GetType().FullName is { } typeName ? (Text)typeName : Null.Value);
         }
@@ -34,7 +34,7 @@ public static class ActionEvaluationMarshaller
         return Dictionary.Empty
             .Add("action", actionEvaluation.Action)
             .Add("logs", new List(actionEvaluation.Logs))
-            .Add("output_states", AccountStateDeltaMarshaller.Marshal(actionEvaluation.OutputStates))
+            .Add("output_states", AccountStateDeltaMarshaller.Marshal(actionEvaluation.OutputState))
             .Add("input_context", ActionContextMarshaller.Marshal(actionEvaluation.InputContext))
             .Add("exception", actionEvaluation.Exception?.GetType().FullName is { } typeName ? (Text)typeName : Null.Value);
     }

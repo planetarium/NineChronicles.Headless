@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
+using Lib9c;
 using Lib9c.Model.Order;
 using Libplanet;
 using Libplanet.Assets;
@@ -24,7 +26,7 @@ using NineChronicles.Headless.GraphTypes.States.Models.Table;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    public class StateQuery : ObjectGraphType<StateContext>
+    public partial class StateQuery : ObjectGraphType<StateContext>
     {
         public StateQuery()
         {
@@ -539,6 +541,8 @@ namespace NineChronicles.Headless.GraphTypes
                     return (address, approved, mead);
                 }
             );
+
+            RegisterGarages();
         }
     }
 }

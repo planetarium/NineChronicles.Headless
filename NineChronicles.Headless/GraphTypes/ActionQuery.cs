@@ -7,7 +7,6 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet;
-using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
@@ -21,12 +20,12 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public partial class ActionQuery : ObjectGraphType
     {
-        private static readonly Codec Codec = new Codec();
-        internal StandaloneContext standaloneContext { get; set; }
+        private static readonly Codec Codec = new();
+        internal StandaloneContext StandaloneContext { get; set; }
 
         public ActionQuery(StandaloneContext standaloneContext)
         {
-            this.standaloneContext = standaloneContext;
+            StandaloneContext = standaloneContext;
 
             Field<ByteStringType>(
                 name: "stake",
@@ -188,14 +187,12 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var sender = context.GetArgument<Address>("sender");
                     var recipient = context.GetArgument<Address>("recipient");
-                    Currency currency = context.GetArgument<CurrencyEnum>("currency") switch
+                    var currencyEnum = context.GetArgument<CurrencyEnum>("currency");
+                    if (!standaloneContext.CurrencyFactory!.TryGetCurrency(currencyEnum, out var currency))
                     {
-                        CurrencyEnum.NCG => new GoldCurrencyState(
-                            (Dictionary)standaloneContext.BlockChain!.GetState(GoldCurrencyState.Address)
-                        ).Currency,
-                        CurrencyEnum.CRYSTAL => CrystalCalculator.CRYSTAL,
-                        _ => throw new ExecutionError("Unsupported Currency type.")
-                    };
+                        throw new ExecutionError($"Currency {currencyEnum} is not found.");
+                    }
+
                     var amount = FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
                     var memo = context.GetArgument<string?>("memo");
                     ActionBase action = new TransferAsset(sender, recipient, amount, memo);
@@ -545,6 +542,7 @@ namespace NineChronicles.Headless.GraphTypes
             RegisterRapidCombination();
             RegisterCombinationConsumable();
             RegisterMead();
+            RegisterGarages();
 
             Field<NonNullGraphType<CraftQuery>>(
                 name: "craftQuery",

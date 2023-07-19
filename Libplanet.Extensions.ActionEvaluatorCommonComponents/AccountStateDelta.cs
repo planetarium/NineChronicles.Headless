@@ -81,7 +81,7 @@ public class AccountStateDelta : IAccountStateDelta
                         new Address(((Binary)dict["address"]).ByteArray),
                         new Currency(dict["currency"])
                     ),
-                    new BigInteger((Integer)dict["amount"])
+                    ((Integer)dict["amount"]).Value
                 ))
             .ToImmutableDictionary();
 
