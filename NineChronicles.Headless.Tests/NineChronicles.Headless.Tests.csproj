@@ -17,7 +17,7 @@
     <Optimize Condition=" '$(Optimize)' == '' ">false</Optimize>
     <DefineConstants>$(DefineConstants);TRACE;LIB9C_DEV_EXTENSIONS</DefineConstants>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <Compile Include="..\Lib9c\.Lib9c.Tests\TableSheets.cs" Link="TableSheets.cs" />
     <Compile Include="..\Lib9c\.Lib9c.Tests\TableSheetsImporter.cs" Link="TableSheetsImporter.cs" />
@@ -42,6 +42,7 @@
     <ProjectReference Include="..\NineChronicles.Headless.Executable.Tests\NineChronicles.Headless.Executable.Tests.csproj" />
     <ProjectReference Include="..\NineChronicles.Headless.Executable\NineChronicles.Headless.Executable.csproj" />
     <ProjectReference Include="..\NineChronicles.Headless\NineChronicles.Headless.csproj" />
+    <ProjectReference Include="..\Lib9c\.Lib9c.Tests\Lib9c.Tests.csproj" />
   </ItemGroup>
 
 </Project>

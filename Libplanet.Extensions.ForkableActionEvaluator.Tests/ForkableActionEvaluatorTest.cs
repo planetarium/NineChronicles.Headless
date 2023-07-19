@@ -82,8 +82,7 @@ class PostActionEvaluator : IActionEvaluator
                     null,
                     false),
                 new AccountStateDelta(),
-                null,
-                new List<string>())
+                null)
         };
     }
 }
@@ -110,8 +109,7 @@ class PreActionEvaluator : IActionEvaluator
                     null,
                     false),
                 new AccountStateDelta(),
-                null,
-                new List<string>())
+                null)
         };
     }
 }

@@ -160,8 +160,8 @@ namespace NineChronicles.Headless.GraphTypes
                     if (!(store.GetFirstTxIdBlockHashIndex(txId) is { } txExecutedBlockHash))
                     {
                         return blockChain.GetStagedTransactionIds().Contains(txId)
-                            ? new TxResult(TxStatus.STAGING, null, null, null, null, null, null, null, null)
-                            : new TxResult(TxStatus.INVALID, null, null, null, null, null, null, null, null);
+                            ? new TxResult(TxStatus.STAGING, null, null, null, null, null, null, null)
+                            : new TxResult(TxStatus.INVALID, null, null, null, null, null, null, null);
                     }
 
                     try
@@ -182,15 +182,13 @@ namespace NineChronicles.Headless.GraphTypes
                                         kv.Value))
                                     .ToImmutableDictionary(),
                                 txSuccess.FungibleAssetsDelta,
-                                txSuccess.UpdatedFungibleAssets,
-                                txSuccess.ActionsLogsList),
+                                txSuccess.UpdatedFungibleAssets),
                             TxFailure txFailure => new TxResult(
                                 TxStatus.FAILURE,
                                 txExecutedBlock.Index,
                                 txExecutedBlock.Hash.ToString(),
                                 txFailure.ExceptionName,
                                 txFailure.ExceptionMetadata,
-                                null,
                                 null,
                                 null,
                                 null),
@@ -200,7 +198,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                     catch (Exception)
                     {
-                        return new TxResult(TxStatus.INVALID, null, null, null, null, null, null, null, null);
+                        return new TxResult(TxStatus.INVALID, null, null, null, null, null, null, null);
                     }
                 }
             );

@@ -35,9 +35,9 @@ public class DynamicActionLoader : IActionLoader
 
         foreach (Type type in LoadAllActionTypes(blockIndex))
         {
-            if (ActionTypeAttribute.ValueOf(type) is { } actionId)
+            if (type.GetCustomAttribute<ActionTypeAttribute>() is { } attr)
             {
-                types[actionId] = type;
+                types[attr.TypeIdentifier] = type;
             }
         }
 

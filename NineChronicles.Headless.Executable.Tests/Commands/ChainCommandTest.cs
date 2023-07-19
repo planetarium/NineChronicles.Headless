@@ -60,8 +60,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var actionEvaluator = new ActionEvaluator(
                 _ => new BlockPolicy().BlockAction,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             Block genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
             IStore store = storeType.CreateStore(_storePath);
             Guid chainId = Guid.NewGuid();
@@ -95,8 +94,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
                 actionEvaluator,
                 transactions: new IAction[]
@@ -157,8 +155,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
                 actionEvaluator,
                 transactions: new IAction[]
@@ -237,8 +234,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             BlockChain chain = BlockChain.Create(
                 blockPolicy,
                 stagePolicy,
@@ -280,8 +276,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             BlockChain chain = BlockChain.Create(
                 blockPolicy,
                 stagePolicy,

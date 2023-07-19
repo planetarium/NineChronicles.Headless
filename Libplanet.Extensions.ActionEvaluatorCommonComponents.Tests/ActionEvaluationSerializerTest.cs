@@ -15,10 +15,8 @@ public class ActionEvaluationSerializerTest
             .SetState(addresses[0], Null.Value)
             .SetState(addresses[1], (Text)"foo")
             .SetState(addresses[2], new List((Text)"bar"));
-        outputStates.ValidatorSetGetter = () => new Consensus.ValidatorSet();
 
         var previousStates = new AccountStateDelta();
-        previousStates.ValidatorSetGetter = () => new Consensus.ValidatorSet();
 
         var actionEvaluation = new ActionEvaluation(
             Null.Value,
@@ -34,8 +32,7 @@ public class ActionEvaluationSerializerTest
                 null,
                 true),
             outputStates,
-            new Libplanet.Action.UnexpectedlyTerminatedActionException("", null, null, null, null, new NullAction(), null),
-            new List<string> { "one", "two" });
+            new Libplanet.Action.UnexpectedlyTerminatedActionException("", null, null, null, null, new NullAction(), null));
         var serialized = ActionEvaluationMarshaller.Serialize(actionEvaluation);
         var deserialized = ActionEvaluationMarshaller.Deserialize(serialized);
 
@@ -43,7 +40,6 @@ public class ActionEvaluationSerializerTest
         Assert.Equal(123, deserialized.InputContext.Random.Seed);
         Assert.Equal(0, deserialized.InputContext.BlockIndex);
         Assert.Equal(0, deserialized.InputContext.BlockProtocolVersion);
-        Assert.Equal(new[] { "one", "two" }, deserialized.Logs);
         Assert.Equal(addresses[0], deserialized.InputContext.Signer);
         Assert.Equal(addresses[1], deserialized.InputContext.Miner);
         Assert.Equal(Null.Value, deserialized.OutputState.GetState(addresses[0]));

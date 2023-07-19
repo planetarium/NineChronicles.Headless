@@ -125,8 +125,7 @@ namespace Libplanet.Headless.Hosting
                     DefaultActionEvaluatorConfiguration _ => new ActionEvaluator(
                         _ => blockPolicy.BlockAction,
                         blockChainStates: blockChainStates,
-                        actionTypeLoader: actionLoader,
-                        feeCalculator: null
+                        actionTypeLoader: actionLoader
                     ),
                     ForkableActionEvaluatorConfiguration forkableActionEvaluatorConfiguration => new
                         ForkableActionEvaluator(

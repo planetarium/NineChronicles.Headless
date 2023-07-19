@@ -59,8 +59,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var actionEvaluator = new ActionEvaluator(
                 _ => blockAction,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             var genesisBlock = BlockChain.ProposeGenesisBlock(
                 actionEvaluator,
                 transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(0,

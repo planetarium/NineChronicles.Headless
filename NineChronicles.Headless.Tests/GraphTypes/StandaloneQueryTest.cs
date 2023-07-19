@@ -120,8 +120,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var actionEvaluator = new ActionEvaluator(
                 _ => null,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             var genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
 
             // 에러로 인하여 NineChroniclesNodeService 를 사용할 수 없습니다. https://git.io/JfS0M
@@ -449,8 +448,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var actionEvaluator = new ActionEvaluator(
                 _ => null,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             Block genesis =
                 BlockChain.ProposeGenesisBlock(
                     actionEvaluator,
@@ -844,8 +842,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var actionEvaluator = new ActionEvaluator(
                 _ => null,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             Block genesis =
                 BlockChain.ProposeGenesisBlock(
                     actionEvaluator,
@@ -930,8 +927,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var actionEvaluator = new ActionEvaluator(
                 _ => null,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             Block genesis =
                 BlockChain.ProposeGenesisBlock(
                     actionEvaluator,
@@ -1012,8 +1008,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var actionEvaluator = new ActionEvaluator(
                 _ => null,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             Block genesis =
                 BlockChain.ProposeGenesisBlock(
                     actionEvaluator,
@@ -1118,8 +1113,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             Block genesis =
                 BlockChain.ProposeGenesisBlock(
                     actionEvaluator,

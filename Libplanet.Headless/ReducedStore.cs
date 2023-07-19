@@ -114,8 +114,7 @@ namespace Libplanet.Headless
                 txSuccess.TxId,
                 updatedStates: txSuccess.UpdatedStates.ToImmutableDictionary(pair => pair.Key, _ => (IValue)Null.Value),
                 fungibleAssetsDelta: txSuccess.FungibleAssetsDelta,
-                updatedFungibleAssets: txSuccess.UpdatedFungibleAssets,
-                actionsLogsList: txSuccess.ActionsLogsList
+                updatedFungibleAssets: txSuccess.UpdatedFungibleAssets
             );
             InternalStore.PutTxExecution(reducedTxSuccess);
         }
