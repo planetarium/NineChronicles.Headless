@@ -50,8 +50,7 @@ namespace NineChronicles.Headless.Executable.Commands
             public IImmutableSet<(Address, Currency)> TotalUpdatedFungibleAssets =>
                 TotalUpdatedFungibles.Keys.ToImmutableHashSet();
 
-            public IImmutableDictionary<(Address, Currency), BigInteger> TotalUpdatedFungibles
-                { get; private set; }
+            public IImmutableDictionary<(Address, Currency), BigInteger> TotalUpdatedFungibles { get; private set; }
 
             /// <inheritdoc/>
             [Pure]
@@ -276,9 +275,9 @@ namespace NineChronicles.Headless.Executable.Commands
             internal static IAccountStateDelta Flush(IAccountStateDelta stateDelta) =>
                 stateDelta is AccountStateDelta impl
                     ? new AccountStateDelta(stateDelta)
-                        {
-                            TotalUpdatedFungibles = impl.TotalUpdatedFungibles,
-                        }
+                    {
+                        TotalUpdatedFungibles = impl.TotalUpdatedFungibles,
+                    }
                     : throw new ArgumentException(
                         $"Unknown type for {nameof(stateDelta)}: {stateDelta.GetType()}");
 
