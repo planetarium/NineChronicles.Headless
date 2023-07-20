@@ -22,10 +22,10 @@ using System.Diagnostics.Metrics;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
 using Libplanet;
 using Libplanet.Action;
-using Libplanet.Assets;
+using Libplanet.Types.Assets;
 using NineChronicles.Headless.Utils;
 using StrictRenderer = Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer;
 

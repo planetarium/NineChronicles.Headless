@@ -1,15 +1,11 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Bencodex.Types;
 using GraphQL.Execution;
-using Libplanet;
-using Libplanet.Assets;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
+using NineChronicles.Headless.Tests.Common;
 using Xunit;
-using Lib9c.Tests.Action;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 
 namespace NineChronicles.Headless.Tests.GraphTypes.States.Models

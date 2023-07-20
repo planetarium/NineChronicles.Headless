@@ -1,11 +1,6 @@
-using System.Collections.Generic;
-using System.Linq;
-using Bencodex.Types;
-using Libplanet;
-using Libplanet.State;
 using Nekoyume.Action;
+using NineChronicles.Headless.Tests.Common;
 using Xunit;
-using Lib9c.Tests.Action;
 using static Lib9c.SerializeKeys;
 
 namespace NineChronicles.Headless.Tests

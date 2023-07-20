@@ -1,5 +1,5 @@
 using Bencodex;
-using Libplanet.Blockchain;
+using Libplanet.Action.State;
 using Libplanet.Extensions.RemoteBlockChainStates;
 
 var builder = WebApplication.CreateBuilder(args);

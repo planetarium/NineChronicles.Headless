@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Net;
 

@@ -3,7 +3,7 @@ using System.IO;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Nekoyume.Action.Loader;

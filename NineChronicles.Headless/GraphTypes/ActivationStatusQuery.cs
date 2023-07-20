@@ -1,7 +1,7 @@
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
-using Libplanet;
+using Libplanet.Crypto;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;

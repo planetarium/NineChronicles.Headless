@@ -2,9 +2,9 @@
 
 using System.Collections.Generic;
 using Bencodex.Types;
-using Libplanet;
-using Libplanet.Assets;
-using Libplanet.State;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
+using Libplanet.Action.State;
 using NineChronicles.Headless.Utils;
 
 namespace NineChronicles.Headless.GraphTypes.States

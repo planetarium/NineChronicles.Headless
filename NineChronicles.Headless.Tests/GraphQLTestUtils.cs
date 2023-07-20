@@ -12,7 +12,7 @@ using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
-using Libplanet.Tx;
+using Libplanet.Types.Tx;
 using Microsoft.Extensions.DependencyInjection;
 using Nekoyume;
 using Nekoyume.Action;
@@ -121,7 +121,7 @@ namespace NineChronicles.Headless.Tests
                     0, minerPrivateKey, null, new ActionBase[]
                     {
                         initializeStates,
-                    })),
+                    }.ToPlainValues())),
                 privateKey: minerPrivateKey
             );
             var blockchain = BlockChain.Create(

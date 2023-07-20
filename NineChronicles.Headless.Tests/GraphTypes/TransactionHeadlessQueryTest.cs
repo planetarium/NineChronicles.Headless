@@ -15,12 +15,12 @@ using Libplanet.Action.Loader;
 using Libplanet.Action.Sys;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
-using Libplanet.Blocks;
-using Libplanet.Consensus;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Consensus;
 using Libplanet.Crypto;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
-using Libplanet.Tx;
+using Libplanet.Types.Tx;
 using Nekoyume.Action;
 using Nekoyume.Action.Loader;
 using NineChronicles.Headless.GraphTypes;
@@ -57,7 +57,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                 new[] { new Validator(_proposer.PublicKey, BigInteger.One) }
                                     .ToList()),
                             states: ImmutableDictionary.Create<Address, IValue>())
-                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa }))
+                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa.PlainValue }))
                     .ToImmutableList(),
                 privateKey: new PrivateKey()
             );
@@ -273,7 +273,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 0,
                 privateKey,
                 _blockChain.Genesis.Hash,
-                ImmutableArray<ActionBase>.Empty);
+                ImmutableArray<IValue>.Empty);
             _blockChain.StageTransaction(tx);
             var queryFormat = @"query {{
                 transactionResult(txId: ""{0}"") {{
@@ -299,7 +299,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 0,
                 privateKey,
                 _blockChain.Genesis.Hash,
-                ImmutableArray<ActionBase>.Empty);
+                ImmutableArray<IValue>.Empty);
             var queryFormat = @"query {{
                 transactionResult(txId: ""{0}"") {{
                     blockHash

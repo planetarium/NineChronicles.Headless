@@ -1,6 +1,6 @@
 using GraphQL;
 using GraphQL.Types;
-using Libplanet;
+using Libplanet.Crypto;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
 

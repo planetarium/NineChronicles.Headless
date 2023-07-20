@@ -3,9 +3,10 @@ using System.Numerics;
 using Bencodex;
 using Bencodex.Types;
 using Libplanet.Action;
-using Libplanet.Assets;
-using Libplanet.Consensus;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Consensus;
 
 namespace Libplanet.Extensions.ActionEvaluatorCommonComponents;
 

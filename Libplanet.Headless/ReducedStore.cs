@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using Bencodex.Types;
-using Libplanet.Action;
-using Libplanet.Blocks;
+using Libplanet.Crypto;
 using Libplanet.Store;
-using Libplanet.Tx;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 
 namespace Libplanet.Headless
 {

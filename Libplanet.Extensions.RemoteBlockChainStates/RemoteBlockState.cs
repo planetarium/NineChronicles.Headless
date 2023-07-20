@@ -3,9 +3,11 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.SystemTextJson;
-using Libplanet.Assets;
-using Libplanet.Blocks;
-using Libplanet.Consensus;
+using Libplanet.Action.State;
+using Libplanet.Common;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Consensus;
 using Libplanet.Crypto;
 
 namespace Libplanet.Extensions.RemoteBlockChainStates;

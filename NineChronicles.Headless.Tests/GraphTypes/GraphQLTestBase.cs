@@ -3,11 +3,11 @@ using Libplanet;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
 using Libplanet.Action.Sys;
-using Libplanet.Assets;
+using Libplanet.Types.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
-using Libplanet.Blocks;
-using Libplanet.Consensus;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Consensus;
 using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
 using Libplanet.KeyStore;
@@ -34,7 +34,7 @@ using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex.Types;
-using Libplanet.Tx;
+using Libplanet.Types.Tx;
 using Xunit.Abstractions;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
@@ -81,14 +81,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             tableSheets: sheets,
                             pendingActivationStates: new PendingActivationState[] { }
                         ),
-                    })).AddRange(new IAction[]
+                    }.ToPlainValues())).AddRange(new IAction[]
                 {
                     new Initialize(
                         new ValidatorSet(
                             new[] { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }
                                 .ToList()),
                         states: ImmutableDictionary.Create<Address, IValue>())
-                }.Select((sa, nonce) => Transaction.Create(nonce + 1, AdminPrivateKey, null, new[] { sa }))),
+                }.Select((sa, nonce) => Transaction.Create(nonce + 1, AdminPrivateKey, null, new[] { sa.PlainValue }))),
                 privateKey: AdminPrivateKey);
 
             var ncService = ServiceBuilder.CreateNineChroniclesNodeService(genesisBlock, ProposerPrivateKey);

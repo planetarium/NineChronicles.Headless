@@ -7,7 +7,7 @@ using System.Reflection;
 using Bencodex.Types;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
 using Serilog;
 
 using HardFork = Libplanet.Headless.DynamicActionTypeLoaderConfiguration.HardFork;

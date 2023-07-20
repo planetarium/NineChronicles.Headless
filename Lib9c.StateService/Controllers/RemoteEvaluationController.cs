@@ -2,7 +2,7 @@ using Bencodex;
 using Bencodex.Types;
 using Lib9c.StateService.Shared;
 using Libplanet.Action;
-using Libplanet.Blockchain;
+using Libplanet.Action.State;
 using Libplanet.Extensions.ActionEvaluatorCommonComponents;
 using Microsoft.AspNetCore.Mvc;
 using Nekoyume.Action;

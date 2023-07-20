@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using GraphQL.Types;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Model.Garages;
 using NineChronicles.Headless.GraphTypes.States.Models.Garage;
