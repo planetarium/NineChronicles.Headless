@@ -1,7 +1,7 @@
 using Bencodex.Types;
 using Lib9c;
-using Libplanet.Assets;
-using Libplanet.State;
+using Libplanet.Types.Assets;
+using Libplanet.Action.State;
 using Nekoyume;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes;

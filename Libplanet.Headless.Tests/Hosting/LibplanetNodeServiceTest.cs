@@ -11,7 +11,7 @@ using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
-using Libplanet.State;
+using Libplanet.Action.State;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Xunit;

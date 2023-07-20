@@ -1,5 +1,5 @@
 using GraphQL.Types;
-using Libplanet;
+using Libplanet.Crypto;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Model.Garages;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;

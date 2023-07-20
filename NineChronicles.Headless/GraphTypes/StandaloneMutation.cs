@@ -1,13 +1,13 @@
 using Bencodex.Types;
 using GraphQL;
-using GraphQL.Server.Authorization.AspNetCore;
 using GraphQL.Types;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Action;
 using Libplanet.Blockchain;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Explorer.GraphTypes;
-using Libplanet.Tx;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Tx;
 using Microsoft.Extensions.Configuration;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
@@ -210,7 +210,7 @@ namespace NineChronicles.Headless.GraphTypes
                                 amount,
                                 memo
                             ),
-                        }
+                        }.ToPlainValues()
                     );
                     blockChain.StageTransaction(tx);
                     return tx.Id;

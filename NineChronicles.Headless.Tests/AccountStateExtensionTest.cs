@@ -1,8 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
-using Bencodex.Types;
-using Libplanet;
-using Libplanet.State;
 using Nekoyume.Action;
 using Xunit;
 using Lib9c.Tests.Action;

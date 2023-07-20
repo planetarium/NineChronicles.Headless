@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Bencodex.Types;
 using GraphQL.Execution;
 using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Types.Assets;
 using Nekoyume;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;

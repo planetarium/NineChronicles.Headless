@@ -7,11 +7,11 @@ using GraphQL.Types;
 using Bencodex.Types;
 using Lib9c;
 using Libplanet.Blockchain;
-using Libplanet.Tx;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Types.Tx;
+using Libplanet.Common;
+using Libplanet.Types.Assets;
 using Libplanet.Explorer.GraphTypes;
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Store;
 using Nekoyume.Action;
@@ -98,7 +98,7 @@ namespace NineChronicles.Headless.GraphTypes
                         new UnsignedTx(
                             new TxInvoice(
                                 genesisHash: blockChain.Genesis.Hash,
-                                actions: new TxActionList(new[] { action }),
+                                actions: new TxActionList(new[] { action.PlainValue }),
                                 gasLimit: action is ITransferAsset or ITransferAssets ? RequestPledge.DefaultRefillMead : 1L,
                                 maxGasPrice: 1 * Currencies.Mead
                             ),
@@ -248,7 +248,7 @@ namespace NineChronicles.Headless.GraphTypes
                         new UnsignedTx(
                             new TxInvoice(
                                 genesisHash: blockChain.Genesis.Hash,
-                                actions: new TxActionList(new[] { action }),
+                                actions: new TxActionList(new[] { action.PlainValue }),
                                 gasLimit: gasLimit,
                                 maxGasPrice: maxGasPrice),
                             new TxSigningMetadata(publicKey, nonce));

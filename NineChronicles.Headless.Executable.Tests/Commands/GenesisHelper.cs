@@ -5,14 +5,13 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text.Json;
-using Libplanet;
-using Libplanet.Blocks;
+using Libplanet.Common;
 using Libplanet.Crypto;
+using Libplanet.Types.Blocks;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
-using Nekoyume.Blockchain.Policy;
 using Lib9cUtils = Lib9c.DevExtensions.Utils;
 
 namespace NineChronicles.Headless.Executable.Tests.Commands

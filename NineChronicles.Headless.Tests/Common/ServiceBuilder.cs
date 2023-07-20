@@ -1,5 +1,5 @@
 using System;
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;

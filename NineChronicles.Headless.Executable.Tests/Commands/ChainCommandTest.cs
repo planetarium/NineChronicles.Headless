@@ -7,18 +7,18 @@ using System.Numerics;
 using System.Text;
 using System.Text.Json;
 using Bencodex.Types;
-using Libplanet;
 using Libplanet.Action;
 using Libplanet.Action.Sys;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
-using Libplanet.Blocks;
-using Libplanet.Consensus;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
-using Libplanet.Tx;
+using Libplanet.Types.Consensus;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Action.Loader;
@@ -105,7 +105,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                             ),
                             states: ImmutableDictionary.Create<Address, IValue>()
                         )
-                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa }))
+                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa.PlainValue }))
                     .ToImmutableList());
             BlockChain chain = BlockChain.Create(
                 blockPolicy,
@@ -166,7 +166,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                             ),
                             states: ImmutableDictionary.Create<Address, IValue>()
                         )
-                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa }))
+                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa.PlainValue }))
                     .ToImmutableList());
             BlockChain chain = BlockChain.Create(
                 blockPolicy,

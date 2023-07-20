@@ -3,7 +3,7 @@ using Bencodex.Types;
 using GraphQL.Types;
 using Libplanet.Action;
 using Libplanet.Explorer.GraphTypes;
-using Libplanet.State;
+using Libplanet.Action.State;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States.Models;
 using NineChronicles.Headless.GraphTypes.States.Models.World;

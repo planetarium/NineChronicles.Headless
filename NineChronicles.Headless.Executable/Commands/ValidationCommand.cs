@@ -1,5 +1,5 @@
 using Cocona;
-using Libplanet;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using NineChronicles.Headless.Executable.IO;
 

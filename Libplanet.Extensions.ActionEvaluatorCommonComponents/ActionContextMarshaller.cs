@@ -2,8 +2,10 @@ using System.Security.Cryptography;
 using Bencodex;
 using Bencodex.Types;
 using Libplanet.Action;
-using Libplanet.Blocks;
-using Libplanet.Tx;
+using Libplanet.Common;
+using Libplanet.Crypto;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 using Boolean = Bencodex.Types.Boolean;
 
 namespace Libplanet.Extensions.ActionEvaluatorCommonComponents;

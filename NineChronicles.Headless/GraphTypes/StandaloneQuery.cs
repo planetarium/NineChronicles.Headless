@@ -7,13 +7,14 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Lib9c;
-using Libplanet;
-using Libplanet.Assets;
 using Libplanet.Blockchain;
-using Libplanet.Blocks;
+using Libplanet.Common;
+using Libplanet.Crypto;
 using Libplanet.Explorer.GraphTypes;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 using Microsoft.Extensions.Configuration;
-using Libplanet.Tx;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
@@ -21,7 +22,7 @@ using Nekoyume.TableData;
 using Nekoyume.Model;
 using NineChronicles.Headless.GraphTypes.States;
 using static NineChronicles.Headless.NCActionUtils;
-using Transaction = Libplanet.Tx.Transaction;
+using Transaction = Libplanet.Types.Tx.Transaction;
 
 namespace NineChronicles.Headless.GraphTypes
 {

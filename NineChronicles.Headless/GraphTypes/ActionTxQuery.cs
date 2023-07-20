@@ -1,11 +1,11 @@
 using System;
 using System.Linq;
 using GraphQL;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Common;
+using Libplanet.Types.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Crypto;
-using Libplanet.Tx;
+using Libplanet.Types.Tx;
 using Nekoyume.Action;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -35,7 +35,7 @@ namespace NineChronicles.Headless.GraphTypes
                     new TxInvoice(
                         genesisHash: blockChain.Genesis.Hash,
                         timestamp: timestamp,
-                        actions: new TxActionList(new[] { action }),
+                        actions: new TxActionList(new[] { action.PlainValue }),
                         gasLimit: gasLimit,
                         maxGasPrice: maxGasPrice),
                     new TxSigningMetadata(publicKey: publicKey, nonce: nonce));

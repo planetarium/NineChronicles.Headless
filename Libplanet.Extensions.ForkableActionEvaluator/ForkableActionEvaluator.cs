@@ -1,6 +1,6 @@
 using Libplanet.Action;
 using Libplanet.Action.Loader;
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
 
 namespace Libplanet.Extensions.ForkableActionEvaluator;
 

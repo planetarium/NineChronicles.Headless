@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using GraphQL.Execution;
-using Libplanet;
-using Libplanet.Assets;
-using Libplanet.Blocks;
+using Libplanet.Common;
 using Libplanet.Crypto;
-using Libplanet.Tx;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 using NineChronicles.Headless.GraphTypes;
 using Xunit;
 

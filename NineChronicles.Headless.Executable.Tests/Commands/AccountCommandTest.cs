@@ -1,11 +1,9 @@
 using System;
 using System.IO;
 using Bencodex;
-using Libplanet;
-using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
 using Libplanet.Crypto;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
@@ -15,7 +13,6 @@ using NineChronicles.Headless.Executable.Store;
 using NineChronicles.Headless.Executable.Tests.IO;
 using Serilog.Core;
 using Xunit;
-using Lib9cUtils = Lib9c.DevExtensions.Utils;
 using Libplanet.Action;
 using Nekoyume.Action.Loader;
 
