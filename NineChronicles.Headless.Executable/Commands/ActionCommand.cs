@@ -89,31 +89,28 @@ namespace NineChronicles.Headless.Executable.Commands
         )
         {
             Type baseType = typeof(Nekoyume.Action.ActionBase);
-            Type attrType = typeof(ActionTypeAttribute);
             Type obsoleteType = typeof(ActionObsoleteAttribute);
 
             bool IsTarget(Type type)
             {
                 return baseType.IsAssignableFrom(type) &&
-                       type.IsDefined(attrType) &&
-                       ActionTypeAttribute.ValueOf(type) is { } &&
-                       (
-                           !excludeObsolete ||
-                           !type.IsDefined(obsoleteType) ||
-                           type
-                               .GetCustomAttributes()
-                               .OfType<ActionObsoleteAttribute>()
-                               .Select(attr => attr.ObsoleteIndex)
-                               .FirstOrDefault() > blockIndex
-                       );
+                    type.GetCustomAttribute<ActionTypeAttribute>() is { } attr &&
+                    (
+                        !excludeObsolete ||
+                        !type.IsDefined(obsoleteType) ||
+                        type
+                            .GetCustomAttributes()
+                            .OfType<ActionObsoleteAttribute>()
+                            .Select(attr => attr.ObsoleteIndex)
+                            .FirstOrDefault() > blockIndex
+                    );
             }
 
             var assembly = baseType.Assembly;
             var typeIds = assembly.GetTypes()
                 .Where(IsTarget)
-                .Select(type => ActionTypeAttribute.ValueOf(type))
-                .Where(v => v is Text)
-                .Cast<Text>()
+                .Select(type => type.GetCustomAttribute<ActionTypeAttribute>()?.TypeIdentifier)
+                .OfType<Text>()
                 .Select(v => v.Value).ToArray();
 
             foreach (string? typeId in typeIds

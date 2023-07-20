@@ -19,8 +19,8 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class AgentStateContext : StateContext
         {
-            public AgentStateContext(AgentState agentState, AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter, long blockIndex)
-                : base(accountStateGetter, accountBalanceGetter, blockIndex)
+            public AgentStateContext(AgentState agentState, IAccountState accountState, long blockIndex)
+                : base(accountState, blockIndex)
             {
                 AgentState = agentState;
             }
@@ -45,11 +45,10 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context =>
                 {
                     IReadOnlyList<Address> avatarAddresses = context.Source.GetAvatarAddresses();
-                    return context.Source.AccountStateGetter.GetAvatarStates(avatarAddresses).Select(
+                    return context.Source.AccountState.GetAvatarStates(avatarAddresses).Select(
                         x => new AvatarStateType.AvatarStateContext(
                             x,
-                            context.Source.AccountStateGetter,
-                            context.Source.AccountBalanceGetter,
+                            context.Source.AccountState,
                             context.Source.BlockIndex));
                 });
             Field<NonNullGraphType<StringGraphType>>(

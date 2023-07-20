@@ -8,6 +8,7 @@ using GraphQL.Execution;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Crypto;
+using Libplanet.State;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
@@ -15,6 +16,7 @@ using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.GraphTypes.States;
 using Xunit;
+using Lib9c.Tests.Action;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
@@ -39,7 +41,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             _worldBossAddress = Addresses.GetWorldBossAddress(1);
             _worldBossKillRewardRecordAddress = Addresses.GetWorldBossKillRewardRecordAddress(_avatarAddress, 1);
             _raiderListAddress = Addresses.GetRaiderListAddress(1);
-            _stateContext = new StateContext(GetStatesMock, GetBalanceMock, 1L);
             _raiderState = new RaiderState
             {
                 TotalScore = 2_000,
@@ -63,6 +64,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 [1] = true,
                 [2] = false,
             };
+            _stateContext = new StateContext(GetMockState(), 1L);
             var minerPrivateKey = new PrivateKey();
             var initializeStates = new InitializeStates(
                 rankingState: new RankingState0(),
@@ -297,45 +299,18 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
                 Assert.Equal(_raiderStateAddress.ToString(), resultAddress);
             }
         }
-        private IValue? GetStateMock(Address address)
-        {
-            if (address.Equals(_raiderStateAddress))
-            {
-                return _raiderState.Serialize();
-            }
 
-            if (address.Equals(Addresses.GetSheetAddress<WorldBossListSheet>()))
-            {
-                return @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
+        private IAccountState GetMockState()
+        {
+            return MockState.Empty
+                .SetState(_raiderStateAddress, _raiderState.Serialize())
+                .SetState(Addresses.GetSheetAddress<WorldBossListSheet>(), @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
 1,205005,0,100,300,200,100,10
 2,205005,200,300,300,200,100,10
-".Serialize();
-            }
-
-            if (address.Equals(_worldBossAddress))
-            {
-                return _worldBossState.Serialize();
-            }
-
-            if (address.Equals(_worldBossKillRewardRecordAddress))
-            {
-                return _worldBossKillRewardRecord.Serialize();
-            }
-
-            if (address.Equals(_raiderListAddress))
-            {
-                return List.Empty.Add(_raiderStateAddress.Serialize());
-            }
-
-            return null;
-        }
-
-        private IReadOnlyList<IValue?> GetStatesMock(IReadOnlyList<Address> addresses) =>
-            addresses.Select(GetStateMock).ToArray();
-
-        private FungibleAssetValue GetBalanceMock(Address address, Currency currency)
-        {
-            return FungibleAssetValue.FromRawValue(currency, 0);
+".Serialize())
+                .SetState(_worldBossAddress, _worldBossState.Serialize())
+                .SetState(_worldBossKillRewardRecordAddress, _worldBossKillRewardRecord.Serialize())
+                .SetState(_raiderListAddress, List.Empty.Add(_raiderStateAddress.Serialize()));
         }
 
         private async Task<int> GetRaidId(long blockIndex, bool prev)

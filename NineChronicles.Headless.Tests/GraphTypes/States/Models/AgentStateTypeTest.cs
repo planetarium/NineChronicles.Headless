@@ -12,6 +12,7 @@ using Nekoyume.Helper;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
 using Xunit;
+using Lib9c.Tests.Action;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 
 namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
@@ -58,53 +59,22 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             MonsterCollectionState monsterCollectionState = new MonsterCollectionState(monsterCollectionAddress, 7, 0, Fixtures.TableSheetsFX.MonsterCollectionRewardSheet);
             Address pledgeAddress = agentState.address.GetPledgeAddress();
 
-            IValue? GetStateMock(Address address)
-            {
-                if (GoldCurrencyState.Address == address)
-                {
-                    return new GoldCurrencyState(goldCurrency).Serialize();
-                }
-
-                if (monsterCollectionAddress == address)
-                {
-                    return monsterCollectionState.Serialize();
-                }
-
-                if (Fixtures.AvatarAddress == address)
-                {
-                    return Fixtures.AvatarStateFX.Serialize();
-                }
-
-                if (pledgeAddress == address)
-                {
-                    return List.Empty
+            MockState mockState = MockState.Empty
+                .SetState(GoldCurrencyState.Address, new GoldCurrencyState(goldCurrency).Serialize())
+                .SetState(monsterCollectionAddress, monsterCollectionState.Serialize())
+                .SetState(Fixtures.AvatarAddress, Fixtures.AvatarStateFX.Serialize())
+                .SetState(
+                    pledgeAddress,
+                    List.Empty
                         .Add(MeadConfig.PatronAddress.Serialize())
                         .Add(true.Serialize())
-                        .Add(4.Serialize());
-                }
-
-                return null;
-            }
-
-            IReadOnlyList<IValue?> GetStatesMock(IReadOnlyList<Address> addresses) =>
-                addresses.Select(GetStateMock).ToArray();
-
-            FungibleAssetValue GetBalanceMock(Address address, Currency currency)
-            {
-                if (address == agentState.address)
-                {
-                    var balance = currency.Equals(CrystalCalculator.CRYSTAL)
-                        ? crystalBalance
-                        : goldBalance;
-                    return new FungibleAssetValue(currency, balance, 0);
-                }
-
-                return FungibleAssetValue.FromRawValue(currency, 0);
-            }
+                        .Add(4.Serialize()))
+                .SetBalance(agentState.address, CrystalCalculator.CRYSTAL * crystalBalance)
+                .SetBalance(agentState.address, goldCurrency * goldBalance);
 
             var queryResult = await ExecuteQueryAsync<AgentStateType>(
                 query,
-                source: new AgentStateType.AgentStateContext(agentState, GetStatesMock, GetBalanceMock, 0)
+                source: new AgentStateType.AgentStateContext(agentState, mockState, 0)
             );
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var expected = new Dictionary<string, object>()

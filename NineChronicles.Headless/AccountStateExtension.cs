@@ -9,7 +9,7 @@ using static Lib9c.SerializeKeys;
 
 namespace NineChronicles.Headless
 {
-    public static class AccountStateGetterExtension
+    public static class AccountStateExtension
     {
         private static readonly string[] AvatarLegacyKeys =
         {
@@ -19,11 +19,11 @@ namespace NineChronicles.Headless
         };
 
         public static IReadOnlyList<AvatarState> GetAvatarStates(
-            this AccountStateGetter accountStateGetter,
+            this IAccountState accountState,
             IReadOnlyList<Address> avatarAddresses
         )
         {
-            IReadOnlyDictionary<Address, Dictionary> rawAvatarStates = GetRawAvatarStates(accountStateGetter, avatarAddresses);
+            IReadOnlyDictionary<Address, Dictionary> rawAvatarStates = GetRawAvatarStates(accountState, avatarAddresses);
             var states = new AvatarState[rawAvatarStates.Count];
             var values = rawAvatarStates.Values.ToArray();
             for (int i = 0; i < rawAvatarStates.Count; i++)
@@ -34,11 +34,11 @@ namespace NineChronicles.Headless
             return states;
         }
 
-        public static AvatarState GetAvatarState(this AccountStateGetter accountStateGetter, Address avatarAddress) =>
-            accountStateGetter.GetAvatarStates(new[] { avatarAddress })[0];
+        public static AvatarState GetAvatarState(this IAccountState accountState, Address avatarAddress) =>
+            accountState.GetAvatarStates(new[] { avatarAddress })[0];
 
         public static IReadOnlyDictionary<Address, Dictionary> GetRawAvatarStates(
-            this AccountStateGetter accountStateGetter,
+            this IAccountState accountState,
             IReadOnlyList<Address> avatarAddresses
         )
         {
@@ -58,7 +58,7 @@ namespace NineChronicles.Headless
                 }
             }
 
-            IReadOnlyList<IValue?> values = accountStateGetter(addresses);
+            IReadOnlyList<IValue?> values = accountState.GetStates(addresses);
             var states = new Dictionary<Address, Dictionary>(avatarAddresses.Count);
             for (var i = 0; i < avatarAddresses.Count; i++)
             {

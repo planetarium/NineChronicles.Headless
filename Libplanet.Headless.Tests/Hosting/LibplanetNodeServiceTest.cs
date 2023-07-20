@@ -32,8 +32,7 @@ namespace Libplanet.Headless.Tests.Hosting
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
                 blockChainStates,
-                actionLoader,
-                null);
+                actionLoader);
             var genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
             var service = new LibplanetNodeService(
                 new LibplanetNodeServiceProperties()

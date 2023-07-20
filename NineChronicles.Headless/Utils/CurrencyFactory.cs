@@ -10,14 +10,14 @@ namespace NineChronicles.Headless.Utils;
 
 public class CurrencyFactory
 {
-    private readonly AccountStateGetter _accountStateGetter;
+    private readonly IAccountState _accountState;
     private Currency? _ncg;
 
     public CurrencyFactory(
-        AccountStateGetter accountStateGetter,
+        IAccountState accountState,
         Currency? ncg = null)
     {
-        _accountStateGetter = accountStateGetter;
+        _accountState = accountState;
         _ncg = ncg;
     }
 
@@ -50,7 +50,7 @@ public class CurrencyFactory
             return _ncg;
         }
 
-        var value = _accountStateGetter(new[] { Addresses.GoldCurrency })[0];
+        var value = _accountState.GetState(Addresses.GoldCurrency);
         if (value is Dictionary goldCurrencyDict)
         {
             var goldCurrency = new GoldCurrencyState(goldCurrencyDict);

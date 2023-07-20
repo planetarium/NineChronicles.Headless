@@ -130,10 +130,10 @@ namespace NineChronicles.Headless
         public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStates(IEnumerable<byte[]> addressBytesList, byte[] blockHashBytes)
         {
             var hash = new BlockHash(blockHashBytes);
-            var accountStateGetter = _blockChain.ToAccountStateGetter(hash);
+            var accountState = _blockChain.GetBlockState(hash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
             var addresses = addressBytesList.Select(a => new Address(a)).ToList();
-            var rawAvatarStates = accountStateGetter.GetRawAvatarStates(addresses);
+            var rawAvatarStates = accountState.GetRawAvatarStates(addresses);
             var taskList = rawAvatarStates
                 .Select(pair => Task.Run(() =>
                 {
