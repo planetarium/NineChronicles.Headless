@@ -257,13 +257,13 @@ namespace NineChronicles.Headless.Executable
                     },
                     ActionEvaluatorType.ForkableActionEvaluator => new ForkableActionEvaluatorConfiguration
                     {
-                        Pairs = (configuration.GetValue<List<IConfiguration>>("Pairs") ??
-                                 throw new KeyNotFoundException()).Select(pair =>
+                        Pairs = (configuration.GetSection("Pairs") ??
+                                 throw new KeyNotFoundException()).GetChildren().Select(pair =>
                         {
-                            var range = pair.GetValue<ForkableActionEvaluatorRange>("Range") ??
-                                        throw new KeyNotFoundException();
+                            var range = new ForkableActionEvaluatorRange();
+                            pair.Bind("Range", range);
                             var actionEvaluatorConfiguration =
-                                GetActionEvaluatorConfiguration(configuration.GetSection("ActionEvaluator")) ??
+                                GetActionEvaluatorConfiguration(pair.GetSection("ActionEvaluator")) ??
                                 throw new KeyNotFoundException();
                             return (range, actionEvaluatorConfiguration);
                         }).ToImmutableArray()
