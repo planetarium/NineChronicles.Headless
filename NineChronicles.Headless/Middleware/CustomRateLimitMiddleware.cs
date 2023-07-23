@@ -16,6 +16,7 @@ namespace NineChronicles.Headless.Middleware
     public class CustomRateLimitMiddleware : RateLimitMiddleware<CustomIpRateLimitProcessor>
     {
         private static Dictionary<Address, int> _agentList = new();
+        private static Dictionary<Address, int> _stateQueryAgentList = new();
         private readonly ILogger _logger;
         private readonly IRateLimitConfiguration _config;
         private readonly IOptions<CustomIpRateLimitOptions> _options;
@@ -69,6 +70,22 @@ namespace NineChronicles.Headless.Middleware
 
                     _logger.Information("[IP-RATE-LIMITER] Transaction signer: {signer} Count:{count}.", tx.Signer, _agentList[tx.Signer]);
                     
+                }
+
+                if (body.Contains("stateQuery {\r\n    agent"))
+                {
+                    byte[] payload = ByteUtil.ParseHex(body.Split("\\\"")[1]);
+                    Transaction tx = Transaction.Deserialize(payload);
+                    if (!_stateQueryAgentList.ContainsKey(tx.Signer))
+                    {
+                        _stateQueryAgentList.Add(tx.Signer, 1);
+                    }
+                    else
+                    {
+                        _stateQueryAgentList[tx.Signer] += 1;
+                    }
+
+                    _logger.Information("[IP-RATE-LIMITER] State Query signer: {signer} Count:{count}.", tx.Signer, _stateQueryAgentList[tx.Signer]);
                 }
 
                 return identity;
