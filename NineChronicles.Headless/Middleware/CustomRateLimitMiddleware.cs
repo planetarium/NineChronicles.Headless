@@ -71,7 +71,7 @@ namespace NineChronicles.Headless.Middleware
                     _logger.Information("[IP-RATE-LIMITER] Transaction signer: {signer} Count:{count}.", tx.Signer, _agentList[tx.Signer]);
                 }
 
-                if (body.Contains("stateQuery {\r\n    agent"))
+                if (body.Contains("agent(address:"))
                 {
                     var agent = body.Split("\\\"")[1];
                     if (!_stateQueryAgentList.ContainsKey(agent))
