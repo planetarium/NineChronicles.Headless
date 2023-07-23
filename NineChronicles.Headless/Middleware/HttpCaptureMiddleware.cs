@@ -30,13 +30,6 @@ namespace NineChronicles.Headless.Middleware
                 _logger.Information("[GRAPHQL-REQUEST-CAPTURE] IP: {IP} Method: {Method} Endpoint: {Path} {Body}",
                     remoteIp, context.Request.Method, context.Request.Path, body);
                 context.Request.Body.Seek(0, SeekOrigin.Begin);
-                if (body.Contains("stageTransaction"))
-                {
-                    _logger.Information("[GRAPHQL-REQUEST-CAPTURE] Contains stageTransaction: {yes}.", "yes");
-                    byte[] payload = ByteUtil.ParseHex(body.Split("\\\"")[1]);
-                    Transaction tx = Transaction.Deserialize(payload);
-                    _logger.Information("[GRAPHQL-REQUEST-CAPTURE] Transaction signer: {signer}.", tx.Signer);
-                }
             }
 
             await _next(context);

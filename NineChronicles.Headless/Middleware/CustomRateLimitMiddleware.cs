@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using AspNetCoreRateLimit;
@@ -16,6 +18,7 @@ namespace NineChronicles.Headless.Middleware
         private readonly ILogger _logger;
         private readonly IRateLimitConfiguration _config;
         private readonly IOptions<CustomIpRateLimitOptions> _options;
+        private static Dictionary<Address, int> _agentList = new();
 
         public CustomRateLimitMiddleware(RequestDelegate next,
             IProcessingStrategy processingStrategy,
@@ -55,7 +58,17 @@ namespace NineChronicles.Headless.Middleware
                     identity.Path = "/graphql/stagetransaction";
                     byte[] payload = ByteUtil.ParseHex(body.Split("\\\"")[1]);
                     Transaction tx = Transaction.Deserialize(payload);
-                    _logger.Information("[IP-RATE-LIMITER] Transaction signer: {signer}.", tx.Signer);
+                    if (!_agentList.ContainsKey(tx.Signer))
+                    {
+                        _agentList.Add(tx.Signer, 1);
+                    }
+                    else
+                    {
+                        _agentList[tx.Signer] += 1;
+                    }
+
+                    _logger.Information("[IP-RATE-LIMITER] Transaction signer: {signer} Count:{count}.", tx.Signer, _agentList[tx.Signer]);
+                    
                 }
 
                 return identity;
