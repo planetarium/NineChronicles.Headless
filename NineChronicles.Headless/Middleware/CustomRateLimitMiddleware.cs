@@ -1,6 +1,8 @@
 using System.IO;
 using System.Threading.Tasks;
 using AspNetCoreRateLimit;
+using Libplanet;
+using Libplanet.Tx;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using NineChronicles.Headless.Properties;
@@ -51,6 +53,9 @@ namespace NineChronicles.Headless.Middleware
                 if (body.Contains("stageTransaction"))
                 {
                     identity.Path = "/graphql/stagetransaction";
+                    byte[] payload = ByteUtil.ParseHex(body.Split("\"")[1]);
+                    Transaction tx = Transaction.Deserialize(payload);
+                    _logger.Information($"[IP-RATE-LIMITER] Transaction signer: {tx.Signer}.");
                 }
 
                 return identity;
