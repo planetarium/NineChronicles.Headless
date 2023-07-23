@@ -55,7 +55,7 @@ namespace NineChronicles.Headless.Middleware
                     identity.Path = "/graphql/stagetransaction";
                     byte[] payload = ByteUtil.ParseHex(body.Split("\"")[1]);
                     Transaction tx = Transaction.Deserialize(payload);
-                    _logger.Information($"[IP-RATE-LIMITER] Transaction signer: {tx.Signer}.");
+                    _logger.Information("[IP-RATE-LIMITER] Transaction signer: {signer}.", tx.Signer);
                 }
 
                 return identity;
