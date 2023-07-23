@@ -15,10 +15,10 @@ namespace NineChronicles.Headless.Middleware
 {
     public class CustomRateLimitMiddleware : RateLimitMiddleware<CustomIpRateLimitProcessor>
     {
+        private static Dictionary<Address, int> _agentList = new();
         private readonly ILogger _logger;
         private readonly IRateLimitConfiguration _config;
         private readonly IOptions<CustomIpRateLimitOptions> _options;
-        private static Dictionary<Address, int> _agentList = new();
 
         public CustomRateLimitMiddleware(RequestDelegate next,
             IProcessingStrategy processingStrategy,
