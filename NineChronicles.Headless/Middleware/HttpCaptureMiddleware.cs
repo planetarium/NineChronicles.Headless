@@ -32,7 +32,8 @@ namespace NineChronicles.Headless.Middleware
                 context.Request.Body.Seek(0, SeekOrigin.Begin);
                 if (body.Contains("stageTransaction"))
                 {
-                    byte[] payload = ByteUtil.ParseHex(body.Split("\"")[1]);
+                    _logger.Information("[GRAPHQL-REQUEST-CAPTURE] Contains stageTransaction: {yes}.", "yes");
+                    byte[] payload = ByteUtil.ParseHex(body.Split("\\\"")[1]);
                     Transaction tx = Transaction.Deserialize(payload);
                     _logger.Information("[GRAPHQL-REQUEST-CAPTURE] Transaction signer: {signer}.", tx.Signer);
                 }
