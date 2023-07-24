@@ -15,8 +15,8 @@ namespace NineChronicles.Headless.Middleware
 {
     public class CustomRateLimitMiddleware : RateLimitMiddleware<CustomIpRateLimitProcessor>
     {
-        private static Dictionary<Address, int> _agentList = new();
         private static Dictionary<string, int> _stateQueryAgentList = new();
+        private static Dictionary<string, DateTimeOffset> _blockedAgentList = new();
         private readonly ILogger _logger;
         private readonly IRateLimitConfiguration _config;
         private readonly IOptions<CustomIpRateLimitOptions> _options;
@@ -54,27 +54,22 @@ namespace NineChronicles.Headless.Middleware
                 httpContext.Request.EnableBuffering();
                 var body = await new StreamReader(httpContext.Request.Body).ReadToEndAsync();
                 httpContext.Request.Body.Seek(0, SeekOrigin.Begin);
+                var agent = string.Empty;
 
                 if (body.Contains("stageTransaction"))
                 {
                     identity.Path = "/graphql/stagetransaction";
                     byte[] payload = ByteUtil.ParseHex(body.Split("\\\"")[1]);
                     Transaction tx = Transaction.Deserialize(payload);
-                    if (!_agentList.ContainsKey(tx.Signer))
+                    if (_blockedAgentList.ContainsKey(tx.Signer.ToString()))
                     {
-                        _agentList.Add(tx.Signer, 1);
+                        httpContext.Abort();
                     }
-                    else
-                    {
-                        _agentList[tx.Signer] += 1;
-                    }
-
-                    _logger.Information("[IP-RATE-LIMITER] Transaction signer: {signer} IP: {ip} Count: {count}.", tx.Signer, httpContext.Connection.RemoteIpAddress, _agentList[tx.Signer]);
                 }
 
-                if (body.Contains("agent(address:"))
+                if (body.Contains("stateQuery {\\n    agent(address:"))
                 {
-                    var agent = body.Split("\\\"")[1];
+                    agent = body.Split("\\\"")[1];
                     if (!_stateQueryAgentList.ContainsKey(agent))
                     {
                         _stateQueryAgentList.Add(agent, 1);
@@ -85,11 +80,29 @@ namespace NineChronicles.Headless.Middleware
                     }
 
                     _logger.Information("[IP-RATE-LIMITER] State Query signer: {signer} IP: {ip} Count: {count}.", agent, httpContext.Connection.RemoteIpAddress, _stateQueryAgentList[agent]);
+                }
 
-                    if (httpContext.Request.Headers["HTTP_CF_CONNECTING_IP"] != string.Empty)
+                if (agent != string.Empty && _stateQueryAgentList[agent] > 100)
+                {
+                    if (!_blockedAgentList.ContainsKey(agent))
                     {
-                        _logger.Information("[IP-RATE-LIMITER] State Query signer: {signer} IP: {ip} HTTP_CF_CONNECTING_IP:{ip2} Count: {count}.", agent, httpContext.Connection.RemoteIpAddress, httpContext.Request.Headers["HTTP_CF_CONNECTING_IP"], _stateQueryAgentList[agent]);
+                        _blockedAgentList.Add(agent, DateTimeOffset.Now);
                     }
+                    else
+                    {
+                        if ((DateTimeOffset.Now - _blockedAgentList[agent]).Minutes >= 10)
+                        {
+                            _logger.Information("[IP-RATE-LIMITER] State Query signer: {signer} removed from blocked list.", agent);
+                            _blockedAgentList.Remove(agent);
+                            _stateQueryAgentList.Remove(agent);
+                        }
+                        else
+                        {
+                            _logger.Information("[IP-RATE-LIMITER] State Query signer: {signer} blocked for the next {time} minutes.", agent, 10 - (DateTimeOffset.Now - _blockedAgentList[agent]).Minutes);
+                        }
+                    }
+
+                    httpContext.Abort();
                 }
 
                 return identity;
