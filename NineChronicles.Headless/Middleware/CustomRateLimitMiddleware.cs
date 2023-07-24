@@ -68,7 +68,7 @@ namespace NineChronicles.Headless.Middleware
                         _agentList[tx.Signer] += 1;
                     }
 
-                    _logger.Information("[IP-RATE-LIMITER] Transaction signer: {signer} IP: {ip} Count: {count}.", tx.Signer, httpContext.Connection.RemoteIpAddress, _agentList[tx.Signer]);
+                    _logger.Information("[IP-RATE-LIMITER] Transaction signer: {signer} IP: {ip} Count: {count}.", tx.Signer, identity.ClientIp, _agentList[tx.Signer]);
                 }
 
                 if (body.Contains("agent(address:"))
@@ -83,7 +83,7 @@ namespace NineChronicles.Headless.Middleware
                         _stateQueryAgentList[agent] += 1;
                     }
 
-                    _logger.Information("[IP-RATE-LIMITER] State Query signer: {signer} IP: {ip} Count: {count}.", agent, httpContext.Connection.RemoteIpAddress, _stateQueryAgentList[agent]);
+                    _logger.Information("[IP-RATE-LIMITER] State Query signer: {signer} IP: {ip} Count: {count}.", agent, identity.ClientIp, _stateQueryAgentList[agent]);
                 }
 
                 return identity;
