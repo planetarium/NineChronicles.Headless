@@ -67,7 +67,7 @@ namespace NineChronicles.Headless.Middleware
                     }
                 }
 
-                if (body.Contains("stateQuery {\\n    agent(address:"))
+                if (body.Contains("agent(address:"))
                 {
                     agent = body.Split("\\\"")[1];
                     if (!_stateQueryAgentList.ContainsKey(agent))
