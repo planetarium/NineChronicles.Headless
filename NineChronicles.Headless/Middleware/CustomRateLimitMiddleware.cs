@@ -86,7 +86,7 @@ namespace NineChronicles.Headless.Middleware
 
                     _logger.Information("[IP-RATE-LIMITER] State Query signer: {signer} IP: {ip} Count: {count}.", agent, httpContext.Connection.RemoteIpAddress, _stateQueryAgentList[agent]);
 
-                    if (httpContext.Request.Headers["HTTP_CF_CONNECTING_IP"] != String.Empty)
+                    if (httpContext.Request.Headers["HTTP_CF_CONNECTING_IP"] != string.Empty)
                     {
                         _logger.Information("[IP-RATE-LIMITER] State Query signer: {signer} IP: {ip} HTTP_CF_CONNECTING_IP:{ip2} Count: {count}.", agent, httpContext.Connection.RemoteIpAddress, httpContext.Request.Headers["HTTP_CF_CONNECTING_IP"], _stateQueryAgentList[agent]);
                     }
