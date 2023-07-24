@@ -54,6 +54,7 @@ namespace NineChronicles.Headless.Middleware
                 httpContext.Request.EnableBuffering();
                 var body = await new StreamReader(httpContext.Request.Body).ReadToEndAsync();
                 httpContext.Request.Body.Seek(0, SeekOrigin.Begin);
+
                 if (body.Contains("stageTransaction"))
                 {
                     identity.Path = "/graphql/stagetransaction";
@@ -84,6 +85,11 @@ namespace NineChronicles.Headless.Middleware
                     }
 
                     _logger.Information("[IP-RATE-LIMITER] State Query signer: {signer} IP: {ip} Count: {count}.", agent, httpContext.Connection.RemoteIpAddress, _stateQueryAgentList[agent]);
+
+                    if (httpContext.Request.Headers["HTTP_CF_CONNECTING_IP"] != String.Empty)
+                    {
+                        _logger.Information("[IP-RATE-LIMITER] Transaction signer: {signer} IP: {ip} HTTP_CF_CONNECTING_IP:{ip2} Count: {count}.", tx.Signer, httpContext.Connection.RemoteIpAddress, httpContext.Request.Headers["HTTP_CF_CONNECTING_IP"], _agentList[tx.Signer]);
+                    }
                 }
 
                 return identity;
