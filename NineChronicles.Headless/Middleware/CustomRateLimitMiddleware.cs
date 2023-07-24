@@ -90,7 +90,7 @@ namespace NineChronicles.Headless.Middleware
                     }
                     else
                     {
-                        if ((DateTimeOffset.Now - _blockedAgentList[agent]).Minutes >= 10)
+                        if ((DateTimeOffset.Now - _blockedAgentList[agent]).Minutes >= 60)
                         {
                             _logger.Information("[IP-RATE-LIMITER] State Query signer: {signer} removed from blocked list.", agent);
                             _blockedAgentList.Remove(agent);
