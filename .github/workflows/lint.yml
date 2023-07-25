@@ -28,3 +28,9 @@ jobs:
                 for file in "${FILES[@]}"; do
                   ajv validate -s appsettings-schema.json -d "$file"
                 done
+    typos:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Check typos
+              uses: crate-ci/typos@v1.15.5
