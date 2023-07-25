@@ -241,7 +241,7 @@ namespace NineChronicles.Headless
                             catch (Exception e)
                             {
                                 // FIXME add logger as property
-                                Log.Error(e, "Skip broadcasting blcok render due to the unexpected exception");
+                                Log.Error(e, "Skip broadcasting block render due to the unexpected exception");
                             }
                         }
                     );
