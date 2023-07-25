@@ -17,6 +17,7 @@ using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
 using Libplanet.Extensions.ActionEvaluatorCommonComponents;
+using Libplanet.Extensions.RemoteBlockChainStates;
 using Libplanet.RocksDBStore;
 using Libplanet.State;
 using Libplanet.Store;
@@ -81,38 +82,50 @@ namespace NineChronicles.Headless.Executable.Commands
                 //        serializedPayload
                 //    }
                 //}
+                // https://9cscan.com/tx/9ae64e1ad2e8c64494adbc46a1b8a5595646298e4c15ee3a51256803d13b8ac7
+                rawTx =
+                    "ZDE6UzcwOjBEAiAUKdHuJEm9Pz/aDjdzDLAgWNwK+GXr0McCVOMQ30MRDgIgWD+eozx39VkTALagD15vx6Fgi0ZAlkWLRNv2zakxg+QxOmFsZHU3OnR5cGVfaWR1MTY6aGFja19hbmRfc2xhc2gyMXU2OnZhbHVlc2R1MTI6YXBTdG9uZUNvdW50dTE6MHUxMzphdmF0YXJBZGRyZXNzMjA6t/WYFfOVeNzLC9xV2Uzl7mac9PN1ODpjb3N0dW1lc2xldTEwOmVxdWlwbWVudHNsMTY61nlsSqODfUOOEszOAlkH5jE2OuxMS1SATxpLsjflHFjke6AxNjo6Ip1eT5YlSZs2p+I/Tj7yMTY6NwJVgHmoZEGXGWnemRNWhTE2OgNpJZstK5lDmoNeQAn9pJ0xNjpjoICqQFlaTZLj0TlFF4RsZXU1OmZvb2RzbGV1MjppZDE2OsyK7y05Vy9NnVy9w124Hth1MTpybGx1MTowdTU6MzAwMDFlZXU3OnN0YWdlSWR1MzoxMzJ1MTQ6dG90YWxQbGF5Q291bnR1MToxdTc6d29ybGRJZHUxOjNlZWUxOmczMjpFgiUNDaM7BneahHXSg9XdIQxoO5uZnXTQP6xPWPprzjE6bGkxZTE6bWxkdTEzOmRlY2ltYWxQbGFjZXMxOhJ1NzptaW50ZXJzbnU2OnRpY2tlcnU0Ok1lYWRlaTEwMDAwMDAwMDAwMDAwMDAwMDBlZTE6bmkxMTY4ZTE6cDY1OgSfrTZuXHbkuF7xIiUCv+c6p/LOGcRDsgNR721m2dGVrigf4xj9y9KrFqWwRcrOdFxhBnKN9es9Gt1JId1mGyAlMTpzMjA6Bzk4jaVfoMkFuRyJ1O1sHqATgd8xOnR1Mjc6MjAyMy0wNy0yNFQwOTo0OTo0OS4wMDAxNzdaMTp1bGVl";
                 byte[] bytes = Convert.FromBase64String(rawTx);
                 var tx = Transaction.Deserialize(bytes);
                 var msg = $"tx id: {tx.Id}";
                 _console.Out.WriteLine(msg);
                 outputSw?.WriteLine(msg);
 
-                var (store, stateStore, blockChain) = LoadBlockchain(storePath);
+#pragma warning disable S1075
+                var (store, stateStore, blockChain) = LoadBlockchain(storePath, "https://9c-main-full-state.nine-chronicles.com/graphql/explorer");
+#pragma warning restore S1075
                 disposables.Add(store);
                 disposables.Add(stateStore);
-                var previousBlock = blockChain[blockIndex - 1];
-                var targetBlock = blockChain[blockIndex];
+                // var previousBlock = blockChain[blockIndex - 1];
+                // var targetBlock = blockChain[blockIndex];
+                var previousBlockIndex = 7337842L;
+                var previousBlockHash =
+                    new BlockHash(ByteUtil.ParseHex("2e19f17270fd1b2dd7e2eac3d858485f03e2fa0982acb831a8ecb94f0fca68c2"));
+                var targetBlockIndex = blockIndex;
+                var targetBlockHash =
+                    new BlockHash(
+                        ByteUtil.ParseHex("583dc63f730230755da0c529f34578487cdef670192b6a9aac285b312c7302a4"));
                 if (verbose)
                 {
-                    msg = $"previous block({previousBlock.Index}) hash: {previousBlock.Hash}";
+                    msg = $"previous block({previousBlockIndex}) hash: {previousBlockHash}";
                     _console.Out.WriteLine(msg);
                     outputSw?.WriteLine(msg);
-                    msg = $"target block({targetBlock.Index}) hash: {targetBlock.Hash}";
+                    msg = $"target block({targetBlockIndex}) hash: {targetBlockHash}";
                     _console.Out.WriteLine(msg);
                     outputSw?.WriteLine(msg);
                 }
 
                 // Evaluate tx.
-                IAccountState previousBlockStates = blockChain.GetBlockState(previousBlock.Hash);
+                IAccountState previousBlockStates = blockChain.GetBlockState(previousBlockHash);
                 IAccountStateDelta previousStates = AccountStateDelta.Create(previousBlockStates);
                 var actions = tx.Actions.Select(a => ToAction(a));
                 var actionEvaluations = EvaluateActions(
-                    preEvaluationHash: targetBlock.PreEvaluationHash,
-                    blockIndex: targetBlock.Index,
-                    blockProtocolVersion: targetBlock.ProtocolVersion,
+                    preEvaluationHash: HashDigest<SHA256>.FromString("2e19f17270fd1b2dd7e2eac3d858485f03e2fa0982acb831a8ecb94f0fca68c2"),
+                    blockIndex: targetBlockIndex,
+                    blockProtocolVersion: blockChain.Tip.ProtocolVersion,
                     txid: tx.Id,
                     previousStates: previousStates,
-                    miner: targetBlock.Miner,
+                    miner: new Address("0x7655122899ccd2cc87b38a35d7158c9516504119"),
                     signer: tx.Signer,
                     signature: tx.Signature,
                     actions: actions.Cast<IAction>().ToImmutableList()
@@ -215,6 +228,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 var (store, stateStore, blockChain) = LoadBlockchain(storePath);
                 disposables.Add(store);
                 disposables.Add(stateStore);
+                // startIndex = 7140408L;
                 startIndex ??= blockChain.Tip.Index;
 
                 if (startIndex is null or < 1)
@@ -228,6 +242,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 if (!endIndex.HasValue)
                 {
                     endIndex = startIndex;
+                    endIndex = blockChain.Tip.Index;
                 }
                 else if (endIndex < startIndex)
                 {
@@ -381,7 +396,7 @@ namespace NineChronicles.Headless.Executable.Commands
         private (
             IStore store,
             IStateStore stateStore,
-            BlockChain blockChain) LoadBlockchain(string storePath)
+            BlockChain blockChain) LoadBlockchain(string storePath, string uri = null!)
         {
             // Load store and genesis block.
             if (!Directory.Exists(storePath))
@@ -405,12 +420,20 @@ namespace NineChronicles.Headless.Executable.Commands
             var genesisBlock = store.GetBlock(genesisBlockHash);
 
             // Make BlockChain and blocks.
-            Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console().CreateLogger();
+            Log.Logger = new LoggerConfiguration().MinimumLevel.Verbose().WriteTo.Console().CreateLogger();
             var policy = new BlockPolicySource(Log.Logger).GetPolicy();
             var stagePolicy = new VolatileStagePolicy();
             var stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(storePath, "states"));
             var stateStore = new TrieStateStore(stateKeyValueStore);
-            var blockChainStates = new BlockChainStates(store, stateStore);
+            IBlockChainStates blockChainStates;
+            if (!string.IsNullOrEmpty(uri))
+            {
+                blockChainStates = new RemoteBlockChainStates(new Uri(uri));
+            }
+            else
+            {
+                blockChainStates = new BlockChainStates(store, stateStore);
+            }
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
                 blockChainStates,
