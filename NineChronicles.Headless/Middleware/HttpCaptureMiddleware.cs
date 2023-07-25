@@ -12,8 +12,8 @@ namespace NineChronicles.Headless.Middleware
 {
     public class HttpCaptureMiddleware
     {
-        private static Dictionary<string, int> _stateQueryAgentList = new();
-        private static Dictionary<string, DateTimeOffset> _blockedAgentList = new();
+        private static Dictionary<Address, int> _stateQueryAgentList = new();
+        private static Dictionary<Address, DateTimeOffset> _blockedAgentList = new();
         private readonly RequestDelegate _next;
         private readonly ILogger _logger;
 
@@ -38,7 +38,7 @@ namespace NineChronicles.Headless.Middleware
                 {
                     byte[] payload = ByteUtil.ParseHex(body.Split("\\\"")[1]);
                     Transaction tx = Transaction.Deserialize(payload);
-                    if (_blockedAgentList.ContainsKey(tx.Signer.ToString()))
+                    if (_blockedAgentList.ContainsKey(tx.Signer))
                     {
                         context.Response.StatusCode = 403;
                         context.Response.ContentType = "application/json";
@@ -46,10 +46,9 @@ namespace NineChronicles.Headless.Middleware
                     }
                 }
 
-                var agent = string.Empty;
                 if (body.Contains("agent(address:"))
                 {
-                    agent = body.Split("\\\"")[1];
+                    var agent = new Address(body.Split("\\\"")[1].Split("0x")[1]);
                     if (!_stateQueryAgentList.ContainsKey(agent))
                     {
                         _stateQueryAgentList.Add(agent, 1);
@@ -60,31 +59,30 @@ namespace NineChronicles.Headless.Middleware
                     }
 
                     _logger.Information("[IP-RATE-LIMITER] State Query signer: {signer} IP: {ip} Count: {count}.", agent, context.Connection.RemoteIpAddress, _stateQueryAgentList[agent]);
-                }
-
-                if (agent != string.Empty && _stateQueryAgentList[agent] > 100)
-                {
-                    if (!_blockedAgentList.ContainsKey(agent))
+                    if (_stateQueryAgentList[agent] > 5)
                     {
-                        _blockedAgentList.Add(agent, DateTimeOffset.Now);
-                    }
-                    else
-                    {
-                        if ((DateTimeOffset.Now - _blockedAgentList[agent]).Minutes >= 60)
+                        if (!_blockedAgentList.ContainsKey(agent))
                         {
-                            _logger.Information("[IP-RATE-LIMITER] State Query signer: {signer} removed from blocked list.", agent);
-                            _blockedAgentList.Remove(agent);
-                            _stateQueryAgentList.Remove(agent);
+                            _blockedAgentList.Add(agent, DateTimeOffset.Now);
                         }
                         else
                         {
-                            _logger.Information("[IP-RATE-LIMITER] State Query signer: {signer} blocked for the next {time} minutes.", agent, 60 - (DateTimeOffset.Now - _blockedAgentList[agent]).Minutes);
+                            if ((DateTimeOffset.Now - _blockedAgentList[agent]).Minutes >= 1)
+                            {
+                                _logger.Information("[IP-RATE-LIMITER] State Query signer: {signer} removed from blocked list.", agent);
+                                _blockedAgentList.Remove(agent);
+                                _stateQueryAgentList.Remove(agent);
+                            }
+                            else
+                            {
+                                _logger.Information("[IP-RATE-LIMITER] State Query signer: {signer} blocked for the next {time} minutes.", agent, 60 - (DateTimeOffset.Now - _blockedAgentList[agent]).Minutes);
+                            }
                         }
-                    }
 
-                    context.Response.StatusCode = 403;
-                    context.Response.ContentType = "application/json";
-                    return;
+                        context.Response.StatusCode = 403;
+                        context.Response.ContentType = "application/json";
+                        return;
+                    }
                 }
             }
 
