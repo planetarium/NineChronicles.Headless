@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using AspNetCoreRateLimit;
-using Libplanet;
-using Libplanet.Tx;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using NineChronicles.Headless.Properties;
@@ -15,8 +13,6 @@ namespace NineChronicles.Headless.Middleware
 {
     public class CustomRateLimitMiddleware : RateLimitMiddleware<CustomIpRateLimitProcessor>
     {
-        private static Dictionary<string, int> _stateQueryAgentList = new();
-        private static Dictionary<string, DateTimeOffset> _blockedAgentList = new();
         private readonly ILogger _logger;
         private readonly IRateLimitConfiguration _config;
         private readonly IOptions<CustomIpRateLimitOptions> _options;
@@ -54,55 +50,10 @@ namespace NineChronicles.Headless.Middleware
                 httpContext.Request.EnableBuffering();
                 var body = await new StreamReader(httpContext.Request.Body).ReadToEndAsync();
                 httpContext.Request.Body.Seek(0, SeekOrigin.Begin);
-                var agent = string.Empty;
 
                 if (body.Contains("stageTransaction"))
                 {
                     identity.Path = "/graphql/stagetransaction";
-                    byte[] payload = ByteUtil.ParseHex(body.Split("\\\"")[1]);
-                    Transaction tx = Transaction.Deserialize(payload);
-                    if (_blockedAgentList.ContainsKey(tx.Signer.ToString()))
-                    {
-                        httpContext.Abort();
-                    }
-                }
-
-                if (body.Contains("agent(address:"))
-                {
-                    agent = body.Split("\\\"")[1];
-                    if (!_stateQueryAgentList.ContainsKey(agent))
-                    {
-                        _stateQueryAgentList.Add(agent, 1);
-                    }
-                    else
-                    {
-                        _stateQueryAgentList[agent] += 1;
-                    }
-
-                    _logger.Information("[IP-RATE-LIMITER] State Query signer: {signer} IP: {ip} Count: {count}.", agent, httpContext.Connection.RemoteIpAddress, _stateQueryAgentList[agent]);
-                }
-
-                if (agent != string.Empty && _stateQueryAgentList[agent] > 100)
-                {
-                    if (!_blockedAgentList.ContainsKey(agent))
-                    {
-                        _blockedAgentList.Add(agent, DateTimeOffset.Now);
-                    }
-                    else
-                    {
-                        if ((DateTimeOffset.Now - _blockedAgentList[agent]).Minutes >= 60)
-                        {
-                            _logger.Information("[IP-RATE-LIMITER] State Query signer: {signer} removed from blocked list.", agent);
-                            _blockedAgentList.Remove(agent);
-                            _stateQueryAgentList.Remove(agent);
-                        }
-                        else
-                        {
-                            _logger.Information("[IP-RATE-LIMITER] State Query signer: {signer} blocked for the next {time} minutes.", agent, 10 - (DateTimeOffset.Now - _blockedAgentList[agent]).Minutes);
-                        }
-                    }
-
-                    httpContext.Abort();
                 }
 
                 return identity;
