@@ -343,7 +343,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         private Task<ExecutionResult> ExecuteAsync(string query)
         {
-            var currencyFactory = new CurrencyFactory(_blockChain.GetBlockState());
+            var currencyFactory = new CurrencyFactory(_blockChain.GetBlockState);
             var fungibleAssetValueFactory = new FungibleAssetValueFactory(currencyFactory);
             return GraphQLTestUtils.ExecuteQueryAsync<TransactionHeadlessQuery>(query, standaloneContext: new StandaloneContext
             {

@@ -1,3 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.Metrics;
+using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
 using Lib9c.Renderers;
 using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
@@ -12,21 +18,11 @@ using Microsoft.Extensions.Hosting;
 using Nekoyume.Blockchain;
 using Nekoyume.Blockchain.Policy;
 using NineChronicles.Headless.Properties;
+using NineChronicles.Headless.Utils;
 using NineChronicles.RPC.Shared.Exceptions;
 using Nito.AsyncEx;
 using Serilog;
 using Serilog.Events;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.Metrics;
-using System.Security.Cryptography;
-using System.Threading;
-using System.Threading.Tasks;
-using Libplanet.Types.Blocks;
-using Libplanet;
-using Libplanet.Action;
-using Libplanet.Types.Assets;
-using NineChronicles.Headless.Utils;
 using StrictRenderer = Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer;
 
 namespace NineChronicles.Headless
@@ -282,7 +278,7 @@ namespace NineChronicles.Headless
             standaloneContext.Store = Store;
             standaloneContext.Swarm = Swarm;
             standaloneContext.CurrencyFactory =
-                new CurrencyFactory(standaloneContext.BlockChain.GetBlockState());
+                new CurrencyFactory(standaloneContext.BlockChain.GetBlockState);
             standaloneContext.FungibleAssetValueFactory =
                 new FungibleAssetValueFactory(standaloneContext.CurrencyFactory);
             BootstrapEnded.WaitAsync().ContinueWith((task) =>

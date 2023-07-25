@@ -92,7 +92,7 @@ namespace NineChronicles.Headless.Tests
                 stateStore,
                 genesisBlock,
                 actionEvaluator);
-            var currencyFactory = new CurrencyFactory(blockchain.GetBlockState());
+            var currencyFactory = new CurrencyFactory(blockchain.GetBlockState);
             var fungibleAssetValueFactory = new FungibleAssetValueFactory(currencyFactory);
             return new StandaloneContext
             {
@@ -133,7 +133,7 @@ namespace NineChronicles.Headless.Tests
                 actionEvaluator);
             var ncg = new GoldCurrencyState((Dictionary)blockchain.GetState(Addresses.GoldCurrency))
                 .Currency;
-            var currencyFactory = new CurrencyFactory(blockchain.GetBlockState(), ncg);
+            var currencyFactory = new CurrencyFactory(blockchain.GetBlockState, ncg);
             var fungibleAssetValueFactory = new FungibleAssetValueFactory(currencyFactory);
             return new StandaloneContext
             {

@@ -17,7 +17,7 @@ namespace NineChronicles.Headless.GraphTypes.States
         {
             AccountState = accountState;
             BlockIndex = blockIndex;
-            CurrencyFactory = new CurrencyFactory(accountState);
+            CurrencyFactory = new CurrencyFactory(() => accountState);
             FungibleAssetValueFactory = new FungibleAssetValueFactory(CurrencyFactory);
         }
 
