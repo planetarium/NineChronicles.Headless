@@ -994,7 +994,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         private Block MakeGenesisBlock(
             Address adminAddress,
-            Currency curreny,
+            Currency currency,
             IImmutableSet<Address> activatedAccounts,
             RankingState0? rankingState = null)
         {
@@ -1018,7 +1018,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             ),
                             adminAddressState: new AdminState(adminAddress, 1500000),
                             activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-                            goldCurrencyState: new GoldCurrencyState(curreny),
+                            goldCurrencyState: new GoldCurrencyState(currency),
                             goldDistributions: new GoldDistribution[0],
                             tableSheets: _sheets,
                             pendingActivationStates: new PendingActivationState[] { }
