@@ -1,5 +1,5 @@
 using GraphQL.Types;
-using Libplanet.Assets;
+using Libplanet.Types.Assets;
 using Libplanet.Explorer.GraphTypes;
 
 namespace NineChronicles.Headless.GraphTypes

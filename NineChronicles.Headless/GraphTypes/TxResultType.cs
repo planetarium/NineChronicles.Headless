@@ -1,10 +1,10 @@
 using System.ComponentModel;
 using Bencodex;
 using GraphQL.Types;
-using Libplanet;
+using Libplanet.Common;
 using Libplanet.Action;
-using Libplanet.Blocks;
-using Libplanet.Tx;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 
 namespace NineChronicles.Headless.GraphTypes
 {

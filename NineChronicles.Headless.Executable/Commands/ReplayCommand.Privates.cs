@@ -8,15 +8,13 @@ using System.Numerics;
 using System.Security.Cryptography;
 using Bencodex.Types;
 using Cocona;
-using Libplanet;
+using Libplanet.Common;
+using Libplanet.Crypto;
 using Libplanet.Action;
-using Libplanet.Assets;
-using Libplanet.Blocks;
-using Libplanet.Consensus;
-using Libplanet.State;
-using Libplanet.Store;
-using Libplanet.Store.Trie;
-using Libplanet.Tx;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Consensus;
+using Libplanet.Action.State;
+using Libplanet.Types.Tx;
 using Serilog;
 
 namespace NineChronicles.Headless.Executable.Commands
@@ -29,27 +27,17 @@ namespace NineChronicles.Headless.Executable.Commands
         [Pure]
         private sealed class AccountStateDelta : IAccountStateDelta
         {
-            /// <summary>
-            /// Creates a null state delta from the given <paramref name="accountStateGetter"/>.
-            /// </summary>
-            /// <param name="accountStateGetter">A view to the &#x201c;epoch&#x201d; states.</param>
-            /// <param name="accountBalanceGetter">A view to the &#x201c;epoch&#x201d; asset balances.
-            /// </param>
-            /// <param name="totalSupplyGetter">A view to the &#x201c;epoch&#x201d; total supplies of
-            /// currencies.</param>
-            /// <param name="validatorSetGetter">A view to the &#x201c;epoch&#x201d; validator
-            /// set.</param>
-            private AccountStateDelta(
-                AccountStateGetter accountStateGetter,
-                AccountBalanceGetter accountBalanceGetter,
-                TotalSupplyGetter totalSupplyGetter,
-                ValidatorSetGetter validatorSetGetter)
+            private readonly IAccountState _baseState;
+
+            private AccountStateDelta(IAccountState baseState)
+                : this(baseState, new AccountDelta())
             {
-                Delta = new AccountDelta();
-                StateGetter = accountStateGetter;
-                BalanceGetter = accountBalanceGetter;
-                TotalSupplyGetter = totalSupplyGetter;
-                ValidatorSetGetter = validatorSetGetter;
+            }
+
+            private AccountStateDelta(IAccountState baseState, IAccountDelta delta)
+            {
+                _baseState = baseState;
+                Delta = delta;
                 TotalUpdatedFungibles = ImmutableDictionary<(Address, Currency), BigInteger>.Empty;
             }
 
@@ -57,36 +45,10 @@ namespace NineChronicles.Headless.Executable.Commands
             public IAccountDelta Delta { get; private set; }
 
             /// <inheritdoc/>
-            [Pure]
-            public IImmutableSet<Address> UpdatedAddresses =>
-                Delta.UpdatedAddresses;
-
-            /// <inheritdoc/>
-            public IImmutableSet<Address> StateUpdatedAddresses =>
-                Delta.StateUpdatedAddresses;
-
-            /// <inheritdoc/>
-            public IImmutableSet<(Address, Currency)> UpdatedFungibleAssets =>
-                Delta.UpdatedFungibleAssets;
-
-            /// <inheritdoc/>
             public IImmutableSet<(Address, Currency)> TotalUpdatedFungibleAssets =>
                 TotalUpdatedFungibles.Keys.ToImmutableHashSet();
 
-            [Pure]
-            public IImmutableSet<Currency> UpdatedTotalSupplyCurrencies =>
-                Delta.UpdatedTotalSupplyCurrencies;
-
-            public IImmutableDictionary<(Address, Currency), BigInteger> TotalUpdatedFungibles
-            { get; private set; }
-
-            private AccountStateGetter StateGetter { get; set; }
-
-            private AccountBalanceGetter BalanceGetter { get; set; }
-
-            private TotalSupplyGetter TotalSupplyGetter { get; set; }
-
-            private ValidatorSetGetter ValidatorSetGetter { get; set; }
+            public IImmutableDictionary<(Address, Currency), BigInteger> TotalUpdatedFungibles { get; private set; }
 
             /// <inheritdoc/>
             [Pure]
@@ -118,7 +80,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 if (notFoundIndices.Count > 0)
                 {
-                    IReadOnlyList<IValue?> restValues = StateGetter(
+                    IReadOnlyList<IValue?> restValues = _baseState.GetStates(
                         notFoundIndices.Select(index => addresses[index]).ToArray());
                     foreach ((var v, var i) in notFoundIndices.Select((v, i) => (v, i)))
                     {
@@ -156,13 +118,13 @@ namespace NineChronicles.Headless.Executable.Commands
                     return FungibleAssetValue.FromRawValue(currency, totalSupplyValue);
                 }
 
-                return TotalSupplyGetter(currency);
+                return _baseState.GetTotalSupply(currency);
             }
 
             /// <inheritdoc/>
             [Pure]
             public ValidatorSet GetValidatorSet() =>
-                Delta.ValidatorSet ?? ValidatorSetGetter();
+                Delta.ValidatorSet ?? _baseState.GetValidatorSet();
 
             /// <inheritdoc/>
             [Pure]
@@ -291,14 +253,8 @@ namespace NineChronicles.Headless.Executable.Commands
             /// a basis.</param>
             /// <returns>A null state delta created from <paramref name="previousState"/>.
             /// </returns>
-            internal static IAccountStateDelta Create(IAccountState previousState)
-            {
-                return new AccountStateDelta(
-                    previousState.GetStates,
-                    previousState.GetBalance,
-                    previousState.GetTotalSupply,
-                    previousState.GetValidatorSet);
-            }
+            internal static IAccountStateDelta Create(IAccountState previousState) =>
+                new AccountStateDelta(previousState);
 
             /// <summary>
             /// Creates a null state delta while inheriting <paramref name="stateDelta"/>s
@@ -314,26 +270,14 @@ namespace NineChronicles.Headless.Executable.Commands
             /// This inherits <paramref name="stateDelta"/>'s
             /// <see cref="IAccountStateDelta.TotalUpdatedFungibleAssets"/>.
             /// </remarks>
-            internal static IAccountStateDelta Flush(
-                IAccountStateDelta stateDelta)
-            {
-                if (stateDelta is AccountStateDelta impl)
-                {
-                    return new AccountStateDelta(
-                        stateDelta.GetStates,
-                        stateDelta.GetBalance,
-                        stateDelta.GetTotalSupply,
-                        stateDelta.GetValidatorSet)
+            internal static IAccountStateDelta Flush(IAccountStateDelta stateDelta) =>
+                stateDelta is AccountStateDelta impl
+                    ? new AccountStateDelta(stateDelta)
                     {
                         TotalUpdatedFungibles = impl.TotalUpdatedFungibles,
-                    };
-                }
-                else
-                {
-                    throw new ArgumentException(
+                    }
+                    : throw new ArgumentException(
                         $"Unknown type for {nameof(stateDelta)}: {stateDelta.GetType()}");
-                }
-            }
 
             [Pure]
             private FungibleAssetValue GetBalance(
@@ -342,23 +286,19 @@ namespace NineChronicles.Headless.Executable.Commands
                 IImmutableDictionary<(Address, Currency), BigInteger> balances) =>
                 balances.TryGetValue((address, currency), out BigInteger balance)
                     ? FungibleAssetValue.FromRawValue(currency, balance)
-                    : BalanceGetter(address, currency);
+                    : _baseState.GetBalance(address, currency);
 
             [Pure]
             private AccountStateDelta UpdateStates(
-                IImmutableDictionary<Address, IValue> updatedStates
-            ) =>
+                IImmutableDictionary<Address, IValue> updatedStates) =>
                 new AccountStateDelta(
-                    StateGetter,
-                    BalanceGetter,
-                    TotalSupplyGetter,
-                    ValidatorSetGetter)
-                {
-                    Delta = new AccountDelta(
+                    _baseState,
+                    new AccountDelta(
                         updatedStates,
                         Delta.Fungibles,
                         Delta.TotalSupplies,
-                        Delta.ValidatorSet),
+                        Delta.ValidatorSet))
+                {
                     TotalUpdatedFungibles = TotalUpdatedFungibles,
                 };
 
@@ -379,34 +319,27 @@ namespace NineChronicles.Headless.Executable.Commands
                 IImmutableDictionary<Currency, BigInteger> updatedTotalSupply
             ) =>
                 new AccountStateDelta(
-                    StateGetter,
-                    BalanceGetter,
-                    TotalSupplyGetter,
-                    ValidatorSetGetter)
-                {
-                    Delta = new AccountDelta(
+                    _baseState,
+                    new AccountDelta(
                         Delta.States,
                         updatedFungibleAssets,
                         updatedTotalSupply,
-                        Delta.ValidatorSet),
+                        Delta.ValidatorSet))
+                {
                     TotalUpdatedFungibles = totalUpdatedFungibles,
                 };
 
             [Pure]
             private AccountStateDelta UpdateValidatorSet(
-                ValidatorSet updatedValidatorSet
-            ) =>
+                ValidatorSet updatedValidatorSet) =>
                 new AccountStateDelta(
-                    StateGetter,
-                    BalanceGetter,
-                    TotalSupplyGetter,
-                    ValidatorSetGetter)
-                {
-                    Delta = new AccountDelta(
+                    _baseState,
+                    new AccountDelta(
                         Delta.States,
                         Delta.Fungibles,
                         Delta.TotalSupplies,
-                        updatedValidatorSet),
+                        updatedValidatorSet))
+                {
                     TotalUpdatedFungibles = TotalUpdatedFungibles,
                 };
 

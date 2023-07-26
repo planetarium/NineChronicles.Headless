@@ -1,6 +1,6 @@
 using Bencodex;
 using Bencodex.Types;
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
 
 namespace Libplanet.Extensions.ActionEvaluatorCommonComponents;
 

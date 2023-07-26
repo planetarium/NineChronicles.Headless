@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL.Execution;
-using Libplanet.Assets;
+using Libplanet.Types.Assets;
 using NineChronicles.Headless.GraphTypes;
 using Xunit;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;

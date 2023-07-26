@@ -1,6 +1,6 @@
 using Libplanet.Action;
 using Libplanet.Blockchain.Renderers;
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Lib9c.Model.Order;
 using Lib9c.Tests;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Common;
 using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 

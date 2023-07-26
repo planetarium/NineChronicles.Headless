@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using Bencodex.Json;
@@ -13,11 +14,11 @@ using Libplanet.Action;
 using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
 using Libplanet.RocksDBStore;
-using Libplanet.State;
+using Libplanet.Action.State;
 using Libplanet.Store;
-using Libplanet.Tx;
+using Libplanet.Types.Tx;
 using Nekoyume.Action;
 using Nekoyume.Action.Loader;
 using Nekoyume.Blockchain.Policy;
@@ -130,7 +131,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     if (actionEvaluation.Action is ActionBase nca)
                     {
                         var type = nca.GetType();
-                        var actionType = ActionTypeAttribute.ValueOf(type);
+                        var actionType = type.GetCustomAttribute<ActionTypeAttribute>()?.TypeIdentifier;
                         msg = $"- action #{actionNum}: {type.Name}(\"{actionType}\")";
                         _console.Out.WriteLine(msg);
                         outputSw?.WriteLine(msg);
@@ -401,8 +402,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
                 blockChainStates,
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             return (
                 store,
                 stateStore,
@@ -449,8 +449,7 @@ namespace NineChronicles.Headless.Executable.Commands
             return new ActionEvaluator(
                 _ => policy.BlockAction,
                 blockChainStates: blockChain,
-                actionTypeLoader: actionLoader,
-                feeCalculator: null);
+                actionTypeLoader: actionLoader);
         }
 
         private void LoggingAboutIncompleteBlockStatesException(
@@ -500,7 +499,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 string? actionType;
                 if (DecodeAction(actionEvaluation.Action) is { } action)
                 {
-                    actionType = ActionTypeAttribute.ValueOf(action.GetType())?.ToString();
+                    actionType = action.GetType().GetCustomAttribute<ActionTypeAttribute>()?.TypeIdentifier?.ToString();
                 }
                 else if (actionEvaluation.Action is Dictionary dictionary && dictionary.ContainsKey("type_id"))
                 {

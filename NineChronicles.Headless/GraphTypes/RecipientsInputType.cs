@@ -1,10 +1,7 @@
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Numerics;
 using GraphQL.Types;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Libplanet.Explorer.GraphTypes;
 
 namespace NineChronicles.Headless.GraphTypes

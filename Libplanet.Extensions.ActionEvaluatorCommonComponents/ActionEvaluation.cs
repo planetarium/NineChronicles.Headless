@@ -1,6 +1,6 @@
 using Bencodex.Types;
 using Libplanet.Action;
-using Libplanet.State;
+using Libplanet.Action.State;
 
 namespace Libplanet.Extensions.ActionEvaluatorCommonComponents;
 
@@ -10,14 +10,12 @@ public class ActionEvaluation : IActionEvaluation
         IValue action,
         ActionContext inputContext,
         AccountStateDelta outputState,
-        Exception? exception,
-        List<string> logs)
+        Exception? exception)
     {
         Action = action;
         InputContext = inputContext;
         OutputState = outputState;
         Exception = exception;
-        Logs = logs;
     }
 
     public IValue Action { get; }
@@ -26,5 +24,4 @@ public class ActionEvaluation : IActionEvaluation
     public AccountStateDelta OutputState { get; }
     IAccountStateDelta IActionEvaluation.OutputState => OutputState;
     public Exception? Exception { get; }
-    public List<string> Logs { get; }
 }

@@ -3,9 +3,10 @@ using System.Numerics;
 using Bencodex;
 using Bencodex.Types;
 using Libplanet.Action;
-using Libplanet.Assets;
-using Libplanet.Consensus;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Consensus;
 
 namespace Libplanet.Extensions.ActionEvaluatorCommonComponents;
 
@@ -28,15 +29,6 @@ public class AccountStateDelta : IAccountStateDelta
 #pragma warning restore LAA1002
 
     public IImmutableSet<Currency> UpdatedTotalSupplyCurrencies => _delta.UpdatedTotalSupplyCurrencies;
-
-    public AccountStateGetter StateGetter { get; set; }
-
-    public AccountBalanceGetter BalanceGetter { get; set; }
-
-    public TotalSupplyGetter TotalSupplyGetter { get; set; }
-
-    public ValidatorSetGetter ValidatorSetGetter { get; set; }
-
 
     public AccountStateDelta()
         : this(
@@ -129,25 +121,18 @@ public class AccountStateDelta : IAccountStateDelta
     public IValue? GetState(Address address) =>
         _states.ContainsKey(address)
             ? _states[address]
-            : StateGetter(new[] { address })[0];
+            : throw new NotSupportedException();
 
     public IReadOnlyList<IValue?> GetStates(IReadOnlyList<Address> addresses) =>
         addresses.Select(GetState).ToArray();
 
     public IAccountStateDelta SetState(Address address, IValue state) =>
-        new AccountStateDelta(_states.SetItem(address, state), _fungibles, _totalSupplies, _validatorSet)
-        {
-            StateGetter = StateGetter,
-            BalanceGetter = BalanceGetter,
-            ValidatorSetGetter = ValidatorSetGetter,
-            TotalSupplyGetter = TotalSupplyGetter,
-        };
-
+        new AccountStateDelta(_states.SetItem(address, state), _fungibles, _totalSupplies, _validatorSet);
     public FungibleAssetValue GetBalance(Address address, Currency currency)
     {
         if (!_fungibles.TryGetValue((address, currency), out BigInteger rawValue))
         {
-            return BalanceGetter(address, currency);
+            throw new NotSupportedException();
         }
 
         return FungibleAssetValue.FromRawValue(currency, rawValue);
@@ -170,7 +155,7 @@ public class AccountStateDelta : IAccountStateDelta
             return FungibleAssetValue.FromRawValue(currency, totalSupplyValue);
         }
 
-        return TotalSupplyGetter(currency);
+        throw new NotSupportedException();
     }
 
     public IAccountStateDelta MintAsset(
@@ -207,13 +192,7 @@ public class AccountStateDelta : IAccountStateDelta
                 ),
                 _totalSupplies.SetItem(currency, (currentTotalSupply + value).RawValue),
                 _validatorSet
-            )
-            {
-                StateGetter = StateGetter,
-                BalanceGetter = BalanceGetter,
-                ValidatorSetGetter = ValidatorSetGetter,
-                TotalSupplyGetter = TotalSupplyGetter,
-            };
+            );
         }
 
         return new AccountStateDelta(
@@ -224,13 +203,7 @@ public class AccountStateDelta : IAccountStateDelta
             ),
             _totalSupplies,
             _validatorSet
-        )
-        {
-            StateGetter = StateGetter,
-            BalanceGetter = BalanceGetter,
-            ValidatorSetGetter = ValidatorSetGetter,
-            TotalSupplyGetter = TotalSupplyGetter,
-        };
+        );
     }
 
     public IAccountStateDelta TransferAsset(
@@ -261,13 +234,7 @@ public class AccountStateDelta : IAccountStateDelta
         var balances = _fungibles
             .SetItem((sender, currency), senderRemains.RawValue)
             .SetItem((recipient, currency), recipientRemains.RawValue);
-        return new AccountStateDelta(_states, balances, _totalSupplies, _validatorSet)
-        {
-            StateGetter = StateGetter,
-            BalanceGetter = BalanceGetter,
-            ValidatorSetGetter = ValidatorSetGetter,
-            TotalSupplyGetter = TotalSupplyGetter,
-        };
+        return new AccountStateDelta(_states, balances, _totalSupplies, _validatorSet);
     }
 
     public IAccountStateDelta BurnAsset(
@@ -306,18 +273,12 @@ public class AccountStateDelta : IAccountStateDelta
                     (GetTotalSupply(currency) - value).RawValue)
                 : _totalSupplies,
             _validatorSet
-        )
-        {
-            StateGetter = StateGetter,
-            BalanceGetter = BalanceGetter,
-            ValidatorSetGetter = ValidatorSetGetter,
-            TotalSupplyGetter = TotalSupplyGetter,
-        };
+        );
     }
 
     public ValidatorSet GetValidatorSet()
     {
-        return _validatorSet ?? ValidatorSetGetter();
+        return _validatorSet ?? throw new NotSupportedException();
     }
 
     public IAccountStateDelta SetValidator(Validator validator)
@@ -327,12 +288,6 @@ public class AccountStateDelta : IAccountStateDelta
             _fungibles,
             _totalSupplies,
             GetValidatorSet().Update(validator)
-        )
-        {
-            StateGetter = StateGetter,
-            BalanceGetter = BalanceGetter,
-            ValidatorSetGetter = ValidatorSetGetter,
-            TotalSupplyGetter = TotalSupplyGetter,
-        };
+        );
     }
 }

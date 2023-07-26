@@ -1,5 +1,5 @@
 using System.Collections.Immutable;
-using Libplanet;
+using Libplanet.Crypto;
 
 namespace NineChronicles.Headless
 {

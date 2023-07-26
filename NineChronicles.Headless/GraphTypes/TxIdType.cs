@@ -1,7 +1,7 @@
 using GraphQL.Language.AST;
 using GraphQL.Types;
-using Libplanet;
-using Libplanet.Tx;
+using Libplanet.Common;
+using Libplanet.Types.Tx;
 using System;
 
 namespace NineChronicles.Headless.GraphTypes

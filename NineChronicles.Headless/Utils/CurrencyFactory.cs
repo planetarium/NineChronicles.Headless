@@ -1,7 +1,8 @@
+using System;
 using Bencodex.Types;
 using Lib9c;
-using Libplanet.Assets;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Types.Assets;
 using Nekoyume;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes;
@@ -10,11 +11,11 @@ namespace NineChronicles.Headless.Utils;
 
 public class CurrencyFactory
 {
-    private readonly AccountStateGetter _accountStateGetter;
+    private readonly Func<IAccountState> _accountStateGetter;
     private Currency? _ncg;
 
     public CurrencyFactory(
-        AccountStateGetter accountStateGetter,
+        Func<IAccountState> accountStateGetter,
         Currency? ncg = null)
     {
         _accountStateGetter = accountStateGetter;
@@ -50,7 +51,7 @@ public class CurrencyFactory
             return _ncg;
         }
 
-        var value = _accountStateGetter(new[] { Addresses.GoldCurrency })[0];
+        var value = _accountStateGetter().GetState(Addresses.GoldCurrency);
         if (value is Dictionary goldCurrencyDict)
         {
             var goldCurrency = new GoldCurrencyState(goldCurrencyDict);
