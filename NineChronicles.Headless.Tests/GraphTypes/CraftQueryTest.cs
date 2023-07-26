@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL.Execution;
-using Libplanet;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Nekoyume.Action;
 using NineChronicles.Headless.GraphTypes;

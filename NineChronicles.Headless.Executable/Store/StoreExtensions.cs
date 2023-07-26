@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 using Libplanet.Action;
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
 using Libplanet.Store;
 
 namespace NineChronicles.Headless.Executable.Store

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using GraphQL.Types;
-using Libplanet;
+using Libplanet.Common;
 using System.Security.Cryptography;
 
 namespace NineChronicles.Headless.GraphTypes.Input

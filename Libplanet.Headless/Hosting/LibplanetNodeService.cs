@@ -12,12 +12,13 @@ using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Extensions.ForkableActionEvaluator;
 using Libplanet.Extensions.RemoteActionEvaluator;
 using Libplanet.Net;
 using Libplanet.Net.Consensus;
+using Libplanet.Net.Options;
 using Libplanet.Net.Protocols;
 using Libplanet.Net.Transports;
 using Libplanet.RocksDBStore;
@@ -125,8 +126,7 @@ namespace Libplanet.Headless.Hosting
                     DefaultActionEvaluatorConfiguration _ => new ActionEvaluator(
                         _ => blockPolicy.BlockAction,
                         blockChainStates: blockChainStates,
-                        actionTypeLoader: actionLoader,
-                        feeCalculator: null
+                        actionTypeLoader: actionLoader
                     ),
                     ForkableActionEvaluatorConfiguration forkableActionEvaluatorConfiguration => new
                         ForkableActionEvaluator(

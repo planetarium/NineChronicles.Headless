@@ -7,18 +7,18 @@ using System.Numerics;
 using System.Text;
 using System.Text.Json;
 using Bencodex.Types;
-using Libplanet;
 using Libplanet.Action;
 using Libplanet.Action.Sys;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
-using Libplanet.Blocks;
-using Libplanet.Consensus;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
-using Libplanet.Tx;
+using Libplanet.Types.Consensus;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Action.Loader;
@@ -60,8 +60,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var actionEvaluator = new ActionEvaluator(
                 _ => new BlockPolicy().BlockAction,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             Block genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
             IStore store = storeType.CreateStore(_storePath);
             Guid chainId = Guid.NewGuid();
@@ -95,8 +94,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
                 actionEvaluator,
                 transactions: new IAction[]
@@ -107,7 +105,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                             ),
                             states: ImmutableDictionary.Create<Address, IValue>()
                         )
-                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa }))
+                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa.PlainValue }))
                     .ToImmutableList());
             BlockChain chain = BlockChain.Create(
                 blockPolicy,
@@ -157,8 +155,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
                 actionEvaluator,
                 transactions: new IAction[]
@@ -169,7 +166,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                             ),
                             states: ImmutableDictionary.Create<Address, IValue>()
                         )
-                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa }))
+                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa.PlainValue }))
                     .ToImmutableList());
             BlockChain chain = BlockChain.Create(
                 blockPolicy,
@@ -237,8 +234,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             BlockChain chain = BlockChain.Create(
                 blockPolicy,
                 stagePolicy,
@@ -280,8 +276,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             BlockChain chain = BlockChain.Create(
                 blockPolicy,
                 stagePolicy,

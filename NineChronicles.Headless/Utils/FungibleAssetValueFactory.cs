@@ -1,5 +1,5 @@
 using System.Numerics;
-using Libplanet.Assets;
+using Libplanet.Types.Assets;
 using NineChronicles.Headless.GraphTypes;
 
 namespace NineChronicles.Headless.Utils;

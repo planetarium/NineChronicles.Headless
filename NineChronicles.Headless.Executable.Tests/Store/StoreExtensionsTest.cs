@@ -3,7 +3,7 @@ using System.IO;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Nekoyume.Action.Loader;
@@ -31,8 +31,7 @@ namespace NineChronicles.Headless.Executable.Tests.Store
             IActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => new BlockPolicy().BlockAction,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             Block genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);

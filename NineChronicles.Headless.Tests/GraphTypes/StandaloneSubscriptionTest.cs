@@ -5,8 +5,6 @@ using System.Linq;
 using System.Net;
 using System.Numerics;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex.Types;
@@ -14,21 +12,20 @@ using GraphQL;
 using GraphQL.Execution;
 using GraphQL.NewtonsoftJson;
 using GraphQL.Subscription;
-using Libplanet;
+using Libplanet.Common;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
 using Libplanet.Action.Sys;
-using Libplanet.Assets;
-using Libplanet.Blocks;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
 using Libplanet.Blockchain;
-using Libplanet.Consensus;
+using Libplanet.Types.Consensus;
 using Libplanet.Crypto;
 using Libplanet.Headless;
 using Libplanet.Net;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
-using Libplanet.Tx;
-using Nekoyume.Action;
+using Libplanet.Types.Tx;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
@@ -82,8 +79,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var actionEvaluator = new ActionEvaluator(
                 _ => null,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new SingleActionLoader(typeof(EmptyAction)),
-                null);
+                new SingleActionLoader(typeof(EmptyAction)));
             var genesisBlock = BlockChain.ProposeGenesisBlock(
                 actionEvaluator,
                 transactions: new IAction[]
@@ -97,7 +93,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                     }
                                     .ToList()),
                             states: ImmutableDictionary.Create<Address, IValue>())
-                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa }))
+                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa.PlainValue }))
                     .ToImmutableList(),
                 privateKey: new PrivateKey());
             var validators = new List<PrivateKey>

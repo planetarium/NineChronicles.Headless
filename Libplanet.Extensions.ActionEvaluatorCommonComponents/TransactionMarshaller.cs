@@ -1,6 +1,6 @@
 using Bencodex;
 using Bencodex.Types;
-using Libplanet.Tx;
+using Libplanet.Types.Tx;
 
 namespace Libplanet.Extensions.ActionEvaluatorCommonComponents;
 

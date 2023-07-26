@@ -4,31 +4,26 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
-using Libplanet;
-using Libplanet.Action;
-using Libplanet.Assets;
-using Libplanet.Blocks;
 using Libplanet.Blockchain;
-using Libplanet.Blockchain.Renderers;
-using Libplanet.Net;
+using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
-using Libplanet.Tx;
+using Libplanet.Net;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 using MagicOnion;
 using MagicOnion.Server;
 using Nekoyume;
-using Nekoyume.Action;
 using Nekoyume.Shared.Services;
 using Serilog;
-using Libplanet.Headless;
 using Nekoyume.Model.State;
 using Sentry;
 using static NineChronicles.Headless.NCActionUtils;
 using NodeExceptionType = Libplanet.Headless.NodeExceptionType;
-using Transaction = Libplanet.Tx.Transaction;
+using Transaction = Libplanet.Types.Tx.Transaction;
 
 namespace NineChronicles.Headless
 {
@@ -130,10 +125,10 @@ namespace NineChronicles.Headless
         public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStates(IEnumerable<byte[]> addressBytesList, byte[] blockHashBytes)
         {
             var hash = new BlockHash(blockHashBytes);
-            var accountStateGetter = _blockChain.ToAccountStateGetter(hash);
+            var accountState = _blockChain.GetBlockState(hash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
             var addresses = addressBytesList.Select(a => new Address(a)).ToList();
-            var rawAvatarStates = accountStateGetter.GetRawAvatarStates(addresses);
+            var rawAvatarStates = accountState.GetRawAvatarStates(addresses);
             var taskList = rawAvatarStates
                 .Select(pair => Task.Run(() =>
                 {

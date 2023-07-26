@@ -1,8 +1,9 @@
 using Bencodex.Types;
-using Libplanet.Assets;
-using Libplanet.Blockchain;
-using Libplanet.Blocks;
-using Libplanet.Consensus;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Consensus;
 
 namespace Libplanet.Extensions.RemoteBlockChainStates
 {

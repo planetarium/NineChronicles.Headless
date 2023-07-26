@@ -10,16 +10,16 @@ using System.Threading;
 using Bencodex;
 using Bencodex.Types;
 using Cocona;
-using Lib9c.DevExtensions;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.Assets;
+using Libplanet.Action.State;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
-using Libplanet.Blocks;
-using Libplanet.State;
+using Libplanet.Common;
+using Libplanet.Crypto;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
 using Nekoyume.Action.Loader;
 using NineChronicles.Headless.Executable.IO;
 using Serilog.Core;
@@ -110,8 +110,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
                 blockChainStates,
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
 
             foreach (BlockHash blockHash in blockHashes)
             {

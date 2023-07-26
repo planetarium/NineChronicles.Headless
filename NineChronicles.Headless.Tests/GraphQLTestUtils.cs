@@ -12,7 +12,7 @@ using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
-using Libplanet.Tx;
+using Libplanet.Types.Tx;
 using Microsoft.Extensions.DependencyInjection;
 using Nekoyume;
 using Nekoyume.Action;
@@ -83,8 +83,7 @@ namespace NineChronicles.Headless.Tests
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
                 new BlockChainStates(store, stateStore),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             var genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
             var blockchain = BlockChain.Create(
                 new BlockPolicy(),
@@ -93,7 +92,7 @@ namespace NineChronicles.Headless.Tests
                 stateStore,
                 genesisBlock,
                 actionEvaluator);
-            var currencyFactory = new CurrencyFactory(blockchain.GetStates);
+            var currencyFactory = new CurrencyFactory(blockchain.GetBlockState);
             var fungibleAssetValueFactory = new FungibleAssetValueFactory(currencyFactory);
             return new StandaloneContext
             {
@@ -115,15 +114,14 @@ namespace NineChronicles.Headless.Tests
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
                 new BlockChainStates(store, stateStore),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             var genesisBlock = BlockChain.ProposeGenesisBlock(
                 actionEvaluator,
                 transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(
                     0, minerPrivateKey, null, new ActionBase[]
                     {
                         initializeStates,
-                    })),
+                    }.ToPlainValues())),
                 privateKey: minerPrivateKey
             );
             var blockchain = BlockChain.Create(
@@ -135,7 +133,7 @@ namespace NineChronicles.Headless.Tests
                 actionEvaluator);
             var ncg = new GoldCurrencyState((Dictionary)blockchain.GetState(Addresses.GoldCurrency))
                 .Currency;
-            var currencyFactory = new CurrencyFactory(blockchain.GetStates, ncg);
+            var currencyFactory = new CurrencyFactory(blockchain.GetBlockState, ncg);
             var fungibleAssetValueFactory = new FungibleAssetValueFactory(currencyFactory);
             return new StandaloneContext
             {

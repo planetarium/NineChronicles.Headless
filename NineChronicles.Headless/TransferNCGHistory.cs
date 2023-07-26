@@ -1,7 +1,7 @@
-using Libplanet;
-using Libplanet.Assets;
-using Libplanet.Blocks;
-using Libplanet.Tx;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 
 namespace NineChronicles.Headless
 {

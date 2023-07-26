@@ -17,7 +17,7 @@
     <Optimize Condition=" '$(Optimize)' == '' ">false</Optimize>
     <DefineConstants>$(DefineConstants);TRACE;LIB9C_DEV_EXTENSIONS</DefineConstants>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <Compile Include="..\Lib9c\.Lib9c.Tests\TableSheets.cs" Link="TableSheets.cs" />
     <Compile Include="..\Lib9c\.Lib9c.Tests\TableSheetsImporter.cs" Link="TableSheetsImporter.cs" />

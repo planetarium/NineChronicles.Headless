@@ -1,17 +1,16 @@
 using GraphQL;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.Action.Loader;
 using Libplanet.Action.Sys;
-using Libplanet.Assets;
 using Libplanet.Blockchain;
-using Libplanet.Blocks;
-using Libplanet.Consensus;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.KeyStore;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
-using Libplanet.Tx;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Consensus;
+using Libplanet.Types.Tx;
 using Nekoyume.Action;
 using Nekoyume.Action.Loader;
 using Nekoyume.Model;
@@ -875,7 +874,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     0,
                     service.MinerPrivateKey!,
                     genesis.Hash,
-                    new ActionBase[] { },
+                    new IValue[] { },
                     gasLimit: 4,
                     maxGasPrice: 1 * Currencies.Mead
                 );
@@ -913,7 +912,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     0,
                     service.MinerPrivateKey!,
                     genesis.Hash,
-                    new ActionBase[] { },
+                    new IValue[] { },
                     gasLimit: 4,
                     maxGasPrice: 1 * Currencies.Mead
                 );
@@ -984,7 +983,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 PatronAddress = new PrivateKey().ToAddress()
             };
-            var tx = Transaction.Create(0, pk, BlockChain.Genesis.Hash, new[] { action });
+            var tx = Transaction.Create(0, pk, BlockChain.Genesis.Hash, new[] { action.PlainValue });
             var payload = ByteUtil.Hex(tx.Serialize());
             var stageTxMutation = $"mutation {{ stageTransaction(payload: \"{payload}\") }}";
             var stageTxResult = await ExecuteQueryAsync(stageTxMutation);
@@ -994,15 +993,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         private Block MakeGenesisBlock(
             Address adminAddress,
-            Currency curreny,
+            Currency currency,
             IImmutableSet<Address> activatedAccounts,
             RankingState0? rankingState = null)
         {
             var actionEvaluator = new ActionEvaluator(
                 _ => ServiceBuilder.BlockPolicy.BlockAction,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             return BlockChain.ProposeGenesisBlock(
                 actionEvaluator,
                 transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(0,
@@ -1018,7 +1016,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             ),
                             adminAddressState: new AdminState(adminAddress, 1500000),
                             activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-                            goldCurrencyState: new GoldCurrencyState(curreny),
+                            goldCurrencyState: new GoldCurrencyState(currency),
                             goldDistributions: new GoldDistribution[0],
                             tableSheets: _sheets,
                             pendingActivationStates: new PendingActivationState[] { }
@@ -1031,14 +1029,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                 1 * Currencies.Mead
                             }
                         }
-                    })).AddRange(new IAction[]
+                    }.ToPlainValues())).AddRange(new IAction[]
                     {
                         new Initialize(
                             new ValidatorSet(
                                 new[] { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }
                                     .ToList()),
                             states: ImmutableDictionary.Create<Address, IValue>())
-                    }.Select((sa, nonce) => Transaction.Create(nonce + 1, AdminPrivateKey, null, new[] { sa }))),
+                    }.Select((sa, nonce) => Transaction.Create(nonce + 1, AdminPrivateKey, null, new[] { sa.PlainValue }))),
                 privateKey: AdminPrivateKey);
         }
     }

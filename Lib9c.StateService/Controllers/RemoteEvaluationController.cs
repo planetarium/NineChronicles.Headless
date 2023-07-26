@@ -2,7 +2,7 @@ using Bencodex;
 using Bencodex.Types;
 using Lib9c.StateService.Shared;
 using Libplanet.Action;
-using Libplanet.Blockchain;
+using Libplanet.Action.State;
 using Libplanet.Extensions.ActionEvaluatorCommonComponents;
 using Microsoft.AspNetCore.Mvc;
 using Nekoyume.Action;
@@ -42,8 +42,7 @@ public class RemoteEvaluationController : ControllerBase
             new ActionEvaluator(
                 context => new RewardGold(),
                 _blockChainStates,
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
         return Ok(new RemoteEvaluationResponse
         {
             Evaluations = actionEvaluator.Evaluate(preEvaluationBlock).Select(ActionEvaluationMarshaller.Serialize)

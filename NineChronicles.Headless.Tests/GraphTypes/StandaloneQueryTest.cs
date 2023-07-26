@@ -11,20 +11,20 @@ using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL.Execution;
-using Libplanet;
 using Libplanet.Action;
 using Libplanet.Action.Sys;
-using Libplanet.Assets;
 using Libplanet.Blockchain;
-using Libplanet.Blocks;
-using Libplanet.Consensus;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
 using Libplanet.KeyStore;
 using Libplanet.Net;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
-using Libplanet.Tx;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Consensus;
+using Libplanet.Types.Tx;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Action.Loader;
@@ -34,7 +34,6 @@ using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.Properties;
 using NineChronicles.Headless.Tests.Common;
-using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
 using Xunit.Abstractions;
 using static NineChronicles.Headless.NCActionUtils;
@@ -120,8 +119,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var actionEvaluator = new ActionEvaluator(
                 _ => null,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             var genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
 
             // 에러로 인하여 NineChroniclesNodeService 를 사용할 수 없습니다. https://git.io/JfS0M
@@ -444,13 +442,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             ValidatorSet validatorSetCandidate = new ValidatorSet(new[]
             {
-                new Libplanet.Consensus.Validator(ProposerPrivateKey.PublicKey, BigInteger.One),
+                new Libplanet.Types.Consensus.Validator(ProposerPrivateKey.PublicKey, BigInteger.One),
             }.ToList());
             var actionEvaluator = new ActionEvaluator(
                 _ => null,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             Block genesis =
                 BlockChain.ProposeGenesisBlock(
                     actionEvaluator,
@@ -477,7 +474,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                     tableSheets: _sheets,
                                     pendingActivationStates: new PendingActivationState[] { }
                                 ),
-                            }))
+                            }.ToPlainValues()))
                         .AddRange(new IAction[]
                             {
                                 new Initialize(
@@ -485,7 +482,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                     states: ImmutableDictionary<Address, IValue>.Empty),
                             }.Select((sa, nonce) =>
                                 Transaction.Create(nonce + 1, ProposerPrivateKey, null,
-                                    new[] { sa }))
+                                    new[] { sa.PlainValue }))
                         ),
                     privateKey: ProposerPrivateKey
                 );
@@ -844,8 +841,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var actionEvaluator = new ActionEvaluator(
                 _ => null,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             Block genesis =
                 BlockChain.ProposeGenesisBlock(
                     actionEvaluator,
@@ -872,7 +868,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                     tableSheets: _sheets,
                                     pendingActivationStates: pendingActivationStates.ToArray()
                                 ),
-                            }))
+                            }.ToPlainValues()))
                 );
 
             var apvPrivateKey = new PrivateKey();
@@ -930,8 +926,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var actionEvaluator = new ActionEvaluator(
                 _ => null,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             Block genesis =
                 BlockChain.ProposeGenesisBlock(
                     actionEvaluator,
@@ -961,7 +956,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                     tableSheets: _sheets,
                                     pendingActivationStates: pendingActivationStates.ToArray()
                                 ),
-                            }))
+                            }.ToPlainValues()))
                         );
 
             var apvPrivateKey = new PrivateKey();
@@ -1012,8 +1007,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var actionEvaluator = new ActionEvaluator(
                 _ => null,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             Block genesis =
                 BlockChain.ProposeGenesisBlock(
                     actionEvaluator,
@@ -1039,7 +1033,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                     tableSheets: _sheets,
                                     pendingActivationStates: pendingActivationStates.ToArray()
                                 ),
-                            }))
+                            }.ToPlainValues()))
                 );
 
             var apvPrivateKey = new PrivateKey();
@@ -1112,14 +1106,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockPolicy = NineChroniclesNodeService.GetTestBlockPolicy();
             var validatorSetCandidate = new ValidatorSet(new[]
             {
-                new Libplanet.Consensus.Validator(ProposerPrivateKey.PublicKey, BigInteger.One),
-                new Libplanet.Consensus.Validator(privateKey.PublicKey, BigInteger.One),
+                new Libplanet.Types.Consensus.Validator(ProposerPrivateKey.PublicKey, BigInteger.One),
+                new Libplanet.Types.Consensus.Validator(privateKey.PublicKey, BigInteger.One),
             }.ToList());
             var actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             Block genesis =
                 BlockChain.ProposeGenesisBlock(
                     actionEvaluator,
@@ -1143,7 +1136,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                         tableSheets: _sheets,
                                         pendingActivationStates: new PendingActivationState[] { }
                                     ),
-                                }
+                                }.ToPlainValues()
                             )
                         )
                         .AddRange(
@@ -1152,7 +1145,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                 new Initialize(validatorSetCandidate, ImmutableDictionary<Address, IValue>.Empty),
                             }.Select((sa, nonce) =>
                                 Transaction.Create(nonce + 1, ProposerPrivateKey, null,
-                                    new[] { sa }))
+                                    new[] { sa.PlainValue }))
                         ),
                     privateKey: ProposerPrivateKey
                 );
