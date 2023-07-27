@@ -27,8 +27,6 @@ jobs:
         docker:
           - repo: planetariumhq/ninechronicles-headless
             dockerfile: Dockerfile
-          - repo: planetariumhq/lib9c-stateservice
-            dockerfile: Dockerfile.lib9c-stateservice
     if: github.ref_type == 'branch'
     runs-on: ubuntu-latest
     steps:
