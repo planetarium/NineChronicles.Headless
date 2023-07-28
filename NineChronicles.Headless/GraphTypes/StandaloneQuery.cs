@@ -116,39 +116,32 @@ namespace NineChronicles.Headless.GraphTypes
                     var recipient = context.GetArgument<Address?>("recipient");
 
                     IEnumerable<Transaction> txs = digest.TxIds
-                        .Select(b => new TxId(b.ToBuilder().ToArray()))
+                        .Select(bytes => new TxId(bytes))
                         .Select(store.GetTransaction);
-                    var filteredTransactions = txs.Where(tx =>
-                        tx.Actions!.Count == 1 &&
-                        ToAction(tx.Actions.First()) is ITransferAsset transferAsset &&
-                        (!recipient.HasValue || transferAsset.Recipient == recipient) &&
-                        transferAsset.Amount.Currency.Ticker == "NCG" &&
-                        store.GetTxExecution(blockHash, tx.Id) is TxSuccess);
 
-                    TransferNCGHistory ToTransferNCGHistory(TxSuccess txSuccess, string? memo)
+                    var pairs = txs
+                        .Where(tx =>
+                            tx.Actions!.Count == 1 &&
+                            store.GetTxExecution(blockHash, tx.Id) is TxSuccess)
+                        .Select(tx => (tx.Id, ToAction(tx.Actions.First())))
+                        .Where(pair =>
+                            pair.Item2 is ITransferAsset transferAssset &&
+                            transferAssset.Amount.Currency.Ticker == "NCG")
+                        .Select(pair => (pair.Item1, (ITransferAsset)pair.Item2))
+                        .Where(pair => (!(recipient is { } r) || pair.Item2.Recipient == r));
+
+                    TransferNCGHistory ToTransferNCGHistory((TxId TxId, ITransferAsset Transfer) pair)
                     {
-                        var rawTransferNcgHistories = txSuccess.FungibleAssetsDelta
-                            .Where(pair => pair.Value.Values.Any(fav => fav.Currency.Ticker == "NCG"))
-                            .Select(pair =>
-                                (pair.Key, pair.Value.Values.First(fav => fav.Currency.Ticker == "NCG")))
-                            .ToArray();
-                        var ((senderAddress, _), (recipientAddress, amount)) =
-                            rawTransferNcgHistories[0].Item2.RawValue > rawTransferNcgHistories[1].Item2.RawValue
-                                ? (rawTransferNcgHistories[1], rawTransferNcgHistories[0])
-                                : (rawTransferNcgHistories[0], rawTransferNcgHistories[1]);
                         return new TransferNCGHistory(
-                            txSuccess.BlockHash,
-                            txSuccess.TxId,
-                            senderAddress,
-                            recipientAddress,
-                            amount,
-                            memo);
+                            blockHash,
+                            pair.TxId,
+                            pair.Transfer.Sender,
+                            pair.Transfer.Recipient,
+                            pair.Transfer.Amount,
+                            pair.Transfer.Memo);
                     }
 
-                    var histories = filteredTransactions.Select(tx =>
-                        ToTransferNCGHistory((TxSuccess)store.GetTxExecution(blockHash, tx.Id),
-                            ((ITransferAsset)ToAction(tx.Actions!.Single())).Memo));
-
+                    var histories = pairs.Select(ToTransferNCGHistory);
                     return histories;
                 });
 
