@@ -5,6 +5,7 @@ using GraphQL.Server;
 using GraphQL.Utilities;
 using Grpc.Core;
 using Grpc.Net.Client;
+using Libplanet;
 using Libplanet.Explorer.Schemas;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -153,8 +154,9 @@ namespace NineChronicles.Headless
                     app.UseDeveloperExceptionPage();
                 }
 
+                Dictionary<string, HashSet<Address>> ipSignerList = new();
                 // Capture requests
-                app.UseMiddleware<HttpCaptureMiddleware>();
+                app.UseMiddleware<HttpCaptureMiddleware>(ipSignerList);
 
                 app.UseMiddleware<LocalAuthenticationMiddleware>();
                 if (Configuration[NoCorsKey] is null)
