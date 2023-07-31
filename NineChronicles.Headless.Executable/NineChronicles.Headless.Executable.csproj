@@ -10,6 +10,7 @@
     <Nullable>enable</Nullable>
     <Configurations>Debug;Release;DevEx</Configurations>
     <Platforms>AnyCPU</Platforms>
+    <AssemblyName>ncd</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'DevEx' ">
