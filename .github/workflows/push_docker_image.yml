@@ -12,6 +12,7 @@ on:
       - 2022q3-worldboss
       - release/*
       - test/deprecated-gql
+      - tmp/moreal/say-txresult-test-on-no-mead
     tags:
       - "*"
   workflow_dispatch:
