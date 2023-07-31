@@ -13,6 +13,7 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Reactive.Disposables;
 using Bencodex.Types;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
@@ -225,7 +226,17 @@ namespace NineChronicles.Headless.GraphTypes
                 (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(),
                     new ReplaySubject<string>()));
             StandaloneContext.AgentAddresses.TryGetValue(address, out var subjects);
-            return subjects.balanceSubject.AsObservable();
+
+            return Observable.Create<string>(observer =>
+            {
+                var subscription = subjects.balanceSubject.Subscribe(observer);
+
+                return Disposable.Create(() =>
+                {
+                    subscription.Dispose();
+                    StandaloneContext.AgentAddresses.TryRemove(address, out _);
+                });
+            });
         }
 
         private TipChanged ResolveTipChanged(IResolveFieldContext context)
