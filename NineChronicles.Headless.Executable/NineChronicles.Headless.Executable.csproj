@@ -11,6 +11,7 @@
     <Configurations>Debug;Release;DevEx</Configurations>
     <Platforms>AnyCPU</Platforms>
     <AssemblyName>ncd</AssemblyName>
+    <PublishSingleFile>true</PublishSingleFile>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'DevEx' ">
