@@ -11,6 +11,7 @@ on:
       - qa-*
       - 2022q3-worldboss
       - release/*
+      - test/bencodex-0.13.0
     tags:
       - "*"
   workflow_dispatch:
