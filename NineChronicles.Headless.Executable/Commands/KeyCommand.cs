@@ -10,7 +10,7 @@ namespace NineChronicles.Headless.Executable.Commands
     using System.IO;
     using System.Linq;
     using global::Cocona;
-    using Libplanet;
+    using Libplanet.Common;
     using Libplanet.Crypto;
     using Libplanet.Extensions.Cocona;
     using Libplanet.KeyStore;

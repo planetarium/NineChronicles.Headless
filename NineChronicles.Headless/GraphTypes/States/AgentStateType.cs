@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Bencodex.Types;
 using GraphQL.Types;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Libplanet.Explorer.GraphTypes;
-using Libplanet.State;
+using Libplanet.Action.State;
 using Nekoyume.Action;
 using Nekoyume.Helper;
 using Nekoyume.Model.Quest;
@@ -19,8 +19,8 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class AgentStateContext : StateContext
         {
-            public AgentStateContext(AgentState agentState, AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter, long blockIndex)
-                : base(accountStateGetter, accountBalanceGetter, blockIndex)
+            public AgentStateContext(AgentState agentState, IAccountState accountState, long blockIndex)
+                : base(accountState, blockIndex)
             {
                 AgentState = agentState;
             }
@@ -45,11 +45,10 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context =>
                 {
                     IReadOnlyList<Address> avatarAddresses = context.Source.GetAvatarAddresses();
-                    return context.Source.AccountStateGetter.GetAvatarStates(avatarAddresses).Select(
+                    return context.Source.AccountState.GetAvatarStates(avatarAddresses).Select(
                         x => new AvatarStateType.AvatarStateContext(
                             x,
-                            context.Source.AccountStateGetter,
-                            context.Source.AccountBalanceGetter,
+                            context.Source.AccountState,
                             context.Source.BlockIndex));
                 });
             Field<NonNullGraphType<StringGraphType>>(

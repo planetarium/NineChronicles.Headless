@@ -12,6 +12,6 @@ public class ForkableActionEvaluatorConfiguration : IActionEvaluatorConfiguratio
 
 public class ForkableActionEvaluatorRange
 {
-    public long Start { get; }
-    public long End { get; }
+    public long Start { get; set; }
+    public long End { get; set; }
 }

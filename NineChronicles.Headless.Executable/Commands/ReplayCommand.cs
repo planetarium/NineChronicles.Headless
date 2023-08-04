@@ -3,21 +3,30 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using Bencodex;
 using Bencodex.Json;
 using Bencodex.Types;
 using Cocona;
 using Cocona.Help;
+using GraphQL.Client.Http;
+using GraphQL.Client.Serializer.SystemTextJson;
+using Libplanet;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
-using Libplanet.Blocks;
+using Libplanet.Extensions.RemoteBlockChainStates;
+using Libplanet.Types.Blocks;
 using Libplanet.RocksDBStore;
-using Libplanet.State;
+using Libplanet.Action.State;
+using Libplanet.Common;
+using Libplanet.Crypto;
 using Libplanet.Store;
-using Libplanet.Tx;
+using Libplanet.Types.Tx;
 using Nekoyume.Action;
 using Nekoyume.Action.Loader;
 using Nekoyume.Blockchain.Policy;
@@ -130,7 +139,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     if (actionEvaluation.Action is ActionBase nca)
                     {
                         var type = nca.GetType();
-                        var actionType = ActionTypeAttribute.ValueOf(type);
+                        var actionType = type.GetCustomAttribute<ActionTypeAttribute>()?.TypeIdentifier;
                         msg = $"- action #{actionNum}: {type.Name}(\"{actionType}\")";
                         _console.Out.WriteLine(msg);
                         outputSw?.WriteLine(msg);
@@ -341,6 +350,73 @@ namespace NineChronicles.Headless.Executable.Commands
             }
         }
 
+        [Command(Description = "Evaluate transaction with remote states")]
+        public int RemoteTx(
+            [Option("tx", new[] { 't' }, Description = "The transaction id")]
+            string transactionId,
+            [Option("endpoint", new[] { 'e' }, Description = "GraphQL endpoint to get remote state")]
+            string endpoint)
+        {
+            var graphQlClient = new GraphQLHttpClient(new Uri(endpoint), new SystemTextJsonSerializer());
+            var transactionResponse = GetTransactionData(graphQlClient, transactionId);
+            if (transactionResponse is null)
+            {
+                throw new CommandExitedException(
+                    $"Failed to query transaction and transactionResult with id {transactionId}", -1);
+            }
+
+            var transaction = GetTransactionFromQueryResult(transactionResponse);
+            if (transaction is null)
+            {
+                throw new CommandExitedException("Failed to get transaction from query", -1);
+            }
+
+            var transactionResult = transactionResponse.Transaction?.TransactionResult;
+            if (transactionResult?.BlockHash is null)
+            {
+                throw new CommandExitedException("Failed to get transactionResult from query", -1);
+            }
+
+            var block = GetBlockData(graphQlClient, transactionResult.BlockHash)?.ChainQuery?.BlockQuery?.Block;
+            var previousBlockHashValue = block?.PreviousBlock?.Hash;
+            var preEvaluationHashValue = block?.PreEvaluationHash;
+            var minerValue = block?.Miner;
+            if (previousBlockHashValue is null || preEvaluationHashValue is null || minerValue is null)
+            {
+                throw new CommandExitedException("Failed to get block from query", -1);
+            }
+            var miner = new Address(minerValue);
+
+            var explorerEndpoint = $"{endpoint}/explorer";
+            var blockChainState = new RemoteBlockChainStates(new Uri(explorerEndpoint));
+
+            var previousBlockHash = BlockHash.FromString(previousBlockHashValue);
+            var previousStates =
+                AccountStateDelta.Create(new RemoteBlockState(new Uri(explorerEndpoint), previousBlockHash));
+
+            var actions = transaction.Actions
+                .Select(ToAction)
+                .Cast<IAction>()
+                .ToImmutableList();
+            var actionEvaluations = EvaluateActions(
+                preEvaluationHash: HashDigest<SHA256>.FromString(preEvaluationHashValue),
+                blockIndex: transactionResult.BlockIndex ?? 0,
+                blockProtocolVersion: 0,
+                txid: transaction.Id,
+                previousStates: previousStates,
+                miner: miner,
+                signer: transaction.Signer,
+                signature: transaction.Signature,
+                actions: actions);
+
+            actionEvaluations
+                .Select((evaluation, index) => (evaluation, index))
+                .ToList()
+                .ForEach(x => PrintEvaluation(x.evaluation, x.index));
+
+            return 0;
+        }
+
         private static (FileStream? fs, StreamWriter? sw) GetOutputFileStream(
             string outputPath,
             string defaultFileName)
@@ -401,8 +477,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
                 blockChainStates,
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             return (
                 store,
                 stateStore,
@@ -449,8 +524,7 @@ namespace NineChronicles.Headless.Executable.Commands
             return new ActionEvaluator(
                 _ => policy.BlockAction,
                 blockChainStates: blockChain,
-                actionTypeLoader: actionLoader,
-                feeCalculator: null);
+                actionTypeLoader: actionLoader);
         }
 
         private void LoggingAboutIncompleteBlockStatesException(
@@ -500,7 +574,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 string? actionType;
                 if (DecodeAction(actionEvaluation.Action) is { } action)
                 {
-                    actionType = ActionTypeAttribute.ValueOf(action.GetType())?.ToString();
+                    actionType = action.GetType().GetCustomAttribute<ActionTypeAttribute>()?.TypeIdentifier?.ToString();
                 }
                 else if (actionEvaluation.Action is Dictionary dictionary && dictionary.ContainsKey("type_id"))
                 {
@@ -530,6 +604,45 @@ namespace NineChronicles.Headless.Executable.Commands
                 msg = $"---- {actionEvaluation.Exception}";
                 _console.Out.WriteLine(msg);
                 textWriter?.WriteLine(msg);
+            }
+        }
+
+        private Transaction? GetTransactionFromQueryResult(GetTransactionDataResponse query)
+        {
+            var bencodexTransaction = query.ChainQuery?.TransactionQuery?.Transaction?.SerializedPayload;
+            if (bencodexTransaction is null)
+            {
+                return null;
+            }
+
+            var serializedTransaction = new Codec().Decode(Convert.FromBase64String(bencodexTransaction));
+
+            return TxMarshaler.UnmarshalTransaction((Dictionary)serializedTransaction);
+        }
+
+        private void PrintEvaluation(ActionEvaluation evaluation, int index)
+        {
+            var exception = evaluation.Exception?.InnerException ?? evaluation.Exception;
+            if (exception is not null)
+            {
+                _console.Out.WriteLine($"action #{index} exception: {exception}");
+                return;
+            }
+
+            if (evaluation.Action is ActionBase nca)
+            {
+                var type = nca.GetType();
+                var actionType = type.GetCustomAttribute<ActionTypeAttribute>()?.TypeIdentifier;
+                _console.Out.WriteLine($"- action #{index + 1}: {type.Name}(\"{actionType}\")");
+            }
+
+            var states = evaluation.OutputState.Delta.States;
+            var indexedStates = states.Select((x, i) => (x.Key, x.Value, i: i));
+            foreach (var (updatedAddress, updatedState, addressIndex) in indexedStates)
+            {
+                _console.Out.WriteLine($"- action #{index + 1} updated address #{addressIndex + 1}({updatedAddress}) beginning...");
+                _console.Out.WriteLine(updatedState);
+                _console.Out.WriteLine($"- action #{index + 1} updated address #{addressIndex + 1}({updatedAddress}) end...");
             }
         }
     }

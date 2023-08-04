@@ -56,7 +56,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                     catch (ArgumentException ae)
                     {
-                        context.Errors.Add(new ExecutionError("The given key isn't in the correct foramt.", ae));
+                        context.Errors.Add(new ExecutionError("The given key isn't in the correct format.", ae));
                         return false;
                     }
                     catch (Exception e)

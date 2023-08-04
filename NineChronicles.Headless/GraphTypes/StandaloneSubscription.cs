@@ -3,7 +3,7 @@ using GraphQL.Resolvers;
 using GraphQL.Subscription;
 using GraphQL.Types;
 using Lib9c.Renderers;
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Headless;
 using Libplanet.Net;
@@ -13,15 +13,14 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Reactive.Disposables;
 using Bencodex.Types;
-using Libplanet;
-using Libplanet.Action;
-using Libplanet.Assets;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
-using NineChronicles.Headless.GraphTypes.States;
 using Libplanet.Blockchain;
 using Serilog;
 
@@ -227,7 +226,17 @@ namespace NineChronicles.Headless.GraphTypes
                 (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(),
                     new ReplaySubject<string>()));
             StandaloneContext.AgentAddresses.TryGetValue(address, out var subjects);
-            return subjects.balanceSubject.AsObservable();
+
+            return Observable.Create<string>(observer =>
+            {
+                var subscription = subjects.balanceSubject.Subscribe(observer);
+
+                return Disposable.Create(() =>
+                {
+                    subscription.Dispose();
+                    StandaloneContext.AgentAddresses.TryRemove(address, out _);
+                });
+            });
         }
 
         private TipChanged ResolveTipChanged(IResolveFieldContext context)

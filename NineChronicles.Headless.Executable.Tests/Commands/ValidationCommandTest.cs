@@ -17,9 +17,9 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         }
 
         [Theory]
-        [InlineData("", -1, "The given private key, '', had an issue during parsing.")]
-        [InlineData("invalid hexadecimal", -1, "The given private key, 'invalid hexadecimal', had an issue during parsing.")]
-        [InlineData("000000000000000000000000000000000000000000000000000000000000000000", -1, "The given private key, '000000000000000000000000000000000000000000000000000000000000000000', had an issue during parsing.")]
+        [InlineData("", -1, "The given private key had an issue during parsing.")]
+        [InlineData("invalid hexadecimal", -1, "The given private key had an issue during parsing.")]
+        [InlineData("000000000000000000000000000000000000000000000000000000000000000000", -1, "The given private key had an issue during parsing.")]
         [InlineData("ab8d591ccdcce263c39eb1f353e44b64869f0afea2df643bf6839ebde650d244", 0, "")]
         [InlineData("d6c3e0d525dac340a132ae05aaa9f3e278d61b70d2b71326570e64aee249e566", 0, "")]
         [InlineData("761f68d68426549df5904395b5ca5bce64a3da759085d8565242db42a5a1b0b9", 0, "")]

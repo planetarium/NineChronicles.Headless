@@ -2,10 +2,11 @@ using System.Security.Cryptography;
 using Bencodex.Types;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Extensions.ActionEvaluatorCommonComponents;
-using Libplanet.Tx;
+using Libplanet.Types.Tx;
 using ActionEvaluation = Libplanet.Extensions.ActionEvaluatorCommonComponents.ActionEvaluation;
 using ArgumentOutOfRangeException = System.ArgumentOutOfRangeException;
 using Random = Libplanet.Extensions.ActionEvaluatorCommonComponents.Random;
@@ -82,8 +83,7 @@ class PostActionEvaluator : IActionEvaluator
                     null,
                     false),
                 new AccountStateDelta(),
-                null,
-                new List<string>())
+                null)
         };
     }
 }
@@ -110,8 +110,7 @@ class PreActionEvaluator : IActionEvaluator
                     null,
                     false),
                 new AccountStateDelta(),
-                null,
-                new List<string>())
+                null)
         };
     }
 }

@@ -1,12 +1,10 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Bencodex.Types;
 using GraphQL.Execution;
-using Libplanet.Assets;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
+using NineChronicles.Headless.Tests.Common;
 using Xunit;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 
@@ -24,38 +22,21 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 agentAddress
                 index
             }";
+            MockState mockState = MockState.Empty
+                .SetState(Fixtures.AvatarAddress, Fixtures.AvatarStateFX.Serialize())
+                .SetState(Fixtures.UserAddress, Fixtures.AgentStateFx.Serialize());
             var queryResult = await ExecuteQueryAsync<AvatarStateType>(
                 query,
                 source: new AvatarStateType.AvatarStateContext(
                     avatarState,
-                    addresses =>
-                    {
-                        var arr = new IValue?[addresses.Count];
-                        for (int i = 0; i < addresses.Count; i++)
-                        {
-                            arr[i] = null;
-
-                            if (addresses[i].Equals(Fixtures.AvatarAddress))
-                            {
-                                arr[i] = Fixtures.AvatarStateFX.Serialize();
-                            }
-
-                            if (addresses[i].Equals(Fixtures.UserAddress))
-                            {
-                                arr[i] = Fixtures.AgentStateFx.Serialize();
-                            }
-                        }
-
-                        return arr;
-                    },
-                    (_, _) => new FungibleAssetValue(),
+                    mockState,
                     0));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
         }
 
         [Theory]
-        [MemberData(nameof(CombinationSlotSteteMembers))]
+        [MemberData(nameof(CombinationSlotStateMembers))]
         public async Task QueryWithCombinationSlotState(AvatarState avatarState, Dictionary<string, object> expected)
         {
             const string query = @"
@@ -70,32 +51,23 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 }
             }
             ";
+            MockState mockState = MockState.Empty
+                .SetState(Fixtures.AvatarAddress, Fixtures.AvatarStateFX.Serialize())
+                .SetState(Fixtures.UserAddress, Fixtures.AgentStateFx.Serialize());
+
+            for (int i = 0; i < Fixtures.AvatarStateFX.combinationSlotAddresses.Count; i++)
+            {
+                mockState = mockState
+                    .SetState(
+                        Fixtures.AvatarStateFX.combinationSlotAddresses[i],
+                        Fixtures.CombinationSlotStatesFx[i].Serialize());
+            }
+
             var queryResult = await ExecuteQueryAsync<AvatarStateType>(
                 query,
                 source: new AvatarStateType.AvatarStateContext(
                     avatarState,
-                    addresses => addresses.Select(x =>
-                    {
-                        if (x == Fixtures.AvatarAddress)
-                        {
-                            return Fixtures.AvatarStateFX.Serialize();
-                        }
-
-                        if (x == Fixtures.UserAddress)
-                        {
-                            return Fixtures.AgentStateFx.Serialize();
-                        }
-
-                        var combinationSlotAddressIndex =
-                            Fixtures.AvatarStateFX.combinationSlotAddresses.FindIndex(address => x == address);
-                        if (combinationSlotAddressIndex > -1)
-                        {
-                            return Fixtures.CombinationSlotStatesFx[combinationSlotAddressIndex].Serialize();
-                        }
-
-                        return null;
-                    }).ToList(),
-                    (_, _) => new FungibleAssetValue(),
+                    mockState,
                     0));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
@@ -115,7 +87,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             },
         };
 
-        public static IEnumerable<object[]> CombinationSlotSteteMembers = new List<object[]>()
+        public static IEnumerable<object[]> CombinationSlotStateMembers = new List<object[]>()
         {
             new object[]
             {

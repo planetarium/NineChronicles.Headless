@@ -1,7 +1,7 @@
 using Cocona;
 using Cocona.Lite;
 using Destructurama;
-using Libplanet;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Extensions.Cocona.Commands;
 using Libplanet.KeyStore;
@@ -29,7 +29,7 @@ using Lib9c.DevExtensions.Action.Loader;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
 // import necessary for sentry exception filters
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
 using Libplanet.Headless;
 using Libplanet.Headless.Hosting;
 using Libplanet.Net.Transports;
@@ -257,13 +257,13 @@ namespace NineChronicles.Headless.Executable
                     },
                     ActionEvaluatorType.ForkableActionEvaluator => new ForkableActionEvaluatorConfiguration
                     {
-                        Pairs = (configuration.GetValue<List<IConfiguration>>("Pairs") ??
-                                 throw new KeyNotFoundException()).Select(pair =>
+                        Pairs = (configuration.GetSection("Pairs") ??
+                                 throw new KeyNotFoundException()).GetChildren().Select(pair =>
                         {
-                            var range = pair.GetValue<ForkableActionEvaluatorRange>("Range") ??
-                                        throw new KeyNotFoundException();
+                            var range = new ForkableActionEvaluatorRange();
+                            pair.Bind("Range", range);
                             var actionEvaluatorConfiguration =
-                                GetActionEvaluatorConfiguration(configuration.GetSection("ActionEvaluator")) ??
+                                GetActionEvaluatorConfiguration(pair.GetSection("ActionEvaluator")) ??
                                 throw new KeyNotFoundException();
                             return (range, actionEvaluatorConfiguration);
                         }).ToImmutableArray()

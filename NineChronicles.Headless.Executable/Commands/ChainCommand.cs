@@ -8,11 +8,12 @@ using System.Security.Cryptography;
 using Bencodex.Types;
 using Cocona;
 using Cocona.Help;
-using Libplanet;
+using Libplanet.Common;
+using Libplanet.Crypto;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
@@ -131,8 +132,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 blockChainStates,
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             BlockChain chain = new BlockChain(
                 blockPolicy,
                 stagePolicy,

@@ -2,7 +2,6 @@ addReviewers: true
 addAssignees: author
 
 reviewers:
-    - longfin
     - ipdae
     - area363
     - moreal

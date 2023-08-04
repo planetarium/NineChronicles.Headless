@@ -1,5 +1,5 @@
 using Cocona;
-using Libplanet;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using NineChronicles.Headless.Executable.IO;
 
@@ -28,7 +28,7 @@ namespace NineChronicles.Headless.Executable.Commands
             }
             catch
             {
-                _console.Error.WriteLine($"The given private key, '{privateKeyHex}', had an issue during parsing.");
+                _console.Error.WriteLine($"The given private key had an issue during parsing.");
                 return -1;
             }
         }

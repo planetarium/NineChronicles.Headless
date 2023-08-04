@@ -1,13 +1,11 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Bencodex.Types;
 using GraphQL.Execution;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Types.Assets;
 using Nekoyume;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
+using NineChronicles.Headless.Tests.Common;
 using Xunit;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 
@@ -24,28 +22,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             var goldCurrency = Currency.Legacy("NCG", 2, null);
 #pragma warning restore CS0618
 
-            IValue? GetStateMock(Address address)
-            {
-                if (GoldCurrencyState.Address == address)
-                {
-                    return new GoldCurrencyState(goldCurrency).Serialize();
-                }
-
-                return null;
-            }
-
-            IReadOnlyList<IValue?> GetStatesMock(IReadOnlyList<Address> addresses) =>
-                addresses.Select(GetStateMock).ToArray();
-
-            FungibleAssetValue GetBalanceMock(Address address, Currency currency)
-            {
-                if (address == Fixtures.StakeStateAddress)
-                {
-                    return goldCurrency * deposit;
-                }
-
-                return FungibleAssetValue.FromRawValue(currency, 0);
-            }
+            MockState mockState = MockState.Empty
+                .SetState(GoldCurrencyState.Address, new GoldCurrencyState(goldCurrency).Serialize())
+                .SetBalance(Fixtures.StakeStateAddress, goldCurrency, (goldCurrency * deposit).RawValue);
 
             const string query = @"
             {
@@ -56,7 +35,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 cancellableBlockIndex
                 claimableBlockIndex
             }";
-            var queryResult = await ExecuteQueryAsync<StakeStateType>(query, source: new StakeStateType.StakeStateContext(stakeState, GetStatesMock, GetBalanceMock, blockIndex));
+            var queryResult = await ExecuteQueryAsync<StakeStateType>(
+                query, source: new StakeStateType.StakeStateContext(stakeState, mockState, blockIndex));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
         }

@@ -4,7 +4,7 @@ using Bencodex.Types;
 using GraphQL.Types;
 using Libplanet.Action;
 using Libplanet.Explorer.GraphTypes;
-using Libplanet.State;
+using Libplanet.Action.State;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States.Models;
 using NineChronicles.Headless.GraphTypes.States.Models.World;
@@ -18,8 +18,8 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class AvatarStateContext : StateContext
         {
-            public AvatarStateContext(AvatarState avatarState, AccountStateGetter accountStateGetter, AccountBalanceGetter accountBalanceGetter, long blockIndex)
-                : base(accountStateGetter, accountBalanceGetter, blockIndex)
+            public AvatarStateContext(AvatarState avatarState, IAccountState accountState, long blockIndex)
+                : base(accountState, blockIndex)
             {
                 AvatarState = avatarState;
             }
@@ -116,7 +116,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context =>
                 {
                     var addresses = context.Source.AvatarState.combinationSlotAddresses;
-                    return context.Source.AccountStateGetter(addresses)
+                    return context.Source.AccountState.GetStates(addresses)
                         .OfType<Dictionary>()
                         .Select(x => new CombinationSlotState(x));
                 });

@@ -2,9 +2,9 @@
 
 using System.Collections.Generic;
 using Bencodex.Types;
-using Libplanet;
-using Libplanet.Assets;
-using Libplanet.State;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
+using Libplanet.Action.State;
 using NineChronicles.Headless.Utils;
 
 namespace NineChronicles.Headless.GraphTypes.States
@@ -12,32 +12,27 @@ namespace NineChronicles.Headless.GraphTypes.States
     public class StateContext
     {
         public StateContext(
-            AccountStateGetter accountStateGetter,
-            AccountBalanceGetter accountBalanceGetter,
+            IAccountState accountState,
             long blockIndex)
         {
-            AccountStateGetter = accountStateGetter;
-            AccountBalanceGetter = accountBalanceGetter;
+            AccountState = accountState;
             BlockIndex = blockIndex;
-            CurrencyFactory = new CurrencyFactory(accountStateGetter);
+            CurrencyFactory = new CurrencyFactory(() => accountState);
             FungibleAssetValueFactory = new FungibleAssetValueFactory(CurrencyFactory);
         }
 
-        public AccountStateGetter AccountStateGetter { get; }
-        public AccountBalanceGetter AccountBalanceGetter { get; }
+        public IAccountState AccountState { get; }
+
         public long BlockIndex { get; }
 
         public CurrencyFactory CurrencyFactory { get; }
 
         public FungibleAssetValueFactory FungibleAssetValueFactory { get; }
 
-        public IValue? GetState(Address address) =>
-            AccountStateGetter(new[] { address })[0];
+        public IValue? GetState(Address address) => AccountState.GetState(address);
 
-        public IReadOnlyList<IValue?> GetStates(IReadOnlyList<Address> addresses) =>
-            AccountStateGetter(addresses);
+        public IReadOnlyList<IValue?> GetStates(IReadOnlyList<Address> addresses) => AccountState.GetStates(addresses);
 
-        public FungibleAssetValue GetBalance(Address address, Currency currency) =>
-            AccountBalanceGetter(address, currency);
+        public FungibleAssetValue GetBalance(Address address, Currency currency) => AccountState.GetBalance(address, currency);
     }
 }

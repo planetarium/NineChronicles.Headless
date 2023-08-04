@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Libplanet.Assets;
+using Libplanet.Types.Assets;
 using Nekoyume.TableData;
 
 namespace NineChronicles.Headless.GraphTypes

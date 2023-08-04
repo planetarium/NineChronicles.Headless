@@ -4,8 +4,8 @@ using System.Linq;
 using System.Numerics;
 using GraphQL.Language.AST;
 using GraphQL.Types;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Libplanet.Explorer.GraphTypes;
 
 namespace NineChronicles.Headless.GraphTypes

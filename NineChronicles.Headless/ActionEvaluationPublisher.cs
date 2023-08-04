@@ -18,9 +18,10 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using Lib9c.Abstractions;
 using Lib9c.Renderers;
-using Libplanet;
-using Libplanet.Blocks;
-using Libplanet.Tx;
+using Libplanet.Common;
+using Libplanet.Crypto;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 using MagicOnion.Client;
 using MessagePack;
 using Microsoft.Extensions.Hosting;
@@ -241,7 +242,7 @@ namespace NineChronicles.Headless
                             catch (Exception e)
                             {
                                 // FIXME add logger as property
-                                Log.Error(e, "Skip broadcasting blcok render due to the unexpected exception");
+                                Log.Error(e, "Skip broadcasting block render due to the unexpected exception");
                             }
                         }
                     );

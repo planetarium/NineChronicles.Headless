@@ -8,11 +8,12 @@ using Bencodex.Types;
 using Cocona;
 using CsvHelper;
 using Lib9c;
-using Libplanet;
-using Libplanet.Assets;
-using Libplanet.Blocks;
+using Libplanet.Action;
+using Libplanet.Common;
 using Libplanet.Crypto;
-using Libplanet.Tx;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
@@ -90,7 +91,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 timestamp: DateTimeOffset.Parse(timestamp),
                 gasLimit: parsedActions.Any(a => a is ITransferAssets or ITransferAsset) ? 4 : 1,
                 maxGasPrice: maxGasPrice.HasValue ? maxGasPrice.Value * Currencies.Mead : null,
-                actions: parsedActions
+                actions: parsedActions.ToPlainValues()
             );
             byte[] raw = tx.Serialize();
 

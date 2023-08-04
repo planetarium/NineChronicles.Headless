@@ -1,9 +1,8 @@
 using System;
 using System.IO;
-using System.Linq;
 using Bencodex;
 using Bencodex.Types;
-using Libplanet;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Nekoyume.Action;
 using Nekoyume.Action.Factory;
