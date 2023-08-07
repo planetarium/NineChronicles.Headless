@@ -59,6 +59,24 @@ namespace NineChronicles.Headless.GraphTypes
                     return GetAvatarState(context.Source, address)
                         ?? throw new InvalidOperationException($"The state {address} doesn't exists");
                 });
+            Field<NonNullGraphType<ListGraphType<AvatarStateType>>>(
+                name: "avatars",
+                description: "Avatar states having some order as addresses",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ListGraphType<AddressType>>>
+                    {
+                        Name = "addresses",
+                        Description = "Addresses of agent to query avatars."
+                    }
+                ),
+                resolve: context =>
+                {
+                    return context.GetArgument<List<Address>>("addresses")
+                        .AsParallel()
+                        .AsOrdered()
+                        .Select(address => GetAvatarState(context.Source, address));
+                }
+            );
             Field<RankingMapStateType>(
                 name: "rankingMap",
                 description: "State for avatar EXP record.",
