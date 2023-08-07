@@ -22,6 +22,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -490,13 +491,29 @@ namespace NineChronicles.Headless.Executable
                 hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, standaloneContext);
                 if (headlessConfig.RpcServer)
                 {
+                    var context = new RpcContext
+                    {
+                        RpcRemoteSever = true
+                    };
+                    var rpcProperties = NineChroniclesNodeServiceProperties
+                        .GenerateRpcNodeServiceProperties(
+                            headlessConfig.RpcListenHost,
+                            headlessConfig.RpcListenPort,
+                            headlessConfig.RpcRemoteServer == true
+                        );
+                    var publisher = new ActionEvaluationPublisher(
+                        standaloneContext.NineChroniclesNodeService!.BlockRenderer,
+                        standaloneContext.NineChroniclesNodeService!.ActionRenderer,
+                        standaloneContext.NineChroniclesNodeService!.ExceptionRenderer,
+                        standaloneContext.NineChroniclesNodeService!.NodeStatusRenderer,
+                        IPAddress.Loopback.ToString(),
+                        rpcProperties.RpcListenPort,
+                        context,
+                        new ConcurrentDictionary<string, Sentry.ITransaction>()
+                    );
                     hostBuilder.UseNineChroniclesRPC(
-                        NineChroniclesNodeServiceProperties
-                            .GenerateRpcNodeServiceProperties(
-                                headlessConfig.RpcListenHost,
-                                headlessConfig.RpcListenPort,
-                                headlessConfig.RpcRemoteServer == true
-                            )
+                        rpcProperties,
+                        publisher
                     );
                 }
 
