@@ -20,9 +20,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Lib9c.DevExtensions.Action.Loader;
@@ -335,6 +338,11 @@ namespace NineChronicles.Headless.Executable
                 );
             }
 
+            if (headlessConfig.StateServiceManagerService is { } stateServiceManagerServiceOptions)
+            {
+                await DownloadStateServices(stateServiceManagerServiceOptions);
+            }
+
             try
             {
                 IHostBuilder hostBuilder = Host.CreateDefaultBuilder();
@@ -455,17 +463,18 @@ namespace NineChronicles.Headless.Executable
                     ? null
                     : new PrivateKey(ByteUtil.ParseHex(headlessConfig.MinerPrivateKeyString));
                 TimeSpan minerBlockInterval = TimeSpan.FromMilliseconds(headlessConfig.MinerBlockIntervalMilliseconds);
-                var nineChroniclesProperties = new NineChroniclesNodeServiceProperties(actionLoader)
-                {
-                    MinerPrivateKey = minerPrivateKey,
-                    Libplanet = properties,
-                    NetworkType = headlessConfig.NetworkType,
-                    StrictRender = headlessConfig.StrictRendering,
-                    TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime),
-                    MinerCount = headlessConfig.MinerCount,
-                    MinerBlockInterval = minerBlockInterval,
-                    TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner,
-                };
+                var nineChroniclesProperties =
+                    new NineChroniclesNodeServiceProperties(actionLoader, headlessConfig.StateServiceManagerService)
+                    {
+                        MinerPrivateKey = minerPrivateKey,
+                        Libplanet = properties,
+                        NetworkType = headlessConfig.NetworkType,
+                        StrictRender = headlessConfig.StrictRendering,
+                        TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime),
+                        MinerCount = headlessConfig.MinerCount,
+                        MinerBlockInterval = minerBlockInterval,
+                        TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner,
+                    };
                 hostBuilder.ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => standaloneContext);
