@@ -87,6 +87,8 @@ namespace NineChronicles.Headless.Executable
 
         public double SentryTraceSampleRate { get; set; } = 0.01;
 
+        public StateServiceManagerServiceOptions? StateServiceManagerService { get; set; }
+
         public void Overwrite(
             string? appProtocolVersionString,
             string[]? trustedAppProtocolVersionSignerStrings,

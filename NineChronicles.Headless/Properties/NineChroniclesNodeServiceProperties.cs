@@ -12,9 +12,10 @@ namespace NineChronicles.Headless.Properties
 {
     public class NineChroniclesNodeServiceProperties
     {
-        public NineChroniclesNodeServiceProperties(IActionLoader actionLoader)
+        public NineChroniclesNodeServiceProperties(IActionLoader actionLoader, StateServiceManagerServiceOptions? stateServiceManagerServiceOptions)
         {
             ActionLoader = actionLoader;
+            StateServiceManagerService = stateServiceManagerServiceOptions;
         }
 
         /// <summary>
@@ -50,6 +51,8 @@ namespace NineChronicles.Headless.Properties
         public int TxQuotaPerSigner { get; set; }
 
         public IActionLoader ActionLoader { get; init; }
+
+        public StateServiceManagerServiceOptions? StateServiceManagerService { get; }
 
         public static LibplanetNodeServiceProperties
             GenerateLibplanetNodeServiceProperties(
