@@ -188,7 +188,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Name = "round",
                         Description = "Round of championship to get arena information"
                     },
-                    new QueryArgument<NonNullGraphType<ListGraphType<AddressType>>>
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>
                     {
                         Name = "avatarAddresses",
                         Description = "List of avatar address to get arena information"
