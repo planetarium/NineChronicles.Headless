@@ -63,7 +63,7 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "avatars",
                 description: "Avatar states having some order as addresses",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<ListGraphType<AddressType>>>
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>
                     {
                         Name = "addresses",
                         Description = "Addresses of avatars to query."
