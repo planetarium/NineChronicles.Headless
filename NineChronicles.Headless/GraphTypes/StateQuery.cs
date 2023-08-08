@@ -174,7 +174,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return null;
                 });
-            Field<NonNullGraphType<ListGraphType<ArenaInformationType>>>(
+            Field<NonNullGraphType<ListGraphType<NonNullGraphType<ArenaInformationType>>>>(
                 name: "arenaInformation",
                 description: "List of arena information of requested arena and avatar list",
                 arguments: new QueryArguments(
