@@ -66,7 +66,7 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<ListGraphType<AddressType>>>
                     {
                         Name = "addresses",
-                        Description = "Addresses of agent to query avatars."
+                        Description = "Addresses of avatars to query."
                     }
                 ),
                 resolve: context =>
