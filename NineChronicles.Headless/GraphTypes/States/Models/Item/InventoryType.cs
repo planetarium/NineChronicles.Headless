@@ -20,7 +20,23 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
             );
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<EquipmentType>>>>(
                 nameof(Inventory.Equipments),
-                description: "List of Equipments."
+                description: "List of Equipments.",
+                arguments: new QueryArguments(
+                    new QueryArgument<BooleanGraphType>
+                    {
+                        Name = "equipped",
+                        Description = "filter equipped inventory item"
+                    }),
+                resolve: context =>
+                {
+                    var equipments = context.Source.Equipments;
+                    var equippedFilter = context.GetArgument<bool?>("equipped");
+                    if (equippedFilter.HasValue)
+                    {
+                        equipments = equipments.Where(x => x.equipped == equippedFilter.Value).ToList();
+                    }
+                    return equipments;
+                }
             );
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<CostumeType>>>>(
                 nameof(Inventory.Costumes),
