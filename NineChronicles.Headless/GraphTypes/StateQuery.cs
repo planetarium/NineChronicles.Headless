@@ -29,6 +29,22 @@ namespace NineChronicles.Headless.GraphTypes
         public StateQuery()
         {
             Name = "StateQuery";
+
+            AvatarStateType.AvatarStateContext? GetAvatarState(StateContext context, Address address)
+            {
+                try
+                {
+                    return new AvatarStateType.AvatarStateContext(
+                        context.AccountState.GetAvatarState(address),
+                        context.AccountState,
+                        context.BlockIndex);
+                }
+                catch (InvalidAddressException)
+                {
+                    return null;
+                }
+            }
+
             Field<AvatarStateType>(
                 name: "avatar",
                 description: "State for avatar.",
@@ -40,18 +56,27 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var address = context.GetArgument<Address>("avatarAddress");
-                    try
-                    {
-                        return new AvatarStateType.AvatarStateContext(
-                            context.Source.AccountState.GetAvatarState(address),
-                            context.Source.AccountState,
-                            context.Source.BlockIndex);
-                    }
-                    catch (InvalidAddressException)
-                    {
-                        throw new InvalidOperationException($"The state {address} doesn't exists");
-                    }
+                    return GetAvatarState(context.Source, address)
+                        ?? throw new InvalidOperationException($"The state {address} doesn't exists");
                 });
+            Field<NonNullGraphType<ListGraphType<AvatarStateType>>>(
+                name: "avatars",
+                description: "Avatar states having some order as addresses",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>
+                    {
+                        Name = "addresses",
+                        Description = "Addresses of avatars to query."
+                    }
+                ),
+                resolve: context =>
+                {
+                    return context.GetArgument<List<Address>>("addresses")
+                        .AsParallel()
+                        .AsOrdered()
+                        .Select(address => GetAvatarState(context.Source, address));
+                }
+            );
             Field<RankingMapStateType>(
                 name: "rankingMap",
                 description: "State for avatar EXP record.",
