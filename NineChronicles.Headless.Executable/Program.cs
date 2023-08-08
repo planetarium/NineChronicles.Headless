@@ -20,9 +20,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Lib9c.DevExtensions.Action.Loader;
@@ -335,6 +338,11 @@ namespace NineChronicles.Headless.Executable
                 );
             }
 
+            if (headlessConfig.StateServiceManagerService is { } stateServiceManagerServiceOptions)
+            {
+                await DownloadStateServices(stateServiceManagerServiceOptions);
+            }
+
             try
             {
                 IHostBuilder hostBuilder = Host.CreateDefaultBuilder();
@@ -455,17 +463,18 @@ namespace NineChronicles.Headless.Executable
                     ? null
                     : new PrivateKey(ByteUtil.ParseHex(headlessConfig.MinerPrivateKeyString));
                 TimeSpan minerBlockInterval = TimeSpan.FromMilliseconds(headlessConfig.MinerBlockIntervalMilliseconds);
-                var nineChroniclesProperties = new NineChroniclesNodeServiceProperties(actionLoader)
-                {
-                    MinerPrivateKey = minerPrivateKey,
-                    Libplanet = properties,
-                    NetworkType = headlessConfig.NetworkType,
-                    StrictRender = headlessConfig.StrictRendering,
-                    TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime),
-                    MinerCount = headlessConfig.MinerCount,
-                    MinerBlockInterval = minerBlockInterval,
-                    TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner,
-                };
+                var nineChroniclesProperties =
+                    new NineChroniclesNodeServiceProperties(actionLoader, headlessConfig.StateServiceManagerService)
+                    {
+                        MinerPrivateKey = minerPrivateKey,
+                        Libplanet = properties,
+                        NetworkType = headlessConfig.NetworkType,
+                        StrictRender = headlessConfig.StrictRendering,
+                        TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime),
+                        MinerCount = headlessConfig.MinerCount,
+                        MinerBlockInterval = minerBlockInterval,
+                        TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner,
+                    };
                 hostBuilder.ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => standaloneContext);
@@ -518,6 +527,37 @@ namespace NineChronicles.Headless.Executable
 
         static void ConfigureSentryOptions(SentryOptions o)
         {
+        }
+
+        private static Task DownloadStateServices(StateServiceManagerServiceOptions options)
+        {
+            Log.Information("Downloading StateServices...");
+
+            if (Directory.Exists(options.StateServicesDownloadPath))
+            {
+                Directory.Delete(options.StateServicesDownloadPath, true);
+            }
+
+            Directory.CreateDirectory(options.StateServicesDownloadPath);
+
+            async Task DownloadStateService(string url)
+            {
+                var hashed =
+                    Convert.ToHexString(HashDigest<SHA256>.DeriveFrom(Encoding.UTF8.GetBytes(url)).ToByteArray());
+                var logger = Log.ForContext("StateService", hashed);
+                using var httpClient = new HttpClient();
+                var downloadPath = Path.Join(options.StateServicesDownloadPath, hashed + ".zip");
+                var extractPath = Path.Join(options.StateServicesDownloadPath, hashed);
+                logger.Debug("Downloading...");
+                await File.WriteAllBytesAsync(downloadPath, await httpClient.GetByteArrayAsync(url));
+                logger.Debug("Finished downloading.");
+                logger.Debug("Extracting...");
+                ZipFile.ExtractToDirectory(downloadPath, extractPath);
+                logger.Debug("Finished extracting.");
+            }
+
+            return Task.WhenAll(options.StateServices.Select(stateService => DownloadStateService(stateService.Path)))
+                .ContinueWith(_ => Log.Information("Finished downloading StateServices..."));
         }
     }
 }
