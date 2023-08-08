@@ -11,6 +11,7 @@ on:
       - qa-*
       - 2022q3-worldboss
       - release/*
+      - exp/docker-single-file
     tags:
       - "*"
   workflow_dispatch:
