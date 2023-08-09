@@ -44,6 +44,7 @@ namespace NineChronicles.Headless
         private readonly NodeStatusRenderer _nodeStatusRenderer;
 
         private readonly ConcurrentDictionary<Address, Client> _clients = new ConcurrentDictionary<Address, Client>();
+        private readonly ConcurrentDictionary<Address, string> _clientsByDevice = new ConcurrentDictionary<Address, string>();
 
         private RpcContext _context;
         private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
@@ -72,6 +73,15 @@ namespace NineChronicles.Headless
                 "ninechronicles_rpc_clients_count",
                 () => this.GetClients().Count,
                 description: "Number of RPC clients connected.");
+            meter.CreateObservableGauge(
+                "ninechronicles_rpc_clients_count_by_device",
+                () => new[]
+                {
+                    new Measurement<int>(this.GetClientsCountByDevice("mobile"), new[] { new KeyValuePair<string, object?>("device", "mobile") }),
+                    new Measurement<int>(this.GetClientsCountByDevice("pc"), new[] { new KeyValuePair<string, object?>("device", "pc") }),
+                    new Measurement<int>(this.GetClientsCountByDevice("other"), new[] { new KeyValuePair<string, object?>("device", "other") }),
+                },
+                description: "Number of RPC clients connected by device.");
 
             ActionEvaluationHub.OnClientDisconnected += RemoveClient;
         }
@@ -110,6 +120,35 @@ namespace NineChronicles.Headless
             {
                 await client.DisposeAsync();
             }
+        }
+
+        public void AddClientByDevice(Address clientAddress, string device)
+        {
+            if (!_clientsByDevice.ContainsKey(clientAddress))
+            {
+                _clientsByDevice.TryAdd(clientAddress, device);
+            }
+        }
+
+        private void RemoveClientByDevice(Address clientAddress)
+        {
+            if (_clientsByDevice.ContainsKey(clientAddress))
+            {
+                _clientsByDevice.TryRemove(clientAddress, out _);
+            }
+        }
+
+        public int GetClientsCountByDevice(string device)
+        {
+            return _clientsByDevice.Values.Count(x => x == device);
+        }
+
+        public List<Address> GetClientsByDevice(string device)
+        {
+            return _clientsByDevice
+                .Where(x => x.Value == device)
+                .Select(x => x.Key)
+                .ToList();
         }
 
         public override async Task StopAsync(CancellationToken cancellationToken)
@@ -169,6 +208,7 @@ namespace NineChronicles.Headless
             {
                 var clientAddress = new Address(ByteUtil.ParseHex(clientAddressHex));
                 Log.Information("[{ClientAddress}] Client Disconnected. RemoveClient", clientAddress);
+                RemoveClientByDevice(clientAddress);
                 await RemoveClient(clientAddress);
             }
             catch (Exception)
