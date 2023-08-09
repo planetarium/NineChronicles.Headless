@@ -34,7 +34,7 @@ namespace NineChronicles.Headless.GraphTypes
                     string device = context.GetArgument<string>("device");
                     return publisher.GetClientsCountByDevice(device);
                 });
-            Field<NonNullGraphType<ListGraphType<AddressType>>>(
+            Field<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>(
                 name: "clientsByDevice",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>

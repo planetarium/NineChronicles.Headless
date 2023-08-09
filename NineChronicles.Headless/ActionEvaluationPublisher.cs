@@ -74,17 +74,14 @@ namespace NineChronicles.Headless
                 () => this.GetClients().Count,
                 description: "Number of RPC clients connected.");
             meter.CreateObservableGauge(
-                "ninechronicles_rpc_clients_mobile_count",
-                () => this.GetClientsCountByDevice("mobile"),
-                description: "Number of mobile RPC clients connected.");
-            meter.CreateObservableGauge(
-                "ninechronicles_rpc_clients_pc_count",
-                () => this.GetClientsCountByDevice("pc"),
-                description: "Number of pc RPC clients connected.");
-            meter.CreateObservableGauge(
-                "ninechronicles_rpc_clients_other_count",
-                () => this.GetClientsCountByDevice("other"),
-                description: "Number of other RPC clients connected.");
+                "ninechronicles_rpc_clients_count_by_device",
+                () => new []
+                {
+                    new Measurement<int>(this.GetClientsCountByDevice("mobile"), new[] { new KeyValuePair<string, object?>("device", "mobile") }),
+                    new Measurement<int>(this.GetClientsCountByDevice("pc"), new[] { new KeyValuePair<string, object?>("device", "pc") }),
+                    new Measurement<int>(this.GetClientsCountByDevice("other"), new[] { new KeyValuePair<string, object?>("device", "other") }),
+                },
+                description: "Number of RPC clients connected by device.");
 
             ActionEvaluationHub.OnClientDisconnected += RemoveClient;
         }
