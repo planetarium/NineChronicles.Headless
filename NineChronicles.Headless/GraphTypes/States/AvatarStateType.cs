@@ -1,11 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Bencodex.Types;
 using GraphQL.Types;
-using Libplanet.Action;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Action.State;
+using Nekoyume.Action;
 using Nekoyume.Model.State;
+using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States.Models;
 using NineChronicles.Headless.GraphTypes.States.Models.World;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
@@ -106,6 +108,27 @@ namespace NineChronicles.Headless.GraphTypes.States
                 nameof(AvatarState.inventory),
                 description: "Avatar inventory.",
                 resolve: context => context.Source.AvatarState.inventory);
+            Field<NonNullGraphType<ListGraphType<NonNullGraphType<RuneStateType>>>>(
+                name: "runes",
+                description: "Rune list of avatar",
+                resolve: context =>
+                {
+                    var runeSheet = context.Source.AccountState.GetSheet<RuneSheet>();
+                    var runeList = new List<RuneState>();
+                    foreach (var rune in runeSheet)
+                    {
+                        var runeState = context.Source.GetState(
+                            RuneState.DeriveAddress(context.Source.AvatarState.address, rune.Id)
+                        );
+                        if (runeState is not null)
+                        {
+                            runeList.Add(new RuneState(runeState as List));
+                        }
+                    }
+
+                    return runeList;
+                }
+            );
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>(
                 nameof(AvatarState.combinationSlotAddresses),
                 description: "Address list of combination slot.",
