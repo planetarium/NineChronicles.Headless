@@ -75,7 +75,7 @@ namespace NineChronicles.Headless
                 description: "Number of RPC clients connected.");
             meter.CreateObservableGauge(
                 "ninechronicles_rpc_clients_count_by_device",
-                () => new []
+                () => new[]
                 {
                     new Measurement<int>(this.GetClientsCountByDevice("mobile"), new[] { new KeyValuePair<string, object?>("device", "mobile") }),
                     new Measurement<int>(this.GetClientsCountByDevice("pc"), new[] { new KeyValuePair<string, object?>("device", "pc") }),
