@@ -11,6 +11,7 @@ using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Extensions;
+using Nekoyume.Model.Arena;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -162,15 +163,56 @@ namespace NineChronicles.Headless.GraphTypes
                                     }
                                 }
 #pragma warning disable CS0618 // Type or member is obsolete
-                                arenastate.OrderedArenaInfos.AddRange(arenaInfos.OrderByDescending(a => a.Score).ThenBy(a => a.CombatPoint));
+                                arenastate.OrderedArenaInfos.AddRange(arenaInfos.OrderByDescending(a => a.Score)
+                                    .ThenBy(a => a.CombatPoint));
 #pragma warning restore CS0618 // Type or member is obsolete
                             }
                         }
+
                         return arenastate;
                     }
 
                     return null;
                 });
+            Field<NonNullGraphType<ListGraphType<NonNullGraphType<ArenaInformationType>>>>(
+                name: "arenaInformation",
+                description: "List of arena information of requested arena and avatar list",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "championshipId",
+                        Description = "Championship ID to get arena information"
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "round",
+                        Description = "Round of championship to get arena information"
+                    },
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>
+                    {
+                        Name = "avatarAddresses",
+                        Description = "List of avatar address to get arena information"
+                    }
+                ),
+                resolve: context =>
+                {
+                    var championshipId = context.GetArgument<int>("championshipId");
+                    var round = context.GetArgument<int>("round");
+                    return context.GetArgument<List<Address>>("avatarAddresses").AsParallel().AsOrdered().Select(
+                        address =>
+                        {
+                            var infoAddr = ArenaInformation.DeriveAddress(address, championshipId, round);
+                            var scoreAddr = ArenaScore.DeriveAddress(address, championshipId, round);
+
+                            return (
+                                address,
+                                new ArenaInformation((List)context.Source.GetState(infoAddr)!),
+                                new ArenaScore((List)context.Source.GetState(scoreAddr)!)
+                            );
+                        }
+                    );
+                }
+            );
             Field<AgentStateType>(
                 name: "agent",
                 description: "State for agent.",
