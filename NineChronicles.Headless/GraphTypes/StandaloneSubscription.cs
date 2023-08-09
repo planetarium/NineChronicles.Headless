@@ -22,6 +22,7 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using Libplanet.Blockchain;
+using Libplanet.Types.Tx;
 using Serilog;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -38,6 +39,21 @@ namespace NineChronicles.Headless.GraphTypes
             {
                 Field<NonNullGraphType<LongGraphType>>(nameof(Index));
                 Field<ByteStringType>("hash", resolve: context => context.Source.Hash.ToByteArray());
+            }
+        }
+
+        class Tx
+        {
+            public Transaction? Transaction { get; set; }
+            public TxResult? TxResult { get; set; }
+        }
+
+        class TxType : ObjectGraphType<Tx>
+        {
+            public TxType()
+            {
+                Field<NonNullGraphType<TransactionType>>(nameof(Transaction));
+                Field<TxResultType>(nameof(TxResult));
             }
         }
 
@@ -117,6 +133,20 @@ namespace NineChronicles.Headless.GraphTypes
                 Type = typeof(TipChanged),
                 Resolver = new FuncFieldResolver<TipChanged>(ResolveTipChanged),
                 Subscriber = new EventStreamResolver<TipChanged>(SubscribeTipChanged),
+            });
+            AddField(new EventStreamFieldType
+            {
+                Name = "tx",
+                Type = typeof(TxType),
+                Arguments = new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Description = "A type of action in transaction.",
+                        Name = "actionType",
+                    }
+                ),
+                Resolver = new FuncFieldResolver<Tx>(ResolveTx),
+                Subscriber = new EventStreamResolver<Tx>(SubscribeTx),
             });
             AddField(new EventStreamFieldType
             {
@@ -248,6 +278,40 @@ namespace NineChronicles.Headless.GraphTypes
         {
             return _subject.AsObservable();
         }
+
+        private Tx ResolveTx(IResolveFieldContext context)
+        {
+            return context.Source as Tx ?? throw new InvalidOperationException();
+        }
+
+        private IObservable<Tx> SubscribeTx(IResolveFieldContext context)
+        {
+            var chain = StandaloneContext.BlockChain
+                        ?? throw new InvalidOperationException($"{nameof(StandaloneContext.BlockChain)} is null.");
+            var store = StandaloneContext.Store
+                        ?? throw new InvalidOperationException($"{nameof(StandaloneContext.Store)} is null");
+            var actionType = context.GetArgument<string>("actionType");
+
+            return _subject.AsObservable()
+                .SelectMany(tipChanged => chain[tipChanged.Index].Transactions)
+                .Where(transaction => transaction.Actions.Any(rawAction =>
+                {
+                    if (rawAction is not Dictionary action || action["type_id"] is not Text typeId)
+                    {
+                        return false;
+                    }
+
+                    return typeId == actionType;
+                }))
+                .Select(transaction =>
+                {
+                    var blockHash = store.GetFirstTxIdBlockHashIndex(transaction.Id);
+                    var txExecution = blockHash is { } hash ? store.GetTxExecution(hash, transaction.Id) : null;
+
+                    return new Tx { Transaction = transaction, TxResult = null };
+                });
+        }
+
         private void RenderBlock((Block OldTip, Block NewTip) pair)
         {
             _tipHeader = pair.NewTip.Header;
