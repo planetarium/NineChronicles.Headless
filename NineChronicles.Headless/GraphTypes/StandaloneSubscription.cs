@@ -9,6 +9,7 @@ using Libplanet.Headless;
 using Libplanet.Net;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -22,6 +23,7 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using Libplanet.Blockchain;
+using Libplanet.Store;
 using Libplanet.Types.Tx;
 using Serilog;
 
@@ -305,11 +307,46 @@ namespace NineChronicles.Headless.GraphTypes
                 }))
                 .Select(transaction =>
                 {
-                    var blockHash = store.GetFirstTxIdBlockHashIndex(transaction.Id);
-                    var txExecution = blockHash is { } hash ? store.GetTxExecution(hash, transaction.Id) : null;
-
-                    return new Tx { Transaction = transaction, TxResult = null };
+                    var txResult = GetTxResult(transaction, store, chain);
+                    return new Tx { Transaction = transaction, TxResult = txResult };
                 });
+        }
+
+        private TxResult? GetTxResult(Transaction transaction, IStore store, BlockChain chain)
+        {
+            if (store.GetFirstTxIdBlockHashIndex(transaction.Id) is not { } blockHash)
+            {
+                return null;
+            }
+            var txExecution = store.GetTxExecution(blockHash, transaction.Id);
+            var txExecutedBlock = chain[blockHash];
+
+            return txExecution switch
+            {
+                TxSuccess success => new TxResult(
+                    TxStatus.SUCCESS,
+                    txExecutedBlock.Index,
+                    txExecutedBlock.Hash.ToString(),
+                    null,
+                    null,
+                    success.UpdatedStates
+                        .Select(kv => new KeyValuePair<Address, IValue>(
+                            kv.Key,
+                            kv.Value))
+                        .ToImmutableDictionary(),
+                    success.FungibleAssetsDelta,
+                    success.UpdatedFungibleAssets),
+                TxFailure failure => new TxResult(
+                    TxStatus.FAILURE,
+                    txExecutedBlock.Index,
+                    txExecutedBlock.Hash.ToString(),
+                    failure.ExceptionName,
+                    failure.ExceptionMetadata,
+                    null,
+                    null,
+                    null),
+                _ => null
+            };
         }
 
         private void RenderBlock((Block OldTip, Block NewTip) pair)
