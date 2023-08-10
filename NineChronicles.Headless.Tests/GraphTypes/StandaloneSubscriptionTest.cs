@@ -26,6 +26,7 @@ using Libplanet.Net;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Libplanet.Types.Tx;
+using Nekoyume.Action;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
@@ -67,6 +68,59 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Assert.Equal(index, tipChangedEvent["index"]);
                 Assert.Equal(BlockChain[index].Hash.ToByteArray(), ByteUtil.ParseHex((string)tipChangedEvent["hash"]));
             }
+        }
+
+        [Fact]
+        public async Task SubscribeTx()
+        {
+            var targetAction = new Grinding { AvatarAddress = new Address(), EquipmentIds = new List<Guid>() };
+            var nonTargetAction = new DailyReward6 { avatarAddress = new Address()};
+
+            var (block, transactions) = AppendBlock(targetAction, nonTargetAction);
+            Assert.NotNull(block);
+            Assert.NotNull(transactions);
+
+            const string query = @"
+            subscription {
+                tx (actionType: ""grinding"") {
+                    transaction { id }
+                    txResult { blockIndex }
+                }
+            }
+            ";
+            var response = await ExecuteSubscriptionQueryAsync(query);
+
+            Assert.IsType<SubscriptionExecutionResult>(response);
+            var result = (SubscriptionExecutionResult)response;
+            var stream = result.Streams!.Values.FirstOrDefault();
+
+            var rawEvents = await stream.Take(1);
+            Assert.NotNull(rawEvents);
+
+            var events = (Dictionary<string, object>)((ExecutionNode)rawEvents.Data!).ToValue();
+            var tx = (Dictionary<string, object>)events["tx"];
+            var transaction = (Dictionary<string, object>)tx["transaction"];
+            var txResult = (Dictionary<string, object>)tx["txResult"];
+            Assert.Equal(transactions[0].Id.ToString(), transaction["id"]);
+            Assert.Equal(block.Index, txResult["blockIndex"]);
+        }
+
+        private (Block block, List<Transaction> transactions) AppendBlock(params IAction[] actions)
+        {
+            var transactions = actions.Select(action => Transaction.Create(
+                0,
+                new PrivateKey(),
+                BlockChain.Genesis.Hash, 
+                new [] { action.PlainValue }))
+                .ToList();
+            transactions.ForEach(transaction => BlockChain.StageTransaction(transaction));
+
+            var block = BlockChain.ProposeBlock(
+                ProposerPrivateKey,
+                lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
+            BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
+
+            return (block, transactions);
         }
 
         [Fact]
