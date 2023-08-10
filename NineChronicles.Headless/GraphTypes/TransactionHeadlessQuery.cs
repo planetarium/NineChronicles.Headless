@@ -66,26 +66,7 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            IEnumerable<Block> ListBlocks(BlockChain chain, long from, long limit)
-            {
-                if (chain.Count <= from)
-                {
-                    yield break;
-                }
 
-                var block = chain[from];
-                for (var i = 0; i < limit; i++)
-                {
-                    if (block is null)
-                    {
-                        yield break;
-                    }
-
-                    yield return block;
-
-                    block = block != chain.Tip ? chain[block.Index + 1] : null;
-                }
-            }
             Field<ListGraphType<TransactionType>>(
                 name: "ncTransactions",
                 arguments: new QueryArguments(
@@ -98,7 +79,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (standaloneContext.BlockChain is not BlockChain blockChain)
+                    if (standaloneContext.BlockChain is not { } blockChain)
                     {
                          throw new ExecutionError(
                              $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -110,8 +91,8 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var blocks = ListBlocks(blockChain, startingBlockIndex, limit);
                     var transactions = blocks
-                        .SelectMany((block) => block.Transactions)
-                        .Where((tx) => tx.Actions.Any(rawAction =>
+                        .SelectMany(block => block.Transactions)
+                        .Where(tx => tx.Actions.Any(rawAction =>
                         {
                             if (rawAction is not Dictionary action || action["type_id"] is not Text typeId)
                             {
@@ -348,6 +329,23 @@ namespace NineChronicles.Headless.GraphTypes
                     return signedTransaction.Serialize();
                 }
             );
+        }
+
+        private IEnumerable<Block> ListBlocks(BlockChain chain, long from, long limit)
+        {
+            if (chain.Tip.Index < from)
+            {
+                return new List<Block>();
+            }
+
+            var count = (int)Math.Min(limit, chain.Tip.Index - from);
+            var blocks = Enumerable.Range(0, count)
+                .ToList()
+                .AsParallel()
+                .Select(offset => chain[from + offset])
+                .OrderBy(block => block.Index);
+
+            return blocks;
         }
     }
 }
