@@ -123,6 +123,7 @@ namespace NineChronicles.Headless.GraphTypes
         private BlockHeader? _tipHeader;
 
         private ISubject<TipChanged> _subject = new ReplaySubject<TipChanged>();
+        private ISubject<TipChanged> _txBlockSubject = new Subject<TipChanged>();
 
         private StandaloneContext StandaloneContext { get; }
 
@@ -294,7 +295,7 @@ namespace NineChronicles.Headless.GraphTypes
                         ?? throw new InvalidOperationException($"{nameof(StandaloneContext.Store)} is null");
             var actionType = context.GetArgument<string>("actionType");
 
-            return _subject.AsObservable()
+            return _txBlockSubject.AsObservable()
                 .SelectMany(tipChanged => chain[tipChanged.Index].Transactions)
                 .Where(transaction => transaction.Actions.Any(rawAction =>
                 {
@@ -353,6 +354,13 @@ namespace NineChronicles.Headless.GraphTypes
         {
             _tipHeader = pair.NewTip.Header;
             _subject.OnNext(
+                new TipChanged
+                {
+                    Index = pair.NewTip.Index,
+                    Hash = pair.NewTip.Hash,
+                }
+            );
+            _txBlockSubject.OnNext(
                 new TipChanged
                 {
                     Index = pair.NewTip.Index,
