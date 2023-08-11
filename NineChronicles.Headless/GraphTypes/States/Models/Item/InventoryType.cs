@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using GraphQL;
@@ -34,12 +35,19 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
                         Description = "An item subtype for fetching only equipment where " +
                                       "its subtype is the same. If it wasn't given, you'll " +
                                       "get all equipment without relationship to the subtype."
+                    },
+                    new QueryArgument<ListGraphType<NonNullGraphType<GuidGraphType>>>
+                    {
+                        Name = "itemIds",
+                        Description = "ItemIds for fetching only equipment where id is in " +
+                                      "the given argument."
                     }),
                 resolve: context =>
                 {
                     var equipments = context.Source.Equipments;
                     var equippedFilter = context.GetArgument<bool?>("equipped");
                     var itemSubTypeFilter = context.GetArgument<ItemSubType?>("itemSubType");
+                    var itemIdsFilter = context.GetArgument<Guid[]?>("itemIds");
                     if (equippedFilter.HasValue)
                     {
                         equipments = equipments.Where(x => x.equipped == equippedFilter.Value).ToList();
@@ -49,15 +57,12 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
                     {
                         equipments = equipments.Where(equipment => equipment.ItemSubType == itemSubTypeFilter);
                     }
-<<<<<<< Updated upstream
-=======
 
                     if (itemIdsFilter is not null)
                     {
                         var set = itemIdsFilter.ToHashSet();
                         equipments = equipments.Where(equipment => set.Contains(equipment.ItemId));
                     }
->>>>>>> Stashed changes
 
                     return equipments;
                 }
