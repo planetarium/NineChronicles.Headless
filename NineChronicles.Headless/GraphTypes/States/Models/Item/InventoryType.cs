@@ -3,6 +3,7 @@ using System.Linq;
 using GraphQL;
 using GraphQL.Types;
 using Nekoyume.Model.Item;
+using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
 
 namespace NineChronicles.Headless.GraphTypes.States.Models.Item
 {
@@ -26,15 +27,38 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
                     {
                         Name = "equipped",
                         Description = "filter equipped inventory item"
+                    },
+                    new QueryArgument<ItemSubTypeEnumType>
+                    {
+                        Name = "itemSubType",
+                        Description = "An item subtype for fetching only equipment where " +
+                                      "its subtype is the same. If it wasn't given, you'll " +
+                                      "get all equipment without relationship to the subtype."
                     }),
                 resolve: context =>
                 {
                     var equipments = context.Source.Equipments;
                     var equippedFilter = context.GetArgument<bool?>("equipped");
+                    var itemSubTypeFilter = context.GetArgument<ItemSubType?>("itemSubType");
                     if (equippedFilter.HasValue)
                     {
                         equipments = equipments.Where(x => x.equipped == equippedFilter.Value).ToList();
                     }
+
+                    if (itemSubTypeFilter is not null)
+                    {
+                        equipments = equipments.Where(equipment => equipment.ItemSubType == itemSubTypeFilter);
+                    }
+<<<<<<< Updated upstream
+=======
+
+                    if (itemIdsFilter is not null)
+                    {
+                        var set = itemIdsFilter.ToHashSet();
+                        equipments = equipments.Where(equipment => set.Contains(equipment.ItemId));
+                    }
+>>>>>>> Stashed changes
+
                     return equipments;
                 }
             );
