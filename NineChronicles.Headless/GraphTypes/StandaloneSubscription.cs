@@ -124,6 +124,8 @@ namespace NineChronicles.Headless.GraphTypes
 
         private ISubject<TipChanged> _subject = new ReplaySubject<TipChanged>();
 
+        private ISubject<Transaction> _transactionSubject = new Subject<Transaction>();
+
         private StandaloneContext StandaloneContext { get; }
 
         public StandaloneSubscription(StandaloneContext standaloneContext)
@@ -294,9 +296,8 @@ namespace NineChronicles.Headless.GraphTypes
                         ?? throw new InvalidOperationException($"{nameof(StandaloneContext.Store)} is null");
             var actionType = context.GetArgument<string>("actionType");
 
-            return _subject.AsObservable()
-                .SelectMany(tipChanged => chain[tipChanged.Index].Transactions)
-                .Where(transaction => transaction.Actions.Any(rawAction =>
+            return _transactionSubject.AsObservable()
+                .Where(tx => tx.Actions.Any(rawAction =>
                 {
                     if (rawAction is not Dictionary action || action["type_id"] is not Text typeId)
                     {
@@ -305,10 +306,10 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return typeId == actionType;
                 }))
-                .Select(transaction =>
+                .Select(transaction => new Tx
                 {
-                    var txResult = GetTxResult(transaction, store, chain);
-                    return new Tx { Transaction = transaction, TxResult = txResult };
+                    Transaction = transaction,
+                    TxResult = GetTxResult(transaction, store, chain),
                 });
         }
 
@@ -359,6 +360,10 @@ namespace NineChronicles.Headless.GraphTypes
                     Hash = pair.NewTip.Hash,
                 }
             );
+            foreach (var transaction in pair.NewTip.Transactions)
+            {
+                _transactionSubject.OnNext(transaction);
+            }
 
             if (StandaloneContext.NineChroniclesNodeService is null)
             {
