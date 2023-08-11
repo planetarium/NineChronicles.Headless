@@ -67,7 +67,8 @@ namespace NineChronicles.Headless
 
         public static IHostBuilder UseNineChroniclesRPC(
             this IHostBuilder builder,
-            RpcNodeServiceProperties properties
+            RpcNodeServiceProperties properties,
+            ActionEvaluationPublisher actionEvaluationPublisher
         )
         {
             var context = new RpcContext
@@ -82,23 +83,10 @@ namespace NineChronicles.Headless
                     services.AddGrpc(options =>
                     {
                         options.MaxReceiveMessageSize = null;
-                        options.Interceptors.Add<GrpcCaptureMiddleware>();
+                        options.Interceptors.Add<GrpcCaptureMiddleware>(actionEvaluationPublisher);
                     });
                     services.AddMagicOnion();
-                    services.AddSingleton(provider =>
-                    {
-                        StandaloneContext? ctx = provider.GetRequiredService<StandaloneContext>();
-                        return new ActionEvaluationPublisher(
-                            ctx.NineChroniclesNodeService!.BlockRenderer,
-                            ctx.NineChroniclesNodeService!.ActionRenderer,
-                            ctx.NineChroniclesNodeService!.ExceptionRenderer,
-                            ctx.NineChroniclesNodeService!.NodeStatusRenderer,
-                            IPAddress.Loopback.ToString(),
-                            properties.RpcListenPort,
-                            context,
-                            provider.GetRequiredService<ConcurrentDictionary<string, ITransaction>>()
-                        );
-                    });
+                    services.AddSingleton(_ => actionEvaluationPublisher);
                     var resolver = MessagePack.Resolvers.CompositeResolver.Create(
                         NineChroniclesResolver.Instance,
                         StandardResolver.Instance
