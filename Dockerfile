@@ -42,4 +42,4 @@ RUN apt-get update \
 
 VOLUME /data
 
-ENTRYPOINT ["./ncd"]
+ENTRYPOINT ["dotnet", "NineChronicles.Headless.Executable.dll"]
