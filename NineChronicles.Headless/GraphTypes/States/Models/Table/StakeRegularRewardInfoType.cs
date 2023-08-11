@@ -29,7 +29,7 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Table
                 nameof(StakeRegularRewardSheet.RewardInfo.CurrencyDecimalPlaces),
                 resolve: context => context.Source.CurrencyDecimalPlaces
             );
-            Field<DecimalGraphType>(
+            Field<NonNullGraphType<DecimalGraphType>>(
                 nameof(StakeRegularRewardSheet.RewardInfo.DecimalRate),
                 resolve: context => context.Source.DecimalRate
             );
