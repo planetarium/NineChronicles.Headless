@@ -45,7 +45,6 @@ namespace NineChronicles.Headless.Middleware
 
             if (httpContext.Request.Protocol == "HTTP/1.1")
             {
-                httpContext.Request.EnableBuffering();
                 var body = await new StreamReader(httpContext.Request.Body).ReadToEndAsync();
                 httpContext.Request.Body.Seek(0, SeekOrigin.Begin);
                 if (body.Contains("stageTransaction"))
