@@ -5,6 +5,7 @@ using GraphQL.Types;
 using Libplanet.Crypto;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
+using Nekoyume.Model;
 
 namespace NineChronicles.Headless.GraphTypes;
 

@@ -18,7 +18,7 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class AvatarStateContext : StateContext
         {
-            public AvatarStateContext(AvatarState avatarState, IAccountState accountState, long blockIndex)
+            public AvatarStateContext(AvatarState avatarState, IWorldState accountState, long blockIndex)
                 : base(accountState, blockIndex)
             {
                 AvatarState = avatarState;
@@ -54,7 +54,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                 description: "The index of this avatar state among its agent's avatar addresses.",
                 resolve: context =>
                 {
-                    if (!(context.Source.GetState(context.Source.AvatarState.agentAddress) is Dictionary dictionary))
+                    if (!(context.Source.GetState(context.Source.AvatarState.agentAddress, null) is Dictionary dictionary))
                     {
                         throw new InvalidOperationException();
                     }
@@ -116,7 +116,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context =>
                 {
                     var addresses = context.Source.AvatarState.combinationSlotAddresses;
-                    return context.Source.AccountState.GetStates(addresses)
+                    return context.Source.WorldState.GetAccount(ReservedAddresses.LegacyAccount).GetStates(addresses)
                         .OfType<Dictionary>()
                         .Select(x => new CombinationSlotState(x));
                 });

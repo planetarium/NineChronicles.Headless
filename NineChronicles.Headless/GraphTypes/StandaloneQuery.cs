@@ -52,7 +52,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return new StateContext(
-                        chain.GetBlockState(blockHash),
+                        chain.GetWorldState(blockHash),
                         blockHash switch
                         {
                             BlockHash bh => chain[bh].Index,
@@ -82,7 +82,7 @@ namespace NineChronicles.Headless.GraphTypes
                         ? blockChain.Tip.Hash
                         : new BlockHash(blockHashByteArray);
 
-                    var state = blockChain.GetStates(new[] { address }, blockHash)[0];
+                    var state = blockChain.GetState(address, blockHash: blockHash) ?? new Null();
 
                     return new Codec().Encode(state);
                 }
@@ -127,7 +127,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     TransferNCGHistory ToTransferNCGHistory(TxSuccess txSuccess, string? memo)
                     {
-                        var rawTransferNcgHistories = txSuccess.FungibleAssetsDelta
+                        var rawTransferNcgHistories = txSuccess.UpdatedFungibleAssets
                             .Where(pair => pair.Value.Values.Any(fav => fav.Currency.Ticker == "NCG"))
                             .Select(pair =>
                                 (pair.Key, pair.Value.Values.First(fav => fav.Currency.Ticker == "NCG")))
@@ -174,13 +174,6 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "The validation method provider for Libplanet types.",
                 resolve: context => new ValidationQuery(standaloneContext));
 
-            Field<NonNullGraphType<ActivationStatusQuery>>(
-                    name: "activationStatus",
-                    description: "Check if the provided address is activated.",
-                    deprecationReason: "Since NCIP-15, it doesn't care account activation.",
-                    resolve: context => new ActivationStatusQuery(standaloneContext))
-                .AuthorizeWithLocalPolicyIf(useSecretToken);
-
             Field<NonNullGraphType<PeerChainStateQuery>>(
                 name: "peerChainState",
                 description: "Get the peer's block chain state",
@@ -205,9 +198,11 @@ namespace NineChronicles.Headless.GraphTypes
                     var blockHash = blockHashByteArray is null
                         ? blockChain.Tip.Hash
                         : new BlockHash(blockHashByteArray);
-                    Currency currency = new GoldCurrencyState(
-                        (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
-                    ).Currency;
+                    IValue? rawValue = blockChain.GetState(GoldCurrencyState.Address, blockHash: blockHash);
+
+                    Currency currency = rawValue is not null
+                        ? new GoldCurrencyState((Dictionary) rawValue).Currency
+                        : new GoldCurrencyState(new Currency()).Currency;
 
                     return blockChain.GetBalance(
                         address,
@@ -311,23 +306,24 @@ namespace NineChronicles.Headless.GraphTypes
 
                     BlockHash offset = blockChain.Tip.Hash;
 #pragma warning disable S3247
-                    if (blockChain.GetStates(new[] { agentAddress }, offset)[0] is Dictionary agentDict)
+                    if (blockChain.GetState(agentAddress, blockHash: offset) is Dictionary agentDict)
 #pragma warning restore S3247
                     {
                         AgentState agentState = new AgentState(agentDict);
                         Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
                         Currency currency = new GoldCurrencyState(
-                            (Dictionary)blockChain.GetStates(new[] { Addresses.GoldCurrency }, offset)[0]
+                            (Dictionary)blockChain.GetState(Addresses.GoldCurrency, blockHash: offset)!
                             ).Currency;
 
                         FungibleAssetValue balance = blockChain.GetBalance(agentAddress, currency, offset);
-                        if (blockChain.GetStates(new[] { deriveAddress }, offset)[0] is Dictionary mcDict)
+
+                        if (blockChain.GetState( deriveAddress, blockHash: offset) is Dictionary mcDict)
                         {
                             var rewardSheet = new MonsterCollectionRewardSheet();
-                            var csv = blockChain.GetStates(
-                                new[] { Addresses.GetSheetAddress<MonsterCollectionRewardSheet>() },
-                                offset
-                            )[0].ToDotnetString();
+                            var csv = blockChain.GetState(
+                                Addresses.GetSheetAddress<MonsterCollectionRewardSheet>(),
+                                blockHash: offset
+                            ).ToDotnetString();
                             rewardSheet.Set(csv);
                             var monsterCollectionState = new MonsterCollectionState(mcDict);
                             long tipIndex = blockChain.Tip.Index;
@@ -352,41 +348,6 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "transaction",
                 description: "Query for transaction.",
                 resolve: context => new TransactionHeadlessQuery(standaloneContext)
-            );
-
-            Field<NonNullGraphType<BooleanGraphType>>(
-                name: "activated",
-                deprecationReason: "Since NCIP-15, it doesn't care account activation.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "invitationCode"
-                    }
-                ),
-                resolve: context =>
-                {
-                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
-
-                    string invitationCode = context.GetArgument<string>("invitationCode");
-                    ActivationKey activationKey = ActivationKey.Decode(invitationCode);
-                    if (blockChain.GetState(activationKey.PendingAddress) is Dictionary dictionary)
-                    {
-                        var pending = new PendingActivationState(dictionary);
-                        ActivateAccount action = activationKey.CreateActivateAccount(pending.Nonce);
-                        if (pending.Verify(action))
-                        {
-                            return false;
-                        }
-
-                        throw new ExecutionError($"invitationCode is invalid.");
-                    }
-
-                    return true;
-                }
             );
 
             Field<NonNullGraphType<StringGraphType>>(

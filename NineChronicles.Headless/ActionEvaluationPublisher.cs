@@ -18,6 +18,7 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using Lib9c.Abstractions;
 using Lib9c.Renderers;
+using Libplanet.Action.State;
 using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Types.Blocks;
@@ -26,6 +27,7 @@ using MagicOnion.Client;
 using MessagePack;
 using Microsoft.Extensions.Hosting;
 using Nekoyume.Action;
+using Nekoyume.Action.Extensions;
 using Nekoyume.Model.State;
 using Nekoyume.Shared.Hubs;
 using Sentry;
@@ -261,17 +263,18 @@ namespace NineChronicles.Headless
                                     : ev.Action;
                                 var extra = new Dictionary<string, IValue>();
 
-                                var previousStates = ev.PreviousState;
+                                var previousWorld = ev.PreviousState;
+                                var legacyAccount = ev.PreviousState.GetAccount(ReservedAddresses.LegacyAccount);
                                 if (pa is IBattleArenaV1 battleArena)
                                 {
                                     var enemyAvatarAddress = battleArena.EnemyAvatarAddress;
-                                    if (previousStates.GetState(enemyAvatarAddress) is { } eAvatar)
+                                    if (legacyAccount.GetState(enemyAvatarAddress) is { } eAvatar)
                                     {
                                         const string inventoryKey = "inventory";
-                                        previousStates = previousStates.SetState(enemyAvatarAddress, eAvatar);
-                                        if (previousStates.GetState(enemyAvatarAddress.Derive(inventoryKey)) is { } inventory)
+                                        legacyAccount = legacyAccount.SetState(enemyAvatarAddress, eAvatar);
+                                        if (legacyAccount.GetState(enemyAvatarAddress.Derive(inventoryKey)) is { } inventory)
                                         {
-                                            previousStates = previousStates.SetState(
+                                            legacyAccount = legacyAccount.SetState(
                                                 enemyAvatarAddress.Derive(inventoryKey),
                                                 inventory);
                                         }
@@ -280,32 +283,34 @@ namespace NineChronicles.Headless
                                     var enemyItemSlotStateAddress =
                                         ItemSlotState.DeriveAddress(battleArena.EnemyAvatarAddress,
                                             Nekoyume.Model.EnumType.BattleType.Arena);
-                                    if (previousStates.GetState(enemyItemSlotStateAddress) is { } eItemSlot)
+                                    if (legacyAccount.GetState(enemyItemSlotStateAddress) is { } eItemSlot)
                                     {
-                                        previousStates = previousStates.SetState(enemyItemSlotStateAddress, eItemSlot);
+                                        legacyAccount = legacyAccount.SetState(enemyItemSlotStateAddress, eItemSlot);
                                     }
 
                                     var enemyRuneSlotStateAddress =
                                         RuneSlotState.DeriveAddress(battleArena.EnemyAvatarAddress,
                                             Nekoyume.Model.EnumType.BattleType.Arena);
-                                    if (previousStates.GetState(enemyRuneSlotStateAddress) is { } eRuneSlot)
+                                    if (legacyAccount.GetState(enemyRuneSlotStateAddress) is { } eRuneSlot)
                                     {
-                                        previousStates = previousStates.SetState(enemyRuneSlotStateAddress, eRuneSlot);
+                                        legacyAccount = legacyAccount.SetState(enemyRuneSlotStateAddress, eRuneSlot);
                                         var runeSlot = new RuneSlotState(eRuneSlot as List);
                                         var enemyRuneSlotInfos = runeSlot.GetEquippedRuneSlotInfos();
                                         var runeAddresses = enemyRuneSlotInfos.Select(info =>
                                             RuneState.DeriveAddress(battleArena.EnemyAvatarAddress, info.RuneId));
                                         foreach (var address in runeAddresses)
                                         {
-                                            if (previousStates.GetState(address) is { } rune)
+                                            if (legacyAccount.GetState(address) is { } rune)
                                             {
-                                                previousStates = previousStates.SetState(address, rune);
+                                                legacyAccount = legacyAccount.SetState(address, rune);
                                             }
                                         }
                                     }
                                 }
 
-                                var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputState, ev.Exception, previousStates, ev.RandomSeed, extra);
+                                previousWorld = previousWorld.SetAccount(legacyAccount);
+
+                                var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputState, ev.Exception, previousWorld, ev.RandomSeed, extra);
                                 var encoded = MessagePackSerializer.Serialize(eval);
                                 var c = new MemoryStream();
                                 await using (var df = new DeflateStream(c, CompressionLevel.Fastest))

@@ -88,7 +88,7 @@ namespace Libplanet.Headless.Tests.Hosting
         {
             IValue IAction.PlainValue => Dictionary.Empty;
 
-            IAccountStateDelta IAction.Execute(IActionContext context)
+            IWorld IAction.Execute(IActionContext context)
             {
                 return context.PreviousState;
             }

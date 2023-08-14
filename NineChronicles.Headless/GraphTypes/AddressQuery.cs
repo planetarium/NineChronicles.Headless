@@ -4,6 +4,7 @@ using Libplanet.Crypto;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Action.Extensions;
 
 namespace NineChronicles.Headless.GraphTypes
 {

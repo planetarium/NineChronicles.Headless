@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Bencodex;
 using Cocona;
+using Libplanet.Action.State;
 using Libplanet.Blockchain;
 using Libplanet.Crypto;
 using Libplanet.Store;
@@ -53,7 +54,7 @@ namespace NineChronicles.Headless.Executable.Commands
             _console.Error.WriteLine("The offset block: #{0} {1}.", offset.Index, offset.Hash);
 
             Bencodex.Types.Dictionary goldCurrencyStateDict = (Bencodex.Types.Dictionary)
-                chain.GetState(GoldCurrencyState.Address);
+                chain.GetState(GoldCurrencyState.Address, ReservedAddresses.LegacyAccount);
             GoldCurrencyState goldCurrencyState = new GoldCurrencyState(goldCurrencyStateDict);
             Currency gold = goldCurrencyState.Currency;
 

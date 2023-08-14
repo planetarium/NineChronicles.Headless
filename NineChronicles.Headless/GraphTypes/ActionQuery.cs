@@ -3,16 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Bencodex;
-using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
-using Nekoyume.Action.Factory;
 using Nekoyume.Model;
-using Nekoyume.Model.State;
 using Nekoyume.TableData;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -36,41 +33,6 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context => Encode(
                     context,
                     new Stake(context.GetArgument<BigInteger>("amount"))));
-
-            Field<ByteStringType>(
-                name: "claimStakeReward",
-                arguments: new QueryArguments(
-                    new QueryArgument<AddressType>
-                    {
-                        Name = "avatarAddress",
-                        Description = "The avatar address to receive staking rewards."
-                    }),
-                resolve: context =>
-                {
-                    if (!(standaloneContext.BlockChain is { } chain))
-                    {
-                        throw new InvalidOperationException("BlockChain not found in the context");
-                    }
-
-                    return Encode(
-                        context,
-                        (GameAction)ClaimStakeRewardFactory.CreateByBlockIndex(
-                            chain.Tip.Index,
-                            context.GetArgument<Address>("avatarAddress")));
-                }
-            );
-            Field<NonNullGraphType<ByteStringType>>(
-                name: "migrateMonsterCollection",
-                arguments: new QueryArguments(
-                    new QueryArgument<AddressType>
-                    {
-                        Name = "avatarAddress",
-                        Description = "The avatar address to receive monster collection rewards."
-                    }),
-                resolve: context => Encode(
-                    context,
-                    new MigrateMonsterCollection(
-                        context.GetArgument<Address>("avatarAddress"))));
             Field<ByteStringType>(
                 name: "grinding",
                 arguments: new QueryArguments(
@@ -396,35 +358,6 @@ namespace NineChronicles.Headless.GraphTypes
 
                     ActionBase action = new TransferAssets(sender, recipients, memo);
                     return Encode(context, action);
-                }
-            );
-            Field<NonNullGraphType<ByteStringType>>(
-                "activateAccount",
-                deprecationReason: "Since NCIP-15, it doesn't care account activation.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "activationCode",
-                        Description = "Activation code that you've get."
-                    }
-                ),
-                resolve: context =>
-                {
-                    var activationCode = context.GetArgument<string>("activationCode");
-                    var activationKey = ActivationKey.Decode(activationCode);
-                    if (standaloneContext.BlockChain!.GetState(activationKey.PendingAddress) is Dictionary dictionary)
-                    {
-                        var pending = new PendingActivationState(dictionary);
-                        var action = activationKey.CreateActivateAccount(pending.Nonce);
-                        if (pending.Verify(action))
-                        {
-                            return Encode(context, action);
-                        }
-
-                        throw new ExecutionError("Failed to verify activateAccount action.");
-                    }
-
-                    throw new InvalidOperationException("BlockChain not found in the context");
                 }
             );
             Field<NonNullGraphType<ByteStringType>>(

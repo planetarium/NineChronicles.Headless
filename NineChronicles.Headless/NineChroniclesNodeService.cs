@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lib9c.Renderers;
 using Libplanet.Action.Loader;
+using Libplanet.Action.State;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;
@@ -278,7 +279,8 @@ namespace NineChronicles.Headless
             standaloneContext.Store = Store;
             standaloneContext.Swarm = Swarm;
             standaloneContext.CurrencyFactory =
-                new CurrencyFactory(standaloneContext.BlockChain.GetBlockState);
+                new CurrencyFactory(() =>
+                    standaloneContext.BlockChain.GetAccount(ReservedAddresses.LegacyAccount, null));
             standaloneContext.FungibleAssetValueFactory =
                 new FungibleAssetValueFactory(standaloneContext.CurrencyFactory);
             BootstrapEnded.WaitAsync().ContinueWith((task) =>

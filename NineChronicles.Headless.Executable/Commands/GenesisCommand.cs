@@ -172,31 +172,6 @@ namespace NineChronicles.Headless.Executable.Commands
             _console.Out.WriteLine($"Initial validator set config done: {str}");
         }
 
-        private void ProcessExtra(ExtraConfig? config,
-            out List<PendingActivationState> pendingActivationStates
-        )
-        {
-            _console.Out.WriteLine("\nProcessing extra data for genesis...");
-            pendingActivationStates = new List<PendingActivationState>();
-
-            if (config is null)
-            {
-                _console.Out.WriteLine("Extra config not provided");
-                return;
-            }
-
-            if (!string.IsNullOrEmpty(config.Value.PendingActivationStatePath))
-            {
-                string hex = File.ReadAllText(config.Value.PendingActivationStatePath).Trim();
-                List decoded = (List)_codec.Decode(ByteUtil.ParseHex(hex));
-                CreatePendingActivations action = new();
-                action.LoadPlainValue(decoded[1]);
-                pendingActivationStates = action.PendingActivations.Select(
-                    pa => new PendingActivationState(pa.Nonce, new PublicKey(pa.PublicKey))
-                ).ToList();
-            }
-        }
-
         [Command(Description = "Mine a new genesis block")]
         public void Mine(
             [Argument("CONFIG", Description = "JSON config path to mine genesis block")]
@@ -220,14 +195,12 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 ProcessValidator(genesisConfig.InitialValidatorSet, initialMinter, out var initialValidatorSet);
 
-                ProcessExtra(genesisConfig.Extra, out var pendingActivationStates);
-
                 // Mine genesis block
                 _console.Out.WriteLine("\nMining genesis block...\n");
                 Block block = BlockHelper.ProposeGenesisBlock(
                     tableSheets: tableSheets,
                     goldDistributions: initialDepositList.ToArray(),
-                    pendingActivationStates: pendingActivationStates.ToArray(),
+                    pendingActivationStates: Array.Empty<PendingActivationState>(),
                     adminState: adminState,
                     privateKey: initialMinter,
                     initialValidators: initialValidatorSet.ToDictionary(

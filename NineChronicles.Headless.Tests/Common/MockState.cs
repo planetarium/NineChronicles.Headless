@@ -85,6 +85,8 @@ namespace NineChronicles.Headless.Tests.Common
 
         public ValidatorSet ValidatorSet => _validatorSet;
 
+        public Address Address { get; }
+
         public IValue? GetState(Address address) => _states.TryGetValue(address, out IValue? value)
             ? value
             : null;
