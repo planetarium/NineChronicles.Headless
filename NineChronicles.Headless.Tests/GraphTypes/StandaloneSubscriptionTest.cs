@@ -73,13 +73,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task SubscribeTx()
         {
-            var targetAction = new Grinding { AvatarAddress = new Address(), EquipmentIds = new List<Guid>() };
-            var nonTargetAction = new DailyReward6 { avatarAddress = new Address() };
-
-            var (block, transactions) = AppendBlock(targetAction, nonTargetAction);
-            Assert.NotNull(block);
-            Assert.NotNull(transactions);
-
             const string query = @"
             subscription {
                 tx (actionType: ""grinding"") {
@@ -93,8 +86,17 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.IsType<SubscriptionExecutionResult>(response);
             var result = (SubscriptionExecutionResult)response;
             var stream = result.Streams!.Values.FirstOrDefault();
+            var observable = stream.Take(1);
 
-            var rawEvents = await stream.Take(1);
+            var targetAction = new Grinding { AvatarAddress = new Address(), EquipmentIds = new List<Guid>() };
+            var nonTargetAction = new DailyReward6 { avatarAddress = new Address() };
+
+            Task<ExecutionResult> task = Task.Run(async () => await observable);
+            var (block, transactions) = AppendBlock(targetAction, nonTargetAction);
+            Assert.NotNull(block);
+            Assert.NotNull(transactions);
+
+            var rawEvents = await task;
             Assert.NotNull(rawEvents);
 
             var events = (Dictionary<string, object>)((ExecutionNode)rawEvents.Data!).ToValue();
