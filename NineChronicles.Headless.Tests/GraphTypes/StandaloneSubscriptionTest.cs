@@ -74,7 +74,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task SubscribeTx()
         {
             var targetAction = new Grinding { AvatarAddress = new Address(), EquipmentIds = new List<Guid>() };
-            var nonTargetAction = new DailyReward6 { avatarAddress = new Address()};
+            var nonTargetAction = new DailyReward6 { avatarAddress = new Address() };
 
             var (block, transactions) = AppendBlock(targetAction, nonTargetAction);
             Assert.NotNull(block);
@@ -110,8 +110,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var transactions = actions.Select(action => Transaction.Create(
                 0,
                 new PrivateKey(),
-                BlockChain.Genesis.Hash, 
-                new [] { action.PlainValue }))
+                BlockChain.Genesis.Hash,
+                new[] { action.PlainValue }))
                 .ToList();
             transactions.ForEach(transaction => BlockChain.StageTransaction(transaction));
 

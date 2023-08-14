@@ -71,18 +71,18 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "ncTransactions",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<LongGraphType>>
-                        { Name = "startingBlockIndex", Description = "start block index for query tx."},
+                    { Name = "startingBlockIndex", Description = "start block index for query tx." },
                     new QueryArgument<NonNullGraphType<LongGraphType>>
-                        { Name = "limit", Description = "number of block to query."},
+                    { Name = "limit", Description = "number of block to query." },
                     new QueryArgument<NonNullGraphType<StringGraphType>>
-                        { Name = "actionType", Description = "filter tx by having actions' type" }
+                    { Name = "actionType", Description = "filter tx by having actions' type" }
                 ),
                 resolve: context =>
                 {
                     if (standaloneContext.BlockChain is not { } blockChain)
                     {
-                         throw new ExecutionError(
-                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
                     }
 
                     var startingBlockIndex = context.GetArgument<long>("startingBlockIndex");
