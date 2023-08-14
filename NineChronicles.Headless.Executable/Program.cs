@@ -48,11 +48,8 @@ namespace NineChronicles.Headless.Executable
     [HasSubCommands(typeof(NineChronicles.Headless.Executable.Commands.KeyCommand), "key")]
     [HasSubCommands(typeof(ApvCommand), "apv")]
     [HasSubCommands(typeof(ActionCommand), "action")]
-    [HasSubCommands(typeof(StateCommand), "state")]
-    [HasSubCommands(typeof(NineChronicles.Headless.Executable.Commands.TxCommand), "tx")]
     [HasSubCommands(typeof(MarketCommand), "market")]
     [HasSubCommands(typeof(GenesisCommand), "genesis")]
-    [HasSubCommands(typeof(ReplayCommand), "replay")]
     public class Program : CoconaLiteConsoleAppBase
     {
         static async Task Main(string[] args)

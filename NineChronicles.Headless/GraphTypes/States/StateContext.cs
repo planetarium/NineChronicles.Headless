@@ -12,16 +12,16 @@ namespace NineChronicles.Headless.GraphTypes.States
     public class StateContext
     {
         public StateContext(
-            IAccountState accountState,
+            IWorldState worldState,
             long blockIndex)
         {
-            AccountState = accountState;
+            WorldState = worldState;
             BlockIndex = blockIndex;
-            CurrencyFactory = new CurrencyFactory(() => accountState);
+            CurrencyFactory = new CurrencyFactory(() => worldState.GetAccount(ReservedAddresses.LegacyAccount))!;
             FungibleAssetValueFactory = new FungibleAssetValueFactory(CurrencyFactory);
         }
 
-        public IAccountState AccountState { get; }
+        public IWorldState WorldState { get; }
 
         public long BlockIndex { get; }
 
@@ -29,10 +29,12 @@ namespace NineChronicles.Headless.GraphTypes.States
 
         public FungibleAssetValueFactory FungibleAssetValueFactory { get; }
 
-        public IValue? GetState(Address address) => AccountState.GetState(address);
+        public IValue? GetState(Address address, Address? account = null) => WorldState.GetAccount(account ?? ReservedAddresses.LegacyAccount).GetState(address);
 
-        public IReadOnlyList<IValue?> GetStates(IReadOnlyList<Address> addresses) => AccountState.GetStates(addresses);
+        public IReadOnlyList<IValue?> GetStates(IReadOnlyList<Address> addresses, Address? account = null)
+            => WorldState.GetAccount(account ?? ReservedAddresses.LegacyAccount).GetStates(addresses);
 
-        public FungibleAssetValue GetBalance(Address address, Currency currency) => AccountState.GetBalance(address, currency);
+        public FungibleAssetValue GetBalance(Address address, Currency currency, Address? account = null)
+            => WorldState.GetAccount(account ?? ReservedAddresses.LegacyAccount).GetBalance(address, currency);
     }
 }

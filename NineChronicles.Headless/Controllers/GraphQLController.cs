@@ -168,7 +168,8 @@ namespace NineChronicles.Headless.Controllers
 
             List<IValue> states = playerAddresses
                 .Select(addr => chain.GetState(addr))
-                .Where(value => !(value is null))
+                .Where(value => value is not null)
+                .Cast<IValue>()
                 .ToList();
 
             if (!states.Any())
@@ -180,9 +181,9 @@ namespace NineChronicles.Headless.Controllers
                 states.Select(state => new AgentState((Bencodex.Types.Dictionary)state));
             var avatarStates = agentStates.SelectMany(agentState =>
                 agentState.avatarAddresses.Values.Select(address =>
-                    new AvatarState((Bencodex.Types.Dictionary)chain.GetState(address))));
+                    new AvatarState((Bencodex.Types.Dictionary)chain.GetState(address)!)));
             var gameConfigState =
-                new GameConfigState((Bencodex.Types.Dictionary)chain.GetState(Addresses.GameConfig));
+                new GameConfigState((Bencodex.Types.Dictionary)chain.GetState(Addresses.GameConfig)!);
 
             bool IsDailyRewardRefilled(long dailyRewardReceivedIndex)
             {
@@ -216,57 +217,6 @@ namespace NineChronicles.Headless.Controllers
                     "Record notification for {AvatarAddress}",
                     avatarState.address.ToHex());
                 NotificationRecords[avatarState.address] = avatarState.dailyRewardReceivedIndex;
-            }
-        }
-
-        private void NotifyAction(ActionEvaluation<ActionBase> eval)
-        {
-            if (StandaloneContext.NineChroniclesNodeService is null)
-            {
-                throw new InvalidOperationException(
-                    $"{nameof(StandaloneContext.NineChroniclesNodeService)} is null.");
-            }
-
-            if (StandaloneContext.NineChroniclesNodeService.MinerPrivateKey is null)
-            {
-                Log.Information("PrivateKey is not set. please call SetPrivateKey() first.");
-                return;
-            }
-            Address address = StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress();
-            if (eval.OutputState.Delta.UpdatedAddresses.Contains(address) || eval.Signer == address)
-            {
-                if (eval.Signer == address)
-                {
-                    var type = NotificationEnum.Refill;
-                    var msg = string.Empty;
-                    switch (eval.Action)
-                    {
-                        case HackAndSlash4 has:
-                            type = NotificationEnum.HAS;
-                            msg = has.stageId.ToString(CultureInfo.InvariantCulture);
-                            break;
-                        case CombinationConsumable3 _:
-                            type = NotificationEnum.CombinationConsumable;
-                            break;
-                        case CombinationEquipment4 _:
-                            type = NotificationEnum.CombinationEquipment;
-                            break;
-                        case Buy4 _:
-                            type = NotificationEnum.Buyer;
-                            break;
-                    }
-                    Log.Information("NotifyAction: Type: {Type} MSG: {Msg}", type, msg);
-                    var notification = new Notification(type, msg);
-                    StandaloneContext.NotificationSubject.OnNext(notification);
-                }
-                else
-                {
-                    if (eval.Action is Buy4 buy && buy.sellerAgentAddress == address)
-                    {
-                        var notification = new Notification(NotificationEnum.Seller);
-                        StandaloneContext.NotificationSubject.OnNext(notification);
-                    }
-                }
             }
         }
 

@@ -19,7 +19,7 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class StakeStateContext : StateContext
         {
-            public StakeStateContext(StakeState stakeState, IAccountState accountState, long blockIndex)
+            public StakeStateContext(StakeState stakeState, IWorldState accountState, long blockIndex)
                 : base(accountState, blockIndex)
             {
                 StakeState = stakeState;
@@ -37,9 +37,9 @@ namespace NineChronicles.Headless.GraphTypes.States
             Field<NonNullGraphType<StringGraphType>>(
                 "deposit",
                 description: "The staked amount.",
-                resolve: context => context.Source.AccountState.GetBalance(
+                resolve: context => context.Source.WorldState.GetAccount(ReservedAddresses.LegacyAccount).GetBalance(
                         context.Source.StakeState.address,
-                        new GoldCurrencyState((Dictionary)context.Source.GetState(GoldCurrencyState.Address)!).Currency)
+                        new GoldCurrencyState((Dictionary)context.Source.GetState(GoldCurrencyState.Address, null)!).Currency)
                     .GetQuantityString(true));
             Field<NonNullGraphType<IntGraphType>>(
                 nameof(StakeState.StartedBlockIndex),

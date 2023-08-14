@@ -1,4 +1,6 @@
 using Nekoyume.Action;
+using Nekoyume.Action.Extensions;
+using Nekoyume.Model.Exceptions;
 using NineChronicles.Headless.Tests.Common;
 using Xunit;
 using static Lib9c.SerializeKeys;

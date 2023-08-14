@@ -11,12 +11,12 @@ namespace NineChronicles.Headless.Tests.Common.Actions
         {
         }
 
-        public IAccountStateDelta Execute(IActionContext context)
+        public IWorld Execute(IActionContext context)
         {
             return context.PreviousState;
         }
 
-        public void Render(IActionContext context, IAccountStateDelta nextStates)
+        public void Render(IActionContext context, IWorld nextStates)
         {
         }
 
@@ -24,7 +24,7 @@ namespace NineChronicles.Headless.Tests.Common.Actions
         {
         }
 
-        public void Unrender(IActionContext context, IAccountStateDelta nextStates)
+        public void Unrender(IActionContext context, IWorld nextStates)
         {
         }
 

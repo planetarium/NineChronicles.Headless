@@ -7,6 +7,7 @@ using GraphQL;
 using GraphQL.Types;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
+using Libplanet.Action.State;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
@@ -92,7 +93,7 @@ namespace NineChronicles.Headless.Tests
                 stateStore,
                 genesisBlock,
                 actionEvaluator);
-            var currencyFactory = new CurrencyFactory(blockchain.GetBlockState);
+            var currencyFactory = new CurrencyFactory(() => blockchain.GetWorldState().GetAccount(ReservedAddresses.LegacyAccount));
             var fungibleAssetValueFactory = new FungibleAssetValueFactory(currencyFactory);
             return new StandaloneContext
             {
@@ -133,7 +134,7 @@ namespace NineChronicles.Headless.Tests
                 actionEvaluator);
             var ncg = new GoldCurrencyState((Dictionary)blockchain.GetState(Addresses.GoldCurrency))
                 .Currency;
-            var currencyFactory = new CurrencyFactory(blockchain.GetBlockState, ncg);
+            var currencyFactory = new CurrencyFactory(() => blockchain.GetWorldState().GetAccount(ReservedAddresses.LegacyAccount), ncg);
             var fungibleAssetValueFactory = new FungibleAssetValueFactory(currencyFactory);
             return new StandaloneContext
             {

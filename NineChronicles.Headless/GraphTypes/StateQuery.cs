@@ -5,12 +5,15 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Lib9c.Model.Order;
+using Libplanet.Action.State;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Action.Extensions;
 using Nekoyume.Extensions;
+using Nekoyume.Model.Exceptions;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -35,8 +38,8 @@ namespace NineChronicles.Headless.GraphTypes
                 try
                 {
                     return new AvatarStateType.AvatarStateContext(
-                        context.AccountState.GetAvatarState(address),
-                        context.AccountState,
+                        context.WorldState.GetAccount(ReservedAddresses.LegacyAccount).GetAvatarState(address),
+                        context.WorldState,
                         context.BlockIndex);
                 }
                 catch (InvalidAddressException)
@@ -186,7 +189,7 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         return new AgentStateType.AgentStateContext(
                             new AgentState(state),
-                            context.Source.AccountState,
+                            context.Source.WorldState,
                             context.Source.BlockIndex
                         );
                     }
@@ -201,7 +204,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     return new StakeStateType.StakeStateContext(
                         new StakeState(state),
-                        ctx.AccountState,
+                        ctx.WorldState,
                         ctx.BlockIndex
                     );
                 }
@@ -360,7 +363,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var address = avatarAddress.Derive("recipe_ids");
-                    IReadOnlyList<IValue?> values = context.Source.AccountState.GetStates(new[] { address });
+                    IReadOnlyList<IValue?> values = context.Source.WorldState.GetAccount(ReservedAddresses.LegacyAccount).GetStates(new[] { address });
                     if (values[0] is List rawRecipeIds)
                     {
                         return rawRecipeIds.ToList(StateExtensions.ToInteger);
@@ -382,7 +385,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var address = avatarAddress.Derive("world_ids");
-                    IReadOnlyList<IValue?> values = context.Source.AccountState.GetStates(new[] { address });
+                    IReadOnlyList<IValue?> values = context.Source.WorldState.GetAccount(ReservedAddresses.LegacyAccount).GetStates(new[] { address });
                     if (values[0] is List rawWorldIds)
                     {
                         return rawWorldIds.ToList(StateExtensions.ToInteger);
@@ -561,8 +564,6 @@ namespace NineChronicles.Headless.GraphTypes
                     return (address, approved, mead);
                 }
             );
-
-            RegisterGarages();
         }
     }
 }

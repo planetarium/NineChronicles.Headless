@@ -10,7 +10,6 @@ namespace NineChronicles.Headless.GraphTypes
             : base(serviceProvider)
         {
             Query = serviceProvider.GetRequiredService<StandaloneQuery>();
-            Mutation = serviceProvider.GetRequiredService<StandaloneMutation>();
             Subscription = serviceProvider.GetRequiredService<StandaloneSubscription>();
         }
     }

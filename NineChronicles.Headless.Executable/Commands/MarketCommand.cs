@@ -6,6 +6,7 @@ using Bencodex;
 using Bencodex.Types;
 using Cocona;
 using Lib9c.Model.Order;
+using Libplanet.Action.State;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
 using Libplanet.Blockchain;
@@ -50,7 +51,7 @@ namespace NineChronicles.Headless.Executable.Commands
             [Option(
                 'T',
                 Description = "Filter by item type.  This implicitly filters out transactions " +
-                              "made with " + nameof(Buy) + " action version prior to " + nameof(Buy5) +
+                              "made with " + nameof(Buy) + " action version prior to " + nameof(Buy) +
                               ".  This can be applied multiple times (meaning: match any of them).  " +
                               "The list of available types can be found in " + nameof(ItemSubType) +
                               " enum declared in Lib9c/Model/Item/ItemType.cs file.")]
@@ -131,7 +132,7 @@ namespace NineChronicles.Headless.Executable.Commands
                         {
                             int? quantity = null;
                             if (p.OrderId is { } oid &&
-                                chain.GetState(GetOrderAddress(oid)) is Dictionary rawOrder)
+                                chain.GetState(ReservedAddresses.LegacyAccount, GetOrderAddress(oid)) is Dictionary rawOrder)
                             {
                                 if (OrderFactory.Deserialize(rawOrder) is FungibleOrder fo)
                                 {

@@ -4,10 +4,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
+using Libplanet.Action.State;
 using Libplanet.Blockchain;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
 using Libplanet.Net;
@@ -116,7 +119,7 @@ namespace NineChronicles.Headless
         {
             var address = new Address(addressBytes);
             var hash = new BlockHash(blockHashBytes);
-            IValue state = _blockChain.GetStates(new[] { address }, hash)[0];
+            IValue state = _blockChain.GetState(ReservedAddresses.LegacyAccount, address, hash);
             // FIXME: Null과 null 구분해서 반환해야 할 듯
             byte[] encoded = _codec.Encode(state ?? new Null());
             return new UnaryResult<byte[]>(encoded);
@@ -125,7 +128,9 @@ namespace NineChronicles.Headless
         public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStates(IEnumerable<byte[]> addressBytesList, byte[] blockHashBytes)
         {
             var hash = new BlockHash(blockHashBytes);
-            var accountState = _blockChain.GetBlockState(hash);
+            var accountState = _blockChain.GetAccount(
+                ReservedAddresses.LegacyAccount,
+                _blockChain.GetBlockStateRoot(hash).Hash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
             var addresses = addressBytesList.Select(a => new Address(a)).ToList();
             var rawAvatarStates = accountState.GetRawAvatarStates(addresses);
@@ -145,7 +150,9 @@ namespace NineChronicles.Headless
             var hash = new BlockHash(blockHashBytes);
             var result = new Dictionary<byte[], byte[]>();
             Address[] addresses = addressBytesList.Select(b => new Address(b)).ToArray();
-            IReadOnlyList<IValue> values = _blockChain.GetStates(addresses, hash);
+            HashDigest<SHA256> stateRoot = _blockChain.GetBlockStateRoot(hash).Hash;
+            IAccountState accountState = _blockChain.GetAccount(ReservedAddresses.LegacyAccount, stateRoot);
+            IReadOnlyList<IValue> values = accountState.GetStates(addresses);
             for (int i = 0; i < addresses.Length; i++)
             {
                 result.TryAdd(addresses[i].ToByteArray(), _codec.Encode(values[i] ?? new Null()));

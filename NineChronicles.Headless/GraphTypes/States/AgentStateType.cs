@@ -7,6 +7,7 @@ using Libplanet.Types.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Action.State;
 using Nekoyume.Action;
+using Nekoyume.Action.Extensions;
 using Nekoyume.Helper;
 using Nekoyume.Model.Quest;
 using Nekoyume.Model.State;
@@ -19,8 +20,8 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class AgentStateContext : StateContext
         {
-            public AgentStateContext(AgentState agentState, IAccountState accountState, long blockIndex)
-                : base(accountState, blockIndex)
+            public AgentStateContext(AgentState agentState, IWorldState worldState, long blockIndex)
+                : base(worldState, blockIndex)
             {
                 AgentState = agentState;
             }
@@ -45,10 +46,10 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context =>
                 {
                     IReadOnlyList<Address> avatarAddresses = context.Source.GetAvatarAddresses();
-                    return context.Source.AccountState.GetAvatarStates(avatarAddresses).Select(
+                    return context.Source.WorldState.GetAccount(ReservedAddresses.LegacyAccount).GetAvatarStates(avatarAddresses).Select(
                         x => new AvatarStateType.AvatarStateContext(
                             x,
-                            context.Source.AccountState,
+                            context.Source.WorldState,
                             context.Source.BlockIndex));
                 });
             Field<NonNullGraphType<StringGraphType>>(
@@ -57,12 +58,13 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context =>
                 {
                     Currency currency = new GoldCurrencyState(
-                        (Dictionary)context.Source.GetState(GoldCurrencyState.Address)!
+                        (Dictionary)context.Source.GetState(GoldCurrencyState.Address, null)!
                     ).Currency;
 
                     return context.Source.GetBalance(
                         context.Source.AgentAddress,
-                        currency
+                        currency,
+                        null
                     ).GetQuantityString(true);
                 });
             Field<NonNullGraphType<LongGraphType>>(
@@ -79,7 +81,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                         context.Source.AgentAddress,
                         context.Source.AgentState.MonsterCollectionRound
                     );
-                    if (context.Source.GetState(monsterCollectionAddress) is { } state)
+                    if (context.Source.GetState(monsterCollectionAddress, null) is { } state)
                     {
                         return new MonsterCollectionState((Dictionary)state).Level;
                     }
@@ -99,7 +101,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                         addresses[avatarAddresses.Count + i] = avatarAddresses[i];
                     }
 
-                    IReadOnlyList<IValue?> values = context.Source.GetStates(addresses);
+                    IReadOnlyList<IValue?> values = context.Source.GetStates(addresses, null);
                     for (int i = 0; i < avatarAddresses.Count; i++)
                     {
                         if (values[i] is { } rawQuestList)
@@ -130,7 +132,8 @@ namespace NineChronicles.Headless.GraphTypes.States
                 description: "Current CRYSTAL.",
                 resolve: context => context.Source.GetBalance(
                     context.Source.AgentAddress,
-                    CrystalCalculator.CRYSTAL
+                    CrystalCalculator.CRYSTAL,
+                    null
                 ).GetQuantityString(true));
             Field<NonNullGraphType<MeadPledgeType>>(
                 "pledge",
@@ -141,7 +144,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                     Address? address = null;
                     bool approved = false;
                     int mead = 0;
-                    if (context.Source.GetState(pledgeAddress) is List l)
+                    if (context.Source.GetState(pledgeAddress, null) is List l)
                     {
                         address = l[0].ToAddress();
                         approved = l[1].ToBoolean();
