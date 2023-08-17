@@ -12,8 +12,10 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Table
                 resolve: context => context.Source.ItemId
             );
             Field<NonNullGraphType<IntGraphType>>(
+#pragma warning disable CS0618 // Type or member is obsolete
                 nameof(StakeRegularRewardSheet.RewardInfo.Rate),
                 resolve: context => context.Source.Rate
+#pragma warning restore CS0618 // Type or member is obsolete
             );
             Field<NonNullGraphType<StakeRewardEnumType>>(
                 nameof(StakeRegularRewardSheet.RewardInfo.Type),
