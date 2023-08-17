@@ -39,7 +39,13 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
                     new QueryArgument<ListGraphType<NonNullGraphType<GuidGraphType>>>
                     {
                         Name = "itemIds",
-                        Description = "ItemIds for fetching only equipment where id is in " +
+                        Description = "ItemIds for fetching only equipment where itemId (Guid) is in " +
+                                      "the given argument."
+                    },
+                    new QueryArgument<ListGraphType<NonNullGraphType<IntGraphType>>>
+                    {
+                        Name = "ids",
+                        Description = "Ids for fetching only equipment where id (number) is in " +
                                       "the given argument."
                     }),
                 resolve: context =>
@@ -48,6 +54,7 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
                     var equippedFilter = context.GetArgument<bool?>("equipped");
                     var itemSubTypeFilter = context.GetArgument<ItemSubType?>("itemSubType");
                     var itemIdsFilter = context.GetArgument<Guid[]?>("itemIds");
+                    var idsFilter = context.GetArgument<int[]?>("ids");
                     if (equippedFilter.HasValue)
                     {
                         equipments = equipments.Where(x => x.equipped == equippedFilter.Value).ToList();
@@ -62,6 +69,12 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
                     {
                         var set = itemIdsFilter.ToHashSet();
                         equipments = equipments.Where(equipment => set.Contains(equipment.ItemId));
+                    }
+
+                    if (idsFilter is not null)
+                    {
+                        var set = idsFilter.ToHashSet();
+                        equipments = equipments.Where(equipment => set.Contains(equipment.Id));
                     }
 
                     return equipments;
