@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Bencodex.Types;
 using GraphQL.Types;
+using Lib9c;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Action.State;
 using Nekoyume.Action;
@@ -108,6 +109,10 @@ namespace NineChronicles.Headless.GraphTypes.States
                 nameof(AvatarState.inventory),
                 description: "Avatar inventory.",
                 resolve: context => context.Source.AvatarState.inventory);
+            Field<NonNullGraphType<AddressType>>(
+                "inventoryAddress",
+                description: "Avatar inventory address.",
+                resolve: context => context.Source.AvatarState.address.Derive(SerializeKeys.LegacyInventoryKey));
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<RuneStateType>>>>(
                 name: "runes",
                 description: "Rune list of avatar",
