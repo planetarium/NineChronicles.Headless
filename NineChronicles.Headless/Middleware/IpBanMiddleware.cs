@@ -41,7 +41,6 @@ namespace NineChronicles.Headless.Middleware
 
         public Task InvokeAsync(HttpContext context)
         {
-            context.Request.EnableBuffering();
             var remoteIp = context.Connection.RemoteIpAddress!.ToString();
             if (_bannedIps.ContainsKey(remoteIp))
             {

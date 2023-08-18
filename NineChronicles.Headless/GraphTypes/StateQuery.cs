@@ -11,6 +11,7 @@ using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Extensions;
+using Nekoyume.Model.Arena;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -29,6 +30,22 @@ namespace NineChronicles.Headless.GraphTypes
         public StateQuery()
         {
             Name = "StateQuery";
+
+            AvatarStateType.AvatarStateContext? GetAvatarState(StateContext context, Address address)
+            {
+                try
+                {
+                    return new AvatarStateType.AvatarStateContext(
+                        context.AccountState.GetAvatarState(address),
+                        context.AccountState,
+                        context.BlockIndex);
+                }
+                catch (InvalidAddressException)
+                {
+                    return null;
+                }
+            }
+
             Field<AvatarStateType>(
                 name: "avatar",
                 description: "State for avatar.",
@@ -40,18 +57,27 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var address = context.GetArgument<Address>("avatarAddress");
-                    try
-                    {
-                        return new AvatarStateType.AvatarStateContext(
-                            context.Source.AccountState.GetAvatarState(address),
-                            context.Source.AccountState,
-                            context.Source.BlockIndex);
-                    }
-                    catch (InvalidAddressException)
-                    {
-                        throw new InvalidOperationException($"The state {address} doesn't exists");
-                    }
+                    return GetAvatarState(context.Source, address)
+                        ?? throw new InvalidOperationException($"The state {address} doesn't exists");
                 });
+            Field<NonNullGraphType<ListGraphType<AvatarStateType>>>(
+                name: "avatars",
+                description: "Avatar states having some order as addresses",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>
+                    {
+                        Name = "addresses",
+                        Description = "Addresses of avatars to query."
+                    }
+                ),
+                resolve: context =>
+                {
+                    return context.GetArgument<List<Address>>("addresses")
+                        .AsParallel()
+                        .AsOrdered()
+                        .Select(address => GetAvatarState(context.Source, address));
+                }
+            );
             Field<RankingMapStateType>(
                 name: "rankingMap",
                 description: "State for avatar EXP record.",
@@ -137,15 +163,56 @@ namespace NineChronicles.Headless.GraphTypes
                                     }
                                 }
 #pragma warning disable CS0618 // Type or member is obsolete
-                                arenastate.OrderedArenaInfos.AddRange(arenaInfos.OrderByDescending(a => a.Score).ThenBy(a => a.CombatPoint));
+                                arenastate.OrderedArenaInfos.AddRange(arenaInfos.OrderByDescending(a => a.Score)
+                                    .ThenBy(a => a.CombatPoint));
 #pragma warning restore CS0618 // Type or member is obsolete
                             }
                         }
+
                         return arenastate;
                     }
 
                     return null;
                 });
+            Field<NonNullGraphType<ListGraphType<NonNullGraphType<ArenaInformationType>>>>(
+                name: "arenaInformation",
+                description: "List of arena information of requested arena and avatar list",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "championshipId",
+                        Description = "Championship ID to get arena information"
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "round",
+                        Description = "Round of championship to get arena information"
+                    },
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>
+                    {
+                        Name = "avatarAddresses",
+                        Description = "List of avatar address to get arena information"
+                    }
+                ),
+                resolve: context =>
+                {
+                    var championshipId = context.GetArgument<int>("championshipId");
+                    var round = context.GetArgument<int>("round");
+                    return context.GetArgument<List<Address>>("avatarAddresses").AsParallel().AsOrdered().Select(
+                        address =>
+                        {
+                            var infoAddr = ArenaInformation.DeriveAddress(address, championshipId, round);
+                            var scoreAddr = ArenaScore.DeriveAddress(address, championshipId, round);
+
+                            return (
+                                address,
+                                new ArenaInformation((List)context.Source.GetState(infoAddr)!),
+                                new ArenaScore((List)context.Source.GetState(scoreAddr)!)
+                            );
+                        }
+                    );
+                }
+            );
             Field<AgentStateType>(
                 name: "agent",
                 description: "State for agent.",

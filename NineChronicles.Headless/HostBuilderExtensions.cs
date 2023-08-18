@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Nekoyume.Action;
 using NineChronicles.Headless.Middleware;
+using NineChronicles.Headless.Services;
 using Sentry;
 
 namespace NineChronicles.Headless
@@ -37,6 +38,13 @@ namespace NineChronicles.Headless
                 services.AddSingleton(provider => service.Swarm);
                 services.AddSingleton(provider => service.BlockChain);
                 services.AddSingleton(provider => service.Store);
+
+                if (properties.StateServiceManagerService is { } stateServiceManagerServiceOptions)
+                {
+                    var stateServiceManagerService = new StateServiceManagerService(stateServiceManagerServiceOptions);
+                    services.AddSingleton(provider => stateServiceManagerService);
+                }
+
                 if (properties.Libplanet is { } libplanetNodeServiceProperties)
                 {
                     services.AddSingleton<LibplanetNodeServiceProperties>(provider => libplanetNodeServiceProperties);
@@ -59,7 +67,8 @@ namespace NineChronicles.Headless
 
         public static IHostBuilder UseNineChroniclesRPC(
             this IHostBuilder builder,
-            RpcNodeServiceProperties properties
+            RpcNodeServiceProperties properties,
+            ActionEvaluationPublisher actionEvaluationPublisher
         )
         {
             var context = new RpcContext
@@ -74,23 +83,10 @@ namespace NineChronicles.Headless
                     services.AddGrpc(options =>
                     {
                         options.MaxReceiveMessageSize = null;
-                        options.Interceptors.Add<GrpcCaptureMiddleware>();
+                        options.Interceptors.Add<GrpcCaptureMiddleware>(actionEvaluationPublisher);
                     });
                     services.AddMagicOnion();
-                    services.AddSingleton(provider =>
-                    {
-                        StandaloneContext? ctx = provider.GetRequiredService<StandaloneContext>();
-                        return new ActionEvaluationPublisher(
-                            ctx.NineChroniclesNodeService!.BlockRenderer,
-                            ctx.NineChroniclesNodeService!.ActionRenderer,
-                            ctx.NineChroniclesNodeService!.ExceptionRenderer,
-                            ctx.NineChroniclesNodeService!.NodeStatusRenderer,
-                            IPAddress.Loopback.ToString(),
-                            properties.RpcListenPort,
-                            context,
-                            provider.GetRequiredService<ConcurrentDictionary<string, ITransaction>>()
-                        );
-                    });
+                    services.AddSingleton(_ => actionEvaluationPublisher);
                     var resolver = MessagePack.Resolvers.CompositeResolver.Create(
                         NineChroniclesResolver.Instance,
                         StandardResolver.Instance
