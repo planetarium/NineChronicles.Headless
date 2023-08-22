@@ -878,15 +878,21 @@ actionPoint: {actionPoint},
         }
 
         [Fact]
-        public async Task ItemEnhantement()
+        public async Task ItemEnhancement()
         {
             var avatarAddress = new PrivateKey().ToAddress();
             var slotIndex = 0;
             var itemId = Guid.NewGuid();
-            var materialId = Guid.NewGuid();
+            var materialIds = new List<Guid> { Guid.NewGuid()};
 
+            var materialQuery = new StringBuilder("[");
+            foreach (var materialId in materialIds)
+            {
+                materialQuery.Append($" \"{materialId}\"");
+            }
+            materialQuery.Append("]");
             var query = $"{{itemEnhancement(avatarAddress: \"{avatarAddress}\", slotIndex: {slotIndex}, " +
-                        $"itemId: \"{itemId}\", materialId: \"{materialId}\")}}";
+                        $"itemId: \"{itemId}\", materialIds: {materialQuery})}}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
             Assert.Null(queryResult.Errors);
 
@@ -898,7 +904,7 @@ actionPoint: {actionPoint},
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(slotIndex, action.slotIndex);
             Assert.Equal(itemId, action.itemId);
-            Assert.Equal(materialId, action.materialId);
+            Assert.Equal(materialIds, action.materialIds);
         }
 
         [Fact]
