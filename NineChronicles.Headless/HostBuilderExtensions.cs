@@ -1,10 +1,12 @@
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.Properties;
 using System.Net;
 using Lib9c.Formatters;
 using Libplanet.Action;
+using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
 using MessagePack;
 using MessagePack.Resolvers;
@@ -68,7 +70,8 @@ namespace NineChronicles.Headless
         public static IHostBuilder UseNineChroniclesRPC(
             this IHostBuilder builder,
             RpcNodeServiceProperties properties,
-            ActionEvaluationPublisher actionEvaluationPublisher
+            ActionEvaluationPublisher actionEvaluationPublisher,
+            StandaloneContext standaloneContext
         )
         {
             var context = new RpcContext
@@ -79,11 +82,12 @@ namespace NineChronicles.Headless
             return builder
                 .ConfigureServices(services =>
                 {
+                    Dictionary<string, HashSet<Address>> ipSignerList = new();
                     services.AddSingleton(_ => context);
                     services.AddGrpc(options =>
                     {
                         options.MaxReceiveMessageSize = null;
-                        options.Interceptors.Add<GrpcCaptureMiddleware>(actionEvaluationPublisher);
+                        options.Interceptors.Add<GrpcCaptureMiddleware>(standaloneContext, ipSignerList, actionEvaluationPublisher);
                     });
                     services.AddMagicOnion();
                     services.AddSingleton(_ => actionEvaluationPublisher);
