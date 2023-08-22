@@ -611,7 +611,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task ItemEnhancement(Address avatarAddress, Guid itemId, List<Guid> materialIds, int slotIndex)
         {
             var playerPrivateKey = new PrivateKey();
-            var materialQuery= new StringBuilder("[");
+            var materialQuery = new StringBuilder("[");
             foreach (var materialId in materialIds)
             {
                 materialQuery.Append($" \"{materialId}\"");
@@ -652,14 +652,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 new Address(),
                 Guid.NewGuid(),
-                new List<Guid>{Guid.NewGuid()},
+                new List<Guid> {Guid.NewGuid()},
                 0,
             },
             new object?[]
             {
                 new Address(),
                 Guid.NewGuid(),
-                new List<Guid>{Guid.NewGuid()},
+                new List<Guid> {Guid.NewGuid()},
                 3,
             },
         };

@@ -883,7 +883,7 @@ actionPoint: {actionPoint},
             var avatarAddress = new PrivateKey().ToAddress();
             var slotIndex = 0;
             var itemId = Guid.NewGuid();
-            var materialIds = new List<Guid> { Guid.NewGuid()};
+            var materialIds = new List<Guid> { Guid.NewGuid() };
 
             var materialQuery = new StringBuilder("[");
             foreach (var materialId in materialIds)
