@@ -5,6 +5,7 @@ using GraphQL.Server;
 using GraphQL.Utilities;
 using Grpc.Core;
 using Grpc.Net.Client;
+using Libplanet.Crypto;
 using Libplanet.Explorer.Schemas;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -33,11 +34,15 @@ namespace NineChronicles.Headless
 
         public const string MagicOnionTargetKey = "magicOnionTarget";
 
+        private StandaloneContext StandaloneContext { get; }
         private GraphQLNodeServiceProperties GraphQlNodeServiceProperties { get; }
+        private IConfiguration Configuration { get; }
 
-        public GraphQLService(GraphQLNodeServiceProperties properties)
+        public GraphQLService(GraphQLNodeServiceProperties properties, StandaloneContext standaloneContext, IConfiguration configuration)
         {
             GraphQlNodeServiceProperties = properties;
+            StandaloneContext = standaloneContext;
+            Configuration = configuration;
         }
 
         public IHostBuilder Configure(IHostBuilder hostBuilder)
@@ -47,7 +52,7 @@ namespace NineChronicles.Headless
 
             return hostBuilder.ConfigureWebHostDefaults(builder =>
             {
-                builder.UseStartup<GraphQLStartup>();
+                builder.UseStartup(x => new GraphQLStartup(x.Configuration, StandaloneContext));
                 builder.ConfigureAppConfiguration(
                     (context, builder) =>
                     {
@@ -86,12 +91,14 @@ namespace NineChronicles.Headless
 
         internal class GraphQLStartup
         {
-            public GraphQLStartup(IConfiguration configuration)
+            public GraphQLStartup(IConfiguration configuration, StandaloneContext standaloneContext)
             {
                 Configuration = configuration;
+                StandaloneContext = standaloneContext;
             }
 
             public IConfiguration Configuration { get; }
+            public StandaloneContext StandaloneContext;
 
             public void ConfigureServices(IServiceCollection services)
             {
@@ -154,7 +161,8 @@ namespace NineChronicles.Headless
                 }
 
                 // Capture requests
-                app.UseMiddleware<HttpCaptureMiddleware>();
+                Dictionary<string, HashSet<Address>> ipSignerList = new();
+                app.UseMiddleware<HttpCaptureMiddleware>(StandaloneContext, ipSignerList);
 
                 app.UseMiddleware<LocalAuthenticationMiddleware>();
                 if (Configuration[NoCorsKey] is null)
