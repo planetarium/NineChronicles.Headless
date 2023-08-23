@@ -54,9 +54,9 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return Encode(
                         context,
-                        (GameAction)ClaimStakeRewardFactory.CreateByBlockIndex(
-                            chain.Tip.Index,
-                            context.GetArgument<Address>("avatarAddress")));
+                        // Due to claim_stake_reward5's compatibility issue, force to latest action temporarily.
+                        // TODO: Restore it with the action factory pattern after v200070.
+                        new ClaimStakeReward(context.GetArgument<Address>("avatarAddress")));
                 }
             );
             Field<NonNullGraphType<ByteStringType>>(
