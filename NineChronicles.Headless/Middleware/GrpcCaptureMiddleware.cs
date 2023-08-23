@@ -15,7 +15,7 @@ namespace NineChronicles.Headless.Middleware
     public class GrpcCaptureMiddleware : Interceptor
     {
         private const int MultiAccountManagementTime = 5;
-        private const int MultiAccountTxInterval = 5;
+        private const int MultiAccountTxInterval = 10;
         private static Dictionary<Address, DateTimeOffset> _multiAccountTxIntervalTracker = new();
         private static Dictionary<Address, DateTimeOffset> _multiAccountList = new();
         private readonly ILogger _logger;
