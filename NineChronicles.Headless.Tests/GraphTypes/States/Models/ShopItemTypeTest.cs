@@ -43,8 +43,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             ShopItem shopItem;
             if (costume is null)
             {
+                if (itemUsable is not ITradableItem tradableItem)
+                {
+                    throw new InvalidOperationException("itemUsable is not ITradableItem");
+                }
+
                 shopItem = new ShopItem(Fixtures.UserAddress, Fixtures.AvatarAddress,
-                    new Guid("d3d9ac06-eb91-4cc4-863a-5b4769ad633e"), 100 * Fixtures.CurrencyFX, itemUsable);
+                    new Guid("d3d9ac06-eb91-4cc4-863a-5b4769ad633e"), 100 * Fixtures.CurrencyFX, tradableItem);
             }
             else
             {
