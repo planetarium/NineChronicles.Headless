@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Libplanet.Common;
 using Libplanet.Crypto;
@@ -72,7 +74,8 @@ namespace NineChronicles.Headless.Middleware
                 {
                     try
                     {
-                        var txPayload = body.Split("\\\"")[1];
+                        var pattern = "64313.*6565";
+                        var txPayload = Regex.Match(body, pattern).ToString();
                         byte[] bytes = ByteUtil.ParseHex(txPayload);
                         Transaction tx = Transaction.Deserialize(bytes);
                         var agent = tx.Signer;
@@ -105,7 +108,7 @@ namespace NineChronicles.Headless.Middleware
                                             _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Managing Agent {agent} for {MultiAccountManagementTime} minutes due to {_ipSignerList[context.Connection.RemoteIpAddress!.ToString()].Count} associated accounts.");
                                             ManageMultiAccount(agent);
                                             _multiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
-                                            return;
+                                            throw new HttpRequestException("Request cancelled.");
                                         }
                                     }
                                 }
@@ -121,7 +124,7 @@ namespace NineChronicles.Headless.Middleware
                                     else
                                     {
                                         _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Agent {agent} is in managed status for the next {MultiAccountManagementTime - (DateTimeOffset.Now - _multiAccountList[agent]).Minutes} minutes.");
-                                        return;
+                                        throw new HttpRequestException("Request cancelled.");
                                     }
                                 }
                             }
