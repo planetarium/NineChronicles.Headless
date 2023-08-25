@@ -108,7 +108,11 @@ namespace NineChronicles.Headless.Middleware
                                             _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Managing Agent {agent} for {MultiAccountManagementTime} minutes due to {_ipSignerList[context.Connection.RemoteIpAddress!.ToString()].Count} associated accounts.");
                                             ManageMultiAccount(agent);
                                             _multiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
-                                            throw new HttpRequestException("Request cancelled.");
+                                            var message = "{ \"message\": \"Request cancelled.\" }";
+                                            context.Response.StatusCode = 403;
+                                            context.Response.ContentType = "application/json";
+                                            await context.Response.WriteAsync(message);
+                                            return;
                                         }
                                     }
                                 }
@@ -124,7 +128,12 @@ namespace NineChronicles.Headless.Middleware
                                     else
                                     {
                                         _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Agent {agent} is in managed status for the next {MultiAccountManagementTime - (DateTimeOffset.Now - _multiAccountList[agent]).Minutes} minutes.");
-                                        throw new HttpRequestException("Request cancelled.");
+                                        context.Response.StatusCode = 403;
+                                        var message = "{ \"message\": \"Request cancelled.\" }";
+                                        context.Response.StatusCode = 403;
+                                        context.Response.ContentType = "application/json";
+                                        await context.Response.WriteAsync(message);
+                                        return;
                                     }
                                 }
                             }
