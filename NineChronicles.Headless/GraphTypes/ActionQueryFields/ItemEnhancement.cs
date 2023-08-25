@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet.Crypto;
@@ -46,7 +47,10 @@ public partial class ActionQuery
                     avatarAddress = avatarAddress,
                     slotIndex = slotIndex,
                     itemId = itemId,
-                    materialId = materialId
+                    materialIds = new List<Guid>
+                    {
+                        materialId,
+                    }
                 };
                 return Encode(context, action);
             }

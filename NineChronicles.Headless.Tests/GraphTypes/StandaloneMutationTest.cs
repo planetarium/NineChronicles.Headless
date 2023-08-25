@@ -634,7 +634,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var action = (ItemEnhancement)ToAction(tx.Actions!.First());
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(itemId, action.itemId);
-            Assert.Equal(materialId, action.materialId);
+            Assert.Contains(materialId, action.materialIds);
             Assert.Equal(slotIndex, action.slotIndex);
         }
 

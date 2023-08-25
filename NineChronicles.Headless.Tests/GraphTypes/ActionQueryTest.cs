@@ -898,7 +898,7 @@ actionPoint: {actionPoint},
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(slotIndex, action.slotIndex);
             Assert.Equal(itemId, action.itemId);
-            Assert.Equal(materialId, action.materialId);
+            Assert.Contains(materialId, action.materialIds);
         }
 
         [Fact]

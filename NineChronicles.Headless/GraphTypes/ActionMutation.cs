@@ -285,7 +285,10 @@ namespace NineChronicles.Headless.GraphTypes
                             avatarAddress = avatarAddress,
                             slotIndex = slotIndex,
                             itemId = itemId,
-                            materialId = materialId,
+                            materialIds = new List<Guid>
+                            {
+                                materialId,   
+                            }
                         };
 
                         var actions = new ActionBase[] { action };

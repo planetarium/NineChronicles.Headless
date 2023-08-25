@@ -44,7 +44,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             if (costume is null)
             {
                 shopItem = new ShopItem(Fixtures.UserAddress, Fixtures.AvatarAddress,
-                    new Guid("d3d9ac06-eb91-4cc4-863a-5b4769ad633e"), 100 * Fixtures.CurrencyFX, itemUsable);
+                    new Guid("d3d9ac06-eb91-4cc4-863a-5b4769ad633e"), 100 * Fixtures.CurrencyFX, (ITradableItem) itemUsable);
             }
             else
             {
