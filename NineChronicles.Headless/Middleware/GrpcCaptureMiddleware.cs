@@ -119,7 +119,7 @@ namespace NineChronicles.Headless.Middleware
                 }
 
                 var agent = tx.Signer;
-                if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count >= MultiAccountThresholdCount)
+                if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count > MultiAccountThresholdCount)
                 {
                     _logger.Information(
                         "[GRPC-REQUEST-CAPTURE] IP: {IP} List Count: {Count}, AgentAddresses: {Agent}",

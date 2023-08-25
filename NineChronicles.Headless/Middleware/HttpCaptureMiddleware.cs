@@ -80,7 +80,7 @@ namespace NineChronicles.Headless.Middleware
                         var agent = tx.Signer;
                         if (_ipSignerList.ContainsKey(context.Connection.RemoteIpAddress!.ToString()))
                         {
-                            if (_ipSignerList[context.Connection.RemoteIpAddress!.ToString()].Count >= MultiAccountThresholdCount)
+                            if (_ipSignerList[context.Connection.RemoteIpAddress!.ToString()].Count > MultiAccountThresholdCount)
                             {
                                 _logger.Information(
                                     "[GRAPHQL-REQUEST-CAPTURE] IP: {IP} List Count: {Count}, AgentAddresses: {Agent}",
@@ -107,14 +107,14 @@ namespace NineChronicles.Headless.Middleware
                                             _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Managing Agent {agent} for {MultiAccountManagementTime} minutes due to {_ipSignerList[context.Connection.RemoteIpAddress!.ToString()].Count} associated accounts.");
                                             ManageMultiAccount(agent);
                                             MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
-                                            CancelRequest(context);
+                                            await CancelRequestAsync(context);
                                             return;
                                         }
                                     }
                                 }
                                 else
                                 {
-                                    if ((DateTimeOffset.Now - MultiAccountManagementList[agent]).Minutes >= MultiAccountManagementTime)
+                                    if ((DateTimeOffset.Now - MultiAccountManagementList[agent]).Minutes > MultiAccountManagementTime)
                                     {
                                         _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Restoring Agent {agent} after {MultiAccountManagementTime} minutes.");
                                         RestoreMultiAccount(agent);
@@ -124,7 +124,7 @@ namespace NineChronicles.Headless.Middleware
                                     else
                                     {
                                         _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Agent {agent} is in managed status for the next {MultiAccountManagementTime - (DateTimeOffset.Now - MultiAccountManagementList[agent]).Minutes} minutes.");
-                                        CancelRequest(context);
+                                        await CancelRequestAsync(context);
                                         return;
                                     }
                                 }
@@ -168,7 +168,7 @@ namespace NineChronicles.Headless.Middleware
             _ipSignerList[ip].Add(agent);
         }
 
-        private async void CancelRequest(HttpContext context)
+        private async Task CancelRequestAsync(HttpContext context)
         {
             var message = "{ \"message\": \"Request cancelled.\" }";
             context.Response.StatusCode = 403;
