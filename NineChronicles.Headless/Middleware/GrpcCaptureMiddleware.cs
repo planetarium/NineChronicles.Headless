@@ -6,7 +6,6 @@ using Grpc.Core.Interceptors;
 using System.Threading.Tasks;
 using Libplanet.Crypto;
 using Libplanet.Types.Tx;
-using Nekoyume.Blockchain;
 using Serilog;
 using static NineChronicles.Headless.NCActionUtils;
 
@@ -17,12 +16,12 @@ namespace NineChronicles.Headless.Middleware
         private const int MultiAccountManagementTime = 5;
         private const int MultiAccountTxInterval = 10;
         private const int MultiAccountThresholdCount = 0;
-        private static Dictionary<Address, DateTimeOffset> _multiAccountTxIntervalTracker = new();
-        private static Dictionary<Address, DateTimeOffset> _multiAccountList = new();
+        private static readonly Dictionary<Address, DateTimeOffset> MultiAccountTxIntervalTracker = new();
+        private static readonly Dictionary<Address, DateTimeOffset> MultiAccountManagementList = new();
         private readonly ILogger _logger;
         private StandaloneContext _standaloneContext;
-        private Dictionary<string, HashSet<Address>> _ipSignerList;
-        private ActionEvaluationPublisher _actionEvaluationPublisher;
+        private readonly Dictionary<string, HashSet<Address>> _ipSignerList;
+        private readonly ActionEvaluationPublisher _actionEvaluationPublisher;
 
         public GrpcCaptureMiddleware(StandaloneContext standaloneContext, Dictionary<string, HashSet<Address>> ipSignerList, ActionEvaluationPublisher actionEvaluationPublisher)
         {
@@ -34,12 +33,12 @@ namespace NineChronicles.Headless.Middleware
 
         private static void ManageMultiAccount(Address agent)
         {
-            _multiAccountList.Add(agent, DateTimeOffset.Now);
+            MultiAccountManagementList.Add(agent, DateTimeOffset.Now);
         }
 
         private static void RestoreMultiAccount(Address agent)
         {
-            _multiAccountList.Remove(agent);
+            MultiAccountManagementList.Remove(agent);
         }
 
         public override async Task<TResponse> UnaryServerHandler<TRequest, TResponse>(
@@ -127,41 +126,41 @@ namespace NineChronicles.Headless.Middleware
                         httpContext.Connection.RemoteIpAddress!.ToString(),
                         _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count,
                         _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()]);
-                    if (!_multiAccountList.ContainsKey(agent))
+                    if (!MultiAccountManagementList.ContainsKey(agent))
                     {
-                        if (!_multiAccountTxIntervalTracker.ContainsKey(agent))
+                        if (!MultiAccountTxIntervalTracker.ContainsKey(agent))
                         {
                             _logger.Information($"[GRPC-REQUEST-CAPTURE] Adding agent {agent} to the agent tracker.");
-                            _multiAccountTxIntervalTracker.Add(agent, DateTimeOffset.Now);
+                            MultiAccountTxIntervalTracker.Add(agent, DateTimeOffset.Now);
                         }
                         else
                         {
-                            if ((DateTimeOffset.Now - _multiAccountTxIntervalTracker[agent]).Minutes >= MultiAccountTxInterval)
+                            if ((DateTimeOffset.Now - MultiAccountTxIntervalTracker[agent]).Minutes >= MultiAccountTxInterval)
                             {
                                 _logger.Information($"[GRPC-REQUEST-CAPTURE] Resetting Agent {agent}'s time because it has been more than {MultiAccountTxInterval} minutes since the last transaction.");
-                                _multiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
+                                MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
                             }
                             else
                             {
                                 _logger.Information($"[GRPC-REQUEST-CAPTURE] Managing Agent {agent} for {MultiAccountManagementTime} minutes due to {_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count} associated accounts.");
                                 ManageMultiAccount(agent);
-                                _multiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
+                                MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
                                 throw new RpcException(new Status(StatusCode.Cancelled, "Request cancelled."));
                             }
                         }
                     }
                     else
                     {
-                        if ((DateTimeOffset.Now - _multiAccountList[agent]).Minutes >= MultiAccountManagementTime)
+                        if ((DateTimeOffset.Now - MultiAccountManagementList[agent]).Minutes >= MultiAccountManagementTime)
                         {
                             _logger.Information($"[GRPC-REQUEST-CAPTURE] Restoring Agent {agent} after {MultiAccountManagementTime} minutes.");
                             RestoreMultiAccount(agent);
-                            _multiAccountTxIntervalTracker[agent] = DateTimeOffset.Now.AddMinutes(-MultiAccountTxInterval);
+                            MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now.AddMinutes(-MultiAccountTxInterval);
                             _logger.Information($"[GRPC-REQUEST-CAPTURE] Current time: {DateTimeOffset.Now} Added time: {DateTimeOffset.Now.AddMinutes(-MultiAccountTxInterval)}.");
                         }
                         else
                         {
-                            _logger.Information($"[GRPC-REQUEST-CAPTURE] Agent {agent} is in managed status for the next {MultiAccountManagementTime - (DateTimeOffset.Now - _multiAccountList[agent]).Minutes} minutes.");
+                            _logger.Information($"[GRPC-REQUEST-CAPTURE] Agent {agent} is in managed status for the next {MultiAccountManagementTime - (DateTimeOffset.Now - MultiAccountManagementList[agent]).Minutes} minutes.");
                             throw new RpcException(new Status(StatusCode.Cancelled, "Request cancelled."));
                         }
                     }
