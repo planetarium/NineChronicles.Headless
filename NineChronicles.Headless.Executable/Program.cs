@@ -515,7 +515,8 @@ namespace NineChronicles.Headless.Executable
                     hostBuilder.UseNineChroniclesRPC(
                         rpcProperties,
                         publisher,
-                        standaloneContext
+                        standaloneContext,
+                        configuration
                     );
                 }
 

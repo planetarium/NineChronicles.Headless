@@ -6,6 +6,8 @@ using Grpc.Core.Interceptors;
 using System.Threading.Tasks;
 using Libplanet.Crypto;
 using Libplanet.Types.Tx;
+using Microsoft.Extensions.Options;
+using NineChronicles.Headless.Properties;
 using Serilog;
 using static NineChronicles.Headless.NCActionUtils;
 
@@ -13,22 +15,26 @@ namespace NineChronicles.Headless.Middleware
 {
     public class GrpcCaptureMiddleware : Interceptor
     {
-        private const int MultiAccountManagementTime = 5;
-        private const int MultiAccountTxInterval = 10;
-        private const int MultiAccountThresholdCount = 0;
         private static readonly Dictionary<Address, DateTimeOffset> MultiAccountTxIntervalTracker = new();
         private static readonly Dictionary<Address, DateTimeOffset> MultiAccountManagementList = new();
         private readonly ILogger _logger;
         private StandaloneContext _standaloneContext;
         private readonly Dictionary<string, HashSet<Address>> _ipSignerList;
         private readonly ActionEvaluationPublisher _actionEvaluationPublisher;
+        private readonly IOptions<MultiAccountManagerProperties> _options;
 
-        public GrpcCaptureMiddleware(StandaloneContext standaloneContext, Dictionary<string, HashSet<Address>> ipSignerList, ActionEvaluationPublisher actionEvaluationPublisher)
+        public GrpcCaptureMiddleware(
+            StandaloneContext standaloneContext,
+            Dictionary<string,
+            HashSet<Address>> ipSignerList,
+            ActionEvaluationPublisher actionEvaluationPublisher,
+            IOptions<MultiAccountManagerProperties> options)
         {
             _logger = Log.Logger.ForContext<GrpcCaptureMiddleware>();
             _standaloneContext = standaloneContext;
             _ipSignerList = ipSignerList;
             _actionEvaluationPublisher = actionEvaluationPublisher;
+            _options = options;
         }
 
         private static void ManageMultiAccount(Address agent)
@@ -55,22 +61,26 @@ namespace NineChronicles.Headless.Middleware
                 _logger.Information(
                     "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method} Agent: {Agent} Header: {Header}",
                     ipAddress, context.Method, agent, uaHeader);
-                if (!_ipSignerList.ContainsKey(httpContext.Connection.RemoteIpAddress!.ToString()))
-                {
-                    _logger.Information(
-                        "[GRPC-REQUEST-CAPTURE] Creating a new list for IP: {IP}",
-                        httpContext.Connection.RemoteIpAddress!.ToString());
-                    _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()] = new HashSet<Address>();
-                }
-                else
-                {
-                    _logger.Information(
-                        "[GRPC-REQUEST-CAPTURE] List already created for IP: {IP} Count: {Count}",
-                        httpContext.Connection.RemoteIpAddress!.ToString(),
-                        _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count);
-                }
 
-                _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Add(agent);
+                if (_options.Value.EnableManaging)
+                {
+                    if (!_ipSignerList.ContainsKey(httpContext.Connection.RemoteIpAddress!.ToString()))
+                    {
+                        _logger.Information(
+                            "[GRPC-REQUEST-CAPTURE] Creating a new list for IP: {IP}",
+                            httpContext.Connection.RemoteIpAddress!.ToString());
+                        _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()] = new HashSet<Address>();
+                    }
+                    else
+                    {
+                        _logger.Information(
+                            "[GRPC-REQUEST-CAPTURE] List already created for IP: {IP} Count: {Count}",
+                            httpContext.Connection.RemoteIpAddress!.ToString(),
+                            _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count);
+                    }
+
+                    _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Add(agent);
+                }
             }
 
             if (context.Method is "/IBlockChainService/GetNextTxNonce" && request is byte[] getNextTxNonceAddressBytes)
@@ -84,22 +94,26 @@ namespace NineChronicles.Headless.Middleware
                 _logger.Information(
                     "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method} Agent: {Agent} Header: {Header}",
                     ipAddress, context.Method, agent, uaHeader);
-                if (!_ipSignerList.ContainsKey(httpContext.Connection.RemoteIpAddress!.ToString()))
-                {
-                    _logger.Information(
-                        "[GRPC-REQUEST-CAPTURE] Creating a new list for IP: {IP}",
-                        httpContext.Connection.RemoteIpAddress!.ToString());
-                    _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()] = new HashSet<Address>();
-                }
-                else
-                {
-                    _logger.Information(
-                        "[GRPC-REQUEST-CAPTURE] List already created for IP: {IP} Count: {Count}",
-                        httpContext.Connection.RemoteIpAddress!.ToString(),
-                        _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count);
-                }
 
-                _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Add(agent);
+                if (_options.Value.EnableManaging)
+                {
+                    if (!_ipSignerList.ContainsKey(httpContext.Connection.RemoteIpAddress!.ToString()))
+                    {
+                        _logger.Information(
+                            "[GRPC-REQUEST-CAPTURE] Creating a new list for IP: {IP}",
+                            httpContext.Connection.RemoteIpAddress!.ToString());
+                        _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()] = new HashSet<Address>();
+                    }
+                    else
+                    {
+                        _logger.Information(
+                            "[GRPC-REQUEST-CAPTURE] List already created for IP: {IP} Count: {Count}",
+                            httpContext.Connection.RemoteIpAddress!.ToString(),
+                            _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count);
+                    }
+
+                    _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Add(agent);
+                }
             }
 
             if (context.Method is "/IBlockChainService/PutTransaction" && request is byte[] txBytes)
@@ -118,50 +132,66 @@ namespace NineChronicles.Headless.Middleware
                     AddClientByDevice(tx.Signer, uaHeader);
                 }
 
-                var agent = tx.Signer;
-                if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count > MultiAccountThresholdCount)
+                if (_options.Value.EnableManaging)
                 {
-                    _logger.Information(
-                        "[GRPC-REQUEST-CAPTURE] IP: {IP} List Count: {Count}, AgentAddresses: {Agent}",
-                        httpContext.Connection.RemoteIpAddress!.ToString(),
-                        _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count,
-                        _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()]);
-                    if (!MultiAccountManagementList.ContainsKey(agent))
+                    var agent = tx.Signer;
+                    if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count >
+                        _options.Value.ThresholdCount)
                     {
-                        if (!MultiAccountTxIntervalTracker.ContainsKey(agent))
+                        _logger.Information(
+                            "[GRPC-REQUEST-CAPTURE] IP: {IP} List Count: {Count}, AgentAddresses: {Agent}",
+                            httpContext.Connection.RemoteIpAddress!.ToString(),
+                            _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count,
+                            _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()]);
+                        if (!MultiAccountManagementList.ContainsKey(agent))
                         {
-                            _logger.Information($"[GRPC-REQUEST-CAPTURE] Adding agent {agent} to the agent tracker.");
-                            MultiAccountTxIntervalTracker.Add(agent, DateTimeOffset.Now);
-                        }
-                        else
-                        {
-                            if ((DateTimeOffset.Now - MultiAccountTxIntervalTracker[agent]).Minutes >= MultiAccountTxInterval)
+                            if (!MultiAccountTxIntervalTracker.ContainsKey(agent))
                             {
-                                _logger.Information($"[GRPC-REQUEST-CAPTURE] Resetting Agent {agent}'s time because it has been more than {MultiAccountTxInterval} minutes since the last transaction.");
-                                MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
+                                _logger.Information(
+                                    $"[GRPC-REQUEST-CAPTURE] Adding agent {agent} to the agent tracker.");
+                                MultiAccountTxIntervalTracker.Add(agent, DateTimeOffset.Now);
                             }
                             else
                             {
-                                _logger.Information($"[GRPC-REQUEST-CAPTURE] Managing Agent {agent} for {MultiAccountManagementTime} minutes due to {_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count} associated accounts.");
-                                ManageMultiAccount(agent);
-                                MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
-                                throw new RpcException(new Status(StatusCode.Cancelled, "Request cancelled."));
+                                if ((DateTimeOffset.Now - MultiAccountTxIntervalTracker[agent]).Minutes >=
+                                    _options.Value.TxIntervalMinutes)
+                                {
+                                    _logger.Information(
+                                        $"[GRPC-REQUEST-CAPTURE] Resetting Agent {agent}'s time because " +
+                                        $"it has been more than {_options.Value.TxIntervalMinutes} minutes since the last transaction.");
+                                    MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
+                                }
+                                else
+                                {
+                                    _logger.Information(
+                                        $"[GRPC-REQUEST-CAPTURE] Managing Agent {agent} for " +
+                                        $"{_options.Value.ManagementTimeMinutes} minutes due to " +
+                                        $"{_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count} associated accounts.");
+                                    ManageMultiAccount(agent);
+                                    MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
+                                    throw new RpcException(new Status(StatusCode.Cancelled, "Request cancelled."));
+                                }
                             }
-                        }
-                    }
-                    else
-                    {
-                        if ((DateTimeOffset.Now - MultiAccountManagementList[agent]).Minutes >= MultiAccountManagementTime)
-                        {
-                            _logger.Information($"[GRPC-REQUEST-CAPTURE] Restoring Agent {agent} after {MultiAccountManagementTime} minutes.");
-                            RestoreMultiAccount(agent);
-                            MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now.AddMinutes(-MultiAccountTxInterval);
-                            _logger.Information($"[GRPC-REQUEST-CAPTURE] Current time: {DateTimeOffset.Now} Added time: {DateTimeOffset.Now.AddMinutes(-MultiAccountTxInterval)}.");
                         }
                         else
                         {
-                            _logger.Information($"[GRPC-REQUEST-CAPTURE] Agent {agent} is in managed status for the next {MultiAccountManagementTime - (DateTimeOffset.Now - MultiAccountManagementList[agent]).Minutes} minutes.");
-                            throw new RpcException(new Status(StatusCode.Cancelled, "Request cancelled."));
+                            if ((DateTimeOffset.Now - MultiAccountManagementList[agent]).Minutes >=
+                                _options.Value.ManagementTimeMinutes)
+                            {
+                                _logger.Information(
+                                    $"[GRPC-REQUEST-CAPTURE] Restoring Agent {agent} after {_options.Value.ManagementTimeMinutes} minutes.");
+                                RestoreMultiAccount(agent);
+                                MultiAccountTxIntervalTracker[agent] =
+                                    DateTimeOffset.Now.AddMinutes(-(int)_options.Value.TxIntervalMinutes!);
+                                _logger.Information(
+                                    $"[GRPC-REQUEST-CAPTURE] Current time: {DateTimeOffset.Now} Added time: {DateTimeOffset.Now.AddMinutes(-(int)_options.Value.TxIntervalMinutes!)}.");
+                            }
+                            else
+                            {
+                                _logger.Information(
+                                    $"[GRPC-REQUEST-CAPTURE] Agent {agent} is in managed status for the next {_options.Value.ManagementTimeMinutes - (DateTimeOffset.Now - MultiAccountManagementList[agent]).Minutes} minutes.");
+                                throw new RpcException(new Status(StatusCode.Cancelled, "Request cancelled."));
+                            }
                         }
                     }
                 }

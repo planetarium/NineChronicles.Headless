@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Middleware;
 using NineChronicles.Headless.Properties;
@@ -112,6 +113,11 @@ namespace NineChronicles.Headless
                     services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
                 }
 
+                if (Convert.ToBoolean(Configuration.GetSection("MultiAccountManaging")["EnableManaging"]))
+                {
+                    services.Configure<MultiAccountManagerProperties>(Configuration.GetSection("MultiAccountManaging"));
+                }
+
                 if (!(Configuration[NoCorsKey] is null))
                 {
                     services.AddCors(
@@ -162,7 +168,9 @@ namespace NineChronicles.Headless
 
                 // Capture requests
                 Dictionary<string, HashSet<Address>> ipSignerList = new();
-                app.UseMiddleware<HttpCaptureMiddleware>(StandaloneContext, ipSignerList);
+                app.UseMiddleware<HttpCaptureMiddleware>(
+                    StandaloneContext,
+                    ipSignerList);
 
                 app.UseMiddleware<LocalAuthenticationMiddleware>();
                 if (Configuration[NoCorsKey] is null)

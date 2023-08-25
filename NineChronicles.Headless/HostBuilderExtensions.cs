@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +13,7 @@ using MessagePack;
 using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.Configuration;
 using Nekoyume.Action;
 using NineChronicles.Headless.Middleware;
 using NineChronicles.Headless.Services;
@@ -71,7 +73,8 @@ namespace NineChronicles.Headless
             this IHostBuilder builder,
             RpcNodeServiceProperties properties,
             ActionEvaluationPublisher actionEvaluationPublisher,
-            StandaloneContext standaloneContext
+            StandaloneContext standaloneContext,
+            IConfiguration configuration
         )
         {
             var context = new RpcContext
@@ -83,11 +86,19 @@ namespace NineChronicles.Headless
                 .ConfigureServices(services =>
                 {
                     Dictionary<string, HashSet<Address>> ipSignerList = new();
+                    if (Convert.ToBoolean(configuration.GetSection("MultiAccountManaging")["EnableManaging"]))
+                    {
+                        services.Configure<MultiAccountManagerProperties>(configuration.GetSection("MultiAccountManaging"));
+                    }
+
                     services.AddSingleton(_ => context);
                     services.AddGrpc(options =>
                     {
                         options.MaxReceiveMessageSize = null;
-                        options.Interceptors.Add<GrpcCaptureMiddleware>(standaloneContext, ipSignerList, actionEvaluationPublisher);
+                        options.Interceptors.Add<GrpcCaptureMiddleware>(
+                            standaloneContext,
+                            ipSignerList,
+                            actionEvaluationPublisher);
                     });
                     services.AddMagicOnion();
                     services.AddSingleton(_ => actionEvaluationPublisher);
