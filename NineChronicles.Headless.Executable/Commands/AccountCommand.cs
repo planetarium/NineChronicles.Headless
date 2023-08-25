@@ -11,6 +11,7 @@ using Libplanet.Types.Blocks;
 using Libplanet.Types.Tx;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using NineChronicles.Headless.Executable.IO;
 using Serilog.Core;
 using static NineChronicles.Headless.NCActionUtils;
@@ -53,7 +54,7 @@ namespace NineChronicles.Headless.Executable.Commands
             _console.Error.WriteLine("The offset block: #{0} {1}.", offset.Index, offset.Hash);
 
             Bencodex.Types.Dictionary goldCurrencyStateDict = (Bencodex.Types.Dictionary)
-                chain.GetState(GoldCurrencyState.Address);
+                LegacyModule.GetState(chain.GetWorldState(), GoldCurrencyState.Address);
             GoldCurrencyState goldCurrencyState = new GoldCurrencyState(goldCurrencyStateDict);
             Currency gold = goldCurrencyState.Currency;
 

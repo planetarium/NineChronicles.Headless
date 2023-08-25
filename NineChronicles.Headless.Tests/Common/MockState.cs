@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Numerics;
+using System.Security.Cryptography;
 using Bencodex.Types;
 using Libplanet.Action.State;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
 using Libplanet.Types.Consensus;
 
 namespace NineChronicles.Headless.Tests.Common
@@ -84,6 +87,10 @@ namespace NineChronicles.Headless.Tests.Common
         public IImmutableDictionary<Currency, BigInteger> TotalSupplies => _totalSupplies;
 
         public ValidatorSet ValidatorSet => _validatorSet;
+
+        public Address Address { get; }
+        public HashDigest<SHA256>? StateRootHash { get; }
+        public BlockHash? BlockHash { get; }
 
         public IValue? GetState(Address address) => _states.TryGetValue(address, out IValue? value)
             ? value

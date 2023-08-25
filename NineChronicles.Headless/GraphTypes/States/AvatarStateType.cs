@@ -6,6 +6,7 @@ using Libplanet.Action;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Action.State;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using NineChronicles.Headless.GraphTypes.States.Models;
 using NineChronicles.Headless.GraphTypes.States.Models.World;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
@@ -18,8 +19,8 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class AvatarStateContext : StateContext
         {
-            public AvatarStateContext(AvatarState avatarState, IAccountState accountState, long blockIndex)
-                : base(accountState, blockIndex)
+            public AvatarStateContext(AvatarState avatarState, IWorldState worldState, long blockIndex)
+                : base(worldState, blockIndex)
             {
                 AvatarState = avatarState;
             }
@@ -54,12 +55,13 @@ namespace NineChronicles.Headless.GraphTypes.States
                 description: "The index of this avatar state among its agent's avatar addresses.",
                 resolve: context =>
                 {
-                    if (!(context.Source.GetState(context.Source.AvatarState.agentAddress) is Dictionary dictionary))
+                    if (AgentModule.GetAgentState(
+                            context.Source.WorldState,
+                            context.Source.AvatarState.agentAddress) is not { } agentState)
                     {
                         throw new InvalidOperationException();
                     }
 
-                    var agentState = new AgentState(dictionary);
                     return agentState.avatarAddresses
                         .First(x => x.Value.Equals(context.Source.AvatarState.address))
                         .Key;
@@ -116,7 +118,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context =>
                 {
                     var addresses = context.Source.AvatarState.combinationSlotAddresses;
-                    return context.Source.AccountState.GetStates(addresses)
+                    return LegacyModule.GetStates(context.Source.WorldState, addresses)
                         .OfType<Dictionary>()
                         .Select(x => new CombinationSlotState(x));
                 });

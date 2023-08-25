@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using GraphQL.Types;
-using Nekoyume.Action;
+using Nekoyume.Model;
 
 namespace NineChronicles.Headless.GraphTypes
 {

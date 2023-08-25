@@ -21,6 +21,7 @@ using Libplanet.Store.Trie;
 using Libplanet.Types.Assets;
 using Libplanet.Types.Blocks;
 using Nekoyume.Action.Loader;
+using Nekoyume.Module;
 using NineChronicles.Headless.Executable.IO;
 using Serilog.Core;
 using DevExUtils = Lib9c.DevExtensions.Utils;
@@ -149,8 +150,12 @@ namespace NineChronicles.Headless.Executable.Commands
                         $"block_{block.Index}_{block.Hash}"
                     );
                     string deltaDump = DumpBencodexToFile(
-                        new Dictionary(
-                            GetTotalDelta(delta, ToStateKey, ToFungibleAssetKey, ToTotalSupplyKey, ValidatorSetKey)),
+                        GetTotalDelta(
+                            delta,
+                            ToStateKey,
+                            ToFungibleAssetKey,
+                            ToTotalSupplyKey,
+                            ValidatorSetKey),
                         $"delta_{block.Index}_{block.Hash}"
                     );
                     string message =
@@ -439,34 +444,43 @@ namespace NineChronicles.Headless.Executable.Commands
                 _dictionary.Keys;
         }
 
-        private static ImmutableDictionary<string, IValue> GetTotalDelta(
-            IReadOnlyList<IActionEvaluation> actionEvaluations,
+        private static Dictionary
+            GetTotalDelta(
+                IReadOnlyList<IActionEvaluation> actionEvaluations,
+                Func<Address, string> toStateKey,
+                Func<(Address, Currency), string> toFungibleAssetKey,
+                Func<Currency, string> toTotalSupplyKey,
+                string validatorSetKey)
+        {
+            var deltas = actionEvaluations.Select(eval => eval.OutputState.Delta);
+            IImmutableDictionary<Address, IAccount> accounts = deltas.Aggregate(
+                ImmutableDictionary<Address, IAccount>.Empty,
+                (prev, next) => prev.SetItems(next.Accounts));
+            var rawStates = accounts.Select(
+                kv => new KeyValuePair<string, Dictionary>(
+                    toStateKey(kv.Key),
+                    GetTotalAccountDelta(kv.Value, toStateKey, toFungibleAssetKey, toTotalSupplyKey, validatorSetKey)));
+            return new Dictionary(ImmutableDictionary<string, Dictionary>.Empty.SetItems(rawStates));
+        }
+
+        private static Dictionary GetTotalAccountDelta(
+            IAccount account,
             Func<Address, string> toStateKey,
             Func<(Address, Currency), string> toFungibleAssetKey,
             Func<Currency, string> toTotalSupplyKey,
             string validatorSetKey)
         {
-            IImmutableSet<Address> stateUpdatedAddresses = actionEvaluations
-                .SelectMany(a => a.OutputState.Delta.StateUpdatedAddresses)
+            IImmutableSet<Address> stateUpdatedAddresses = account.Delta.StateUpdatedAddresses
                 .ToImmutableHashSet();
-            IImmutableSet<(Address, Currency)> updatedFungibleAssets = actionEvaluations
-                .SelectMany(a => a.OutputState.Delta.UpdatedFungibleAssets)
+            IImmutableSet<(Address, Currency)> updatedFungibleAssets = account.Delta.UpdatedFungibleAssets
                 .ToImmutableHashSet();
-            IImmutableSet<Currency> updatedTotalSupplies = actionEvaluations
-                .SelectMany(a => a.OutputState.Delta.UpdatedTotalSupplyCurrencies)
+            IImmutableSet<Currency> updatedTotalSupplies = account.Delta.UpdatedTotalSupplyCurrencies
                 .ToImmutableHashSet();
-
-            if (actionEvaluations.Count == 0)
-            {
-                return ImmutableDictionary<string, IValue>.Empty;
-            }
-
-            IAccountStateDelta lastStates = actionEvaluations[actionEvaluations.Count - 1].OutputState;
 
             ImmutableDictionary<string, IValue> totalDelta =
                 stateUpdatedAddresses.ToImmutableDictionary(
                     toStateKey,
-                    a => lastStates.GetState(a) ??
+                    a => account.GetState(a) ??
                          throw new InvalidOperationException(
                              "If it was updated well, the output states will include it also.")
                 ).SetItems(
@@ -474,7 +488,7 @@ namespace NineChronicles.Headless.Executable.Commands
                         new KeyValuePair<string, IValue>(
                             toFungibleAssetKey(pair),
                             new Bencodex.Types.Integer(
-                                lastStates.GetBalance(pair.Item1, pair.Item2).RawValue
+                                account.GetBalance(pair.Item1, pair.Item2).RawValue
                             )
                         )
                     )
@@ -482,7 +496,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             foreach (var currency in updatedTotalSupplies)
             {
-                if (lastStates.GetTotalSupply(currency).RawValue is { } rawValue)
+                if (account.GetTotalSupply(currency).RawValue is { } rawValue)
                 {
                     totalDelta = totalDelta.SetItem(
                         toTotalSupplyKey(currency),
@@ -491,7 +505,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
             }
 
-            if (lastStates.GetValidatorSet() is { } validatorSet && validatorSet.Validators.Any())
+            if (account.GetValidatorSet() is { } validatorSet && validatorSet.Validators.Any())
             {
                 totalDelta = totalDelta.SetItem(
                     validatorSetKey,
@@ -499,7 +513,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 );
             }
 
-            return totalDelta;
+            return new Dictionary(totalDelta);
         }
 
         private static string ToStateKey(Address address) => ByteUtil.Hex(address.ByteArray);

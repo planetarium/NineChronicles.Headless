@@ -14,6 +14,7 @@ using Libplanet.Store;
 using Libplanet.Types.Tx;
 using Nekoyume.Action;
 using Nekoyume.Model.Item;
+using Nekoyume.Module;
 using NineChronicles.Headless.Executable.IO;
 using Serilog.Core;
 using static NineChronicles.Headless.NCActionUtils;
@@ -50,7 +51,7 @@ namespace NineChronicles.Headless.Executable.Commands
             [Option(
                 'T',
                 Description = "Filter by item type.  This implicitly filters out transactions " +
-                              "made with " + nameof(Buy) + " action version prior to " + nameof(Buy5) +
+                              "made with " + nameof(Buy) + " action version prior to Buy5" +
                               ".  This can be applied multiple times (meaning: match any of them).  " +
                               "The list of available types can be found in " + nameof(ItemSubType) +
                               " enum declared in Lib9c/Model/Item/ItemType.cs file.")]
@@ -131,7 +132,7 @@ namespace NineChronicles.Headless.Executable.Commands
                         {
                             int? quantity = null;
                             if (p.OrderId is { } oid &&
-                                chain.GetState(GetOrderAddress(oid)) is Dictionary rawOrder)
+                                LegacyModule.GetState(chain.GetWorldState(), GetOrderAddress(oid)) is Dictionary rawOrder)
                             {
                                 if (OrderFactory.Deserialize(rawOrder) is FungibleOrder fo)
                                 {

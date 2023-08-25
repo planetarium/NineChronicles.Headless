@@ -1,17 +1,9 @@
-using System;
 using Bencodex.Types;
 using GraphQL.Types;
-using Libplanet.Action;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Action.State;
 using Nekoyume.Model.State;
-using NineChronicles.Headless.GraphTypes.States.Models;
-using NineChronicles.Headless.GraphTypes.States.Models.World;
-using NineChronicles.Headless.GraphTypes.States.Models.Item;
-using NineChronicles.Headless.GraphTypes.States.Models.Mail;
-using NineChronicles.Headless.GraphTypes.States.Models.Quest;
-using Nekoyume.Blockchain.Policy;
-using Nekoyume;
+using Nekoyume.Module;
 
 namespace NineChronicles.Headless.GraphTypes.States
 {
@@ -19,8 +11,8 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class StakeStateContext : StateContext
         {
-            public StakeStateContext(StakeState stakeState, IAccountState accountState, long blockIndex)
-                : base(accountState, blockIndex)
+            public StakeStateContext(StakeState stakeState, IWorldState worldState, long blockIndex)
+                : base(worldState, blockIndex)
             {
                 StakeState = stakeState;
             }
@@ -37,9 +29,14 @@ namespace NineChronicles.Headless.GraphTypes.States
             Field<NonNullGraphType<StringGraphType>>(
                 "deposit",
                 description: "The staked amount.",
-                resolve: context => context.Source.AccountState.GetBalance(
+                resolve: context => LegacyModule.GetBalance(
+                        context.Source.WorldState,
                         context.Source.StakeState.address,
-                        new GoldCurrencyState((Dictionary)context.Source.GetState(GoldCurrencyState.Address)!).Currency)
+                        new GoldCurrencyState(
+                                (Dictionary)LegacyModule.GetState(
+                                    context.Source.WorldState,
+                                    GoldCurrencyState.Address)!)
+                            .Currency)
                     .GetQuantityString(true));
             Field<NonNullGraphType<IntGraphType>>(
                 nameof(StakeState.StartedBlockIndex),
