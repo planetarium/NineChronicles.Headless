@@ -16,6 +16,7 @@ namespace NineChronicles.Headless.Middleware
     {
         private const int MultiAccountManagementTime = 5;
         private const int MultiAccountTxInterval = 10;
+        private const int MultiAccountThresholdCount = 0;
         private static Dictionary<Address, DateTimeOffset> _multiAccountTxIntervalTracker = new();
         private static Dictionary<Address, DateTimeOffset> _multiAccountList = new();
         private readonly ILogger _logger;
@@ -119,7 +120,7 @@ namespace NineChronicles.Headless.Middleware
                 }
 
                 var agent = tx.Signer;
-                if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count > 0)
+                if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count >= MultiAccountThresholdCount)
                 {
                     _logger.Information(
                         "[GRPC-REQUEST-CAPTURE] IP: {IP} List Count: {Count}, AgentAddresses: {Agent}",

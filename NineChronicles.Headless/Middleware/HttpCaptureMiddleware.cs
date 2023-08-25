@@ -18,6 +18,7 @@ namespace NineChronicles.Headless.Middleware
     {
         private const int MultiAccountManagementTime = 5;
         private const int MultiAccountTxInterval = 10;
+        private const int MultiAccountThresholdCount = 0;
         private static Dictionary<Address, DateTimeOffset> _multiAccountTxIntervalTracker = new();
         private static Dictionary<Address, DateTimeOffset> _multiAccountList = new();
         private readonly RequestDelegate _next;
@@ -81,7 +82,7 @@ namespace NineChronicles.Headless.Middleware
                         var agent = tx.Signer;
                         if (_ipSignerList.ContainsKey(context.Connection.RemoteIpAddress!.ToString()))
                         {
-                            if (_ipSignerList[context.Connection.RemoteIpAddress!.ToString()].Count > 0)
+                            if (_ipSignerList[context.Connection.RemoteIpAddress!.ToString()].Count >= MultiAccountThresholdCount)
                             {
                                 _logger.Information(
                                     "[GRAPHQL-REQUEST-CAPTURE] IP: {IP} List Count: {Count}, AgentAddresses: {Agent}",
@@ -108,10 +109,7 @@ namespace NineChronicles.Headless.Middleware
                                             _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Managing Agent {agent} for {MultiAccountManagementTime} minutes due to {_ipSignerList[context.Connection.RemoteIpAddress!.ToString()].Count} associated accounts.");
                                             ManageMultiAccount(agent);
                                             _multiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
-                                            var message = "{ \"message\": \"Request cancelled.\" }";
-                                            context.Response.StatusCode = 403;
-                                            context.Response.ContentType = "application/json";
-                                            await context.Response.WriteAsync(message);
+                                            CancelRequest(context);
                                             return;
                                         }
                                     }
@@ -128,11 +126,7 @@ namespace NineChronicles.Headless.Middleware
                                     else
                                     {
                                         _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Agent {agent} is in managed status for the next {MultiAccountManagementTime - (DateTimeOffset.Now - _multiAccountList[agent]).Minutes} minutes.");
-                                        context.Response.StatusCode = 403;
-                                        var message = "{ \"message\": \"Request cancelled.\" }";
-                                        context.Response.StatusCode = 403;
-                                        context.Response.ContentType = "application/json";
-                                        await context.Response.WriteAsync(message);
+                                        CancelRequest(context);
                                         return;
                                     }
                                 }
@@ -174,6 +168,14 @@ namespace NineChronicles.Headless.Middleware
             }
 
             _ipSignerList[ip].Add(agent);
+        }
+
+        private async void CancelRequest(HttpContext context)
+        {
+            var message = "{ \"message\": \"Request cancelled.\" }";
+            context.Response.StatusCode = 403;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(message);
         }
     }
 }
