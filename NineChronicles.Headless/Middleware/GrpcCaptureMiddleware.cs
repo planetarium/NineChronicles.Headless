@@ -121,6 +121,11 @@ namespace NineChronicles.Headless.Middleware
                 var agent = tx.Signer;
                 if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count > 0)
                 {
+                    _logger.Information(
+                        "[GRPC-REQUEST-CAPTURE] IP: {IP} List Count: {Count}, AgentAddresses: {Agent}",
+                        httpContext.Connection.RemoteIpAddress!.ToString(),
+                        _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count,
+                        _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()]);
                     if (!_multiAccountList.ContainsKey(agent))
                     {
                         if (!_multiAccountTxIntervalTracker.ContainsKey(agent))
@@ -140,8 +145,7 @@ namespace NineChronicles.Headless.Middleware
                                 _logger.Information($"[GRPC-REQUEST-CAPTURE] Managing Agent {agent} for {MultiAccountManagementTime} minutes due to {_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count} associated accounts.");
                                 ManageMultiAccount(agent);
                                 _multiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
-                                var ncStagePolicy = (NCStagePolicy)_standaloneContext.BlockChain!.StagePolicy;
-                                ncStagePolicy.BannedAccounts = ncStagePolicy.BannedAccounts.Add(agent);
+                                throw new RpcException(new Status(StatusCode.Cancelled, "Request cancelled."));
                             }
                         }
                     }
@@ -153,21 +157,15 @@ namespace NineChronicles.Headless.Middleware
                             RestoreMultiAccount(agent);
                             _multiAccountTxIntervalTracker[agent] = DateTimeOffset.Now.AddMinutes(-MultiAccountTxInterval);
                             _logger.Information($"[GRPC-REQUEST-CAPTURE] Current time: {DateTimeOffset.Now} Added time: {DateTimeOffset.Now.AddMinutes(-MultiAccountTxInterval)}.");
-                            var ncStagePolicy = (NCStagePolicy)_standaloneContext.BlockChain!.StagePolicy;
-                            ncStagePolicy.BannedAccounts = ncStagePolicy.BannedAccounts.Remove(agent);
                         }
                         else
                         {
                             _logger.Information($"[GRPC-REQUEST-CAPTURE] Agent {agent} is in managed status for the next {MultiAccountManagementTime - (DateTimeOffset.Now - _multiAccountList[agent]).Minutes} minutes.");
+                            throw new RpcException(new Status(StatusCode.Cancelled, "Request cancelled."));
                         }
                     }
-
-                    _logger.Information(
-                        "[GRPC-REQUEST-CAPTURE] IP: {IP} List Count: {Count}, AgentAddresses: {Agent}",
-                        httpContext.Connection.RemoteIpAddress!.ToString(),
-                        _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count,
-                        _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()]);
                 }
+
                 _logger.Information(
                     "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method} Agent: {Agent} Action: {Action}",
                     ipAddress, context.Method, tx.Signer, actionName);
