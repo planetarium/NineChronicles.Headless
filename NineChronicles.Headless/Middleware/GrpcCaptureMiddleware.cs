@@ -119,7 +119,7 @@ namespace NineChronicles.Headless.Middleware
                 }
 
                 var agent = tx.Signer;
-                if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count > 49)
+                if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count > 0)
                 {
                     if (!_multiAccountList.ContainsKey(agent))
                     {

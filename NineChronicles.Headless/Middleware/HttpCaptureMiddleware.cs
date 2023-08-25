@@ -78,7 +78,7 @@ namespace NineChronicles.Headless.Middleware
                         var agent = tx.Signer;
                         if (_ipSignerList.ContainsKey(context.Connection.RemoteIpAddress!.ToString()))
                         {
-                            if (_ipSignerList[context.Connection.RemoteIpAddress!.ToString()].Count > 49)
+                            if (_ipSignerList[context.Connection.RemoteIpAddress!.ToString()].Count > 0)
                             {
                                 if (!_multiAccountList.ContainsKey(agent))
                                 {
