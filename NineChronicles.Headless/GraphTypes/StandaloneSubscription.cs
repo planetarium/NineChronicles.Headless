@@ -9,6 +9,7 @@ using Libplanet.Headless;
 using Libplanet.Net;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -22,6 +23,8 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using Libplanet.Blockchain;
+using Libplanet.Store;
+using Libplanet.Types.Tx;
 using Serilog;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -38,6 +41,21 @@ namespace NineChronicles.Headless.GraphTypes
             {
                 Field<NonNullGraphType<LongGraphType>>(nameof(Index));
                 Field<ByteStringType>("hash", resolve: context => context.Source.Hash.ToByteArray());
+            }
+        }
+
+        class Tx
+        {
+            public Transaction? Transaction { get; set; }
+            public TxResult? TxResult { get; set; }
+        }
+
+        class TxType : ObjectGraphType<Tx>
+        {
+            public TxType()
+            {
+                Field<NonNullGraphType<TransactionType>>(nameof(Transaction));
+                Field<TxResultType>(nameof(TxResult));
             }
         }
 
@@ -106,6 +124,8 @@ namespace NineChronicles.Headless.GraphTypes
 
         private ISubject<TipChanged> _subject = new ReplaySubject<TipChanged>();
 
+        private ISubject<Transaction> _transactionSubject = new Subject<Transaction>();
+
         private StandaloneContext StandaloneContext { get; }
 
         public StandaloneSubscription(StandaloneContext standaloneContext)
@@ -117,6 +137,20 @@ namespace NineChronicles.Headless.GraphTypes
                 Type = typeof(TipChanged),
                 Resolver = new FuncFieldResolver<TipChanged>(ResolveTipChanged),
                 Subscriber = new EventStreamResolver<TipChanged>(SubscribeTipChanged),
+            });
+            AddField(new EventStreamFieldType
+            {
+                Name = "tx",
+                Type = typeof(TxType),
+                Arguments = new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Description = "A type of action in transaction.",
+                        Name = "actionType",
+                    }
+                ),
+                Resolver = new FuncFieldResolver<Tx>(ResolveTx),
+                Subscriber = new EventStreamResolver<Tx>(SubscribeTx),
             });
             AddField(new EventStreamFieldType
             {
@@ -248,6 +282,74 @@ namespace NineChronicles.Headless.GraphTypes
         {
             return _subject.AsObservable();
         }
+
+        private Tx ResolveTx(IResolveFieldContext context)
+        {
+            return context.Source as Tx ?? throw new InvalidOperationException();
+        }
+
+        private IObservable<Tx> SubscribeTx(IResolveFieldContext context)
+        {
+            var chain = StandaloneContext.BlockChain
+                        ?? throw new InvalidOperationException($"{nameof(StandaloneContext.BlockChain)} is null.");
+            var store = StandaloneContext.Store
+                        ?? throw new InvalidOperationException($"{nameof(StandaloneContext.Store)} is null");
+            var actionType = context.GetArgument<string>("actionType");
+
+            return _transactionSubject.AsObservable()
+                .Where(tx => tx.Actions.Any(rawAction =>
+                {
+                    if (rawAction is not Dictionary action || action["type_id"] is not Text typeId)
+                    {
+                        return false;
+                    }
+
+                    return typeId == actionType;
+                }))
+                .Select(transaction => new Tx
+                {
+                    Transaction = transaction,
+                    TxResult = GetTxResult(transaction, store, chain),
+                });
+        }
+
+        private TxResult? GetTxResult(Transaction transaction, IStore store, BlockChain chain)
+        {
+            if (store.GetFirstTxIdBlockHashIndex(transaction.Id) is not { } blockHash)
+            {
+                return null;
+            }
+            var txExecution = store.GetTxExecution(blockHash, transaction.Id);
+            var txExecutedBlock = chain[blockHash];
+
+            return txExecution switch
+            {
+                TxSuccess success => new TxResult(
+                    TxStatus.SUCCESS,
+                    txExecutedBlock.Index,
+                    txExecutedBlock.Hash.ToString(),
+                    null,
+                    null,
+                    success.UpdatedStates
+                        .Select(kv => new KeyValuePair<Address, IValue>(
+                            kv.Key,
+                            kv.Value))
+                        .ToImmutableDictionary(),
+                    success.FungibleAssetsDelta,
+                    success.UpdatedFungibleAssets),
+                TxFailure failure => new TxResult(
+                    TxStatus.FAILURE,
+                    txExecutedBlock.Index,
+                    txExecutedBlock.Hash.ToString(),
+                    failure.ExceptionName,
+                    failure.ExceptionMetadata,
+                    null,
+                    null,
+                    null),
+                _ => null
+            };
+        }
+
         private void RenderBlock((Block OldTip, Block NewTip) pair)
         {
             _tipHeader = pair.NewTip.Header;
@@ -258,6 +360,10 @@ namespace NineChronicles.Headless.GraphTypes
                     Hash = pair.NewTip.Hash,
                 }
             );
+            foreach (var transaction in pair.NewTip.Transactions)
+            {
+                _transactionSubject.OnNext(transaction);
+            }
 
             if (StandaloneContext.NineChroniclesNodeService is null)
             {

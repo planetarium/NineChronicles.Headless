@@ -1,10 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using Bencodex;
+using Bencodex.Json;
 using GraphQL;
 using GraphQL.Types;
 using Bencodex.Types;
+using GraphQL.NewtonsoftJson;
 using Lib9c;
 using Libplanet.Blockchain;
 using Libplanet.Types.Tx;
@@ -56,6 +63,46 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var txId = context.GetArgument<TxId>("txId");
                     return blockChain.GetTransaction(txId);
+                }
+            );
+
+
+            Field<ListGraphType<TransactionType>>(
+                name: "ncTransactions",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<LongGraphType>>
+                    { Name = "startingBlockIndex", Description = "start block index for query tx." },
+                    new QueryArgument<NonNullGraphType<LongGraphType>>
+                    { Name = "limit", Description = "number of block to query." },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    { Name = "actionType", Description = "filter tx by having actions' type" }
+                ),
+                resolve: context =>
+                {
+                    if (standaloneContext.BlockChain is not { } blockChain)
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    var startingBlockIndex = context.GetArgument<long>("startingBlockIndex");
+                    var limit = context.GetArgument<long>("limit");
+                    var actionType = context.GetArgument<string>("actionType");
+
+                    var blocks = ListBlocks(blockChain, startingBlockIndex, limit);
+                    var transactions = blocks
+                        .SelectMany(block => block.Transactions)
+                        .Where(tx => tx.Actions.Any(rawAction =>
+                        {
+                            if (rawAction is not Dictionary action || action["type_id"] is not Text typeId)
+                            {
+                                return false;
+                            }
+
+                            return typeId == actionType;
+                        }));
+
+                    return transactions;
                 }
             );
 
@@ -282,6 +329,23 @@ namespace NineChronicles.Headless.GraphTypes
                     return signedTransaction.Serialize();
                 }
             );
+        }
+
+        private IEnumerable<Block> ListBlocks(BlockChain chain, long from, long limit)
+        {
+            if (chain.Tip.Index < from)
+            {
+                return new List<Block>();
+            }
+
+            var count = (int)Math.Min(limit, chain.Tip.Index - from);
+            var blocks = Enumerable.Range(0, count)
+                .ToList()
+                .AsParallel()
+                .Select(offset => chain[from + offset])
+                .OrderBy(block => block.Index);
+
+            return blocks;
         }
     }
 }
