@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet.Crypto;
@@ -29,10 +30,10 @@ public partial class ActionQuery
                     Name = "itemId",
                     Description = "Target item ID to enhance"
                 },
-                new QueryArgument<NonNullGraphType<GuidGraphType>>
+                new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<GuidGraphType>>>>
                 {
-                    Name = "materialId",
-                    Description = "Material ID to enhance"
+                    Name = "materialIds",
+                    Description = "Material ID list to enhance"
                 }
             ),
             resolve: context =>
@@ -40,13 +41,13 @@ public partial class ActionQuery
                 var avatarAddress = context.GetArgument<Address>("avatarAddress");
                 var slotIndex = context.GetArgument<int>("slotIndex");
                 var itemId = context.GetArgument<Guid>("itemId");
-                var materialId = context.GetArgument<Guid>("materialId");
+                var materialIds = context.GetArgument<List<Guid>>("materialIds");
                 ActionBase action = new ItemEnhancement
                 {
                     avatarAddress = avatarAddress,
                     slotIndex = slotIndex,
                     itemId = itemId,
-                    materialId = materialId
+                    materialIds = materialIds
                 };
                 return Encode(context, action);
             }

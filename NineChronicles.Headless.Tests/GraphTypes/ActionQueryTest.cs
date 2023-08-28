@@ -886,7 +886,7 @@ actionPoint: {actionPoint},
             var materialId = Guid.NewGuid();
 
             var query = $"{{itemEnhancement(avatarAddress: \"{avatarAddress}\", slotIndex: {slotIndex}, " +
-                        $"itemId: \"{itemId}\", materialId: \"{materialId}\")}}";
+                        $"itemId: \"{itemId}\", materialIds: [\"{materialId}\"])}}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
             Assert.Null(queryResult.Errors);
 
@@ -898,7 +898,7 @@ actionPoint: {actionPoint},
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(slotIndex, action.slotIndex);
             Assert.Equal(itemId, action.itemId);
-            Assert.Equal(materialId, action.materialId);
+            Assert.Contains(materialId, action.materialIds);
         }
 
         [Fact]
