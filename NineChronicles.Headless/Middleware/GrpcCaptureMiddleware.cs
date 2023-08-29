@@ -182,9 +182,9 @@ namespace NineChronicles.Headless.Middleware
                                     $"[GRPC-REQUEST-CAPTURE] Restoring Agent {agent} after {_options.Value.ManagementTimeMinutes} minutes.");
                                 RestoreMultiAccount(agent);
                                 MultiAccountTxIntervalTracker[agent] =
-                                    DateTimeOffset.Now.AddMinutes(-(int)_options.Value.TxIntervalMinutes!);
+                                    DateTimeOffset.Now.AddMinutes(-_options.Value.TxIntervalMinutes);
                                 _logger.Information(
-                                    $"[GRPC-REQUEST-CAPTURE] Current time: {DateTimeOffset.Now} Added time: {DateTimeOffset.Now.AddMinutes(-(int)_options.Value.TxIntervalMinutes!)}.");
+                                    $"[GRPC-REQUEST-CAPTURE] Current time: {DateTimeOffset.Now} Added time: {DateTimeOffset.Now.AddMinutes(-_options.Value.TxIntervalMinutes)}.");
                             }
                             else
                             {

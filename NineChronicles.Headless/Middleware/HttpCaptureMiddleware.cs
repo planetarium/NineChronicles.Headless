@@ -125,8 +125,8 @@ namespace NineChronicles.Headless.Middleware
                                         {
                                             _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Restoring Agent {agent} after {_options.Value.ManagementTimeMinutes} minutes.");
                                             RestoreMultiAccount(agent);
-                                            MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now.AddMinutes((int)-_options.Value.TxIntervalMinutes!);
-                                            _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Current time: {DateTimeOffset.Now} Added time: {DateTimeOffset.Now.AddMinutes((int)-_options.Value.TxIntervalMinutes!)}.");
+                                            MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now.AddMinutes(-_options.Value.TxIntervalMinutes);
+                                            _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Current time: {DateTimeOffset.Now} Added time: {DateTimeOffset.Now.AddMinutes(-_options.Value.TxIntervalMinutes)}.");
                                         }
                                         else
                                         {
