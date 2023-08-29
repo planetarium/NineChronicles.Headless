@@ -88,10 +88,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 2,
                 new Address("0x47D082a115c63E7b58B1532d20E631538eaFADde"));
 #pragma warning restore CS0618
-            MockState mockState = MockState.Empty;
+            MockAccountState mockAccountState = MockAccountState.Empty;
 
             // NCG
-            mockState = mockState
+            mockAccountState = mockAccountState
                 .SetState(
                     Addresses.GoldCurrency,
                     new GoldCurrencyState(goldCurrency).Serialize());
@@ -118,7 +118,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             .SetItem("elemental_type", ElementalType.Normal.Serialize())
                             .SetItem("item_id", HashDigest<SHA256>.FromString(fid).Serialize()));
 
-                        mockState = mockState
+                        mockAccountState = mockAccountState
                             .SetState(
                                 Addresses.GetGarageAddress(
                                     agentAddr,
@@ -133,17 +133,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             // testing without setting up any balance passes the tests;
             // also this is different from the original test setup as there is no way
             // to allow state to have "infinite" FAVs with all possible addresses having FAVs
-            mockState = mockState
+            mockAccountState = mockAccountState
                 .SetBalance(agentAddr, new FungibleAssetValue(goldCurrency, 99, 99))
                 .SetBalance(agentAddr, new FungibleAssetValue(Currencies.Crystal, 99, 123456789012345678))
                 .SetBalance(agentAddr, new FungibleAssetValue(Currencies.Garage, 99, 123456789012345678))
                 .SetBalance(agentAddr, new FungibleAssetValue(Currencies.Mead, 99, 0));
-
+            MockWorld mockWorld = new MockWorld(new MockAccount(mockAccountState));
+            
             var queryResult = await ExecuteQueryAsync<StateQuery>(
                 sb.ToString(),
-                source: new StateContext(
-                    mockState,
-                    0L));
+                source: new StateContext(mockWorld, 0L));
             Assert.Null(queryResult.Errors);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var garages = (Dictionary<string, object>)data["garages"];

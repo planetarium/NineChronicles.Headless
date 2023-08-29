@@ -5,7 +5,7 @@ using GraphQL.Execution;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
 using Nekoyume;
-using Nekoyume.Action;
+using Nekoyume.Action.Extensions;
 using Nekoyume.Helper;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
@@ -57,7 +57,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             MonsterCollectionState monsterCollectionState = new MonsterCollectionState(monsterCollectionAddress, 7, 0, Fixtures.TableSheetsFX.MonsterCollectionRewardSheet);
             Address pledgeAddress = agentState.address.GetPledgeAddress();
 
-            MockState mockState = MockState.Empty
+            MockAccountState mockAccountState = MockAccountState.Empty
                 .SetState(GoldCurrencyState.Address, new GoldCurrencyState(goldCurrency).Serialize())
                 .SetState(monsterCollectionAddress, monsterCollectionState.Serialize())
                 .SetState(Fixtures.AvatarAddress, Fixtures.AvatarStateFX.Serialize())
@@ -69,10 +69,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                         .Add(4.Serialize()))
                 .SetBalance(agentState.address, CrystalCalculator.CRYSTAL * crystalBalance)
                 .SetBalance(agentState.address, goldCurrency * goldBalance);
+            MockWorld mockWorld = new MockWorld(new MockAccount(mockAccountState));
 
             var queryResult = await ExecuteQueryAsync<AgentStateType>(
                 query,
-                source: new AgentStateType.AgentStateContext(agentState, mockState, 0)
+                source: new AgentStateType.AgentStateContext(agentState, mockWorld, 0)
             );
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var expected = new Dictionary<string, object>()

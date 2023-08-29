@@ -182,7 +182,6 @@ namespace NineChronicles.Headless.Executable.Commands
             if (config is null)
             {
                 _console.Out.WriteLine("Extra config not provided");
-                return;
             }
         }
 

@@ -22,14 +22,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 agentAddress
                 index
             }";
-            MockState mockState = MockState.Empty
+            MockAccountState mockAccountState = MockAccountState.Empty
                 .SetState(Fixtures.AvatarAddress, Fixtures.AvatarStateFX.Serialize())
                 .SetState(Fixtures.UserAddress, Fixtures.AgentStateFx.Serialize());
+            MockWorld mockWorld = new MockWorld(new MockAccount(mockAccountState));
             var queryResult = await ExecuteQueryAsync<AvatarStateType>(
                 query,
                 source: new AvatarStateType.AvatarStateContext(
                     avatarState,
-                    mockState,
+                    mockWorld,
                     0));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
@@ -51,23 +52,25 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 }
             }
             ";
-            MockState mockState = MockState.Empty
+            MockAccountState mockAccountState = MockAccountState.Empty
                 .SetState(Fixtures.AvatarAddress, Fixtures.AvatarStateFX.Serialize())
                 .SetState(Fixtures.UserAddress, Fixtures.AgentStateFx.Serialize());
 
             for (int i = 0; i < Fixtures.AvatarStateFX.combinationSlotAddresses.Count; i++)
             {
-                mockState = mockState
+                mockAccountState = mockAccountState
                     .SetState(
                         Fixtures.AvatarStateFX.combinationSlotAddresses[i],
                         Fixtures.CombinationSlotStatesFx[i].Serialize());
             }
 
+            MockWorld mockWorld = new MockWorld(new MockAccount(mockAccountState));
+
             var queryResult = await ExecuteQueryAsync<AvatarStateType>(
                 query,
                 source: new AvatarStateType.AvatarStateContext(
                     avatarState,
-                    mockState,
+                    mockWorld,
                     0));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);

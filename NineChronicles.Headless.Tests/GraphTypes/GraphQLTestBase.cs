@@ -87,7 +87,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                         new ValidatorSet(
                             new[] { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }
                                 .ToList()),
-                        states: ImmutableDictionary.Create<Address, IValue>())
+                        states: ImmutableDictionary.Create<Address, IImmutableDictionary<Address, IValue>>())
                 }.Select((sa, nonce) => Transaction.Create(nonce + 1, AdminPrivateKey, null, new[] { sa.PlainValue }))),
                 privateKey: AdminPrivateKey);
 

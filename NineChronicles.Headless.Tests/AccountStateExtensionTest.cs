@@ -1,4 +1,5 @@
-using Nekoyume.Action;
+using Nekoyume.Action.Extensions;
+using Nekoyume.Model.Exceptions;
 using NineChronicles.Headless.Tests.Common;
 using Xunit;
 using static Lib9c.SerializeKeys;
@@ -16,34 +17,34 @@ namespace NineChronicles.Headless.Tests
         [InlineData(false, true, true, false, true)]
         public void GetAvatarState(bool backward, bool inventoryExist, bool worldInformationExist, bool questListExist, bool exc)
         {
-            MockState mockState = MockState.Empty;
+            MockAccountState mockAccountState = MockAccountState.Empty;
 
-            mockState = backward
-                ? mockState.SetState(Fixtures.AvatarAddress, Fixtures.AvatarStateFX.Serialize())
-                : mockState.SetState(Fixtures.AvatarAddress, Fixtures.AvatarStateFX.SerializeV2());
-            mockState = inventoryExist
-                ? mockState.SetState(
+            mockAccountState = backward
+                ? mockAccountState.SetState(Fixtures.AvatarAddress, Fixtures.AvatarStateFX.Serialize())
+                : mockAccountState.SetState(Fixtures.AvatarAddress, Fixtures.AvatarStateFX.SerializeV2());
+            mockAccountState = inventoryExist
+                ? mockAccountState.SetState(
                     Fixtures.AvatarAddress.Derive(LegacyInventoryKey),
                     Fixtures.AvatarStateFX.inventory.Serialize())
-                : mockState;
-            mockState = worldInformationExist
-                ? mockState.SetState(
+                : mockAccountState;
+            mockAccountState = worldInformationExist
+                ? mockAccountState.SetState(
                     Fixtures.AvatarAddress.Derive(LegacyWorldInformationKey),
                     Fixtures.AvatarStateFX.worldInformation.Serialize())
-                : mockState;
-            mockState = questListExist
-                ? mockState.SetState(
+                : mockAccountState;
+            mockAccountState = questListExist
+                ? mockAccountState.SetState(
                     Fixtures.AvatarAddress.Derive(LegacyQuestListKey),
                     Fixtures.AvatarStateFX.questList.Serialize())
-                : mockState;
+                : mockAccountState;
 
             if (exc)
             {
-                Assert.Throws<InvalidAddressException>(() => mockState.GetAvatarState(default));
+                Assert.Throws<InvalidAddressException>(() => mockAccountState.GetAvatarState(default));
             }
             else
             {
-                var avatarState = mockState.GetAvatarState(Fixtures.AvatarAddress);
+                var avatarState = mockAccountState.GetAvatarState(Fixtures.AvatarAddress);
 
                 Assert.NotNull(avatarState.inventory);
                 Assert.NotNull(avatarState.worldInformation);

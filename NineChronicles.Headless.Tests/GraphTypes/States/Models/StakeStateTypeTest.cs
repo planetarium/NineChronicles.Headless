@@ -22,9 +22,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             var goldCurrency = Currency.Legacy("NCG", 2, null);
 #pragma warning restore CS0618
 
-            MockState mockState = MockState.Empty
+            MockAccountState mockAccountState = MockAccountState.Empty
                 .SetState(GoldCurrencyState.Address, new GoldCurrencyState(goldCurrency).Serialize())
                 .SetBalance(Fixtures.StakeStateAddress, goldCurrency, (goldCurrency * deposit).RawValue);
+            MockWorld mockWorld = new MockWorld(new MockAccount(mockAccountState));
 
             const string query = @"
             {
@@ -36,7 +37,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 claimableBlockIndex
             }";
             var queryResult = await ExecuteQueryAsync<StakeStateType>(
-                query, source: new StakeStateType.StakeStateContext(stakeState, mockState, blockIndex));
+                query, source: new StakeStateType.StakeStateContext(stakeState, mockWorld, blockIndex));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
         }

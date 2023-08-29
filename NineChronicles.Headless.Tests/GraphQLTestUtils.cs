@@ -18,6 +18,7 @@ using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Action.Loader;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using NineChronicles.Headless.Utils;
 
 namespace NineChronicles.Headless.Tests
@@ -92,7 +93,7 @@ namespace NineChronicles.Headless.Tests
                 stateStore,
                 genesisBlock,
                 actionEvaluator);
-            var currencyFactory = new CurrencyFactory(blockchain.GetBlockState);
+            var currencyFactory = new CurrencyFactory(blockchain.GetWorldState);
             var fungibleAssetValueFactory = new FungibleAssetValueFactory(currencyFactory);
             return new StandaloneContext
             {
@@ -131,9 +132,11 @@ namespace NineChronicles.Headless.Tests
                 stateStore,
                 genesisBlock,
                 actionEvaluator);
-            var ncg = new GoldCurrencyState((Dictionary)blockchain.GetState(Addresses.GoldCurrency))
-                .Currency;
-            var currencyFactory = new CurrencyFactory(blockchain.GetBlockState, ncg);
+            var ncg = new GoldCurrencyState(
+                (Dictionary)LegacyModule.GetState(
+                    blockchain.GetWorldState(),
+                    Addresses.GoldCurrency)).Currency;
+            var currencyFactory = new CurrencyFactory(blockchain.GetWorldState, ncg);
             var fungibleAssetValueFactory = new FungibleAssetValueFactory(currencyFactory);
             return new StandaloneContext
             {

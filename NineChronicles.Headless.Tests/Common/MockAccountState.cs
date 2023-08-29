@@ -49,15 +49,15 @@ namespace NineChronicles.Headless.Tests.Common
     ///     </description></item>
     /// </list>
     /// </remarks>
-    internal class MockState : IAccountState
+    internal class MockAccountState : IAccountState
     {
-        private static readonly MockState _empty = new MockState();
+        private static readonly MockAccountState _empty = new MockAccountState();
         private readonly IImmutableDictionary<Address, IValue> _states;
         private readonly IImmutableDictionary<(Address, Currency), BigInteger> _fungibles;
         private readonly IImmutableDictionary<Currency, BigInteger> _totalSupplies;
         private readonly ValidatorSet _validatorSet;
 
-        private MockState()
+        private MockAccountState()
             : this(
                 ImmutableDictionary<Address, IValue>.Empty,
                 ImmutableDictionary<(Address Address, Currency Currency), BigInteger>.Empty,
@@ -66,7 +66,7 @@ namespace NineChronicles.Headless.Tests.Common
         {
         }
 
-        private MockState(
+        private MockAccountState(
             IImmutableDictionary<Address, IValue> state,
             IImmutableDictionary<(Address Address, Currency Currency), BigInteger> balance,
             IImmutableDictionary<Currency, BigInteger> totalSupplies,
@@ -78,7 +78,7 @@ namespace NineChronicles.Headless.Tests.Common
             _validatorSet = validatorSet;
         }
 
-        public static MockState Empty => _empty;
+        public static MockAccountState Empty => _empty;
 
         public IImmutableDictionary<Address, IValue> States => _states;
 
@@ -122,57 +122,57 @@ namespace NineChronicles.Headless.Tests.Common
 
         public ValidatorSet GetValidatorSet() => _validatorSet;
 
-        public MockState SetState(Address address, IValue state) =>
-            new MockState(
+        public MockAccountState SetState(Address address, IValue state) =>
+            new MockAccountState(
                 _states.SetItem(address, state),
                 _fungibles,
                 _totalSupplies,
                 _validatorSet);
 
-        public MockState SetBalance(Address address, FungibleAssetValue amount) =>
+        public MockAccountState SetBalance(Address address, FungibleAssetValue amount) =>
             SetBalance((address, amount.Currency), amount.RawValue);
 
-        public MockState SetBalance(Address address, Currency currency, BigInteger rawAmount) =>
+        public MockAccountState SetBalance(Address address, Currency currency, BigInteger rawAmount) =>
             SetBalance((address, currency), rawAmount);
 
-        public MockState SetBalance((Address Address, Currency Currency) pair, BigInteger rawAmount) =>
-            new MockState(
+        public MockAccountState SetBalance((Address Address, Currency Currency) pair, BigInteger rawAmount) =>
+            new MockAccountState(
                 _states,
                 _fungibles.SetItem(pair, rawAmount),
                 _totalSupplies,
                 _validatorSet);
 
-        public MockState AddBalance(Address address, FungibleAssetValue amount) =>
+        public MockAccountState AddBalance(Address address, FungibleAssetValue amount) =>
             AddBalance((address, amount.Currency), amount.RawValue);
 
-        public MockState AddBalance(Address address, Currency currency, BigInteger rawAmount) =>
+        public MockAccountState AddBalance(Address address, Currency currency, BigInteger rawAmount) =>
             AddBalance((address, currency), rawAmount);
 
-        public MockState AddBalance((Address Address, Currency Currency) pair, BigInteger rawAmount) =>
+        public MockAccountState AddBalance((Address Address, Currency Currency) pair, BigInteger rawAmount) =>
             SetBalance(pair, (_fungibles.TryGetValue(pair, out BigInteger amount) ? amount : 0) + rawAmount);
 
-        public MockState SubtractBalance(Address address, FungibleAssetValue amount) =>
+        public MockAccountState SubtractBalance(Address address, FungibleAssetValue amount) =>
             SubtractBalance((address, amount.Currency), amount.RawValue);
 
-        public MockState SubtractBalance(Address address, Currency currency, BigInteger rawAmount) =>
+        public MockAccountState SubtractBalance(Address address, Currency currency, BigInteger rawAmount) =>
             SubtractBalance((address, currency), rawAmount);
 
-        public MockState SubtractBalance((Address Address, Currency Currency) pair, BigInteger rawAmount) =>
+        public MockAccountState SubtractBalance((Address Address, Currency Currency) pair, BigInteger rawAmount) =>
             SetBalance(pair, (_fungibles.TryGetValue(pair, out BigInteger amount) ? amount : 0) - rawAmount);
 
-        public MockState TransferBalance(Address sender, Address recipient, FungibleAssetValue amount) =>
+        public MockAccountState TransferBalance(Address sender, Address recipient, FungibleAssetValue amount) =>
             TransferBalance(sender, recipient, amount.Currency, amount.RawValue);
 
-        public MockState TransferBalance(Address sender, Address recipient, Currency currency, BigInteger rawAmount) =>
+        public MockAccountState TransferBalance(Address sender, Address recipient, Currency currency, BigInteger rawAmount) =>
             SubtractBalance(sender, currency, rawAmount).AddBalance(recipient, currency, rawAmount);
 
-        public MockState SetTotalSupply(FungibleAssetValue amount) =>
+        public MockAccountState SetTotalSupply(FungibleAssetValue amount) =>
             SetTotalSupply(amount.Currency, amount.RawValue);
 
-        public MockState SetTotalSupply(Currency currency, BigInteger rawAmount) =>
+        public MockAccountState SetTotalSupply(Currency currency, BigInteger rawAmount) =>
             currency.TotalSupplyTrackable
                 ? !(currency.MaximumSupply is { } maximumSupply) || rawAmount <= maximumSupply.RawValue
-                    ? new MockState(
+                    ? new MockAccountState(
                         _states,
                         _fungibles,
                         _totalSupplies.SetItem(currency, rawAmount),
@@ -183,20 +183,20 @@ namespace NineChronicles.Headless.Tests.Common
                 : throw new ArgumentException(
                     $"Given {currency} is not trackable.");
 
-        public MockState AddTotalSupply(FungibleAssetValue amount) =>
+        public MockAccountState AddTotalSupply(FungibleAssetValue amount) =>
             AddTotalSupply(amount.Currency, amount.RawValue);
 
-        public MockState AddTotalSupply(Currency currency, BigInteger rawAmount) =>
+        public MockAccountState AddTotalSupply(Currency currency, BigInteger rawAmount) =>
             SetTotalSupply(currency, (_totalSupplies.TryGetValue(currency, out BigInteger amount) ? amount : 0) + rawAmount);
 
-        public MockState SubtractTotalSupply(FungibleAssetValue amount) =>
+        public MockAccountState SubtractTotalSupply(FungibleAssetValue amount) =>
             SubtractTotalSupply(amount.Currency, amount.RawValue);
 
-        public MockState SubtractTotalSupply(Currency currency, BigInteger rawAmount) =>
+        public MockAccountState SubtractTotalSupply(Currency currency, BigInteger rawAmount) =>
             SetTotalSupply(currency, (_totalSupplies.TryGetValue(currency, out BigInteger amount) ? amount : 0) - rawAmount);
 
-        public MockState SetValidator(Validator validator) =>
-            new MockState(
+        public MockAccountState SetValidator(Validator validator) =>
+            new MockAccountState(
                 _states,
                 _fungibles,
                 _totalSupplies,

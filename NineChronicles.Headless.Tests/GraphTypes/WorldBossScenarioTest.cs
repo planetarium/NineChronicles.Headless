@@ -62,7 +62,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 [1] = true,
                 [2] = false,
             };
-            _stateContext = new StateContext(GetMockState(), 1L);
+            _stateContext = new StateContext(GetMockWorld(), 1L);
             var minerPrivateKey = new PrivateKey();
             var initializeStates = new InitializeStates(
                 rankingState: new RankingState0(),
@@ -298,9 +298,9 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
             }
         }
 
-        private IAccountState GetMockState()
+        private IWorld GetMockWorld()
         {
-            return MockState.Empty
+            return new MockWorld(new MockAccount(MockAccountState.Empty
                 .SetState(_raiderStateAddress, _raiderState.Serialize())
                 .SetState(Addresses.GetSheetAddress<WorldBossListSheet>(), @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
 1,205005,0,100,300,200,100,10
@@ -308,7 +308,7 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
 ".Serialize())
                 .SetState(_worldBossAddress, _worldBossState.Serialize())
                 .SetState(_worldBossKillRewardRecordAddress, _worldBossKillRewardRecord.Serialize())
-                .SetState(_raiderListAddress, List.Empty.Add(_raiderStateAddress.Serialize()));
+                .SetState(_raiderListAddress, List.Empty.Add(_raiderStateAddress.Serialize()))));
         }
 
         private async Task<int> GetRaidId(long blockIndex, bool prev)

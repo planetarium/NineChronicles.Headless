@@ -26,7 +26,6 @@ using Libplanet.Net;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Libplanet.Types.Tx;
-using Nekoyume.Model.State;
 using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
 using Xunit.Abstractions;
@@ -92,7 +91,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                         new Validator(apvPrivateKey.PublicKey, BigInteger.One)
                                     }
                                     .ToList()),
-                            states: ImmutableDictionary.Create<Address, IValue>())
+                            states: ImmutableDictionary.Create<Address, IImmutableDictionary<Address, IValue>>())
                     }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa.PlainValue }))
                     .ToImmutableList(),
                 privateKey: new PrivateKey());

@@ -52,6 +52,17 @@ namespace NineChronicles.Headless.Executable.Commands
             /// <inheritdoc/>
             [Pure]
             public BlockHash? BlockHash => _baseState.BlockHash;
+            
+            /// <summary>
+            /// Creates a null state delta from given <paramref name="previousState"/>.
+            /// </summary>
+            /// <param name="previousState">The previous <see cref="IAccountState"/> to use as
+            /// a basis.</param>
+            /// <returns>A null state delta created from <paramref name="previousState"/>.
+            /// </returns>
+            public static IWorld Create(IWorldState previousState) =>
+                new World(previousState)
+                    { Legacy = previousState.Legacy };
 
             public IWorld SetAccount(IAccount account)
             {
@@ -71,17 +82,6 @@ namespace NineChronicles.Headless.Executable.Commands
                     ? account!
                     : _baseState.GetAccount(address);
             }
-            
-            /// <summary>
-            /// Creates a null state delta from given <paramref name="previousState"/>.
-            /// </summary>
-            /// <param name="previousState">The previous <see cref="IAccountState"/> to use as
-            /// a basis.</param>
-            /// <returns>A null state delta created from <paramref name="previousState"/>.
-            /// </returns>
-            public static IWorld Create(IWorldState previousState) =>
-                new World(previousState)
-                    { Legacy = previousState.Legacy };
         }
 
         /// <summary>
