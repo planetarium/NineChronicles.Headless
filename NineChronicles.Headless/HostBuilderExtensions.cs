@@ -95,10 +95,11 @@ namespace NineChronicles.Headless
                     services.AddGrpc(options =>
                     {
                         options.MaxReceiveMessageSize = null;
-                        options.Interceptors.Add<GrpcCaptureMiddleware>(
+                        options.Interceptors.Add<GrpMultiAccountManagementMiddleware>(
                             standaloneContext,
                             ipSignerList,
                             actionEvaluationPublisher);
+                        options.Interceptors.Add<GrpcCaptureMiddleware>(actionEvaluationPublisher);
                     });
                     services.AddMagicOnion();
                     services.AddSingleton(_ => actionEvaluationPublisher);
