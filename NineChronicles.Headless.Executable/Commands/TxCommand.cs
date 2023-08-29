@@ -75,6 +75,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     nameof(ClaimStakeReward3) => new ClaimStakeReward3(),
                     nameof(ClaimStakeReward4) => new ClaimStakeReward4(),
                     nameof(ClaimStakeReward5) => new ClaimStakeReward5(),
+                    nameof(ClaimStakeReward7) => new ClaimStakeReward7(),
                     nameof(ClaimStakeReward) => new ClaimStakeReward(),
                     nameof(TransferAsset) => new TransferAsset(),
                     nameof(MigrateMonsterCollection) => new MigrateMonsterCollection(),
