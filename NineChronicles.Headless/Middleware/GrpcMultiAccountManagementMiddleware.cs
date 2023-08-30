@@ -148,8 +148,8 @@ namespace NineChronicles.Headless.Middleware
                         }
                         else
                         {
-                            if ((DateTimeOffset.Now - MultiAccountManagementList[agent]).Minutes >=
-                                _options.Value.ManagementTimeMinutes)
+                            var currentManagedTime = (DateTimeOffset.Now - MultiAccountManagementList[agent]).Minutes;
+                            if (currentManagedTime >= _options.Value.ManagementTimeMinutes)
                             {
                                 _logger.Information(
                                     $"[GRPC-MULTI-ACCOUNT-MANAGER] Restoring Agent {agent} after {_options.Value.ManagementTimeMinutes} minutes.");
@@ -162,7 +162,7 @@ namespace NineChronicles.Headless.Middleware
                             else
                             {
                                 _logger.Information(
-                                    $"[GRPC-MULTI-ACCOUNT-MANAGER] Agent {agent} is in managed status for the next {_options.Value.ManagementTimeMinutes - (DateTimeOffset.Now - MultiAccountManagementList[agent]).Minutes} minutes.");
+                                    $"[GRPC-MULTI-ACCOUNT-MANAGER] Agent {agent} is in managed status for the next {_options.Value.ManagementTimeMinutes - currentManagedTime} minutes.");
                                 throw new RpcException(new Status(StatusCode.Cancelled, "Request cancelled."));
                             }
                         }
