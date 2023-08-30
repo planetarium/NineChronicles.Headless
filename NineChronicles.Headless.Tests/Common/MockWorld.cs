@@ -1,5 +1,6 @@
 ﻿namespace NineChronicles.Headless.Tests.Common
 {
+#nullable enable
     using System.Collections.Immutable;
     using System.Diagnostics.Contracts;
     using Libplanet.Action.State;

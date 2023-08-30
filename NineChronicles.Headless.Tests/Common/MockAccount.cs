@@ -1,5 +1,7 @@
 ﻿namespace NineChronicles.Headless.Tests.Common
 {
+#nullable enable
+
     using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
@@ -17,7 +19,7 @@
     using Libplanet.Types.Consensus;
 
     /// <summary>
-    /// A rough replica of https://github.com/planetarium/libplanet/blob/main/Libplanet/State/Account.cs
+    /// A rough replica of https://github.com/planetarium/libplanet/blob/main/Libplanet/State/AccountStateDelta.cs
     /// except this has its constructors exposed as public for testing.
     /// </summary>
     [Pure]
@@ -25,8 +27,8 @@
     {
         private readonly IAccountState _baseState;
 
-        public MockAccount()
-            : this(MockAccountState.Empty)
+        public MockAccount(Address address)
+            : this(new MockAccountState(address))
         {
         }
 
@@ -45,9 +47,14 @@
         /// <inheritdoc/>
         public IAccountDelta Delta { get; private set; }
 
-        public BlockHash? BlockHash => _baseState.BlockHash;
+        /// <inheritdoc/>
+        public Address Address => _baseState.Address;
 
+        /// <inheritdoc/>
         public HashDigest<SHA256>? StateRootHash => _baseState.StateRootHash;
+
+        /// <inheritdoc/>
+        public BlockHash? BlockHash => _baseState.BlockHash;
 
         /// <inheritdoc/>
         public IImmutableSet<(Address, Currency)> TotalUpdatedFungibleAssets =>
@@ -55,8 +62,6 @@
 
         public IImmutableDictionary<(Address, Currency), BigInteger> TotalUpdatedFungibles
             { get; private set; }
-
-        public Address Address => ReservedAddresses.LegacyAccount;
 
         /// <inheritdoc/>
         [Pure]

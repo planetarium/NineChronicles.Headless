@@ -22,7 +22,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             var goldCurrency = Currency.Legacy("NCG", 2, null);
 #pragma warning restore CS0618
 
-            MockAccountState mockAccountState = MockAccountState.Empty
+            MockAccountState mockAccountState = MockAccountState.Legacy
                 .SetState(GoldCurrencyState.Address, new GoldCurrencyState(goldCurrency).Serialize())
                 .SetBalance(Fixtures.StakeStateAddress, goldCurrency, (goldCurrency * deposit).RawValue);
             MockWorld mockWorld = new MockWorld(new MockAccount(mockAccountState));

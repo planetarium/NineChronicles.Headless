@@ -88,7 +88,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 2,
                 new Address("0x47D082a115c63E7b58B1532d20E631538eaFADde"));
 #pragma warning restore CS0618
-            MockAccountState mockAccountState = MockAccountState.Empty;
+            MockAccountState mockAccountState = MockAccountState.Legacy;
 
             // NCG
             mockAccountState = mockAccountState

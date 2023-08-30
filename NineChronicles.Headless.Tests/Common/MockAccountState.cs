@@ -1,19 +1,21 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Numerics;
-using System.Security.Cryptography;
-using Bencodex.Types;
-using Libplanet.Action.State;
-using Libplanet.Common;
-using Libplanet.Crypto;
-using Libplanet.Types.Assets;
-using Libplanet.Types.Blocks;
-using Libplanet.Types.Consensus;
-
 namespace NineChronicles.Headless.Tests.Common
 {
+#nullable enable
+
+    using System;
+    using System.Collections.Generic;
+    using System.Collections.Immutable;
+    using System.Linq;
+    using System.Numerics;
+    using System.Security.Cryptography;
+    using Bencodex.Types;
+    using Libplanet.Action.State;
+    using Libplanet.Common;
+    using Libplanet.Crypto;
+    using Libplanet.Types.Assets;
+    using Libplanet.Types.Blocks;
+    using Libplanet.Types.Consensus;
+
     /// <summary>
     /// A mock implementation of <see cref="IAccountState"/> with various overloaded methods for
     /// improving QoL.
@@ -49,16 +51,17 @@ namespace NineChronicles.Headless.Tests.Common
     ///     </description></item>
     /// </list>
     /// </remarks>
-    internal class MockAccountState : IAccountState
+    public class MockAccountState : IAccountState
     {
-        private static readonly MockAccountState _empty = new MockAccountState();
+        private readonly Address _address;
         private readonly IImmutableDictionary<Address, IValue> _states;
         private readonly IImmutableDictionary<(Address, Currency), BigInteger> _fungibles;
         private readonly IImmutableDictionary<Currency, BigInteger> _totalSupplies;
         private readonly ValidatorSet _validatorSet;
 
-        private MockAccountState()
+        public MockAccountState(Address address)
             : this(
+                address,
                 ImmutableDictionary<Address, IValue>.Empty,
                 ImmutableDictionary<(Address Address, Currency Currency), BigInteger>.Empty,
                 ImmutableDictionary<Currency, BigInteger>.Empty,
@@ -67,18 +70,21 @@ namespace NineChronicles.Headless.Tests.Common
         }
 
         private MockAccountState(
+            Address address,
             IImmutableDictionary<Address, IValue> state,
             IImmutableDictionary<(Address Address, Currency Currency), BigInteger> balance,
             IImmutableDictionary<Currency, BigInteger> totalSupplies,
             ValidatorSet validatorSet)
         {
+            _address = address;
             _states = state;
             _fungibles = balance;
             _totalSupplies = totalSupplies;
             _validatorSet = validatorSet;
         }
 
-        public static MockAccountState Empty => _empty;
+        public static MockAccountState Legacy =>
+            new MockAccountState(ReservedAddresses.LegacyAccount);
 
         public IImmutableDictionary<Address, IValue> States => _states;
 
@@ -88,9 +94,11 @@ namespace NineChronicles.Headless.Tests.Common
 
         public ValidatorSet ValidatorSet => _validatorSet;
 
-        public Address Address { get; }
-        public HashDigest<SHA256>? StateRootHash { get; }
-        public BlockHash? BlockHash { get; }
+        public Address Address => _address;
+
+        public BlockHash? BlockHash => null;
+
+        public HashDigest<SHA256>? StateRootHash => null;
 
         public IValue? GetState(Address address) => _states.TryGetValue(address, out IValue? value)
             ? value
@@ -124,6 +132,7 @@ namespace NineChronicles.Headless.Tests.Common
 
         public MockAccountState SetState(Address address, IValue state) =>
             new MockAccountState(
+                _address,
                 _states.SetItem(address, state),
                 _fungibles,
                 _totalSupplies,
@@ -137,6 +146,7 @@ namespace NineChronicles.Headless.Tests.Common
 
         public MockAccountState SetBalance((Address Address, Currency Currency) pair, BigInteger rawAmount) =>
             new MockAccountState(
+                _address,
                 _states,
                 _fungibles.SetItem(pair, rawAmount),
                 _totalSupplies,
@@ -173,6 +183,7 @@ namespace NineChronicles.Headless.Tests.Common
             currency.TotalSupplyTrackable
                 ? !(currency.MaximumSupply is { } maximumSupply) || rawAmount <= maximumSupply.RawValue
                     ? new MockAccountState(
+                        _address,
                         _states,
                         _fungibles,
                         _totalSupplies.SetItem(currency, rawAmount),
@@ -197,6 +208,7 @@ namespace NineChronicles.Headless.Tests.Common
 
         public MockAccountState SetValidator(Validator validator) =>
             new MockAccountState(
+                _address,
                 _states,
                 _fungibles,
                 _totalSupplies,

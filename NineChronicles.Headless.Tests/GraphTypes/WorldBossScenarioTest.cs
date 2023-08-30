@@ -300,7 +300,7 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
 
         private IWorld GetMockWorld()
         {
-            return new MockWorld(new MockAccount(MockAccountState.Empty
+            return new MockWorld(new MockAccount(MockAccountState.Legacy
                 .SetState(_raiderStateAddress, _raiderState.Serialize())
                 .SetState(Addresses.GetSheetAddress<WorldBossListSheet>(), @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
 1,205005,0,100,300,200,100,10

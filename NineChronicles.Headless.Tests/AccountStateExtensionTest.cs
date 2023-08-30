@@ -1,5 +1,7 @@
+using Libplanet.Action.State;
 using Nekoyume.Action.Extensions;
 using Nekoyume.Model.Exceptions;
+using Nekoyume.Module;
 using NineChronicles.Headless.Tests.Common;
 using Xunit;
 using static Lib9c.SerializeKeys;
@@ -17,34 +19,44 @@ namespace NineChronicles.Headless.Tests
         [InlineData(false, true, true, false, true)]
         public void GetAvatarState(bool backward, bool inventoryExist, bool worldInformationExist, bool questListExist, bool exc)
         {
-            MockAccountState mockAccountState = MockAccountState.Empty;
+            IWorld mockWorld = new MockWorld();
 
-            mockAccountState = backward
-                ? mockAccountState.SetState(Fixtures.AvatarAddress, Fixtures.AvatarStateFX.Serialize())
-                : mockAccountState.SetState(Fixtures.AvatarAddress, Fixtures.AvatarStateFX.SerializeV2());
-            mockAccountState = inventoryExist
-                ? mockAccountState.SetState(
+            mockWorld = backward
+                ? AvatarModule.SetAvatarState(
+                    mockWorld,
+                    Fixtures.AvatarAddress,
+                    Fixtures.AvatarStateFX)
+                : AvatarModule.SetAvatarStateV2(
+                    mockWorld,
+                    Fixtures.AvatarAddress,
+                    Fixtures.AvatarStateFX);
+            mockWorld = inventoryExist
+                ? LegacyModule.SetState(
+                    mockWorld,
                     Fixtures.AvatarAddress.Derive(LegacyInventoryKey),
                     Fixtures.AvatarStateFX.inventory.Serialize())
-                : mockAccountState;
-            mockAccountState = worldInformationExist
-                ? mockAccountState.SetState(
+                : mockWorld;
+            mockWorld = worldInformationExist
+                ? LegacyModule.SetState(
+                    mockWorld,
                     Fixtures.AvatarAddress.Derive(LegacyWorldInformationKey),
                     Fixtures.AvatarStateFX.worldInformation.Serialize())
-                : mockAccountState;
-            mockAccountState = questListExist
-                ? mockAccountState.SetState(
+                : mockWorld;
+            mockWorld = questListExist
+                ? LegacyModule.SetState(
+                    mockWorld,
                     Fixtures.AvatarAddress.Derive(LegacyQuestListKey),
                     Fixtures.AvatarStateFX.questList.Serialize())
-                : mockAccountState;
+                : mockWorld;
 
             if (exc)
             {
-                Assert.Throws<InvalidAddressException>(() => mockAccountState.GetAvatarState(default));
+                Assert.Throws<InvalidAddressException>(
+                    () => AvatarModule.GetAvatarState(mockWorld, default));
             }
             else
             {
-                var avatarState = mockAccountState.GetAvatarState(Fixtures.AvatarAddress);
+                var avatarState = AvatarModule.GetAvatarState(mockWorld, Fixtures.AvatarAddress);
 
                 Assert.NotNull(avatarState.inventory);
                 Assert.NotNull(avatarState.worldInformation);
