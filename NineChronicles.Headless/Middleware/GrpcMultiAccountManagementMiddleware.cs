@@ -11,7 +11,7 @@ using Serilog;
 
 namespace NineChronicles.Headless.Middleware
 {
-    public class GrpMultiAccountManagementMiddleware : Interceptor
+    public class GrpcMultiAccountManagementMiddleware : Interceptor
     {
         private static readonly Dictionary<Address, DateTimeOffset> MultiAccountTxIntervalTracker = new();
         private static readonly Dictionary<Address, DateTimeOffset> MultiAccountManagementList = new();
@@ -21,13 +21,13 @@ namespace NineChronicles.Headless.Middleware
         private readonly ActionEvaluationPublisher _actionEvaluationPublisher;
         private readonly IOptions<MultiAccountManagerProperties> _options;
 
-        public GrpMultiAccountManagementMiddleware(
+        public GrpcMultiAccountManagementMiddleware(
             StandaloneContext standaloneContext,
             Dictionary<string, HashSet<Address>> ipSignerList,
             ActionEvaluationPublisher actionEvaluationPublisher,
             IOptions<MultiAccountManagerProperties> options)
         {
-            _logger = Log.Logger.ForContext<GrpMultiAccountManagementMiddleware>();
+            _logger = Log.Logger.ForContext<GrpcMultiAccountManagementMiddleware>();
             _standaloneContext = standaloneContext;
             _ipSignerList = ipSignerList;
             _actionEvaluationPublisher = actionEvaluationPublisher;

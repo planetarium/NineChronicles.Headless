@@ -95,7 +95,7 @@ namespace NineChronicles.Headless
                     services.AddGrpc(options =>
                     {
                         options.MaxReceiveMessageSize = null;
-                        options.Interceptors.Add<GrpMultiAccountManagementMiddleware>(
+                        options.Interceptors.Add<GrpcMultiAccountManagementMiddleware>(
                             standaloneContext,
                             ipSignerList,
                             actionEvaluationPublisher);
