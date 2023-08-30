@@ -13,6 +13,7 @@ using Nekoyume.Action;
 using Nekoyume.Extensions;
 using Nekoyume.Model.Arena;
 using Nekoyume.Model.Item;
+using Nekoyume.Model.Stake;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using Nekoyume.TableData.Crystal;
@@ -239,10 +240,23 @@ namespace NineChronicles.Headless.GraphTypes
 
             StakeStateType.StakeStateContext? GetStakeState(StateContext ctx, Address agentAddress)
             {
-                if (ctx.GetState(StakeState.DeriveAddress(agentAddress)) is Dictionary state)
+                var stakeStateAddress = StakeState.DeriveAddress(agentAddress);
+                var stakeStateValue = ctx.GetState(stakeStateAddress);
+                if (stakeStateValue is Dictionary dictionary)
                 {
                     return new StakeStateType.StakeStateContext(
-                        new StakeState(state),
+                        new StakeStateType.StakeStateContext.StakeStateWrapper(new StakeState(dictionary)),
+                        ctx.AccountState,
+                        ctx.BlockIndex
+                    );
+                }
+
+                if (stakeStateValue is List list)
+                {
+                    return new StakeStateType.StakeStateContext(
+                        new StakeStateType.StakeStateContext.StakeStateWrapper(
+                            new StakeStateV2(list),
+                            stakeStateAddress),
                         ctx.AccountState,
                         ctx.BlockIndex
                     );
@@ -252,7 +266,7 @@ namespace NineChronicles.Headless.GraphTypes
             }
 
             Field<StakeStateType>(
-                name: nameof(StakeState),
+                name: "stakeState",
                 description: "State for staking.",
                 arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
                 {
