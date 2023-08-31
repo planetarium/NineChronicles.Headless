@@ -45,6 +45,7 @@ namespace NineChronicles.Headless
 
         private readonly ConcurrentDictionary<Address, Client> _clients = new ConcurrentDictionary<Address, Client>();
         private readonly ConcurrentDictionary<Address, string> _clientsByDevice = new ConcurrentDictionary<Address, string>();
+        private readonly ConcurrentDictionary<string, HashSet<Address>> _clientsByIp = new ConcurrentDictionary<string, HashSet<Address>>();
 
         private RpcContext _context;
         private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
@@ -144,6 +145,29 @@ namespace NineChronicles.Headless
         }
 
         public List<Address> GetClientsByDevice(string device)
+        {
+            return _clientsByDevice
+                .Where(x => x.Value == device)
+                .Select(x => x.Key)
+                .ToList();
+        }
+
+        public void AddClientByIp(string ipAddress, Address clientAddress)
+        {
+            if (!_clientsByIp.ContainsKey(ipAddress))
+            {
+                _clientsByIp[ipAddress] = new HashSet<Address>();
+            }
+
+            _clientsByIp[ipAddress].Add(clientAddress);
+        }
+
+        public int GetClientsCountByIp(string device)
+        {
+            return _clientsByDevice.Values.Count(x => x == device);
+        }
+
+        public List<Address> GetClientsByIp(string device)
         {
             return _clientsByDevice
                 .Where(x => x.Value == device)
