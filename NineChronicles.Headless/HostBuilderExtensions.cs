@@ -85,7 +85,6 @@ namespace NineChronicles.Headless
             return builder
                 .ConfigureServices(services =>
                 {
-                    Dictionary<string, HashSet<Address>> ipSignerList = new();
                     if (Convert.ToBoolean(configuration.GetSection("MultiAccountManaging")["EnableManaging"]))
                     {
                         services.Configure<MultiAccountManagerProperties>(configuration.GetSection("MultiAccountManaging"));
@@ -95,10 +94,15 @@ namespace NineChronicles.Headless
                     services.AddGrpc(options =>
                     {
                         options.MaxReceiveMessageSize = null;
-                        options.Interceptors.Add<GrpcMultiAccountManagementMiddleware>(
-                            standaloneContext,
-                            ipSignerList,
-                            actionEvaluationPublisher);
+                        if (Convert.ToBoolean(configuration.GetSection("MultiAccountManaging")["EnableManaging"]))
+                        {
+                            Dictionary<string, HashSet<Address>> ipSignerList = new();
+                            options.Interceptors.Add<GrpcMultiAccountManagementMiddleware>(
+                                standaloneContext,
+                                ipSignerList,
+                                actionEvaluationPublisher);
+                        }
+
                         options.Interceptors.Add<GrpcCaptureMiddleware>(actionEvaluationPublisher);
                     });
                     services.AddMagicOnion();
