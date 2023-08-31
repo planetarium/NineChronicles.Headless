@@ -13,6 +13,8 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
             Field<NonNullGraphType<GuidGraphType>>(nameof(Equipment.ItemId));
             Field<NonNullGraphType<IntGraphType>>(nameof(Equipment.level),
                 resolve: context => context.Source.level);
+            Field<NonNullGraphType<IntGraphType>>(nameof(Equipment.Exp),
+                resolve: context => context.Source.Exp);
             Field<ListGraphType<SkillType>>(nameof(Equipment.Skills));
             Field<ListGraphType<SkillType>>(nameof(Equipment.BuffSkills));
             Field<NonNullGraphType<StatsMapType>>(nameof(Equipment.StatsMap));

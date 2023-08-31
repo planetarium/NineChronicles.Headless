@@ -104,7 +104,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 foreach ((var fid, var i) in fids.Select((item, index) => (item, index)))
                 {
                     if (setToNullForFungibleItemGarages is { } flags &&
-                        flags.ElementAt(i) == true)
+                        flags.ElementAt(i))
                     {
                         continue;
                     }

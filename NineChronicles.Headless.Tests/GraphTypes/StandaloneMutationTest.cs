@@ -23,6 +23,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Text;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using GraphQL.Execution;
@@ -607,12 +608,19 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         [Theory]
         [MemberData(nameof(ItemEnhancementMember))]
-        public async Task ItemEnhancement(Address avatarAddress, Guid itemId, Guid materialId, int slotIndex)
+        public async Task ItemEnhancement(Address avatarAddress, Guid itemId, List<Guid> materialIds, int slotIndex)
         {
             var playerPrivateKey = new PrivateKey();
+            var materialQuery = new StringBuilder("[");
+            foreach (var materialId in materialIds)
+            {
+                materialQuery.Append($" \"{materialId}\"");
+            }
+
+            materialQuery.Append("]");
             var query = $@"mutation {{
                 action {{
-                    itemEnhancement(avatarAddress: ""{avatarAddress}"", itemId: ""{itemId}"", materialId: ""{materialId}"", slotIndex: {slotIndex})
+                    itemEnhancement(avatarAddress: ""{avatarAddress}"", itemId: ""{itemId}"", materialIds: {materialQuery}, slotIndex: {slotIndex})
                 }}
             }}";
             var result = await ExecuteQueryAsync(query);
@@ -634,7 +642,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var action = (ItemEnhancement)ToAction(tx.Actions!.First());
             Assert.Equal(avatarAddress, action.avatarAddress);
             Assert.Equal(itemId, action.itemId);
-            Assert.Equal(materialId, action.materialId);
+            Assert.Equal(materialIds, action.materialIds);
             Assert.Equal(slotIndex, action.slotIndex);
         }
 
@@ -644,14 +652,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 new Address(),
                 Guid.NewGuid(),
-                Guid.NewGuid(),
+                new List<Guid> {Guid.NewGuid()},
                 0,
             },
             new object?[]
             {
                 new Address(),
                 Guid.NewGuid(),
-                Guid.NewGuid(),
+                new List<Guid> {Guid.NewGuid()},
                 3,
             },
         };

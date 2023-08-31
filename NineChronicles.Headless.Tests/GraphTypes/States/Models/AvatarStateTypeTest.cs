@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GraphQL.Execution;
+using Lib9c;
+using Nekoyume.Action;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
 using NineChronicles.Headless.Tests.Common;
@@ -21,6 +23,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 address
                 agentAddress
                 index
+                inventoryAddress
             }";
             MockState mockState = MockState.Empty
                 .SetState(Fixtures.AvatarAddress, Fixtures.AvatarStateFX.Serialize())
@@ -83,6 +86,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     ["address"] = Fixtures.AvatarAddress.ToString(),
                     ["agentAddress"] = Fixtures.UserAddress.ToString(),
                     ["index"] = 2,
+                    ["inventoryAddress"] = Fixtures.AvatarAddress.Derive(SerializeKeys.LegacyInventoryKey).ToString(),
                 },
             },
         };

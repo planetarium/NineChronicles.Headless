@@ -23,11 +23,6 @@ RUN dotnet publish NineChronicles.Headless.Executable/NineChronicles.Headless.Ex
     --self-contained \
     --version-suffix $COMMIT
 
-# Run prepare-pluggable-lib9c.py
-RUN apt update && apt install -y python3.11 python3-pip
-RUN python3.11 -m pip install GitPython
-RUN python3.11 prepare-pluggable-lib9c.py
-
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:6.0
 WORKDIR /app

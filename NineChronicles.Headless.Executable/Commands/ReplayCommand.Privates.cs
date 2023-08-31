@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Security.Cryptography;
+using Bencodex;
 using Bencodex.Types;
 using Cocona;
 using Libplanet.Common;
@@ -14,7 +16,9 @@ using Libplanet.Action;
 using Libplanet.Types.Assets;
 using Libplanet.Types.Consensus;
 using Libplanet.Action.State;
+using Libplanet.Types.Blocks;
 using Libplanet.Types.Tx;
+using RocksDbSharp;
 using Serilog;
 
 namespace NineChronicles.Headless.Executable.Commands
@@ -564,6 +568,174 @@ namespace NineChronicles.Headless.Executable.Commands
             }
 
             public int Seed { get; private set; }
+        }
+
+        private sealed class LocalCacheBlockChainStates : IBlockChainStates
+        {
+            private readonly IBlockChainStates _source;
+            private readonly RocksDb _rocksDb;
+
+            public LocalCacheBlockChainStates(IBlockChainStates source, string cacheDirectory)
+            {
+                _source = source;
+                var options = new DbOptions().SetCreateIfMissing();
+                _rocksDb = RocksDb.Open(options, cacheDirectory);
+            }
+
+            public IValue? GetState(Address address, BlockHash? offset)
+            {
+                return GetBlockState(offset).GetState(address);
+            }
+
+            public IReadOnlyList<IValue?> GetStates(IReadOnlyList<Address> addresses, BlockHash? offset)
+            {
+                return GetBlockState(offset).GetStates(addresses);
+            }
+
+            public FungibleAssetValue GetBalance(Address address, Currency currency, BlockHash? offset)
+            {
+                return GetBlockState(offset).GetBalance(address, currency);
+            }
+
+            public FungibleAssetValue GetTotalSupply(Currency currency, BlockHash? offset)
+            {
+                return GetBlockState(offset).GetTotalSupply(currency);
+            }
+
+            public ValidatorSet GetValidatorSet(BlockHash? offset)
+            {
+                return GetBlockState(offset).GetValidatorSet();
+            }
+
+            public IBlockState GetBlockState(BlockHash? offset)
+            {
+                return new LocalCacheBlockState(_rocksDb, _source.GetBlockState(offset));
+            }
+        }
+
+        private sealed class LocalCacheBlockState : IBlockState
+        {
+            private static readonly Codec _codec = new Codec();
+            private readonly RocksDb _rocksDb;
+            private readonly IBlockState _sourceBlockState;
+
+            public LocalCacheBlockState(RocksDb rocksDb, IBlockState sourceBlockState)
+            {
+                _rocksDb = rocksDb;
+                _sourceBlockState = sourceBlockState;
+            }
+
+            public IValue? GetState(Address address)
+            {
+                var key = WithBlockHash(address.ToByteArray());
+                try
+                {
+                    return GetValue(key);
+                }
+                catch (KeyNotFoundException)
+                {
+                    var state = _sourceBlockState.GetState(address);
+                    SetValue(key, state);
+                    return state;
+                }
+            }
+
+            public IReadOnlyList<IValue?> GetStates(IReadOnlyList<Address> addresses)
+            {
+                return addresses.Select(GetState).ToList();
+            }
+
+            public FungibleAssetValue GetBalance(Address address, Currency currency)
+            {
+                var key = WithBlockHash(address.ToByteArray(), currency.Hash.ToByteArray());
+                try
+                {
+                    var state = GetValue(key);
+                    if (state is not Integer integer)
+                    {
+                        throw new InvalidOperationException();
+                    }
+
+                    return FungibleAssetValue.FromRawValue(currency, integer);
+                }
+                catch (KeyNotFoundException)
+                {
+                    var fav = _sourceBlockState.GetBalance(address, currency);
+                    SetValue(key, (Integer)fav.RawValue);
+                    return fav;
+                }
+            }
+
+            public FungibleAssetValue GetTotalSupply(Currency currency)
+            {
+                var key = WithBlockHash(currency.Hash.ToByteArray());
+                try
+                {
+                    var state = GetValue(key);
+                    if (state is not Integer integer)
+                    {
+                        throw new InvalidOperationException();
+                    }
+
+                    return FungibleAssetValue.FromRawValue(currency, integer);
+                }
+                catch (KeyNotFoundException)
+                {
+                    var fav = _sourceBlockState.GetTotalSupply(currency);
+                    SetValue(key, (Integer)fav.RawValue);
+                    return fav;
+                }
+            }
+
+            public ValidatorSet GetValidatorSet()
+            {
+                var key = WithBlockHash(new byte[] { 0x5f, 0x5f, 0x5f });
+                try
+                {
+                    var state = GetValue(key);
+                    return state is not null ? new ValidatorSet(state) : new ValidatorSet();
+                }
+                catch (KeyNotFoundException)
+                {
+                    var validatorSet = _sourceBlockState.GetValidatorSet();
+                    SetValue(key, validatorSet.Bencoded);
+                    return validatorSet;
+                }
+            }
+
+            public BlockHash? BlockHash => _sourceBlockState.BlockHash;
+
+            private IValue? GetValue(byte[] key)
+            {
+                if (_rocksDb.Get(key) is not { } bytes)
+                {
+                    throw new KeyNotFoundException();
+                }
+
+                return bytes[0] == 'x' ? null : _codec.Decode(bytes);
+            }
+
+            private void SetValue(byte[] key, IValue? value)
+            {
+                _rocksDb.Put(key, value is null ? new byte[] { 0x78 } : _codec.Encode(value));
+            }
+
+            private byte[] WithBlockHash(params byte[][] suffixes)
+            {
+                if (BlockHash is not { } blockHash)
+                {
+                    throw new InvalidOperationException();
+                }
+
+                var stream = new MemoryStream(Libplanet.Types.Blocks.BlockHash.Size + suffixes.Sum(s => s.Length));
+                stream.Write(blockHash.ToByteArray());
+                foreach (var suffix in suffixes)
+                {
+                    stream.Write(suffix);
+                }
+
+                return stream.ToArray();
+            }
         }
 
         /// <summary>

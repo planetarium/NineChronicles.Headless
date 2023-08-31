@@ -1,0 +1,33 @@
+spectaql:
+    logoFile: ./resources/logo.png
+    faviconFile: ./resources/logo.png
+    displayAllServers: true
+
+introspection:
+    removeTrailingPeriodFromDescriptions: false
+    schemaFile: ./schema.graphql
+    queryNameStrategy: capitalizeFirst
+    fieldExpansionDepth: 2
+
+extensions:
+    graphqlScalarExamples: true
+
+info:
+    title: NineChronicles.Headless GraphQL API Reference
+    description: "NineChronicles.Headless provides GraphQL APIs to browse NineChronicles' states, blockchain data easily."
+    contact:
+        name: Nine Chronicles DX Team & Game Backend Team
+        url: https://github.com/planetarium/NineChronicles.Headless
+    license:
+        name: GNU Affero General Public License v3.0
+        url: https://github.com/planetarium/NineChronicles.Headless/blob/main/LICENSE
+    x-introItems:
+        - title: About AGPL 3.0 license
+          description: You **MUST** UNDERSTAND ***"HOW AGPL 3.0 LICENSE can affect your application"*** before using these APIs. When you use these APIs, ***YOU MUST OPEN YOUR APPLICATION'S SOURCE CODE TO ITS USERS***.
+
+servers:
+    - url: https://9c-internal-rpc-1.nine-chronicles.com/graphql
+      description: Internal
+    - url: https://9c-main-api.nine-chronicles.com/graphql
+      description: Mainnet
+      production: true

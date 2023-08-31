@@ -1,0 +1,63 @@
+name: Deploy gh pages
+on:
+  push:
+    branches:
+      - development
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+      - uses: actions/setup-dotnet@v3
+        name: Set up .NET Core SDK
+        with:
+          dotnet-version: 6.0.x
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Install dependencies
+        run: yarn global add graphql @graphql-inspector/cli
+      - name: Build GraphQL Schema
+        run: |
+          dotnet restore
+          dotnet build
+          dotnet run --project NineChronicles.Headless.Executable -- \
+            --graphql-server \
+            --graphql-port 30000 \
+            --graphql-host localhost \
+            --store-path /tmp/store \
+            --no-miner \
+            --no-cors \
+            --skip-preload \
+            -H localhost \
+            -V "0/CbfC996ad185c61a031f40CeeE80a055e6D83005/MEUCIQCtoZmiFgg5NXW7+5jYMae80lTlj7xO4tQfX9CnvomAtwIgWViM8s.4mYQ89wlGkohmynZ43olDzZLBk.bHShKCVrc=" \
+            -G "https://9c-dx.s3.ap-northeast-2.amazonaws.com/empty-genesis-block-20230511" &
+          sleep 60s
+          graphql-inspector introspect http://localhost:30000/graphql --write schema.graphql
+      - name: Build
+        run: |
+          yarn global add spectaql
+          spectaql ./spectaql-config.yaml
+      - name: Copy GraphQL Schema to deploy
+        run: cp schema.graphql doc
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public

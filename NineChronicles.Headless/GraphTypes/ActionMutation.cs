@@ -250,10 +250,10 @@ namespace NineChronicles.Headless.GraphTypes
                         Name = "itemId",
                         Description = "Equipment Guid for upgrade."
                     },
-                    new QueryArgument<NonNullGraphType<GuidGraphType>>
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<GuidGraphType>>>>
                     {
-                        Name = "materialId",
-                        Description = "Material Guid for equipment upgrade."
+                        Name = "materialIds",
+                        Description = "Material Guids for equipment upgrade."
                     },
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
@@ -276,7 +276,7 @@ namespace NineChronicles.Headless.GraphTypes
                         }
 
                         Guid itemId = context.GetArgument<Guid>("itemId");
-                        Guid materialId = context.GetArgument<Guid>("materialId");
+                        var materialIds = context.GetArgument<List<Guid>>("materialIds");
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
                         int slotIndex = context.GetArgument<int>("slotIndex");
 
@@ -285,7 +285,7 @@ namespace NineChronicles.Headless.GraphTypes
                             avatarAddress = avatarAddress,
                             slotIndex = slotIndex,
                             itemId = itemId,
-                            materialId = materialId,
+                            materialIds = materialIds,
                         };
 
                         var actions = new ActionBase[] { action };
