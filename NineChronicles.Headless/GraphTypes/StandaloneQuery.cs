@@ -7,6 +7,7 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Lib9c;
+using Libplanet.Action.State;
 using Libplanet.Blockchain;
 using Libplanet.Common;
 using Libplanet.Crypto;
@@ -67,7 +68,7 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "state",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "The address of state to fetch from the chain." },
-                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "accountAddress", Description = "The address of account which the state is included." },
+                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "accountAddress", DefaultValue = ReservedAddresses.LegacyAccount, Description = "The address of account which the state is included." },
                     new QueryArgument<ByteStringType> { Name = "hash", Description = "The hash of the block used to fetch state from chain." }
                 ),
                 resolve: context =>
