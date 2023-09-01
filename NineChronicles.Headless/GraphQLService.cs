@@ -167,14 +167,10 @@ namespace NineChronicles.Headless
                 }
 
                 // Capture requests
-                if (Convert.ToBoolean(Configuration.GetSection("MultiAccountManaging")["EnableManaging"]))
-                {
-                    Dictionary<string, HashSet<Address>> ipSignerList = new();
-                    app.UseMiddleware<HttpMultiAccountManagementMiddleware>(
-                        StandaloneContext,
-                        ipSignerList);
-                }
-
+                Dictionary<string, HashSet<Address>> ipSignerList = new();
+                app.UseMiddleware<HttpMultiAccountManagementMiddleware>(
+                    StandaloneContext,
+                    ipSignerList);
                 app.UseMiddleware<HttpCaptureMiddleware>();
 
                 app.UseMiddleware<LocalAuthenticationMiddleware>();
