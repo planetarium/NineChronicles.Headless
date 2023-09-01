@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 using Xunit;
 
 namespace NineChronicles.Headless.Tests
@@ -14,7 +15,8 @@ namespace NineChronicles.Headless.Tests
         public GraphQLStartupTest()
         {
             _configuration = new ConfigurationBuilder().AddInMemoryCollection().Build();
-            _startup = new GraphQLService.GraphQLStartup(_configuration);
+            var standaloneContext = CreateStandaloneContext();
+            _startup = new GraphQLService.GraphQLStartup(_configuration, standaloneContext);
         }
 
         [Theory]
