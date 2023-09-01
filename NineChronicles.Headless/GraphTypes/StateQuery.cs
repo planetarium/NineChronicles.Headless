@@ -249,7 +249,7 @@ namespace NineChronicles.Headless.GraphTypes
                         stakeStateAddress,
                         ctx.AccountState,
                         ctx.BlockIndex
-                    );     
+                    );
                 }
 
                 return null;
