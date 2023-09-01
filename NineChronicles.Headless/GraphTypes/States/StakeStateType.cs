@@ -25,56 +25,15 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class StakeStateContext : StateContext
         {
-            public class StakeStateWrapper
-            {
-                private readonly StakeState? _v1;
-                private readonly StakeStateV2? _v2;
-                private readonly Address? _v2Address;
-
-                public StakeStateWrapper(StakeState stakeState)
-                {
-                    _v1 = stakeState;
-                    _v2 = null;
-                    _v2Address = null;
-                }
-
-                public StakeStateWrapper(StakeStateV2 stakeStateV2, Address stakeStateV2Address)
-                {
-                    _v1 = null;
-                    _v2 = stakeStateV2;
-                    _v2Address = stakeStateV2Address;
-                }
-
-                public long StartedBlockIndex => _v1?.StartedBlockIndex ??
-                                                 _v2?.StartedBlockIndex ?? throw new InvalidOperationException();
-
-                public long ReceivedBlockIndex => _v1?.ReceivedBlockIndex ??
-                                                  _v2?.ReceivedBlockIndex ?? throw new InvalidOperationException();
-
-                public long GetClaimableBlockIndex(long blockIndex) => _v1?.GetClaimableBlockIndex(blockIndex) ??
-                                                                       _v2?.ClaimableBlockIndex ??
-                                                                       throw new InvalidOperationException();
-
-                public long CancellableBlockIndex => _v1?.CancellableBlockIndex ??
-                                                     _v2?.CancellableBlockIndex ??
-                                                     throw new InvalidOperationException();
-
-                public StakeState.StakeAchievements? Achievements => _v1?.Achievements;
-
-                public Address Address => _v1?.address ??
-                                          _v2Address ??
-                                          throw new InvalidOperationException();
-
-                public Contract? Contract => _v2?.Contract;
-            }
-
-            public StakeStateContext(StakeStateWrapper stakeStateWrapper, IAccountState accountState, long blockIndex)
+            public StakeStateContext(StakeStateV2 stakeState, Address address, IAccountState accountState, long blockIndex)
                 : base(accountState, blockIndex)
             {
-                StakeState = stakeStateWrapper;
+                StakeState = stakeState;
+                Address = address;
             }
 
-            public StakeStateWrapper StakeState { get; }
+            public StakeStateV2 StakeState { get; }
+            public Address Address { get; }
         }
 
         public StakeStateType()
@@ -82,12 +41,12 @@ namespace NineChronicles.Headless.GraphTypes.States
             Field<NonNullGraphType<AddressType>>(
                 "address",
                 description: "The address of current state.",
-                resolve: context => context.Source.StakeState.Address);
+                resolve: context => context.Source.Address);
             Field<NonNullGraphType<StringGraphType>>(
                 "deposit",
                 description: "The staked amount.",
                 resolve: context => context.Source.AccountState.GetBalance(
-                        context.Source.StakeState.Address,
+                        context.Source.Address,
                         new GoldCurrencyState((Dictionary)context.Source.GetState(GoldCurrencyState.Address)!).Currency)
                     .GetQuantityString(true));
             Field<NonNullGraphType<IntGraphType>>(
@@ -105,13 +64,13 @@ namespace NineChronicles.Headless.GraphTypes.States
             Field<NonNullGraphType<LongGraphType>>(
                 "claimableBlockIndex",
                 description: "The block index the user can claim rewards.",
-                resolve: context => context.Source.StakeState.GetClaimableBlockIndex(
-                    context.Source.BlockIndex));
+                resolve: context => context.Source.StakeState.ClaimableBlockIndex);
             Field<StakeAchievementsType>(
                 nameof(StakeState.Achievements),
                 description: "The staking achievements.",
-                resolve: context => context.Source.StakeState.Achievements);
-            Field<StakeRewardsType>(
+                deprecationReason: "Since StakeStateV2, the achievement became removed.",
+                resolve: _ => null);
+            Field<NonNullGraphType<StakeRewardsType>>(
                 "stakeRewards",
                 resolve: context =>
                 {

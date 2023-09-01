@@ -242,25 +242,14 @@ namespace NineChronicles.Headless.GraphTypes
             StakeStateType.StakeStateContext? GetStakeState(StateContext ctx, Address agentAddress)
             {
                 var stakeStateAddress = StakeState.DeriveAddress(agentAddress);
-                var stakeStateValue = ctx.GetState(stakeStateAddress);
-                if (stakeStateValue is Dictionary dictionary)
+                if (ctx.AccountState.TryGetStakeStateV2(stakeStateAddress, out StakeStateV2 stakeStateV2))
                 {
                     return new StakeStateType.StakeStateContext(
-                        new StakeStateType.StakeStateContext.StakeStateWrapper(new StakeState(dictionary)),
+                        stakeStateV2,
+                        stakeStateAddress,
                         ctx.AccountState,
                         ctx.BlockIndex
-                    );
-                }
-
-                if (stakeStateValue is List list)
-                {
-                    return new StakeStateType.StakeStateContext(
-                        new StakeStateType.StakeStateContext.StakeStateWrapper(
-                            new StakeStateV2(list),
-                            stakeStateAddress),
-                        ctx.AccountState,
-                        ctx.BlockIndex
-                    );
+                    );     
                 }
 
                 return null;
