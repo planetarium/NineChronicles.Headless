@@ -45,7 +45,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         public GraphQLTestBase(ITestOutputHelper output)
         {
-            Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console().CreateLogger();
+            const string outputTemplate =
+                "{Timestamp:HH:mm:ss:ffffffZ} - {Message}";
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.TestOutput(output, outputTemplate: outputTemplate)
+                .CreateLogger()
+                .ForContext<GraphQLTestBase>();
 
             _output = output;
 

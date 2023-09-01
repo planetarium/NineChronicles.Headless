@@ -266,12 +266,6 @@ namespace NineChronicles.Headless.GraphTypes
                         blockChain.GetWorldState(_tipHeader.Hash),
                         new[] { Addresses.GoldCurrency })[0]!
                 ).Currency;
-            var rewardSheet = new MonsterCollectionRewardSheet();
-            var csv = LegacyModule.GetStates(
-                blockChain.GetWorldState(_tipHeader.Hash),
-                new[] { Addresses.GetSheetAddress<MonsterCollectionRewardSheet>() }
-            )[0].ToDotnetString();
-            rewardSheet.Set(csv);
             Log.Debug($"StandaloneSubscription.RenderBlock target addresses. (count: {StandaloneContext.AgentAddresses.Count})");
             StandaloneContext.AgentAddresses
                 .AsParallel()
@@ -286,9 +280,7 @@ namespace NineChronicles.Headless.GraphTypes
                         _tipHeader,
                         address,
                         currency,
-                        statusSubject,
-                        balanceSubject,
-                        rewardSheet
+                        balanceSubject
                     );
                 });
 
@@ -301,40 +293,10 @@ namespace NineChronicles.Headless.GraphTypes
             BlockHeader tipHeader,
             Address address,
             Currency currency,
-            ReplaySubject<MonsterCollectionStatus> statusSubject,
-            ReplaySubject<string> balanceSubject,
-            MonsterCollectionRewardSheet rewardSheet)
+            ReplaySubject<string> balanceSubject)
         {
             FungibleAssetValue agentBalance = blockChain.GetBalance(address, currency, tipHeader.Hash);
             balanceSubject.OnNext(agentBalance.GetQuantityString(true));
-            if (AgentModule.GetAgentState(blockChain.GetWorldState(tipHeader.Hash), address ) is { } agentState)
-            {
-                Address deriveAddress =
-                    MonsterCollectionState.DeriveAddress(
-                        address,
-                        agentState.MonsterCollectionRound);
-                if (agentState.avatarAddresses.Any() &&
-                    LegacyModule.GetState(
-                            blockChain.GetWorldState(tipHeader.Hash),
-                            deriveAddress) is Dictionary
-                        collectDict)
-                {
-                    var monsterCollectionState = new MonsterCollectionState(collectDict);
-                    List<MonsterCollectionRewardSheet.RewardInfo> rewards =
-                        monsterCollectionState.CalculateRewards(
-                            rewardSheet,
-                            tipHeader.Index
-                        );
-
-                    var monsterCollectionStatus = new MonsterCollectionStatus(
-                        agentBalance,
-                        rewards,
-                        tipHeader.Index,
-                        monsterCollectionState.IsLocked(tipHeader.Index)
-                    );
-                    statusSubject.OnNext(monsterCollectionStatus);
-                }
-            }
         }
 
         private void RenderMonsterCollectionStateSubject<T>(ActionEvaluation<T> eval)

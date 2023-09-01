@@ -36,6 +36,7 @@ using Nekoyume.Module;
 using Nekoyume.TableData;
 using NineChronicles.Headless.Properties;
 using NineChronicles.Headless.Tests.Common;
+using Serilog;
 using Xunit;
 using Xunit.Abstractions;
 using static NineChronicles.Headless.NCActionUtils;
@@ -678,6 +679,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Block block = blockChain.ProposeBlock(
                 userPrivateKey,
                 lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, validators));
+            Log.Debug("Appending Block...");
             blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, validators));
 
             var avatarAddress = userAddress.Derive(
@@ -687,7 +689,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     0
                 )
             );
-
             string query = $@"query {{
                 stateQuery {{
                     avatar(avatarAddress: ""{avatarAddress}"") {{
