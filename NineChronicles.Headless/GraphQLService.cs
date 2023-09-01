@@ -37,12 +37,18 @@ namespace NineChronicles.Headless
         private StandaloneContext StandaloneContext { get; }
         private GraphQLNodeServiceProperties GraphQlNodeServiceProperties { get; }
         private IConfiguration Configuration { get; }
+        private ActionEvaluationPublisher Publisher { get; }
 
-        public GraphQLService(GraphQLNodeServiceProperties properties, StandaloneContext standaloneContext, IConfiguration configuration)
+        public GraphQLService(
+            GraphQLNodeServiceProperties properties,
+            StandaloneContext standaloneContext,
+            IConfiguration configuration,
+            ActionEvaluationPublisher publisher)
         {
             GraphQlNodeServiceProperties = properties;
             StandaloneContext = standaloneContext;
             Configuration = configuration;
+            Publisher = publisher;
         }
 
         public IHostBuilder Configure(IHostBuilder hostBuilder)
@@ -52,7 +58,7 @@ namespace NineChronicles.Headless
 
             return hostBuilder.ConfigureWebHostDefaults(builder =>
             {
-                builder.UseStartup(x => new GraphQLStartup(x.Configuration, StandaloneContext));
+                builder.UseStartup(x => new GraphQLStartup(x.Configuration, StandaloneContext, Publisher));
                 builder.ConfigureAppConfiguration(
                     (context, builder) =>
                     {
@@ -91,14 +97,19 @@ namespace NineChronicles.Headless
 
         internal class GraphQLStartup
         {
-            public GraphQLStartup(IConfiguration configuration, StandaloneContext standaloneContext)
+            public GraphQLStartup(
+                IConfiguration configuration,
+                StandaloneContext standaloneContext,
+                ActionEvaluationPublisher publisher)
             {
                 Configuration = configuration;
                 StandaloneContext = standaloneContext;
+                Publisher = publisher;
             }
 
             public IConfiguration Configuration { get; }
             public StandaloneContext StandaloneContext;
+            public ActionEvaluationPublisher Publisher;
 
             public void ConfigureServices(IServiceCollection services)
             {
@@ -162,7 +173,7 @@ namespace NineChronicles.Headless
 
                 // Capture requests
                 Dictionary<string, HashSet<Address>> ipSignerList = new();
-                app.UseMiddleware<HttpCaptureMiddleware>(StandaloneContext, ipSignerList);
+                app.UseMiddleware<HttpCaptureMiddleware>(StandaloneContext, ipSignerList, Publisher);
 
                 app.UseMiddleware<LocalAuthenticationMiddleware>();
                 if (Configuration[NoCorsKey] is null)
