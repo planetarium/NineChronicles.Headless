@@ -168,10 +168,9 @@ namespace NineChronicles.Headless
 
                 // Capture requests
                 Dictionary<string, HashSet<Address>> ipSignerList = new();
-                app.UseMiddleware<HttpMultiAccountManagementMiddleware>(
+                app.UseMiddleware<HttpCaptureMiddleware>(
                     StandaloneContext,
                     ipSignerList);
-                app.UseMiddleware<HttpCaptureMiddleware>();
 
                 app.UseMiddleware<LocalAuthenticationMiddleware>();
                 if (Configuration[NoCorsKey] is null)
