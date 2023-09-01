@@ -5,7 +5,6 @@ using GraphQL.Server;
 using GraphQL.Utilities;
 using Grpc.Core;
 using Grpc.Net.Client;
-using Libplanet.Crypto;
 using Libplanet.Explorer.Schemas;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -13,7 +12,6 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Middleware;
 using NineChronicles.Headless.Properties;
@@ -35,15 +33,11 @@ namespace NineChronicles.Headless
 
         public const string MagicOnionTargetKey = "magicOnionTarget";
 
-        private StandaloneContext StandaloneContext { get; }
         private GraphQLNodeServiceProperties GraphQlNodeServiceProperties { get; }
-        private IConfiguration Configuration { get; }
 
-        public GraphQLService(GraphQLNodeServiceProperties properties, StandaloneContext standaloneContext, IConfiguration configuration)
+        public GraphQLService(GraphQLNodeServiceProperties properties)
         {
             GraphQlNodeServiceProperties = properties;
-            StandaloneContext = standaloneContext;
-            Configuration = configuration;
         }
 
         public IHostBuilder Configure(IHostBuilder hostBuilder)
@@ -53,7 +47,7 @@ namespace NineChronicles.Headless
 
             return hostBuilder.ConfigureWebHostDefaults(builder =>
             {
-                builder.UseStartup(x => new GraphQLStartup(x.Configuration, StandaloneContext));
+                builder.UseStartup<GraphQLStartup>();
                 builder.ConfigureAppConfiguration(
                     (context, builder) =>
                     {
@@ -92,14 +86,12 @@ namespace NineChronicles.Headless
 
         internal class GraphQLStartup
         {
-            public GraphQLStartup(IConfiguration configuration, StandaloneContext standaloneContext)
+            public GraphQLStartup(IConfiguration configuration)
             {
                 Configuration = configuration;
-                StandaloneContext = standaloneContext;
             }
 
             public IConfiguration Configuration { get; }
-            public StandaloneContext StandaloneContext;
 
             public void ConfigureServices(IServiceCollection services)
             {
@@ -111,11 +103,6 @@ namespace NineChronicles.Headless
                     services.AddInMemoryRateLimiting();
                     services.AddMvc(options => options.EnableEndpointRouting = false);
                     services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
-                }
-
-                if (Convert.ToBoolean(Configuration.GetSection("MultiAccountManaging")["EnableManaging"]))
-                {
-                    services.Configure<MultiAccountManagerProperties>(Configuration.GetSection("MultiAccountManaging"));
                 }
 
                 if (!(Configuration[NoCorsKey] is null))
@@ -167,10 +154,7 @@ namespace NineChronicles.Headless
                 }
 
                 // Capture requests
-                Dictionary<string, HashSet<Address>> ipSignerList = new();
-                app.UseMiddleware<HttpCaptureMiddleware>(
-                    StandaloneContext,
-                    ipSignerList);
+                app.UseMiddleware<HttpCaptureMiddleware>();
 
                 app.UseMiddleware<LocalAuthenticationMiddleware>();
                 if (Configuration[NoCorsKey] is null)
