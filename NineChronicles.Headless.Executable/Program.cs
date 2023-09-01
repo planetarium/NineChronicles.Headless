@@ -378,7 +378,7 @@ namespace NineChronicles.Headless.Executable
                             : (GraphQLNodeServiceProperties.MagicOnionHttpOptions?)null,
                     };
 
-                    var graphQLService = new GraphQLService(graphQLNodeServiceProperties, standaloneContext, configuration);
+                    var graphQLService = new GraphQLService(graphQLNodeServiceProperties);
                     hostBuilder = graphQLService.Configure(hostBuilder);
                 }
 
@@ -511,12 +511,9 @@ namespace NineChronicles.Headless.Executable
                         context,
                         new ConcurrentDictionary<string, Sentry.ITransaction>()
                     );
-
                     hostBuilder.UseNineChroniclesRPC(
                         rpcProperties,
-                        publisher,
-                        standaloneContext,
-                        configuration
+                        publisher
                     );
                 }
 
