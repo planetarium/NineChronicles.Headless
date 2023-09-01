@@ -23,7 +23,10 @@ namespace NineChronicles.Headless.Middleware
         private Dictionary<string, HashSet<Address>> _ipSignerList;
         private ActionEvaluationPublisher _actionEvaluationPublisher;
 
-        public GrpcCaptureMiddleware(StandaloneContext standaloneContext, Dictionary<string, HashSet<Address>> ipSignerList, ActionEvaluationPublisher actionEvaluationPublisher)
+        public GrpcCaptureMiddleware(
+            StandaloneContext standaloneContext,
+            Dictionary<string, HashSet<Address>> ipSignerList,
+            ActionEvaluationPublisher actionEvaluationPublisher)
         {
             _logger = Log.Logger.ForContext<GrpcCaptureMiddleware>();
             _standaloneContext = standaloneContext;
@@ -48,58 +51,60 @@ namespace NineChronicles.Headless.Middleware
             {
                 var agent = new Address(addClientAddressBytes);
                 var httpContext = context.GetHttpContext();
-                var ipAddress = httpContext.Connection.RemoteIpAddress + ":" + httpContext.Connection.RemotePort;
+                var ipAddress = httpContext.Connection.RemoteIpAddress!.ToString();
                 var uaHeader = httpContext.Request.Headers["User-Agent"].FirstOrDefault()!;
                 AddClientByDevice(agent, uaHeader);
 
                 _logger.Information(
                     "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method} Agent: {Agent} Header: {Header}",
                     ipAddress, context.Method, agent, uaHeader);
-                if (!_ipSignerList.ContainsKey(httpContext.Connection.RemoteIpAddress!.ToString()))
+                if (!_ipSignerList.ContainsKey(ipAddress))
                 {
                     _logger.Information(
                         "[GRPC-REQUEST-CAPTURE] Creating a new list for IP: {IP}",
-                        httpContext.Connection.RemoteIpAddress!.ToString());
-                    _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()] = new HashSet<Address>();
+                        ipAddress);
+                    _ipSignerList[ipAddress] = new HashSet<Address>();
                 }
                 else
                 {
                     _logger.Information(
                         "[GRPC-REQUEST-CAPTURE] List already created for IP: {IP} Count: {Count}",
-                        httpContext.Connection.RemoteIpAddress!.ToString(),
-                        _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count);
+                        ipAddress,
+                        _ipSignerList[ipAddress].Count);
                 }
 
-                _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Add(agent);
+                _ipSignerList[ipAddress].Add(agent);
+                AddClientIpInfo(agent, ipAddress);
             }
 
             if (context.Method is "/IBlockChainService/GetNextTxNonce" && request is byte[] getNextTxNonceAddressBytes)
             {
                 var agent = new Address(getNextTxNonceAddressBytes);
                 var httpContext = context.GetHttpContext();
-                var ipAddress = httpContext.Connection.RemoteIpAddress + ":" + httpContext.Connection.RemotePort;
+                var ipAddress = httpContext.Connection.RemoteIpAddress!.ToString();
                 var uaHeader = httpContext.Request.Headers["User-Agent"].FirstOrDefault()!;
                 AddClientByDevice(agent, uaHeader);
 
                 _logger.Information(
                     "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method} Agent: {Agent} Header: {Header}",
                     ipAddress, context.Method, agent, uaHeader);
-                if (!_ipSignerList.ContainsKey(httpContext.Connection.RemoteIpAddress!.ToString()))
+                if (!_ipSignerList.ContainsKey(ipAddress))
                 {
                     _logger.Information(
                         "[GRPC-REQUEST-CAPTURE] Creating a new list for IP: {IP}",
-                        httpContext.Connection.RemoteIpAddress!.ToString());
-                    _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()] = new HashSet<Address>();
+                        ipAddress);
+                    _ipSignerList[ipAddress] = new HashSet<Address>();
                 }
                 else
                 {
                     _logger.Information(
                         "[GRPC-REQUEST-CAPTURE] List already created for IP: {IP} Count: {Count}",
-                        httpContext.Connection.RemoteIpAddress!.ToString(),
-                        _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count);
+                        ipAddress,
+                        _ipSignerList[ipAddress].Count);
                 }
 
-                _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Add(agent);
+                _ipSignerList[ipAddress].Add(agent);
+                AddClientIpInfo(agent, ipAddress);
             }
 
             if (context.Method is "/IBlockChainService/PutTransaction" && request is byte[] txBytes)
@@ -110,16 +115,17 @@ namespace NineChronicles.Headless.Middleware
                     ? $"{action}"
                     : "NoAction";
                 var httpContext = context.GetHttpContext();
-                var ipAddress = httpContext.Connection.RemoteIpAddress + ":" + httpContext.Connection.RemotePort;
+                var ipAddress = httpContext.Connection.RemoteIpAddress!.ToString();
                 var uaHeader = httpContext.Request.Headers["User-Agent"].FirstOrDefault()!;
                 if (!_actionEvaluationPublisher.GetClients().Contains(tx.Signer))
                 {
                     await _actionEvaluationPublisher.AddClient(tx.Signer);
                     AddClientByDevice(tx.Signer, uaHeader);
+                    AddClientIpInfo(tx.Signer, ipAddress);
                 }
 
                 var agent = tx.Signer;
-                if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count > 49)
+                if (_ipSignerList[ipAddress].Count > 49)
                 {
                     if (!_multiAccountList.ContainsKey(agent))
                     {
@@ -137,7 +143,7 @@ namespace NineChronicles.Headless.Middleware
                             }
                             else
                             {
-                                _logger.Information($"[GRPC-REQUEST-CAPTURE] Managing Agent {agent} for {MultiAccountManagementTime} minutes due to {_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count} associated accounts.");
+                                _logger.Information($"[GRPC-REQUEST-CAPTURE] Managing Agent {agent} for {MultiAccountManagementTime} minutes due to {_ipSignerList[ipAddress].Count} associated accounts.");
                                 ManageMultiAccount(agent);
                                 _multiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
                                 var ncStagePolicy = (NCStagePolicy)_standaloneContext.BlockChain!.StagePolicy;
@@ -164,9 +170,9 @@ namespace NineChronicles.Headless.Middleware
 
                     _logger.Information(
                         "[GRPC-REQUEST-CAPTURE] IP: {IP} List Count: {Count}, AgentAddresses: {Agent}",
-                        httpContext.Connection.RemoteIpAddress!.ToString(),
-                        _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count,
-                        _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()]);
+                        ipAddress,
+                        _ipSignerList[ipAddress].Count,
+                        _ipSignerList[ipAddress]);
                 }
                 _logger.Information(
                     "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method} Agent: {Agent} Action: {Action}",
@@ -194,6 +200,11 @@ namespace NineChronicles.Headless.Middleware
             {
                 _actionEvaluationPublisher.AddClientByDevice(agentAddress, "other");
             }
+        }
+
+        private void AddClientIpInfo(Address agentAddress, string ipAddress)
+        {
+            _actionEvaluationPublisher.AddClientAndIp(ipAddress, agentAddress);
         }
     }
 }
