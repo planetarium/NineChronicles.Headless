@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using GraphQL;
 using GraphQL.Types;
+using Libplanet.Crypto;
 using Libplanet.Explorer.GraphTypes;
 using Log = Serilog.Log;
 
@@ -48,6 +49,24 @@ namespace NineChronicles.Headless.GraphTypes
                     string device = context.GetArgument<string>("device");
                     return publisher.GetClientsByDevice(device);
                 });
+            Field<NonNullGraphType<ListGraphType<StringGraphType>>>(
+                name: "clientsByIp",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "minimum"
+                    }
+                ),
+                description: "clients connected to this node by Ip address.",
+                resolve: context =>
+                {
+                    int minimum = context.GetArgument<int>("minimum");
+                    return publisher.GetClientsByIp(minimum);
+                });
+            Field<NonNullGraphType<ListGraphType<StringGraphType>>>(
+                name: "ipsByClient",
+                description: "Ip addresses associate to each client.",
+                resolve: context => publisher.GetIpsByClient());
         }
     }
 }

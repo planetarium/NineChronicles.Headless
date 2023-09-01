@@ -22,13 +22,19 @@ namespace NineChronicles.Headless.Middleware
         private readonly ILogger _logger;
         private StandaloneContext _standaloneContext;
         private Dictionary<string, HashSet<Address>> _ipSignerList;
+        private ActionEvaluationPublisher _publisher;
 
-        public HttpCaptureMiddleware(RequestDelegate next, StandaloneContext standaloneContext, Dictionary<string, HashSet<Address>> ipSignerList)
+        public HttpCaptureMiddleware(
+            RequestDelegate next,
+            StandaloneContext standaloneContext,
+            Dictionary<string, HashSet<Address>> ipSignerList,
+            ActionEvaluationPublisher publisher)
         {
             _next = next;
             _logger = Log.Logger.ForContext<HttpCaptureMiddleware>();
             _standaloneContext = standaloneContext;
             _ipSignerList = ipSignerList;
+            _publisher = publisher;
         }
 
         private static void ManageMultiAccount(Address agent)
@@ -58,6 +64,7 @@ namespace NineChronicles.Headless.Middleware
                     {
                         var agent = new Address(body.Split("\\\"")[1].Split("0x")[1]);
                         UpdateIpSignerList(remoteIp!.ToString(), agent);
+                        AddClientIpInfo(agent, remoteIp.ToString());
                     }
                     catch (Exception ex)
                     {
@@ -131,6 +138,7 @@ namespace NineChronicles.Headless.Middleware
                         else
                         {
                             UpdateIpSignerList(remoteIp!.ToString(), agent);
+                            AddClientIpInfo(agent, remoteIp.ToString());
                         }
                     }
                     catch (Exception ex)
@@ -164,6 +172,11 @@ namespace NineChronicles.Headless.Middleware
             }
 
             _ipSignerList[ip].Add(agent);
+        }
+
+        private void AddClientIpInfo(Address agentAddress, string ipAddress)
+        {
+            _publisher.AddClientAndIp(ipAddress, agentAddress);
         }
     }
 }

@@ -43,9 +43,10 @@ namespace NineChronicles.Headless
         private readonly ExceptionRenderer _exceptionRenderer;
         private readonly NodeStatusRenderer _nodeStatusRenderer;
 
-        private readonly ConcurrentDictionary<Address, Client> _clients = new ConcurrentDictionary<Address, Client>();
-        private readonly ConcurrentDictionary<Address, string> _clientsByDevice = new ConcurrentDictionary<Address, string>();
-        private readonly ConcurrentDictionary<string, HashSet<Address>> _clientsByIp = new ConcurrentDictionary<string, HashSet<Address>>();
+        private readonly ConcurrentDictionary<Address, Client> _clients = new();
+        private readonly ConcurrentDictionary<Address, string> _clientsByDevice = new();
+        private readonly ConcurrentDictionary<string, HashSet<Address>> _clientsByIp = new();
+        private readonly ConcurrentDictionary<Address, HashSet<string>> _ipsByClient = new();
 
         private RpcContext _context;
         private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
@@ -81,6 +82,18 @@ namespace NineChronicles.Headless
                     new Measurement<int>(this.GetClientsCountByDevice("mobile"), new[] { new KeyValuePair<string, object?>("device", "mobile") }),
                     new Measurement<int>(this.GetClientsCountByDevice("pc"), new[] { new KeyValuePair<string, object?>("device", "pc") }),
                     new Measurement<int>(this.GetClientsCountByDevice("other"), new[] { new KeyValuePair<string, object?>("device", "other") }),
+                },
+                description: "Number of RPC clients connected by device.");
+            meter.CreateObservableGauge(
+                "ninechronicles_clients_count_by_ip",
+                () => new[]
+                {
+                    new Measurement<int>(
+                        GetClientsCountByIp(50),
+                        new KeyValuePair<string, object?>("account-type", "multi-account")),
+                    new Measurement<int>(
+                        GetClientsCountByIp(0) - GetClientsCountByIp(50),
+                        new KeyValuePair<string, object?>("account-type", "organic-account")),
                 },
                 description: "Number of RPC clients connected by device.");
 
@@ -152,7 +165,7 @@ namespace NineChronicles.Headless
                 .ToList();
         }
 
-        public void AddClientByIp(string ipAddress, Address clientAddress)
+        public void AddClientAndIp(string ipAddress, Address clientAddress)
         {
             if (!_clientsByIp.ContainsKey(ipAddress))
             {
@@ -160,19 +173,47 @@ namespace NineChronicles.Headless
             }
 
             _clientsByIp[ipAddress].Add(clientAddress);
+            if (!_ipsByClient.ContainsKey(clientAddress))
+            {
+                _ipsByClient[clientAddress] = new HashSet<string>();
+            }
+
+            _ipsByClient[clientAddress].Add(ipAddress);
         }
 
-        public int GetClientsCountByIp(string device)
+        public int GetClientsCountByIp(int minimum)
         {
-            return _clientsByDevice.Values.Count(x => x == device);
+            int clientsCount = 0;
+            foreach (var clientIp in _clientsByIp.Keys)
+            {
+                if (_clientsByIp[clientIp].Count >= minimum)
+                {
+                    clientsCount += _clientsByIp[clientIp].Count;
+                }
+            }
+
+            return clientsCount;
         }
 
-        public List<Address> GetClientsByIp(string device)
+        public ConcurrentDictionary<string, List<Address>> GetClientsByIp(int minimum)
         {
-            return _clientsByDevice
-                .Where(x => x.Value == device)
-                .Select(x => x.Key)
-                .ToList();
+            ConcurrentDictionary<string, List<Address>> clientsList = new();
+            foreach (var ip in _clientsByIp.Keys)
+            {
+                if (_clientsByIp[ip].Count >= minimum)
+                {
+                    clientsList.TryAdd(ip, _clientsByIp[ip].ToList());
+                }
+            }
+
+            return new ConcurrentDictionary<string, List<Address>>(
+                clientsList.OrderByDescending(x => x.Value.Count));
+        }
+
+        public ConcurrentDictionary<Address, HashSet<string>> GetIpsByClient()
+        {
+            return new ConcurrentDictionary<Address, HashSet<string>>(
+                _ipsByClient.OrderByDescending(x => x.Value.Count));
         }
 
         public override async Task StopAsync(CancellationToken cancellationToken)
