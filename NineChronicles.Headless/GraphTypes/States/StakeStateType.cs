@@ -49,11 +49,11 @@ namespace NineChronicles.Headless.GraphTypes.States
                         context.Source.Address,
                         new GoldCurrencyState((Dictionary)context.Source.GetState(GoldCurrencyState.Address)!).Currency)
                     .GetQuantityString(true));
-            Field<NonNullGraphType<IntGraphType>>(
+            Field<NonNullGraphType<LongGraphType>>(
                 "startedBlockIndex",
                 description: "The block index the user started to stake.",
                 resolve: context => context.Source.StakeState.StartedBlockIndex);
-            Field<NonNullGraphType<IntGraphType>>(
+            Field<NonNullGraphType<LongGraphType>>(
                 "receivedBlockIndex",
                 description: "The block index the user received rewards.",
                 resolve: context => context.Source.StakeState.ReceivedBlockIndex);
