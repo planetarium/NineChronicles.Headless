@@ -119,8 +119,7 @@ namespace NineChronicles.Headless.Middleware
                                     }
                                     else
                                     {
-                                        var currentManagedTime = (DateTimeOffset.Now - MultiAccountManagementList[agent]).Minutes;
-                                        if (currentManagedTime > _options.Value.ManagementTimeMinutes)
+                                        if ((DateTimeOffset.Now - MultiAccountManagementList[agent]).Minutes > _options.Value.ManagementTimeMinutes)
                                         {
                                             _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Restoring Agent {agent} after {_options.Value.ManagementTimeMinutes} minutes.");
                                             RestoreMultiAccount(agent);
@@ -129,7 +128,7 @@ namespace NineChronicles.Headless.Middleware
                                         }
                                         else
                                         {
-                                            _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Agent {agent} is in managed status for the next {_options.Value.ManagementTimeMinutes - currentManagedTime} minutes.");
+                                            _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Agent {agent} is in managed status for the next {_options.Value.ManagementTimeMinutes - (DateTimeOffset.Now - MultiAccountManagementList[agent]).Minutes} minutes.");
                                             await CancelRequestAsync(context);
                                             return;
                                         }
