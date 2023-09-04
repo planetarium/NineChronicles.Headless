@@ -26,7 +26,9 @@ using MagicOnion.Client;
 using MessagePack;
 using Microsoft.Extensions.Hosting;
 using Nekoyume.Action;
+using Nekoyume.Action.Extensions;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.Shared.Hubs;
 using Sentry;
 using Serilog;
@@ -265,13 +267,15 @@ namespace NineChronicles.Headless
                                 if (pa is IBattleArenaV1 battleArena)
                                 {
                                     var enemyAvatarAddress = battleArena.EnemyAvatarAddress;
-                                    if (previousStates.GetState(enemyAvatarAddress) is { } eAvatar)
+                                    // FIXME: Should use AvatarModule?
+                                    if (LegacyModule.GetState(previousStates, enemyAvatarAddress) is { } eAvatar)
                                     {
                                         const string inventoryKey = "inventory";
-                                        previousStates = previousStates.SetState(enemyAvatarAddress, eAvatar);
-                                        if (previousStates.GetState(enemyAvatarAddress.Derive(inventoryKey)) is { } inventory)
+                                        previousStates = LegacyModule.SetState(previousStates, enemyAvatarAddress, eAvatar);
+                                        if (LegacyModule.GetState(previousStates, enemyAvatarAddress.Derive(inventoryKey)) is { } inventory)
                                         {
-                                            previousStates = previousStates.SetState(
+                                            previousStates = LegacyModule.SetState(
+                                                previousStates,
                                                 enemyAvatarAddress.Derive(inventoryKey),
                                                 inventory);
                                         }
@@ -280,26 +284,26 @@ namespace NineChronicles.Headless
                                     var enemyItemSlotStateAddress =
                                         ItemSlotState.DeriveAddress(battleArena.EnemyAvatarAddress,
                                             Nekoyume.Model.EnumType.BattleType.Arena);
-                                    if (previousStates.GetState(enemyItemSlotStateAddress) is { } eItemSlot)
+                                    if (LegacyModule.GetState(previousStates, enemyItemSlotStateAddress) is { } eItemSlot)
                                     {
-                                        previousStates = previousStates.SetState(enemyItemSlotStateAddress, eItemSlot);
+                                        previousStates = LegacyModule.SetState(previousStates, enemyItemSlotStateAddress, eItemSlot);
                                     }
 
                                     var enemyRuneSlotStateAddress =
                                         RuneSlotState.DeriveAddress(battleArena.EnemyAvatarAddress,
                                             Nekoyume.Model.EnumType.BattleType.Arena);
-                                    if (previousStates.GetState(enemyRuneSlotStateAddress) is { } eRuneSlot)
+                                    if (LegacyModule.GetState(previousStates, enemyRuneSlotStateAddress) is { } eRuneSlot)
                                     {
-                                        previousStates = previousStates.SetState(enemyRuneSlotStateAddress, eRuneSlot);
+                                        previousStates = LegacyModule.SetState(previousStates, enemyRuneSlotStateAddress, eRuneSlot);
                                         var runeSlot = new RuneSlotState(eRuneSlot as List);
                                         var enemyRuneSlotInfos = runeSlot.GetEquippedRuneSlotInfos();
                                         var runeAddresses = enemyRuneSlotInfos.Select(info =>
                                             RuneState.DeriveAddress(battleArena.EnemyAvatarAddress, info.RuneId));
                                         foreach (var address in runeAddresses)
                                         {
-                                            if (previousStates.GetState(address) is { } rune)
+                                            if (LegacyModule.GetState(previousStates, address) is { } rune)
                                             {
-                                                previousStates = previousStates.SetState(address, rune);
+                                                previousStates = LegacyModule.SetState(previousStates, address, rune);
                                             }
                                         }
                                     }

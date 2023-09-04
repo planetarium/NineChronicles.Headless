@@ -6,10 +6,11 @@ using Libplanet.Crypto;
 using Libplanet.Types.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Action.State;
-using Nekoyume.Action;
+using Nekoyume.Action.Extensions;
 using Nekoyume.Helper;
 using Nekoyume.Model.Quest;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using NineChronicles.Headless.GraphTypes.States.Models;
 using static Lib9c.SerializeKeys;
 
@@ -19,8 +20,8 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class AgentStateContext : StateContext
         {
-            public AgentStateContext(AgentState agentState, IAccountState accountState, long blockIndex)
-                : base(accountState, blockIndex)
+            public AgentStateContext(AgentState agentState, IWorldState worldState, long blockIndex)
+                : base(worldState, blockIndex)
             {
                 AgentState = agentState;
             }
@@ -45,11 +46,10 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context =>
                 {
                     IReadOnlyList<Address> avatarAddresses = context.Source.GetAvatarAddresses();
-                    return context.Source.AccountState.GetAvatarStates(avatarAddresses).Select(
-                        x => new AvatarStateType.AvatarStateContext(
-                            x,
-                            context.Source.AccountState,
-                            context.Source.BlockIndex));
+                    return avatarAddresses.Select(address => new AvatarStateType.AvatarStateContext(
+                        AvatarModule.GetAvatarState(context.Source.WorldState, address),
+                        context.Source.WorldState,
+                        context.Source.BlockIndex));
                 });
             Field<NonNullGraphType<StringGraphType>>(
                 "gold",
@@ -57,10 +57,13 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context =>
                 {
                     Currency currency = new GoldCurrencyState(
-                        (Dictionary)context.Source.GetState(GoldCurrencyState.Address)!
+                        (Dictionary)LegacyModule.GetState(
+                            context.Source.WorldState,
+                            GoldCurrencyState.Address)!
                     ).Currency;
 
-                    return context.Source.GetBalance(
+                    return LegacyModule.GetBalance(
+                        context.Source.WorldState,
                         context.Source.AgentAddress,
                         currency
                     ).GetQuantityString(true);
@@ -79,7 +82,9 @@ namespace NineChronicles.Headless.GraphTypes.States
                         context.Source.AgentAddress,
                         context.Source.AgentState.MonsterCollectionRound
                     );
-                    if (context.Source.GetState(monsterCollectionAddress) is { } state)
+                    if (LegacyModule.GetState(
+                            context.Source.WorldState,
+                            monsterCollectionAddress) is { } state)
                     {
                         return new MonsterCollectionState((Dictionary)state).Level;
                     }
@@ -99,7 +104,9 @@ namespace NineChronicles.Headless.GraphTypes.States
                         addresses[avatarAddresses.Count + i] = avatarAddresses[i];
                     }
 
-                    IReadOnlyList<IValue?> values = context.Source.GetStates(addresses);
+                    IReadOnlyList<IValue?> values = LegacyModule.GetStates(
+                        context.Source.WorldState,
+                        addresses);
                     for (int i = 0; i < avatarAddresses.Count; i++)
                     {
                         if (values[i] is { } rawQuestList)
@@ -128,7 +135,8 @@ namespace NineChronicles.Headless.GraphTypes.States
             Field<NonNullGraphType<StringGraphType>>(
                 "crystal",
                 description: "Current CRYSTAL.",
-                resolve: context => context.Source.GetBalance(
+                resolve: context => LegacyModule.GetBalance(
+                    context.Source.WorldState,
                     context.Source.AgentAddress,
                     CrystalCalculator.CRYSTAL
                 ).GetQuantityString(true));
@@ -141,7 +149,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                     Address? address = null;
                     bool approved = false;
                     int mead = 0;
-                    if (context.Source.GetState(pledgeAddress) is List l)
+                    if (LegacyModule.GetState(context.Source.WorldState, pledgeAddress) is List l)
                     {
                         address = l[0].ToAddress();
                         approved = l[1].ToBoolean();

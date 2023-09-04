@@ -1,9 +1,6 @@
 #nullable enable
 
-using System.Collections.Generic;
-using Bencodex.Types;
 using Libplanet.Crypto;
-using Libplanet.Types.Assets;
 using Libplanet.Action.State;
 using NineChronicles.Headless.Utils;
 
@@ -12,16 +9,16 @@ namespace NineChronicles.Headless.GraphTypes.States
     public class StateContext
     {
         public StateContext(
-            IAccountState accountState,
+            IWorldState worldState,
             long blockIndex)
         {
-            AccountState = accountState;
+            WorldState = worldState;
             BlockIndex = blockIndex;
-            CurrencyFactory = new CurrencyFactory(() => accountState);
+            CurrencyFactory = new CurrencyFactory(() => worldState);
             FungibleAssetValueFactory = new FungibleAssetValueFactory(CurrencyFactory);
         }
 
-        public IAccountState AccountState { get; }
+        public IWorldState WorldState { get; }
 
         public long BlockIndex { get; }
 
@@ -29,10 +26,6 @@ namespace NineChronicles.Headless.GraphTypes.States
 
         public FungibleAssetValueFactory FungibleAssetValueFactory { get; }
 
-        public IValue? GetState(Address address) => AccountState.GetState(address);
-
-        public IReadOnlyList<IValue?> GetStates(IReadOnlyList<Address> addresses) => AccountState.GetStates(addresses);
-
-        public FungibleAssetValue GetBalance(Address address, Currency currency) => AccountState.GetBalance(address, currency);
+        public IAccount GetAccount(Address address) => WorldState.GetAccount(address);
     }
 }

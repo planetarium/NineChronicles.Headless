@@ -2,7 +2,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GraphQL.Execution;
+using Libplanet.Action.State;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using NineChronicles.Headless.GraphTypes.States;
 using NineChronicles.Headless.Tests.Common;
 using Xunit;
@@ -22,14 +24,20 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 agentAddress
                 index
             }";
-            MockState mockState = MockState.Empty
-                .SetState(Fixtures.AvatarAddress, Fixtures.AvatarStateFX.Serialize())
-                .SetState(Fixtures.UserAddress, Fixtures.AgentStateFx.Serialize());
+            IWorld mockWorld = new MockWorld();
+            mockWorld = AvatarModule.SetAvatarState(
+                mockWorld,
+                Fixtures.AvatarAddress,
+                Fixtures.AvatarStateFX);
+            mockWorld = AgentModule.SetAgentState(
+                mockWorld,
+                Fixtures.UserAddress,
+                Fixtures.AgentStateFx);
             var queryResult = await ExecuteQueryAsync<AvatarStateType>(
                 query,
                 source: new AvatarStateType.AvatarStateContext(
                     avatarState,
-                    mockState,
+                    mockWorld,
                     0));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
@@ -51,23 +59,29 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 }
             }
             ";
-            MockState mockState = MockState.Empty
-                .SetState(Fixtures.AvatarAddress, Fixtures.AvatarStateFX.Serialize())
-                .SetState(Fixtures.UserAddress, Fixtures.AgentStateFx.Serialize());
+            IWorld mockWorld = new MockWorld();
+            mockWorld = AvatarModule.SetAvatarState(
+                mockWorld,
+                Fixtures.AvatarAddress,
+                Fixtures.AvatarStateFX);
+            mockWorld = AgentModule.SetAgentState(
+                mockWorld,
+                Fixtures.UserAddress,
+                Fixtures.AgentStateFx);
 
             for (int i = 0; i < Fixtures.AvatarStateFX.combinationSlotAddresses.Count; i++)
             {
-                mockState = mockState
-                    .SetState(
-                        Fixtures.AvatarStateFX.combinationSlotAddresses[i],
-                        Fixtures.CombinationSlotStatesFx[i].Serialize());
+                mockWorld = LegacyModule.SetState(
+                    mockWorld,
+                    Fixtures.AvatarStateFX.combinationSlotAddresses[i],
+                    Fixtures.CombinationSlotStatesFx[i].Serialize());
             }
 
             var queryResult = await ExecuteQueryAsync<AvatarStateType>(
                 query,
                 source: new AvatarStateType.AvatarStateContext(
                     avatarState,
-                    mockState,
+                    mockWorld,
                     0));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);

@@ -78,11 +78,11 @@ class PostActionEvaluator : IActionEvaluator
                     0,
                     0,
                     false,
-                    new AccountStateDelta(),
+                    new World(),
                     new Random(0),
                     null,
                     false),
-                new AccountStateDelta(),
+                new World(),
                 null)
         };
     }
@@ -105,11 +105,11 @@ class PreActionEvaluator : IActionEvaluator
                     0,
                     0,
                     false,
-                    new AccountStateDelta(),
+                    new World(),
                     new Random(0),
                     null,
                     false),
-                new AccountStateDelta(),
+                new World(),
                 null)
         };
     }

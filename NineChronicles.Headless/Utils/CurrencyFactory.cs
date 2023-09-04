@@ -11,14 +11,14 @@ namespace NineChronicles.Headless.Utils;
 
 public class CurrencyFactory
 {
-    private readonly Func<IAccountState> _accountStateGetter;
+    private readonly Func<IWorldState> _worldStateGetter;
     private Currency? _ncg;
 
     public CurrencyFactory(
-        Func<IAccountState> accountStateGetter,
+        Func<IWorldState> worldStateGetter,
         Currency? ncg = null)
     {
-        _accountStateGetter = accountStateGetter;
+        _worldStateGetter = worldStateGetter;
         _ncg = ncg;
     }
 
@@ -51,7 +51,10 @@ public class CurrencyFactory
             return _ncg;
         }
 
-        var value = _accountStateGetter().GetState(Addresses.GoldCurrency);
+        // FIXME: Should use module instead of hardcoded address.
+        var value = _worldStateGetter()
+            .GetAccount(ReservedAddresses.LegacyAccount)
+            .GetState(Addresses.GoldCurrency);
         if (value is Dictionary goldCurrencyDict)
         {
             var goldCurrency = new GoldCurrencyState(goldCurrencyDict);

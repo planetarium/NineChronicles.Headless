@@ -182,18 +182,6 @@ namespace NineChronicles.Headless.Executable.Commands
             if (config is null)
             {
                 _console.Out.WriteLine("Extra config not provided");
-                return;
-            }
-
-            if (!string.IsNullOrEmpty(config.Value.PendingActivationStatePath))
-            {
-                string hex = File.ReadAllText(config.Value.PendingActivationStatePath).Trim();
-                List decoded = (List)_codec.Decode(ByteUtil.ParseHex(hex));
-                CreatePendingActivations action = new();
-                action.LoadPlainValue(decoded[1]);
-                pendingActivationStates = action.PendingActivations.Select(
-                    pa => new PendingActivationState(pa.Nonce, new PublicKey(pa.PublicKey))
-                ).ToList();
             }
         }
 

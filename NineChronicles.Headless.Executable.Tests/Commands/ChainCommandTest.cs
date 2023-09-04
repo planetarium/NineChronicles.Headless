@@ -103,7 +103,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                             validatorSet: new ValidatorSet(
                                 new[] { new Validator(proposer.PublicKey, BigInteger.One) }.ToList()
                             ),
-                            states: ImmutableDictionary.Create<Address, IValue>()
+                            states: ImmutableDictionary.Create<Address, IImmutableDictionary<Address, IValue>>()
                         )
                     }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa.PlainValue }))
                     .ToImmutableList());
@@ -164,7 +164,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                             validatorSet: new ValidatorSet(
                                 new[] { new Validator(proposer.PublicKey, BigInteger.One) }.ToList()
                             ),
-                            states: ImmutableDictionary.Create<Address, IValue>()
+                            states: ImmutableDictionary.Create<Address, IImmutableDictionary<Address, IValue>>()
                         )
                     }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa.PlainValue }))
                     .ToImmutableList());

@@ -1,6 +1,5 @@
 using GraphQL;
 using GraphQL.Client.Abstractions;
-using GraphQL.Client.Http;
 
 namespace NineChronicles.Headless.Executable.Commands;
 

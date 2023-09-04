@@ -10,9 +10,12 @@ using Libplanet.Types.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Action.Extensions;
 using Nekoyume.Extensions;
+using Nekoyume.Model.Exceptions;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using Nekoyume.TableData.Crystal;
 using NineChronicles.Headless.GraphTypes.Abstractions;
@@ -35,8 +38,8 @@ namespace NineChronicles.Headless.GraphTypes
                 try
                 {
                     return new AvatarStateType.AvatarStateContext(
-                        context.AccountState.GetAvatarState(address),
-                        context.AccountState,
+                        AvatarModule.GetAvatarState(context.WorldState, address),
+                        context.WorldState,
                         context.BlockIndex);
                 }
                 catch (InvalidAddressException)
@@ -89,7 +92,9 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var index = context.GetArgument<int>("index");
-                    if (context.Source.GetState(RankingState.Derive(index)) is { } state)
+                    if (LegacyModule.GetState(
+                            context.Source.WorldState,
+                            RankingState.Derive(index)) is { } state)
                     {
                         return new RankingMapState((Dictionary)state);
                     }
@@ -99,10 +104,12 @@ namespace NineChronicles.Headless.GraphTypes
             Field<ShopStateType>(
                 name: "shop",
                 description: "State for shop.",
-                deprecationReason: "Shop is migrated to ShardedShop and not using now. Use shardedShop() instead.",
-                resolve: context => context.Source.GetState(Addresses.Shop) is { } state
-                    ? new ShopState((Dictionary)state)
-                    : null);
+                deprecationReason:
+                "Shop is migrated to ShardedShop and not using now. Use shardedShop() instead.",
+                resolve: context =>
+                    LegacyModule.GetState(context.Source.WorldState, Addresses.Shop) is { } state
+                        ? new ShopState((Dictionary)state)
+                        : null);
             Field<ShardedShopStateV2Type>(
                 name: "shardedShop",
                 description: "State for sharded shop.",
@@ -122,7 +129,9 @@ namespace NineChronicles.Headless.GraphTypes
                     var subType = context.GetArgument<ItemSubType>("itemSubType");
                     var nonce = context.GetArgument<int>("nonce").ToString("X").ToLower();
 
-                    if (context.Source.GetState(ShardedShopStateV2.DeriveAddress(subType, nonce)) is { } state)
+                    if (LegacyModule.GetState(
+                            context.Source.WorldState,
+                            ShardedShopStateV2.DeriveAddress(subType, nonce)) is { } state)
                     {
                         return new ShardedShopStateV2((Dictionary)state);
                     }
@@ -142,31 +151,31 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var index = context.GetArgument<int>("index");
                     var arenaAddress = WeeklyArenaState.DeriveAddress(index);
-                    if (context.Source.GetState(arenaAddress) is { } state)
+                    if (LegacyModule.GetState(context.Source.WorldState, arenaAddress) is { } state)
                     {
-                        var arenastate = new WeeklyArenaState((Dictionary)state);
-                        if (arenastate.OrderedArenaInfos.Count == 0)
+                        var arenaState = new WeeklyArenaState((Dictionary)state);
+                        if (arenaState.OrderedArenaInfos.Count == 0)
                         {
                             var listAddress = arenaAddress.Derive("address_list");
-                            if (context.Source.GetState(listAddress) is List rawList)
+                            if (LegacyModule.GetState(context.Source.WorldState, listAddress) is List rawList)
                             {
                                 var addressList = rawList.ToList(StateExtensions.ToAddress);
                                 var arenaInfos = new List<ArenaInfo>();
                                 foreach (var address in addressList)
                                 {
                                     var infoAddress = arenaAddress.Derive(address.ToByteArray());
-                                    if (context.Source.GetState(infoAddress) is Dictionary rawInfo)
+                                    if (LegacyModule.GetState(context.Source.WorldState, infoAddress) is Dictionary rawInfo)
                                     {
                                         var info = new ArenaInfo(rawInfo);
                                         arenaInfos.Add(info);
                                     }
                                 }
 #pragma warning disable CS0618 // Type or member is obsolete
-                                arenastate.OrderedArenaInfos.AddRange(arenaInfos.OrderByDescending(a => a.Score).ThenBy(a => a.CombatPoint));
+                                arenaState.OrderedArenaInfos.AddRange(arenaInfos.OrderByDescending(a => a.Score).ThenBy(a => a.CombatPoint));
 #pragma warning restore CS0618 // Type or member is obsolete
                             }
                         }
-                        return arenastate;
+                        return arenaState;
                     }
 
                     return null;
@@ -182,11 +191,11 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var address = context.GetArgument<Address>("address");
-                    if (context.Source.GetState(address) is Dictionary state)
+                    if (AgentModule.GetAgentState(context.Source.WorldState, address) is { } state)
                     {
                         return new AgentStateType.AgentStateContext(
-                            new AgentState(state),
-                            context.Source.AccountState,
+                            state,
+                            context.Source.WorldState,
                             context.Source.BlockIndex
                         );
                     }
@@ -197,11 +206,11 @@ namespace NineChronicles.Headless.GraphTypes
 
             StakeStateType.StakeStateContext? GetStakeState(StateContext ctx, Address agentAddress)
             {
-                if (ctx.GetState(StakeState.DeriveAddress(agentAddress)) is Dictionary state)
+                if (LegacyModule.GetState(ctx.WorldState, StakeState.DeriveAddress(agentAddress)) is Dictionary state)
                 {
                     return new StakeStateType.StakeStateContext(
                         new StakeState(state),
-                        ctx.AccountState,
+                        ctx.WorldState,
                         ctx.BlockIndex
                     );
                 }
@@ -256,13 +265,14 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var agentAddress = context.GetArgument<Address>("agentAddress");
-                    if (!(context.Source.GetState(agentAddress) is Dictionary value))
+                    if (AgentModule.GetAgentState(context.Source.WorldState, agentAddress) is not
+                        { } agentState)
                     {
                         return null;
                     }
-                    var agentState = new AgentState(value);
+
                     var deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
-                    if (context.Source.GetState(deriveAddress) is Dictionary state)
+                    if (LegacyModule.GetState(context.Source.WorldState, deriveAddress) is Dictionary state)
                     {
                         return new MonsterCollectionState(state);
                     }
@@ -277,11 +287,14 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var sheetAddress = Addresses.GetSheetAddress<MonsterCollectionSheet>();
                     var rewardSheetAddress = Addresses.GetSheetAddress<MonsterCollectionRewardSheet>();
-                    IReadOnlyList<IValue?> values = context.Source.GetStates(new[]
-                    {
-                        sheetAddress,
-                        rewardSheetAddress,
-                    });
+                    IReadOnlyList<IValue?> values =
+                        LegacyModule.GetStates(
+                            context.Source.WorldState,
+                            new[]
+                            {
+                                sheetAddress,
+                                rewardSheetAddress,
+                            });
                     if (values[0] is Text ss &&
                         values[1] is Text srs)
                     {
@@ -312,11 +325,13 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                     else
                     {
-                        IReadOnlyList<IValue?> values = context.Source.GetStates(new[]
-                        {
-                            Addresses.GetSheetAddress<StakeRegularRewardSheet>(),
-                            Addresses.GetSheetAddress<StakeRegularFixedRewardSheet>()
-                        });
+                        IReadOnlyList<IValue?> values = LegacyModule.GetStates(
+                            context.Source.WorldState,
+                            new[]
+                            {
+                                Addresses.GetSheetAddress<StakeRegularRewardSheet>(),
+                                Addresses.GetSheetAddress<StakeRegularFixedRewardSheet>()
+                            });
 
                         if (!(values[0] is Text sv && values[1] is Text fsv))
                         {
@@ -337,7 +352,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var sheetAddress = Addresses.GetSheetAddress<CrystalMonsterCollectionMultiplierSheet>();
-                    IValue? sheetValue = context.Source.GetState(sheetAddress);
+                    IValue? sheetValue = LegacyModule.GetState(context.Source.WorldState, sheetAddress);
                     if (sheetValue is Text sv)
                     {
                         var crystalMonsterCollectionMultiplierSheet = new CrystalMonsterCollectionMultiplierSheet();
@@ -360,7 +375,9 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var address = avatarAddress.Derive("recipe_ids");
-                    IReadOnlyList<IValue?> values = context.Source.AccountState.GetStates(new[] { address });
+                    IReadOnlyList<IValue?> values = LegacyModule.GetStates(
+                        context.Source.WorldState,
+                        new[] { address });
                     if (values[0] is List rawRecipeIds)
                     {
                         return rawRecipeIds.ToList(StateExtensions.ToInteger);
@@ -382,7 +399,9 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var address = avatarAddress.Derive("world_ids");
-                    IReadOnlyList<IValue?> values = context.Source.AccountState.GetStates(new[] { address });
+                    IReadOnlyList<IValue?> values = LegacyModule.GetStates(
+                        context.Source.WorldState,
+                        new[] { address });
                     if (values[0] is List rawWorldIds)
                     {
                         return rawWorldIds.ToList(StateExtensions.ToInteger);
@@ -405,7 +424,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var raiderAddress = context.GetArgument<Address>("raiderAddress");
-                    if (context.Source.GetState(raiderAddress) is List list)
+                    if (LegacyModule.GetState(context.Source.WorldState, raiderAddress) is List list)
                     {
                         return new RaiderState(list);
                     }
@@ -435,7 +454,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var prev = context.GetArgument<bool>("prev");
                     var sheet = new WorldBossListSheet();
                     var address = Addresses.GetSheetAddress<WorldBossListSheet>();
-                    if (context.Source.GetState(address) is Text text)
+                    if (LegacyModule.GetState(context.Source.WorldState, address) is Text text)
                     {
                         sheet.Set(text);
                     }
@@ -456,7 +475,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var bossAddress = context.GetArgument<Address>("bossAddress");
-                    if (context.Source.GetState(bossAddress) is List list)
+                    if (LegacyModule.GetState(context.Source.WorldState, bossAddress) is List list)
                     {
                         return new WorldBossState(list);
                     }
@@ -475,7 +494,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var address = context.GetArgument<Address>("worldBossKillRewardRecordAddress");
-                    if (context.Source.GetState(address) is List list)
+                    if (LegacyModule.GetState(context.Source.WorldState, address) is List list)
                     {
                         return new WorldBossKillRewardRecord(list);
                     }
@@ -499,7 +518,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var address = context.GetArgument<Address>("address");
                     var currency = context.GetArgument<Currency>("currency");
-                    return context.Source.GetBalance(address, currency);
+                    return LegacyModule.GetBalance(context.Source.WorldState, address, currency);
                 }
             );
 
@@ -513,7 +532,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var address = context.GetArgument<Address>("raiderListAddress");
-                    if (context.Source.GetState(address) is List list)
+                    if (LegacyModule.GetState(context.Source.WorldState, address) is List list)
                     {
                         return list.ToList(StateExtensions.ToAddress);
                     }
@@ -531,7 +550,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     var orderDigestListAddress = OrderDigestListState.DeriveAddress(avatarAddress);
-                    if (context.Source.GetState(orderDigestListAddress) is Dictionary d)
+                    if (LegacyModule.GetState(context.Source.WorldState, orderDigestListAddress) is Dictionary d)
                     {
                         return new OrderDigestListState(d);
                     }
@@ -551,7 +570,7 @@ namespace NineChronicles.Headless.GraphTypes
                     Address? address = null;
                     bool approved = false;
                     int mead = 0;
-                    if (context.Source.GetState(pledgeAddress) is List l)
+                    if (LegacyModule.GetState(context.Source.WorldState, pledgeAddress) is List l)
                     {
                         address = l[0].ToAddress();
                         approved = l[1].ToBoolean();

@@ -20,6 +20,7 @@ using Nekoyume.Helper;
 using Nekoyume.Model;
 using Nekoyume.Model.EnumType;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
 using Xunit;
@@ -105,23 +106,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.IsType<Dictionary>(plainValue);
             var dictionary = (Dictionary)plainValue;
             Assert.IsAssignableFrom<IClaimStakeReward>(DeserializeNCAction(dictionary));
-        }
-
-        [Fact]
-        public async Task MigrateMonsterCollection()
-        {
-            var avatarAddress = new PrivateKey().ToAddress();
-            string query = $@"
-            {{
-                migrateMonsterCollection(avatarAddress: ""{avatarAddress.ToString()}"")
-            }}";
-
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
-            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
-            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["migrateMonsterCollection"]));
-            var dictionary = Assert.IsType<Dictionary>(plainValue);
-            var action = Assert.IsType<MigrateMonsterCollection>(DeserializeNCAction(dictionary));
-            Assert.Equal(avatarAddress, action.AvatarAddress);
         }
 
         private class StakeFixture : IEnumerable<object[]>
@@ -252,7 +236,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.IsType<Dictionary>(plainValue);
             var actionBase = DeserializeNCAction(plainValue);
             var action = Assert.IsType<TransferAsset>(actionBase);
-            var rawState = _standaloneContext.BlockChain!.GetState(Addresses.GoldCurrency);
+            var rawState = LegacyModule.GetState(
+                _standaloneContext.BlockChain!.GetWorldState(),
+                Addresses.GoldCurrency);
             var goldCurrencyState = new GoldCurrencyState((Dictionary)rawState);
             Currency currency = currencyType == "NCG" ? goldCurrencyState.Currency : CrystalCalculator.CRYSTAL;
 
@@ -536,25 +522,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     Assert.Equal(decimalPlaces, recipient.amount.Currency.DecimalPlaces);
                 }
             }
-        }
-
-        [Fact]
-        public async Task ActivateAccount()
-        {
-            var activationCode = _activationKey.Encode();
-            var signature = _activationKey.PrivateKey.Sign(_nonce);
-
-            var query = $"{{ activateAccount(activationCode: \"{activationCode}\") }}";
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
-
-            Assert.Null(queryResult.Errors);
-            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
-            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["activateAccount"]));
-            Assert.IsType<Dictionary>(plainValue);
-            var actionBase = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<ActivateAccount>(actionBase);
-
-            Assert.Equal(signature, action.Signature);
         }
 
         [Theory]

@@ -28,7 +28,9 @@ using Bencodex.Types;
 using GraphQL.Execution;
 using Lib9c;
 using Lib9c.Tests;
+using Libplanet.Action.State;
 using Nekoyume;
+using Nekoyume.Module;
 using NineChronicles.Headless.Executable.Commands;
 using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Executable.Tests.IO;
@@ -111,41 +113,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(address.ToString(), revokedPrivateKeyAddress);
         }
 
-        [Fact]
-        public async Task ActivateAccount()
-        {
-            var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
-            var privateKey = new PrivateKey();
-            (ActivationKey activationKey, PendingActivationState pendingActivation) =
-                ActivationKey.Create(privateKey, nonce);
-            ActionBase action = new CreatePendingActivation(pendingActivation);
-            BlockChain.MakeTransaction(AdminPrivateKey, new[] { action });
-            Block block = BlockChain.ProposeBlock(
-                ProposerPrivateKey,
-                lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
-            BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-
-            var encodedActivationKey = activationKey.Encode();
-            var queryResult = await ExecuteQueryAsync(
-                $"mutation {{ activationStatus {{ activateAccount(encodedActivationKey: \"{encodedActivationKey}\") }} }}");
-            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
-            block = BlockChain.ProposeBlock(
-                ProposerPrivateKey,
-                lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
-            BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-
-            var result =
-                (bool)((Dictionary<string, object>)
-                    data["activationStatus"])["activateAccount"];
-            Assert.True(result);
-
-            Address userAddress = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!.ToAddress();
-            IValue? state = BlockChain.GetState(
-                userAddress.Derive(ActivationKey.DeriveKey)
-            );
-            Assert.True((Bencodex.Types.Boolean)state);
-        }
-
         [Theory]
         [InlineData(null, false)]
         [InlineData("", false)]
@@ -155,7 +122,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             NineChroniclesNodeService service = StandaloneContextFx.NineChroniclesNodeService!;
             Currency goldCurrency = new GoldCurrencyState(
-                (Dictionary)BlockChain.GetState(GoldCurrencyState.Address)
+                (Dictionary)BlockChain.GetState(GoldCurrencyState.Address, ReservedAddresses.LegacyAccount)
             ).Currency;
 
             Address senderAddress = service.MinerPrivateKey!.ToAddress();
@@ -242,7 +209,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             NineChroniclesNodeService service = StandaloneContextFx.NineChroniclesNodeService!;
             Currency goldCurrency = new GoldCurrencyState(
-                (Dictionary)BlockChain.GetState(GoldCurrencyState.Address)
+                (Dictionary)LegacyModule.GetState(
+                    BlockChain.GetWorldState(),
+                    GoldCurrencyState.Address)
             ).Currency;
 
             Address senderAddress = service.MinerPrivateKey!.ToAddress();
@@ -706,140 +675,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         };
 
         [Fact]
-        public async Task MonsterCollect()
-        {
-            const string query = @"mutation {
-                action {
-                    monsterCollect(level: 1)
-                }
-            }";
-
-            ActionBase createAvatar = new CreateAvatar2
-            {
-                index = 0,
-                hair = 0,
-                lens = 0,
-                ear = 0,
-                tail = 0,
-                name = "avatar",
-            };
-            var playerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
-            BlockChain.MakeTransaction(playerPrivateKey, new[] { createAvatar });
-            Block block = BlockChain.ProposeBlock(playerPrivateKey);
-            BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-
-            Assert.NotNull(BlockChain.GetState(playerPrivateKey.ToAddress()));
-            var result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
-            Assert.Null(result.Errors);
-
-            var txIds = BlockChain.GetStagedTransactionIds();
-            Assert.Single(txIds);
-            var tx = BlockChain.GetTransaction(txIds.First());
-            var expected = new Dictionary<string, object>
-            {
-                ["action"] = new Dictionary<string, object>
-                {
-                    ["monsterCollect"] = tx.Id.ToString(),
-                }
-            };
-            Assert.Equal(expected, data);
-            Assert.Single(tx.Actions);
-            var action = (MonsterCollect)ToAction(tx.Actions!.First());
-            Assert.Equal(1, action.level);
-        }
-
-        [Fact]
-        public async Task ClaimMonsterCollectionReward()
-        {
-            var playerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
-            var avatarAddress = playerPrivateKey.ToAddress();
-            string query = $@"mutation {{
-                action {{
-                    claimMonsterCollectionReward(avatarAddress: ""{avatarAddress}"")
-                }}
-            }}";
-
-            ActionBase createAvatar = new CreateAvatar2
-            {
-                index = 0,
-                hair = 0,
-                lens = 0,
-                ear = 0,
-                tail = 0,
-                name = "avatar",
-            };
-            BlockChain.MakeTransaction(playerPrivateKey, new[] { createAvatar });
-            Block block = BlockChain.ProposeBlock(playerPrivateKey);
-            BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-
-            Assert.NotNull(BlockChain.GetState(playerPrivateKey.ToAddress()));
-
-            var result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
-            Assert.Null(result.Errors);
-
-            var txIds = BlockChain.GetStagedTransactionIds();
-            Assert.Single(txIds);
-            var tx = BlockChain.GetTransaction(txIds.First());
-            var expected = new Dictionary<string, object>
-            {
-                ["action"] = new Dictionary<string, object>
-                {
-                    ["claimMonsterCollectionReward"] = tx.Id.ToString(),
-                }
-            };
-            Assert.Equal(expected, data);
-            Assert.Single(tx.Actions);
-            var action = (ClaimMonsterCollectionReward)ToAction(tx.Actions!.First());
-            Assert.Equal(avatarAddress, action.avatarAddress);
-        }
-
-        // [Fact]
-        // public async Task CancelMonsterCollect()
-        // {
-        //     var playerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
-        //
-        //     const string query = @"mutation {
-        //         action {
-        //             cancelMonsterCollect(level: 1)
-        //         }
-        //     }";
-        //
-        //     ActionBase createAvatar = new CreateAvatar2
-        //     {
-        //         index = 0,
-        //         hair = 0,
-        //         lens = 0,
-        //         ear = 0,
-        //         tail = 0,
-        //         name = "avatar",
-        //     };
-        //     BlockChain.MakeTransaction(playerPrivateKey, new[] { createAvatar });
-        //     await BlockChain.MineBlock(playerPrivateKey.ToAddress());
-        //
-        //     Assert.NotNull(BlockChain.GetState(playerPrivateKey.ToAddress()));
-        //
-        //     var result = await ExecuteQueryAsync(query);
-        //     Assert.Null(result.Errors);
-        //
-        //     var txIds = BlockChain.GetStagedTransactionIds();
-        //     Assert.Single(txIds);
-        //     var tx = BlockChain.GetTransaction(txIds.First());
-        //     var expected = new Dictionary<string, object>
-        //     {
-        //         ["action"] = new Dictionary<string, object>
-        //         {
-        //             ["cancelMonsterCollect"] = tx.Id.ToString(),
-        //         }
-        //     };
-        //     Assert.Equal(expected, result.Data!);
-        //     Assert.Single(tx.Actions);
-        //     var action = (CancelMonsterCollect) tx.Actions!.First().InnerAction;
-        //     Assert.Equal(1, action.level);
-        //     Assert.Equal(0, action.collectRound);
-        // }
-        [Fact]
         public async Task Tx()
         {
             Block genesis =
@@ -924,44 +759,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Fact]
-        public async Task Tx_ActivateAccount()
-        {
-            var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
-            var privateKey = new PrivateKey();
-            (ActivationKey activationKey, PendingActivationState pendingActivation) =
-                ActivationKey.Create(privateKey, nonce);
-            ActionBase action = new CreatePendingActivation(pendingActivation);
-            BlockChain.MakeTransaction(AdminPrivateKey, new[] { action });
-            Block block = BlockChain.ProposeBlock(
-                ProposerPrivateKey,
-                lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
-            BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-            var encodedActivationKey = activationKey.Encode();
-            var actionCommand = new ActionCommand(new StandardConsole());
-            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
-            actionCommand.ActivateAccount(encodedActivationKey, ByteUtil.Hex(nonce), filePath);
-            var console = new StringIOConsole();
-            var txCommand = new TxCommand(console);
-            var timeStamp = DateTimeOffset.UtcNow;
-            txCommand.Sign(ByteUtil.Hex(privateKey.ByteArray), BlockChain.GetNextTxNonce(privateKey.ToAddress()), ByteUtil.Hex(BlockChain.Genesis.Hash.ByteArray), timeStamp.ToString(), new[] { filePath });
-            var output = console.Out.ToString();
-            output = output.Trim();
-            var queryResult = await ExecuteQueryAsync(
-                $"mutation {{ stageTx(payload: \"{output}\") }}");
-            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
-            block = BlockChain.ProposeBlock(
-                ProposerPrivateKey,
-                lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
-            BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-
-            var result = (bool)data["stageTx"];
-            Assert.True(result);
-
-            IValue? state = BlockChain.GetState(privateKey.ToAddress().Derive(ActivationKey.DeriveKey));
-            Assert.True((Bencodex.Types.Boolean)state);
-        }
-
-        [Fact]
         public async Task StageTransaction()
         {
             Block genesis =
@@ -1035,7 +832,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             new ValidatorSet(
                                 new[] { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }
                                     .ToList()),
-                            states: ImmutableDictionary.Create<Address, IValue>())
+                            states: ImmutableDictionary.Create<Address, IImmutableDictionary<Address, IValue>>())
                     }.Select((sa, nonce) => Transaction.Create(nonce + 1, AdminPrivateKey, null, new[] { sa.PlainValue }))),
                 privateKey: AdminPrivateKey);
         }

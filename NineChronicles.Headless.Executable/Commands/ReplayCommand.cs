@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -12,19 +11,13 @@ using Bencodex.Json;
 using Bencodex.Types;
 using Cocona;
 using Cocona.Help;
-using GraphQL.Client.Http;
-using GraphQL.Client.Serializer.SystemTextJson;
-using Libplanet;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
-using Libplanet.Extensions.RemoteBlockChainStates;
 using Libplanet.Types.Blocks;
 using Libplanet.RocksDBStore;
 using Libplanet.Action.State;
-using Libplanet.Common;
-using Libplanet.Crypto;
 using Libplanet.Store;
 using Libplanet.Types.Tx;
 using Nekoyume.Action;
@@ -100,8 +93,8 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 // Evaluate tx.
-                IAccountState previousBlockStates = blockChain.GetBlockState(previousBlock.Hash);
-                IAccountStateDelta previousStates = AccountStateDelta.Create(previousBlockStates);
+                IWorldState previousWorldStates = blockChain.GetWorldState(previousBlock.Hash);
+                IWorld previousStates = World.Create(previousWorldStates);
                 var actions = tx.Actions.Select(a => ToAction(a));
                 var actionEvaluations = EvaluateActions(
                     preEvaluationHash: targetBlock.PreEvaluationHash,
@@ -147,19 +140,24 @@ namespace NineChronicles.Headless.Executable.Commands
 
                     var states = actionEvaluation.OutputState;
                     var addressNum = 1;
-                    foreach (var (updatedAddress, updatedState) in states.Delta.States)
+                    foreach (var (updatedAccountAddress, updatedAccount) in states.Delta.Accounts)
                     {
-                        if (verbose)
+                        foreach (var (updatedAddress, updatedState) in updatedAccount.Delta.States)
                         {
-                            msg = $"- action #{actionNum} updated address #{addressNum}({updatedAddress}) beginning..";
-                            _console.Out.WriteLine(msg);
-                            outputSw?.WriteLine(msg);
-                            msg = $"{updatedState}";
-                            _console.Out.WriteLine(msg);
-                            outputSw?.WriteLine(msg);
-                            msg = $"- action #{actionNum} updated address #{addressNum}({updatedAddress}) end..";
-                            _console.Out.WriteLine(msg);
-                            outputSw?.WriteLine(msg);
+                            if (verbose)
+                            {
+                                msg =
+                                    $"- action #{actionNum} updated address #{addressNum}({updatedAccountAddress}, {updatedAddress}) beginning..";
+                                _console.Out.WriteLine(msg);
+                                outputSw?.WriteLine(msg);
+                                msg = $"{updatedState}";
+                                _console.Out.WriteLine(msg);
+                                outputSw?.WriteLine(msg);
+                                msg =
+                                    $"- action #{actionNum} updated address #{addressNum}({updatedAccountAddress}, {updatedAddress}) end..";
+                                _console.Out.WriteLine(msg);
+                                outputSw?.WriteLine(msg);
+                            }
                         }
 
                         addressNum++;
@@ -350,7 +348,7 @@ namespace NineChronicles.Headless.Executable.Commands
             }
         }
 
-        [Command(Description = "Evaluate transaction with remote states")]
+        /*[Command(Description = "Evaluate transaction with remote states")]
         public int RemoteTx(
             [Option("tx", new[] { 't' }, Description = "The transaction id")]
             string transactionId,
@@ -415,7 +413,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 .ForEach(x => PrintEvaluation(x.evaluation, x.index));
 
             return 0;
-        }
+        }*/
 
         private static (FileStream? fs, StreamWriter? sw) GetOutputFileStream(
             string outputPath,
@@ -636,13 +634,18 @@ namespace NineChronicles.Headless.Executable.Commands
                 _console.Out.WriteLine($"- action #{index + 1}: {type.Name}(\"{actionType}\")");
             }
 
-            var states = evaluation.OutputState.Delta.States;
+            var states = evaluation.OutputState.Delta.Accounts;
             var indexedStates = states.Select((x, i) => (x.Key, x.Value, i: i));
-            foreach (var (updatedAddress, updatedState, addressIndex) in indexedStates)
+            foreach (var (updatedAccountAddress, updatedAccount, addressIndex) in indexedStates)
             {
-                _console.Out.WriteLine($"- action #{index + 1} updated address #{addressIndex + 1}({updatedAddress}) beginning...");
-                _console.Out.WriteLine(updatedState);
-                _console.Out.WriteLine($"- action #{index + 1} updated address #{addressIndex + 1}({updatedAddress}) end...");
+                foreach (var (updatedAddress, updatedState) in updatedAccount.Delta.States)
+                {
+                    _console.Out.WriteLine(
+                        $"- action #{index + 1} updated address #{addressIndex + 1}({updatedAccountAddress} {updatedAddress}) beginning...");
+                    _console.Out.WriteLine(updatedState);
+                    _console.Out.WriteLine(
+                        $"- action #{index + 1} updated address #{addressIndex + 1}({updatedAccountAddress} {updatedAddress}) end...");
+                }
             }
         }
     }

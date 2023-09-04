@@ -45,9 +45,9 @@
     <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet.Extensions.Cocona\Libplanet.Extensions.Cocona.csproj" />
     <ProjectReference Include="..\Lib9c\Lib9c.Utils\Lib9c.Utils.csproj" />
     <ProjectReference Include="..\Lib9c\Lib9c.Abstractions\Lib9c.Abstractions.csproj" />
-    <ProjectReference Include="..\Lib9c\.Libplanet.Extensions.RemoteBlockChainStates\Libplanet.Extensions.RemoteBlockChainStates.csproj" />
     <ProjectReference Include="..\NineChronicles.Headless\NineChronicles.Headless.csproj" />
     <ProjectReference Include="..\Lib9c\Lib9c.DevExtensions\Lib9c.DevExtensions.csproj" />
+    <PackageReference Include="GraphQL.Client" Version="5.1.1" />
   </ItemGroup>
 
   <ItemGroup>

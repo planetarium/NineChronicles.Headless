@@ -11,9 +11,9 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Table
                 nameof(StakeRegularRewardSheet.RewardInfo.ItemId),
                 resolve: context => context.Source.ItemId
             );
-            Field<NonNullGraphType<IntGraphType>>(
-                nameof(StakeRegularRewardSheet.RewardInfo.Rate),
-                resolve: context => context.Source.Rate
+            Field<NonNullGraphType<DecimalGraphType>>(
+                nameof(StakeRegularRewardSheet.RewardInfo.DecimalRate),
+                resolve: context => context.Source.DecimalRate
             );
             Field<NonNullGraphType<StakeRewardEnumType>>(
                 nameof(StakeRegularRewardSheet.RewardInfo.Type),

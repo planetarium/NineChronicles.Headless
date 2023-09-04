@@ -13,6 +13,7 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Serilog;
 using System;
+using Nekoyume.Module;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -191,7 +192,9 @@ namespace NineChronicles.Headless.GraphTypes
 
                     BlockChain blockChain = service.BlockChain;
                     var currency = new GoldCurrencyState(
-                        (Dictionary)blockChain.GetState(new Address(context.GetArgument<string>("currencyAddress")))
+                        (Dictionary)LegacyModule.GetState(
+                            blockChain.GetWorldState(),
+                            new Address(context.GetArgument<string>("currencyAddress")))
                     ).Currency;
                     FungibleAssetValue amount =
                         FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
@@ -249,7 +252,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     BlockChain blockChain = service.BlockChain;
                     var currency = new GoldCurrencyState(
-                        (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
+                        (Dictionary)LegacyModule.GetState(blockChain.GetWorldState(), GoldCurrencyState.Address)
                     ).Currency;
                     FungibleAssetValue amount =
                     FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));

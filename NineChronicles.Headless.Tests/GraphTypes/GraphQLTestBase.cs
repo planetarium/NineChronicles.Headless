@@ -45,7 +45,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         public GraphQLTestBase(ITestOutputHelper output)
         {
-            Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console().CreateLogger();
+            const string outputTemplate =
+                "{Timestamp:HH:mm:ss:ffffffZ} - {Message}";
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.TestOutput(output, outputTemplate: outputTemplate)
+                .CreateLogger()
+                .ForContext<GraphQLTestBase>();
 
             _output = output;
 
@@ -87,7 +93,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                         new ValidatorSet(
                             new[] { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }
                                 .ToList()),
-                        states: ImmutableDictionary.Create<Address, IValue>())
+                        states: ImmutableDictionary.Create<Address, IImmutableDictionary<Address, IValue>>())
                 }.Select((sa, nonce) => Transaction.Create(nonce + 1, AdminPrivateKey, null, new[] { sa.PlainValue }))),
                 privateKey: AdminPrivateKey);
 

@@ -65,18 +65,11 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 ActionBase action = type switch
                 {
-                    nameof(ActivateAccount) => new ActivateAccount(),
-                    nameof(MonsterCollect) => new MonsterCollect(),
-                    nameof(ClaimMonsterCollectionReward) => new ClaimMonsterCollectionReward(),
                     nameof(Stake) => new Stake(),
                     // FIXME: This `ClaimStakeReward` cases need to reduce to one case.
-                    nameof(ClaimStakeReward1) => new ClaimStakeReward1(),
                     nameof(ClaimStakeReward2) => new ClaimStakeReward2(),
-                    nameof(ClaimStakeReward3) => new ClaimStakeReward3(),
-                    nameof(ClaimStakeReward4) => new ClaimStakeReward4(),
                     nameof(ClaimStakeReward) => new ClaimStakeReward(),
                     nameof(TransferAsset) => new TransferAsset(),
-                    nameof(MigrateMonsterCollection) => new MigrateMonsterCollection(),
                     _ => throw new CommandExitedException($"Unsupported action type was passed '{type}'", 128)
                 };
                 action.LoadPlainValue(plainValue);
@@ -181,61 +174,6 @@ namespace NineChronicles.Headless.Executable.Commands
             _console.Out.WriteLine(ByteUtil.Hex(raw));
         }
 
-        [Command(Description = "Create MigrationLegacyShop action and dump it.")]
-        public void MigrationLegacyShop()
-        {
-            var action = new MigrationLegacyShop();
-
-            var bencoded = new List(
-                (Text)nameof(Nekoyume.Action.MigrationLegacyShop),
-                action.PlainValue
-            );
-
-            byte[] raw = _codec.Encode(bencoded);
-            _console.Out.WriteLine(ByteUtil.Hex(raw));
-        }
-
-        [Command(Description = "Create MigrationActivatedAccountsState action and dump it.")]
-        public void MigrationActivatedAccountsState()
-        {
-            var action = new MigrationActivatedAccountsState();
-            var bencoded = new List(
-                (Text)nameof(Nekoyume.Action.MigrationActivatedAccountsState),
-                action.PlainValue
-            );
-
-            byte[] raw = _codec.Encode(bencoded);
-            _console.Out.WriteLine(ByteUtil.Hex(raw));
-        }
-
-        [Command(Description = "Create MigrationAvatarState action and dump it.")]
-        public void MigrationAvatarState(
-            [Argument("directory-path", Description = "path of the directory contained hex-encoded avatar states.")]
-            string directoryPath,
-            [Argument("output-path", Description = "path of the output file dumped action.")]
-            string outputPath
-        )
-        {
-            var files = Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories);
-            var avatarStates = files.Select(a =>
-            {
-                var raw = File.ReadAllText(a);
-                return (Dictionary)_codec.Decode(ByteUtil.ParseHex(raw));
-            }).ToList();
-            var action = new MigrationAvatarState()
-            {
-                avatarStates = avatarStates
-            };
-
-            var encoded = new List(
-                (Text)nameof(Nekoyume.Action.MigrationAvatarState),
-                action.PlainValue
-            );
-
-            byte[] raw = _codec.Encode(encoded);
-            File.WriteAllText(outputPath, ByteUtil.Hex(raw));
-        }
-
         [Command(Description = "Create AddRedeemCode action and dump it.")]
         public void AddRedeemCode(
             [Argument("TABLE-PATH", Description = "A table file path for RedeemCodeListSheet")]
@@ -250,38 +188,6 @@ namespace NineChronicles.Headless.Executable.Commands
             var encoded = new List(
                 (Text)nameof(Nekoyume.Action.AddRedeemCode),
                 action.PlainValue
-            );
-            byte[] raw = _codec.Encode(encoded);
-            _console.Out.WriteLine(ByteUtil.Hex(raw));
-        }
-
-        [Command(Description = "Create CreatePendingActivations action and dump it.")]
-        public void CreatePendingActivations(
-            [Argument("CSV-PATH", Description = "A csv file path for CreatePendingActivations")]
-            string csvPath
-        )
-        {
-            var RecordType = new
-            {
-                EncodedActivationKey = string.Empty,
-                NonceHex = string.Empty,
-            };
-            using var reader = new StreamReader(csvPath);
-            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
-            var activations =
-                csv.GetRecords(RecordType)
-                    .Select(r => new PendingActivationState(
-                        ByteUtil.ParseHex(r.NonceHex),
-                        ActivationKey.Decode(r.EncodedActivationKey).PrivateKey.PublicKey)
-                    )
-                    .ToList();
-            var action = new CreatePendingActivations(activations);
-            var encoded = new List(
-                new IValue[]
-                {
-                    (Text)nameof(Nekoyume.Action.CreatePendingActivations),
-                    action.PlainValue
-                }
             );
             byte[] raw = _codec.Encode(encoded);
             _console.Out.WriteLine(ByteUtil.Hex(raw));

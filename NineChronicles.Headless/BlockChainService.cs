@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
+using Libplanet.Action.State;
 using Libplanet.Blockchain;
 using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
@@ -112,40 +113,54 @@ namespace NineChronicles.Headless
             }
         }
 
-        public UnaryResult<byte[]> GetState(byte[] addressBytes, byte[] blockHashBytes)
+        public UnaryResult<byte[]> GetState(byte[] addressBytes, byte[] accountBytes, byte[] blockHashBytes)
         {
             var address = new Address(addressBytes);
+            var accountAddress = new Address(accountBytes);
             var hash = new BlockHash(blockHashBytes);
-            IValue state = _blockChain.GetStates(new[] { address }, hash)[0];
+            IValue state = _blockChain.GetStates(
+                new[] { address },
+                accountAddress,
+                hash)[0];
             // FIXME: Null과 null 구분해서 반환해야 할 듯
             byte[] encoded = _codec.Encode(state ?? new Null());
             return new UnaryResult<byte[]>(encoded);
         }
 
-        public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStates(IEnumerable<byte[]> addressBytesList, byte[] blockHashBytes)
+        public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStates(
+            IEnumerable<byte[]> addressBytesList,
+            byte[] accountBytes,
+            byte[] blockHashBytes)
         {
             var hash = new BlockHash(blockHashBytes);
-            var accountState = _blockChain.GetBlockState(hash);
+            var accountAddress = new Address(accountBytes);
+            var accountState = _blockChain.GetWorldState(hash).GetAccount(accountAddress);
             var result = new ConcurrentDictionary<byte[], byte[]>();
             var addresses = addressBytesList.Select(a => new Address(a)).ToList();
             var rawAvatarStates = accountState.GetRawAvatarStates(addresses);
             var taskList = rawAvatarStates
-                .Select(pair => Task.Run(() =>
-                {
-                    result.TryAdd(pair.Key.ToByteArray(), _codec.Encode(pair.Value));
-                }))
+                .Select(
+                    pair => Task.Run(
+                        () =>
+                        {
+                            result.TryAdd(pair.Key.ToByteArray(), _codec.Encode(pair.Value));
+                        }))
                 .ToList();
 
             await Task.WhenAll(taskList);
             return result.ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
-        public UnaryResult<Dictionary<byte[], byte[]>> GetStateBulk(IEnumerable<byte[]> addressBytesList, byte[] blockHashBytes)
+        public UnaryResult<Dictionary<byte[], byte[]>> GetStateBulk(
+            IEnumerable<byte[]> addressBytesList,
+            byte[] accountBytes,
+            byte[] blockHashBytes)
         {
             var hash = new BlockHash(blockHashBytes);
+            var accountAddress = new Address(accountBytes);
             var result = new Dictionary<byte[], byte[]>();
             Address[] addresses = addressBytesList.Select(b => new Address(b)).ToArray();
-            IReadOnlyList<IValue> values = _blockChain.GetStates(addresses, hash);
+            IReadOnlyList<IValue> values = _blockChain.GetStates(addresses, accountAddress, hash);
             for (int i = 0; i < addresses.Length; i++)
             {
                 result.TryAdd(addresses[i].ToByteArray(), _codec.Encode(values[i] ?? new Null()));

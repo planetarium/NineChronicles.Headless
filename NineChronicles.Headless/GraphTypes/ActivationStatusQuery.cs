@@ -2,11 +2,12 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet.Crypto;
-using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using System;
+using Libplanet.Action.State;
 using Libplanet.Explorer.GraphTypes;
+using Nekoyume.Action.Extensions;
 using Log = Serilog.Log;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -44,14 +45,18 @@ namespace NineChronicles.Headless.GraphTypes
                         Address userAddress = privateKey.ToAddress();
                         Address activatedAddress = userAddress.Derive(ActivationKey.DeriveKey);
 
-                        if (blockChain.GetState(activatedAddress) is Bencodex.Types.Boolean)
+                        if (blockChain.GetWorldState()
+                                .GetAccount(ReservedAddresses.LegacyAccount)
+                                .GetState(activatedAddress) is Bencodex.Types.Boolean)
                         {
                             return true;
                         }
 
                         // Preserve previous check code due to migration period.
                         // TODO: Remove this code after v100061+
-                        IValue state = blockChain.GetState(ActivatedAccountsState.Address);
+                        IValue state = blockChain.GetWorldState()
+                            .GetAccount(ReservedAddresses.LegacyAccount)
+                            .GetState(ActivatedAccountsState.Address)!;
 
                         if (state is Bencodex.Types.Dictionary asDict)
                         {
@@ -101,14 +106,18 @@ namespace NineChronicles.Headless.GraphTypes
                         var userAddress = context.GetArgument<Address>("address");
                         Address activatedAddress = userAddress.Derive(ActivationKey.DeriveKey);
 
-                        if (blockChain.GetState(activatedAddress) is Bencodex.Types.Boolean)
+                        if (blockChain.GetWorldState()
+                                .GetAccount(ReservedAddresses.LegacyAccount)
+                                .GetState(activatedAddress) is Bencodex.Types.Boolean)
                         {
                             return true;
                         }
 
                         // backward for launcher E2E test.
                         // TODO: Remove this code after launcher E2E test fixed.
-                        IValue state = blockChain.GetState(ActivatedAccountsState.Address);
+                        IValue state = blockChain.GetWorldState()
+                            .GetAccount(ReservedAddresses.LegacyAccount)
+                            .GetState(ActivatedAccountsState.Address)!;
 
                         if (state is Bencodex.Types.Dictionary asDict)
                         {
