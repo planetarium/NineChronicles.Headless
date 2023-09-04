@@ -242,7 +242,7 @@ namespace NineChronicles.Headless.GraphTypes
             StakeStateType.StakeStateContext? GetStakeState(StateContext ctx, Address agentAddress)
             {
                 var stakeStateAddress = StakeState.DeriveAddress(agentAddress);
-                if (ctx.AccountState.TryGetStakeStateV2(stakeStateAddress, out StakeStateV2 stakeStateV2))
+                if (ctx.AccountState.TryGetStakeStateV2(agentAddr: agentAddress, out StakeStateV2 stakeStateV2))
                 {
                     return new StakeStateType.StakeStateContext(
                         stakeStateV2,
