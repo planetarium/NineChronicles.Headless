@@ -74,7 +74,7 @@ namespace NineChronicles.Headless.GraphTypes
                         a.Add(b);
                     }
 
-                    return a;
+                    return a.OrderByDescending(x=>x.Count);
                 });
             Field<NonNullGraphType<ListGraphType<MultiAccountGraphType>>>(
                 name: "ipsByClient",
@@ -94,7 +94,7 @@ namespace NineChronicles.Headless.GraphTypes
                         a.Add(b);
                     }
 
-                    return a;
+                    return a.OrderByDescending(x=>x.Count);
                 });
         }
     }
