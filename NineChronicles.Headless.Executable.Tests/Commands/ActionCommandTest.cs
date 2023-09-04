@@ -220,8 +220,8 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
 
         [Theory]
         [InlineData(0, 0, -1)]
-        [InlineData(1, 7, 0)]
-        [InlineData(8, 8, -1)]
+        [InlineData(1, 8, 0)]
+        [InlineData(9, 9, -1)]
         public void ClaimStakeRewardWithActionVersion(
             int actionVersionMin,
             int actionVersionMax,
