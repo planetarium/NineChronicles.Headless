@@ -75,7 +75,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             const string query = @"
             subscription {
-                tx (actionType: ""grinding"") {
+                tx (actionType: ""grinding2"") {
                     transaction { id }
                     txResult { blockIndex }
                 }

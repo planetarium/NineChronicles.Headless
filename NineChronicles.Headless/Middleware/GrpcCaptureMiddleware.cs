@@ -13,7 +13,7 @@ namespace NineChronicles.Headless.Middleware
     public class GrpcCaptureMiddleware : Interceptor
     {
         private readonly ILogger _logger;
-        private ActionEvaluationPublisher _actionEvaluationPublisher;
+        private readonly ActionEvaluationPublisher _actionEvaluationPublisher;
 
         public GrpcCaptureMiddleware(ActionEvaluationPublisher actionEvaluationPublisher)
         {

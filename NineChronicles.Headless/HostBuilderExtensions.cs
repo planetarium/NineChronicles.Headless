@@ -1,15 +1,19 @@
+using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.Properties;
 using System.Net;
 using Lib9c.Formatters;
 using Libplanet.Action;
+using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
 using MessagePack;
 using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.Configuration;
 using Nekoyume.Action;
 using NineChronicles.Headless.Middleware;
 using NineChronicles.Headless.Services;
@@ -68,7 +72,9 @@ namespace NineChronicles.Headless
         public static IHostBuilder UseNineChroniclesRPC(
             this IHostBuilder builder,
             RpcNodeServiceProperties properties,
-            ActionEvaluationPublisher actionEvaluationPublisher
+            ActionEvaluationPublisher actionEvaluationPublisher,
+            StandaloneContext standaloneContext,
+            IConfiguration configuration
         )
         {
             var context = new RpcContext
@@ -79,10 +85,24 @@ namespace NineChronicles.Headless
             return builder
                 .ConfigureServices(services =>
                 {
+                    if (Convert.ToBoolean(configuration.GetSection("MultiAccountManaging")["EnableManaging"]))
+                    {
+                        services.Configure<MultiAccountManagerProperties>(configuration.GetSection("MultiAccountManaging"));
+                    }
+
                     services.AddSingleton(_ => context);
                     services.AddGrpc(options =>
                     {
                         options.MaxReceiveMessageSize = null;
+                        if (Convert.ToBoolean(configuration.GetSection("MultiAccountManaging")["EnableManaging"]))
+                        {
+                            Dictionary<string, HashSet<Address>> ipSignerList = new();
+                            options.Interceptors.Add<GrpcMultiAccountManagementMiddleware>(
+                                standaloneContext,
+                                ipSignerList,
+                                actionEvaluationPublisher);
+                        }
+
                         options.Interceptors.Add<GrpcCaptureMiddleware>(actionEvaluationPublisher);
                     });
                     services.AddMagicOnion();
