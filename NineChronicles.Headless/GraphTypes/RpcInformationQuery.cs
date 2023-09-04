@@ -49,7 +49,7 @@ namespace NineChronicles.Headless.GraphTypes
                     string device = context.GetArgument<string>("device");
                     return publisher.GetClientsByDevice(device);
                 });
-            Field<NonNullGraphType<ListGraphType<StringGraphType>>>(
+            Field<NonNullGraphType<ListGraphType<MultiAccountGraphType>>>(
                 name: "clientsByIp",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<IntGraphType>>
@@ -61,12 +61,41 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     int minimum = context.GetArgument<int>("minimum");
-                    return publisher.GetClientsByIp(minimum);
+                    var a = new List<MultiAccountGraphType.MultiAccountInfo>();
+                    var data = publisher.GetClientsByIp(minimum);
+                    foreach (var i in data)
+                    {
+                        var b = new MultiAccountGraphType.MultiAccountInfo
+                        {
+                            Key = i.Key,
+                            Values = i.Value.Select(address => address.ToString()).ToList(),
+                            Count = i.Value.Count,
+                        };
+                        a.Add(b);
+                    }
+
+                    return a;
                 });
-            Field<NonNullGraphType<ListGraphType<StringGraphType>>>(
+            Field<NonNullGraphType<ListGraphType<MultiAccountGraphType>>>(
                 name: "ipsByClient",
                 description: "Ip addresses associate to each client.",
-                resolve: context => publisher.GetIpsByClient());
+                resolve: context =>
+                {
+                    var a = new List<MultiAccountGraphType.MultiAccountInfo>();
+                    var data = publisher.GetIpsByClient();
+                    foreach (var i in data)
+                    {
+                        var b = new MultiAccountGraphType.MultiAccountInfo
+                        {
+                            Key = i.Key.ToString(),
+                            Values = i.Value.Select(address => address.ToString()).ToList(),
+                            Count = i.Value.Count,
+                        };
+                        a.Add(b);
+                    }
+
+                    return a;
+                });
         }
     }
 }
