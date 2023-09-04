@@ -28,16 +28,13 @@ namespace NineChronicles.Headless.GraphTypes
             Address signer = publicKey.ToAddress();
             long nonce = context.Parent!.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
             DateTimeOffset? timestamp = context.Parent!.GetArgument<DateTimeOffset?>("timestamp");
-            long? gasLimit = action is ITransferAsset or ITransferAssets ? RequestPledge.DefaultRefillMead : 1L;
-            FungibleAssetValue? maxGasPrice = context.Parent!.GetArgument<FungibleAssetValue?>("maxGasPrice");
             UnsignedTx unsignedTransaction =
                 new UnsignedTx(
                     new TxInvoice(
                         genesisHash: blockChain.Genesis.Hash,
                         timestamp: timestamp,
-                        actions: new TxActionList(new[] { action.PlainValue }),
-                        gasLimit: gasLimit,
-                        maxGasPrice: maxGasPrice),
+                        actions: new TxActionList(new[] { action.PlainValue })
+                    ),
                     new TxSigningMetadata(publicKey: publicKey, nonce: nonce));
 
             return unsignedTransaction.SerializeUnsignedTx().ToArray();

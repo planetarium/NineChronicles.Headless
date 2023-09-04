@@ -34,8 +34,8 @@ query {{
             Assert.Equal(publicKey, tx.PublicKey);
             Assert.Equal(publicKey.ToAddress(), tx.Signer);
             Assert.Equal(0, tx.Nonce);
-            Assert.Equal(1, tx.GasLimit);
-            Assert.Equal(1 * Currencies.Mead, tx.MaxGasPrice);
+            Assert.Null(tx.GasLimit);
+            Assert.Null(tx.MaxGasPrice);
             var rawAction = Assert.Single(tx.Actions);
             var action = new NCActionLoader().LoadAction(0, rawAction);
             Assert.IsType<Stake>(action);
@@ -84,8 +84,8 @@ query {{
             Assert.Equal(publicKey.ToAddress(), tx.Signer);
             Assert.Equal(0, tx.Nonce);
             Assert.IsType<DateTimeOffset>(tx.Timestamp);
-            Assert.Equal(1, tx.GasLimit);
-            Assert.Equal(1 * Currencies.Mead, tx.MaxGasPrice);
+            Assert.Equal(null, tx.GasLimit);
+            Assert.Equal(null, tx.MaxGasPrice);
             var rawAction = Assert.Single(tx.Actions);
             var action = Assert.IsType<RequestPledge>(new NCActionLoader().LoadAction(0, rawAction));
             Assert.Equal(address, action.AgentAddress);

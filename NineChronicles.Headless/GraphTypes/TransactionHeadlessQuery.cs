@@ -98,9 +98,7 @@ namespace NineChronicles.Headless.GraphTypes
                         new UnsignedTx(
                             new TxInvoice(
                                 genesisHash: blockChain.Genesis.Hash,
-                                actions: new TxActionList(new[] { action.PlainValue }),
-                                gasLimit: action is ITransferAsset or ITransferAssets ? RequestPledge.DefaultRefillMead : 1L,
-                                maxGasPrice: 1 * Currencies.Mead
+                                actions: new TxActionList(new[] { action.PlainValue })
                             ),
                             new TxSigningMetadata(publicKey: publicKey, nonce: nonce)
                         );
@@ -242,15 +240,12 @@ namespace NineChronicles.Headless.GraphTypes
                     var publicKey = new PublicKey(ByteUtil.ParseHex(context.GetArgument<string>("publicKey")));
                     Address signer = publicKey.ToAddress();
                     long nonce = context.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
-                    long? gasLimit = action is ITransferAsset or ITransferAssets ? RequestPledge.DefaultRefillMead : 1L;
-                    FungibleAssetValue? maxGasPrice = context.GetArgument<FungibleAssetValue?>("maxGasPrice");
                     UnsignedTx unsignedTransaction =
                         new UnsignedTx(
                             new TxInvoice(
                                 genesisHash: blockChain.Genesis.Hash,
-                                actions: new TxActionList(new[] { action.PlainValue }),
-                                gasLimit: gasLimit,
-                                maxGasPrice: maxGasPrice),
+                                actions: new TxActionList(new[] { action.PlainValue })
+                            ),
                             new TxSigningMetadata(publicKey, nonce));
                     return unsignedTransaction.SerializeUnsignedTx().ToArray();
                 });

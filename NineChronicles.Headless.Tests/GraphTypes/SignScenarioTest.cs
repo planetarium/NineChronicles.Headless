@@ -167,8 +167,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var action = Assert.IsType<CreatePledge>(ToAction(signedTx.Actions!.Single()));
             Assert.Equal(sender, action.AgentAddresses.Single().Item1);
             Assert.Equal(MeadConfig.PatronAddress, action.PatronAddress);
-            Assert.Equal(1, signedTx.GasLimit);
-            Assert.Equal(1 * Currencies.Mead, signedTx.MaxGasPrice);
+            Assert.Null(signedTx.GasLimit);
+            Assert.Null(signedTx.MaxGasPrice);
             await StageTransaction(signedTx, hex);
         }
 
@@ -248,8 +248,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(unsignedTx.Timestamp, signedTx.Timestamp);
             Assert.Single(unsignedTx.Actions);
             Assert.Single(signedTx.Actions!);
-            Assert.Equal(expectedGasLimit, signedTx.GasLimit);
-            Assert.Equal(1 * Currencies.Mead, signedTx.MaxGasPrice);
+            Assert.Null(signedTx.GasLimit);
+            Assert.Null(signedTx.MaxGasPrice);
             return (signedTx, hex);
         }
 
