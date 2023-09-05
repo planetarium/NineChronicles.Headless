@@ -3,20 +3,23 @@ using GraphQL.Types;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    public class MultiAccountGraphType : ObjectGraphType<MultiAccountGraphType.MultiAccountInfo>
+    public class MultiAccountInfoGraphType : ObjectGraphType<MultiAccountInfoGraphType.MultiAccountInfo>
     {
         public class MultiAccountInfo
         {
             public string Key { get; set; } = null!;
-            public List<string> Values { get; set; } = null!;
+            public List<string> Ips { get; set; } = null!;
+            public List<string> Agents { get; set; } = null!;
             public int Count { get; set; }
         }
 
-        public MultiAccountGraphType()
+        public MultiAccountInfoGraphType()
         {
-            Field(x => x.Key);
-            Field<ListGraphType<StringGraphType>>("values", resolve: context => context.Source.Values);
-            Field<IntGraphType>("count", resolve: context => context.Source.Values.Count);
+            Field("key", x => x.Key);
+            Field<ListGraphType<StringGraphType>>("ips", resolve: context => context.Source.Ips);
+            Field<ListGraphType<StringGraphType>>("agents", resolve: context => context.Source.Agents);
+            Field<IntGraphType>("ipsCount", resolve: context => context.Source.Ips.Count);
+            Field<IntGraphType>("agentsCount", resolve: context => context.Source.Agents.Count);
         }
     }
 }
