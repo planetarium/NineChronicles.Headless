@@ -24,11 +24,12 @@ using Libplanet.Types.Blocks;
 using Libplanet.Types.Tx;
 using MagicOnion.Client;
 using MessagePack;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.Shared.Hubs;
-using Sentry;
 using Serilog;
 
 namespace NineChronicles.Headless
@@ -45,8 +46,8 @@ namespace NineChronicles.Headless
 
         private readonly ConcurrentDictionary<Address, Client> _clients = new();
         private readonly ConcurrentDictionary<Address, string> _clientsByDevice = new();
-        private readonly ConcurrentDictionary<string, HashSet<Address>> _clientsByIp = new();
-        private readonly ConcurrentDictionary<Address, HashSet<string>> _ipsByClient = new();
+        private readonly ConcurrentDictionary<string, HashSet<string>> _clientsByIp = new();
+        private readonly IMemoryCache _cache;
 
         private RpcContext _context;
         private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
@@ -69,6 +70,9 @@ namespace NineChronicles.Headless
             _port = port;
             _context = context;
             _sentryTraces = sentryTraces;
+            var memoryCacheOptions = new MemoryCacheOptions();
+            var options = Options.Create(memoryCacheOptions);
+            _cache = new MemoryCache(options);
 
             var meter = new Meter("NineChronicles");
             meter.CreateObservableGauge(
@@ -165,55 +169,42 @@ namespace NineChronicles.Headless
                 .ToList();
         }
 
-        public void AddClientAndIp(string ipAddress, Address clientAddress)
+        public void AddClientAndIp(string ipAddress, string clientAddress)
         {
             if (!_clientsByIp.ContainsKey(ipAddress))
             {
-                _clientsByIp[ipAddress] = new HashSet<Address>();
+                _clientsByIp[ipAddress] = new HashSet<string>();
             }
 
             _clientsByIp[ipAddress].Add(clientAddress);
-            if (!_ipsByClient.ContainsKey(clientAddress))
-            {
-                _ipsByClient[clientAddress] = new HashSet<string>();
-            }
-
-            _ipsByClient[clientAddress].Add(ipAddress);
         }
 
         public int GetClientsCountByIp(int minimum)
         {
             int clientsCount = 0;
-            foreach (var clientIp in _clientsByIp.Keys)
-            {
-                if (_clientsByIp[clientIp].Count >= minimum)
-                {
-                    clientsCount += _clientsByIp[clientIp].Count;
-                }
-            }
+            var finder = new IdGroupFinder(_cache);
+            var groups = finder.FindGroups(_clientsByIp);
+            clientsCount += groups.Where(group => group.IDs.Count >= minimum)
+                .Sum(group => group.IDs.Count);
 
             return clientsCount;
         }
 
-        public ConcurrentDictionary<string, List<Address>> GetClientsByIp(int minimum)
+        public ConcurrentDictionary<List<string>, List<string>> GetClientsByIp(int minimum)
         {
-            ConcurrentDictionary<string, List<Address>> clientsList = new();
-            foreach (var ip in _clientsByIp.Keys)
+            var finder = new IdGroupFinder(_cache);
+            var groups = finder.FindGroups(_clientsByIp);
+            ConcurrentDictionary<List<string>, List<string>> clientsIpList = new();
+            foreach (var group in groups)
             {
-                if (_clientsByIp[ip].Count >= minimum)
+                if (group.IDs.Count >= minimum)
                 {
-                    clientsList.TryAdd(ip, _clientsByIp[ip].ToList());
+                    clientsIpList.TryAdd(group.IPs.ToList(), group.IDs.ToList());
                 }
             }
 
-            return new ConcurrentDictionary<string, List<Address>>(
-                clientsList.OrderByDescending(x => x.Value.Count));
-        }
-
-        public ConcurrentDictionary<Address, HashSet<string>> GetIpsByClient()
-        {
-            return new ConcurrentDictionary<Address, HashSet<string>>(
-                _ipsByClient.OrderByDescending(x => x.Value.Count));
+            return new ConcurrentDictionary<List<string>, List<string>>(
+                clientsIpList.OrderByDescending(x => x.Value.Count));
         }
 
         public override async Task StopAsync(CancellationToken cancellationToken)
@@ -279,6 +270,101 @@ namespace NineChronicles.Headless
             catch (Exception)
             {
                 Log.Error("[{ClientAddress }] Client ");
+            }
+        }
+
+        public class IdGroupFinder
+        {
+            private Dictionary<string, List<string>> adjacencyList = new Dictionary<string, List<string>>();
+            private HashSet<string> visited = new HashSet<string>();
+            private readonly IMemoryCache _memoryCache;
+
+            public IdGroupFinder(IMemoryCache memoryCache)
+            {
+                _memoryCache = memoryCache;
+            }
+
+            public List<(HashSet<string> IPs, HashSet<string> IDs)> FindGroups(ConcurrentDictionary<string, HashSet<string>> dict)
+            {
+                // Create a serialized version of the input for caching purposes
+                var serializedInput = string.Join("; ", dict.Select(kvp => $"{kvp.Key}: {string.Join(",", kvp.Value)}"));
+
+                // Check cache
+                if (_memoryCache.TryGetValue(serializedInput, out List<(HashSet<string> IPs, HashSet<string> IDs)> cachedResult))
+                {
+                    return cachedResult;
+                }
+
+                // Step 1: Construct the adjacency list
+                foreach (var kvp in dict)
+                {
+                    var ip = kvp.Key;
+                    if (!adjacencyList.ContainsKey(ip))
+                    {
+                        adjacencyList[ip] = new List<string>();
+                    }
+
+                    foreach (var id in kvp.Value)
+                    {
+                        adjacencyList[ip].Add(id);
+
+                        if (!adjacencyList.ContainsKey(id))
+                        {
+                            adjacencyList[id] = new List<string>();
+                        }
+                        adjacencyList[id].Add(ip);
+                    }
+                }
+
+                // Step 2: DFS to find connected components
+                var groups = new List<(HashSet<string> IPs, HashSet<string> IDs)>();
+                foreach (var node in adjacencyList.Keys)
+                {
+                    if (!visited.Contains(node))
+                    {
+                        var ips = new HashSet<string>();
+                        var ids = new HashSet<string>();
+                        DFS(node, ips, ids, dict);
+                        groups.Add((ips, ids));
+                    }
+                }
+
+                // Cache the result before returning. Here we set a sliding expiration of 1 hour.
+                var cacheEntryOptions = new MemoryCacheEntryOptions
+                {
+                    SlidingExpiration = TimeSpan.FromMinutes(1)
+                };
+                _memoryCache.Set(serializedInput, groups, cacheEntryOptions);
+
+                return groups;
+            }
+
+            private void DFS(string node, HashSet<string> ips, HashSet<string> ids, ConcurrentDictionary<string, HashSet<string>> dict)
+            {
+                if (visited.Contains(node))
+                {
+                    return;
+                }
+
+                visited.Add(node);
+
+                // if node is an IP
+                if (dict.ContainsKey(node))
+                {
+                    ips.Add(node);
+                }
+                else
+                {
+                    ids.Add(node);
+                }
+
+                foreach (var neighbor in adjacencyList[node])
+                {
+                    if (!visited.Contains(neighbor))
+                    {
+                        DFS(neighbor, ips, ids, dict);
+                    }
+                }
             }
         }
 
