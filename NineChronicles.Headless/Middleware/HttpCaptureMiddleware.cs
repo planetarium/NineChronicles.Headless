@@ -176,7 +176,7 @@ namespace NineChronicles.Headless.Middleware
 
         private void AddClientIpInfo(Address agentAddress, string ipAddress)
         {
-            _publisher.AddClientAndIp(ipAddress, agentAddress);
+            _publisher.AddClientAndIp(ipAddress, agentAddress.ToString());
         }
     }
 }

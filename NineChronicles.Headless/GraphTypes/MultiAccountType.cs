@@ -10,7 +10,8 @@ namespace NineChronicles.Headless.GraphTypes
             public string Key { get; set; } = null!;
             public List<string> Ips { get; set; } = null!;
             public List<string> Agents { get; set; } = null!;
-            public int Count { get; set; }
+            public int IpsCount { get; set; }
+            public int AgentsCount { get; set; }
         }
 
         public MultiAccountInfoGraphType()
