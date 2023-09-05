@@ -287,7 +287,7 @@ namespace NineChronicles.Headless.GraphTypes
                             itemId = itemId,
                             materialIds = new List<Guid>
                             {
-                                materialId,   
+                                materialId,
                             }
                         };
 
