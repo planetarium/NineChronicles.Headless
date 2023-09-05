@@ -47,6 +47,7 @@ namespace NineChronicles.Headless
         private readonly ConcurrentDictionary<Address, Client> _clients = new();
         private readonly ConcurrentDictionary<Address, string> _clientsByDevice = new();
         private readonly ConcurrentDictionary<string, HashSet<string>> _clientsByIp = new();
+        private readonly ConcurrentDictionary<List<string>, List<string>> _clientsIpsList = new();
         private readonly IMemoryCache _cache;
 
         private RpcContext _context;
@@ -86,6 +87,18 @@ namespace NineChronicles.Headless
                     new Measurement<int>(this.GetClientsCountByDevice("mobile"), new[] { new KeyValuePair<string, object?>("device", "mobile") }),
                     new Measurement<int>(this.GetClientsCountByDevice("pc"), new[] { new KeyValuePair<string, object?>("device", "pc") }),
                     new Measurement<int>(this.GetClientsCountByDevice("other"), new[] { new KeyValuePair<string, object?>("device", "other") }),
+                },
+                description: "Number of RPC clients connected by device.");
+            meter.CreateObservableGauge(
+                "ninechronicles_clients_count_by_ip",
+                () => new[]
+                {
+                    new Measurement<int>(
+                        GetClientsCountByIp(50),
+                        new KeyValuePair<string, object?>("account-type", "multi-account")),
+                    new Measurement<int>(
+                        GetClientsCountByIp(0) - GetClientsCountByIp(50),
+                        new KeyValuePair<string, object?>("account-type", "organic-account")),
                 },
                 description: "Number of RPC clients connected by device.");
 
@@ -169,13 +182,10 @@ namespace NineChronicles.Headless
 
         public int GetClientsCountByIp(int minimum)
         {
-            int clientsCount = 0;
             var finder = new IdGroupFinder(_cache);
             var groups = finder.FindGroups(_clientsByIp);
-            clientsCount += groups.Where(group => group.IDs.Count >= minimum)
+            return groups.Where(group => group.IDs.Count >= minimum)
                 .Sum(group => group.IDs.Count);
-
-            return clientsCount;
         }
 
         public ConcurrentDictionary<List<string>, List<string>> GetClientsByIp(int minimum)
@@ -320,7 +330,7 @@ namespace NineChronicles.Headless
                 // Cache the result before returning. Here we set a sliding expiration of 1 hour.
                 var cacheEntryOptions = new MemoryCacheEntryOptions
                 {
-                    SlidingExpiration = TimeSpan.FromMinutes(1)
+                    SlidingExpiration = TimeSpan.FromMinutes(5)
                 };
                 _memoryCache.Set(serializedInput, groups, cacheEntryOptions);
 

@@ -49,6 +49,20 @@ namespace NineChronicles.Headless.GraphTypes
                     string device = context.GetArgument<string>("device");
                     return publisher.GetClientsByDevice(device);
                 });
+            Field<NonNullGraphType<IntGraphType>>(
+                name: "clientsCountByIps",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "minimum"
+                    }
+                ),
+                description: "clients count connected to this node grouped by Ip addresses.",
+                resolve: context =>
+                {
+                    int minimum = context.GetArgument<int>("minimum");
+                    return publisher.GetClientsCountByIp(minimum);
+                });
             Field<NonNullGraphType<ListGraphType<MultiAccountInfoGraphType>>>(
                 name: "clientsByIps",
                 arguments: new QueryArguments(
