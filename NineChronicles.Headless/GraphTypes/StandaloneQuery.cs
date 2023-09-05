@@ -84,6 +84,11 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var state = blockChain.GetStates(new[] { address }, blockHash)[0];
 
+                    if (state is null)
+                    {
+                        return null;
+                    }
+
                     return new Codec().Encode(state);
                 }
             );
