@@ -329,21 +329,17 @@ namespace NineChronicles.Headless.GraphTypes
                     txExecutedBlock.Index,
                     txExecutedBlock.Hash.ToString(),
                     null,
-                    null,
                     success.UpdatedStates
                         .Select(kv => new KeyValuePair<Address, IValue>(
                             kv.Key,
                             kv.Value))
                         .ToImmutableDictionary(),
-                    success.FungibleAssetsDelta,
                     success.UpdatedFungibleAssets),
                 TxFailure failure => new TxResult(
                     TxStatus.FAILURE,
                     txExecutedBlock.Index,
                     txExecutedBlock.Hash.ToString(),
                     failure.ExceptionName,
-                    failure.ExceptionMetadata,
-                    null,
                     null,
                     null),
                 _ => null
