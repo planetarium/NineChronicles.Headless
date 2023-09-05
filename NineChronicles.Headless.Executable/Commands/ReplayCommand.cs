@@ -101,7 +101,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 // Evaluate tx.
                 IAccountState previousBlockStates = blockChain.GetBlockState(previousBlock.Hash);
-                IAccountStateDelta previousStates = AccountStateDelta.Create(previousBlockStates);
+                IAccount previousStates = AccountStateDelta.Create(previousBlockStates);
                 var actions = tx.Actions.Select(a => ToAction(a));
                 var actionEvaluations = EvaluateActions(
                     preEvaluationHash: targetBlock.PreEvaluationHash,

@@ -461,7 +461,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 return ImmutableDictionary<string, IValue>.Empty;
             }
 
-            IAccountStateDelta lastStates = actionEvaluations[actionEvaluations.Count - 1].OutputState;
+            IAccount lastStates = actionEvaluations[actionEvaluations.Count - 1].OutputState;
 
             ImmutableDictionary<string, IValue> totalDelta =
                 stateUpdatedAddresses.ToImmutableDictionary(
