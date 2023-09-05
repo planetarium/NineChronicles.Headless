@@ -94,10 +94,10 @@ namespace NineChronicles.Headless
                 () => new[]
                 {
                     new Measurement<int>(
-                        GetClientsCountByIp(50),
+                        GetClientsCountByIp(10),
                         new KeyValuePair<string, object?>("account-type", "multi-account")),
                     new Measurement<int>(
-                        GetClientsCountByIp(0) - GetClientsCountByIp(50),
+                        GetClientsCountByIp(0) - GetClientsCountByIp(10),
                         new KeyValuePair<string, object?>("account-type", "organic-account")),
                 },
                 description: "Number of RPC clients connected by device.");
@@ -285,7 +285,7 @@ namespace NineChronicles.Headless
             public List<(HashSet<string> IPs, HashSet<string> IDs)> FindGroups(ConcurrentDictionary<string, HashSet<string>> dict)
             {
                 // Create a serialized version of the input for caching purposes
-                var serializedInput = string.Join("; ", dict.Select(kvp => $"{kvp.Key}: {string.Join(",", kvp.Value)}"));
+                var serializedInput = "key";
 
                 // Check cache
                 if (_memoryCache.TryGetValue(serializedInput, out List<(HashSet<string> IPs, HashSet<string> IDs)> cachedResult))
@@ -330,7 +330,7 @@ namespace NineChronicles.Headless
                 // Cache the result before returning. Here we set a sliding expiration of 1 hour.
                 var cacheEntryOptions = new MemoryCacheEntryOptions
                 {
-                    SlidingExpiration = TimeSpan.FromMinutes(5)
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1)
                 };
                 _memoryCache.Set(serializedInput, groups, cacheEntryOptions);
 
