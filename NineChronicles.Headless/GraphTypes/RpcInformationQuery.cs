@@ -49,7 +49,7 @@ namespace NineChronicles.Headless.GraphTypes
                     string device = context.GetArgument<string>("device");
                     return publisher.GetClientsByDevice(device);
                 });
-            Field<NonNullGraphType<ListGraphType<MultiAccountGraphType>>>(
+            Field<NonNullGraphType<ListGraphType<MultiAccountInfoGraphType>>>(
                 name: "clientsByIp",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<IntGraphType>>
@@ -61,14 +61,14 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     int minimum = context.GetArgument<int>("minimum");
-                    var a = new List<MultiAccountGraphType.MultiAccountInfo>();
+                    var a = new List<MultiAccountInfoGraphType.MultiAccountInfo>();
                     var data = publisher.GetClientsByIp(minimum);
                     foreach (var i in data)
                     {
-                        var b = new MultiAccountGraphType.MultiAccountInfo
+                        var b = new MultiAccountInfoGraphType.MultiAccountInfo
                         {
                             Key = i.Key,
-                            Values = i.Value.Select(address => address.ToString()).ToList(),
+                            Agents = i.Value.Select(address => address.ToString()).ToList(),
                             Count = i.Value.Count,
                         };
                         a.Add(b);
@@ -76,19 +76,19 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return a.OrderByDescending(x => x.Count);
                 });
-            Field<NonNullGraphType<ListGraphType<MultiAccountGraphType>>>(
+            Field<NonNullGraphType<ListGraphType<MultiAccountInfoGraphType>>>(
                 name: "ipsByClient",
                 description: "Ip addresses associate to each client.",
                 resolve: context =>
                 {
-                    var a = new List<MultiAccountGraphType.MultiAccountInfo>();
+                    var a = new List<MultiAccountInfoGraphType.MultiAccountInfo>();
                     var data = publisher.GetIpsByClient();
                     foreach (var i in data)
                     {
-                        var b = new MultiAccountGraphType.MultiAccountInfo
+                        var b = new MultiAccountInfoGraphType.MultiAccountInfo
                         {
                             Key = i.Key.ToString(),
-                            Values = i.Value.Select(address => address.ToString()).ToList(),
+                            Ips = i.Value.Select(address => address.ToString()).ToList(),
                             Count = i.Value.Count,
                         };
                         a.Add(b);
