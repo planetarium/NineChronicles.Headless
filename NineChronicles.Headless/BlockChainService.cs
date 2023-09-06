@@ -125,7 +125,7 @@ namespace NineChronicles.Headless
         public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStates(IEnumerable<byte[]> addressBytesList, byte[] blockHashBytes)
         {
             var hash = new BlockHash(blockHashBytes);
-            var accountState = _blockChain.GetBlockState(hash);
+            var accountState = _blockChain.GetAccountState(hash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
             var addresses = addressBytesList.Select(a => new Address(a)).ToList();
             var rawAvatarStates = accountState.GetRawAvatarStates(addresses);

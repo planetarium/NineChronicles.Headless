@@ -52,7 +52,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return new StateContext(
-                        chain.GetBlockState(blockHash),
+                        chain.GetAccountState(blockHash),
                         blockHash switch
                         {
                             BlockHash bh => chain[bh].Index,
