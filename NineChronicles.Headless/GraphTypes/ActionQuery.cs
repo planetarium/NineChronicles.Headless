@@ -542,6 +542,7 @@ namespace NineChronicles.Headless.GraphTypes
             RegisterCombinationConsumable();
             RegisterMead();
             RegisterGarages();
+            RegisterSummon();
 
             Field<NonNullGraphType<CraftQuery>>(
                 name: "craftQuery",
