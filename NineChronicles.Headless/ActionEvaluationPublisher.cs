@@ -330,7 +330,7 @@ namespace NineChronicles.Headless
                 // Cache the result before returning. Here we set a sliding expiration of 1 hour.
                 var cacheEntryOptions = new MemoryCacheEntryOptions
                 {
-                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1)
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
                 };
                 _memoryCache.Set(serializedInput, groups, cacheEntryOptions);
 
