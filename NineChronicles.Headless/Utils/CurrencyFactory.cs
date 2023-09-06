@@ -32,6 +32,7 @@ public class CurrencyFactory
         var result = ticker switch
         {
             "NCG" => GetNCG(),
+            "MEAD" => Currencies.Mead,
             _ => Currencies.GetMinterlessCurrency(ticker),
         };
         if (result is null)

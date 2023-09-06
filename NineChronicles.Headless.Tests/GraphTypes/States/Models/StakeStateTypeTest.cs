@@ -1,9 +1,12 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL.Execution;
+using Libplanet.Crypto;
 using Libplanet.Types.Assets;
 using Nekoyume;
+using Nekoyume.Model.Stake;
 using Nekoyume.Model.State;
+using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States;
 using NineChronicles.Headless.Tests.Common;
 using Xunit;
@@ -15,7 +18,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
     {
         [Theory]
         [MemberData(nameof(Members))]
-        public async Task Query(StakeState stakeState, long deposit, long blockIndex, Dictionary<string, object> expected)
+        public async Task Query(StakeStateV2 stakeState, Address stakeStateAddress, long deposit, long blockIndex, Dictionary<string, object> expected)
         {
 #pragma warning disable CS0618
             // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
@@ -36,7 +39,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 claimableBlockIndex
             }";
             var queryResult = await ExecuteQueryAsync<StakeStateType>(
-                query, source: new StakeStateType.StakeStateContext(stakeState, mockState, blockIndex));
+                query,
+                source: new StakeStateType.StakeStateContext(
+                    stakeState,
+                    stakeStateAddress,
+                    mockState,
+                    blockIndex));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
         }
@@ -45,76 +53,83 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
         {
             new object[]
             {
-                new StakeState(Fixtures.StakeStateAddress, 0),
+                new StakeStateV2(
+                    new Contract("StakeRegularFixedRewardSheet_V1", "StakeRegularRewardSheet_V1", 50400, 201600), 0),
+                Fixtures.StakeStateAddress,
                 100,
                 0,
                 new Dictionary<string, object>
                 {
                     ["address"] = Fixtures.StakeStateAddress.ToString(),
                     ["deposit"] = "100.00",
-                    ["startedBlockIndex"] = 0,
+                    ["startedBlockIndex"] = 0L,
                     ["cancellableBlockIndex"] = StakeState.LockupInterval,
-                    ["receivedBlockIndex"] = 0,
-                    ["claimableBlockIndex"] = 0 + StakeState.RewardInterval,
+                    ["receivedBlockIndex"] = 0L,
+                    ["claimableBlockIndex"] = 0L + StakeState.RewardInterval,
                 }
             },
             new object[]
             {
-                new StakeState(Fixtures.StakeStateAddress, 100),
+                new StakeStateV2(new Contract("StakeRegularFixedRewardSheet_V1", "StakeRegularRewardSheet_V1", 50400, 201600), 100),
+                Fixtures.StakeStateAddress,
                 100,
                 0,
                 new Dictionary<string, object>
                 {
                     ["address"] = Fixtures.StakeStateAddress.ToString(),
                     ["deposit"] = "100.00",
-                    ["startedBlockIndex"] = 100,
+                    ["startedBlockIndex"] = 100L,
                     ["cancellableBlockIndex"] = 100 + StakeState.LockupInterval,
-                    ["receivedBlockIndex"] = 0,
+                    ["receivedBlockIndex"] = 0L,
                     ["claimableBlockIndex"] = 100 + StakeState.RewardInterval,
                 }
             },
             new object[]
             {
-                new StakeState(Fixtures.StakeStateAddress, 100),
+                new StakeStateV2(new Contract("StakeRegularFixedRewardSheet_V1", "StakeRegularRewardSheet_V1", 50400, 201600), 100),
+                Fixtures.StakeStateAddress,
                 100,
                 0,
                 new Dictionary<string, object>
                 {
                     ["address"] = Fixtures.StakeStateAddress.ToString(),
                     ["deposit"] = "100.00",
-                    ["startedBlockIndex"] = 100,
+                    ["startedBlockIndex"] = 100L,
                     ["cancellableBlockIndex"] = StakeState.LockupInterval + 100,
-                    ["receivedBlockIndex"] = 0,
+                    ["receivedBlockIndex"] = 0L,
                     ["claimableBlockIndex"] = StakeState.RewardInterval + 100,
                 }
             },
             new object[]
             {
-                new StakeState(Fixtures.StakeStateAddress, 10, 50412, 201610, new StakeState.StakeAchievements()),
+                new StakeStateV2(
+                    new Contract("StakeRegularFixedRewardSheet_V1", "StakeRegularRewardSheet_V1", 50400, 201600), 10, 50412),
+                Fixtures.StakeStateAddress,
                 100,
                 0,
                 new Dictionary<string, object>
                 {
                     ["address"] = Fixtures.StakeStateAddress.ToString(),
                     ["deposit"] = "100.00",
-                    ["startedBlockIndex"] = 10,
+                    ["startedBlockIndex"] = 10L,
                     ["cancellableBlockIndex"] = 201610L,
-                    ["receivedBlockIndex"] = 50412,
-                    ["claimableBlockIndex"] = 100812L,
+                    ["receivedBlockIndex"] = 50412L,
+                    ["claimableBlockIndex"] = 100810L,
                 }
             },
             new object[]
             {
-                new StakeState(Fixtures.StakeStateAddress, 10, 50412, 201610, new StakeState.StakeAchievements()),
+                new StakeStateV2(new Contract("StakeRegularFixedRewardSheet_V1", "StakeRegularRewardSheet_V1", 50400, 201600), 10, 50412),
+                Fixtures.StakeStateAddress,
                 100,
                 ActionObsoleteConfig.V100290ObsoleteIndex,
                 new Dictionary<string, object>
                 {
                     ["address"] = Fixtures.StakeStateAddress.ToString(),
                     ["deposit"] = "100.00",
-                    ["startedBlockIndex"] = 10,
+                    ["startedBlockIndex"] = 10L,
                     ["cancellableBlockIndex"] = 201610L,
-                    ["receivedBlockIndex"] = 50412,
+                    ["receivedBlockIndex"] = 50412L,
                     ["claimableBlockIndex"] = 100810L,
                 }
             }
