@@ -90,17 +90,17 @@ namespace NineChronicles.Headless
                 },
                 description: "Number of RPC clients connected by device.");
             meter.CreateObservableGauge(
-                "ninechronicles_clients_count_by_ip",
+                "ninechronicles_clients_count_by_ips",
                 () => new[]
                 {
                     new Measurement<int>(
                         GetClientsCountByIp(10),
-                        new KeyValuePair<string, object?>("account-type", "multi-account")),
+                        new KeyValuePair<string, object?>("account-type", "multi")),
                     new Measurement<int>(
-                        GetClientsCountByIp(0) - GetClientsCountByIp(10),
-                        new KeyValuePair<string, object?>("account-type", "organic-account")),
+                        GetClientsCountByIp(0),
+                        new KeyValuePair<string, object?>("account-type", "all")),
                 },
-                description: "Number of RPC clients connected by device.");
+                description: "Number of RPC clients connected grouped by ips.");
 
             ActionEvaluationHub.OnClientDisconnected += RemoveClient;
         }
