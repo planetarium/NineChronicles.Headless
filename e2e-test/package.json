@@ -1,38 +1,36 @@
 {
-  "name": "scripts",
+  "name": "e2e-test",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "vitest ./src"
+    "sign": "tsx src/scripts/sign.ts",
+    "start": "tsx src/index.ts",
+    "test": "vitest --config vitest.config.ts src/tests"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "@types/luxon": "^3.3.2",
-    "@types/node": "^20.5.7",
-    "@typescript-eslint/eslint-plugin": "^6.5.0",
-    "@typescript-eslint/parser": "^6.5.0",
-    "eslint": "^8.48.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-config-airbnb-typescript": "^17.1.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-import-resolver-typescript": "^3.6.0",
-    "eslint-plugin-import": "^2.28.1",
-    "eslint-plugin-prettier": "^5.0.0",
-    "prettier": "^3.0.3",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.2.2",
-    "vitest": "^0.34.3"
-  },
   "dependencies": {
     "@planetarium/account": "^3.2.0",
     "@planetarium/account-raw": "^0.0.3",
     "@planetarium/bencodex": "^0.2.2",
     "@planetarium/sign": "^0.0.12",
     "axios": "^1.5.0",
-    "dotenv": "^16.3.1",
-    "luxon": "^3.4.2"
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.9",
+    "@typescript-eslint/eslint-plugin": "^6.6.0",
+    "@typescript-eslint/parser": "^6.6.0",
+    "eslint": "^8.48.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.1.0",
+    "eslint-import-resolver-typescript": "^3.6.0",
+    "eslint-plugin-import": "^2.28.1",
+    "tsx": "^3.12.8",
+    "typescript": "^5.2.2",
+    "vitest": "^0.34.3"
   }
 }

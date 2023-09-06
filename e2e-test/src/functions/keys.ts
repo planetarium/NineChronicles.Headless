@@ -1,19 +1,12 @@
 import { RawPrivateKey } from '@planetarium/account';
 import { createAccount } from '@planetarium/account-raw';
-import { Account } from '@planetarium/sign';
+import { adminAddress, adminPrivateKey, adminPublicKey } from './config.js';
 
-export type Key = {
-  publicKey: string;
-  address: string;
-  privateKey: string;
-  account: Account;
-};
-
-export const adminAccountKey: Key = {
-  privateKey: process.env.ADMIN_PRIVATE_KEY as string,
-  address: process.env.ADMIN_ADDRESS as string,
-  publicKey: process.env.ADMIN_PUBLIC_KEY as string,
-  account: createAccount(process.env.ADMIN_PRIVATE_KEY as string),
+export const adminKey = {
+  privateKey: adminPrivateKey,
+  publicKey: adminPublicKey,
+  address: adminAddress,
+  account: createAccount(adminPrivateKey),
 };
 
 export const generateKeys = async () => {

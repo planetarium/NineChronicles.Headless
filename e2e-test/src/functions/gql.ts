@@ -1,12 +1,13 @@
 import axios from 'axios';
 
-export const executeGqlQuery = async (
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const executeGqlQuery = async <T = any>(
   network: string,
   query: string,
   variables?: unknown,
 ) => {
   try {
-    return await axios.post(
+    return await axios.post<T>(
       `${network}/graphql`,
       JSON.stringify({
         query,

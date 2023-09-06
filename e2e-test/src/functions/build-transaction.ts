@@ -6,12 +6,19 @@ import {
   decode,
   encode,
 } from '@planetarium/bencodex';
-import { signTransaction } from '@planetarium/sign';
+import { Account, signTransaction } from '@planetarium/sign';
 import * as fs from 'fs';
 
-import { executeGqlQuery } from 'src/gql';
-import { Key as AuthKey, adminAccountKey } from './auth';
-import { log, network } from './config';
+import { executeGqlQuery } from './gql.js';
+import { adminKey } from './keys.js';
+import { log, network } from './config.js';
+
+export type AuthKey = {
+  privateKey: string;
+  publicKey: string;
+  address: string;
+  account: Account;
+};
 
 const unsignedActionTxQuery = async (
   key: AuthKey,
@@ -62,11 +69,11 @@ export const transferAsset = async (
   currency: 'MEAD' | 'NCG',
 ) => {
   const ncgQuery = `transferAsset(
-    sender: "${adminAccountKey.address}",
+    sender: "${adminKey.address}",
     recipient: "${key.address}",
     amount: "${amount}",
     currency: ${currency})`;
-  const ncgTx = await actionTxQuery(adminAccountKey, 'transferAsset', ncgQuery);
+  const ncgTx = await actionTxQuery(adminKey, 'transferAsset', ncgQuery);
 
   return ncgTx;
 };
@@ -79,7 +86,8 @@ export const stake = async (key: AuthKey, amount: number) => {
 };
 
 export const stake2 = async (key: AuthKey, amount: number) => {
-  const stakeTx = await stake(key, amount);
+  const stakeQuery = `stake(amount: ${amount})`;
+  const stakeTx = await unsignedActionTxQuery(key, 'stake', stakeQuery);
 
   const buffer = Buffer.from(stakeTx, 'hex');
   const decoded = decode(buffer) as Dictionary;
@@ -99,9 +107,13 @@ export const stake2 = async (key: AuthKey, amount: number) => {
   });
 
   const stake2Dictionary = new BencodexDictionary(entries);
-  return [...encode(stake2Dictionary)]
+  const unsignedTx = [...encode(stake2Dictionary)]
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('');
+
+  const signedTx = await signTransaction(unsignedTx, key.account);
+
+  return signedTx;
 };
 
 export const patchTableSheet = async (csvPath: string) => {
@@ -115,7 +127,18 @@ export const patchTableSheet = async (csvPath: string) => {
   const query = `patchTableSheet(
     tablename: "${csvName}",
     tableCsv: "${trimedCsvData}")`;
-  const tx = await actionTxQuery(adminAccountKey, 'patchTableSheet', query);
+  const tx = await actionTxQuery(adminKey, 'patchTableSheet', query);
+
+  return tx;
+};
+
+export const createAvatar = async (
+  key: AuthKey,
+  index: 0 | 1 | 2,
+  name: string,
+) => {
+  const query = `createAvatar(index: ${index}, name: "${name}")`;
+  const tx = await actionTxQuery(key, 'createAvatar', query);
 
   return tx;
 };

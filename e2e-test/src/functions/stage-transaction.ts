@@ -1,5 +1,5 @@
-import { executeGqlQuery } from 'src/gql';
-import { log, network } from './config';
+import { executeGqlQuery } from './gql.js';
+import { log, network } from './config.js';
 
 export const stageTransaction = async (tx: string) => {
   const response = await executeGqlQuery(
@@ -19,8 +19,20 @@ export const stageTransaction = async (tx: string) => {
   return result;
 };
 
+export type TxResult = {
+  txStatus: 'SUCCESS';
+  blockIndex: number;
+  blockHash: string;
+} | {
+  txStatus: 'FAILED';
+  exceptionName: string;
+} | {
+  txStatus: 'STAGING';
+};
+
 const checkIsStaged = async (txId: string) => {
-  const response = await executeGqlQuery(
+  type Response = { data: { transaction: { transactionResult: TxResult; }; }; };
+  const response = await executeGqlQuery<Response>(
     network,
     `{
       transaction {
