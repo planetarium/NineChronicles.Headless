@@ -255,7 +255,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             _command.PruneStates(storeType, _storePath);
             IStore outputStore = storeType.CreateStore(_storePath);
             var outputStateKeyValueStore = new RocksDBKeyValueStore(statesPath);
-            var outputStateStore = new TrieStateStore(outputStateKeyValueStore, true);
+            var outputStateStore = new TrieStateStore(outputStateKeyValueStore);
             int outputStatesCount = outputStateKeyValueStore.ListKeys().Count();
             outputStore.Dispose();
             outputStateStore.Dispose();
