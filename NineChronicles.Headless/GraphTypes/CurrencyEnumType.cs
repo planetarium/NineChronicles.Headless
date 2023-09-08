@@ -9,6 +9,7 @@ namespace NineChronicles.Headless.GraphTypes
         CRYSTAL,
         NCG,
         GARAGE,
+        MEAD
     }
 
     public class CurrencyEnumType : EnumerationGraphType<CurrencyEnum>
