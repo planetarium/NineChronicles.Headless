@@ -14,8 +14,8 @@ namespace NineChronicles.Headless.Middleware
 {
     public class GrpcCaptureMiddleware : Interceptor
     {
-        private const int MultiAccountManagementTime = 10;
-        private const int MultiAccountTxInterval = 10;
+        private const int MultiAccountManagementTime = 15;
+        private const int MultiAccountTxInterval = 15;
         private static Dictionary<Address, DateTimeOffset> _multiAccountTxIntervalTracker = new();
         private static Dictionary<Address, DateTimeOffset> _multiAccountList = new();
         private readonly ILogger _logger;
@@ -125,7 +125,7 @@ namespace NineChronicles.Headless.Middleware
                 }
 
                 var agent = tx.Signer;
-                if (_ipSignerList[ipAddress].Count > 49)
+                if (_ipSignerList[ipAddress].Count > 29)
                 {
                     if (!_multiAccountList.ContainsKey(agent))
                     {

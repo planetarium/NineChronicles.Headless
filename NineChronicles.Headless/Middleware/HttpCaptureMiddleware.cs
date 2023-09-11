@@ -14,8 +14,8 @@ namespace NineChronicles.Headless.Middleware
 {
     public class HttpCaptureMiddleware
     {
-        private const int MultiAccountManagementTime = 10;
-        private const int MultiAccountTxInterval = 10;
+        private const int MultiAccountManagementTime = 15;
+        private const int MultiAccountTxInterval = 15;
         private static Dictionary<Address, DateTimeOffset> _multiAccountTxIntervalTracker = new();
         private static Dictionary<Address, DateTimeOffset> _multiAccountList = new();
         private readonly RequestDelegate _next;
@@ -85,7 +85,7 @@ namespace NineChronicles.Headless.Middleware
                         var agent = tx.Signer;
                         if (_ipSignerList.ContainsKey(context.Connection.RemoteIpAddress!.ToString()))
                         {
-                            if (_ipSignerList[context.Connection.RemoteIpAddress!.ToString()].Count > 49)
+                            if (_ipSignerList[context.Connection.RemoteIpAddress!.ToString()].Count > 29)
                             {
                                 if (!_multiAccountList.ContainsKey(agent))
                                 {
