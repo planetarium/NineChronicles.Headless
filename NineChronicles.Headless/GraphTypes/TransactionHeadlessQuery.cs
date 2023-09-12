@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using Bencodex;
 using Bencodex.Json;
 using GraphQL;
@@ -75,7 +76,7 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<LongGraphType>>
                     { Name = "limit", Description = "number of block to query." },
                     new QueryArgument<NonNullGraphType<StringGraphType>>
-                    { Name = "actionType", Description = "filter tx by having actions' type" }
+                    { Name = "actionType", Description = "filter tx by having actions' type. It is regular expression." }
                 ),
                 resolve: context =>
                 {
@@ -99,7 +100,7 @@ namespace NineChronicles.Headless.GraphTypes
                                 return false;
                             }
 
-                            return typeId == actionType;
+                            return Regex.IsMatch(typeId, actionType);
                         }));
 
                     return transactions;
