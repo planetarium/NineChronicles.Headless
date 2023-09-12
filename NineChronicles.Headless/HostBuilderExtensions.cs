@@ -26,15 +26,11 @@ namespace NineChronicles.Headless
         public static IHostBuilder UseNineChroniclesNode(
             this IHostBuilder builder,
             NineChroniclesNodeServiceProperties properties,
-            StandaloneContext context
+            StandaloneContext context,
+            ActionEvaluationPublisher actionEvaluationPublisher,
+            NineChroniclesNodeService service
         )
         {
-            NineChroniclesNodeService service =
-                NineChroniclesNodeService.Create(properties, context);
-            var rpcContext = new RpcContext
-            {
-                RpcRemoteSever = false
-            };
             return builder.ConfigureServices(services =>
             {
                 services.AddHostedService(provider => service);
@@ -53,19 +49,8 @@ namespace NineChronicles.Headless
                 {
                     services.AddSingleton<LibplanetNodeServiceProperties>(provider => libplanetNodeServiceProperties);
                 }
-                services.AddSingleton(provider =>
-                {
-                    return new ActionEvaluationPublisher(
-                        context.NineChroniclesNodeService!.BlockRenderer,
-                        context.NineChroniclesNodeService!.ActionRenderer,
-                        context.NineChroniclesNodeService!.ExceptionRenderer,
-                        context.NineChroniclesNodeService!.NodeStatusRenderer,
-                        IPAddress.Loopback.ToString(),
-                        0,
-                        rpcContext,
-                        provider.GetRequiredService<ConcurrentDictionary<string, ITransaction>>()
-                    );
-                });
+
+                services.AddSingleton(_ => actionEvaluationPublisher);
             });
         }
 

@@ -488,7 +488,9 @@ namespace NineChronicles.Headless.Executable
                                 .AddAspNetCoreInstrumentation()
                                 .AddPrometheusExporter());
                 });
-                hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, standaloneContext);
+
+                NineChroniclesNodeService service =
+                    NineChroniclesNodeService.Create(nineChroniclesProperties, standaloneContext);
                 if (headlessConfig.RpcServer)
                 {
                     var context = new RpcContext
@@ -512,12 +514,39 @@ namespace NineChronicles.Headless.Executable
                         new ConcurrentDictionary<string, Sentry.ITransaction>()
                     );
 
+                    hostBuilder.UseNineChroniclesNode(
+                        nineChroniclesProperties,
+                        standaloneContext,
+                        publisher,
+                        service);
                     hostBuilder.UseNineChroniclesRPC(
                         rpcProperties,
                         publisher,
                         standaloneContext,
                         configuration
                     );
+                }
+                else
+                {
+                    var context = new RpcContext
+                    {
+                        RpcRemoteSever = false
+                    };
+                    var publisher = new ActionEvaluationPublisher(
+                        standaloneContext.NineChroniclesNodeService!.BlockRenderer,
+                        standaloneContext.NineChroniclesNodeService!.ActionRenderer,
+                        standaloneContext.NineChroniclesNodeService!.ExceptionRenderer,
+                        standaloneContext.NineChroniclesNodeService!.NodeStatusRenderer,
+                        IPAddress.Loopback.ToString(),
+                        0,
+                        context,
+                        new ConcurrentDictionary<string, Sentry.ITransaction>()
+                    );
+                    hostBuilder.UseNineChroniclesNode(
+                        nineChroniclesProperties,
+                        standaloneContext,
+                        publisher,
+                        service);
                 }
 
                 await hostBuilder.RunConsoleAsync(cancellationToken ?? Context.CancellationToken);
