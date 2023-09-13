@@ -14,8 +14,8 @@ namespace NineChronicles.Headless.Middleware
 {
     public class GrpcCaptureMiddleware : Interceptor
     {
-        private const int MultiAccountManagementTime = 15;
-        private const int MultiAccountTxInterval = 15;
+        private const int MultiAccountManagementTime = 30;
+        private const int MultiAccountTxInterval = 30;
         private static Dictionary<Address, DateTimeOffset> _multiAccountTxIntervalTracker = new();
         private static Dictionary<Address, DateTimeOffset> _multiAccountList = new();
         private readonly ILogger _logger;
@@ -167,12 +167,6 @@ namespace NineChronicles.Headless.Middleware
                             _logger.Information($"[GRPC-REQUEST-CAPTURE] Agent {agent} is in managed status for the next {MultiAccountManagementTime - (DateTimeOffset.Now - _multiAccountList[agent]).Minutes} minutes.");
                         }
                     }
-
-                    _logger.Information(
-                        "[GRPC-REQUEST-CAPTURE] IP: {IP} List Count: {Count}, AgentAddresses: {Agent}",
-                        ipAddress,
-                        _ipSignerList[ipAddress].Count,
-                        _ipSignerList[ipAddress]);
                 }
                 _logger.Information(
                     "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method} Agent: {Agent} Action: {Action}",
