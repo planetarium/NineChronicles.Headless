@@ -19,6 +19,7 @@ using Libplanet.Types.Tx;
 using RocksDbSharp;
 using Serilog;
 using Libplanet.Store.Trie;
+using Libplanet.Store;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
@@ -117,6 +118,10 @@ namespace NineChronicles.Headless.Executable.Commands
                 var options = new DbOptions().SetCreateIfMissing();
                 _rocksDb = RocksDb.Open(options, cacheDirectory);
             }
+
+            public IStore Store => _source.Store;
+
+            public IStateStore StateStore => _source.StateStore;
 
             public IValue? GetState(Address address, BlockHash? offset)
             {
