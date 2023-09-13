@@ -14,8 +14,8 @@ namespace NineChronicles.Headless.Middleware
 {
     public class HttpCaptureMiddleware
     {
-        private const int MultiAccountManagementTime = 15;
-        private const int MultiAccountTxInterval = 15;
+        private const int MultiAccountManagementTime = 30;
+        private const int MultiAccountTxInterval = 30;
         private static Dictionary<Address, DateTimeOffset> _multiAccountTxIntervalTracker = new();
         private static Dictionary<Address, DateTimeOffset> _multiAccountList = new();
         private readonly RequestDelegate _next;
@@ -127,12 +127,6 @@ namespace NineChronicles.Headless.Middleware
                                         _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Agent {agent} is in managed status for the next {MultiAccountManagementTime - (DateTimeOffset.Now - _multiAccountList[agent]).Minutes} minutes.");
                                     }
                                 }
-
-                                _logger.Information(
-                                    "[GRAPHQL-REQUEST-CAPTURE] IP: {IP} List Count: {Count}, AgentAddresses: {Agent}",
-                                    context.Connection.RemoteIpAddress!.ToString(),
-                                    _ipSignerList[context.Connection.RemoteIpAddress!.ToString()].Count,
-                                    _ipSignerList[context.Connection.RemoteIpAddress!.ToString()]);
                             }
                         }
                         else
