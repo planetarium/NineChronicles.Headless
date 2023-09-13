@@ -75,6 +75,24 @@ namespace NineChronicles.Headless.Middleware
                     }
                 }
 
+                if (body.Contains("arenaInformation"))
+                {
+                    try
+                    {
+                        _logger.Information("[GRAPHQL-REQUEST-CAPTURE] Cancelling ArenaInformation Query from IP: {IP}",
+                            remoteIp);
+                        await CancelRequestAsync(context);
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error(
+                            "[GRAPHQL-REQUEST-CAPTURE-SIGNER] Error message: {message} Stacktrace: {stackTrace}",
+                            ex.Message,
+                            ex.StackTrace);
+                    }
+                }
+
                 if (body.Contains("stageTransaction"))
                 {
                     try
@@ -171,6 +189,14 @@ namespace NineChronicles.Headless.Middleware
         private void AddClientIpInfo(Address agentAddress, string ipAddress)
         {
             _publisher.AddClientAndIp(ipAddress, agentAddress.ToString());
+        }
+
+        private async Task CancelRequestAsync(HttpContext context)
+        {
+            var message = "{ \"message\": \"Request cancelled.\" }";
+            context.Response.StatusCode = 403;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(message);
         }
     }
 }
