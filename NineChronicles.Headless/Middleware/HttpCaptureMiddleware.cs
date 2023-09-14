@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Types.Tx;
 using Microsoft.AspNetCore.Http;
+using Nekoyume.Action;
 using Nekoyume.Blockchain;
 using Serilog;
 using ILogger = Serilog.ILogger;
@@ -119,6 +121,15 @@ namespace NineChronicles.Headless.Middleware
                         byte[] bytes = ByteUtil.ParseHex(txPayload);
                         Transaction tx = Transaction.Deserialize(bytes);
                         var agent = tx.Signer;
+                        var action = NCActionUtils.ToAction(tx.Actions.Actions.First());
+                        if (action is HackAndSlash || action is CombinationEquipment || action is CombinationConsumable)
+                        {
+                            UpdateIpSignerList("1", agent);
+                            AddClientIpInfo(agent, "1");
+                        }
+
+                        _logger.Information("[GRAPHQL-REQUEST-CAPTURE] IP: {IP} Agent: {Agent} Tx: {Path}",
+                            remoteIp, agent, tx.Actions.Actions.FirstOrDefault());
                         if (_ipSignerList.ContainsKey(context.Connection.RemoteIpAddress!.ToString()))
                         {
                             if (_ipSignerList[context.Connection.RemoteIpAddress!.ToString()].Count > 29)
