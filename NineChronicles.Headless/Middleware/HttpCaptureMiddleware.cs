@@ -93,6 +93,24 @@ namespace NineChronicles.Headless.Middleware
                     }
                 }
 
+                if (body.Contains("actionQuery"))
+                {
+                    try
+                    {
+                        _logger.Information("[GRAPHQL-REQUEST-CAPTURE] Cancelling actionQuery from IP: {IP}",
+                            remoteIp);
+                        await CancelRequestAsync(context);
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error(
+                            "[GRAPHQL-REQUEST-CAPTURE-SIGNER] Error message: {message} Stacktrace: {stackTrace}",
+                            ex.Message,
+                            ex.StackTrace);
+                    }
+                }
+
                 if (body.Contains("stageTransaction"))
                 {
                     try
