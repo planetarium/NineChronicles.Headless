@@ -52,6 +52,11 @@ namespace NineChronicles.Headless.Middleware
                     identity.Path = "/graphql/stagetransaction";
                 }
 
+                if (body.Contains("actionQuery{hackAndSlash"))
+                {
+                    identity.Path = "/graphql/actionquery";
+                }
+
                 return identity;
             }
 
