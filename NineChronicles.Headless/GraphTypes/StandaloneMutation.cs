@@ -13,6 +13,7 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Serilog;
 using System;
+using System.Linq;
 
 namespace NineChronicles.Headless.GraphTypes
 {
