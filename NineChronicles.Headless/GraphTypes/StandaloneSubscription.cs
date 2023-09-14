@@ -122,7 +122,7 @@ namespace NineChronicles.Headless.GraphTypes
 
         private BlockHeader? _tipHeader;
 
-        private ISubject<TipChanged> _subject = new ReplaySubject<TipChanged>();
+        private ISubject<TipChanged> _subject = new ReplaySubject<TipChanged>(1);
 
         private ISubject<Transaction> _transactionSubject = new Subject<Transaction>();
 
