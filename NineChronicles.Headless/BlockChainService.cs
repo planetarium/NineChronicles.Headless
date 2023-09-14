@@ -180,6 +180,18 @@ namespace NineChronicles.Headless
             return new UnaryResult<byte[]>(headerBytes);
         }
 
+        public UnaryResult<byte[]> GetBlockHash(long blockIndex)
+        {
+            try
+            {
+                return new UnaryResult<byte[]>(_codec.Encode(_blockChain[blockIndex].Hash.Bencoded));
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return new UnaryResult<byte[]>(_codec.Encode(new Null()));
+            }
+        }
+
         public UnaryResult<long> GetNextTxNonce(byte[] addressBytes)
         {
             var address = new Address(addressBytes);
