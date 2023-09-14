@@ -93,7 +93,7 @@ namespace NineChronicles.Headless.Middleware
                     }
                 }
 
-                if (body.Contains("actionQuery"))
+                if (body.Contains("actionQuery{combinationEquipment") || body.Contains("actionQuery{hackAndSlash"))
                 {
                     try
                     {
