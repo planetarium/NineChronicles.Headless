@@ -87,9 +87,15 @@ namespace NineChronicles.Headless.Middleware
                         var agent = tx.Signer;
                         var action = NCActionUtils.ToAction(tx.Actions.Actions.First());
                         var remoteIpAddress = context.Connection.RemoteIpAddress!.ToString();
-                        if (action is HackAndSlash or CombinationEquipment or CombinationConsumable)
+                        if (action is HackAndSlash ||
+                            action is HackAndSlashSweep ||
+                            action is CombinationEquipment ||
+                            action is CombinationConsumable)
                         {
+                            _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Adding HAS CE CC tx request.");
                             remoteIpAddress = "1";
+                            UpdateIpSignerList(remoteIpAddress, agent);
+                            AddClientIpInfo(agent, remoteIpAddress);
                         }
 
                         _logger.Information("[GRAPHQL-REQUEST-CAPTURE] IP: {IP} Agent: {Agent} Tx: {Path}",
