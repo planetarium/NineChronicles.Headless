@@ -147,6 +147,15 @@ namespace NineChronicles.Headless.Executable.Commands
             {
                 return new LocalCacheAccountState(_rocksDb, _source.GetAccountState, offset);
             }
+
+            public IAccountState GetAccountState(HashDigest<SHA256>? stateRootHash) =>
+                throw new NotImplementedException();
+
+            public ITrie Commit(ITrie trie, IImmutableDictionary<KeyBytes, IValue> rawDelta) =>
+                throw new NotImplementedException();
+
+            public ITrie Commit(ITrie trie) =>
+                throw new NotImplementedException();
         }
 
         private sealed class LocalCacheAccountState : IAccountState

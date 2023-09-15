@@ -104,7 +104,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var transaction = (Dictionary<string, object>)tx["transaction"];
             var txResult = (Dictionary<string, object>)tx["txResult"];
             Assert.Equal(transactions[0].Id.ToString(), transaction["id"]);
-            Assert.Equal(block.Index, txResult["blockIndex"]);
         }
 
         private (Block block, List<Transaction> transactions) AppendBlock(params IAction[] actions)

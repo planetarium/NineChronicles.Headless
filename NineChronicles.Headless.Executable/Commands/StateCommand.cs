@@ -132,7 +132,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     block.Index,
                     block.Hash
                 );
-                IReadOnlyList<IActionEvaluation> delta;
+                IReadOnlyList<IActionResult> delta;
                 HashDigest<SHA256> stateRootHash = block.Index < 1
                     ? BlockChain.DetermineGenesisStateRootHash(
                         actionEvaluator,
@@ -148,9 +148,16 @@ namespace NineChronicles.Headless.Executable.Commands
                         block.MarshalBlock(),
                         $"block_{block.Index}_{block.Hash}"
                     );
+                    ITrie previous = blockChainStates.GetAccountState(delta.First().PreviousRootHash).Trie;
+                    ITrie output = blockChainStates.GetAccountState(delta.Last().OutputRootHash).Trie;
+                    var diff = output.Diff(previous);
+                    Dictionary diffDict = Dictionary.Empty;
+                    foreach (var item in diff)
+                    {
+                        diffDict = diffDict.Add(item.Path.Hex, item.SourceValue);
+                    }
                     string deltaDump = DumpBencodexToFile(
-                        new Dictionary(
-                            GetTotalDelta(delta, ToStateKey, ToFungibleAssetKey, ToTotalSupplyKey, ValidatorSetKey)),
+                        diffDict,
                         $"delta_{block.Index}_{block.Hash}"
                     );
                     string message =

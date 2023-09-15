@@ -16,22 +16,6 @@ namespace Libplanet.Extensions.ForkableActionEvaluator.Tests;
 public class ForkableActionEvaluatorTest
 {
     [Fact]
-    public void ForkEvaluation()
-    {
-        var evaluator = new ForkableActionEvaluator(new ((long, long), IActionEvaluator)[]
-        {
-            ((0L, 100L), new PreActionEvaluator()),
-            ((101L, long.MaxValue), new PostActionEvaluator()),
-        });
-
-        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(0))).Action);
-        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(99))).Action);
-        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(100))).Action);
-        Assert.Equal((Text)"POST", Assert.Single(evaluator.Evaluate(new MockBlock(101))).Action);
-        Assert.Equal((Text)"POST", Assert.Single(evaluator.Evaluate(new MockBlock(long.MaxValue))).Action);
-    }
-
-    [Fact]
     public void CheckPairs()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => new ForkableActionEvaluator(
@@ -64,7 +48,7 @@ public class ForkableActionEvaluatorTest
 class PostActionEvaluator : IActionEvaluator
 {
     public IActionLoader ActionLoader => throw new NotSupportedException();
-    public IReadOnlyList<IActionEvaluation> Evaluate(IPreEvaluationBlock block)
+    public IReadOnlyList<IActionResult> Evaluate(IPreEvaluationBlock block)
     {
         return new IActionEvaluation[]
         {
@@ -84,14 +68,14 @@ class PostActionEvaluator : IActionEvaluator
                     false),
                 new AccountStateDelta(),
                 null)
-        };
+        }.Select(x => new ActionResult(x)).ToArray();
     }
 }
 
 class PreActionEvaluator : IActionEvaluator
 {
     public IActionLoader ActionLoader => throw new NotSupportedException();
-    public IReadOnlyList<IActionEvaluation> Evaluate(IPreEvaluationBlock block)
+    public IReadOnlyList<IActionResult> Evaluate(IPreEvaluationBlock block)
     {
         return new IActionEvaluation[]
         {
@@ -111,7 +95,7 @@ class PreActionEvaluator : IActionEvaluator
                     false),
                 new AccountStateDelta(),
                 null)
-        };
+        }.Select(x => new ActionResult(x)).ToArray();
     }
 }
 

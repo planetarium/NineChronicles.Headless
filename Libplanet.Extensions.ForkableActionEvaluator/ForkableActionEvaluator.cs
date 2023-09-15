@@ -15,7 +15,7 @@ public class ForkableActionEvaluator : IActionEvaluator
 
     public IActionLoader ActionLoader => throw new NotSupportedException();
 
-    public IReadOnlyList<IActionEvaluation> Evaluate(IPreEvaluationBlock block)
+    public IReadOnlyList<IActionResult> Evaluate(IPreEvaluationBlock block)
     {
         var actionEvaluator = _router.GetEvaluator(block.Index);
         return actionEvaluator.Evaluate(block);
