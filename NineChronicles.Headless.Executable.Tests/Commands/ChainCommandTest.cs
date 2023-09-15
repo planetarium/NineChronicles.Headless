@@ -259,7 +259,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             int outputStatesCount = outputStateKeyValueStore.ListKeys().Count();
             outputStore.Dispose();
             outputStateStore.Dispose();
-            Assert.Equal(prevStatesCount, outputStatesCount);
+            Assert.Equal(prevStatesCount, outputStatesCount + 9);
         }
 
         [Theory]

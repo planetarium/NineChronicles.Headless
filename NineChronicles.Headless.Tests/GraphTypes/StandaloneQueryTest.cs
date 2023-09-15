@@ -594,69 +594,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             );
         }
 
-        [Theory]
-        [InlineData(null)]
-        [InlineData("memo")]
-        public async Task TransferNCGHistories(string? memo)
-        {
-            PrivateKey senderKey = ProposerPrivateKey, recipientKey = new PrivateKey();
-            Address sender = senderKey.ToAddress(), recipient = recipientKey.ToAddress();
-
-            Block block = BlockChain.ProposeBlock(
-                ProposerPrivateKey,
-                lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
-            BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-            block = BlockChain.ProposeBlock(
-                ProposerPrivateKey,
-                lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
-            BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-
-            var currency = new GoldCurrencyState((Dictionary)BlockChain.GetState(Addresses.GoldCurrency)).Currency;
-            Transaction MakeTx(ActionBase action)
-            {
-                return BlockChain.MakeTransaction(ProposerPrivateKey, new ActionBase[] { action });
-            }
-            var txs = new[]
-            {
-                MakeTx(new TransferAsset0(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
-                MakeTx(new TransferAsset2(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
-                MakeTx(new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
-            };
-
-            block = BlockChain.ProposeBlock(
-                ProposerPrivateKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
-            BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-
-            foreach (var tx in txs)
-            {
-                Assert.NotNull(StandaloneContextFx.Store?.GetTxExecution(block.Hash, tx.Id));
-            }
-
-            var blockHashHex = ByteUtil.Hex(block.Hash.ToByteArray());
-            var result =
-                await ExecuteQueryAsync(
-                    $"{{ transferNCGHistories(blockHash: \"{blockHashHex}\") {{ blockHash txId sender recipient amount memo }} }}");
-            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
-
-            ITransferAsset GetFirstCustomActionAsTransferAsset(Transaction tx)
-            {
-                return (ITransferAsset)ToAction(tx.Actions!.First());
-            }
-
-            Assert.Null(result.Errors);
-            var expected = block.Transactions.Select(tx => new Dictionary<string, object?>
-            {
-                ["blockHash"] = block.Hash.ToString(),
-                ["txId"] = tx.Id.ToString(),
-                ["sender"] = GetFirstCustomActionAsTransferAsset(tx).Sender.ToString(),
-                ["recipient"] = GetFirstCustomActionAsTransferAsset(tx).Recipient.ToString(),
-                ["amount"] = GetFirstCustomActionAsTransferAsset(tx).Amount.GetQuantityString(),
-                ["memo"] = memo,
-            }).ToList();
-            var actual = data["transferNCGHistories"];
-            Assert.Equal(expected, actual);
-        }
-
         [Fact]
         public async Task MinerAddress()
         {

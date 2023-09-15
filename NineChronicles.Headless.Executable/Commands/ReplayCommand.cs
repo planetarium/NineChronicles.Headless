@@ -271,7 +271,7 @@ namespace NineChronicles.Headless.Executable.Commands
                         try
                         {
                             var rootHash = blockChain.DetermineBlockStateRootHash(block,
-                                out IReadOnlyList<IActionEvaluation> actionEvaluations);
+                                out IReadOnlyList<IActionResult> actionEvaluations);
 
                             if (verbose)
                             {
@@ -558,7 +558,7 @@ namespace NineChronicles.Headless.Executable.Commands
         }
 
         private void LoggingActionEvaluations(
-            IReadOnlyList<IActionEvaluation> actionEvaluations,
+            IReadOnlyList<IActionResult> actionEvaluations,
             TextWriter? textWriter)
         {
             var count = actionEvaluations.Count;
@@ -593,7 +593,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 var prefix = $"--- action evaluation {i + 1}/{count}:";
                 var msg = prefix +
-                          $" tx-id({actionEvaluation.InputContext.TxId})" +
+                          $" tx-id({actionEvaluation.TxId})" +
                           $", action-type(\"{actionType}\")";
                 if (actionEvaluation.Exception is null)
                 {
