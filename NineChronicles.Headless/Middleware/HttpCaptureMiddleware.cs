@@ -16,8 +16,8 @@ namespace NineChronicles.Headless.Middleware
 {
     public class HttpCaptureMiddleware
     {
-        private const int MultiAccountManagementTime = 60;
-        private const int MultiAccountTxInterval = 60;
+        private const int MultiAccountManagementTime = 30;
+        private const int MultiAccountTxInterval = 30;
         private static Dictionary<Address, DateTimeOffset> _multiAccountTxIntervalTracker = new();
         private static Dictionary<Address, DateTimeOffset> _multiAccountList = new();
         private readonly RequestDelegate _next;
@@ -55,7 +55,7 @@ namespace NineChronicles.Headless.Middleware
             if (context.Request.Protocol == "HTTP/1.1")
             {
                 context.Request.EnableBuffering();
-                var remoteIp = context.Connection.RemoteIpAddress;
+                var remoteIp = context.Connection.RemoteIpAddress!.ToString();
                 var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
                 _logger.Information("[GRAPHQL-REQUEST-CAPTURE] IP: {IP} Method: {Method} Endpoint: {Path} {Body}",
                     remoteIp, context.Request.Method, context.Request.Path, body);
@@ -65,44 +65,8 @@ namespace NineChronicles.Headless.Middleware
                     try
                     {
                         var agent = new Address(body.Split("\\\"")[1].Split("0x")[1]);
-                        UpdateIpSignerList(remoteIp!.ToString(), agent);
-                        AddClientIpInfo(agent, remoteIp.ToString());
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.Error(
-                            "[GRAPHQL-REQUEST-CAPTURE-SIGNER] Error message: {message} Stacktrace: {stackTrace}",
-                            ex.Message,
-                            ex.StackTrace);
-                    }
-                }
-
-                if (body.Contains("arenaInformation"))
-                {
-                    try
-                    {
-                        _logger.Information("[GRAPHQL-REQUEST-CAPTURE] Cancelling ArenaInformation Query from IP: {IP}",
-                            remoteIp);
-                        await CancelRequestAsync(context);
-                        return;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.Error(
-                            "[GRAPHQL-REQUEST-CAPTURE-SIGNER] Error message: {message} Stacktrace: {stackTrace}",
-                            ex.Message,
-                            ex.StackTrace);
-                    }
-                }
-
-                if (body.Contains("actionQuery{combinationEquipment") || body.Contains("actionQuery{hackAndSlash"))
-                {
-                    try
-                    {
-                        _logger.Information("[GRAPHQL-REQUEST-CAPTURE] Cancelling actionQuery from IP: {IP}",
-                            remoteIp);
-                        await CancelRequestAsync(context);
-                        return;
+                        UpdateIpSignerList(remoteIp, agent);
+                        AddClientIpInfo(agent, remoteIp);
                     }
                     catch (Exception ex)
                     {
@@ -122,17 +86,17 @@ namespace NineChronicles.Headless.Middleware
                         Transaction tx = Transaction.Deserialize(bytes);
                         var agent = tx.Signer;
                         var action = NCActionUtils.ToAction(tx.Actions.Actions.First());
-                        if (action is HackAndSlash || action is CombinationEquipment || action is CombinationConsumable)
+                        var remoteIpAddress = context.Connection.RemoteIpAddress!.ToString();
+                        if (action is HackAndSlash or CombinationEquipment or CombinationConsumable)
                         {
-                            UpdateIpSignerList("1", agent);
-                            AddClientIpInfo(agent, "1");
+                            remoteIpAddress = "1";
                         }
 
                         _logger.Information("[GRAPHQL-REQUEST-CAPTURE] IP: {IP} Agent: {Agent} Tx: {Path}",
                             remoteIp, agent, tx.Actions.Actions.FirstOrDefault());
-                        if (_ipSignerList.ContainsKey(context.Connection.RemoteIpAddress!.ToString()))
+                        if (_ipSignerList.ContainsKey(remoteIpAddress))
                         {
-                            if (_ipSignerList[context.Connection.RemoteIpAddress!.ToString()].Count > 29)
+                            if (_ipSignerList[remoteIpAddress].Count > 29 || remoteIpAddress == "1")
                             {
                                 if (!_multiAccountList.ContainsKey(agent))
                                 {
@@ -150,7 +114,7 @@ namespace NineChronicles.Headless.Middleware
                                         }
                                         else
                                         {
-                                            _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Managing Agent {agent} for {MultiAccountManagementTime} minutes due to {_ipSignerList[context.Connection.RemoteIpAddress!.ToString()].Count} associated accounts.");
+                                            _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Managing Agent {agent} for {MultiAccountManagementTime} minutes due to {_ipSignerList[remoteIpAddress].Count} associated accounts.");
                                             ManageMultiAccount(agent);
                                             _multiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
                                             var ncStagePolicy = (NCStagePolicy)_standaloneContext.BlockChain!.StagePolicy;
@@ -180,8 +144,8 @@ namespace NineChronicles.Headless.Middleware
                         }
                         else
                         {
-                            UpdateIpSignerList(remoteIp!.ToString(), agent);
-                            AddClientIpInfo(agent, remoteIp.ToString());
+                            UpdateIpSignerList(remoteIpAddress, agent);
+                            AddClientIpInfo(agent, remoteIpAddress);
                         }
                     }
                     catch (Exception ex)
