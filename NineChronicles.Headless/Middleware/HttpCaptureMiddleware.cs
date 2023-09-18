@@ -100,9 +100,9 @@ namespace NineChronicles.Headless.Middleware
 
                         _logger.Information("[GRAPHQL-REQUEST-CAPTURE] IP: {IP} Agent: {Agent} Tx: {Path}",
                             remoteIp, agent, tx.Actions.Actions.FirstOrDefault());
-                        if (_ipSignerList.ContainsKey(remoteIpAddress))
+                        if (_ipSignerList.ContainsKey(remoteIp) || remoteIpAddress == "1")
                         {
-                            if (_ipSignerList[remoteIpAddress].Count > 29 || remoteIpAddress == "1")
+                            if (_ipSignerList[remoteIp].Count > 29 || remoteIpAddress == "1")
                             {
                                 if (!_multiAccountList.ContainsKey(agent))
                                 {
@@ -120,7 +120,7 @@ namespace NineChronicles.Headless.Middleware
                                         }
                                         else
                                         {
-                                            _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Managing Agent {agent} for {MultiAccountManagementTime} minutes due to {_ipSignerList[remoteIpAddress].Count} associated accounts.");
+                                            _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Managing Agent {agent} for {MultiAccountManagementTime} minutes due to {_ipSignerList[remoteIp].Count} associated accounts.");
                                             ManageMultiAccount(agent);
                                             _multiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
                                             var ncStagePolicy = (NCStagePolicy)_standaloneContext.BlockChain!.StagePolicy;
@@ -150,8 +150,8 @@ namespace NineChronicles.Headless.Middleware
                         }
                         else
                         {
-                            UpdateIpSignerList(remoteIpAddress, agent);
-                            AddClientIpInfo(agent, remoteIpAddress);
+                            UpdateIpSignerList(remoteIp, agent);
+                            AddClientIpInfo(agent, remoteIp);
                         }
                     }
                     catch (Exception ex)
