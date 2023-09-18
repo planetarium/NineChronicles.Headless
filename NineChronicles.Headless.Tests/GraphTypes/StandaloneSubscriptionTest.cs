@@ -56,6 +56,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 // var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
 
                 Assert.Equal(index, BlockChain.Tip.Index);
+                await Task.Delay(TimeSpan.FromSeconds(1));
+
                 var result = await ExecuteSubscriptionQueryAsync("subscription { tipChanged { index hash } }");
                 Assert.IsType<SubscriptionExecutionResult>(result);
                 var subscribeResult = (SubscriptionExecutionResult)result;
