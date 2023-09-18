@@ -296,21 +296,24 @@ namespace NineChronicles.Headless
                 // Step 1: Construct the adjacency list
                 foreach (var kvp in dict)
                 {
-                    var ip = kvp.Key;
-                    if (!adjacencyList.ContainsKey(ip))
+                    if (kvp.Key != "1")
                     {
-                        adjacencyList[ip] = new List<string>();
-                    }
-
-                    foreach (var id in kvp.Value)
-                    {
-                        adjacencyList[ip].Add(id);
-
-                        if (!adjacencyList.ContainsKey(id))
+                        var ip = kvp.Key;
+                        if (!adjacencyList.ContainsKey(ip))
                         {
-                            adjacencyList[id] = new List<string>();
+                            adjacencyList[ip] = new List<string>();
                         }
-                        adjacencyList[id].Add(ip);
+
+                        foreach (var id in kvp.Value)
+                        {
+                            adjacencyList[ip].Add(id);
+
+                            if (!adjacencyList.ContainsKey(id))
+                            {
+                                adjacencyList[id] = new List<string>();
+                            }
+                            adjacencyList[id].Add(ip);
+                        }
                     }
                 }
 
