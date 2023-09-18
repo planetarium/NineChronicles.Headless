@@ -96,6 +96,8 @@ namespace NineChronicles.Headless.Middleware
                             remoteIpAddress = "1";
                             UpdateIpSignerList(remoteIpAddress, agent);
                             AddClientIpInfo(agent, remoteIpAddress);
+                            UpdateIpSignerList(remoteIp, agent);
+                            AddClientIpInfo(agent, remoteIp);
                         }
 
                         _logger.Information("[GRAPHQL-REQUEST-CAPTURE] IP: {IP} Agent: {Agent} Tx: {Path}",
