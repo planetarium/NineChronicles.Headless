@@ -13,9 +13,11 @@ using Nekoyume.Action;
 using Nekoyume.Extensions;
 using Nekoyume.Model.Arena;
 using Nekoyume.Model.Item;
+using Nekoyume.Model.Stake;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using Nekoyume.TableData.Crystal;
+using Nekoyume.TableData.Stake;
 using NineChronicles.Headless.GraphTypes.Abstractions;
 using NineChronicles.Headless.GraphTypes.States;
 using NineChronicles.Headless.GraphTypes.States.Models;
@@ -239,10 +241,12 @@ namespace NineChronicles.Headless.GraphTypes
 
             StakeStateType.StakeStateContext? GetStakeState(StateContext ctx, Address agentAddress)
             {
-                if (ctx.GetState(StakeState.DeriveAddress(agentAddress)) is Dictionary state)
+                var stakeStateAddress = StakeState.DeriveAddress(agentAddress);
+                if (ctx.AccountState.TryGetStakeStateV2(agentAddr: agentAddress, out StakeStateV2 stakeStateV2))
                 {
                     return new StakeStateType.StakeStateContext(
-                        new StakeState(state),
+                        stakeStateV2,
+                        stakeStateAddress,
                         ctx.AccountState,
                         ctx.BlockIndex
                     );
@@ -252,7 +256,7 @@ namespace NineChronicles.Headless.GraphTypes
             }
 
             Field<StakeStateType>(
-                name: nameof(StakeState),
+                name: "stakeState",
                 description: "State for staking.",
                 arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
                 {
@@ -339,7 +343,41 @@ namespace NineChronicles.Headless.GraphTypes
             );
 
             Field<StakeRewardsType>(
+                "latestStakeRewards",
+                description: "The latest stake rewards based on StakePolicySheet.",
+                resolve: context =>
+                {
+                    var stakePolicySheetStateValue = context.Source.GetState(Addresses.GetSheetAddress<StakePolicySheet>());
+                    var stakePolicySheet = new StakePolicySheet();
+                    if (stakePolicySheetStateValue is not Text stakePolicySheetStateText)
+                    {
+                        return null;
+                    }
+
+                    stakePolicySheet.Set(stakePolicySheetStateText);
+
+                    IReadOnlyList<IValue?> values = context.Source.GetStates(new[]
+                    {
+                        Addresses.GetSheetAddress(stakePolicySheet["StakeRegularFixedRewardSheet"].Value),
+                        Addresses.GetSheetAddress(stakePolicySheet["StakeRegularRewardSheet"].Value),
+                    });
+
+                    if (!(values[0] is Text fsv && values[1] is Text sv))
+                    {
+                        return null;
+                    }
+
+                    var stakeRegularFixedRewardSheet = new StakeRegularFixedRewardSheet();
+                    var stakeRegularRewardSheet = new StakeRegularRewardSheet();
+                    stakeRegularFixedRewardSheet.Set(fsv);
+                    stakeRegularRewardSheet.Set(sv);
+
+                    return (stakeRegularRewardSheet, stakeRegularFixedRewardSheet);
+                }
+            );
+            Field<StakeRewardsType>(
                 "stakeRewards",
+                deprecationReason: "Since stake3, claim_stake_reward9 actions, each stakers have their own contracts.",
                 resolve: context =>
                 {
                     StakeRegularRewardSheet stakeRegularRewardSheet;
@@ -348,9 +386,9 @@ namespace NineChronicles.Headless.GraphTypes
                     if (context.Source.BlockIndex < StakeState.StakeRewardSheetV2Index)
                     {
                         stakeRegularRewardSheet = new StakeRegularRewardSheet();
-                        stakeRegularRewardSheet.Set(ClaimStakeReward.V1.StakeRegularRewardSheetCsv);
+                        stakeRegularRewardSheet.Set(ClaimStakeReward8.V1.StakeRegularRewardSheetCsv);
                         stakeRegularFixedRewardSheet = new StakeRegularFixedRewardSheet();
-                        stakeRegularFixedRewardSheet.Set(ClaimStakeReward.V1.StakeRegularFixedRewardSheetCsv);
+                        stakeRegularFixedRewardSheet.Set(ClaimStakeReward8.V1.StakeRegularFixedRewardSheetCsv);
                     }
                     else
                     {

@@ -278,7 +278,8 @@ namespace NineChronicles.Headless
             standaloneContext.Store = Store;
             standaloneContext.Swarm = Swarm;
             standaloneContext.CurrencyFactory =
-                new CurrencyFactory(standaloneContext.BlockChain.GetBlockState);
+                new CurrencyFactory(
+                    () => standaloneContext.BlockChain.GetAccountState(standaloneContext.BlockChain.Tip.Hash));
             standaloneContext.FungibleAssetValueFactory =
                 new FungibleAssetValueFactory(standaloneContext.CurrencyFactory);
             BootstrapEnded.WaitAsync().ContinueWith((task) =>
