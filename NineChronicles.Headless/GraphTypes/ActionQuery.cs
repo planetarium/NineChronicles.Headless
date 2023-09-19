@@ -223,7 +223,7 @@ namespace NineChronicles.Headless.GraphTypes
                                            @namespace.StartsWith($"{nameof(Nekoyume)}.{nameof(Nekoyume.TableData)}") &&
                                            !type.IsAbstract &&
                                            typeof(ISheet).IsAssignableFrom(type) &&
-                                           type.Name == tableName);
+                                           tableName.Split('_').First() == type.Name);
                     }
                     catch (Exception)
                     {
@@ -542,6 +542,7 @@ namespace NineChronicles.Headless.GraphTypes
             RegisterCombinationConsumable();
             RegisterMead();
             RegisterGarages();
+            RegisterSummon();
 
             Field<NonNullGraphType<CraftQuery>>(
                 name: "craftQuery",

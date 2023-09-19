@@ -100,8 +100,8 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 // Evaluate tx.
-                IAccountState previousBlockStates = blockChain.GetBlockState(previousBlock.Hash);
-                IAccountStateDelta previousStates = AccountStateDelta.Create(previousBlockStates);
+                IAccountState previousBlockStates = blockChain.GetAccountState(previousBlock.Hash);
+                IAccount previousStates = new Account(previousBlockStates);
                 var actions = tx.Actions.Select(a => ToAction(a));
                 var actionEvaluations = EvaluateActions(
                     preEvaluationHash: targetBlock.PreEvaluationHash,
@@ -398,8 +398,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 cacheDirectory ?? Path.Join(Path.GetTempPath(), "ncd-replay-remote-tx-cache"));
 
             var previousBlockHash = BlockHash.FromString(previousBlockHashValue);
-            var previousStates =
-                AccountStateDelta.Create(blockChainStates.GetBlockState(previousBlockHash));
+            var previousStates = new Account(blockChainStates.GetAccountState(previousBlockHash));
 
             var actions = transaction.Actions
                 .Select(ToAction)
