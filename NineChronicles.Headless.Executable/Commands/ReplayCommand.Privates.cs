@@ -16,6 +16,7 @@ using Libplanet.Action;
 using Libplanet.Types.Assets;
 using Libplanet.Types.Consensus;
 using Libplanet.Action.State;
+using Libplanet.Store.Trie;
 using Libplanet.Types.Blocks;
 using Libplanet.Types.Tx;
 using RocksDbSharp;
@@ -29,7 +30,7 @@ namespace NineChronicles.Headless.Executable.Commands
         /// Almost duplicate https://github.com/planetarium/libplanet/blob/main/Libplanet/State/AccountStateDelta.cs.
         /// </summary>
         [Pure]
-        private sealed class AccountStateDelta : IAccountStateDelta
+        private sealed class AccountStateDelta : IAccount
         {
             private readonly IAccountState _baseState;
 
@@ -54,6 +55,10 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public IImmutableDictionary<(Address, Currency), BigInteger> TotalUpdatedFungibles { get; private set; }
 
+            public ITrie Trie
+            {
+                get => _baseState.Trie;
+            }
             /// <inheritdoc/>
             [Pure]
             public IValue? GetState(Address address)
@@ -97,7 +102,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             /// <inheritdoc/>
             [Pure]
-            public IAccountStateDelta SetState(Address address, IValue state) =>
+            public IAccount SetState(Address address, IValue state) =>
                 UpdateStates(Delta.States.SetItem(address, state));
 
             /// <inheritdoc/>
@@ -132,7 +137,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             /// <inheritdoc/>
             [Pure]
-            public IAccountStateDelta MintAsset(
+            public IAccount MintAsset(
                 IActionContext context, Address recipient, FungibleAssetValue value)
             {
                 if (value.Sign <= 0)
@@ -183,7 +188,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             /// <inheritdoc/>
             [Pure]
-            public IAccountStateDelta TransferAsset(
+            public IAccount TransferAsset(
                 IActionContext context,
                 Address sender,
                 Address recipient,
@@ -194,7 +199,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             /// <inheritdoc/>
             [Pure]
-            public IAccountStateDelta BurnAsset(
+            public IAccount BurnAsset(
                 IActionContext context, Address owner, FungibleAssetValue value)
             {
                 string msg;
@@ -245,7 +250,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             /// <inheritdoc/>
             [Pure]
-            public IAccountStateDelta SetValidator(Validator validator)
+            public IAccount SetValidator(Validator validator)
             {
                 return UpdateValidatorSet(GetValidatorSet().Update(validator));
             }
@@ -257,14 +262,14 @@ namespace NineChronicles.Headless.Executable.Commands
             /// a basis.</param>
             /// <returns>A null state delta created from <paramref name="previousState"/>.
             /// </returns>
-            internal static IAccountStateDelta Create(IAccountState previousState) =>
+            internal static IAccount Create(IAccountState previousState) =>
                 new AccountStateDelta(previousState);
 
             /// <summary>
             /// Creates a null state delta while inheriting <paramref name="stateDelta"/>s
             /// total updated fungibles.
             /// </summary>
-            /// <param name="stateDelta">The previous <see cref="IAccountStateDelta"/> to use.</param>
+            /// <param name="stateDelta">The previous <see cref="IAccount"/> to use.</param>
             /// <returns>A null state delta that is of the same type as <paramref name="stateDelta"/>.
             /// </returns>
             /// <exception cref="ArgumentException">Thrown if given <paramref name="stateDelta"/>
@@ -272,9 +277,9 @@ namespace NineChronicles.Headless.Executable.Commands
             /// </exception>
             /// <remarks>
             /// This inherits <paramref name="stateDelta"/>'s
-            /// <see cref="IAccountStateDelta.TotalUpdatedFungibleAssets"/>.
+            /// <see cref="IAccount.TotalUpdatedFungibleAssets"/>.
             /// </remarks>
-            internal static IAccountStateDelta Flush(IAccountStateDelta stateDelta) =>
+            internal static IAccount Flush(IAccount stateDelta) =>
                 stateDelta is AccountStateDelta impl
                     ? new AccountStateDelta(stateDelta)
                     {
@@ -348,7 +353,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 };
 
             [Pure]
-            private IAccountStateDelta TransferAssetV0(
+            private IAccount TransferAssetV0(
                 Address sender,
                 Address recipient,
                 FungibleAssetValue value,
@@ -384,7 +389,7 @@ namespace NineChronicles.Headless.Executable.Commands
             }
 
             [Pure]
-            private IAccountStateDelta TransferAssetV1(
+            private IAccount TransferAssetV1(
                 Address sender,
                 Address recipient,
                 FungibleAssetValue value,
@@ -501,7 +506,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 Address miner,
                 long blockIndex,
                 int blockProtocolVersion,
-                IAccountStateDelta previousState,
+                IAccount previousState,
                 int randomSeed,
                 bool rehearsal = false)
             {
@@ -528,7 +533,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public bool Rehearsal { get; }
 
-            public IAccountStateDelta PreviousState { get; }
+            public IAccount PreviousState { get; }
 
             public IRandom Random { get; }
 
@@ -584,45 +589,57 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public IValue? GetState(Address address, BlockHash? offset)
             {
-                return GetBlockState(offset).GetState(address);
+                return GetAccountState(offset).GetState(address);
             }
 
             public IReadOnlyList<IValue?> GetStates(IReadOnlyList<Address> addresses, BlockHash? offset)
             {
-                return GetBlockState(offset).GetStates(addresses);
+                return GetAccountState(offset).GetStates(addresses);
             }
 
             public FungibleAssetValue GetBalance(Address address, Currency currency, BlockHash? offset)
             {
-                return GetBlockState(offset).GetBalance(address, currency);
+                return GetAccountState(offset).GetBalance(address, currency);
             }
 
             public FungibleAssetValue GetTotalSupply(Currency currency, BlockHash? offset)
             {
-                return GetBlockState(offset).GetTotalSupply(currency);
+                return GetAccountState(offset).GetTotalSupply(currency);
             }
 
             public ValidatorSet GetValidatorSet(BlockHash? offset)
             {
-                return GetBlockState(offset).GetValidatorSet();
+                return GetAccountState(offset).GetValidatorSet();
             }
 
-            public IBlockState GetBlockState(BlockHash? offset)
-            {
-                return new LocalCacheBlockState(_rocksDb, _source.GetBlockState(offset));
-            }
+            public IAccountState GetAccountState(BlockHash? offset) =>
+                throw new NotImplementedException();
+
+            public IAccountState GetAccountState(HashDigest<SHA256>? hash) =>
+                throw new NotImplementedException();
         }
 
-        private sealed class LocalCacheBlockState : IBlockState
+        private sealed class LocalCacheBlockState : IAccountState
         {
             private static readonly Codec _codec = new Codec();
             private readonly RocksDb _rocksDb;
-            private readonly IBlockState _sourceBlockState;
+            private readonly IAccountState _sourceBlockState;
 
-            public LocalCacheBlockState(RocksDb rocksDb, IBlockState sourceBlockState)
+            public LocalCacheBlockState(RocksDb rocksDb, IAccountState sourceBlockState)
             {
                 _rocksDb = rocksDb;
                 _sourceBlockState = sourceBlockState;
+            }
+
+            public ITrie Trie
+            {
+                get => new MerkleTrie(new MemoryKeyValueStore());
+            }
+            
+            public BlockHash? BlockHash
+            {
+                get;
+                set;
             }
 
             public IValue? GetState(Address address)
@@ -703,8 +720,6 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
             }
 
-            public BlockHash? BlockHash => _sourceBlockState.BlockHash;
-
             private IValue? GetValue(byte[] key)
             {
                 if (_rocksDb.Get(key) is not { } bytes)
@@ -746,7 +761,7 @@ namespace NineChronicles.Headless.Executable.Commands
             long blockIndex,
             int blockProtocolVersion,
             TxId? txid,
-            IAccountStateDelta previousStates,
+            IAccount previousStates,
             Address miner,
             Address signer,
             byte[] signature,
@@ -754,7 +769,7 @@ namespace NineChronicles.Headless.Executable.Commands
             ILogger? logger = null)
         {
             ActionContext CreateActionContext(
-                IAccountStateDelta prevState,
+                IAccount prevState,
                 int randomSeed)
             {
                 return new ActionContext(
@@ -776,11 +791,11 @@ namespace NineChronicles.Headless.Executable.Commands
             byte[] preEvaluationHashBytes = preEvaluationHash.ToByteArray();
             int seed = ActionEvaluator.GenerateRandomSeed(preEvaluationHashBytes, hashedSignature, signature, 0);
 
-            IAccountStateDelta states = previousStates;
+            IAccount states = previousStates;
             foreach (IAction action in actions)
             {
                 Exception? exc = null;
-                IAccountStateDelta nextStates = states;
+                IAccount nextStates = states;
                 ActionContext context = CreateActionContext(nextStates, seed);
 
                 try

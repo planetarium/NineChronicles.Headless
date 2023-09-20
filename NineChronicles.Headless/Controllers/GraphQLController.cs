@@ -18,6 +18,7 @@ using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Requests;
 using Serilog;
 using Lib9c.Renderers;
+using Libplanet.Action.State;
 
 namespace NineChronicles.Headless.Controllers
 {
@@ -233,7 +234,10 @@ namespace NineChronicles.Headless.Controllers
                 return;
             }
             Address address = StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress();
-            if (eval.OutputState.Delta.UpdatedAddresses.Contains(address) || eval.Signer == address)
+            var input = StandaloneContext.NineChroniclesNodeService.BlockChain.GetAccountState(eval.PreviousState);
+            var output = StandaloneContext.NineChroniclesNodeService.BlockChain.GetAccountState(eval.OutputState);
+            var diff = AccountDiff.Create(input, output);
+            if (diff.StateDiffs.ContainsKey(address) || eval.Signer == address)
             {
                 if (eval.Signer == address)
                 {

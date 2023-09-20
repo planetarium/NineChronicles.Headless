@@ -6,6 +6,7 @@ using System.Numerics;
 using Bencodex.Types;
 using Libplanet.Action.State;
 using Libplanet.Crypto;
+using Libplanet.Store.Trie;
 using Libplanet.Types.Assets;
 using Libplanet.Types.Consensus;
 
@@ -85,6 +86,10 @@ namespace NineChronicles.Headless.Tests.Common
 
         public ValidatorSet ValidatorSet => _validatorSet;
 
+        public ITrie Trie
+        {
+            get => new MerkleTrie(new MemoryKeyValueStore());
+        }
         public IValue? GetState(Address address) => _states.TryGetValue(address, out IValue? value)
             ? value
             : null;

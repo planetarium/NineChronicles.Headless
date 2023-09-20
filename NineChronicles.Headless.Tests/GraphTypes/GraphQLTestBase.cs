@@ -115,6 +115,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ncService.ActionRenderer,
                 ncService.ExceptionRenderer,
                 ncService.NodeStatusRenderer,
+                ncService.BlockChain,
                 "",
                 0,
                 new RpcContext(),

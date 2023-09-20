@@ -100,8 +100,8 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 // Evaluate tx.
-                IAccountState previousBlockStates = blockChain.GetBlockState(previousBlock.Hash);
-                IAccountStateDelta previousStates = AccountStateDelta.Create(previousBlockStates);
+                IAccountState previousBlockStates = blockChain.GetAccountState(previousBlock.Hash);
+                IAccount previousStates = AccountStateDelta.Create(previousBlockStates);
                 var actions = tx.Actions.Select(a => ToAction(a));
                 var actionEvaluations = EvaluateActions(
                     preEvaluationHash: targetBlock.PreEvaluationHash,
@@ -399,7 +399,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             var previousBlockHash = BlockHash.FromString(previousBlockHashValue);
             var previousStates =
-                AccountStateDelta.Create(blockChainStates.GetBlockState(previousBlockHash));
+                AccountStateDelta.Create(blockChainStates.GetAccountState(previousBlockHash));
 
             var actions = transaction.Actions
                 .Select(ToAction)

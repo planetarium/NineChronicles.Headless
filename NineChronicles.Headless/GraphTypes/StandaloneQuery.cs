@@ -52,7 +52,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return new StateContext(
-                        chain.GetBlockState(blockHash),
+                        chain.GetAccountState(blockHash),
                         blockHash switch
                         {
                             BlockHash bh => chain[bh].Index,
@@ -127,21 +127,12 @@ namespace NineChronicles.Headless.GraphTypes
 
                     TransferNCGHistory ToTransferNCGHistory(TxSuccess txSuccess, string? memo)
                     {
-                        var rawTransferNcgHistories = txSuccess.FungibleAssetsDelta
-                            .Where(pair => pair.Value.Values.Any(fav => fav.Currency.Ticker == "NCG"))
-                            .Select(pair =>
-                                (pair.Key, pair.Value.Values.First(fav => fav.Currency.Ticker == "NCG")))
-                            .ToArray();
-                        var ((senderAddress, _), (recipientAddress, amount)) =
-                            rawTransferNcgHistories[0].Item2.RawValue > rawTransferNcgHistories[1].Item2.RawValue
-                                ? (rawTransferNcgHistories[1], rawTransferNcgHistories[0])
-                                : (rawTransferNcgHistories[0], rawTransferNcgHistories[1]);
                         return new TransferNCGHistory(
                             txSuccess.BlockHash,
                             txSuccess.TxId,
-                            senderAddress,
-                            recipientAddress,
-                            amount,
+                            default,
+                            default,
+                            new FungibleAssetValue(),
                             memo);
                     }
 

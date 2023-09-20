@@ -9,6 +9,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,8 +17,9 @@ using Bencodex;
 using Bencodex.Types;
 using Grpc.Core;
 using Grpc.Net.Client;
-using Lib9c.Abstractions;
 using Lib9c.Renderers;
+using Libplanet.Action.State;
+using Libplanet.Blockchain;
 using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Types.Blocks;
@@ -26,9 +28,7 @@ using MagicOnion.Client;
 using MessagePack;
 using Microsoft.Extensions.Hosting;
 using Nekoyume.Action;
-using Nekoyume.Model.State;
 using Nekoyume.Shared.Hubs;
-using Sentry;
 using Serilog;
 
 namespace NineChronicles.Headless
@@ -42,6 +42,7 @@ namespace NineChronicles.Headless
         private readonly ActionRenderer _actionRenderer;
         private readonly ExceptionRenderer _exceptionRenderer;
         private readonly NodeStatusRenderer _nodeStatusRenderer;
+        private readonly IBlockChainStates _blockChainStates;
 
         private readonly ConcurrentDictionary<Address, Client> _clients = new ConcurrentDictionary<Address, Client>();
         private readonly ConcurrentDictionary<Address, string> _clientsByDevice = new ConcurrentDictionary<Address, string>();
@@ -54,6 +55,7 @@ namespace NineChronicles.Headless
             ActionRenderer actionRenderer,
             ExceptionRenderer exceptionRenderer,
             NodeStatusRenderer nodeStatusRenderer,
+            IBlockChainStates blockChainStates,
             string host,
             int port,
             RpcContext context,
@@ -63,6 +65,7 @@ namespace NineChronicles.Headless
             _actionRenderer = actionRenderer;
             _exceptionRenderer = exceptionRenderer;
             _nodeStatusRenderer = nodeStatusRenderer;
+            _blockChainStates = blockChainStates;
             _host = host;
             _port = port;
             _context = context;
@@ -227,6 +230,9 @@ namespace NineChronicles.Headless
             private IDisposable? _actionEveryRenderSubscribe;
             private IDisposable? _everyExceptionSubscribe;
             private IDisposable? _nodeStatusSubscribe;
+            
+            private Subject<NCActionEvaluation> _NCActionRenderSubject { get; }
+                = new Subject<NCActionEvaluation>();
 
             public ImmutableHashSet<Address> TargetAddresses { get; set; }
 
@@ -301,51 +307,7 @@ namespace NineChronicles.Headless
                                     : ev.Action;
                                 var extra = new Dictionary<string, IValue>();
 
-                                var previousStates = ev.PreviousState;
-                                if (pa is IBattleArenaV1 battleArena)
-                                {
-                                    var enemyAvatarAddress = battleArena.EnemyAvatarAddress;
-                                    if (previousStates.GetState(enemyAvatarAddress) is { } eAvatar)
-                                    {
-                                        const string inventoryKey = "inventory";
-                                        previousStates = previousStates.SetState(enemyAvatarAddress, eAvatar);
-                                        if (previousStates.GetState(enemyAvatarAddress.Derive(inventoryKey)) is { } inventory)
-                                        {
-                                            previousStates = previousStates.SetState(
-                                                enemyAvatarAddress.Derive(inventoryKey),
-                                                inventory);
-                                        }
-                                    }
-
-                                    var enemyItemSlotStateAddress =
-                                        ItemSlotState.DeriveAddress(battleArena.EnemyAvatarAddress,
-                                            Nekoyume.Model.EnumType.BattleType.Arena);
-                                    if (previousStates.GetState(enemyItemSlotStateAddress) is { } eItemSlot)
-                                    {
-                                        previousStates = previousStates.SetState(enemyItemSlotStateAddress, eItemSlot);
-                                    }
-
-                                    var enemyRuneSlotStateAddress =
-                                        RuneSlotState.DeriveAddress(battleArena.EnemyAvatarAddress,
-                                            Nekoyume.Model.EnumType.BattleType.Arena);
-                                    if (previousStates.GetState(enemyRuneSlotStateAddress) is { } eRuneSlot)
-                                    {
-                                        previousStates = previousStates.SetState(enemyRuneSlotStateAddress, eRuneSlot);
-                                        var runeSlot = new RuneSlotState(eRuneSlot as List);
-                                        var enemyRuneSlotInfos = runeSlot.GetEquippedRuneSlotInfos();
-                                        var runeAddresses = enemyRuneSlotInfos.Select(info =>
-                                            RuneState.DeriveAddress(battleArena.EnemyAvatarAddress, info.RuneId));
-                                        foreach (var address in runeAddresses)
-                                        {
-                                            if (previousStates.GetState(address) is { } rune)
-                                            {
-                                                previousStates = previousStates.SetState(address, rune);
-                                            }
-                                        }
-                                    }
-                                }
-
-                                var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputState, ev.Exception, previousStates, ev.RandomSeed, extra);
+                                var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputState, ev.Exception, ev.PreviousState, ev.RandomSeed, extra);
                                 var encoded = MessagePackSerializer.Serialize(eval);
                                 var c = new MemoryStream();
                                 await using (var df = new DeflateStream(c, CompressionLevel.Fastest))

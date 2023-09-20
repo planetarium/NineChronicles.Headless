@@ -37,6 +37,7 @@ namespace NineChronicles.Headless
             };
             return builder.ConfigureServices(services =>
             {
+                services.AddOptions();
                 services.AddHostedService(provider => service);
                 services.AddSingleton(provider => service);
                 services.AddSingleton(provider => service.Swarm);
@@ -60,6 +61,7 @@ namespace NineChronicles.Headless
                         context.NineChroniclesNodeService!.ActionRenderer,
                         context.NineChroniclesNodeService!.ExceptionRenderer,
                         context.NineChroniclesNodeService!.NodeStatusRenderer,
+                        context.NineChroniclesNodeService!.BlockChain,
                         IPAddress.Loopback.ToString(),
                         0,
                         rpcContext,

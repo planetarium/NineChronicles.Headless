@@ -14,6 +14,7 @@ using Libplanet.Headless;
 using Libplanet.Headless.Hosting;
 using Libplanet.Net;
 using Libplanet.Store;
+using Libplanet.Types.Blocks;
 using Microsoft.Extensions.Hosting;
 using Nekoyume.Blockchain;
 using Nekoyume.Blockchain.Policy;
@@ -278,7 +279,7 @@ namespace NineChronicles.Headless
             standaloneContext.Store = Store;
             standaloneContext.Swarm = Swarm;
             standaloneContext.CurrencyFactory =
-                new CurrencyFactory(standaloneContext.BlockChain.GetBlockState);
+                new CurrencyFactory(() => standaloneContext.BlockChain.GetAccountState((BlockHash?)null));
             standaloneContext.FungibleAssetValueFactory =
                 new FungibleAssetValueFactory(standaloneContext.CurrencyFactory);
             BootstrapEnded.WaitAsync().ContinueWith((task) =>
