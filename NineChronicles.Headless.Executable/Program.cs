@@ -353,35 +353,6 @@ namespace NineChronicles.Headless.Executable
                     KeyStore = Web3KeyStore.DefaultKeyStore,
                 };
 
-                if (headlessConfig.GraphQLServer)
-                {
-                    string? secretToken = null;
-                    if (headlessConfig.GraphQLSecretTokenPath is { })
-                    {
-                        var buffer = new byte[40];
-                        new SecureRandom().NextBytes(buffer);
-                        secretToken = Convert.ToBase64String(buffer);
-                        await File.WriteAllTextAsync(headlessConfig.GraphQLSecretTokenPath, secretToken);
-                    }
-
-                    var graphQLNodeServiceProperties = new GraphQLNodeServiceProperties
-                    {
-                        GraphQLServer = headlessConfig.GraphQLServer,
-                        GraphQLListenHost = headlessConfig.GraphQLHost,
-                        GraphQLListenPort = headlessConfig.GraphQLPort,
-                        SecretToken = secretToken,
-                        NoCors = headlessConfig.NoCors,
-                        UseMagicOnion = headlessConfig.RpcServer,
-                        HttpOptions = headlessConfig.RpcServer && headlessConfig.RpcHttpServer == true
-                            ? new GraphQLNodeServiceProperties.MagicOnionHttpOptions(
-                                $"{headlessConfig.RpcListenHost}:{headlessConfig.RpcListenPort}")
-                            : (GraphQLNodeServiceProperties.MagicOnionHttpOptions?)null,
-                    };
-
-                    var graphQLService = new GraphQLService(graphQLNodeServiceProperties, standaloneContext, configuration);
-                    hostBuilder = graphQLService.Configure(hostBuilder);
-                }
-
                 var properties = NineChroniclesNodeServiceProperties
                     .GenerateLibplanetNodeServiceProperties(
                         headlessConfig.AppProtocolVersionString,
@@ -491,6 +462,7 @@ namespace NineChronicles.Headless.Executable
 
                 NineChroniclesNodeService service =
                     NineChroniclesNodeService.Create(nineChroniclesProperties, standaloneContext);
+                ActionEvaluationPublisher publisher;
                 if (headlessConfig.RpcServer)
                 {
                     var context = new RpcContext
@@ -503,7 +475,7 @@ namespace NineChronicles.Headless.Executable
                             headlessConfig.RpcListenPort,
                             headlessConfig.RpcRemoteServer == true
                         );
-                    var publisher = new ActionEvaluationPublisher(
+                    publisher = new ActionEvaluationPublisher(
                         standaloneContext.NineChroniclesNodeService!.BlockRenderer,
                         standaloneContext.NineChroniclesNodeService!.ActionRenderer,
                         standaloneContext.NineChroniclesNodeService!.ExceptionRenderer,
@@ -532,7 +504,7 @@ namespace NineChronicles.Headless.Executable
                     {
                         RpcRemoteSever = false
                     };
-                    var publisher = new ActionEvaluationPublisher(
+                    publisher = new ActionEvaluationPublisher(
                         standaloneContext.NineChroniclesNodeService!.BlockRenderer,
                         standaloneContext.NineChroniclesNodeService!.ActionRenderer,
                         standaloneContext.NineChroniclesNodeService!.ExceptionRenderer,
@@ -547,6 +519,36 @@ namespace NineChronicles.Headless.Executable
                         standaloneContext,
                         publisher,
                         service);
+                }
+
+                if (headlessConfig.GraphQLServer)
+                {
+                    string? secretToken = null;
+                    if (headlessConfig.GraphQLSecretTokenPath is { })
+                    {
+                        var buffer = new byte[40];
+                        new SecureRandom().NextBytes(buffer);
+                        secretToken = Convert.ToBase64String(buffer);
+                        await File.WriteAllTextAsync(headlessConfig.GraphQLSecretTokenPath, secretToken);
+                    }
+
+                    var graphQLNodeServiceProperties = new GraphQLNodeServiceProperties
+                    {
+                        GraphQLServer = headlessConfig.GraphQLServer,
+                        GraphQLListenHost = headlessConfig.GraphQLHost,
+                        GraphQLListenPort = headlessConfig.GraphQLPort,
+                        SecretToken = secretToken,
+                        NoCors = headlessConfig.NoCors,
+                        UseMagicOnion = headlessConfig.RpcServer,
+                        HttpOptions = headlessConfig.RpcServer && headlessConfig.RpcHttpServer == true
+                            ? new GraphQLNodeServiceProperties.MagicOnionHttpOptions(
+                                $"{headlessConfig.RpcListenHost}:{headlessConfig.RpcListenPort}")
+                            : (GraphQLNodeServiceProperties.MagicOnionHttpOptions?)null,
+                    };
+
+                    var graphQLService =
+                        new GraphQLService(graphQLNodeServiceProperties, standaloneContext, configuration, publisher);
+                    hostBuilder = graphQLService.Configure(hostBuilder);
                 }
 
                 await hostBuilder.RunConsoleAsync(cancellationToken ?? Context.CancellationToken);
