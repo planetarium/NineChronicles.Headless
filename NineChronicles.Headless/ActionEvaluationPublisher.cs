@@ -274,8 +274,8 @@ namespace NineChronicles.Headless
 
         private sealed class IdGroupFinder
         {
-            private Dictionary<string, List<string>> adjacencyList = new ();
-            private HashSet<string> visited = new ();
+            private Dictionary<string, List<string>> adjacencyList = new();
+            private HashSet<string> visited = new();
             private readonly IMemoryCache _memoryCache;
 
             public IdGroupFinder(IMemoryCache memoryCache)
