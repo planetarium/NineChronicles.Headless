@@ -114,7 +114,7 @@ namespace NineChronicles.Headless.Executable.Commands
             }
 
             IStagePolicy stagePolicy = new VolatileStagePolicy();
-            IBlockPolicy blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
+            IBlockPolicy blockPolicy = new BlockPolicySource().GetPolicy();
             IStore store = storeType.CreateStore(storePath);
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             if (!(store.GetCanonicalChainId() is { } chainId))

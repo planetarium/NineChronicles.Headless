@@ -90,7 +90,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             IStore store = storeType.CreateStore(_storePath);
             IStateStore stateStore = new TrieStateStore(new RocksDBKeyValueStore(Path.Combine(_storePath, "states")));
             IStagePolicy stagePolicy = new VolatileStagePolicy();
-            IBlockPolicy blockPolicy = new BlockPolicySource(Logger.None).GetTestPolicy();
+            IBlockPolicy blockPolicy = new BlockPolicySource().GetTestPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
@@ -151,7 +151,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             IStore store = storeType.CreateStore(_storePath);
             IStateStore stateStore = new TrieStateStore(new RocksDBKeyValueStore(Path.Combine(_storePath, "states")));
             IStagePolicy stagePolicy = new VolatileStagePolicy();
-            IBlockPolicy blockPolicy = new BlockPolicySource(Logger.None).GetTestPolicy();
+            IBlockPolicy blockPolicy = new BlockPolicySource().GetTestPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
@@ -230,7 +230,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var stateKeyValueStore = new RocksDBKeyValueStore(statesPath);
             var stateStore = new TrieStateStore(stateKeyValueStore);
             IStagePolicy stagePolicy = new VolatileStagePolicy();
-            IBlockPolicy blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
+            IBlockPolicy blockPolicy = new BlockPolicySource().GetPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
@@ -272,7 +272,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var stateKeyValueStore = new RocksDBKeyValueStore(statesPath);
             var stateStore = new TrieStateStore(stateKeyValueStore);
             IStagePolicy stagePolicy = new VolatileStagePolicy();
-            IBlockPolicy blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
+            IBlockPolicy blockPolicy = new BlockPolicySource().GetPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),
