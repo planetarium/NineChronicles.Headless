@@ -475,7 +475,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var genesisBlock = store.GetBlock(genesisBlockHash);
 
             // Make BlockChain and blocks.
-            var policy = new BlockPolicySource(Logger.None).GetPolicy();
+            var policy = new BlockPolicySource().GetPolicy();
             var stagePolicy = new VolatileStagePolicy();
             var stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(storePath, "states"));
             var stateStore = new TrieStateStore(stateKeyValueStore);
@@ -525,7 +525,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
         private ActionEvaluator GetActionEvaluator(BlockChain blockChain)
         {
-            var policy = new BlockPolicySource(Logger.None).GetPolicy();
+            var policy = new BlockPolicySource().GetPolicy();
             IActionLoader actionLoader = new NCActionLoader();
             return new ActionEvaluator(
                 _ => policy.BlockAction,
