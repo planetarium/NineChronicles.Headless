@@ -11,6 +11,7 @@ on:
       - qa-*
       - 2022q3-worldboss
       - release/*
+      - migrate/iaccount-to-itrie
     tags:
       - "*"
   workflow_dispatch:
