@@ -11,6 +11,8 @@ on:
       - qa-*
       - 2022q3-worldboss
       - release/*
+      # This branch is for testing only. Use until the next(v200080) release.
+      - test/action-evaluation-publisher-elapse-metric
     tags:
       - "*"
   workflow_dispatch:
