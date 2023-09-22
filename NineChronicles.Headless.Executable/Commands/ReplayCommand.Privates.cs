@@ -638,8 +638,7 @@ namespace NineChronicles.Headless.Executable.Commands
             
             public BlockHash? BlockHash
             {
-                get;
-                set;
+                get => default;
             }
 
             public IValue? GetState(Address address)

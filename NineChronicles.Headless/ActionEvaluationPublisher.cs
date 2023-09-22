@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.IO;
 using System.IO.Compression;
@@ -103,7 +104,7 @@ namespace NineChronicles.Headless
             };
 
             GrpcChannel channel = GrpcChannel.ForAddress($"http://{_host}:{_port}", options);
-            Client client = await Client.CreateAsync(channel, clientAddress, _context, _sentryTraces);
+            Client client = await Client.CreateAsync(channel, _blockChainStates, clientAddress, _context, _sentryTraces);
             if (_clients.TryAdd(clientAddress, client))
             {
                 if (clientAddress == default)
@@ -223,6 +224,7 @@ namespace NineChronicles.Headless
         private sealed class Client : IAsyncDisposable
         {
             private readonly IActionEvaluationHub _hub;
+            private readonly IBlockChainStates _blockChainStates;
             private readonly RpcContext _context;
             private readonly Address _clientAddress;
 
@@ -240,11 +242,13 @@ namespace NineChronicles.Headless
 
             private Client(
                 IActionEvaluationHub hub,
+                IBlockChainStates blockChainStates,
                 Address clientAddress,
                 RpcContext context,
                 ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces)
             {
                 _hub = hub;
+                _blockChainStates = blockChainStates;
                 _clientAddress = clientAddress;
                 _context = context;
                 TargetAddresses = ImmutableHashSet<Address>.Empty;
@@ -253,6 +257,7 @@ namespace NineChronicles.Headless
 
             public static async Task<Client> CreateAsync(
                 GrpcChannel channel,
+                IBlockChainStates blockChainStates,
                 Address clientAddress,
                 RpcContext context,
                 ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces)
@@ -263,7 +268,7 @@ namespace NineChronicles.Headless
                 );
                 await hub.JoinAsync(clientAddress.ToHex());
 
-                return new Client(hub, clientAddress, context, sentryTraces);
+                return new Client(hub, blockChainStates, clientAddress, context, sentryTraces);
             }
 
             public void Subscribe(
@@ -302,10 +307,20 @@ namespace NineChronicles.Headless
                         {
                             try
                             {
+                                Stopwatch stopwatch = new Stopwatch();
+                                stopwatch.Start();                                
                                 ActionBase? pa = ev.Action is RewardGold
                                     ? null
                                     : ev.Action;
                                 var extra = new Dictionary<string, IValue>();
+                                IAccountState output = _blockChainStates.GetAccountState(ev.OutputState);
+                                IAccountState input = _blockChainStates.GetAccountState(ev.PreviousState);
+                                AccountDiff diff = AccountDiff.Create(input, output);
+                                if (!TargetAddresses.Any(diff.StateDiffs.Keys.Append(ev.Signer).Contains))
+                                {
+                                    return;
+                                }
+                                var encodeElapsedMilliseconds = stopwatch.ElapsedMilliseconds;                                
 
                                 var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputState, ev.Exception, ev.PreviousState, ev.RandomSeed, extra);
                                 var encoded = MessagePackSerializer.Serialize(eval);
@@ -325,6 +340,21 @@ namespace NineChronicles.Headless
                                 );
 
                                 await _hub.BroadcastRenderAsync(compressed);
+                                stopwatch.Stop();
+                                
+                                var broadcastElapsedMilliseconds = stopwatch.ElapsedMilliseconds - encodeElapsedMilliseconds;
+                                Log
+                                    .ForContext("tag", "Metric")
+                                    .ForContext("subtag", "ActionEvaluationPublisherElapse")
+                                    .Information(
+                                        "[{ClientAddress}], #{BlockIndex}, {Action}," +
+                                        " {EncodeElapsedMilliseconds}, {BroadcastElapsedMilliseconds}, {TotalElapsedMilliseconds}",
+                                        _clientAddress,
+                                        ev.BlockIndex,
+                                        ev.Action.GetType(),
+                                        encodeElapsedMilliseconds,
+                                        broadcastElapsedMilliseconds,
+                                        encodeElapsedMilliseconds + broadcastElapsedMilliseconds);                                
                             }
                             catch (SerializationException se)
                             {
@@ -411,14 +441,14 @@ namespace NineChronicles.Headless
 
             private bool ContainsAddressToBroadcastLocal(ActionEvaluation<ActionBase> ev)
             {
-                var updatedAddresses = ev.OutputState.Delta.UpdatedAddresses;
-                return _context.AddressesToSubscribe.Any(updatedAddresses.Add(ev.Signer).Contains);
+                int t =ev.RandomSeed;
+                return true;
             }
 
             private bool ContainsAddressToBroadcastRemoteClient(ActionEvaluation<ActionBase> ev)
             {
-                var updatedAddresses = ev.OutputState.Delta.UpdatedAddresses;
-                return TargetAddresses.Any(updatedAddresses.Add(ev.Signer).Contains);
+                int r = ev.RandomSeed;
+                return true;
             }
         }
     }
