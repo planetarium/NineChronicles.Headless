@@ -51,25 +51,11 @@ namespace NineChronicles.Headless.Middleware
             {
                 var agent = new Address(addClientAddressBytes);
                 var httpContext = context.GetHttpContext();
+                var remoteIp = httpContext.Connection.RemoteIpAddress!.ToString();
 
                 if (_options.Value.EnableManaging)
                 {
-                    if (!_ipSignerList.ContainsKey(httpContext.Connection.RemoteIpAddress!.ToString()))
-                    {
-                        _logger.Information(
-                            "[GRPC-MULTI-ACCOUNT-MANAGER] Creating a new list for IP: {IP}",
-                            httpContext.Connection.RemoteIpAddress!.ToString());
-                        _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()] = new HashSet<Address>();
-                    }
-                    else
-                    {
-                        _logger.Information(
-                            "[GRPC-MULTI-ACCOUNT-MANAGER] List already created for IP: {IP} Count: {Count}",
-                            httpContext.Connection.RemoteIpAddress!.ToString(),
-                            _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count);
-                    }
-
-                    _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Add(agent);
+                    UpdateIpSignerList(remoteIp, agent);
                 }
             }
 
@@ -77,25 +63,11 @@ namespace NineChronicles.Headless.Middleware
             {
                 var agent = new Address(getNextTxNonceAddressBytes);
                 var httpContext = context.GetHttpContext();
+                var remoteIp = httpContext.Connection.RemoteIpAddress!.ToString();
 
                 if (_options.Value.EnableManaging)
                 {
-                    if (!_ipSignerList.ContainsKey(httpContext.Connection.RemoteIpAddress!.ToString()))
-                    {
-                        _logger.Information(
-                            "[GRPC-MULTI-ACCOUNT-MANAGER] Creating a new list for IP: {IP}",
-                            httpContext.Connection.RemoteIpAddress!.ToString());
-                        _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()] = new HashSet<Address>();
-                    }
-                    else
-                    {
-                        _logger.Information(
-                            "[GRPC-MULTI-ACCOUNT-MANAGER] List already created for IP: {IP} Count: {Count}",
-                            httpContext.Connection.RemoteIpAddress!.ToString(),
-                            _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count);
-                    }
-
-                    _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Add(agent);
+                    UpdateIpSignerList(remoteIp, agent);
                 }
             }
 
@@ -104,18 +76,19 @@ namespace NineChronicles.Headless.Middleware
                 Transaction tx =
                     Transaction.Deserialize(txBytes);
                 var httpContext = context.GetHttpContext();
+                var remoteIp = httpContext.Connection.RemoteIpAddress!.ToString();
 
                 if (_options.Value.EnableManaging)
                 {
                     var agent = tx.Signer;
-                    if (_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count >
+                    if (_ipSignerList[remoteIp].Count >
                         _options.Value.ThresholdCount)
                     {
                         _logger.Information(
                             "[GRPC-MULTI-ACCOUNT-MANAGER] IP: {IP} List Count: {Count}, AgentAddresses: {Agent}",
-                            httpContext.Connection.RemoteIpAddress!.ToString(),
-                            _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count,
-                            _ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()]);
+                            remoteIp,
+                            _ipSignerList[remoteIp].Count,
+                            _ipSignerList[remoteIp]);
                         if (!MultiAccountManagementList.ContainsKey(agent))
                         {
                             if (!MultiAccountTxIntervalTracker.ContainsKey(agent))
@@ -139,7 +112,7 @@ namespace NineChronicles.Headless.Middleware
                                     _logger.Information(
                                         $"[GRPC-MULTI-ACCOUNT-MANAGER] Managing Agent {agent} for " +
                                         $"{_options.Value.ManagementTimeMinutes} minutes due to " +
-                                        $"{_ipSignerList[httpContext.Connection.RemoteIpAddress!.ToString()].Count} associated accounts.");
+                                        $"{_ipSignerList[remoteIp].Count} associated accounts.");
                                     ManageMultiAccount(agent);
                                     MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
                                     throw new RpcException(new Status(StatusCode.Cancelled, "Request cancelled."));
@@ -171,6 +144,32 @@ namespace NineChronicles.Headless.Middleware
             }
 
             return await base.UnaryServerHandler(request, context, continuation);
+        }
+
+        private void UpdateIpSignerList(string ip, Address agent)
+        {
+            if (!_ipSignerList.ContainsKey(ip))
+            {
+                _logger.Information(
+                    "[GRPC-MULTI-ACCOUNT-MANAGER] Creating a new list for IP: {IP}",
+                    ip);
+                _ipSignerList[ip] = new HashSet<Address>();
+            }
+            else
+            {
+                _logger.Information(
+                    "[GRPC-MULTI-ACCOUNT-MANAGER] List already created for IP: {IP} Count: {Count}",
+                    ip,
+                    _ipSignerList[ip].Count);
+            }
+
+            _ipSignerList[ip].Add(agent);
+            AddClientIpInfo(agent, ip);
+        }
+
+        private void AddClientIpInfo(Address agentAddress, string ipAddress)
+        {
+            _actionEvaluationPublisher.AddClientAndIp(ipAddress, agentAddress.ToString());
         }
     }
 }

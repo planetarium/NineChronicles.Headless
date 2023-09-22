@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using Lib9c.Renderers;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +18,17 @@ namespace NineChronicles.Headless.Tests
         {
             _configuration = new ConfigurationBuilder().AddInMemoryCollection().Build();
             var standaloneContext = CreateStandaloneContext();
-            _startup = new GraphQLService.GraphQLStartup(_configuration, standaloneContext);
+            var publisher = new ActionEvaluationPublisher(
+                new BlockRenderer(),
+                new ActionRenderer(),
+                new ExceptionRenderer(),
+                new NodeStatusRenderer(),
+                "",
+                0,
+                new RpcContext(),
+                new ConcurrentDictionary<string, Sentry.ITransaction>()
+            );
+            _startup = new GraphQLService.GraphQLStartup(_configuration, standaloneContext, publisher);
         }
 
         [Theory]

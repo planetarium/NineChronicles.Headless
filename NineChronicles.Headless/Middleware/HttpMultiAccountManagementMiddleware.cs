@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Libplanet.Common;
@@ -8,6 +9,7 @@ using Libplanet.Crypto;
 using Libplanet.Types.Tx;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
+using Nekoyume.Action;
 using NineChronicles.Headless.Properties;
 using Serilog;
 using ILogger = Serilog.ILogger;
@@ -23,18 +25,21 @@ namespace NineChronicles.Headless.Middleware
         private StandaloneContext _standaloneContext;
         private readonly Dictionary<string, HashSet<Address>> _ipSignerList;
         private readonly IOptions<MultiAccountManagerProperties> _options;
+        private ActionEvaluationPublisher _publisher;
 
         public HttpMultiAccountManagementMiddleware(
             RequestDelegate next,
             StandaloneContext standaloneContext,
             Dictionary<string, HashSet<Address>> ipSignerList,
-            IOptions<MultiAccountManagerProperties> options)
+            IOptions<MultiAccountManagerProperties> options,
+            ActionEvaluationPublisher publisher)
         {
             _next = next;
             _logger = Log.Logger.ForContext<HttpMultiAccountManagementMiddleware>();
             _standaloneContext = standaloneContext;
             _ipSignerList = ipSignerList;
             _options = options;
+            _publisher = publisher;
         }
 
         private static void ManageMultiAccount(Address agent)
@@ -53,7 +58,7 @@ namespace NineChronicles.Headless.Middleware
             if (context.Request.Protocol == "HTTP/1.1")
             {
                 context.Request.EnableBuffering();
-                var remoteIp = context.Connection.RemoteIpAddress;
+                var remoteIp = context.Connection.RemoteIpAddress!.ToString();
                 var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
                 context.Request.Body.Seek(0, SeekOrigin.Begin);
                 if (_options.Value.EnableManaging)
@@ -63,7 +68,7 @@ namespace NineChronicles.Headless.Middleware
                         try
                         {
                             var agent = new Address(body.Split("\\\"")[1].Split("0x")[1]);
-                            UpdateIpSignerList(remoteIp!.ToString(), agent);
+                            UpdateIpSignerList(remoteIp, agent);
                         }
                         catch (Exception ex)
                         {
@@ -83,63 +88,72 @@ namespace NineChronicles.Headless.Middleware
                             byte[] bytes = ByteUtil.ParseHex(txPayload);
                             Transaction tx = Transaction.Deserialize(bytes);
                             var agent = tx.Signer;
-                            if (_ipSignerList.ContainsKey(context.Connection.RemoteIpAddress!.ToString()))
-                            {
-                                if (_ipSignerList[context.Connection.RemoteIpAddress!.ToString()].Count > _options.Value.ThresholdCount)
-                                {
-                                    _logger.Information(
-                                        "[GRAPHQL-MULTI-ACCOUNT-MANAGER] IP: {IP} List Count: {Count}, AgentAddresses: {Agent}",
-                                        context.Connection.RemoteIpAddress!.ToString(),
-                                        _ipSignerList[context.Connection.RemoteIpAddress!.ToString()].Count,
-                                        _ipSignerList[context.Connection.RemoteIpAddress!.ToString()]);
+                            var action = NCActionUtils.ToAction(tx.Actions.Actions.First());
 
-                                    if (!MultiAccountManagementList.ContainsKey(agent))
+                            // Only monitoring actions not used in the launcher
+                            if (action is not Stake
+                                and not ClaimStakeReward
+                                and not TransferAsset)
+                            {
+                                if (_ipSignerList.ContainsKey(remoteIp))
+                                {
+                                    if (_ipSignerList[remoteIp].Count > _options.Value.ThresholdCount)
                                     {
-                                        if (!MultiAccountTxIntervalTracker.ContainsKey(agent))
+                                        _logger.Information(
+                                            "[GRAPHQL-MULTI-ACCOUNT-MANAGER] IP: {IP} List Count: {Count}, AgentAddresses: {Agent}",
+                                            remoteIp,
+                                            _ipSignerList[remoteIp].Count,
+                                            _ipSignerList[remoteIp]);
+
+                                        if (!MultiAccountManagementList.ContainsKey(agent))
                                         {
-                                            _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Adding agent {agent} to the agent tracker.");
-                                            MultiAccountTxIntervalTracker.Add(agent, DateTimeOffset.Now);
-                                        }
-                                        else
-                                        {
-                                            if ((DateTimeOffset.Now - MultiAccountTxIntervalTracker[agent]).Minutes >= _options.Value.TxIntervalMinutes)
+                                            if (!MultiAccountTxIntervalTracker.ContainsKey(agent))
                                             {
-                                                _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Resetting Agent {agent}'s time because it has been more than {_options.Value.TxIntervalMinutes} minutes since the last transaction.");
-                                                MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
+                                                _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Adding agent {agent} to the agent tracker.");
+                                                MultiAccountTxIntervalTracker.Add(agent, DateTimeOffset.Now);
                                             }
                                             else
                                             {
-                                                _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Managing Agent {agent} for {_options.Value.ManagementTimeMinutes} minutes due to {_ipSignerList[context.Connection.RemoteIpAddress!.ToString()].Count} associated accounts.");
-                                                ManageMultiAccount(agent);
-                                                MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
+                                                if ((DateTimeOffset.Now - MultiAccountTxIntervalTracker[agent]).Minutes >= _options.Value.TxIntervalMinutes)
+                                                {
+                                                    _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Resetting Agent {agent}'s time because it has been more than {_options.Value.TxIntervalMinutes} minutes since the last transaction.");
+                                                    MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
+                                                }
+                                                else
+                                                {
+                                                    _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Managing Agent {agent} for {_options.Value.ManagementTimeMinutes} minutes due to {_ipSignerList[remoteIp].Count} associated accounts.");
+                                                    ManageMultiAccount(agent);
+                                                    MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
+                                                    await CancelRequestAsync(context);
+                                                    return;
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            var currentManagedTime = (DateTimeOffset.Now - MultiAccountManagementList[agent]).Minutes;
+                                            if (currentManagedTime > _options.Value.ManagementTimeMinutes)
+                                            {
+                                                _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Restoring Agent {agent} after {_options.Value.ManagementTimeMinutes} minutes.");
+                                                RestoreMultiAccount(agent);
+                                                MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now.AddMinutes(-_options.Value.TxIntervalMinutes);
+                                                _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Current time: {DateTimeOffset.Now} Added time: {DateTimeOffset.Now.AddMinutes(-_options.Value.TxIntervalMinutes)}.");
+                                            }
+                                            else
+                                            {
+                                                _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Agent {agent} is in managed status for the next {_options.Value.ManagementTimeMinutes - currentManagedTime} minutes.");
                                                 await CancelRequestAsync(context);
                                                 return;
                                             }
                                         }
                                     }
-                                    else
-                                    {
-                                        var currentManagedTime = (DateTimeOffset.Now - MultiAccountManagementList[agent]).Minutes;
-                                        if (currentManagedTime > _options.Value.ManagementTimeMinutes)
-                                        {
-                                            _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Restoring Agent {agent} after {_options.Value.ManagementTimeMinutes} minutes.");
-                                            RestoreMultiAccount(agent);
-                                            MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now.AddMinutes(-_options.Value.TxIntervalMinutes);
-                                            _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Current time: {DateTimeOffset.Now} Added time: {DateTimeOffset.Now.AddMinutes(-_options.Value.TxIntervalMinutes)}.");
-                                        }
-                                        else
-                                        {
-                                            _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Agent {agent} is in managed status for the next {_options.Value.ManagementTimeMinutes - currentManagedTime} minutes.");
-                                            await CancelRequestAsync(context);
-                                            return;
-                                        }
-                                    }
+                                }
+                                else
+                                {
+                                    UpdateIpSignerList(remoteIp, agent);
                                 }
                             }
-                            else
-                            {
-                                UpdateIpSignerList(remoteIp!.ToString(), agent);
-                            }
+
                         }
                         catch (Exception ex)
                         {
@@ -155,7 +169,7 @@ namespace NineChronicles.Headless.Middleware
             await _next(context);
         }
 
-        public void UpdateIpSignerList(string ip, Address agent)
+        private void UpdateIpSignerList(string ip, Address agent)
         {
             if (!_ipSignerList.ContainsKey(ip))
             {
@@ -173,6 +187,12 @@ namespace NineChronicles.Headless.Middleware
             }
 
             _ipSignerList[ip].Add(agent);
+            AddClientIpInfo(agent, ip);
+        }
+
+        private void AddClientIpInfo(Address agentAddress, string ipAddress)
+        {
+            _publisher.AddClientAndIp(ipAddress, agentAddress.ToString());
         }
 
         private async Task CancelRequestAsync(HttpContext context)
