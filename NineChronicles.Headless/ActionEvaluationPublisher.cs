@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.IO;
 using System.IO.Compression;
@@ -296,6 +297,8 @@ namespace NineChronicles.Headless
                         {
                             try
                             {
+                                Stopwatch stopwatch = new Stopwatch();
+                                stopwatch.Start();
                                 ActionBase? pa = ev.Action is RewardGold
                                     ? null
                                     : ev.Action;
@@ -361,8 +364,23 @@ namespace NineChronicles.Headless
                                     ev.Action.GetType(),
                                     compressed.LongLength
                                 );
-
+                                
+                                var encodeElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
                                 await _hub.BroadcastRenderAsync(compressed);
+                                stopwatch.Stop();
+                                var broadcastElapsedMilliseconds = stopwatch.ElapsedMilliseconds - encodeElapsedMilliseconds;
+                                Log
+                                    .ForContext("tag", "Metric")
+                                    .ForContext("subtag", "ActionEvaluationPublisherElapse")
+                                    .Information(
+                                        "[{ClientAddress}], #{BlockIndex}, {Action}," +
+                                        " {EncodeElapsedMilliseconds}, {BroadcastElapsedMilliseconds}, {TotalElapsedMilliseconds}",
+                                        _clientAddress,
+                                        ev.BlockIndex,
+                                        ev.Action.GetType(),
+                                        encodeElapsedMilliseconds,
+                                        broadcastElapsedMilliseconds,
+                                        encodeElapsedMilliseconds + broadcastElapsedMilliseconds);
                             }
                             catch (SerializationException se)
                             {
