@@ -11,6 +11,7 @@ on:
       - qa-*
       - 2022q3-worldboss
       - release/*
+      - test/action-evaluation-publisher-elapse-metric
     tags:
       - "*"
   workflow_dispatch:
