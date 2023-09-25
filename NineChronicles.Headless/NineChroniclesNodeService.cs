@@ -84,10 +84,11 @@ namespace NineChronicles.Headless
             Properties = properties;
 
             LogEventLevel logLevel = LogEventLevel.Debug;
+            var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
             IStagePolicy stagePolicy = new NCStagePolicy(txLifeTime, txQuotaPerSigner);
 
-            BlockRenderer = new BlockRenderer();
-            ActionRenderer = new ActionRenderer();
+            BlockRenderer = blockPolicySource.BlockRenderer;
+            ActionRenderer = blockPolicySource.ActionRenderer;
             ExceptionRenderer = new ExceptionRenderer();
             NodeStatusRenderer = new NodeStatusRenderer();
             var renderers = new List<IRenderer>();
@@ -100,12 +101,12 @@ namespace NineChronicles.Headless
 
             if (Properties.Render)
             {
-                renderers.Add(BlockRenderer);
-                renderers.Add(new LoggedActionRenderer(ActionRenderer, Log.Logger, logLevel));
+                renderers.Add(blockPolicySource.BlockRenderer);
+                renderers.Add(blockPolicySource.LoggedActionRenderer);
             }
             else if (Properties.LogActionRenders)
             {
-                renderers.Add(BlockRenderer);
+                renderers.Add(blockPolicySource.BlockRenderer);
                 // The following "nullRenderer" does nothing.  It's just for filling
                 // the LoggedActionRenderer<T>() constructor's parameter:
                 IActionRenderer nullRenderer = new AnonymousActionRenderer();
@@ -119,7 +120,7 @@ namespace NineChronicles.Headless
             }
             else
             {
-                renderers.Add(new LoggedRenderer(BlockRenderer, Log.Logger, logLevel));
+                renderers.Add(blockPolicySource.LoggedBlockRenderer);
             }
 
             if (strictRendering)
@@ -241,7 +242,7 @@ namespace NineChronicles.Headless
 
         internal static IBlockPolicy GetBlockPolicy(NetworkType networkType, IActionLoader actionLoader)
         {
-            var source = new BlockPolicySource(actionLoader);
+            var source = new BlockPolicySource(Log.Logger, LogEventLevel.Debug, actionLoader);
             return networkType switch
             {
                 NetworkType.Main => source.GetPolicy(),
@@ -254,7 +255,7 @@ namespace NineChronicles.Headless
         }
 
         internal static IBlockPolicy GetTestBlockPolicy() =>
-            new BlockPolicySource().GetTestPolicy();
+            new BlockPolicySource(Log.Logger, LogEventLevel.Debug).GetTestPolicy();
 
         public Task<bool> CheckPeer(string addr) => NodeService?.CheckPeer(addr) ?? throw new InvalidOperationException();
 
