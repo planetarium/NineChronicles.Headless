@@ -480,6 +480,7 @@ namespace NineChronicles.Headless.Executable
                         standaloneContext.NineChroniclesNodeService!.ActionRenderer,
                         standaloneContext.NineChroniclesNodeService!.ExceptionRenderer,
                         standaloneContext.NineChroniclesNodeService!.NodeStatusRenderer,
+                        standaloneContext.NineChroniclesNodeService!.BlockChain,
                         IPAddress.Loopback.ToString(),
                         rpcProperties.RpcListenPort,
                         context,

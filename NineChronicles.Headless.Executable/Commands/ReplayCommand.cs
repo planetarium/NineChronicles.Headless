@@ -101,7 +101,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 // Evaluate tx.
                 IAccountState previousBlockStates = blockChain.GetAccountState(previousBlock.Hash);
-                IAccount previousStates = new Account(previousBlockStates);
+                IAccount previousStates = AccountStateDelta.Create(previousBlockStates);
                 var actions = tx.Actions.Select(a => ToAction(a));
                 var actionEvaluations = EvaluateActions(
                     preEvaluationHash: targetBlock.PreEvaluationHash,
@@ -271,7 +271,7 @@ namespace NineChronicles.Headless.Executable.Commands
                         try
                         {
                             var rootHash = blockChain.DetermineBlockStateRootHash(block,
-                                out IReadOnlyList<IActionEvaluation> actionEvaluations);
+                                out IReadOnlyList<ICommittedActionEvaluation> actionEvaluations);
 
                             if (verbose)
                             {
@@ -301,8 +301,9 @@ namespace NineChronicles.Headless.Executable.Commands
                             outputSw?.WriteLine(msg);
 
                             var actionEvaluator = GetActionEvaluator(blockChain);
-                            var actionEvaluations = actionEvaluator.Evaluate(block);
-                            LoggingActionEvaluations(actionEvaluations, outputSw);
+                            var actionEvaluations = blockChain.DetermineBlockStateRootHash(block,
+                                out IReadOnlyList<ICommittedActionEvaluation> failedActionEvaluations);
+                            LoggingActionEvaluations(failedActionEvaluations, outputSw);
 
                             msg = $"- block #{block.Index} evaluating failed with ";
                             _console.Out.Write(msg);
@@ -398,7 +399,8 @@ namespace NineChronicles.Headless.Executable.Commands
                 cacheDirectory ?? Path.Join(Path.GetTempPath(), "ncd-replay-remote-tx-cache"));
 
             var previousBlockHash = BlockHash.FromString(previousBlockHashValue);
-            var previousStates = new Account(blockChainStates.GetAccountState(previousBlockHash));
+            var previousStates =
+                AccountStateDelta.Create(blockChainStates.GetAccountState(previousBlockHash));
 
             var actions = transaction.Actions
                 .Select(ToAction)
@@ -558,7 +560,7 @@ namespace NineChronicles.Headless.Executable.Commands
         }
 
         private void LoggingActionEvaluations(
-            IReadOnlyList<IActionEvaluation> actionEvaluations,
+            IReadOnlyList<ICommittedActionEvaluation> actionEvaluations,
             TextWriter? textWriter)
         {
             var count = actionEvaluations.Count;

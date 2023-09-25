@@ -321,29 +321,17 @@ namespace NineChronicles.Headless.GraphTypes
             }
             var txExecution = store.GetTxExecution(blockHash, transaction.Id);
             var txExecutedBlock = chain[blockHash];
-
-            return txExecution switch
-            {
-                TxSuccess success => new TxResult(
-                    TxStatus.SUCCESS,
-                    txExecutedBlock.Index,
-                    txExecutedBlock.Hash.ToString(),
-                    null,
-                    success.UpdatedStates
-                        .Select(kv => new KeyValuePair<Address, IValue>(
-                            kv.Key,
-                            kv.Value))
-                        .ToImmutableDictionary(),
-                    success.UpdatedFungibleAssets),
-                TxFailure failure => new TxResult(
+            return txExecution.Fail
+                ? new TxResult(
                     TxStatus.FAILURE,
                     txExecutedBlock.Index,
                     txExecutedBlock.Hash.ToString(),
-                    failure.ExceptionName,
-                    null,
-                    null),
-                _ => null
-            };
+                    txExecution.ExceptionNames)
+                : new TxResult(
+                    TxStatus.SUCCESS,
+                    txExecutedBlock.Index,
+                    txExecutedBlock.Hash.ToString(),
+                    txExecution.ExceptionNames);
         }
 
         private void RenderBlock((Block OldTip, Block NewTip) pair)
@@ -465,7 +453,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var agentState = new AgentState(agentDict);
                     Address deriveAddress = MonsterCollectionState.DeriveAddress(address, agentState.MonsterCollectionRound);
                     var subject = subjects.stateSubject;
-                    if (eval.OutputState.GetState(deriveAddress) is Dictionary state)
+                    if (service.BlockChain.GetAccountState(eval.OutputState).GetState(deriveAddress) is Dictionary state)
                     {
                         subject.OnNext(new MonsterCollectionState(state));
                     }
