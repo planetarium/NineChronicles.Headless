@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using Bencodex.Types;
 using Libplanet.Crypto;
 using Libplanet.Store;
 using Libplanet.Types.Blocks;
@@ -106,20 +104,10 @@ namespace Libplanet.Headless
         public void PutTransaction(Transaction tx) =>
             InternalStore.PutTransaction(tx);
 
-        public void PutTxExecution(TxSuccess txSuccess)
+        public void PutTxExecution(TxExecution txExecution)
         {
-            // Omit TxSuccess.UpdatedStates as it is unused by Nine Chronicles and too big.
-            TxSuccess reducedTxSuccess = new TxSuccess(
-                txSuccess.BlockHash,
-                txSuccess.TxId,
-                updatedStates: txSuccess.UpdatedStates.ToImmutableDictionary(pair => pair.Key, _ => (IValue)Null.Value),
-                updatedFungibleAssets: txSuccess.UpdatedFungibleAssets
-            );
-            InternalStore.PutTxExecution(reducedTxSuccess);
+            InternalStore.PutTxExecution(txExecution);
         }
-
-        public void PutTxExecution(TxFailure txFailure) =>
-            InternalStore.PutTxExecution(txFailure);
 
         public void SetCanonicalChainId(Guid chainId) =>
             InternalStore.SetCanonicalChainId(chainId);
