@@ -94,54 +94,50 @@ namespace NineChronicles.Headless.Middleware
                             and not TransferAsset0
                             and not TransferAssets
                             and not TransferAssets0
-                            and not UnloadFromMyGarages)
+                            and not UnloadFromMyGarages
+                            && _ipSignerList.ContainsKey(remoteIp)
+                            && _ipSignerList[remoteIp].Count > 1)
                         {
-                            if (_ipSignerList.ContainsKey(remoteIp))
+                            if (!_multiAccountList.ContainsKey(agent))
                             {
-                                if (_ipSignerList[remoteIp].Count > 1)
+                                if (!_multiAccountTxIntervalTracker.ContainsKey(agent))
                                 {
-                                    if (!_multiAccountList.ContainsKey(agent))
+                                    _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Adding agent {agent} to the agent tracker.");
+                                    _multiAccountTxIntervalTracker.Add(agent, DateTimeOffset.Now);
+                                }
+                                else
+                                {
+                                    if ((DateTimeOffset.Now - _multiAccountTxIntervalTracker[agent]).Minutes >= MultiAccountTxInterval)
                                     {
-                                        if (!_multiAccountTxIntervalTracker.ContainsKey(agent))
-                                        {
-                                            _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Adding agent {agent} to the agent tracker.");
-                                            _multiAccountTxIntervalTracker.Add(agent, DateTimeOffset.Now);
-                                        }
-                                        else
-                                        {
-                                            if ((DateTimeOffset.Now - _multiAccountTxIntervalTracker[agent]).Minutes >= MultiAccountTxInterval)
-                                            {
-                                                _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Resetting Agent {agent}'s time because it has been more than {MultiAccountTxInterval} minutes since the last transaction.");
-                                                _multiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
-                                            }
-                                            else
-                                            {
-                                                _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Managing Agent {agent} for {MultiAccountManagementTime} minutes due to {_ipSignerList[remoteIp].Count} associated accounts.");
-                                                ManageMultiAccount(agent);
-                                                _multiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
-                                                var ncStagePolicy = (NCStagePolicy)_standaloneContext.BlockChain!.StagePolicy;
-                                                ncStagePolicy.BannedAccounts = ncStagePolicy.BannedAccounts.Add(agent);
-                                                await CancelRequestAsync(context);
-                                                return;
-                                            }
-                                        }
+                                        _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Resetting Agent {agent}'s time because it has been more than {MultiAccountTxInterval} minutes since the last transaction.");
+                                        _multiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
                                     }
                                     else
                                     {
-                                        if ((DateTimeOffset.Now - _multiAccountList[agent]).Minutes >= MultiAccountManagementTime)
-                                        {
-                                            _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Restoring Agent {agent} after {MultiAccountManagementTime} minutes.");
-                                            RestoreMultiAccount(agent);
-                                            _multiAccountTxIntervalTracker[agent] = DateTimeOffset.Now.AddMinutes(-MultiAccountTxInterval);
-                                            _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Current time: {DateTimeOffset.Now} Added time: {DateTimeOffset.Now.AddMinutes(-MultiAccountTxInterval)}.");
-                                            var ncStagePolicy = (NCStagePolicy)_standaloneContext.BlockChain!.StagePolicy;
-                                            ncStagePolicy.BannedAccounts = ncStagePolicy.BannedAccounts.Remove(agent);
-                                        }
-                                        else
-                                        {
-                                            _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Agent {agent} is in managed status for the next {MultiAccountManagementTime - (DateTimeOffset.Now - _multiAccountList[agent]).Minutes} minutes.");
-                                        }
+                                        _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Managing Agent {agent} for {MultiAccountManagementTime} minutes due to {_ipSignerList[remoteIp].Count} associated accounts.");
+                                        ManageMultiAccount(agent);
+                                        _multiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
+                                        var ncStagePolicy = (NCStagePolicy)_standaloneContext.BlockChain!.StagePolicy;
+                                        ncStagePolicy.BannedAccounts = ncStagePolicy.BannedAccounts.Add(agent);
+                                        await CancelRequestAsync(context);
+                                        return;
                                     }
+                                }
+                            }
+                            else
+                            {
+                                if ((DateTimeOffset.Now - _multiAccountList[agent]).Minutes >= MultiAccountManagementTime)
+                                {
+                                    _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Restoring Agent {agent} after {MultiAccountManagementTime} minutes.");
+                                    RestoreMultiAccount(agent);
+                                    _multiAccountTxIntervalTracker[agent] = DateTimeOffset.Now.AddMinutes(-MultiAccountTxInterval);
+                                    _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Current time: {DateTimeOffset.Now} Added time: {DateTimeOffset.Now.AddMinutes(-MultiAccountTxInterval)}.");
+                                    var ncStagePolicy = (NCStagePolicy)_standaloneContext.BlockChain!.StagePolicy;
+                                    ncStagePolicy.BannedAccounts = ncStagePolicy.BannedAccounts.Remove(agent);
+                                }
+                                else
+                                {
+                                    _logger.Information($"[GRAPHQL-REQUEST-CAPTURE] Agent {agent} is in managed status for the next {MultiAccountManagementTime - (DateTimeOffset.Now - _multiAccountList[agent]).Minutes} minutes.");
                                 }
                             }
                         }
