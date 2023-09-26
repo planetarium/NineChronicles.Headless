@@ -17,8 +17,8 @@ namespace NineChronicles.Headless.Middleware
 {
     public class HttpCaptureMiddleware
     {
-        private const int MultiAccountManagementTime = 30;
-        private const int MultiAccountTxInterval = 30;
+        private const int MultiAccountManagementTime = 60;
+        private const int MultiAccountTxInterval = 60;
         private static Dictionary<Address, DateTimeOffset> _multiAccountTxIntervalTracker = new();
         private static Dictionary<Address, DateTimeOffset> _multiAccountList = new();
         private readonly RequestDelegate _next;
