@@ -74,6 +74,10 @@ namespace NineChronicles.Headless.Middleware
 
                         _logger.Information("[GRAPHQL-REQUEST-CAPTURE] IP: {IP} Agent: {Agent} Tx: {Path}",
                             remoteIp, agent, tx.Actions.Actions.FirstOrDefault());
+
+                        UpdateIpSignerList(remoteIp, agent);
+                        AddClientIpInfo(agent, remoteIp);
+
                         if (action is not Stake
                             and not Stake0
                             and not ClaimStakeReward
@@ -139,11 +143,6 @@ namespace NineChronicles.Headless.Middleware
                                         }
                                     }
                                 }
-                            }
-                            else
-                            {
-                                UpdateIpSignerList(remoteIp, agent);
-                                AddClientIpInfo(agent, remoteIp);
                             }
                         }
                     }
