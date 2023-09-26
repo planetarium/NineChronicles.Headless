@@ -8,6 +8,7 @@ using Libplanet.Crypto;
 using Libplanet.Types.Tx;
 using Microsoft.AspNetCore.Http;
 using Nekoyume.Action;
+using Nekoyume.Action.Garages;
 using Nekoyume.Blockchain;
 using Serilog;
 using ILogger = Serilog.ILogger;
@@ -104,7 +105,8 @@ namespace NineChronicles.Headless.Middleware
                             and not TransferAsset2
                             and not TransferAsset0
                             and not TransferAssets
-                            and not TransferAssets0)
+                            and not TransferAssets0
+                            and not UnloadFromMyGarages)
                         {
                             if (_ipSignerList.ContainsKey(remoteIp))
                             {
