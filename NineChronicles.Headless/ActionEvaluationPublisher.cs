@@ -382,7 +382,7 @@ namespace NineChronicles.Headless
             private IDisposable? _actionEveryRenderSubscribe;
             private IDisposable? _everyExceptionSubscribe;
             private IDisposable? _nodeStatusSubscribe;
-            
+
             private Subject<NCActionEvaluation> _NCActionRenderSubject { get; }
                 = new Subject<NCActionEvaluation>();
 
@@ -458,7 +458,7 @@ namespace NineChronicles.Headless
                             try
                             {
                                 Stopwatch stopwatch = new Stopwatch();
-                                stopwatch.Start();                                
+                                stopwatch.Start();
                                 ActionBase? pa = ev.Action is RewardGold
                                     ? null
                                     : ev.Action;
@@ -470,7 +470,7 @@ namespace NineChronicles.Headless
                                 {
                                     return;
                                 }
-                                var encodeElapsedMilliseconds = stopwatch.ElapsedMilliseconds;                                
+                                var encodeElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
 
                                 var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputState, ev.Exception, ev.PreviousState, ev.RandomSeed, extra);
                                 var encoded = MessagePackSerializer.Serialize(eval);
@@ -491,7 +491,7 @@ namespace NineChronicles.Headless
 
                                 await _hub.BroadcastRenderAsync(compressed);
                                 stopwatch.Stop();
-                                
+
                                 var broadcastElapsedMilliseconds = stopwatch.ElapsedMilliseconds - encodeElapsedMilliseconds;
                                 Log
                                     .ForContext("tag", "Metric")
@@ -504,7 +504,7 @@ namespace NineChronicles.Headless
                                         ev.Action.GetType(),
                                         encodeElapsedMilliseconds,
                                         broadcastElapsedMilliseconds,
-                                        encodeElapsedMilliseconds + broadcastElapsedMilliseconds);                                
+                                        encodeElapsedMilliseconds + broadcastElapsedMilliseconds);
                             }
                             catch (SerializationException se)
                             {
@@ -591,7 +591,7 @@ namespace NineChronicles.Headless
 
             private bool ContainsAddressToBroadcastLocal(ActionEvaluation<ActionBase> ev)
             {
-                int t =ev.RandomSeed;
+                int t = ev.RandomSeed;
                 return true;
             }
 
