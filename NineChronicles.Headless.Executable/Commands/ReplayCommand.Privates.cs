@@ -147,7 +147,7 @@ namespace NineChronicles.Headless.Executable.Commands
             }
 
             public IAccountState GetAccountState(HashDigest<SHA256>? hash)
-                => throw new NotImplementedException();
+                => _source.GetAccountState(hash);
         }
 
         private sealed class LocalCacheAccountState : IAccountState

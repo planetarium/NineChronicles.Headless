@@ -86,10 +86,7 @@ namespace NineChronicles.Headless.Tests.Common
 
         public ValidatorSet ValidatorSet => _validatorSet;
 
-        public ITrie Trie
-        {
-            get => new MerkleTrie(new MemoryKeyValueStore());
-        }
+        public ITrie Trie => throw new NotSupportedException();
 
         public IValue? GetState(Address address) => _states.TryGetValue(address, out IValue? value)
             ? value

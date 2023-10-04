@@ -121,7 +121,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var recipient = context.GetArgument<Address?>("recipient");
 
                     IEnumerable<Transaction> blockTxs = digest.TxIds
-                        .Select(b => new TxId(b.ToBuilder().ToArray()))
+                        .Select(bytes => new TxId(bytes))
                         .Select(store.GetTransaction);
 
                     var filtered = blockTxs
