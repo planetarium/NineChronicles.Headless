@@ -449,7 +449,6 @@ namespace NineChronicles.Headless
                     );
 
                 _actionEveryRenderSubscribe = actionRenderer.EveryRender<ActionBase>()
-                    .Where(ContainsAddressToBroadcast)
                     .SubscribeOn(NewThreadScheduler.Default)
                     .ObserveOn(NewThreadScheduler.Default)
                     .Subscribe(
@@ -580,25 +579,6 @@ namespace NineChronicles.Headless
                 _everyExceptionSubscribe?.Dispose();
                 _nodeStatusSubscribe?.Dispose();
                 await _hub.DisposeAsync();
-            }
-
-            private bool ContainsAddressToBroadcast(ActionEvaluation<ActionBase> ev)
-            {
-                return _context.RpcRemoteSever
-                    ? ContainsAddressToBroadcastRemoteClient(ev)
-                    : ContainsAddressToBroadcastLocal(ev);
-            }
-
-            private bool ContainsAddressToBroadcastLocal(ActionEvaluation<ActionBase> ev)
-            {
-                int t = ev.RandomSeed;
-                return true;
-            }
-
-            private bool ContainsAddressToBroadcastRemoteClient(ActionEvaluation<ActionBase> ev)
-            {
-                int r = ev.RandomSeed;
-                return true;
             }
         }
     }
