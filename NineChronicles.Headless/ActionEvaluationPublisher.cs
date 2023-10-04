@@ -3,12 +3,14 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,8 +18,9 @@ using Bencodex;
 using Bencodex.Types;
 using Grpc.Core;
 using Grpc.Net.Client;
-using Lib9c.Abstractions;
 using Lib9c.Renderers;
+using Libplanet.Action.State;
+using Libplanet.Blockchain;
 using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Types.Blocks;
@@ -28,9 +31,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Nekoyume.Action;
-using Nekoyume.Model.State;
 using Nekoyume.Shared.Hubs;
-using Sentry;
 using Serilog;
 
 namespace NineChronicles.Headless
@@ -44,6 +45,7 @@ namespace NineChronicles.Headless
         private readonly ActionRenderer _actionRenderer;
         private readonly ExceptionRenderer _exceptionRenderer;
         private readonly NodeStatusRenderer _nodeStatusRenderer;
+        private readonly IBlockChainStates _blockChainStates;
 
         private readonly ConcurrentDictionary<Address, Client> _clients = new();
         private readonly ConcurrentDictionary<Address, string> _clientsByDevice = new();
@@ -59,6 +61,7 @@ namespace NineChronicles.Headless
             ActionRenderer actionRenderer,
             ExceptionRenderer exceptionRenderer,
             NodeStatusRenderer nodeStatusRenderer,
+            IBlockChainStates blockChainStates,
             string host,
             int port,
             RpcContext context,
@@ -68,6 +71,7 @@ namespace NineChronicles.Headless
             _actionRenderer = actionRenderer;
             _exceptionRenderer = exceptionRenderer;
             _nodeStatusRenderer = nodeStatusRenderer;
+            _blockChainStates = blockChainStates;
             _host = host;
             _port = port;
             _context = context;
@@ -120,7 +124,7 @@ namespace NineChronicles.Headless
             };
 
             GrpcChannel channel = GrpcChannel.ForAddress($"http://{_host}:{_port}", options);
-            Client client = await Client.CreateAsync(channel, clientAddress, _context, _sentryTraces);
+            Client client = await Client.CreateAsync(channel, _blockChainStates, clientAddress, _context, _sentryTraces);
             if (_clients.TryAdd(clientAddress, client))
             {
                 if (clientAddress == default)
@@ -370,6 +374,7 @@ namespace NineChronicles.Headless
         private sealed class Client : IAsyncDisposable
         {
             private readonly IActionEvaluationHub _hub;
+            private readonly IBlockChainStates _blockChainStates;
             private readonly RpcContext _context;
             private readonly Address _clientAddress;
 
@@ -378,17 +383,22 @@ namespace NineChronicles.Headless
             private IDisposable? _everyExceptionSubscribe;
             private IDisposable? _nodeStatusSubscribe;
 
+            private Subject<NCActionEvaluation> _NCActionRenderSubject { get; }
+                = new Subject<NCActionEvaluation>();
+
             public ImmutableHashSet<Address> TargetAddresses { get; set; }
 
             public readonly ConcurrentDictionary<string, Sentry.ITransaction> SentryTraces;
 
             private Client(
                 IActionEvaluationHub hub,
+                IBlockChainStates blockChainStates,
                 Address clientAddress,
                 RpcContext context,
                 ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces)
             {
                 _hub = hub;
+                _blockChainStates = blockChainStates;
                 _clientAddress = clientAddress;
                 _context = context;
                 TargetAddresses = ImmutableHashSet<Address>.Empty;
@@ -397,6 +407,7 @@ namespace NineChronicles.Headless
 
             public static async Task<Client> CreateAsync(
                 GrpcChannel channel,
+                IBlockChainStates blockChainStates,
                 Address clientAddress,
                 RpcContext context,
                 ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces)
@@ -407,7 +418,7 @@ namespace NineChronicles.Headless
                 );
                 await hub.JoinAsync(clientAddress.ToHex());
 
-                return new Client(hub, clientAddress, context, sentryTraces);
+                return new Client(hub, blockChainStates, clientAddress, context, sentryTraces);
             }
 
             public void Subscribe(
@@ -438,7 +449,6 @@ namespace NineChronicles.Headless
                     );
 
                 _actionEveryRenderSubscribe = actionRenderer.EveryRender<ActionBase>()
-                    .Where(ContainsAddressToBroadcast)
                     .SubscribeOn(NewThreadScheduler.Default)
                     .ObserveOn(NewThreadScheduler.Default)
                     .Subscribe(
@@ -446,56 +456,22 @@ namespace NineChronicles.Headless
                         {
                             try
                             {
+                                Stopwatch stopwatch = new Stopwatch();
+                                stopwatch.Start();
                                 ActionBase? pa = ev.Action is RewardGold
                                     ? null
                                     : ev.Action;
                                 var extra = new Dictionary<string, IValue>();
-
-                                var previousStates = ev.PreviousState;
-                                if (pa is IBattleArenaV1 battleArena)
+                                IAccountState output = _blockChainStates.GetAccountState(ev.OutputState);
+                                IAccountState input = _blockChainStates.GetAccountState(ev.PreviousState);
+                                AccountDiff diff = AccountDiff.Create(input, output);
+                                if (!TargetAddresses.Any(diff.StateDiffs.Keys.Append(ev.Signer).Contains))
                                 {
-                                    var enemyAvatarAddress = battleArena.EnemyAvatarAddress;
-                                    if (previousStates.GetState(enemyAvatarAddress) is { } eAvatar)
-                                    {
-                                        const string inventoryKey = "inventory";
-                                        previousStates = previousStates.SetState(enemyAvatarAddress, eAvatar);
-                                        if (previousStates.GetState(enemyAvatarAddress.Derive(inventoryKey)) is { } inventory)
-                                        {
-                                            previousStates = previousStates.SetState(
-                                                enemyAvatarAddress.Derive(inventoryKey),
-                                                inventory);
-                                        }
-                                    }
-
-                                    var enemyItemSlotStateAddress =
-                                        ItemSlotState.DeriveAddress(battleArena.EnemyAvatarAddress,
-                                            Nekoyume.Model.EnumType.BattleType.Arena);
-                                    if (previousStates.GetState(enemyItemSlotStateAddress) is { } eItemSlot)
-                                    {
-                                        previousStates = previousStates.SetState(enemyItemSlotStateAddress, eItemSlot);
-                                    }
-
-                                    var enemyRuneSlotStateAddress =
-                                        RuneSlotState.DeriveAddress(battleArena.EnemyAvatarAddress,
-                                            Nekoyume.Model.EnumType.BattleType.Arena);
-                                    if (previousStates.GetState(enemyRuneSlotStateAddress) is { } eRuneSlot)
-                                    {
-                                        previousStates = previousStates.SetState(enemyRuneSlotStateAddress, eRuneSlot);
-                                        var runeSlot = new RuneSlotState(eRuneSlot as List);
-                                        var enemyRuneSlotInfos = runeSlot.GetEquippedRuneSlotInfos();
-                                        var runeAddresses = enemyRuneSlotInfos.Select(info =>
-                                            RuneState.DeriveAddress(battleArena.EnemyAvatarAddress, info.RuneId));
-                                        foreach (var address in runeAddresses)
-                                        {
-                                            if (previousStates.GetState(address) is { } rune)
-                                            {
-                                                previousStates = previousStates.SetState(address, rune);
-                                            }
-                                        }
-                                    }
+                                    return;
                                 }
+                                var encodeElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
 
-                                var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputState, ev.Exception, previousStates, ev.RandomSeed, extra);
+                                var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputState, ev.Exception, ev.PreviousState, ev.RandomSeed, extra);
                                 var encoded = MessagePackSerializer.Serialize(eval);
                                 var c = new MemoryStream();
                                 await using (var df = new DeflateStream(c, CompressionLevel.Fastest))
@@ -513,6 +489,21 @@ namespace NineChronicles.Headless
                                 );
 
                                 await _hub.BroadcastRenderAsync(compressed);
+                                stopwatch.Stop();
+
+                                var broadcastElapsedMilliseconds = stopwatch.ElapsedMilliseconds - encodeElapsedMilliseconds;
+                                Log
+                                    .ForContext("tag", "Metric")
+                                    .ForContext("subtag", "ActionEvaluationPublisherElapse")
+                                    .Information(
+                                        "[{ClientAddress}], #{BlockIndex}, {Action}," +
+                                        " {EncodeElapsedMilliseconds}, {BroadcastElapsedMilliseconds}, {TotalElapsedMilliseconds}",
+                                        _clientAddress,
+                                        ev.BlockIndex,
+                                        ev.Action.GetType(),
+                                        encodeElapsedMilliseconds,
+                                        broadcastElapsedMilliseconds,
+                                        encodeElapsedMilliseconds + broadcastElapsedMilliseconds);
                             }
                             catch (SerializationException se)
                             {
@@ -588,25 +579,6 @@ namespace NineChronicles.Headless
                 _everyExceptionSubscribe?.Dispose();
                 _nodeStatusSubscribe?.Dispose();
                 await _hub.DisposeAsync();
-            }
-
-            private bool ContainsAddressToBroadcast(ActionEvaluation<ActionBase> ev)
-            {
-                return _context.RpcRemoteSever
-                    ? ContainsAddressToBroadcastRemoteClient(ev)
-                    : ContainsAddressToBroadcastLocal(ev);
-            }
-
-            private bool ContainsAddressToBroadcastLocal(ActionEvaluation<ActionBase> ev)
-            {
-                var updatedAddresses = ev.OutputState.Delta.UpdatedAddresses;
-                return _context.AddressesToSubscribe.Any(updatedAddresses.Add(ev.Signer).Contains);
-            }
-
-            private bool ContainsAddressToBroadcastRemoteClient(ActionEvaluation<ActionBase> ev)
-            {
-                var updatedAddresses = ev.OutputState.Delta.UpdatedAddresses;
-                return TargetAddresses.Any(updatedAddresses.Add(ev.Signer).Contains);
             }
         }
     }
