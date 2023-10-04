@@ -63,22 +63,6 @@ namespace NineChronicles.Headless.Middleware
                 context.Request.Body.Seek(0, SeekOrigin.Begin);
                 if (_options.Value.EnableManaging)
                 {
-                    if (body.Contains("agent(address:\\\"") || body.Contains("agent(address: \\\""))
-                    {
-                        try
-                        {
-                            var agent = new Address(body.Split("\\\"")[1].Split("0x")[1]);
-                            UpdateIpSignerList(remoteIp, agent);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.Error(
-                                "[GRAPHQL-MULTI-ACCOUNT-MANAGER] Error message: {message} Stacktrace: {stackTrace}",
-                                ex.Message,
-                                ex.StackTrace);
-                        }
-                    }
-
                     if (body.Contains("stageTransaction"))
                     {
                         try
