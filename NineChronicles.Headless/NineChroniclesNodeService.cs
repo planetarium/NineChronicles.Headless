@@ -19,6 +19,7 @@ using Nekoyume.Blockchain;
 using Nekoyume.Blockchain.Policy;
 using NineChronicles.Headless.Properties;
 using NineChronicles.Headless.Utils;
+using NineChronicles.Headless.Services;
 using NineChronicles.RPC.Shared.Exceptions;
 using Nito.AsyncEx;
 using Serilog;
@@ -77,14 +78,27 @@ namespace NineChronicles.Headless
             bool ignorePreloadFailure = false,
             bool strictRendering = false,
             TimeSpan txLifeTime = default,
-            int txQuotaPerSigner = 10
+            int txQuotaPerSigner = 10,
+            AccessControlServiceOptions? acsOptions = null
         )
         {
             MinerPrivateKey = minerPrivateKey;
             Properties = properties;
 
             LogEventLevel logLevel = LogEventLevel.Debug;
-            IStagePolicy stagePolicy = new NCStagePolicy(txLifeTime, txQuotaPerSigner);
+
+            IAccessControlService? accessControlService = null;
+
+            if (acsOptions != null)
+            {
+                accessControlService = AccessControlServiceFactory.Create(
+                    acsOptions.GetStorageType(),
+                    acsOptions.AccessControlServiceConnectionString
+                );
+            }
+
+            IStagePolicy stagePolicy = new NCStagePolicy(
+                txLifeTime, txQuotaPerSigner, accessControlService);
 
             BlockRenderer = new BlockRenderer();
             ActionRenderer = new ActionRenderer();
@@ -200,7 +214,8 @@ namespace NineChronicles.Headless
                 ignorePreloadFailure: properties.IgnorePreloadFailure,
                 strictRendering: properties.StrictRender,
                 txLifeTime: properties.TxLifeTime,
-                txQuotaPerSigner: properties.TxQuotaPerSigner
+                txQuotaPerSigner: properties.TxQuotaPerSigner,
+                acsOptions: properties.AccessControlServiceOptions
             );
             service.ConfigureContext(context);
             var meter = new Meter("NineChronicles");
