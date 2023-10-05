@@ -46,7 +46,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var stateKeyValueStore = new RocksDBKeyValueStore(statesPath);
             var stateStore = new TrieStateStore(stateKeyValueStore);
             IStagePolicy stagePolicy = new VolatileStagePolicy();
-            IBlockPolicy blockPolicy = new BlockPolicySource(Logger.None).GetPolicy();
+            IBlockPolicy blockPolicy = new BlockPolicySource().GetPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 new BlockChainStates(store, stateStore),

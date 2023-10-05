@@ -53,14 +53,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
                 BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
 
-                var result = await ExecuteSubscriptionQueryAsync("subscription { tipChanged { index hash } }");
-
                 // var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
+
+                Assert.Equal(index, BlockChain.Tip.Index);
+                await Task.Delay(TimeSpan.FromSeconds(1));
+
+                var result = await ExecuteSubscriptionQueryAsync("subscription { tipChanged { index hash } }");
                 Assert.IsType<SubscriptionExecutionResult>(result);
                 var subscribeResult = (SubscriptionExecutionResult)result;
-                Assert.Equal(index, BlockChain.Tip.Index);
                 var stream = subscribeResult.Streams!.Values.FirstOrDefault();
-                var rawEvents = await stream.Take((int)index);
+                var rawEvents = await stream.Take(1);
                 Assert.NotNull(rawEvents);
 
                 var events = (Dictionary<string, object>)((ExecutionNode)rawEvents.Data!).ToValue()!;

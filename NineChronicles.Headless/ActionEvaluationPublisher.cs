@@ -24,7 +24,9 @@ using Libplanet.Types.Blocks;
 using Libplanet.Types.Tx;
 using MagicOnion.Client;
 using MessagePack;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.Shared.Hubs;
@@ -43,8 +45,11 @@ namespace NineChronicles.Headless
         private readonly ExceptionRenderer _exceptionRenderer;
         private readonly NodeStatusRenderer _nodeStatusRenderer;
 
-        private readonly ConcurrentDictionary<Address, Client> _clients = new ConcurrentDictionary<Address, Client>();
-        private readonly ConcurrentDictionary<Address, string> _clientsByDevice = new ConcurrentDictionary<Address, string>();
+        private readonly ConcurrentDictionary<Address, Client> _clients = new();
+        private readonly ConcurrentDictionary<Address, string> _clientsByDevice = new();
+        private readonly ConcurrentDictionary<string, HashSet<string>> _clientsByIp = new();
+        private readonly ConcurrentDictionary<List<string>, List<string>> _clientsIpsList = new();
+        private readonly IMemoryCache _cache;
 
         private RpcContext _context;
         private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
@@ -67,6 +72,9 @@ namespace NineChronicles.Headless
             _port = port;
             _context = context;
             _sentryTraces = sentryTraces;
+            var memoryCacheOptions = new MemoryCacheOptions();
+            var options = Options.Create(memoryCacheOptions);
+            _cache = new MemoryCache(options);
 
             var meter = new Meter("NineChronicles");
             meter.CreateObservableGauge(
@@ -82,6 +90,18 @@ namespace NineChronicles.Headless
                     new Measurement<int>(this.GetClientsCountByDevice("other"), new[] { new KeyValuePair<string, object?>("device", "other") }),
                 },
                 description: "Number of RPC clients connected by device.");
+            meter.CreateObservableGauge(
+                "ninechronicles_clients_count_by_ips",
+                () => new[]
+                {
+                    new Measurement<int>(
+                        GetClientsCountByIp(10),
+                        new KeyValuePair<string, object?>("account-type", "multi")),
+                    new Measurement<int>(
+                        GetClientsCountByIp(0),
+                        new KeyValuePair<string, object?>("account-type", "all")),
+                },
+                description: "Number of RPC clients connected grouped by ips.");
 
             ActionEvaluationHub.OnClientDisconnected += RemoveClient;
         }
@@ -151,6 +171,41 @@ namespace NineChronicles.Headless
                 .ToList();
         }
 
+        public void AddClientAndIp(string ipAddress, string clientAddress)
+        {
+            if (!_clientsByIp.ContainsKey(ipAddress))
+            {
+                _clientsByIp[ipAddress] = new HashSet<string>();
+            }
+
+            _clientsByIp[ipAddress].Add(clientAddress);
+        }
+
+        public int GetClientsCountByIp(int minimum)
+        {
+            var finder = new IdGroupFinder(_cache);
+            var groups = finder.FindGroups(_clientsByIp);
+            return groups.Where(group => group.IDs.Count >= minimum)
+                .Sum(group => group.IDs.Count);
+        }
+
+        public ConcurrentDictionary<List<string>, List<string>> GetClientsByIp(int minimum)
+        {
+            var finder = new IdGroupFinder(_cache);
+            var groups = finder.FindGroups(_clientsByIp);
+            ConcurrentDictionary<List<string>, List<string>> clientsIpList = new();
+            foreach (var group in groups)
+            {
+                if (group.IDs.Count >= minimum)
+                {
+                    clientsIpList.TryAdd(group.IPs.ToList(), group.IDs.ToList());
+                }
+            }
+
+            return new ConcurrentDictionary<List<string>, List<string>>(
+                clientsIpList.OrderByDescending(x => x.Value.Count));
+        }
+
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
             foreach (Client? client in _clients.Values)
@@ -211,9 +266,104 @@ namespace NineChronicles.Headless
                 RemoveClientByDevice(clientAddress);
                 await RemoveClient(clientAddress);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Log.Error("[{ClientAddress }] Client ");
+                Log.Error(e, "[{ClientAddress}] Error while removing client.", clientAddressHex);
+            }
+        }
+
+        private sealed class IdGroupFinder
+        {
+            private Dictionary<string, List<string>> adjacencyList = new();
+            private HashSet<string> visited = new();
+            private readonly IMemoryCache _memoryCache;
+
+            public IdGroupFinder(IMemoryCache memoryCache)
+            {
+                _memoryCache = memoryCache;
+            }
+
+            public List<(HashSet<string> IPs, HashSet<string> IDs)> FindGroups(ConcurrentDictionary<string, HashSet<string>> dict)
+            {
+                // Create a serialized version of the input for caching purposes
+                var serializedInput = "key";
+
+                // Check cache
+                if (_memoryCache.TryGetValue(serializedInput, out List<(HashSet<string> IPs, HashSet<string> IDs)> cachedResult))
+                {
+                    return cachedResult;
+                }
+
+                // Step 1: Construct the adjacency list
+                foreach (var kvp in dict)
+                {
+                    var ip = kvp.Key;
+                    if (!adjacencyList.ContainsKey(ip))
+                    {
+                        adjacencyList[ip] = new List<string>();
+                    }
+
+                    foreach (var id in kvp.Value)
+                    {
+                        adjacencyList[ip].Add(id);
+
+                        if (!adjacencyList.ContainsKey(id))
+                        {
+                            adjacencyList[id] = new List<string>();
+                        }
+                        adjacencyList[id].Add(ip);
+                    }
+                }
+
+                // Step 2: DFS to find connected components
+                var groups = new List<(HashSet<string> IPs, HashSet<string> IDs)>();
+                foreach (var node in adjacencyList.Keys)
+                {
+                    if (!visited.Contains(node))
+                    {
+                        var ips = new HashSet<string>();
+                        var ids = new HashSet<string>();
+                        DFS(node, ips, ids, dict);
+                        groups.Add((ips, ids));
+                    }
+                }
+
+                // Cache the result before returning. Here we set a sliding expiration of 1 hour.
+                var cacheEntryOptions = new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+                };
+                _memoryCache.Set(serializedInput, groups, cacheEntryOptions);
+
+                return groups;
+            }
+
+            private void DFS(string node, HashSet<string> ips, HashSet<string> ids, ConcurrentDictionary<string, HashSet<string>> dict)
+            {
+                if (visited.Contains(node))
+                {
+                    return;
+                }
+
+                visited.Add(node);
+
+                // if node is an IP
+                if (dict.ContainsKey(node))
+                {
+                    ips.Add(node);
+                }
+                else
+                {
+                    ids.Add(node);
+                }
+
+                foreach (var neighbor in adjacencyList[node])
+                {
+                    if (!visited.Contains(neighbor))
+                    {
+                        DFS(neighbor, ips, ids, dict);
+                    }
+                }
             }
         }
 

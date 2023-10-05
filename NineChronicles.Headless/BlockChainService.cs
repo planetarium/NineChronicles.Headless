@@ -118,7 +118,7 @@ namespace NineChronicles.Headless
             var hash = new BlockHash(blockHashBytes);
             IValue state = _blockChain.GetStates(new[] { address }, hash)[0];
             // FIXME: Null과 null 구분해서 반환해야 할 듯
-            byte[] encoded = _codec.Encode(state ?? new Null());
+            byte[] encoded = _codec.Encode(state ?? Null.Value);
             return new UnaryResult<byte[]>(encoded);
         }
 
@@ -148,7 +148,7 @@ namespace NineChronicles.Headless
             IReadOnlyList<IValue> values = _blockChain.GetStates(addresses, hash);
             for (int i = 0; i < addresses.Length; i++)
             {
-                result.TryAdd(addresses[i].ToByteArray(), _codec.Encode(values[i] ?? new Null()));
+                result.TryAdd(addresses[i].ToByteArray(), _codec.Encode(values[i] ?? Null.Value));
             }
 
             return new UnaryResult<Dictionary<byte[], byte[]>>(result);
@@ -178,6 +178,18 @@ namespace NineChronicles.Headless
             Bencodex.Types.Dictionary headerDict = _blockChain.Tip.MarshalBlock();
             byte[] headerBytes = Codec.Encode(headerDict);
             return new UnaryResult<byte[]>(headerBytes);
+        }
+
+        public UnaryResult<byte[]> GetBlockHash(long blockIndex)
+        {
+            try
+            {
+                return new UnaryResult<byte[]>(_codec.Encode(_blockChain[blockIndex].Hash.Bencoded));
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return new UnaryResult<byte[]>(_codec.Encode(Null.Value));
+            }
         }
 
         public UnaryResult<long> GetNextTxNonce(byte[] addressBytes)
