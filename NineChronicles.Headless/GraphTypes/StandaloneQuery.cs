@@ -120,33 +120,28 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var recipient = context.GetArgument<Address?>("recipient");
 
-                    IEnumerable<Transaction> txs = digest.TxIds
+                    IEnumerable<Transaction> blockTxs = digest.TxIds
                         .Select(bytes => new TxId(bytes))
                         .Select(store.GetTransaction);
 
-                    var pairs = txs
-                        .Where(tx =>
-                            tx.Actions!.Count == 1 &&
-                            store.GetTxExecution(blockHash, tx.Id) is TxSuccess)
-                        .Select(tx => (tx.Id, ToAction(tx.Actions.First())))
-                        .Where(pair =>
-                            pair.Item2 is ITransferAsset transferAssset &&
-                            transferAssset.Amount.Currency.Ticker == "NCG")
+                    var filtered = blockTxs
+                        .Where(tx => tx.Actions.Count == 1)
+                        .Select(tx => (store.GetTxExecution(blockHash, tx.Id), ToAction(tx.Actions[0])))
+                        .Where(pair => pair.Item1 is { } && pair.Item2 is ITransferAsset)
                         .Select(pair => (pair.Item1, (ITransferAsset)pair.Item2))
-                        .Where(pair => (!(recipient is { } r) || pair.Item2.Recipient == r));
+                        .Where(pair => !pair.Item1.Fail &&
+                            (!recipient.HasValue || pair.Item2.Recipient == recipient) &&
+                            pair.Item2.Amount.Currency.Ticker == "NCG");
 
-                    TransferNCGHistory ToTransferNCGHistory((TxId TxId, ITransferAsset Transfer) pair)
-                    {
-                        return new TransferNCGHistory(
-                            blockHash,
-                            pair.TxId,
-                            pair.Transfer.Sender,
-                            pair.Transfer.Recipient,
-                            pair.Transfer.Amount,
-                            pair.Transfer.Memo);
-                    }
+                    var histories = filtered.Select(pair =>
+                        new TransferNCGHistory(
+                            pair.Item1.BlockHash,
+                            pair.Item1.TxId,
+                            pair.Item2.Sender,
+                            pair.Item2.Recipient,
+                            pair.Item2.Amount,
+                            pair.Item2.Memo));
 
-                    var histories = pairs.Select(ToTransferNCGHistory);
                     return histories;
                 });
 

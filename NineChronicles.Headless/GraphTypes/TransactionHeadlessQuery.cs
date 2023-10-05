@@ -208,41 +208,29 @@ namespace NineChronicles.Headless.GraphTypes
                     if (!(store.GetFirstTxIdBlockHashIndex(txId) is { } txExecutedBlockHash))
                     {
                         return blockChain.GetStagedTransactionIds().Contains(txId)
-                            ? new TxResult(TxStatus.STAGING, null, null, null, null, null)
-                            : new TxResult(TxStatus.INVALID, null, null, null, null, null);
+                            ? new TxResult(TxStatus.STAGING, null, null, null)
+                            : new TxResult(TxStatus.INVALID, null, null, null);
                     }
 
                     try
                     {
                         TxExecution execution = blockChain.GetTxExecution(txExecutedBlockHash, txId);
                         Block txExecutedBlock = blockChain[txExecutedBlockHash];
-                        return execution switch
-                        {
-                            TxSuccess txSuccess => new TxResult(
-                                TxStatus.SUCCESS,
-                                txExecutedBlock.Index,
-                                txExecutedBlock.Hash.ToString(),
-                                null,
-                                txSuccess.UpdatedStates
-                                    .Select(kv => new KeyValuePair<Address, IValue>(
-                                        kv.Key,
-                                        kv.Value))
-                                    .ToImmutableDictionary(),
-                                txSuccess.UpdatedFungibleAssets),
-                            TxFailure txFailure => new TxResult(
+                        return execution.Fail
+                            ? new TxResult(
                                 TxStatus.FAILURE,
                                 txExecutedBlock.Index,
                                 txExecutedBlock.Hash.ToString(),
-                                txFailure.ExceptionName,
-                                null,
-                                null),
-                            _ => throw new NotImplementedException(
-                                $"{nameof(execution)} is not expected concrete class.")
-                        };
+                                execution.ExceptionNames)
+                            : new TxResult(
+                                TxStatus.SUCCESS,
+                                txExecutedBlock.Index,
+                                txExecutedBlock.Hash.ToString(),
+                                execution.ExceptionNames);
                     }
                     catch (Exception)
                     {
-                        return new TxResult(TxStatus.INVALID, null, null, null, null, null);
+                        return new TxResult(TxStatus.INVALID, null, null, null);
                     }
                 }
             );

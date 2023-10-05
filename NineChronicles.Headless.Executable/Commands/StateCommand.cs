@@ -132,31 +132,20 @@ namespace NineChronicles.Headless.Executable.Commands
                     block.Index,
                     block.Hash
                 );
-                IReadOnlyList<IActionEvaluation> delta;
                 HashDigest<SHA256> stateRootHash = block.Index < 1
                     ? BlockChain.DetermineGenesisStateRootHash(
                         actionEvaluator,
                         preEvalBlock,
-                        out delta)
+                        out _)
                     : chain.DetermineBlockStateRootHash(
                         preEvalBlock,
-                        out delta);
+                        out _);
                 DateTimeOffset now = DateTimeOffset.Now;
                 if (invalidStateRootHashBlock is null && !stateRootHash.Equals(block.StateRootHash))
                 {
-                    string blockDump = DumpBencodexToFile(
-                        block.MarshalBlock(),
-                        $"block_{block.Index}_{block.Hash}"
-                    );
-                    string deltaDump = DumpBencodexToFile(
-                        new Dictionary(
-                            GetTotalDelta(delta, ToStateKey, ToFungibleAssetKey, ToTotalSupplyKey, ValidatorSetKey)),
-                        $"delta_{block.Index}_{block.Hash}"
-                    );
                     string message =
                         $"Unexpected state root hash for block #{block.Index} {block.Hash}.\n" +
-                        $"  Expected: {block.StateRootHash}\n  Actual:   {stateRootHash}\n" +
-                        $"  Block file: {blockDump}\n  Evaluated delta file: {deltaDump}\n";
+                        $"  Expected: {block.StateRootHash}\n  Actual:   {stateRootHash}\n";
                     if (!bypassStateRootHashCheck)
                     {
                         throw new CommandExitedException(message, 1);
