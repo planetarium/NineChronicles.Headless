@@ -82,7 +82,7 @@ namespace NineChronicles.Headless.Tests
             var policy = new BlockPolicy();
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
-                new BlockChainStates(store, stateStore),
+                stateStore,
                 new NCActionLoader());
             var genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
             var blockchain = BlockChain.Create(
@@ -113,7 +113,7 @@ namespace NineChronicles.Headless.Tests
             var policy = new BlockPolicy();
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
-                new BlockChainStates(store, stateStore),
+                stateStore,
                 new NCActionLoader());
             var genesisBlock = BlockChain.ProposeGenesisBlock(
                 actionEvaluator,

@@ -124,7 +124,7 @@ namespace Libplanet.Headless.Hosting
                         new Uri(remoteActionEvaluatorConfiguration.StateServiceEndpoint), blockChainStates),
                     DefaultActionEvaluatorConfiguration _ => new ActionEvaluator(
                         _ => blockPolicy.BlockAction,
-                        blockChainStates: blockChainStates,
+                        stateStore: StateStore,
                         actionTypeLoader: actionLoader
                     ),
                     ForkableActionEvaluatorConfiguration forkableActionEvaluatorConfiguration => new

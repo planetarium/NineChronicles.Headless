@@ -136,7 +136,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
             var actionEvaluator = new ActionEvaluator(
                 _ => null,
-                new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
+                new TrieStateStore(new MemoryKeyValueStore()),
                 new SingleActionLoader(typeof(EmptyAction)));
             var genesisBlock = BlockChain.ProposeGenesisBlock(
                 actionEvaluator,

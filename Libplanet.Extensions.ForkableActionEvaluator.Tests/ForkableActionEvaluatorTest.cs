@@ -24,11 +24,11 @@ public class ForkableActionEvaluatorTest
             ((101L, long.MaxValue), new PostActionEvaluator()),
         });
 
-        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(0))).Action);
-        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(99))).Action);
-        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(100))).Action);
-        Assert.Equal((Text)"POST", Assert.Single(evaluator.Evaluate(new MockBlock(101))).Action);
-        Assert.Equal((Text)"POST", Assert.Single(evaluator.Evaluate(new MockBlock(long.MaxValue))).Action);
+        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(0), null)).Action);
+        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(99), null)).Action);
+        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(100), null)).Action);
+        Assert.Equal((Text)"POST", Assert.Single(evaluator.Evaluate(new MockBlock(101), null)).Action);
+        Assert.Equal((Text)"POST", Assert.Single(evaluator.Evaluate(new MockBlock(long.MaxValue), null)).Action);
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class ForkableActionEvaluatorTest
 class PostActionEvaluator : IActionEvaluator
 {
     public IActionLoader ActionLoader => throw new NotSupportedException();
-    public IReadOnlyList<IActionEvaluation> Evaluate(IPreEvaluationBlock block)
+    public IReadOnlyList<IActionEvaluation> Evaluate(IPreEvaluationBlock block, HashDigest<SHA256>? baseStateroothash)
     {
         return new IActionEvaluation[]
         {
@@ -91,7 +91,7 @@ class PostActionEvaluator : IActionEvaluator
 class PreActionEvaluator : IActionEvaluator
 {
     public IActionLoader ActionLoader => throw new NotSupportedException();
-    public IReadOnlyList<IActionEvaluation> Evaluate(IPreEvaluationBlock block)
+    public IReadOnlyList<IActionEvaluation> Evaluate(IPreEvaluationBlock block, HashDigest<SHA256>? baseStateRootHash)
     {
         return new IActionEvaluation[]
         {
