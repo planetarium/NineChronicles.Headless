@@ -15,6 +15,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Disposables;
+using System.Text.RegularExpressions;
 using Bencodex.Types;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
@@ -145,7 +146,7 @@ namespace NineChronicles.Headless.GraphTypes
                 Arguments = new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
-                        Description = "A type of action in transaction.",
+                        Description = "A regular expression to filter transactions based on action type.",
                         Name = "actionType",
                     }
                 ),
@@ -304,7 +305,7 @@ namespace NineChronicles.Headless.GraphTypes
                         return false;
                     }
 
-                    return typeId == actionType;
+                    return Regex.IsMatch(typeId, actionType);
                 }))
                 .Select(transaction => new Tx
                 {
