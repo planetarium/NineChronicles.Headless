@@ -1,3 +1,4 @@
+using System;
 using GraphQL.Types;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Types.Tx;
@@ -48,6 +49,15 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "A list of actions in this transaction.",
                 resolve: context => context.Source.Actions
             );
+
+            Field<NonNullGraphType<StringGraphType>>(
+                name: "SerializedPayload",
+                description: "A serialized tx payload in base64 string.",
+                resolve: x =>
+                {
+                    byte[] bytes = x.Source.Serialize();
+                    return Convert.ToBase64String(bytes);
+                });
         }
     }
 }
