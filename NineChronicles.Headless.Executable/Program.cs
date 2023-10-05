@@ -205,7 +205,11 @@ namespace NineChronicles.Headless.Executable
                 Description = "Absolute path of \"appsettings.json\" file to provide headless configurations.")]
             string? configPath = "appsettings.json",
             [Option(Description = "Sentry DSN")]
-            string? sentryDsn = "",
+            string? sentryDsn = "",           
+            [Option(Description = "AccessControlService Type")]
+            string? acsType = null,
+            [Option(Description = "AccessControlService ConnectionString")]
+            string? acsConnectionString = null,
             [Option(Description = "Trace sample rate for sentry")]
             double? sentryTraceSampleRate = null,
             [Ignore] CancellationToken? cancellationToken = null
@@ -436,7 +440,7 @@ namespace NineChronicles.Headless.Executable
                     : new PrivateKey(ByteUtil.ParseHex(headlessConfig.MinerPrivateKeyString));
                 TimeSpan minerBlockInterval = TimeSpan.FromMilliseconds(headlessConfig.MinerBlockIntervalMilliseconds);
                 var nineChroniclesProperties =
-                    new NineChroniclesNodeServiceProperties(actionLoader, headlessConfig.StateServiceManagerService)
+                    new NineChroniclesNodeServiceProperties(actionLoader, headlessConfig.StateServiceManagerService, headlessConfig.AccessControlService)
                     {
                         MinerPrivateKey = minerPrivateKey,
                         Libplanet = properties,

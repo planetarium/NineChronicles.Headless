@@ -89,6 +89,8 @@ namespace NineChronicles.Headless.Executable
 
         public StateServiceManagerServiceOptions? StateServiceManagerService { get; set; }
 
+        public AccessControlServiceOptions? AccessControlService { get; set; }
+
         public void Overwrite(
             string? appProtocolVersionString,
             string[]? trustedAppProtocolVersionSignerStrings,

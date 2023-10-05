@@ -2,7 +2,7 @@ using Microsoft.Data.Sqlite;
 using Libplanet.Crypto;
 using Nekoyume.Blockchain;
 
-namespace NineChronicles.Headless.Services.AccessControlService
+namespace NineChronicles.Headless.Services
 {
     public class SQLiteAccessControlService : IAccessControlService
     {
