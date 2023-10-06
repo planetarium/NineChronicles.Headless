@@ -205,11 +205,7 @@ namespace NineChronicles.Headless.Executable
                 Description = "Absolute path of \"appsettings.json\" file to provide headless configurations.")]
             string? configPath = "appsettings.json",
             [Option(Description = "Sentry DSN")]
-            string? sentryDsn = "",           
-            [Option(Description = "AccessControlService Type")]
-            string? acsType = null,
-            [Option(Description = "AccessControlService ConnectionString")]
-            string? acsConnectionString = null,
+            string? sentryDsn = "",
             [Option(Description = "Trace sample rate for sentry")]
             double? sentryTraceSampleRate = null,
             [Ignore] CancellationToken? cancellationToken = null

@@ -54,7 +54,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
 
                 // var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
-
                 Assert.Equal(index, BlockChain.Tip.Index);
                 await Task.Delay(TimeSpan.FromSeconds(1));
 

@@ -6,7 +6,7 @@ namespace NineChronicles.Headless.Services
 {
     public class RedisAccessControlService : IAccessControlService
     {
-        private IDatabase _db;
+        protected IDatabase _db;
 
         public RedisAccessControlService(string storageUri)
         {

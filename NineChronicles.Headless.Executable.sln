@@ -78,6 +78,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Extensions.Remote
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Extensions.RemoteBlockChainStates", "Lib9c\.Libplanet.Extensions.RemoteBlockChainStates\Libplanet.Extensions.RemoteBlockChainStates.csproj", "{8F9E5505-C157-4DF3-A419-FF0108731397}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NineChronicles.Headless.AccessControlCenter", "NineChronicles.Headless.AccessControlCenter\NineChronicles.Headless.AccessControlCenter.csproj", "{162C0F4B-A1D9-4132-BC34-31F1247BC26B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -703,6 +705,24 @@ Global
 		{8F9E5505-C157-4DF3-A419-FF0108731397}.Release|x64.Build.0 = Release|Any CPU
 		{8F9E5505-C157-4DF3-A419-FF0108731397}.Release|x86.ActiveCfg = Release|Any CPU
 		{8F9E5505-C157-4DF3-A419-FF0108731397}.Release|x86.Build.0 = Release|Any CPU
+		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.Debug|x64.Build.0 = Debug|Any CPU
+		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.Debug|x86.Build.0 = Debug|Any CPU
+		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.DevEx|Any CPU.ActiveCfg = Debug|Any CPU
+		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.DevEx|Any CPU.Build.0 = Debug|Any CPU
+		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.DevEx|x64.ActiveCfg = Debug|Any CPU
+		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.DevEx|x64.Build.0 = Debug|Any CPU
+		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.DevEx|x86.ActiveCfg = Debug|Any CPU
+		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.DevEx|x86.Build.0 = Debug|Any CPU
+		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.Release|x64.ActiveCfg = Release|Any CPU
+		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.Release|x64.Build.0 = Release|Any CPU
+		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.Release|x86.ActiveCfg = Release|Any CPU
+		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

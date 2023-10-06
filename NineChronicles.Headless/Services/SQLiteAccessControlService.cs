@@ -11,7 +11,7 @@ namespace NineChronicles.Headless.Services
         private const string CheckAccessSql =
             "SELECT EXISTS(SELECT 1 FROM blocklist WHERE address=@Address)";
 
-        private readonly string _connectionString;
+        protected readonly string _connectionString;
 
         public SQLiteAccessControlService(string connectionString)
         {
