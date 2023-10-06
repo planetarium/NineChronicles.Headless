@@ -8,7 +8,7 @@ namespace NineChronicles.Headless.Properties
     {
         [Required]
         public string AccessControlServiceType { get; set; } = null!;
-    
+
         [Required]
         public string AccessControlServiceConnectionString { get; set; } = null!;
 
