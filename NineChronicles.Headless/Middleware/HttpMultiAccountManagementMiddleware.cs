@@ -10,6 +10,7 @@ using Libplanet.Types.Tx;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Nekoyume.Action;
+using Nekoyume.Action.Garages;
 using NineChronicles.Headless.Properties;
 using Serilog;
 using ILogger = Serilog.ILogger;
@@ -75,8 +76,26 @@ namespace NineChronicles.Headless.Middleware
 
                         // Only monitoring actions not used in the launcher
                         if (action is not Stake
+                            and not Stake2
+                            and not Stake0
                             and not ClaimStakeReward
-                            and not TransferAsset)
+                            and not ClaimStakeReward8
+                            and not ClaimStakeReward7
+                            and not ClaimStakeReward6
+                            and not ClaimStakeReward5
+                            and not ClaimStakeReward4
+                            and not ClaimStakeReward3
+                            and not ClaimStakeReward2
+                            and not ClaimStakeReward1
+                            and not TransferAsset
+                            and not TransferAsset4
+                            and not TransferAsset3
+                            and not TransferAsset2
+                            and not TransferAsset0
+                            and not TransferAssets
+                            and not TransferAssets2
+                            and not TransferAssets0
+                            and not UnloadFromMyGarages)
                         {
                             if (_ipSignerList.ContainsKey(remoteIp))
                             {
