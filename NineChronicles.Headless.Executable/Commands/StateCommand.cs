@@ -104,12 +104,13 @@ namespace NineChronicles.Headless.Executable.Commands
                 (int)(top.Index - bottom.Index + 1L)
             );
 
+            var sStore = new TrieStateStore(new Libplanet.Store.Trie.MemoryKeyValueStore());
             var blockChainStates = new BlockChainStates(
                 new MemoryStore(),
-                new TrieStateStore(new Libplanet.Store.Trie.MemoryKeyValueStore()));
+                sStore);
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
-                blockChainStates,
+                sStore,
                 new NCActionLoader());
 
             foreach (BlockHash blockHash in blockHashes)

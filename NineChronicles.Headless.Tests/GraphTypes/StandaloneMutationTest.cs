@@ -1007,7 +1007,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             var actionEvaluator = new ActionEvaluator(
                 _ => ServiceBuilder.BlockPolicy.BlockAction,
-                new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
+                new TrieStateStore(new MemoryKeyValueStore()),
                 new NCActionLoader());
             return BlockChain.ProposeGenesisBlock(
                 actionEvaluator,
