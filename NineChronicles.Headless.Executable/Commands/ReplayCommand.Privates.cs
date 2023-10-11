@@ -70,11 +70,6 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public bool BlockAction => TxId is null;
 
-            public void PutLog(string log)
-            {
-                // NOTE: Not implemented yet. See also Lib9c.Tests.Action.ActionContext.PutLog().
-            }
-
             public void UseGas(long gas)
             {
             }
@@ -145,8 +140,14 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public IAccountState GetAccountState(BlockHash? offset)
             {
-                return new LocalCacheAccountState(_rocksDb, _source.GetAccountState, offset);
+                return new LocalCacheAccountState(
+                    _rocksDb,
+                    _source.GetAccountState,
+                    offset);
             }
+
+            public IAccountState GetAccountState(HashDigest<SHA256>? hash)
+                => _source.GetAccountState(hash);
         }
 
         private sealed class LocalCacheAccountState : IAccountState
@@ -158,11 +159,11 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public LocalCacheAccountState(
                 RocksDb rocksDb,
-                Func<BlockHash?, IAccountState> sourceAccountStateGetter,
+                Func<BlockHash?, IAccountState> sourceAccountStateGetterWithBlockHash,
                 BlockHash? offset)
             {
                 _rocksDb = rocksDb;
-                _sourceAccountStateGetter = sourceAccountStateGetter;
+                _sourceAccountStateGetter = sourceAccountStateGetterWithBlockHash;
                 _offset = offset;
             }
 
