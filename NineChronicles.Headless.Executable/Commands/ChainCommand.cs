@@ -131,7 +131,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var blockChainStates = new BlockChainStates(store, stateStore);
             var actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
-                blockChainStates,
+                stateStore,
                 new NCActionLoader());
             BlockChain chain = new BlockChain(
                 blockPolicy,

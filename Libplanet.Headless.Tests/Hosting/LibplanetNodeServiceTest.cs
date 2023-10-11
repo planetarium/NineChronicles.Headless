@@ -25,13 +25,14 @@ namespace Libplanet.Headless.Tests.Hosting
         {
             var policy = new BlockPolicy();
             var stagePolicy = new VolatileStagePolicy();
+            var stateStore = new TrieStateStore(new MemoryKeyValueStore());
             var blockChainStates = new BlockChainStates(
                 new MemoryStore(),
-                new TrieStateStore(new MemoryKeyValueStore()));
+                stateStore);
             var actionLoader = new SingleActionLoader(typeof(DummyAction));
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
-                blockChainStates,
+                stateStore,
                 actionLoader);
             var genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
             var service = new LibplanetNodeService(

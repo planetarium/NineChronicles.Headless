@@ -29,8 +29,6 @@ namespace NineChronicles.Headless.Executable.Commands
         /// </summary>
         private sealed class ActionContext : IActionContext
         {
-            private readonly int _randomSeed;
-
             public ActionContext(
                 Address signer,
                 TxId? txid,
@@ -48,8 +46,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 BlockProtocolVersion = blockProtocolVersion;
                 Rehearsal = rehearsal;
                 PreviousState = previousState;
-                Random = new Random(randomSeed);
-                _randomSeed = randomSeed;
+                RandomSeed = randomSeed;
             }
 
             public Address Signer { get; }
@@ -66,7 +63,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public IAccount PreviousState { get; }
 
-            public IRandom Random { get; }
+            public int RandomSeed { get; }
 
             public bool BlockAction => TxId is null;
 
@@ -74,20 +71,11 @@ namespace NineChronicles.Headless.Executable.Commands
             {
             }
 
-            public IActionContext GetUnconsumedContext() =>
-                new ActionContext(
-                    Signer,
-                    TxId,
-                    Miner,
-                    BlockIndex,
-                    BlockProtocolVersion,
-                    PreviousState,
-                    _randomSeed,
-                    Rehearsal);
-
             public long GasUsed() => 0;
 
             public long GasLimit() => 0;
+
+            public IRandom GetRandom() => new Random(RandomSeed);
         }
 
         private sealed class Random : System.Random, IRandom

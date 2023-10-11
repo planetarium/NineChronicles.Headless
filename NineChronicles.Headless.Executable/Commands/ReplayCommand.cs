@@ -300,7 +300,7 @@ namespace NineChronicles.Headless.Executable.Commands
                             _console.Out.WriteLine(msg);
                             outputSw?.WriteLine(msg);
 
-                            var actionEvaluator = GetActionEvaluator(blockChain);
+                            var actionEvaluator = GetActionEvaluator(stateStore);
                             var actionEvaluations = blockChain.DetermineBlockStateRootHash(block,
                                 out IReadOnlyList<ICommittedActionEvaluation> failedActionEvaluations);
                             LoggingActionEvaluations(failedActionEvaluations, outputSw);
@@ -483,7 +483,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var blockChainStates = new BlockChainStates(store, stateStore);
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
-                blockChainStates,
+                stateStore,
                 new NCActionLoader());
             return (
                 store,
@@ -524,13 +524,13 @@ namespace NineChronicles.Headless.Executable.Commands
             return TxMarshaler.UnmarshalTransaction(txDict);
         }
 
-        private ActionEvaluator GetActionEvaluator(BlockChain blockChain)
+        private ActionEvaluator GetActionEvaluator(IStateStore stateStore)
         {
             var policy = new BlockPolicySource().GetPolicy();
             IActionLoader actionLoader = new NCActionLoader();
             return new ActionEvaluator(
                 _ => policy.BlockAction,
-                blockChainStates: blockChain,
+                stateStore: stateStore,
                 actionTypeLoader: actionLoader);
         }
 

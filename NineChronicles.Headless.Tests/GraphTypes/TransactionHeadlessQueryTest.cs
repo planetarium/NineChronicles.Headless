@@ -46,7 +46,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             IBlockPolicy policy = NineChroniclesNodeService.GetTestBlockPolicy();
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
-                new BlockChainStates(_store, _stateStore),
+                _stateStore,
                 new NCActionLoader());
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
                 actionEvaluator,
