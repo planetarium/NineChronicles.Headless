@@ -242,7 +242,16 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 stateStore,
                 genesisBlock,
                 actionEvaluator);
+
+            // Additional pruning is now required since in-between commits are made
+            store.Dispose();
+            stateStore.Dispose();
+            _command.PruneStates(storeType, _storePath);
+            store = storeType.CreateStore(_storePath);
+            stateKeyValueStore = new RocksDBKeyValueStore(statesPath);
+            stateStore = new TrieStateStore(stateKeyValueStore);
             int prevStatesCount = stateKeyValueStore.ListKeys().Count();
+
             stateKeyValueStore.Set(
                 new KeyBytes("alpha"),
                 ByteUtil.ParseHex("00"));
@@ -250,6 +259,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 new KeyBytes("beta"),
                 ByteUtil.ParseHex("00"));
             Assert.Equal(prevStatesCount + 2, stateKeyValueStore.ListKeys().Count());
+
             store.Dispose();
             stateStore.Dispose();
             _command.PruneStates(storeType, _storePath);
