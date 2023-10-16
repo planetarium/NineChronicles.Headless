@@ -7,7 +7,6 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
 {
     public class MutableRedisAccessControlService : RedisAccessControlService, IMutableAccessControlService
     {
-
         public MutableRedisAccessControlService(string storageUri) : base(storageUri)
         {
         }
@@ -25,12 +24,12 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
         public List<Address> ListBlockedAddresses(int offset, int limit)
         {
             var server = _db.Multiplexer.GetServer(_db.Multiplexer.GetEndPoints().First());
-            var keys = server
+            return server
                 .Keys()
                 .Select(k => new Address(k.ToString()))
+                .Skip(offset)
+                .Take(limit)
                 .ToList();
-
-            return keys.Skip(offset).Take(limit).ToList();
         }
     }
 }
