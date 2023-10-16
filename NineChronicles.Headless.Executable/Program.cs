@@ -436,7 +436,7 @@ namespace NineChronicles.Headless.Executable
                     : new PrivateKey(ByteUtil.ParseHex(headlessConfig.MinerPrivateKeyString));
                 TimeSpan minerBlockInterval = TimeSpan.FromMilliseconds(headlessConfig.MinerBlockIntervalMilliseconds);
                 var nineChroniclesProperties =
-                    new NineChroniclesNodeServiceProperties(actionLoader, headlessConfig.StateServiceManagerService)
+                    new NineChroniclesNodeServiceProperties(actionLoader, headlessConfig.StateServiceManagerService, headlessConfig.AccessControlService)
                     {
                         MinerPrivateKey = minerPrivateKey,
                         Libplanet = properties,
