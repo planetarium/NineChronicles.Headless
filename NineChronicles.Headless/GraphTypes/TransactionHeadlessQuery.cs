@@ -208,29 +208,25 @@ namespace NineChronicles.Headless.GraphTypes
                     if (!(store.GetFirstTxIdBlockHashIndex(txId) is { } txExecutedBlockHash))
                     {
                         return blockChain.GetStagedTransactionIds().Contains(txId)
-                            ? new TxResult(TxStatus.STAGING, null, null, null)
-                            : new TxResult(TxStatus.INVALID, null, null, null);
+                            ? new TxResult(TxStatus.STAGING, null, null, null, null, null)
+                            : new TxResult(TxStatus.INVALID, null, null, null, null, null);
                     }
 
                     try
                     {
                         TxExecution execution = blockChain.GetTxExecution(txExecutedBlockHash, txId);
                         Block txExecutedBlock = blockChain[txExecutedBlockHash];
-                        return execution.Fail
-                            ? new TxResult(
-                                TxStatus.FAILURE,
-                                txExecutedBlock.Index,
-                                txExecutedBlock.Hash.ToString(),
-                                execution.ExceptionNames)
-                            : new TxResult(
-                                TxStatus.SUCCESS,
-                                txExecutedBlock.Index,
-                                txExecutedBlock.Hash.ToString(),
-                                execution.ExceptionNames);
+                        return new TxResult(
+                            execution.Fail ? TxStatus.FAILURE : TxStatus.SUCCESS,
+                            txExecutedBlock.Index,
+                            txExecutedBlock.Hash.ToString(),
+                            execution.InputState,
+                            execution.OutputState,
+                            execution.ExceptionNames);
                     }
                     catch (Exception)
                     {
-                        return new TxResult(TxStatus.INVALID, null, null, null);
+                        return new TxResult(TxStatus.INVALID, null, null, null, null, null);
                     }
                 }
             );

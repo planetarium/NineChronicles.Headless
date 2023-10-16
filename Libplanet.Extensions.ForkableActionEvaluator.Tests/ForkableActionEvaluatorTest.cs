@@ -5,11 +5,8 @@ using Libplanet.Action.Loader;
 using Libplanet.Types.Blocks;
 using Libplanet.Common;
 using Libplanet.Crypto;
-using Libplanet.Extensions.ActionEvaluatorCommonComponents;
 using Libplanet.Types.Tx;
-using ActionEvaluation = Libplanet.Extensions.ActionEvaluatorCommonComponents.ActionEvaluation;
 using ArgumentOutOfRangeException = System.ArgumentOutOfRangeException;
-using Random = Libplanet.Extensions.ActionEvaluatorCommonComponents.Random;
 
 namespace Libplanet.Extensions.ForkableActionEvaluator.Tests;
 
@@ -64,26 +61,23 @@ public class ForkableActionEvaluatorTest
 class PostActionEvaluator : IActionEvaluator
 {
     public IActionLoader ActionLoader => throw new NotSupportedException();
-    public IReadOnlyList<IActionEvaluation> Evaluate(IPreEvaluationBlock block, HashDigest<SHA256>? baseStateroothash)
+    public IReadOnlyList<ICommittedActionEvaluation> Evaluate(IPreEvaluationBlock block, HashDigest<SHA256>? baseStateroothash)
     {
-        return new IActionEvaluation[]
+        return new ICommittedActionEvaluation[]
         {
-            new ActionEvaluation(
+            new CommittedActionEvaluation(
                 (Text)"POST",
-                new ActionContext(
-                    null,
+                new CommittedActionContext(
                     default,
                     null,
                     default,
                     0,
                     0,
                     false,
-                    new AccountStateDelta(),
+                    default,
                     0,
-                    null,
                     false),
-                new AccountStateDelta(),
-                null)
+                default)
         };
     }
 }
@@ -91,26 +85,23 @@ class PostActionEvaluator : IActionEvaluator
 class PreActionEvaluator : IActionEvaluator
 {
     public IActionLoader ActionLoader => throw new NotSupportedException();
-    public IReadOnlyList<IActionEvaluation> Evaluate(IPreEvaluationBlock block, HashDigest<SHA256>? baseStateRootHash)
+    public IReadOnlyList<ICommittedActionEvaluation> Evaluate(IPreEvaluationBlock block, HashDigest<SHA256>? baseStateRootHash)
     {
-        return new IActionEvaluation[]
+        return new ICommittedActionEvaluation[]
         {
-            new ActionEvaluation(
+            new CommittedActionEvaluation(
                 (Text)"PRE",
-                new ActionContext(
-                    null,
+                new CommittedActionContext(
                     default,
                     null,
                     default,
                     0,
                     0,
                     false,
-                    new AccountStateDelta(),
+                    default,
                     0,
-                    null,
                     false),
-                new AccountStateDelta(),
-                null)
+                default)
         };
     }
 }

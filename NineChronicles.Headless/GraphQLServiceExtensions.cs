@@ -45,6 +45,7 @@ namespace NineChronicles.Headless
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.VoteType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.BlockCommitType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.BoundPeerType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.HashDigestSHA256Type>();
 
             return services;
         }
