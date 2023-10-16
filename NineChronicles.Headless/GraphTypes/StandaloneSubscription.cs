@@ -322,16 +322,12 @@ namespace NineChronicles.Headless.GraphTypes
             }
             var txExecution = store.GetTxExecution(blockHash, transaction.Id);
             var txExecutedBlock = chain[blockHash];
-            return txExecution.Fail
-                ? new TxResult(
-                    TxStatus.FAILURE,
+            return new TxResult(
+                    txExecution.Fail ? TxStatus.FAILURE : TxStatus.SUCCESS,
                     txExecutedBlock.Index,
                     txExecutedBlock.Hash.ToString(),
-                    txExecution.ExceptionNames)
-                : new TxResult(
-                    TxStatus.SUCCESS,
-                    txExecutedBlock.Index,
-                    txExecutedBlock.Hash.ToString(),
+                    txExecution.InputState,
+                    txExecution.OutputState,
                     txExecution.ExceptionNames);
         }
 

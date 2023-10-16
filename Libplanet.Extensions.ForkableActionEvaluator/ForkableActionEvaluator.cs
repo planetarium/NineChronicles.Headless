@@ -17,7 +17,7 @@ public class ForkableActionEvaluator : IActionEvaluator
 
     public IActionLoader ActionLoader => throw new NotSupportedException();
 
-    public IReadOnlyList<IActionEvaluation> Evaluate(
+    public IReadOnlyList<ICommittedActionEvaluation> Evaluate(
         IPreEvaluationBlock block, HashDigest<SHA256>? baseStateRootHash)
     {
         var actionEvaluator = _router.GetEvaluator(block.Index);

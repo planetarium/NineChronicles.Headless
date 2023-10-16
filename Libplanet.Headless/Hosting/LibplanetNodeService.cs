@@ -121,7 +121,7 @@ namespace Libplanet.Headless.Hosting
                 return actionEvaluatorConfiguration switch
                 {
                     RemoteActionEvaluatorConfiguration remoteActionEvaluatorConfiguration => new RemoteActionEvaluator(
-                        new Uri(remoteActionEvaluatorConfiguration.StateServiceEndpoint), blockChainStates),
+                        new Uri(remoteActionEvaluatorConfiguration.StateServiceEndpoint)),
                     DefaultActionEvaluatorConfiguration _ => new ActionEvaluator(
                         _ => blockPolicy.BlockAction,
                         stateStore: StateStore,
