@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using NineChronicles.Headless.AccessControlCenter.AccessControlService;
@@ -39,10 +40,17 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
         [HttpGet("entries")]
         public ActionResult<List<string>> ListBlockedAddresses(int offset, int limit)
         {
-            return _accessControlService
-                .ListBlockedAddresses(offset, limit)
-                .Select(a => a.ToString())
-                .ToList();
+            try
+            {
+                return _accessControlService
+                    .ListBlockedAddresses(offset, limit)
+                    .Select(a => a.ToString())
+                    .ToList();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

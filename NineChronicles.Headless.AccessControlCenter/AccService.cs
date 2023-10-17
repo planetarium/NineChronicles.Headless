@@ -2,16 +2,16 @@ using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
 using NineChronicles.Headless.AccessControlCenter.AccessControlService;
 
 namespace NineChronicles.Headless.AccessControlCenter
 {
-    public class AcsService
+    public class AccService
     {
-        public AcsService(Configuration configuration)
+        public AccService(Configuration configuration)
         {
             Configuration = configuration;
         }
@@ -49,6 +49,33 @@ namespace NineChronicles.Headless.AccessControlCenter
             {
                 services.AddControllers();
 
+                services.AddSwaggerGen(c =>
+                {
+                    c.SwaggerDoc(
+                        "v1",
+                        new OpenApiInfo { Title = "Access Control Center API", Version = "v1" }
+                    );
+                    c.DocInclusionPredicate(
+                        (docName, apiDesc) =>
+                        {
+                            var controllerType =
+                                apiDesc.ActionDescriptor
+                                as Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor;
+                            if (controllerType != null)
+                            {
+                                var assemblyName = controllerType.ControllerTypeInfo.Assembly
+                                    .GetName()
+                                    .Name;
+                                var namespaceName = controllerType.ControllerTypeInfo.Namespace;
+                                return namespaceName?.StartsWith(
+                                        "NineChronicles.Headless.AccessControlCenter"
+                                    ) ?? false;
+                            }
+                            return false;
+                        }
+                    );
+                });
+
                 var accessControlService = MutableAccessControlServiceFactory.Create(
                     Enum.Parse<MutableAccessControlServiceFactory.StorageType>(
                         Configuration.AccessControlServiceType,
@@ -62,10 +89,11 @@ namespace NineChronicles.Headless.AccessControlCenter
 
             public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
             {
-                if (env.IsDevelopment())
+                app.UseSwagger();
+                app.UseSwaggerUI(c =>
                 {
-                    app.UseDeveloperExceptionPage();
-                }
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Access Control Center API V1");
+                });
 
                 app.UseRouting();
                 app.UseAuthorization();
