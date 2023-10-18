@@ -465,10 +465,15 @@ namespace NineChronicles.Headless
                                 IAccountState output = _blockChainStates.GetAccountState(ev.OutputState);
                                 IAccountState input = _blockChainStates.GetAccountState(ev.PreviousState);
                                 AccountDiff diff = AccountDiff.Create(input, output);
-                                if (!TargetAddresses.Any(diff.StateDiffs.Keys.Append(ev.Signer).Contains))
+                                var updatedAddresses = diff.StateDiffs.Keys
+                                    .Union(diff.FungibleAssetValueDiffs.Select(kv => kv.Key.Item1))
+                                    .Append(ev.Signer)
+                                    .ToHashSet();
+                                if (!TargetAddresses.Any(updatedAddresses.Contains))
                                 {
                                     return;
                                 }
+
                                 var encodeElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
 
                                 var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputState, ev.Exception, ev.PreviousState, ev.RandomSeed, extra);
