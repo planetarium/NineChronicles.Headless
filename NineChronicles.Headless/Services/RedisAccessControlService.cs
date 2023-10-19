@@ -1,6 +1,7 @@
 using StackExchange.Redis;
 using Libplanet.Crypto;
 using Nekoyume.Blockchain;
+using Serilog;
 
 namespace NineChronicles.Headless.Services
 {
