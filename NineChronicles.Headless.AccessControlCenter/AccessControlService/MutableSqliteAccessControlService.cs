@@ -40,11 +40,6 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
 
         public List<Address> ListBlockedAddresses(int offset, int limit)
         {
-            if (limit > 30)
-            {
-                throw new ArgumentException("Limit cannot exceed 30.", nameof(limit));
-            }
-
             var blockedAddresses = new List<Address>();
 
             using var connection = new SqliteConnection(_connectionString);

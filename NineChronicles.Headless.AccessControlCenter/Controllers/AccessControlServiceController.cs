@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using NineChronicles.Headless.AccessControlCenter.AccessControlService;
@@ -40,17 +39,24 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
         [HttpGet("entries")]
         public ActionResult<List<string>> ListBlockedAddresses(int offset, int limit)
         {
-            try
+            var maxLimit = 10;
+            if (_accessControlService is MutableRedisAccessControlService)
             {
-                return _accessControlService
-                    .ListBlockedAddresses(offset, limit)
-                    .Select(a => a.ToString())
-                    .ToList();
+                maxLimit = 10;
             }
-            catch (ArgumentException ex)
+            else if (_accessControlService is MutableSqliteAccessControlService)
             {
-                return BadRequest(ex.Message);
+                maxLimit = 100;
             }
+            if (limit > maxLimit)
+            {
+                return BadRequest($"The limit cannot exceed {maxLimit}.");
+            }
+
+            return _accessControlService
+                .ListBlockedAddresses(offset, limit)
+                .Select(a => a.ToString())
+                .ToList();
         }
     }
 }
