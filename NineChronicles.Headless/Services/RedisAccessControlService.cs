@@ -1,6 +1,7 @@
 using StackExchange.Redis;
 using Libplanet.Crypto;
 using Nekoyume.Blockchain;
+using Serilog;
 
 namespace NineChronicles.Headless.Services
 {
@@ -16,7 +17,13 @@ namespace NineChronicles.Headless.Services
 
         public bool IsAccessDenied(Address address)
         {
-            return _db.KeyExists(address.ToString());
+            var result = _db.KeyExists(address.ToString());
+            if (result)
+            {
+                Log.Debug($"{address} is access denied");
+            }
+
+            return result;
         }
     }
 }

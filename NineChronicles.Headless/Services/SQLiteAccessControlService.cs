@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using Libplanet.Crypto;
 using Nekoyume.Blockchain;
+using Serilog;
 
 namespace NineChronicles.Headless.Services
 {
@@ -33,9 +34,16 @@ namespace NineChronicles.Headless.Services
             command.CommandText = CheckAccessSql;
             command.Parameters.AddWithValue("@Address", address.ToString());
 
-            var result = command.ExecuteScalar();
+            var queryResult = command.ExecuteScalar();
 
-            return result is not null && (long)result == 1;
+            var result = queryResult is not null && (long)queryResult == 1;
+
+            if (result)
+            {
+                Log.Debug($"{address} is access denied");
+            }
+
+            return result;
         }
     }
 }
