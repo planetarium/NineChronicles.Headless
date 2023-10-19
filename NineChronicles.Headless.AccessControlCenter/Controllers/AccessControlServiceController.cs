@@ -39,6 +39,20 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
         [HttpGet("entries")]
         public ActionResult<List<string>> ListBlockedAddresses(int offset, int limit)
         {
+            var maxLimit = 10;
+            if (_accessControlService is MutableRedisAccessControlService)
+            {
+                maxLimit = 10;
+            }
+            else if (_accessControlService is MutableSqliteAccessControlService)
+            {
+                maxLimit = 100;
+            }
+            if (limit > maxLimit)
+            {
+                return BadRequest($"The limit cannot exceed {maxLimit}.");
+            }
+
             return _accessControlService
                 .ListBlockedAddresses(offset, limit)
                 .Select(a => a.ToString())

@@ -20,7 +20,7 @@ namespace NineChronicles.Headless.AccessControlCenter
             var acsConfig = new Configuration();
             config.Bind(acsConfig);
 
-            var service = new AcsService(acsConfig);
+            var service = new AccService(acsConfig);
             var hostBuilder = service.Configure(Host.CreateDefaultBuilder(), acsConfig.Port);
             var host = hostBuilder.Build();
             host.Run();
