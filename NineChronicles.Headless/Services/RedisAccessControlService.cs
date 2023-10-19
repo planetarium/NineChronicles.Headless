@@ -20,7 +20,8 @@ namespace NineChronicles.Headless.Services
             var result = _db.KeyExists(address.ToString());
             if (result)
             {
-                Log.Debug($"{address} is access denied");
+                Log.ForContext("Source", nameof(IAccessControlService))
+                    .Debug("\"{Address}\" is access denied", address);
             }
 
             return result;
