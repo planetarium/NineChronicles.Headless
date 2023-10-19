@@ -21,7 +21,7 @@ namespace NineChronicles.Headless.Services
             if (result)
             {
                 Log.ForContext("Source", nameof(IAccessControlService))
-                    .Debug($"\"{address}\" is access denied");
+                    .Debug("\"{Address}\" is access denied", address);
             }
 
             return result;
