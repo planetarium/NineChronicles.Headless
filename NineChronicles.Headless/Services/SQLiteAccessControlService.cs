@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Data.Sqlite;
 using Libplanet.Crypto;
 using Nekoyume.Blockchain;
@@ -7,9 +8,11 @@ namespace NineChronicles.Headless.Services
     public class SQLiteAccessControlService : IAccessControlService
     {
         private const string CreateTableSql =
-            "CREATE TABLE IF NOT EXISTS blocklist (address VARCHAR(42))";
+            "CREATE TABLE IF NOT EXISTS blocklist (address VARCHAR(42), level INT)";
         private const string CheckAccessSql =
             "SELECT EXISTS(SELECT 1 FROM blocklist WHERE address=@Address)";
+        private const string CheckAccessLevelSql =
+            "SELECT level FROM blocklist WHERE address=@Address";
 
         protected readonly string _connectionString;
 
@@ -36,6 +39,20 @@ namespace NineChronicles.Headless.Services
             var result = command.ExecuteScalar();
 
             return result is not null && (long)result == 1;
+        }
+
+        public int GetAccessLevel(Address address)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = CheckAccessLevelSql;
+            command.Parameters.AddWithValue("@Address", address.ToString());
+
+            var queryResult = command.ExecuteScalar() ?? "-1";
+
+            return Convert.ToInt32(queryResult);
         }
     }
 }

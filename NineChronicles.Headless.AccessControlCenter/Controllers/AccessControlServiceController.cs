@@ -36,6 +36,20 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
             return Ok();
         }
 
+        [HttpPost("entries/{address}/deny-whitelist")]
+        public ActionResult DenyWhiteList(string address)
+        {
+            _accessControlService.DenyWhiteList(new Address(address));
+            return Ok();
+        }
+
+        [HttpPost("entries/{address}/allow-whitelist")]
+        public ActionResult AllowWhiteList(string address)
+        {
+            _accessControlService.AllowWhiteList(new Address(address));
+            return Ok();
+        }
+
         [HttpGet("entries")]
         public ActionResult<List<string>> ListBlockedAddresses(int offset, int limit)
         {
