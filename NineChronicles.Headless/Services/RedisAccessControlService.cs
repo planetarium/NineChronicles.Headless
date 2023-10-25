@@ -1,5 +1,7 @@
+using System;
 using StackExchange.Redis;
 using Libplanet.Crypto;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Nekoyume.Blockchain;
 using Serilog;
 
@@ -25,6 +27,17 @@ namespace NineChronicles.Headless.Services
             }
 
             return result;
+        }
+
+        public int GetAccessLevel(Address address)
+        {
+            RedisValue result = _db.StringGet(address.ToString());
+            if (result.IsNull)
+            {
+                result = "-1";
+            }
+
+            return Convert.ToInt32(result);
         }
     }
 }
