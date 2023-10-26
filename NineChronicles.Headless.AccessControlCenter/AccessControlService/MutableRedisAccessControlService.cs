@@ -18,12 +18,30 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
 
         public void DenyAccess(Address address)
         {
-            _db.StringSet(address.ToString(), "denied");
+            _db.StringSet(address.ToString(), "0");
         }
 
         public void AllowAccess(Address address)
         {
-            _db.KeyDelete(address.ToString());
+            var value = _db.StringGet(address.ToString());
+            if (value == "0")
+            {
+                _db.KeyDelete(address.ToString());
+            }
+        }
+
+        public void DenyWhiteList(Address address)
+        {
+            var value = _db.StringGet(address.ToString());
+            if (value == "1")
+            {
+                _db.KeyDelete(address.ToString());
+            }
+        }
+
+        public void AllowWhiteList(Address address)
+        {
+            _db.StringSet(address.ToString(), "1");
         }
 
         public List<Address> ListBlockedAddresses(int offset, int limit)
