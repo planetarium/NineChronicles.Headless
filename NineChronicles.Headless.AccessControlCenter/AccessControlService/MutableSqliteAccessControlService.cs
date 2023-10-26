@@ -8,12 +8,14 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
     public class MutableSqliteAccessControlService : SQLiteAccessControlService, IMutableAccessControlService
     {
         private const string DenyAccessSql =
-            "INSERT OR IGNORE INTO blocklist (address) VALUES (@Address, 0)";
+            "INSERT OR IGNORE INTO blocklist (address, level) VALUES (@Address, 0)";
         private const string AllowAccessSql = "DELETE FROM blocklist WHERE address=@Address";
 
         private const string AllowWhiteListSql =
-            "INSERT OR IGNORE INTO blocklist (address) VALUES (@Address, 1)";
+            "INSERT OR IGNORE INTO blocklist (address, level) VALUES (@Address, 1)";
         private const string DenyWhiteListSql = "DELETE FROM blocklist WHERE address=@Address";
+
+        private const string GetAccessLevelSql = "SELECT level FROM blocklist WHERE address=@Address";
 
         public MutableSqliteAccessControlService(string connectionString) : base(connectionString)
         {
@@ -36,9 +38,22 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
             connection.Open();
 
             using var command = connection.CreateCommand();
-            command.CommandText = AllowAccessSql;
+            command.CommandText = GetAccessLevelSql;
             command.Parameters.AddWithValue("@Address", address.ToString());
             command.ExecuteNonQuery();
+            using var reader = command.ExecuteReader();
+            var level = "-1";
+            while (reader.Read())
+            {
+                level = reader.GetString(0);
+            }
+
+            if (level == "0")
+            {
+                command.CommandText = AllowAccessSql;
+                command.Parameters.AddWithValue("@Address", address.ToString());
+                command.ExecuteNonQuery();
+            }
         }
 
         public void DenyWhiteList(Address address)
@@ -47,9 +62,22 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
             connection.Open();
 
             using var command = connection.CreateCommand();
-            command.CommandText = DenyWhiteListSql;
+            command.CommandText = GetAccessLevelSql;
             command.Parameters.AddWithValue("@Address", address.ToString());
             command.ExecuteNonQuery();
+            using var reader = command.ExecuteReader();
+            var level = "-1";
+            while (reader.Read())
+            {
+                level = reader.GetString(0);
+            }
+
+            if (level == "1")
+            {
+                command.CommandText = DenyWhiteListSql;
+                command.Parameters.AddWithValue("@Address", address.ToString());
+                command.ExecuteNonQuery();
+            }
         }
 
         public void AllowWhiteList(Address address)
