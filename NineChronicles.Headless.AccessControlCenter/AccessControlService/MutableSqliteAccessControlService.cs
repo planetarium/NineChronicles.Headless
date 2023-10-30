@@ -9,8 +9,12 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
     public class MutableSqliteAccessControlService : SQLiteAccessControlService, IMutableAccessControlService
     {
         private const string DenyAccessSql =
-            "INSERT OR IGNORE INTO blocklist (address) VALUES (@Address)";
+            "INSERT OR IGNORE INTO blocklist (address, quota) VALUES (@Address, 0)";
         private const string AllowAccessSql = "DELETE FROM blocklist WHERE address=@Address";
+
+        private const string AddTxQuotaSql =
+            "INSERT OR IGNORE INTO blocklist (address, quota) VALUES (@Address, @Quota)";
+        private const string RemoveTxQuotaSql = "DELETE FROM blocklist WHERE address=@Address";
 
         public MutableSqliteAccessControlService(string connectionString) : base(connectionString)
         {
@@ -34,6 +38,29 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
 
             using var command = connection.CreateCommand();
             command.CommandText = AllowAccessSql;
+            command.Parameters.AddWithValue("@Address", address.ToString());
+            command.ExecuteNonQuery();
+        }
+
+        public void AddTxQuota(Address address, int quota)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = AddTxQuotaSql;
+            command.Parameters.AddWithValue("@Address", address.ToString());
+            command.Parameters.AddWithValue("@Quota", quota.ToString());
+            command.ExecuteNonQuery();
+        }
+
+        public void RemoveTxQuota(Address address)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = RemoveTxQuotaSql;
             command.Parameters.AddWithValue("@Address", address.ToString());
             command.ExecuteNonQuery();
         }

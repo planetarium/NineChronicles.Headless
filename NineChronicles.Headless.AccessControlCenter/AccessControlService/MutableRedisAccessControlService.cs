@@ -18,10 +18,24 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
 
         public void DenyAccess(Address address)
         {
-            _db.StringSet(address.ToString(), "denied");
+            _db.StringSet(address.ToString(), "0");
         }
 
         public void AllowAccess(Address address)
+        {
+            var value = _db.StringGet(address.ToString());
+            if (value == "0")
+            {
+                _db.KeyDelete(address.ToString());
+            }
+        }
+
+        public void AddTxQuota(Address address, int quota)
+        {
+            _db.StringSet(address.ToString(), quota.ToString());
+        }
+
+        public void RemoveTxQuota(Address address)
         {
             _db.KeyDelete(address.ToString());
         }

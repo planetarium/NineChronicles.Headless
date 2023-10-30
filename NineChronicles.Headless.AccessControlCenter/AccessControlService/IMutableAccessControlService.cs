@@ -8,6 +8,8 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
     {
         void DenyAccess(Address address);
         void AllowAccess(Address address);
+        void AddTxQuota(Address address, int quota);
+        void RemoveTxQuota(Address address);
         List<Address> ListBlockedAddresses(int offset, int limit);
     }
 }
