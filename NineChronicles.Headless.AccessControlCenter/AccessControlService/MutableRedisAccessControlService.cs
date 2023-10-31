@@ -26,18 +26,14 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
             }
         }
 
-        public void DenyWhiteList(Address address)
+        public void AddTxQuota(Address address, int quota)
         {
-            var value = _db.StringGet(address.ToString());
-            if (value == "1")
-            {
-                _db.KeyDelete(address.ToString());
-            }
+            _db.StringSet(address.ToString(), quota.ToString());
         }
 
-        public void AllowWhiteList(Address address)
+        public void RemoveTxQuota(Address address)
         {
-            _db.StringSet(address.ToString(), "1");
+            _db.KeyDelete(address.ToString());
         }
 
         public List<Address> ListBlockedAddresses(int offset, int limit)

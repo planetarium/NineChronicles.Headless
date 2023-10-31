@@ -8,14 +8,12 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
     public class MutableSqliteAccessControlService : SQLiteAccessControlService, IMutableAccessControlService
     {
         private const string DenyAccessSql =
-            "INSERT OR IGNORE INTO blocklist (address, level) VALUES (@Address, 0)";
+            "INSERT OR IGNORE INTO blocklist (address, quota) VALUES (@Address, 0)";
         private const string AllowAccessSql = "DELETE FROM blocklist WHERE address=@Address";
 
-        private const string AllowWhiteListSql =
-            "INSERT OR IGNORE INTO blocklist (address, level) VALUES (@Address, 1)";
-        private const string DenyWhiteListSql = "DELETE FROM blocklist WHERE address=@Address";
-
-        private const string GetAccessLevelSql = "SELECT level FROM blocklist WHERE address=@Address";
+        private const string AddTxQuotaSql =
+            "INSERT OR IGNORE INTO blocklist (address, quota) VALUES (@Address, @Quota)";
+        private const string RemoveTxQuotaSql = "DELETE FROM blocklist WHERE address=@Address";
 
         public MutableSqliteAccessControlService(string connectionString) : base(connectionString)
         {
@@ -25,7 +23,6 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-
             using var command = connection.CreateCommand();
             command.CommandText = DenyAccessSql;
             command.Parameters.AddWithValue("@Address", address.ToString());
@@ -36,57 +33,31 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-
             using var command = connection.CreateCommand();
-            command.CommandText = GetAccessLevelSql;
+            command.CommandText = AllowAccessSql;
             command.Parameters.AddWithValue("@Address", address.ToString());
             command.ExecuteNonQuery();
-            using var reader = command.ExecuteReader();
-            var level = "-1";
-            while (reader.Read())
-            {
-                level = reader.GetString(0);
-            }
-
-            if (level == "0")
-            {
-                command.CommandText = AllowAccessSql;
-                command.Parameters.AddWithValue("@Address", address.ToString());
-                command.ExecuteNonQuery();
-            }
         }
 
-        public void DenyWhiteList(Address address)
+        public void AddTxQuota(Address address, int quota)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
 
             using var command = connection.CreateCommand();
-            command.CommandText = GetAccessLevelSql;
+            command.CommandText = AddTxQuotaSql;
             command.Parameters.AddWithValue("@Address", address.ToString());
+            command.Parameters.AddWithValue("@Quota", quota.ToString());
             command.ExecuteNonQuery();
-            using var reader = command.ExecuteReader();
-            var level = "-1";
-            while (reader.Read())
-            {
-                level = reader.GetString(0);
-            }
-
-            if (level == "1")
-            {
-                command.CommandText = DenyWhiteListSql;
-                command.Parameters.AddWithValue("@Address", address.ToString());
-                command.ExecuteNonQuery();
-            }
         }
 
-        public void AllowWhiteList(Address address)
+        public void RemoveTxQuota(Address address)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
 
             using var command = connection.CreateCommand();
-            command.CommandText = AllowWhiteListSql;
+            command.CommandText = RemoveTxQuotaSql;
             command.Parameters.AddWithValue("@Address", address.ToString());
             command.ExecuteNonQuery();
         }

@@ -28,16 +28,14 @@ namespace NineChronicles.Headless.Services
             return result;
         }
 
-        public int GetAccessLevel(Address address)
+        public int? GetTxQuota(Address address)
         {
             RedisValue result = _db.StringGet(address.ToString());
-            if (result.IsNull)
+            if (!result.IsNull)
             {
-                result = "-1";
+                Log.ForContext("Source", nameof(IAccessControlService))
+                    .Debug("\"{Address}\" access level: {level}", address, result);
             }
-
-            Log.ForContext("Source", nameof(IAccessControlService))
-                .Debug("\"{Address}\" access level: {level}", address, result);
 
             return Convert.ToInt32(result);
         }
