@@ -59,6 +59,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     ["level"] = 5,
                     ["multiplier"] = 300,
                 },
+                new Dictionary<string, object>
+                {
+                    ["level"] = 6,
+                    ["multiplier"] = 300,
+                },
+                new Dictionary<string, object>
+                {
+                    ["level"] = 7,
+                    ["multiplier"] = 300,
+                },
             };
             var expected = new Dictionary<string, object> { { "orderedList", list } };
             Assert.Equal(expected, data);
