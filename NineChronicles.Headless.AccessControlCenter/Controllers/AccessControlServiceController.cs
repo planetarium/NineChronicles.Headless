@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using NineChronicles.Headless.AccessControlCenter.AccessControlService;
@@ -36,17 +37,18 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
             return Ok();
         }
 
-        [HttpPost("entries/{address}/deny-whitelist")]
-        public ActionResult DenyWhiteList(string address)
+        [HttpPost("entries/add-tx-quota/{address}/{quota}")]
+        public ActionResult AddTxQuota(string address, string quota)
         {
-            _accessControlService.DenyWhiteList(new Address(address));
+            var txQuota = Convert.ToInt32(quota);
+            _accessControlService.AddTxQuota(new Address(address), txQuota);
             return Ok();
         }
 
-        [HttpPost("entries/{address}/allow-whitelist")]
-        public ActionResult AllowWhiteList(string address)
+        [HttpPost("entries/remove-tx-quota/{address}")]
+        public ActionResult RemoveTxQuota(string address)
         {
-            _accessControlService.AllowWhiteList(new Address(address));
+            _accessControlService.RemoveTxQuota(new Address(address));
             return Ok();
         }
 
