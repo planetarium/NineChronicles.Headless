@@ -34,10 +34,13 @@ namespace NineChronicles.Headless.Services
             if (!result.IsNull)
             {
                 Log.ForContext("Source", nameof(IAccessControlService))
-                    .Debug("\"{Address}\" access level: {level}", address, result);
+                    .Debug("\"{Address}\" access level: {level} ACS-TEST", address, result);
+                return Convert.ToInt32(result);
             }
 
-            return Convert.ToInt32(result);
+            Log.ForContext("Source", nameof(IAccessControlService))
+                .Debug("\"{Address}\" access level: {level} ACS-TEST", address, result);
+            return null;
         }
     }
 }
