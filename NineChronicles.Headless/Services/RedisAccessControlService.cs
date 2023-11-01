@@ -16,18 +16,6 @@ namespace NineChronicles.Headless.Services
             _db = redis.GetDatabase();
         }
 
-        public bool IsListed(Address address)
-        {
-            var result = _db.KeyExists(address.ToString());
-            if (result)
-            {
-                Log.ForContext("Source", nameof(IAccessControlService))
-                    .Debug("\"{Address}\" is listed", address);
-            }
-
-            return result;
-        }
-
         public int? GetTxQuota(Address address)
         {
             RedisValue result = _db.StringGet(address.ToString());

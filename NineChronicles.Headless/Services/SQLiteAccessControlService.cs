@@ -10,8 +10,6 @@ namespace NineChronicles.Headless.Services
     {
         private const string CreateTableSql =
             "CREATE TABLE IF NOT EXISTS txquotalist (address VARCHAR(42), quota INT)";
-        private const string CheckAddressSql =
-            "SELECT EXISTS(SELECT 1 FROM txquotalist WHERE address=@Address)";
         private const string GetTxQuotaSql =
             "SELECT quota FROM txquotalist WHERE address=@Address";
 
@@ -26,28 +24,6 @@ namespace NineChronicles.Headless.Services
             using var command = connection.CreateCommand();
             command.CommandText = CreateTableSql;
             command.ExecuteNonQuery();
-        }
-
-        public bool IsListed(Address address)
-        {
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-
-            using var command = connection.CreateCommand();
-            command.CommandText = CheckAddressSql;
-            command.Parameters.AddWithValue("@Address", address.ToString());
-
-            var queryResult = command.ExecuteScalar();
-
-            var result = queryResult is not null && (long)queryResult == 1;
-
-            if (result)
-            {
-                Log.ForContext("Source", nameof(IAccessControlService))
-                    .Debug("\"{Address}\" is listed", address);
-            }
-
-            return result;
         }
 
         public int? GetTxQuota(Address address)

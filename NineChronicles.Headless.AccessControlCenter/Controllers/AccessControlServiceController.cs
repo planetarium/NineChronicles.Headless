@@ -18,9 +18,9 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
         }
 
         [HttpGet("entries/{address}")]
-        public ActionResult<bool> IsListed(string address)
+        public ActionResult<int?> GetTxQuota(string address)
         {
-            return _accessControlService.IsListed(new Address(address));
+            return _accessControlService.GetTxQuota(new Address(address));
         }
 
         [HttpPost("entries/add-tx-quota/{address}/{quota:int}")]
