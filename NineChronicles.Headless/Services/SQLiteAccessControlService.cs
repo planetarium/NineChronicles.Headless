@@ -61,7 +61,12 @@ namespace NineChronicles.Headless.Services
 
             var queryResult = command.ExecuteScalar();
 
-            return Convert.ToInt32(queryResult);
+            if (queryResult != null)
+            {
+                return Convert.ToInt32(queryResult);
+            }
+
+            return null;
         }
     }
 }

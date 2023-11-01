@@ -34,10 +34,11 @@ namespace NineChronicles.Headless.Services
             if (!result.IsNull)
             {
                 Log.ForContext("Source", nameof(IAccessControlService))
-                    .Debug("\"{Address}\" access level: {level}", address, result);
+                    .Debug("\"{Address}\" Tx Quota: {Quota}", address, result);
+                return Convert.ToInt32(result);
             }
 
-            return Convert.ToInt32(result);
+            return null;
         }
     }
 }

@@ -50,7 +50,7 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
             using var command = connection.CreateCommand();
             command.CommandText = AddTxQuotaSql;
             command.Parameters.AddWithValue("@Address", address.ToString());
-            command.Parameters.AddWithValue("@Quota", quota.ToString());
+            command.Parameters.AddWithValue("@Quota", quota);
             command.ExecuteNonQuery();
         }
 
