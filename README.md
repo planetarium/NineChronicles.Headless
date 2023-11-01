@@ -146,6 +146,7 @@ For more information on the GraphQL API, refer to the [NineChronicles Headless G
 1. Copy `config.json.example` to `config.json`
 2. Change values inside `config.json`
    - `data.tablePath` is required.
+   - If you have `PendingActivation` file, set file path to `extra.pendingActivationStatePath`
 
 #### Structure of genesis block
 | Key                                        | Type                | Required | Description                                                                                                                                                                        |
@@ -166,6 +167,13 @@ For more information on the GraphQL API, refer to the [NineChronicles Headless G
 | initialValidatorSet                        |                     | Optional | Initial Validator set for this blockchain. Do not provide this section if you want to use default setting.                                                                         |   
 | initialValidatorSet[i].publicKey           | PublicKey (string)  |          | Public Key of validator.                                                                                                                                                           |
 | initialValidatorSet[i].power               | long                |          | Voting power of validator. Min. value of voting power is 1.                                                                                                                        |
+| initialMeadConfigs                         |                     | Optional | Initial MEAD distributions                                                                                                                                                         |
+| initialMeadConfigs[i].address              | Address (string)    |          | Recipient address                                                                                                                                                                  |
+| initialMeadConfigs[i].amount               | BigInteger          |          | Amount of initial MEAD                                                                                                                                                             |
+| initialPledgeConfigs                       |                     | Optional | Initial pledges introduced from NCIP-15                                                                                                                                            |
+| initialPledgeConfigs[i].agentAddress       | Address (string)    |          | Address of agent who will be funded                                                                                                                                                |
+| initialPledgeConfigs[i].patronAddress      | Address (string)    |          | Address of patron who will fund                                                                                                                                                    |
+| initialPledgeConfigs[i].mead               | int                 |          | Amount of MEAD that will be funded per each blocks                                                                                                                                 |
 
 ### 2. Create genesis block
 
@@ -188,6 +196,7 @@ dotnet run --project ./NineChronicles.Headless.Executable/ \
     --miner-private-key=[PRIVATE_KEY_OF_BLOCK_MINER]
 ```
 If you see log like this, all process is successfully done:
+
 ```text
 Start mining.
 [BlockChain] 424037645/18484: Starting to mine block #1 with difficulty 5000000 and previous hash 29f53d22...

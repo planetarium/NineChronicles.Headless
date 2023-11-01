@@ -23,5 +23,18 @@
             "publicKey": "",
             "power": 1
         }
+    ],
+    "initialMeadConfigs": [
+        {
+            "address": "",
+            "amount": "100"
+        }
+    ],
+    "initialPledgeConfigs": [
+        {
+            "agentAddress": "",
+            "patronAddress": "",
+            "mead": ""
+        }
     ]
 }

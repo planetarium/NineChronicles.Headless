@@ -4,8 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text.Json;
-using Bencodex;
-using Bencodex.Types;
 using Cocona;
 using Lib9c;
 using Libplanet.Common;
@@ -24,7 +22,6 @@ namespace NineChronicles.Headless.Executable.Commands
     public class GenesisCommand : CoconaLiteConsoleAppBase
     {
         private const int DefaultCurrencyValue = 10000;
-        private static readonly Codec _codec = new Codec();
         private readonly IConsole _console;
 
         public GenesisCommand(IConsole console)
@@ -58,8 +55,10 @@ namespace NineChronicles.Headless.Executable.Commands
                 {
                     new()
                     {
-                        Address = initialMinter.ToAddress(), AmountPerBlock = DefaultCurrencyValue,
-                        StartBlock = 0, EndBlock = 0
+                        Address = initialMinter.ToAddress(), 
+                        AmountPerBlock = DefaultCurrencyValue,
+                        StartBlock = 0, 
+                        EndBlock = 0
                     }
                 };
                 return;
@@ -172,6 +171,60 @@ namespace NineChronicles.Headless.Executable.Commands
             _console.Out.WriteLine($"Initial validator set config done: {str}");
         }
 
+        private void ProcessInitialMeadConfigs(
+            List<MeadConfig>? configs, 
+            out List<PrepareRewardAssets> meadActions
+        )
+        {
+            _console.Out.WriteLine("\nProcessing initial mead distribution...");
+
+            meadActions = new List<PrepareRewardAssets>();
+            if (configs is { })
+            {
+                foreach (MeadConfig config in configs)
+                {
+                    _console.Out.WriteLine($"Preparing initial {config.Amount} MEAD for {config.Address}...");
+                    Address target = new(config.Address);
+                    meadActions.Add(
+                        new PrepareRewardAssets(
+                            target,
+                            new List<FungibleAssetValue>
+                            {
+                                FungibleAssetValue.Parse(Currencies.Mead, config.Amount),
+                            }
+                        )
+                    );
+                }
+            }
+        }
+
+        private void ProcessInitialPledgeConfigs(
+            List<PledgeConfig>? configs,
+            out List<CreatePledge> pledgeActions
+        )
+        {
+            _console.Out.WriteLine("\nProcessing initial pledges...");
+
+            pledgeActions = new List<CreatePledge>();
+            if (configs is { })
+            {
+                foreach (PledgeConfig config in configs)
+                {
+                    _console.Out.WriteLine($"Preparing a pledge for {config.AgentAddress}...");
+                    Address agentAddress = new(config.AgentAddress);
+                    Address pledgeAddress = agentAddress.GetPledgeAddress();
+                    pledgeActions.Add(
+                        new CreatePledge()
+                        {
+                            AgentAddresses = new[] { (agentAddress, pledgeAddress) },
+                            PatronAddress = new(config.PatronAddress),
+                            Mead = config.Mead,
+                        }
+                    );
+                }
+            }
+        }
+
         [Command(Description = "Mine a new genesis block")]
         public void Mine(
             [Argument("CONFIG", Description = "JSON config path to mine genesis block")]
@@ -191,10 +244,14 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 ProcessCurrency(genesisConfig.Currency, out var initialMinter, out var initialDepositList);
 
-                ProcessAdmin(genesisConfig.Admin, initialMinter, out var adminState, out var meadActions);
+                ProcessAdmin(genesisConfig.Admin, initialMinter, out var adminState, out var adminMeads);
 
                 ProcessValidator(genesisConfig.InitialValidatorSet, initialMinter, out var initialValidatorSet);
 
+                ProcessInitialMeadConfigs(genesisConfig.InitialMeadConfigs, out var initialMeads);
+
+                ProcessInitialPledgeConfigs(genesisConfig.InitialPledgeConfigs, out var initialPledges);
+ 
                 // Mine genesis block
                 _console.Out.WriteLine("\nMining genesis block...\n");
                 Block block = BlockHelper.ProposeGenesisBlock(
@@ -206,7 +263,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     initialValidators: initialValidatorSet.ToDictionary(
                         item => new PublicKey(ByteUtil.ParseHex(item.PublicKey)),
                         item => new BigInteger(item.Power)),
-                    actionBases: meadActions
+                    actionBases: adminMeads.Concat(initialMeads).Concat(initialPledges)
                 );
 
                 Lib9cUtils.ExportBlock(block, "genesis-block");
@@ -315,6 +372,24 @@ namespace NineChronicles.Headless.Executable.Commands
             public long Power { get; set; }
         }
 
+        [Serializable]
+        private struct MeadConfig
+        {
+            public string Address { get; set; }
+            
+            public string Amount { get; set; }
+        }
+
+        [Serializable]
+        private struct PledgeConfig
+        {
+            public string AgentAddress { get; set; }
+
+            public string PatronAddress { get; set; }
+
+            public int Mead { get; set; }
+        }
+
         /// <summary>
         /// Config to mine new genesis block.
         /// </summary>
@@ -347,6 +422,10 @@ namespace NineChronicles.Headless.Executable.Commands
             public CurrencyConfig? Currency { get; set; }
             public AdminConfig? Admin { get; set; }
             public List<Validator>? InitialValidatorSet { get; set; }
+
+            public List<MeadConfig>? InitialMeadConfigs { get; set; }
+
+            public List<PledgeConfig>? InitialPledgeConfigs { get; set; }
         }
 #pragma warning restore S3459
     }
