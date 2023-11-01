@@ -9,11 +9,11 @@ namespace NineChronicles.Headless.Services
     public class SQLiteAccessControlService : IAccessControlService
     {
         private const string CreateTableSql =
-            "CREATE TABLE IF NOT EXISTS blocklist (address VARCHAR(42), quota INT)";
-        private const string CheckAccessSql =
-            "SELECT EXISTS(SELECT 1 FROM blocklist WHERE address=@Address)";
+            "CREATE TABLE IF NOT EXISTS txquotalist (address VARCHAR(42), quota INT)";
+        private const string CheckAddressSql =
+            "SELECT EXISTS(SELECT 1 FROM txquotalist WHERE address=@Address)";
         private const string GetTxQuotaSql =
-            "SELECT quota FROM blocklist WHERE address=@Address";
+            "SELECT quota FROM txquotalist WHERE address=@Address";
 
         protected readonly string _connectionString;
 
@@ -28,13 +28,13 @@ namespace NineChronicles.Headless.Services
             command.ExecuteNonQuery();
         }
 
-        public bool IsAccessDenied(Address address)
+        public bool IsListed(Address address)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
 
             using var command = connection.CreateCommand();
-            command.CommandText = CheckAccessSql;
+            command.CommandText = CheckAddressSql;
             command.Parameters.AddWithValue("@Address", address.ToString());
 
             var queryResult = command.ExecuteScalar();
@@ -44,7 +44,7 @@ namespace NineChronicles.Headless.Services
             if (result)
             {
                 Log.ForContext("Source", nameof(IAccessControlService))
-                    .Debug("\"{Address}\" is access denied", address);
+                    .Debug("\"{Address}\" is listed", address);
             }
 
             return result;

@@ -16,13 +16,13 @@ namespace NineChronicles.Headless.Services
             _db = redis.GetDatabase();
         }
 
-        public bool IsAccessDenied(Address address)
+        public bool IsListed(Address address)
         {
             var result = _db.KeyExists(address.ToString());
             if (result)
             {
                 Log.ForContext("Source", nameof(IAccessControlService))
-                    .Debug("\"{Address}\" is access denied", address);
+                    .Debug("\"{Address}\" is listed", address);
             }
 
             return result;
