@@ -26,6 +26,12 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
         [HttpPost("entries/add-tx-quota/{address}/{quota:int}")]
         public ActionResult AddTxQuota(string address, int quota)
         {
+            var maxLimit = 10;
+            if (quota > maxLimit)
+            {
+                return BadRequest($"The limit cannot exceed {maxLimit}.");
+            }
+
             _accessControlService.AddTxQuota(new Address(address), quota);
             return Ok();
         }
