@@ -93,13 +93,17 @@ namespace NineChronicles.Headless.Executable.Commands
             }
         }
 
-        private void ProcessAdmin(AdminConfig? config, PrivateKey initialMinter,
-            out AdminState adminState, out List<ActionBase> meadActions)
+        private void ProcessAdmin(
+            AdminConfig? config,
+            PrivateKey initialMinter,
+            out AdminState? adminState,
+            out List<ActionBase> meadActions
+        )
         {
             // FIXME: If the `adminState` is not required inside `MineGenesisBlock`,
             //        this logic will be much lighter.
             _console.Out.WriteLine("\nProcessing admin for genesis...");
-            adminState = new AdminState(new Address(), 0);
+            adminState = default;
             meadActions = new List<ActionBase>();
 
             if (config is null)
@@ -110,31 +114,26 @@ namespace NineChronicles.Headless.Executable.Commands
 
             if (config.Value.Activate)
             {
+                Address adminAddress;
                 if (string.IsNullOrEmpty(config.Value.Address))
                 {
                     _console.Out.WriteLine("Admin address not provided. Give admin privilege to initialMinter");
-                    adminState = new AdminState(initialMinter.ToAddress(), config.Value.ValidUntil);
-                    meadActions.Add(new PrepareRewardAssets
-                    {
-                        RewardPoolAddress = initialMinter.ToAddress(),
-                        Assets = new List<FungibleAssetValue>
-                        {
-                            10000 * Currencies.Mead,
-                        },
-                    });
+                    adminAddress = initialMinter.ToAddress();
                 }
                 else
                 {
-                    adminState = new AdminState(new Address(config.Value.Address), config.Value.ValidUntil);
-                    meadActions.Add(new PrepareRewardAssets
-                    {
-                        RewardPoolAddress = new Address(config.Value.Address),
-                        Assets = new List<FungibleAssetValue>
-                        {
-                            10000 * Currencies.Mead,
-                        },
-                    });
+                    adminAddress = new Address(config.Value.Address);
                 }
+
+                adminState = new AdminState(adminAddress, config.Value.ValidUntil);
+                meadActions.Add(new PrepareRewardAssets
+                {
+                    RewardPoolAddress = adminAddress,
+                    Assets = new List<FungibleAssetValue>
+                    {
+                        10000 * Currencies.Mead,
+                    },
+                });
             }
             else
             {
