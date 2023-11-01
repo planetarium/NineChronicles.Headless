@@ -60,6 +60,8 @@ jobs:
           dotnet run --project NineChronicles.Headless.Executable -- \
             docs \
             public/cli
+      - name: Copy Landing Page to deploy
+        run: cp Docs/resources/landing.html public/index.html
       - name: Copy GraphQL Schema to deploy
         run: cp schema.graphql public/schema.graphql
       - name: Deploy
