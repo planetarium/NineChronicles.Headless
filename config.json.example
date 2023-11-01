@@ -23,8 +23,5 @@
             "publicKey": "",
             "power": 1
         }
-    ],
-    "extra": {
-        "pendingActivationStatePath": "PendingActivation"
-    }
+    ]
 }

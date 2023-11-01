@@ -142,20 +142,10 @@ For more information on the GraphQL API, refer to the [NineChronicles Headless G
 
 ## Create a new genesis block
 
-### 1. (Optional) Create activation keys and PendingActivationState
-Activation key is the code for 9c account to register/activate into NineChronicles.
-You can create activation key whenever you want later, so you can just skip this step.
-
-```shell
-dotnet run --project NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj -- tx create-activation-keys 10 > ActivationKeys.csv  # Change [10] to your number of new activation keys
-dotnet run --project NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj -- tx create-pending-activations ActivationKeys.csv > PendingActivation
-```
-
-### 2. Create config file for genesis block
+### 1. Create config file for genesis block
 1. Copy `config.json.example` to `config.json`
 2. Change values inside `config.json`
    - `data.tablePath` is required.
-   - If you have `PendingActivation` file, set file path to `extra.pendingActivationStatePath`
 
 #### Structure of genesis block
 | Key                                        | Type                | Required | Description                                                                                                                                                                        |
@@ -176,10 +166,8 @@ dotnet run --project NineChronicles.Headless.Executable/NineChronicles.Headless.
 | initialValidatorSet                        |                     | Optional | Initial Validator set for this blockchain. Do not provide this section if you want to use default setting.                                                                         |   
 | initialValidatorSet[i].publicKey           | PublicKey (string)  |          | Public Key of validator.                                                                                                                                                           |
 | initialValidatorSet[i].power               | long                |          | Voting power of validator. Min. value of voting power is 1.                                                                                                                        |
-| extra                                      |                     | Optional | Extra settings.                                                                                                                                                                    |
-| extra.pendingActivationStatePath           | string              |          | If you want to set activation key inside genesis block to use, create `PendingActivationData` and save to file and provide here.                                                   |
 
-### 3. Create genesis block
+### 2. Create genesis block
 
 ```shell
 dotnet run --project ./NineChronicles.Headless.Executable/ genesis ./config.json
@@ -187,7 +175,7 @@ dotnet run --project ./NineChronicles.Headless.Executable/ genesis ./config.json
 
 After this step, you will get `genesis-block` file as output and another info in addition.
 
-### 4. Run Headless node with genesis block
+### 3. Run Headless node with genesis block
 
 ```shell
 dotnet run --project ./NineChronicles.Headless.Executable/ \

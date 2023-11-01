@@ -172,31 +172,6 @@ namespace NineChronicles.Headless.Executable.Commands
             _console.Out.WriteLine($"Initial validator set config done: {str}");
         }
 
-        private void ProcessExtra(ExtraConfig? config,
-            out List<PendingActivationState> pendingActivationStates
-        )
-        {
-            _console.Out.WriteLine("\nProcessing extra data for genesis...");
-            pendingActivationStates = new List<PendingActivationState>();
-
-            if (config is null)
-            {
-                _console.Out.WriteLine("Extra config not provided");
-                return;
-            }
-
-            if (!string.IsNullOrEmpty(config.Value.PendingActivationStatePath))
-            {
-                string hex = File.ReadAllText(config.Value.PendingActivationStatePath).Trim();
-                List decoded = (List)_codec.Decode(ByteUtil.ParseHex(hex));
-                CreatePendingActivations action = new();
-                action.LoadPlainValue(decoded[1]);
-                pendingActivationStates = action.PendingActivations.Select(
-                    pa => new PendingActivationState(pa.Nonce, new PublicKey(pa.PublicKey))
-                ).ToList();
-            }
-        }
-
         [Command(Description = "Mine a new genesis block")]
         public void Mine(
             [Argument("CONFIG", Description = "JSON config path to mine genesis block")]
@@ -220,14 +195,12 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 ProcessValidator(genesisConfig.InitialValidatorSet, initialMinter, out var initialValidatorSet);
 
-                ProcessExtra(genesisConfig.Extra, out var pendingActivationStates);
-
                 // Mine genesis block
                 _console.Out.WriteLine("\nMining genesis block...\n");
                 Block block = BlockHelper.ProposeGenesisBlock(
                     tableSheets: tableSheets,
                     goldDistributions: initialDepositList.ToArray(),
-                    pendingActivationStates: pendingActivationStates.ToArray(),
+                    pendingActivationStates: Array.Empty<PendingActivationState>(),
                     adminState: adminState,
                     privateKey: initialMinter,
                     initialValidators: initialValidatorSet.ToDictionary(
@@ -343,20 +316,6 @@ namespace NineChronicles.Headless.Executable.Commands
         }
 
         /// <summary>
-        /// Extra configurations.
-        /// </summary>
-        [Serializable]
-        private struct ExtraConfig
-        {
-            /// <value>
-            /// Dump file path of pending activation state created using <c>9c-tools</c><br/>
-            /// This will set activation codes that can be used to genesis block. <br/>
-            /// See <see cref="TxCommand"/> to create activation key.
-            /// </value>
-            public string? PendingActivationStatePath { get; set; }
-        }
-
-        /// <summary>
         /// Config to mine new genesis block.
         /// </summary>
         /// <list type="table">
@@ -380,10 +339,6 @@ namespace NineChronicles.Headless.Executable.Commands
         /// <term><see cref="InitialValidatorSet">Initial validator set</see></term>
         /// <description>Optional. Sets game admin and lifespan to genesis block.</description>
         /// </item>
-        /// <item>
-        /// <term><see cref="ExtraConfig">Extra</see></term>
-        /// <description>Optional. Sets extra data (e.g. activation keys) to genesis block.</description>
-        /// </item>
         /// </list>
         [Serializable]
         private struct GenesisConfig
@@ -392,7 +347,6 @@ namespace NineChronicles.Headless.Executable.Commands
             public CurrencyConfig? Currency { get; set; }
             public AdminConfig? Admin { get; set; }
             public List<Validator>? InitialValidatorSet { get; set; }
-            public ExtraConfig? Extra { get; set; }
         }
 #pragma warning restore S3459
     }
