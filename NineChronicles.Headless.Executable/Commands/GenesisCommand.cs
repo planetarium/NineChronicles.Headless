@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -42,6 +43,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
         private void ProcessCurrency(
             CurrencyConfig? config,
+            out Currency currency,
             out PrivateKey initialMinter,
             out List<GoldDistribution> initialDepositList
         )
@@ -61,6 +63,11 @@ namespace NineChronicles.Headless.Executable.Commands
                         EndBlock = 0
                     }
                 };
+
+#pragma warning disable CS0618
+                // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                currency = Currency.Legacy("NCG", 2, minters: null);
+#pragma warning restore CS0618
                 return;
             }
 
@@ -91,6 +98,11 @@ namespace NineChronicles.Headless.Executable.Commands
             {
                 initialDepositList = config.Value.InitialCurrencyDeposit;
             }
+
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            currency = Currency.Legacy("NCG", 2, minters: config.Value.AllowMint ? null : ImmutableHashSet.Create(initialMinter.ToAddress()));
+#pragma warning restore CS0618
         }
 
         private void ProcessAdmin(
@@ -241,7 +253,7 @@ namespace NineChronicles.Headless.Executable.Commands
             {
                 ProcessData(genesisConfig.Data, out var tableSheets);
 
-                ProcessCurrency(genesisConfig.Currency, out var initialMinter, out var initialDepositList);
+                ProcessCurrency(genesisConfig.Currency, out var currency, out var initialMinter, out var initialDepositList);
 
                 ProcessAdmin(genesisConfig.Admin, initialMinter, out var adminState, out var adminMeads);
 
@@ -263,7 +275,8 @@ namespace NineChronicles.Headless.Executable.Commands
                     initialValidators: initialValidatorSet.ToDictionary(
                         item => new PublicKey(ByteUtil.ParseHex(item.PublicKey)),
                         item => new BigInteger(item.Power)),
-                    actionBases: adminMeads.Concat(initialMeads).Concat(initialPledges)
+                    actionBases: adminMeads.Concat(initialMeads).Concat(initialPledges),
+                    goldCurrency: currency
                 );
 
                 Lib9cUtils.ExportBlock(block, "genesis-block");
@@ -339,6 +352,8 @@ namespace NineChronicles.Headless.Executable.Commands
             /// You can see newly created deposition info in <c>initial_deposit.csv</c> file.
             /// </value>
             public List<GoldDistribution>? InitialCurrencyDeposit { get; set; }
+
+            public bool AllowMint { get; set; }
         }
 
         /// <summary>
