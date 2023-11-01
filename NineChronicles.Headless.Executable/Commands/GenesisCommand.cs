@@ -257,7 +257,8 @@ namespace NineChronicles.Headless.Executable.Commands
                     tableSheets: tableSheets,
                     goldDistributions: initialDepositList.ToArray(),
                     pendingActivationStates: Array.Empty<PendingActivationState>(),
-                    adminState: adminState,
+                    // FIXME Should remove default value after fixing parameter type on Lib9c side.
+                    adminState: adminState ?? new AdminState(default, 0L),
                     privateKey: initialMinter,
                     initialValidators: initialValidatorSet.ToDictionary(
                         item => new PublicKey(ByteUtil.ParseHex(item.PublicKey)),
