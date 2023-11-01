@@ -1,0 +1,2341 @@
+
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css"/>
+      <style>@font-face { font-family: "fira-code"; src: url("woff2/FiraCode-Light.woff2") format("woff2"), url("woff/FiraCode-Light.woff"); }</style>
+
+      <body class="bg-slate-950 font-mono">
+    
+      <header class="sticky top-0 text-white px-8 h-16 z-41 bg-slate-950 border-b border-slate-700 flex gap-4 items-center">
+        <span class="text-white text-4xl top-5 left-4 cursor-pointer md:hidden" onclick="toggle()">
+          <i class="bi bi-list"></i>
+        </span>
+        <h1 class="text-2xl font-bold">NineChronicles.Headless.Executable CLI</h1>
+      </header>
+    
+      <div class="container mx-auto px-4 py-16 text-white transition-[padding] md:pl-[19rem]">
+        <ul class="flex flex-col gap-16">
+    <li id="" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold"></h1>
+    </div>
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">app-protocol-version</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">App protocol version token.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">genesis-block-path</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Genesis block path of blockchain. Blockchain is recognized by its genesis block.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">host</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Hostname of this node for another nodes to access. This is not listening host like 0.0.0.0</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">port</span>
+            <span class="text-slate-400 text-sm">&lt;UInt16?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Port of this node for another nodes to access.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">swarm-private-key</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">The private key used for signing messages and to specify your node. If you leave this null, a randomly generated value will be used.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">no-miner</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Disable block mining.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">miner-count</span>
+            <span class="text-slate-400 text-sm">&lt;Int32?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">The number of miner task(thread).</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">miner-private-key</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">The private key used for mining blocks. Must not be null if you want to turn on mining with libplanet-node.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">miner.block-interval</span>
+            <span class="text-slate-400 text-sm">&lt;Int32?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">The miner's break time after mining a block. The unit is millisecond.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">store-type</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">The type of storage to store blockchain data. If not provided, "LiteDB" will be used as default. Available type: ["rocksdb", "memory"]</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">store-path</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Path of storage. This value is required if you use persistent storage e.g. "rocksdb"</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">no-reduce-store</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Do not reduce storage. Enabling this option will use enormous disk spaces.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">ice-server</span>
+            <span class="text-slate-400 text-sm">&lt;String[]&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">ICE server to NAT traverse.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">peer</span>
+            <span class="text-slate-400 text-sm">&lt;String[]&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Seed peer list to communicate to another nodes.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">trusted-app-protocol-version-signer</span>
+            <span class="text-slate-400 text-sm">&lt;String[]&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Trustworthy signers who claim new app protocol versions</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">rpc-server</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Use this option if you want to make unity clients to communicate with this server with RPC</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">rpc-listen-host</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">RPC listen host</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">rpc-listen-port</span>
+            <span class="text-slate-400 text-sm">&lt;Int32?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">RPC listen port</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">rpc-remote-server</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Do a role as RPC remote server? If you enable this option, multiple Unity clients can connect to your RPC server.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">rpc-http-server</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">If you enable this option with "rpcRemoteServer" option at the same time, RPC server will use HTTP/1, not gRPC.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">graphql-server</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Use this option if you want to enable GraphQL server to enable querying data.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">graphql-host</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">GraphQL listen host</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">graphql-port</span>
+            <span class="text-slate-400 text-sm">&lt;Int32?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">GraphQL listen port</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">graphql-secret-token-path</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">The path to write GraphQL secret token. If you want to protect this headless application, you should use this option and take it into headers.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">no-cors</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Run without CORS policy.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">confirmations</span>
+            <span class="text-slate-400 text-sm">&lt;Int32?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">The number of required confirmations to recognize a block.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">nonblock-renderer</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Uses non-blocking renderer, which prevents the blockchain & swarm from waiting slow rendering. Turned off by default.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">nonblock-renderer-queue</span>
+            <span class="text-slate-400 text-sm">&lt;Int32?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">The size of the queue used by the non-blocking renderer. Ignored if --nonblock-renderer is turned off.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">strict-rendering</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Flag to turn on validating action renderer.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">log-action-renders</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Log action renders besides block renders. --rpc-server implies this.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">network-type</span>
+            <span class="text-slate-400 text-sm">&lt;NetworkType?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Network type.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">tx-life-time</span>
+            <span class="text-slate-400 text-sm">&lt;Int32?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">The lifetime of each transaction, which uses minute as its unit.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">message-timeout</span>
+            <span class="text-slate-400 text-sm">&lt;Int32?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">The grace period for new messages, which uses second as its unit.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">tip-timeout</span>
+            <span class="text-slate-400 text-sm">&lt;Int32?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">The grace period for tip update, which uses second as its unit.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">demand-buffer</span>
+            <span class="text-slate-400 text-sm">&lt;Int32?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">A number of block size that determines how far behind the demand the tip of the chain will publish `NodeException` to GraphQL subscriptions.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">static-peer</span>
+            <span class="text-slate-400 text-sm">&lt;String[]&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">A list of peers that the node will continue to maintain.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">skip-preload</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Run node without preloading.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">minimum-broadcast-target</span>
+            <span class="text-slate-400 text-sm">&lt;Int32?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Minimum number of peers to broadcast message.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">bucket-size</span>
+            <span class="text-slate-400 text-sm">&lt;Int32?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Number of the peers can be stored in each bucket.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">chain-tip-stale-behavior-type</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Determines behavior when the chain's tip is stale. "reboot" and "preload" is available and "reboot" option is selected by default.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">tx-quota-per-signer</span>
+            <span class="text-slate-400 text-sm">&lt;Int32?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">The number of maximum transactions can be included in stage per signer.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">maximum-poll-peers</span>
+            <span class="text-slate-400 text-sm">&lt;Int32?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">The maximum number of peers to poll blocks. int.MaxValue by default.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">consensus-port</span>
+            <span class="text-slate-400 text-sm">&lt;UInt16?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Port used for communicating consensus related messages.  null by default.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">consensus-private-key</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">The private key used for signing consensus messages. Cannot be null.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">consensus-seed</span>
+            <span class="text-slate-400 text-sm">&lt;String[]&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">A list of seed peers to join the block consensus.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">consensus-target-block-interval</span>
+            <span class="text-slate-400 text-sm">&lt;Double?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">A target block interval used in consensus context. The unit is millisecond.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">config</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : appsettings.json</div>
+          <div class="ml-6">Absolute path of "appsettings.json" file to provide headless configurations.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">sentry-dsn</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Sentry DSN</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">sentry-trace-sample-rate</span>
+            <span class="text-slate-400 text-sm">&lt;Double?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Trace sample rate for sentry</div>
+      </li>
+</ul>
+</li>
+<li class="border-b border-slate-700"></li>
+<li id="docs" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">docs</h1>
+    </div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">out_dir</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">Path to output directory.</div>
+        </li>
+      </ul>
+</li>
+<li class="border-b border-slate-700"></li>
+<li id="account" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">account</h1>
+    <p class="text-slate-400">Query accounts' balances.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">address</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">Account address.</div>
+        </li>
+      </ul>
+
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">verbose</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">Print more logs.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">store-path</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Path to the chain store.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">block</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Optional block hash/index offset to query balances at.  Tip by default.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">chain-id</span>
+            <span class="text-slate-400 text-sm">&lt;Guid?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Optional chain ID.  Default is the canonical chain ID.</div>
+      </li>
+</ul>
+</li>
+<li class="border-b border-slate-700"></li>
+<li id="validation_private-key" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">validation private-key</h1>
+    <p class="text-slate-400">Validate private key</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">private-key</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A hexadecimal representation of private key to validate.</div>
+        </li>
+      </ul>
+</li>
+<li id="validation_public-key" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">validation public-key</h1>
+    <p class="text-slate-400">Validate public key</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">public-key</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A hexadecimal representation of public key to validate.</div>
+        </li>
+      </ul>
+</li>
+<li class="border-b border-slate-700"></li>
+<li id="chain_tip" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">chain tip</h1>
+    <p class="text-slate-400">Print the tip's header of the chain placed at given store path.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">store-type</span>
+            <span class="text-slate-400 text-sm">enum StoreType (RocksDb, Memory, Default)</span>
+          </div>
+          <div class="ml-6">The storage type to store blockchain data. You cannot use "Memory" because it's volatile.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">store-path</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6"></div>
+        </li>
+      </ul>
+</li>
+<li id="chain_inspect" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">chain inspect</h1>
+    <p class="text-slate-400">Print each block's mining time and tx stats (total tx, hack and slash, ranking battle, mimisbrunnr) of a given chain in csv format.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">store-type</span>
+            <span class="text-slate-400 text-sm">enum StoreType (RocksDb, Memory, Default)</span>
+          </div>
+          <div class="ml-6">The storage type to store blockchain data. You cannot use "Memory" because it's volatile.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">store-path</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">Store path to inspect.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">offset</span>
+            <span class="text-slate-400 text-sm">Int32?</span>
+          </div>
+          <div class="ml-6">Offset of block index.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">limit</span>
+            <span class="text-slate-400 text-sm">Int32?</span>
+          </div>
+          <div class="ml-6">Limit of block count.</div>
+        </li>
+      </ul>
+</li>
+<li id="chain_truncate" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">chain truncate</h1>
+    <p class="text-slate-400">Truncate the chain from the tip by the input value (in blocks)</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">store-type</span>
+            <span class="text-slate-400 text-sm">enum StoreType (RocksDb, Memory, Default)</span>
+          </div>
+          <div class="ml-6">The storage type to store blockchain data. You cannot use "Memory" because it's volatile.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">store-path</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">Store path to inspect.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">blocks-before</span>
+            <span class="text-slate-400 text-sm">Int32</span>
+          </div>
+          <div class="ml-6">Number of blocks to truncate from the tip</div>
+        </li>
+      </ul>
+</li>
+<li id="chain_prune-states" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">chain prune-states</h1>
+    <p class="text-slate-400">Prune states in the chain</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">store-type</span>
+            <span class="text-slate-400 text-sm">enum StoreType (RocksDb, Memory, Default)</span>
+          </div>
+          <div class="ml-6">Store type of RocksDb.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">store-path</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">Store path to prune states.</div>
+        </li>
+      </ul>
+</li>
+<li id="chain_snapshot" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">chain snapshot</h1>
+    <p class="text-slate-400">Take a chain snapshot and store it in a designated directory</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">apv</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">APV to include in the snapshot metadata</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">output-directory</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">Directory path to store the snapshot file</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">store-path</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">Store path of the chain to take a snapshot</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">block-before</span>
+            <span class="text-slate-400 text-sm">Int32</span>
+          </div>
+          <div class="ml-6">Number of blocks to truncate from the tip</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">snapshot-type</span>
+            <span class="text-slate-400 text-sm">enum SnapshotType (Full, Partition, All)</span>
+          </div>
+          <div class="ml-6">Type of snapshot to take (full, partition, or all)</div>
+        </li>
+      </ul>
+</li>
+<li class="border-b border-slate-700"></li>
+<li id="key" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">key</h1>
+    <p class="text-slate-400">List all private keys.</p></div></li>
+<li id="key_create" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">key create</h1>
+    <p class="text-slate-400">Create a new private key.</p></div>
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">passphrase</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Take passphrase through this option instead of prompt.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">json</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">Print the created private key as Web3 Secret Storage format.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">dry-run</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">Do not add to the key store, but only show the created key.</div>
+      </li>
+</ul>
+</li>
+<li id="key_remove" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">key remove</h1>
+    <p class="text-slate-400">Remove a private key.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">key-id</span>
+            <span class="text-slate-400 text-sm">Guid</span>
+          </div>
+          <div class="ml-6">A key UUID to remove.</div>
+        </li>
+      </ul>
+
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">passphrase</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Take passphrase through this option instead of prompt.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">no-passphrase</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6"></div>
+      </li>
+</ul>
+</li>
+<li id="key_import" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">key import</h1>
+    <p class="text-slate-400">Import a raw private key.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">private-key</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A raw private key to import in hexadecimal string.</div>
+        </li>
+      </ul>
+
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">passphrase</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Take passphrase through this option instead of prompt.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">json</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">Print the created private key as Web3 Secret Storage format.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">dry-run</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">Do not add to the key store, but only show the created key.</div>
+      </li>
+</ul>
+</li>
+<li id="key_export" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">key export</h1>
+    <p class="text-slate-400">Export a raw private key (or public key).</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">key-id</span>
+            <span class="text-slate-400 text-sm">Guid</span>
+          </div>
+          <div class="ml-6">A key UUID to export.</div>
+        </li>
+      </ul>
+
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">passphrase</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Take passphrase through this option instead of prompt.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">public-key</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">Export a public key instead of private key.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">bytes</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">Print raw bytes instead of hexadecimal.  No trailing LF appended.</div>
+      </li>
+</ul>
+</li>
+<li id="key_generate" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">key generate</h1>
+    <p class="text-slate-400">Generate a raw private key without storing it.</p></div>
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">no-address</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">Do not show a derived address.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">public-key</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">Show a public key as well.</div>
+      </li>
+</ul>
+</li>
+<li id="key_sign" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">key sign</h1>
+    <p class="text-slate-400">Sign a message.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">key-id</span>
+            <span class="text-slate-400 text-sm">Guid</span>
+          </div>
+          <div class="ml-6">A key UUID to sign.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">file</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A path of the file to sign. If you pass '-' dash character, it will receive the message to sign from stdin.</div>
+        </li>
+      </ul>
+
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">passphrase</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Take passphrase through this option instead of prompt.  Mutually exclusive with --passphrase-file option.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">passphrase-file</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Read passphrase from the specified file instead of taking it through prompt.  Mutually exclusive with -p/--passphrase option.  For standard input, use a hyphen (`-').  For an actual file named a hyphen, prepend `./', i.e., `./-'.  Note that the trailing CR/LF is trimmed.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">binary-output</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">A path of the file to save the signature. If you pass '-' dash character, it will print to stdout as raw bytes not hexadecimal string or else. If this option isn't given, it will print hexadecimal string to stdout as default behaviour.</div>
+      </li>
+</ul>
+</li>
+<li id="key_public-key" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">key public-key</h1>
+    </div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">key-id</span>
+            <span class="text-slate-400 text-sm">Guid</span>
+          </div>
+          <div class="ml-6">A key UUID to sign.</div>
+        </li>
+      </ul>
+
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">passphrase</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Take passphrase through this option instead of prompt.  Mutually exclusive with --passphrase-file option.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">passphrase-file</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Read passphrase from the specified file instead of taking it through prompt.  Mutually exclusive with -p/--passphrase option.  For standard input, use a hyphen (`-').  For an actual file named a hyphen, prepend `./', i.e., `./-'.  Note that the trailing CR/LF is trimmed.</div>
+      </li>
+</ul>
+</li>
+<li id="key_unprotect-key" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">key unprotect-key</h1>
+    </div>
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">key-id</span>
+            <span class="text-slate-400 text-sm">&lt;Guid&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6"></div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">passphrase</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6"></div>
+      </li>
+</ul>
+</li>
+<li id="key_convert" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">key convert</h1>
+    </div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">private-key</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6"></div>
+        </li>
+      </ul>
+
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">public-key</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6"></div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">address</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6"></div>
+      </li>
+</ul>
+</li>
+<li class="border-b border-slate-700"></li>
+<li id="apv_sign" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">apv sign</h1>
+    <p class="text-slate-400">Sign a new app protocol version.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">key-id</span>
+            <span class="text-slate-400 text-sm">Guid</span>
+          </div>
+          <div class="ml-6">A private key to use for signing.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">version</span>
+            <span class="text-slate-400 text-sm">Int32</span>
+          </div>
+          <div class="ml-6">A version number to sign.</div>
+        </li>
+      </ul>
+
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">passphrase</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Take passphrase through this option instead of prompt.  Mutually exclusive with --passphrase-file option.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">passphrase-file</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Read passphrase from the specified file instead of taking it through prompt.  Mutually exclusive with -p/--passphrase option.  For standard input, use a hyphen (`-').  For an actual file named a hyphen, prepend `./', i.e., `./-'.  Note that the trailing CR/LF is trimmed.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">extra-file</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Bencodex file to use for extra data.  For standard input, use a hyphen (`-').  For an actual file named a hyphen, prepend `./', i.e., `./-'.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">extra</span>
+            <span class="text-slate-400 text-sm">&lt;String[]&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Set a value to a key on extra Bencodex dictionary.  Can be applied multiple times (e.g., `-e foo=1 -e bar=baz').  This option implies the extra data to be a Bencodex dictionary, hence cannot be used together with -E/--extra-file option.</div>
+      </li>
+</ul>
+</li>
+<li id="apv_verify" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">apv verify</h1>
+    <p class="text-slate-400">Verify a given app protocol version token's signature.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">apv-token</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">An app protocol version token to verify.  Read from the standard input if omitted.</div>
+        </li>
+      </ul>
+
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">public-keys</span>
+            <span class="text-slate-400 text-sm">&lt;PublicKey[]&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Public key(s) to be used for verification.  Can be applied multiple times.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">no-key-store</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">Do not use any keys in the key store, but only -p/--public-key options.</div>
+      </li>
+</ul>
+</li>
+<li id="apv_analyze" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">apv analyze</h1>
+    <p class="text-slate-400">Parse and analyze a given app protocol version token.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">apv-token</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">An app protocol version token to analyze.  Read from the standard input if omitted.</div>
+        </li>
+      </ul>
+
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">json</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">Print information of given token as JSON.</div>
+      </li>
+</ul>
+</li>
+<li id="apv_query" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">apv query</h1>
+    <p class="text-slate-400">Query app protocol version (a.k.a. APV) of target node.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">target</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">Comma separated peer information({pubkey},{host},{port}) of target node.  (E.g., 027bd36895d68681290e570692ad3736750ceaab37be402442ffb203967f98f7b6,9c.planetarium.dev,31236)</div>
+        </li>
+      </ul>
+</li>
+<li class="border-b border-slate-700"></li>
+<li id="action_activate-account" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">action activate-account</h1>
+    <p class="text-slate-400">Create ActivateAccount action.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">invitation-code</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">An invitation code.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">nonce</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A hex-encoded nonce for activation.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">path</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A file path of base64 encoded action.</div>
+        </li>
+      </ul>
+</li>
+<li id="action_list" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">action list</h1>
+    <p class="text-slate-400">Lists all actions' type ids.</p></div>
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">exclude-obsolete</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">If true, filter obsoleted actions since the --block-index option.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">block-index</span>
+            <span class="text-slate-400 text-sm">&lt;Int64&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : 0</div>
+          <div class="ml-6">The current block index to filter obsoleted actions.</div>
+      </li>
+</ul>
+</li>
+<li id="action_monster-collect" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">action monster-collect</h1>
+    <p class="text-slate-400">Create MonsterCollect action.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">path</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A file path of base64 encoded action.</div>
+        </li>
+      </ul>
+
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">level</span>
+            <span class="text-slate-400 text-sm">&lt;Int32&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6"></div>
+      </li>
+</ul>
+</li>
+<li id="action_claim-monster-collection-reward" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">action claim-monster-collection-reward</h1>
+    <p class="text-slate-400">Create ClaimMonsterCollectionReward action.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">avatar-address</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A hex-encoded avatar address.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">path</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A file path of base64 encoded action.</div>
+        </li>
+      </ul>
+</li>
+<li id="action_transfer-asset" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">action transfer-asset</h1>
+    <p class="text-slate-400">Create TransferAsset action.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">sender-address</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A hex-encoded sender address.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">recipient-address</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A hex-encoded recipient address.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">amount</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">The amount of asset to transfer.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">path</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A file path of base64 encoded action.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">memo</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A memo of asset transfer</div>
+        </li>
+      </ul>
+</li>
+<li id="action_stake" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">action stake</h1>
+    <p class="text-slate-400">Create Stake action.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">path</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A file path of base64 encoded action.</div>
+        </li>
+      </ul>
+
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">amount</span>
+            <span class="text-slate-400 text-sm">&lt;Int64&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6"></div>
+      </li>
+</ul>
+</li>
+<li id="action_claim-stake-reward" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">action claim-stake-reward</h1>
+    <p class="text-slate-400">Create ClaimStakeReward action.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">avatar-address</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A hex-encoded avatar address.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">path</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A file path of base64 encoded action.</div>
+        </li>
+      </ul>
+
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">block-index</span>
+            <span class="text-slate-400 text-sm">&lt;Int64?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">A block index which is used to specifying the action version.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">action-version</span>
+            <span class="text-slate-400 text-sm">&lt;Int32?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">A version of action.</div>
+      </li>
+</ul>
+</li>
+<li id="action_migrate-monster-collection" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">action migrate-monster-collection</h1>
+    <p class="text-slate-400">Create MigrateMonsterCollection action.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">avatar-address</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A hex-encoded avatar address.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">path</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A file path of base64 encoded action.</div>
+        </li>
+      </ul>
+</li>
+<li class="border-b border-slate-700"></li>
+<li id="state_rebuild" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">state rebuild</h1>
+    <p class="text-slate-400">Rebuild entire states by executing the chain from the genesis.</p></div>
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">verbose</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">Print more logs.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">store-path</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Path to the chain store.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">chain-id</span>
+            <span class="text-slate-400 text-sm">&lt;Guid?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Optional chain ID.  Default is the canonical chain ID.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">topmost</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Optional topmost block to execute last.  Can be either a block hash or block index.  Tip by default.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">bottommost</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Optional bottommost block to execute first.  Can be either a block hash or block index.  Genesis by default.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">bypass-state-root-hash-check</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">Bypass the state root hash check.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">use-memory-kv-store</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Use the in-memory key-value state store and dump it to the specified directory path in the end.</div>
+      </li>
+</ul>
+</li>
+<li id="state_check" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">state check</h1>
+    <p class="text-slate-400">Check if states for the specified block are available in the state store.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">block</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A block to check.  Can be either a block hash or block index.  Tip by default.</div>
+        </li>
+      </ul>
+
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">store-path</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Path to the chain store.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">chain-id</span>
+            <span class="text-slate-400 text-sm">&lt;Guid?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Optional chain ID.  Default is the canonical chain ID.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">verbose</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">Print more logs.</div>
+      </li>
+</ul>
+</li>
+<li class="border-b border-slate-700"></li>
+<li id="tx_sign" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">tx sign</h1>
+    <p class="text-slate-400">Create new transaction with given actions and dump it.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">private-key</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A hex-encoded private key for signing.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">nonce</span>
+            <span class="text-slate-400 text-sm">Int64</span>
+          </div>
+          <div class="ml-6">A nonce for new transaction.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">genesis-hash</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A hex-encoded genesis block hash.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">timestamp</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A datetime for new transaction.</div>
+        </li>
+      </ul>
+
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">action</span>
+            <span class="text-slate-400 text-sm">&lt;String[]&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">A path of the file contained base64 encoded actions.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">bytes</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">Print raw bytes instead of base64.  No trailing LF appended.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">max-gas-price</span>
+            <span class="text-slate-400 text-sm">&lt;Int64?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">maximum price per gas fee.</div>
+      </li>
+</ul>
+</li>
+<li id="tx_transfer-asset" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">tx transfer-asset</h1>
+    </div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">sender</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">An address of sender.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">recipient</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">An address of recipient.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">amount</span>
+            <span class="text-slate-400 text-sm">Int32</span>
+          </div>
+          <div class="ml-6">An amount of gold to transfer.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">genesis-block</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A genesis block containing InitializeStates.</div>
+        </li>
+      </ul>
+</li>
+<li id="tx_patch-table" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">tx patch-table</h1>
+    <p class="text-slate-400">Create PatchTable action and dump it.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">table-path</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A table file path for patch.</div>
+        </li>
+      </ul>
+</li>
+<li id="tx_migration-legacy-shop" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">tx migration-legacy-shop</h1>
+    <p class="text-slate-400">Create MigrationLegacyShop action and dump it.</p></div></li>
+<li id="tx_migration-activated-accounts-state" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">tx migration-activated-accounts-state</h1>
+    <p class="text-slate-400">Create MigrationActivatedAccountsState action and dump it.</p></div></li>
+<li id="tx_migration-avatar-state" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">tx migration-avatar-state</h1>
+    <p class="text-slate-400">Create MigrationAvatarState action and dump it.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">directory-path</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">path of the directory contained hex-encoded avatar states.</div>
+        </li>
+      
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">output-path</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">path of the output file dumped action.</div>
+        </li>
+      </ul>
+</li>
+<li id="tx_add-redeem-code" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">tx add-redeem-code</h1>
+    <p class="text-slate-400">Create AddRedeemCode action and dump it.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">table-path</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A table file path for RedeemCodeListSheet</div>
+        </li>
+      </ul>
+</li>
+<li id="tx_create-pending-activations" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">tx create-pending-activations</h1>
+    <p class="text-slate-400">Create CreatePendingActivations action and dump it.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">csv-path</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">A csv file path for CreatePendingActivations</div>
+        </li>
+      </ul>
+</li>
+<li id="tx_renew-admin-state" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">tx renew-admin-state</h1>
+    <p class="text-slate-400">Create RenewAdminState action and dump it.</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">new-valid-until</span>
+            <span class="text-slate-400 text-sm">Int64</span>
+          </div>
+          <div class="ml-6"></div>
+        </li>
+      </ul>
+</li>
+<li id="tx_create-activation-keys" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">tx create-activation-keys</h1>
+    <p class="text-slate-400">Create ActvationKey-nonce pairs and dump them as csv</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">count</span>
+            <span class="text-slate-400 text-sm">Int32</span>
+          </div>
+          <div class="ml-6">An amount of pairs</div>
+        </li>
+      </ul>
+</li>
+<li class="border-b border-slate-700"></li>
+<li id="market" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">market</h1>
+    <p class="text-slate-400">Query market transactions.</p></div>
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">verbose</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">Print more logs.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">store-path</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Path to the chain store.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">from</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Optional bottom block hash/index to search.  Genesis by default.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">to</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Optional topmost block hash/index to search.  Tip by default.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">include-fails</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">Include failed transactions too.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">item-type</span>
+            <span class="text-slate-400 text-sm">&lt;String[]&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Filter by item type.  This implicitly filters out transactions made with Buy action version prior to Buy5.  This can be applied multiple times (meaning: match any of them).  The list of available types can be found in ItemSubType enum declared in Lib9c/Model/Item/ItemType.cs file.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">chain-id</span>
+            <span class="text-slate-400 text-sm">&lt;Guid?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Optional chain ID.  Default is the canonical chain ID.</div>
+      </li>
+</ul>
+</li>
+<li class="border-b border-slate-700"></li>
+<li id="genesis" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">genesis</h1>
+    <p class="text-slate-400">Mine a new genesis block</p></div>
+      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">config</span>
+            <span class="text-slate-400 text-sm">String</span>
+          </div>
+          <div class="ml-6">JSON config path to mine genesis block</div>
+        </li>
+      </ul>
+</li>
+<li class="border-b border-slate-700"></li>
+<li id="replay_tx" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">replay tx</h1>
+    <p class="text-slate-400">Evaluate tx and calculate result state</p></div>
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">tx-path</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">A JSON file path of tx.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">store-path</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">An absolute path of block storage.(rocksdb)</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">block-index</span>
+            <span class="text-slate-400 text-sm">&lt;Int64&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : 1</div>
+          <div class="ml-6">Target block height to evaluate tx. Tip as default. (Min: 1)If you set 100, using block 99 as previous state.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">verbose</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">Verbose mode.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">output-path</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">An path of output file.</div>
+      </li>
+</ul>
+</li>
+<li id="replay_blocks" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">replay blocks</h1>
+    <p class="text-slate-400">Evaluate blocks and check state root hash</p></div>
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">store-path</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">An absolute path of block storage.(rocksdb)</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">start-index</span>
+            <span class="text-slate-400 text-sm">&lt;Int64?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Target start block height. Tip as default. (Min: 1)</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">end-index</span>
+            <span class="text-slate-400 text-sm">&lt;Int64?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">Target end block height. Tip as default. (Min: 1)If not set, same as argument "-i".</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">repeat-count</span>
+            <span class="text-slate-400 text-sm">&lt;Int32&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : 1</div>
+          <div class="ml-6">Repeat count. (Min: 1)If not set, default is 1.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">verbose</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">Verbose mode.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">output-path</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">The path of output file.</div>
+      </li>
+</ul>
+</li>
+<li id="replay_remote-tx" class="flex flex-col gap-6 scroll-mt-24">
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl font-bold">replay remote-tx</h1>
+    <p class="text-slate-400">Evaluate transaction with remote states</p></div>
+      <h2 class="px-4 w-fit bg-slate-500">Options</h2>
+      <ul class="flex flex-col gap-4">
+    
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">tx</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">The transaction id</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">endpoint</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">GraphQL endpoint to get remote state</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">cache-directory</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">A directory to store states, balances, etc as cache</div>
+      </li>
+</ul>
+</li>
+<li class="border-b border-slate-700"></li>
+
+        </ul>
+      </div>
+    
+      <aside class="sidebar fixed top-16 left-0 z-40 h-[calc(100vh-4rem)] w-72 bg-slate-950 border-r border-slate-700 overflow-y-auto translate-x-[-100%] transition md:translate-x-0">
+        <ul class="flex flex-col gap-4 p-8 text-white text-sm">
+    <li><a href="#" class="block" onclick="toggle()"></a></li>
+<li class="border-b border-slate-700"></li><li><a href="#docs" class="block" onclick="toggle()">docs</a></li>
+<li class="border-b border-slate-700"></li><li><a href="#account" class="block" onclick="toggle()">account</a></li>
+<li class="border-b border-slate-700"></li><li><a href="#validation_private-key" class="block" onclick="toggle()">validation private-key</a></li>
+<li><a href="#validation_public-key" class="block" onclick="toggle()">validation public-key</a></li>
+<li class="border-b border-slate-700"></li><li><a href="#chain_tip" class="block" onclick="toggle()">chain tip</a></li>
+<li><a href="#chain_inspect" class="block" onclick="toggle()">chain inspect</a></li>
+<li><a href="#chain_truncate" class="block" onclick="toggle()">chain truncate</a></li>
+<li><a href="#chain_prune-states" class="block" onclick="toggle()">chain prune-states</a></li>
+<li><a href="#chain_snapshot" class="block" onclick="toggle()">chain snapshot</a></li>
+<li class="border-b border-slate-700"></li><li><a href="#key" class="block" onclick="toggle()">key</a></li>
+<li><a href="#key_create" class="block" onclick="toggle()">key create</a></li>
+<li><a href="#key_remove" class="block" onclick="toggle()">key remove</a></li>
+<li><a href="#key_import" class="block" onclick="toggle()">key import</a></li>
+<li><a href="#key_export" class="block" onclick="toggle()">key export</a></li>
+<li><a href="#key_generate" class="block" onclick="toggle()">key generate</a></li>
+<li><a href="#key_sign" class="block" onclick="toggle()">key sign</a></li>
+<li><a href="#key_public-key" class="block" onclick="toggle()">key public-key</a></li>
+<li><a href="#key_unprotect-key" class="block" onclick="toggle()">key unprotect-key</a></li>
+<li><a href="#key_convert" class="block" onclick="toggle()">key convert</a></li>
+<li class="border-b border-slate-700"></li><li><a href="#apv_sign" class="block" onclick="toggle()">apv sign</a></li>
+<li><a href="#apv_verify" class="block" onclick="toggle()">apv verify</a></li>
+<li><a href="#apv_analyze" class="block" onclick="toggle()">apv analyze</a></li>
+<li><a href="#apv_query" class="block" onclick="toggle()">apv query</a></li>
+<li class="border-b border-slate-700"></li><li><a href="#action_activate-account" class="block" onclick="toggle()">action activate-account</a></li>
+<li><a href="#action_list" class="block" onclick="toggle()">action list</a></li>
+<li><a href="#action_monster-collect" class="block" onclick="toggle()">action monster-collect</a></li>
+<li><a href="#action_claim-monster-collection-reward" class="block" onclick="toggle()">action claim-monster-collection-reward</a></li>
+<li><a href="#action_transfer-asset" class="block" onclick="toggle()">action transfer-asset</a></li>
+<li><a href="#action_stake" class="block" onclick="toggle()">action stake</a></li>
+<li><a href="#action_claim-stake-reward" class="block" onclick="toggle()">action claim-stake-reward</a></li>
+<li><a href="#action_migrate-monster-collection" class="block" onclick="toggle()">action migrate-monster-collection</a></li>
+<li class="border-b border-slate-700"></li><li><a href="#state_rebuild" class="block" onclick="toggle()">state rebuild</a></li>
+<li><a href="#state_check" class="block" onclick="toggle()">state check</a></li>
+<li class="border-b border-slate-700"></li><li><a href="#tx_sign" class="block" onclick="toggle()">tx sign</a></li>
+<li><a href="#tx_transfer-asset" class="block" onclick="toggle()">tx transfer-asset</a></li>
+<li><a href="#tx_patch-table" class="block" onclick="toggle()">tx patch-table</a></li>
+<li><a href="#tx_migration-legacy-shop" class="block" onclick="toggle()">tx migration-legacy-shop</a></li>
+<li><a href="#tx_migration-activated-accounts-state" class="block" onclick="toggle()">tx migration-activated-accounts-state</a></li>
+<li><a href="#tx_migration-avatar-state" class="block" onclick="toggle()">tx migration-avatar-state</a></li>
+<li><a href="#tx_add-redeem-code" class="block" onclick="toggle()">tx add-redeem-code</a></li>
+<li><a href="#tx_create-pending-activations" class="block" onclick="toggle()">tx create-pending-activations</a></li>
+<li><a href="#tx_renew-admin-state" class="block" onclick="toggle()">tx renew-admin-state</a></li>
+<li><a href="#tx_create-activation-keys" class="block" onclick="toggle()">tx create-activation-keys</a></li>
+<li class="border-b border-slate-700"></li><li><a href="#market" class="block" onclick="toggle()">market</a></li>
+<li class="border-b border-slate-700"></li><li><a href="#genesis" class="block" onclick="toggle()">genesis</a></li>
+<li class="border-b border-slate-700"></li><li><a href="#replay_tx" class="block" onclick="toggle()">replay tx</a></li>
+<li><a href="#replay_blocks" class="block" onclick="toggle()">replay blocks</a></li>
+<li><a href="#replay_remote-tx" class="block" onclick="toggle()">replay remote-tx</a></li>
+<li class="border-b border-slate-700"></li>
+        </ul>
+      </aside>
+     
+      </body>
+
+      <script type="text/javascript">
+        function toggle() {
+          document.querySelector(".sidebar").classList.toggle("translate-x-[-100%]");
+        }
+      </script>
+    

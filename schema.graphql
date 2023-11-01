@@ -1,0 +1,2577 @@
+schema {
+  query: StandaloneQuery
+  mutation: StandaloneMutation
+  subscription: StandaloneSubscription
+}
+
+type Action {
+  """A readable representation for debugging."""
+  inspection: String!
+
+  """A JSON representation of action data"""
+  json: String!
+
+  """Raw Action data ('hex' or 'base64' encoding available.)"""
+  raw(encode: String = "hex"): String!
+}
+
+type ActionMutation {
+  """Charge Action Points using Material."""
+  chargeActionPoint(
+    """Avatar to use potion."""
+    avatarAddress: Address!
+  ): TxId!
+
+  """Get monster collection reward."""
+  claimMonsterCollectionReward(
+    """Address of avatar for get reward."""
+    avatarAddress: Address!
+  ): TxId!
+
+  """Combine new Consumable."""
+  combinationConsumable(
+    """Avatar address to combine consumable."""
+    avatarAddress: Address!
+
+    """ConsumableRecipe ID from ConsumableRecipeSheet."""
+    recipeId: Int!
+
+    """The empty combination slot index to combine consumable. 0 ~ 3"""
+    slotIndex: Int!
+  ): TxId!
+
+  """Combine new equipment."""
+  combinationEquipment(
+    """Avatar address to create equipment."""
+    avatarAddress: Address!
+
+    """EquipmentRecipe ID from EquipmentRecipeSheet."""
+    recipeId: Int!
+
+    """The empty combination slot index to combine equipment. 0 ~ 3"""
+    slotIndex: Int!
+
+    """EquipmentSubRecipe ID from EquipmentSubRecipeSheet."""
+    subRecipeId: Int
+  ): TxId!
+
+  """Create new avatar."""
+  createAvatar(
+    """The index of character slot. 0 ~ 2"""
+    avatarIndex: Int!
+
+    """Avatar name."""
+    avatarName: String!
+
+    """The index of character ear color. 0 ~ 8"""
+    earIndex: Int!
+
+    """The index of character hair color. 0 ~ 8"""
+    hairIndex: Int!
+
+    """The index of character eye color. 0 ~ 8"""
+    lensIndex: Int!
+
+    """The index of character tail color. 0 ~ 8"""
+    tailIndex: Int!
+  ): TxId!
+
+  """Get daily reward."""
+  dailyReward(
+    """Avatar address to receive reward."""
+    avatarAddress: Address!
+  ): TxId!
+
+  """Start stage to get material."""
+  hackAndSlash(
+    """Avatar address."""
+    avatarAddress: Address!
+
+    """List of consumable id for use."""
+    consumableIds: [Guid]
+
+    """List of costume id for equip."""
+    costumeIds: [Guid]
+
+    """List of equipment id for equip."""
+    equipmentIds: [Guid]
+
+    """List of rune slot info for equip."""
+    runeSlotInfos: [RuneSlotInfoInputType!] = []
+
+    """Stage ID."""
+    stageId: Int!
+
+    """World ID containing the stage ID."""
+    worldId: Int!
+  ): TxId!
+
+  """Upgrade equipment."""
+  itemEnhancement(
+    """Avatar address to upgrade equipment."""
+    avatarAddress: Address!
+
+    """Equipment Guid for upgrade."""
+    itemId: Guid!
+
+    """Material Guids for equipment upgrade."""
+    materialIds: [Guid!]!
+
+    """The empty combination slot index to upgrade equipment. 0 ~ 3"""
+    slotIndex: Int!
+  ): TxId!
+
+  """Start monster collect."""
+  monsterCollect(
+    """The monster collection level.(1 ~ 7)"""
+    level: Int!
+  ): TxId!
+}
+
+type ActionQuery {
+  activateAccount(
+    """Activation code that you've get."""
+    activationCode: String!
+  ): ByteString! @deprecated(reason: "Since NCIP-15, it doesn't care account activation.")
+  approvePledge(patronAddress: Address!): ByteString!
+  auraSummon(
+    """Avatar address to get summoned items"""
+    avatarAddress: Address!
+
+    """Summon group id"""
+    groupId: Int!
+
+    """Count to summon. Must between 1 and 10."""
+    summonCount: Int!
+  ): ByteString!
+  claimRaidReward(
+    """address of avatar state to receive reward."""
+    avatarAddress: Address!
+  ): ByteString!
+  claimStakeReward(
+    """The avatar address to receive staking rewards."""
+    avatarAddress: Address
+  ): ByteString
+  claimWorldBossKillReward(
+    """address of avatar state to receive reward."""
+    avatarAddress: Address!
+  ): ByteString!
+  combinationConsumable(
+    """Avatar address to combine consumable"""
+    avatarAddress: Address!
+
+    """Recipe ID to combine consumable"""
+    recipeId: Int!
+
+    """Slot index to combine"""
+    slotIndex: Int!
+  ): ByteString!
+  combinationEquipment(
+    """Avatar address to combine equipment"""
+    avatarAddress: Address!
+
+    """Pay crystal co combine equipment?"""
+    payByCrystal: Boolean
+
+    """Combination recipe ID"""
+    recipeId: Int!
+
+    """Slot index to combine equipment"""
+    slotIndex: Int!
+
+    """Sub-recipe ID of this combination"""
+    subRecipeId: Int
+
+    """Use hammer point to combine equipment?"""
+    useHammerPoint: Boolean
+  ): ByteString!
+
+  """Query to craft/enhance items/foods"""
+  craftQuery: CraftQuery!
+  createAvatar(
+    """ear index of avatar."""
+    ear: Int = 0
+
+    """hair index of avatar."""
+    hair: Int = 0
+
+    """index of avatar in `AgentState.avatarAddresses`.(0~2)"""
+    index: Int!
+
+    """lens index of avatar."""
+    lens: Int = 0
+
+    """name of avatar.(2~20 characters)"""
+    name: String!
+
+    """tail index of avatar."""
+    tail: Int = 0
+  ): ByteString!
+  createPledge(agentAddresses: [Address!]!, mead: Int = 4, patronAddress: Address!): ByteString!
+  dailyReward(
+    """Avatar address to get daily reward"""
+    avatarAddress: Address!
+  ): ByteString!
+  deliverToOthersGarages(
+    """Array of currency ticket and quantity to deliver."""
+    fungibleAssetValues: [SimplifyFungibleAssetValueInput!]
+
+    """Array of Fungible ID and count to deliver."""
+    fungibleIdAndCounts: [FungibleIdAndCountInput!]
+
+    """Memo"""
+    memo: String
+
+    """Recipient agent address"""
+    recipientAgentAddr: Address!
+  ): ByteString!
+  endPledge(agentAddress: Address!): ByteString!
+  grinding(
+    """Address of avatar."""
+    avatarAddress: Address!
+
+    """Flag to Charge Action Point."""
+    chargeAp: Boolean
+
+    """List of equipment ItemId."""
+    equipmentIds: [Guid]!
+  ): ByteString
+  hackAndSlash(
+    """Avatar address."""
+    avatarAddress: Address!
+
+    """List of consumable id for use."""
+    consumableIds: [Guid]
+
+    """List of costume id for equip."""
+    costumeIds: [Guid]
+
+    """List of equipment id for equip."""
+    equipmentIds: [Guid]
+
+    """List of rune slot info for equip."""
+    runeSlotInfos: [RuneSlotInfoInputType!] = []
+
+    """Buff ID for this stage"""
+    stageBuffId: Int
+
+    """Stage ID."""
+    stageId: Int!
+
+    """World ID containing the stage ID."""
+    worldId: Int!
+  ): ByteString!
+  hackAndSlashSweep(
+    """Action point usage to sweep"""
+    actionPoint: Int!
+
+    """AP stone usage to sweep"""
+    apStoneCount: Int
+
+    """Avatar address."""
+    avatarAddress: Address!
+
+    """List of costume id for equip."""
+    costumeIds: [Guid]
+
+    """List of equipment id for equip."""
+    equipmentIds: [Guid]
+
+    """List of rune slot info for equip."""
+    runeSlotInfos: [RuneSlotInfoInputType!] = []
+
+    """Stage ID."""
+    stageId: Int!
+
+    """World ID containing the stage ID."""
+    worldId: Int!
+  ): ByteString!
+  itemEnhancement(
+    """Avatar address to enhance item"""
+    avatarAddress: Address!
+
+    """Target item ID to enhance"""
+    itemId: Guid!
+
+    """Material IDs to enhance"""
+    materialIds: [Guid!]!
+
+    """Slot index to enhance item"""
+    slotIndex: Int!
+  ): ByteString!
+  loadIntoMyGarages(
+    """Array of balance address and currency ticker and quantity."""
+    fungibleAssetValues: [BalanceInput!]
+
+    """Array of fungible ID and count"""
+    fungibleIdAndCounts: [FungibleIdAndCountInput!]
+
+    """Inventory Address"""
+    inventoryAddr: Address
+
+    """Memo"""
+    memo: String
+  ): ByteString!
+  migrateMonsterCollection(
+    """The avatar address to receive monster collection rewards."""
+    avatarAddress: Address
+  ): ByteString!
+  patchTableSheet(
+    """table data."""
+    tableCsv: String!
+
+    """name of table sheet."""
+    tableName: String!
+  ): ByteString!
+  prepareRewardAssets(
+    """list of FungibleAssetValue for charge reward."""
+    assets: [FungibleAssetValueInputType!]!
+
+    """address of reward pool for charge reward."""
+    rewardPoolAddress: Address!
+  ): ByteString!
+  raid(
+    """address of avatar state."""
+    avatarAddress: Address!
+
+    """list of costume id."""
+    costumeIds: [Guid] = []
+
+    """list of equipment id."""
+    equipmentIds: [Guid] = []
+
+    """list of food id."""
+    foodIds: [Guid] = []
+
+    """refill ticket by NCG."""
+    payNcg: Boolean = false
+
+    """list of rune slot"""
+    runeSlotInfos: [RuneSlotInfoInputType!] = []
+  ): ByteString!
+  rapidCombination(
+    """Avatar address to execute rapid combination"""
+    avatarAddress: Address!
+
+    """Slot index to execute rapid"""
+    slotIndex: Int!
+  ): ByteString!
+  requestPledge(agentAddress: Address!, mead: Int = 4): ByteString!
+  runeEnhancement(
+    """The avatar address to enhance rune."""
+    avatarAddress: Address!
+
+    """Rune ID to enhance."""
+    runeId: Int!
+
+    """The try count to enhance rune"""
+    tryCount: Int
+  ): ByteString!
+  stake(
+    """An amount to stake."""
+    amount: BigInt
+  ): ByteString
+  transferAsset(
+    """A string value to be transferred."""
+    amount: String!
+
+    """A currency type to be transferred."""
+    currency: CurrencyEnum!
+
+    """A 80-max length string to note."""
+    memo: String
+
+    """Address of recipient."""
+    recipient: Address!
+
+    """Address of sender."""
+    sender: Address!
+  ): ByteString
+  transferAssets(
+    """A 80-max length string to note."""
+    memo: String
+
+    """List of tuples that recipients' address and asset amount to be sent"""
+    recipients: [RecipientsInputType!]!
+
+    """Address of sender."""
+    sender: Address!
+  ): ByteString!
+  unloadFromMyGarages(
+    """Array of balance address and currency ticker and quantity to send."""
+    fungibleAssetValues: [BalanceInput!]
+
+    """Array of fungible ID and count to send."""
+    fungibleIdAndCounts: [FungibleIdAndCountInput!]
+
+    """Memo"""
+    memo: String
+
+    """Recipient avatar address"""
+    recipientAvatarAddr: Address!
+  ): ByteString!
+  unlockEquipmentRecipe(
+    """Address of avatar."""
+    avatarAddress: Address!
+
+    """List of EquipmentRecipeSheet row ids to unlock."""
+    recipeIds: [Int]!
+  ): ByteString
+  unlockWorld(
+    """Address of avatar."""
+    avatarAddress: Address!
+
+    """List of WorldUnlockSheet row world_id_to_unlock."""
+    worldIds: [Int]!
+  ): ByteString
+}
+
+type ActionTxQuery {
+  activateAccount(
+    """Activation code that you've get."""
+    activationCode: String!
+  ): ByteString! @deprecated(reason: "Since NCIP-15, it doesn't care account activation.")
+  approvePledge(patronAddress: Address!): ByteString!
+  auraSummon(
+    """Avatar address to get summoned items"""
+    avatarAddress: Address!
+
+    """Summon group id"""
+    groupId: Int!
+
+    """Count to summon. Must between 1 and 10."""
+    summonCount: Int!
+  ): ByteString!
+  claimRaidReward(
+    """address of avatar state to receive reward."""
+    avatarAddress: Address!
+  ): ByteString!
+  claimStakeReward(
+    """The avatar address to receive staking rewards."""
+    avatarAddress: Address
+  ): ByteString
+  claimWorldBossKillReward(
+    """address of avatar state to receive reward."""
+    avatarAddress: Address!
+  ): ByteString!
+  combinationConsumable(
+    """Avatar address to combine consumable"""
+    avatarAddress: Address!
+
+    """Recipe ID to combine consumable"""
+    recipeId: Int!
+
+    """Slot index to combine"""
+    slotIndex: Int!
+  ): ByteString!
+  combinationEquipment(
+    """Avatar address to combine equipment"""
+    avatarAddress: Address!
+
+    """Pay crystal co combine equipment?"""
+    payByCrystal: Boolean
+
+    """Combination recipe ID"""
+    recipeId: Int!
+
+    """Slot index to combine equipment"""
+    slotIndex: Int!
+
+    """Sub-recipe ID of this combination"""
+    subRecipeId: Int
+
+    """Use hammer point to combine equipment?"""
+    useHammerPoint: Boolean
+  ): ByteString!
+
+  """Query to craft/enhance items/foods"""
+  craftQuery: CraftQuery!
+  createAvatar(
+    """ear index of avatar."""
+    ear: Int = 0
+
+    """hair index of avatar."""
+    hair: Int = 0
+
+    """index of avatar in `AgentState.avatarAddresses`.(0~2)"""
+    index: Int!
+
+    """lens index of avatar."""
+    lens: Int = 0
+
+    """name of avatar.(2~20 characters)"""
+    name: String!
+
+    """tail index of avatar."""
+    tail: Int = 0
+  ): ByteString!
+  createPledge(agentAddresses: [Address!]!, mead: Int = 4, patronAddress: Address!): ByteString!
+  dailyReward(
+    """Avatar address to get daily reward"""
+    avatarAddress: Address!
+  ): ByteString!
+  deliverToOthersGarages(
+    """Array of currency ticket and quantity to deliver."""
+    fungibleAssetValues: [SimplifyFungibleAssetValueInput!]
+
+    """Array of Fungible ID and count to deliver."""
+    fungibleIdAndCounts: [FungibleIdAndCountInput!]
+
+    """Memo"""
+    memo: String
+
+    """Recipient agent address"""
+    recipientAgentAddr: Address!
+  ): ByteString!
+  endPledge(agentAddress: Address!): ByteString!
+  grinding(
+    """Address of avatar."""
+    avatarAddress: Address!
+
+    """Flag to Charge Action Point."""
+    chargeAp: Boolean
+
+    """List of equipment ItemId."""
+    equipmentIds: [Guid]!
+  ): ByteString
+  hackAndSlash(
+    """Avatar address."""
+    avatarAddress: Address!
+
+    """List of consumable id for use."""
+    consumableIds: [Guid]
+
+    """List of costume id for equip."""
+    costumeIds: [Guid]
+
+    """List of equipment id for equip."""
+    equipmentIds: [Guid]
+
+    """List of rune slot info for equip."""
+    runeSlotInfos: [RuneSlotInfoInputType!] = []
+
+    """Buff ID for this stage"""
+    stageBuffId: Int
+
+    """Stage ID."""
+    stageId: Int!
+
+    """World ID containing the stage ID."""
+    worldId: Int!
+  ): ByteString!
+  hackAndSlashSweep(
+    """Action point usage to sweep"""
+    actionPoint: Int!
+
+    """AP stone usage to sweep"""
+    apStoneCount: Int
+
+    """Avatar address."""
+    avatarAddress: Address!
+
+    """List of costume id for equip."""
+    costumeIds: [Guid]
+
+    """List of equipment id for equip."""
+    equipmentIds: [Guid]
+
+    """List of rune slot info for equip."""
+    runeSlotInfos: [RuneSlotInfoInputType!] = []
+
+    """Stage ID."""
+    stageId: Int!
+
+    """World ID containing the stage ID."""
+    worldId: Int!
+  ): ByteString!
+  itemEnhancement(
+    """Avatar address to enhance item"""
+    avatarAddress: Address!
+
+    """Target item ID to enhance"""
+    itemId: Guid!
+
+    """Material IDs to enhance"""
+    materialIds: [Guid!]!
+
+    """Slot index to enhance item"""
+    slotIndex: Int!
+  ): ByteString!
+  loadIntoMyGarages(
+    """Array of balance address and currency ticker and quantity."""
+    fungibleAssetValues: [BalanceInput!]
+
+    """Array of fungible ID and count"""
+    fungibleIdAndCounts: [FungibleIdAndCountInput!]
+
+    """Inventory Address"""
+    inventoryAddr: Address
+
+    """Memo"""
+    memo: String
+  ): ByteString!
+  migrateMonsterCollection(
+    """The avatar address to receive monster collection rewards."""
+    avatarAddress: Address
+  ): ByteString!
+  patchTableSheet(
+    """table data."""
+    tableCsv: String!
+
+    """name of table sheet."""
+    tableName: String!
+  ): ByteString!
+  prepareRewardAssets(
+    """list of FungibleAssetValue for charge reward."""
+    assets: [FungibleAssetValueInputType!]!
+
+    """address of reward pool for charge reward."""
+    rewardPoolAddress: Address!
+  ): ByteString!
+  raid(
+    """address of avatar state."""
+    avatarAddress: Address!
+
+    """list of costume id."""
+    costumeIds: [Guid] = []
+
+    """list of equipment id."""
+    equipmentIds: [Guid] = []
+
+    """list of food id."""
+    foodIds: [Guid] = []
+
+    """refill ticket by NCG."""
+    payNcg: Boolean = false
+
+    """list of rune slot"""
+    runeSlotInfos: [RuneSlotInfoInputType!] = []
+  ): ByteString!
+  rapidCombination(
+    """Avatar address to execute rapid combination"""
+    avatarAddress: Address!
+
+    """Slot index to execute rapid"""
+    slotIndex: Int!
+  ): ByteString!
+  requestPledge(agentAddress: Address!, mead: Int = 4): ByteString!
+  runeEnhancement(
+    """The avatar address to enhance rune."""
+    avatarAddress: Address!
+
+    """Rune ID to enhance."""
+    runeId: Int!
+
+    """The try count to enhance rune"""
+    tryCount: Int
+  ): ByteString!
+  stake(
+    """An amount to stake."""
+    amount: BigInt
+  ): ByteString
+  transferAsset(
+    """A string value to be transferred."""
+    amount: String!
+
+    """A currency type to be transferred."""
+    currency: CurrencyEnum!
+
+    """A 80-max length string to note."""
+    memo: String
+
+    """Address of recipient."""
+    recipient: Address!
+
+    """Address of sender."""
+    sender: Address!
+  ): ByteString
+  transferAssets(
+    """A 80-max length string to note."""
+    memo: String
+
+    """List of tuples that recipients' address and asset amount to be sent"""
+    recipients: [RecipientsInputType!]!
+
+    """Address of sender."""
+    sender: Address!
+  ): ByteString!
+  unloadFromMyGarages(
+    """Array of balance address and currency ticker and quantity to send."""
+    fungibleAssetValues: [BalanceInput!]
+
+    """Array of fungible ID and count to send."""
+    fungibleIdAndCounts: [FungibleIdAndCountInput!]
+
+    """Memo"""
+    memo: String
+
+    """Recipient avatar address"""
+    recipientAvatarAddr: Address!
+  ): ByteString!
+  unlockEquipmentRecipe(
+    """Address of avatar."""
+    avatarAddress: Address!
+
+    """List of EquipmentRecipeSheet row ids to unlock."""
+    recipeIds: [Int]!
+  ): ByteString
+  unlockWorld(
+    """Address of avatar."""
+    avatarAddress: Address!
+
+    """List of WorldUnlockSheet row world_id_to_unlock."""
+    worldIds: [Int]!
+  ): ByteString
+}
+
+type ActivationStatusMutation {
+  activateAccount(encodedActivationKey: String!): Boolean! @deprecated(reason: "Since NCIP-15, it doesn't care account activation.")
+}
+
+type ActivationStatusQuery {
+  activated: Boolean! @deprecated(reason: "Since NCIP-15, it doesn't care account activation.")
+  addressActivated(address: Address!): Boolean! @deprecated(reason: "Since NCIP-15, it doesn't care account activation.")
+}
+
+scalar Address
+
+type AddressQuery {
+  """currency minters address."""
+  currencyMintersAddress(
+    """
+    A currency type. see also: https://github.com/planetarium/NineChronicles.Headless/blob/main/NineChronicles.Headless/GraphTypes/CurrencyEnumType.cs
+    """
+    currency: CurrencyEnum!
+  ): [Address!]
+
+  """pledge information address."""
+  pledgeAddress(
+    """address of agent state."""
+    agentAddress: Address!
+  ): Address!
+
+  """user information address by world boss season."""
+  raiderAddress(
+    """address of avatar state."""
+    avatarAddress: Address!
+
+    """world boss season id."""
+    raidId: Int!
+  ): Address!
+
+  """raider list address by world boss season."""
+  raiderListAddress(
+    """world boss season id."""
+    raidId: Int!
+  ): Address!
+
+  """boss information address by world boss season."""
+  worldBossAddress(
+    """world boss season id."""
+    raidId: Int!
+  ): Address!
+
+  """user boss kill reward record address by world boss season."""
+  worldBossKillRewardRecordAddress(
+    """address of avatar state."""
+    avatarAddress: Address!
+
+    """world boss season id."""
+    raidId: Int!
+  ): Address!
+}
+
+type AgentStateType {
+  """Address of agent."""
+  address: Address!
+
+  """List of avatar."""
+  avatarStates: [AvatarStateType!]
+
+  """Current CRYSTAL."""
+  crystal: String!
+
+  """Current NCG."""
+  gold: String!
+  hasTradedItem: Boolean!
+
+  """Current monster collection level."""
+  monsterCollectionLevel: Long!
+
+  """Monster collection round of agent."""
+  monsterCollectionRound: Long!
+
+  """mead pledge information."""
+  pledge: MeadPledgeType!
+}
+
+type AppProtocolVersionType {
+  extra: ByteString
+  signature: ByteString!
+  signer: Address!
+  version: Int!
+}
+
+type ArenaInfoType {
+  active: Boolean!
+  agentAddress: Address!
+  arenaRecord: ArenaRecordType!
+  avatarAddress: Address!
+  avatarName: String!
+  dailyChallengeCount: Int!
+  score: Int!
+}
+
+type ArenaInformationType {
+  address: Address!
+  avatarAddress: Address!
+  lose: Int!
+  purchasedTicketCount: Int!
+  score: Int!
+  ticket: Int!
+  ticketResetCount: Int!
+  win: Int!
+}
+
+type ArenaRecordType {
+  draw: Int
+  lose: Int
+  win: Int
+}
+
+type AvatarStateType {
+  """Current ActionPoint."""
+  actionPoint: Int!
+
+  """Address of avatar."""
+  address: Address!
+
+  """Address of agent."""
+  agentAddress: Address!
+
+  """Block index at the latest executed action."""
+  blockIndex: Int!
+
+  """Character ID from CharacterSheet."""
+  characterId: Int!
+
+  """Address list of combination slot."""
+  combinationSlotAddresses: [Address!]!
+
+  """Combination slots."""
+  combinationSlots: [CombinationSlotStateType!]!
+
+  """Block index at the DailyReward execution."""
+  dailyRewardReceivedIndex: Long!
+
+  """Index of ear color."""
+  ear: Int!
+
+  """List of quest event ID."""
+  eventMap: CollectionMapType!
+
+  """Avatar total EXP."""
+  exp: Int!
+
+  """Index of hair color."""
+  hair: Int!
+
+  """The index of this avatar state among its agent's avatar addresses."""
+  index: Int!
+
+  """Avatar inventory."""
+  inventory: InventoryType!
+
+  """Avatar inventory address."""
+  inventoryAddress: Address!
+
+  """List of acquired item ID."""
+  itemMap: CollectionMapType!
+
+  """Index of eye color."""
+  lens: Int!
+
+  """Avatar Level."""
+  level: Int!
+
+  """List of mail."""
+  mailBox: MailBoxType!
+
+  """List of defeated monster ID."""
+  monsterMap: CollectionMapType!
+
+  """Avatar name."""
+  name: String!
+
+  """List of quest."""
+  questList: QuestListType!
+
+  """Rune list of avatar"""
+  runes: [RuneStateType!]!
+
+  """List of cleared stage ID."""
+  stageMap: CollectionMapType!
+
+  """Index of tail color."""
+  tail: Int!
+
+  """Block index at the latest executed action."""
+  updatedAt: Long!
+
+  """World & Stage information."""
+  worldInformation: WorldInformationType!
+}
+
+input BalanceInput {
+  """Balance Address."""
+  balanceAddr: Address
+
+  """Fungible asset value ticker and amount."""
+  value: SimplifyFungibleAssetValueInput
+}
+
+scalar BencodexValue
+
+scalar BigInt
+
+type Block {
+  """The mining difficulty that the block's nonce has to satisfy."""
+  difficulty: Long! @deprecated(reason: "Block does not have Difficulty field in PBFT.")
+
+  """A block's hash."""
+  hash: ID!
+
+  """The height of the block."""
+  index: Long!
+
+  """The LastCommit of the block."""
+  lastCommit: BlockCommit
+
+  """The address of the miner."""
+  miner: Address!
+
+  """The proof-of-work nonce which satisfies the required difficulty."""
+  nonce: ByteString! @deprecated(reason: "Block does not have Nonce field in PBFT.")
+
+  """The hash of PreEvaluationBlock."""
+  preEvaluationHash: ByteString!
+
+  """
+  The previous block.  If it's a genesis block (i.e., its index is 0) this must be null.
+  """
+  previousBlock: Block
+
+  """The public key of the Miner."""
+  publicKey: PublicKey
+
+  """
+  The digital signature of the whole block content (except for hash, which is derived from the signature and other contents)
+  """
+  signature: ByteString
+
+  """
+  The hash of the resulting states after evaluating transactions and a block action (if exists)
+  """
+  stateRootHash: ByteString!
+  timestamp: DateTimeOffset!
+
+  """
+  The total mining difficulty since the genesis including the block's difficulty.
+  """
+  totalDifficulty: BigInt! @deprecated(reason: "Block does not have TotalDifficulty field in PBFT.")
+
+  """Transactions belonging to the block."""
+  transactions: [Transaction!]!
+}
+
+type BlockCommit {
+  """The hash of the block which contains block commit."""
+  blockHash: ID!
+
+  """The height of the block commit."""
+  height: Long!
+
+  """The round of the block commit."""
+  round: Int!
+
+  """Total votes of the block commit."""
+  votes: [Vote!]!
+}
+
+type BlockHeader {
+  hash: String!
+  id: ID!
+  index: Int!
+  miner: Address
+}
+
+type BlockQuery {
+  block(hash: ID, index: ID): Block
+  blocks(desc: Boolean = false, excludeEmptyTxs: Boolean = false, limit: Int, miner: Address, offset: Int = 0): [Block!]!
+}
+
+type BoundPeer {
+  """The endpoint of the peer."""
+  endPoint: String!
+
+  """The address of the miner."""
+  publicIpAddress: String
+
+  """The public key of the peer."""
+  publicKey: PublicKey!
+}
+
+scalar Byte
+
+scalar ByteString
+
+type CollectionMapType {
+  count: Int!
+  pairs: [[Int]!]!
+}
+
+type CombinationSlotStateType {
+  """Address of combination slot."""
+  address: Address!
+
+  """Pet id used in equipment"""
+  petId: Int
+
+  """Block index at the combination started."""
+  startBlockIndex: Long!
+
+  """Block index at the combination slot can be usable."""
+  unlockBlockIndex: Long!
+
+  """Stage id at the combination slot unlock."""
+  unlockStage: Int!
+}
+
+type ConsumableType {
+  """Item elemental."""
+  elementalType: ElementalType!
+
+  """Grade from ItemSheet."""
+  grade: Int!
+
+  """ID from ItemSheet."""
+  id: Int!
+  itemId: Guid!
+
+  """Item subcategory."""
+  itemSubType: ItemSubType!
+
+  """Item category."""
+  itemType: ItemType!
+  mainStat: StatType!
+  requiredBlockIndex: Long
+}
+
+type CostumeType {
+  """Item elemental."""
+  elementalType: ElementalType!
+
+  """Status of Avatar equipped."""
+  equipped: Boolean!
+
+  """Grade from ItemSheet."""
+  grade: Int!
+
+  """ID from ItemSheet."""
+  id: Int!
+
+  """Guid of costume."""
+  itemId: Guid!
+
+  """Item subcategory."""
+  itemSubType: ItemSubType!
+
+  """Item category."""
+  itemType: ItemType!
+  requiredBlockIndex: Long
+}
+
+type CraftQuery {
+  eventConsumableItemCrafts(
+    """Avatar address to craft event item"""
+    avatarAddress: Address!
+
+    """Recipe ID of event item to craft"""
+    eventConsumableItemRecipeId: Int!
+
+    """The ID of event schedule"""
+    eventScheduleId: Int!
+
+    """Target slot index to craft item"""
+    slotIndex: Int!
+  ): ByteString!
+  eventMaterialItemCrafts(
+    """Avatar address to craft item"""
+    avatarAddress: Address!
+
+    """Recipe ID of event item to craft"""
+    eventMaterialItemRecipeId: Int!
+
+    """The ID of event schedule"""
+    eventScheduleId: Int!
+
+    """Materials to be used to craft"""
+    materialsToUse: [MaterialsToUseInputType!]!
+  ): ByteString!
+}
+
+type CrystalMonsterCollectionMultiplierRowType {
+  level: Int!
+  multiplier: Int!
+}
+
+type CrystalMonsterCollectionMultiplierSheetType {
+  orderedList: [CrystalMonsterCollectionMultiplierRowType!]!
+}
+
+type Currency {
+  """The number of digits to treat as minor units (i.e., exponents)."""
+  decimalPlaces: Byte!
+
+  """The deterministic hash derived from other fields."""
+  hash: ByteString!
+
+  """
+  The uppermost quantity of currency allowed to exist.  null means unlimited supply.
+  """
+  maximumSupply: FungibleAssetValue
+
+  """
+  The addresses who can mint this currency.  If this is null anyone can mint the currency.  On the other hand, unlike null, an empty set means no one can mint the currency.
+  """
+  minters: [Address!]
+
+  """The ticker symbol, e.g., USD."""
+  ticker: String!
+
+  """Whether the total supply of this currency is trackable."""
+  totalSupplyTrackable: Boolean!
+}
+
+"""The currency type."""
+enum CurrencyEnum {
+  CRYSTAL
+  GARAGE
+  MEAD
+  NCG
+}
+
+input CurrencyInput {
+  """The number of digits to treat as minor units (i.e., exponents)."""
+  decimalPlaces: Byte!
+  maximumSupplyMajorUnit: BigInt
+  maximumSupplyMinorUnit: BigInt
+
+  """
+  The addresses who can mint this currency.  If this is null anyone can mint the currency.  On the other hand, unlike null, an empty set means no one can mint the currency.
+  """
+  minters: [Address!]
+
+  """The ticker symbol, e.g., USD."""
+  ticker: String!
+
+  """Whether the total supply of this currency is trackable."""
+  totalSupplyTrackable: Boolean
+}
+
+type CurrencyType {
+  decimalPlaces: Byte!
+  minters: [Address]
+  ticker: String!
+}
+
+"""
+The `DateTimeOffset` scalar type represents a date, time and offset from UTC. `DateTimeOffset` expects timestamps to be formatted in accordance with the [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) standard.
+"""
+scalar DateTimeOffset
+
+scalar Decimal
+
+type DecimalStatType {
+  additionalValue: Decimal!
+  baseValue: Decimal!
+  statType: StatType!
+  totalValue: Decimal!
+}
+
+type DifferentAppProtocolVersionEncounterType {
+  localVersion: AppProtocolVersionType!
+  peer: String!
+  peerVersion: AppProtocolVersionType!
+}
+
+enum ElementalType {
+  FIRE
+  LAND
+  NORMAL
+  WATER
+  WIND
+}
+
+type EquipmentType {
+  buffSkills: [SkillType]
+
+  """Item elemental."""
+  elementalType: ElementalType!
+  equipped: Boolean!
+  exp: Int!
+
+  """Grade from ItemSheet."""
+  grade: Int!
+
+  """ID from ItemSheet."""
+  id: Int!
+  itemId: Guid!
+
+  """Item subcategory."""
+  itemSubType: ItemSubType!
+
+  """Item category."""
+  itemType: ItemType!
+  level: Int!
+  requiredBlockIndex: Long
+  setId: Int!
+  skills: [SkillType]
+  stat: DecimalStatType!
+  statsMap: StatsMapType!
+}
+
+type ExplorerQuery {
+  blockQuery: BlockQuery
+  nodeState: NodeState!
+  stateQuery: LibplanetStateQuery
+  transactionQuery: TransactionQuery
+}
+
+"""Holds a fungible asset value which holds its currency together."""
+type FungibleAssetValue {
+  """The currency of the fungible asset."""
+  currency: Currency!
+  majorUnit: BigInt!
+  minorUnit: BigInt!
+
+  """The value quantity without its currency in string, e.g., "123.45"."""
+  quantity: String!
+
+  """
+  Gets a number that indicates the sign (-1: negative, 1: positive, or 0: zero) of the value.
+  """
+  sign: Int!
+
+  """The value quantity with its currency in string, e.g., "123.45 ABC"."""
+  string: String!
+}
+
+input FungibleAssetValueInputType {
+  decimalPlaces: Byte!
+  minters: [Address!]
+  quantity: BigInt!
+  ticker: String!
+}
+
+type FungibleAssetValueType {
+  currency: String!
+  quantity: String!
+}
+
+type FungibleAssetValueWithCurrencyType {
+  currency: CurrencyType!
+  quantity(minerUnit: Boolean = false): String!
+}
+
+input FungibleIdAndCountInput {
+  """Count"""
+  count: Int!
+
+  """Fungible ID"""
+  fungibleId: String!
+}
+
+type FungibleItemGarageWithAddressType {
+  addr: Address
+  count: Int
+  fungibleItemId: String
+  item: FungibleItemType
+}
+
+type FungibleItemType {
+  fungibleItemId: String!
+
+  """Item sub category."""
+  itemSubType: ItemSubType!
+
+  """Item category."""
+  itemType: ItemType!
+}
+
+type GaragesType {
+  agentAddr: Address
+  fungibleItemGarages: [FungibleItemGarageWithAddressType]
+  garageBalances: [FungibleAssetValue]
+  garageBalancesAddr: Address
+}
+
+scalar Guid
+
+scalar HashDigest_SHA256
+
+type InventoryItemType {
+  """A count of item"""
+  count: Int!
+
+  """An Id of item"""
+  id: Int!
+
+  """An ItemType of item"""
+  itemType: ItemType!
+  lockId: Guid
+  locked: Boolean!
+  tradableId: Guid
+}
+
+type InventoryType {
+  """List of Consumables."""
+  consumables: [ConsumableType!]!
+
+  """List of Costumes."""
+  costumes: [CostumeType!]!
+
+  """List of Equipments."""
+  equipments(
+    """filter equipped inventory item"""
+    equipped: Boolean
+
+    """
+    Ids for fetching only equipment where id (number) is in the given argument.
+    """
+    ids: [Int!]
+
+    """
+    ItemIds for fetching only equipment where itemId (Guid) is in the given argument.
+    """
+    itemIds: [Guid!]
+
+    """
+    An item subtype for fetching only equipment where its subtype is the same. If it wasn't given, you'll get all equipment without relationship to the subtype.
+    """
+    itemSubType: ItemSubType
+  ): [EquipmentType!]!
+
+  """List of Inventory Item."""
+  items(
+    """An Id to find Inventory Item"""
+    inventoryItemId: Int
+
+    """filter locked Inventory Item"""
+    locked: Boolean
+  ): [InventoryItemType!]!
+
+  """List of Materials."""
+  materials: [MaterialType!]!
+}
+
+enum ItemSubType {
+  AP_STONE
+  ARMOR
+  AURA
+  BELT
+  CHEST @deprecated(reason: "ItemSubType.Chest has never been used outside the MaterialItemSheet. And we won't use it in the future until we have a specific reason.")
+  EAR_COSTUME
+  EQUIPMENT_MATERIAL
+  EYE_COSTUME
+  FOOD
+  FOOD_MATERIAL
+  FULL_COSTUME
+  HAIR_COSTUME
+  HOURGLASS
+  MONSTER_PART
+  NECKLACE
+  NORMAL_MATERIAL
+  RING
+  TAIL_COSTUME
+  TITLE
+  WEAPON
+}
+
+enum ItemType {
+  CONSUMABLE
+  COSTUME
+  EQUIPMENT
+  MATERIAL
+}
+
+type ItemUsableType {
+  """Item elemental."""
+  elementalType: ElementalType!
+
+  """Grade from ItemSheet."""
+  grade: Int!
+
+  """ID from ItemSheet."""
+  id: Int!
+
+  """Guid of item."""
+  itemId: Guid!
+
+  """Item subcategory."""
+  itemSubType: ItemSubType!
+
+  """Item category."""
+  itemType: ItemType!
+  requiredBlockIndex: Long
+}
+
+type KeyStoreMutation {
+  createPrivateKey(passphrase: String!, privateKey: ByteString): PrivateKeyType!
+  revokePrivateKey(address: Address!): ProtectedPrivateKeyType!
+}
+
+type KeyStoreType {
+  decryptedPrivateKey(address: Address!, passphrase: String!): ByteString!
+
+  """An API to provide conversion to public-key, address."""
+  privateKey(
+    """A representation of public-key with hexadecimal format."""
+    hex: ByteString!
+  ): PrivateKeyType!
+  protectedPrivateKeys: [ProtectedPrivateKeyType!]!
+}
+
+type LibplanetStateQuery {
+  balance(currency: CurrencyInput!, offsetBlockHash: ID, offsetStateRootHash: HashDigest_SHA256, owner: Address!): FungibleAssetValue!
+  states(addresses: [Address!]!, offsetBlockHash: ID, offsetStateRootHash: HashDigest_SHA256): [BencodexValue]!
+  totalSupply(currency: CurrencyInput!, offsetBlockHash: ID, offsetStateRootHash: HashDigest_SHA256): FungibleAssetValue
+  validators(offsetBlockHash: ID, offsetStateRootHash: HashDigest_SHA256): [Validator!]
+}
+
+scalar Long
+
+type MailBoxType {
+  count: Int!
+  mails: [MailType!]!
+}
+
+type MailType {
+  blockIndex: Long!
+  id: Guid!
+  requiredBlockIndex: Long!
+}
+
+type MaterialType {
+  """Item elemental."""
+  elementalType: ElementalType!
+
+  """Grade from ItemSheet."""
+  grade: Int!
+
+  """ID from ItemSheet."""
+  id: Int!
+  itemId: ByteString!
+
+  """Item subcategory."""
+  itemSubType: ItemSubType!
+
+  """Item category."""
+  itemType: ItemType!
+  requiredBlockIndex: Long
+}
+
+input MaterialsToUseInputType {
+  """Material ID to be used."""
+  materialId: Int!
+
+  """Item quantity to be used."""
+  quantity: Int!
+}
+
+type MeadPledgeType {
+  approved: Boolean!
+  mead: Int!
+  patronAddress: Address
+}
+
+type MonsterCollectionRewardInfoType {
+  itemId: Int!
+  quantity: Int!
+}
+
+type MonsterCollectionRowType {
+  level: Int!
+  requiredGold: Int!
+  rewards: [MonsterCollectionRewardInfoType]!
+}
+
+type MonsterCollectionSheetType {
+  orderedList: [MonsterCollectionRowType]
+}
+
+type MonsterCollectionStateType {
+  address: Address!
+  claimableBlockIndex: Long!
+  expiredBlockIndex: Long!
+  level: Long!
+  receivedBlockIndex: Long!
+  rewardLevel: Long!
+  startedBlockIndex: Long!
+}
+
+type MonsterCollectionStatusType {
+  fungibleAssetValue: FungibleAssetValueType!
+  lockup: Boolean!
+  rewardInfos: [MonsterCollectionRewardInfoType]
+  tipIndex: Long!
+}
+
+type MultiAccountInfo {
+  agents: [String]
+  agentsCount: Int
+  ips: [String]
+  ipsCount: Int
+  key: String!
+}
+
+type NodeExceptionType {
+  """The code of NodeException."""
+  code: Int!
+
+  """The message of NodeException."""
+  message: String!
+}
+
+type NodeState {
+  peers: [BoundPeer!]
+  preloaded: Boolean!
+  validators: [BoundPeer!]
+}
+
+type NodeStatusType {
+  appProtocolVersion: AppProtocolVersionType
+
+  """Whether the current libplanet node has ended bootstrapping."""
+  bootstrapEnded: Boolean!
+
+  """Block header of the genesis block from the current chain."""
+  genesis: BlockHeader!
+
+  """
+  A informational version (a.k.a. version suffix) of NineChronicles.Headless
+  """
+  informationalVersion: String
+
+  """Whether the current node is mining."""
+  isMining: Boolean!
+
+  """Whether the current libplanet node has ended preloading."""
+  preloadEnded: Boolean!
+
+  """A version of NineChronicles.Headless"""
+  productVersion: String
+
+  """Ids of staged transactions from the current node."""
+  stagedTxIds(
+    """Target address to query"""
+    address: Address
+  ): [TxId]
+
+  """The number of ids of staged transactions from the current node."""
+  stagedTxIdsCount: Int
+
+  """A list of subscribers' address"""
+  subscriberAddresses: [Address]
+
+  """The number of a list of subscribers' address"""
+  subscriberAddressesCount: Int
+
+  """Block header of the tip block from the current canonical chain."""
+  tip: BlockHeader!
+
+  """The topmost blocks from the current node."""
+  topmostBlocks(
+    """The number of blocks to get."""
+    limit: Int!
+
+    """
+    List only blocks mined by the given address.  (List everything if omitted.)
+    """
+    miner: Address
+
+    """The number of blocks to skip from tip."""
+    offset: Int = 0
+  ): [BlockHeader]!
+}
+
+enum NotificationEnum {
+  BUYER
+  COMBINATION_CONSUMABLE
+  COMBINATION_EQUIPMENT
+  HAS
+  REFILL
+  SELLER
+}
+
+type NotificationType {
+  """The message of Notification."""
+  message: String
+
+  """The type of Notification."""
+  type: NotificationEnum!
+}
+
+type OrderDigestListStateType {
+  address: Address
+  orderDigestList: [OrderDigestType]!
+}
+
+type OrderDigestType {
+  combatPoint: Int!
+
+  """Block index order expired."""
+  expiredBlockIndex: Int!
+
+  """Count of item."""
+  itemCount: Int!
+
+  """Id of item."""
+  itemId: Int!
+  level: Int!
+
+  """Guid of order."""
+  orderId: Guid!
+
+  """Order price."""
+  price: String!
+
+  """Address of seller agent."""
+  sellerAgentAddress: Address!
+
+  """Block index order started."""
+  startedBlockIndex: Int!
+
+  """Tradable guid of order."""
+  tradableId: Guid!
+}
+
+type PeerChainStateQuery {
+  """
+  Summary of other peers connected to this node. It consists of address, chain height, and total difficulty.
+  """
+  state: [String]!
+}
+
+type PreloadStateExtraType {
+  currentCount: Long!
+  totalCount: Long!
+  type: String!
+}
+
+type PreloadStateType {
+  currentPhase: Long!
+  extra: PreloadStateExtraType!
+  totalPhase: Long!
+}
+
+type PrivateKeyType {
+  """A representation of private-key with hexadecimal format."""
+  hex: ByteString!
+
+  """A public-key derived from the private-key."""
+  publicKey: PublicKeyType!
+}
+
+type ProtectedPrivateKeyType {
+  address: Address!
+}
+
+scalar PublicKey
+
+type PublicKeyType {
+  """An address derived from the public-key."""
+  address: Address!
+
+  """A representation of public-key with hexadecimal format."""
+  hex(
+    """A flag to determine whether to compress public-key."""
+    compress: Boolean
+  ): ByteString!
+}
+
+type QuestListType {
+  completedQuestIds: [Int!]!
+}
+
+type RaiderStateType {
+  """address of avatar state."""
+  avatarAddress: Address!
+
+  """name of avatar state."""
+  avatarName: String!
+
+  """rank reward claimed block index."""
+  claimedBlockIndex: Long!
+
+  """combat point of avatar state."""
+  cp: Int!
+
+  """season high score."""
+  highScore: Int!
+
+  """icon id for ranking portrait."""
+  iconId: Int!
+
+  """latest challenge boss level."""
+  latestBossLevel: Int!
+
+  """latest reward claimed season rank."""
+  latestRewardRank: Int!
+
+  """level of avatar state."""
+  level: Int!
+
+  """challenge ticket purchase count."""
+  purchaseCount: Int!
+
+  """ticket refilled block index."""
+  refillBlockIndex: Long!
+
+  """remain challenge count before refill."""
+  remainChallengeCount: Int!
+
+  """season total challenge count."""
+  totalChallengeCount: Int!
+
+  """season total score."""
+  totalScore: Int!
+}
+
+type RankingInfoType {
+  """Address of agent."""
+  agentAddress: Address!
+
+  """Equipped Armor ID from EquipmentItemSheet."""
+  armorId: Int!
+
+  """Address of avatar."""
+  avatarAddress: Address!
+
+  """Avatar name."""
+  avatarName: String!
+
+  """Avatar total EXP."""
+  exp: Long!
+
+  """Avatar Level."""
+  level: Int!
+
+  """Block index at Latest stage cleared."""
+  stageClearedBlockIndex: Long!
+
+  """Block index at RankingInfo update."""
+  updatedAt: Long!
+}
+
+type RankingMapStateType {
+  """Address of RankingMapState."""
+  address: Address!
+
+  """RankingMapState Capacity."""
+  capacity: Int!
+
+  """List of RankingInfo."""
+  rankingInfos: [RankingInfoType!]!
+}
+
+input RecipientsInputType {
+  amount: FungibleAssetValueInputType!
+  recipient: Address!
+}
+
+type RpcInformationQuery {
+  """List of address connected to this node."""
+  clients: [Address]!
+
+  """clients connected to this node by device."""
+  clientsByDevice(device: String!): [Address!]!
+
+  """clients connected to this node grouped by Ip addresses."""
+  clientsByIps(minimum: Int!): [MultiAccountInfo]!
+
+  """clients count connected to this node grouped by Ip addresses."""
+  clientsCountByIps(minimum: Int!): Int!
+
+  """total count by connected to this node."""
+  totalCount: Int!
+
+  """total count by connected to this node."""
+  totalCountByDevice(device: String!): Int!
+}
+
+input RuneSlotInfoInputType {
+  runeId: Int!
+  slotIndex: Int!
+}
+
+type RuneStateType {
+  """Level of this rune."""
+  level: Int!
+
+  """ID of rune."""
+  runeId: Int!
+}
+
+type ShardedShopStateV2Type {
+  """Address of sharded shop."""
+  address: Address!
+
+  """List of OrderDigest."""
+  orderDigestList(
+    """Filter for item id."""
+    id: Int
+
+    """Filter for item maximum price."""
+    maximumPrice: Int
+  ): [OrderDigestType]!
+}
+
+type ShopItemType {
+  """Costume information."""
+  costume: CostumeType
+
+  """Equipment / Consumable information."""
+  itemUsable: ItemUsableType
+
+  """Item price."""
+  price: String!
+
+  """Guid of product registered."""
+  productId: Guid!
+
+  """Address of seller agent."""
+  sellerAgentAddress: Address!
+
+  """Address of seller avatar."""
+  sellerAvatarAddress: Address!
+}
+
+type ShopStateType {
+  """Address of shop."""
+  address: Address!
+
+  """List of ShopItem."""
+  products(
+    """Filter for item id."""
+    id: Int
+
+    """
+    Filter for ItemSubType. see from https://github.com/planetarium/lib9c/blob/main/Lib9c/Model/Item/ItemType.cs#L13
+    """
+    itemSubType: ItemSubType
+
+    """Filter for item maximum price."""
+    maximumPrice: Int
+  ): [ShopItemType]!
+}
+
+"""
+A fungible asset value ticker and amount.You can specify either currencyEnum or currencyTicker.
+"""
+input SimplifyFungibleAssetValueInput {
+  """A currency type to be loaded."""
+  currencyEnum: CurrencyEnum
+
+  """A currency ticker to be loaded."""
+  currencyTicker: String
+
+  """
+  A numeric string to parse.  Can consist of digits, plus (+), minus (-), and decimal separator (.). <see cref="FungibleAssetValue.Parse(Currency, string)" />
+  """
+  value: String!
+}
+
+type SkillType {
+  chance: Int!
+  elementalType: ElementalType!
+  id: Int!
+  power: Int!
+  referencedStatType: StatType!
+  statPowerRatio: Int!
+}
+
+type StakeAchievementsType {
+  """The address of current state."""
+  achievementsByLevel(level: Int!): Int!
+}
+
+type StakeRegularFixedRewardInfoType {
+  count: Int!
+  itemId: Int!
+}
+
+type StakeRegularRewardInfoType {
+  currencyDecimalPlaces: Int
+  currencyTicker: String
+  decimalRate: Decimal!
+  itemId: Int!
+  rate: Int!
+  type: StakeRewardType!
+}
+
+type StakeRegularRewardsType {
+  bonusRewards: [StakeRegularFixedRewardInfoType!]!
+  level: Int!
+  requiredGold: Long!
+  rewards: [StakeRegularRewardInfoType!]!
+}
+
+enum StakeRewardType {
+  CURRENCY
+  ITEM
+  RUNE
+}
+
+type StakeRewardsType {
+  orderedList: [StakeRegularRewardsType!]!
+}
+
+type StakeStateType {
+  """The staking achievements."""
+  achievements: StakeAchievementsType @deprecated(reason: "Since StakeStateV2, the achievement became removed.")
+
+  """The address of current state."""
+  address: Address!
+
+  """The block index the user can cancel the staking."""
+  cancellableBlockIndex: Long!
+
+  """The block index the user can claim rewards."""
+  claimableBlockIndex: Long!
+
+  """The staked amount."""
+  deposit: String!
+
+  """The block index the user received rewards."""
+  receivedBlockIndex: Long!
+  stakeRewards: StakeRewardsType!
+
+  """The block index the user started to stake."""
+  startedBlockIndex: Long!
+}
+
+type StandaloneMutation {
+  action: ActionMutation
+  activationStatus: ActivationStatusMutation @deprecated(reason: "Since NCIP-15, it doesn't care account activation.")
+  keyStore: KeyStoreMutation @deprecated(reason: "Use `planet key` command instead.  https://www.npmjs.com/package/@planetarium/cli")
+
+  """Add a new transaction to staging and return TxId"""
+  stageTransaction(
+    """The hexadecimal string of the transaction to stage."""
+    payload: String!
+  ): TxId!
+
+  """Add a new transaction to staging"""
+  stageTx(
+    """The base64-encoded bytes for new transaction."""
+    payload: String!
+  ): Boolean!
+
+  """Add a new transaction to staging and return TxId"""
+  stageTxV2(
+    """The base64-encoded bytes for new transaction."""
+    payload: String!
+  ): TxId! @deprecated(reason: "API update with action query. use stageTransaction mutation")
+  transfer(
+    """A string value of the value to be transferred."""
+    amount: String!
+
+    """
+    A hex-encoded value for address of currency to be transferred. The default is the NCG's address.
+    """
+    currencyAddress: String! = "000000000000000000000000000000000000000A"
+
+    """A 80-max length string to note."""
+    memo: String
+
+    """A hex-encoded value for address of recipient."""
+    recipient: Address!
+
+    """A sender's transaction counter. You can get it through nextTxNonce()."""
+    txNonce: Long!
+  ): TxId
+  transferGold(amount: String!, recipient: Address!): TxId @deprecated(reason: "Incorrect remittance may occur when using transferGold() to the same address consecutively. Use transfer() instead.")
+}
+
+type StandaloneQuery {
+  """Query to create action transaction."""
+  actionQuery: ActionQuery!
+  actionTxQuery(
+    maxGasPrice: FungibleAssetValueInputType = {decimalPlaces: 18, minters: null, quantity: 1000000000000000000, ticker: "Mead"}
+
+    """The nonce for Transaction."""
+    nonce: Long
+
+    """The hexadecimal string of public key for Transaction."""
+    publicKey: String!
+
+    """The time this transaction is created."""
+    timestamp: DateTimeOffset
+  ): ActionTxQuery!
+  activated(invitationCode: String!): Boolean! @deprecated(reason: "Since NCIP-15, it doesn't care account activation.")
+  activationKeyNonce(invitationCode: String!): String! @deprecated(reason: "Since NCIP-15, it doesn't care account activation.")
+
+  """Check if the provided address is activated."""
+  activationStatus: ActivationStatusQuery! @deprecated(reason: "Since NCIP-15, it doesn't care account activation.")
+
+  """Query to get derived address."""
+  addressQuery: AddressQuery!
+  chainQuery: ExplorerQuery! @deprecated(reason: "Use /graphql/explorer")
+  getTx(
+    """transaction id."""
+    txId: TxId!
+  ): TransactionType @deprecated(reason: "The root query is not the best place for getTx so it was moved. Use transaction.getTx()")
+  goldBalance(
+    """Target address to query"""
+    address: Address!
+
+    """Offset block hash for query."""
+    hash: ByteString
+  ): String!
+  keyStore: KeyStoreType @deprecated(reason: "Use `planet key` command instead.  https://www.npmjs.com/package/@planetarium/cli")
+
+  """Address of current node."""
+  minerAddress: Address
+
+  """Get monster collection status by address."""
+  monsterCollectionStatus(
+    """agent address."""
+    address: Address
+  ): MonsterCollectionStatusType
+  nextTxNonce(
+    """Target address to query"""
+    address: Address!
+  ): Long! @deprecated(reason: "The root query is not the best place for nextTxNonce so it was moved. Use transaction.nextTxNonce()")
+  nodeStatus: NodeStatusType!
+
+  """Get the peer's block chain state"""
+  peerChainState: PeerChainStateQuery!
+
+  """Query for rpc mode information."""
+  rpcInformation: RpcInformationQuery!
+  state(
+    """The address of state to fetch from the chain."""
+    address: Address!
+
+    """The hash of the block used to fetch state from chain."""
+    hash: ByteString
+  ): ByteString
+  stateQuery(
+    """Offset block hash for query."""
+    hash: ByteString
+  ): StateQuery!
+
+  """Query for transaction."""
+  transaction: TransactionHeadlessQuery!
+  transferNCGHistories(blockHash: ByteString!, recipient: Address): [TransferNCGHistoryType!]!
+
+  """The validation method provider for Libplanet types."""
+  validation: ValidationQuery!
+}
+
+type StandaloneSubscription {
+  balanceByAgent(
+    """A hex-encoded address of agent."""
+    address: Address!
+  ): String!
+  differentAppProtocolVersionEncounter: DifferentAppProtocolVersionEncounterType!
+  nodeException: NodeExceptionType!
+  nodeStatus: NodeStatusType
+  notification: NotificationType!
+  preloadProgress: PreloadStateType
+  tipChanged: TipChanged
+  tx(
+    """A regular expression to filter transactions based on action type."""
+    actionType: String!
+  ): TxType
+}
+
+enum StatType {
+  ARMOR_PENETRATION
+  ATK
+  CDMG
+  CRI
+  DEF
+  DRR
+  DRV
+  HIT
+  HP
+  NONE
+  SPD
+  THORN
+}
+
+type StateQuery {
+  """State for agent."""
+  agent(
+    """Address of agent."""
+    address: Address!
+  ): AgentStateType
+
+  """List of arena information of requested arena and avatar list"""
+  arenaInformation(
+    """List of avatar address to get arena information"""
+    avatarAddresses: [Address!]!
+
+    """Championship ID to get arena information"""
+    championshipId: Int!
+
+    """Round of championship to get arena information"""
+    round: Int!
+  ): [ArenaInformationType!]!
+
+  """State for avatar."""
+  avatar(
+    """Address of avatar."""
+    avatarAddress: Address!
+  ): AvatarStateType
+
+  """Avatar states having some order as addresses"""
+  avatars(
+    """Addresses of avatars to query."""
+    addresses: [Address!]!
+  ): [AvatarStateType]!
+
+  """asset balance by currency."""
+  balance(address: Address!, currency: CurrencyInput!): FungibleAssetValueWithCurrencyType!
+  crystalMonsterCollectionMultiplierSheet: CrystalMonsterCollectionMultiplierSheetType
+
+  """
+  Get balances and fungible items in garages.
+  Use either `currencyEnums` or `currencyTickers` to get balances.
+  """
+  garages(
+    """Agent address to get balances and fungible items in garages"""
+    agentAddr: Address!
+
+    """List of currency enums to get balances in garages"""
+    currencyEnums: [CurrencyEnum!]
+
+    """List of currency tickers to get balances in garages"""
+    currencyTickers: [String!]
+
+    """List of fungible item IDs to get fungible item in garages"""
+    fungibleItemIds: [String!]
+  ): GaragesType
+
+  """The latest stake rewards based on StakePolicySheet."""
+  latestStakeRewards: StakeRewardsType
+  monsterCollectionSheet: MonsterCollectionSheetType
+
+  """State for monster collection."""
+  monsterCollectionState(
+    """Address of agent."""
+    agentAddress: Address!
+  ): MonsterCollectionStateType
+  orderDigestList(avatarAddress: Address!): OrderDigestListStateType
+  pledge(agentAddress: Address!): MeadPledgeType!
+
+  """world boss season id by block index."""
+  raidId(
+    blockIndex: Long!
+
+    """find previous raid id."""
+    prev: Boolean = false
+  ): Int!
+
+  """raider address list by world boss season."""
+  raiderList(raiderListAddress: Address!): [Address!]
+
+  """world boss season user information."""
+  raiderState(
+    """address of world boss season."""
+    raiderAddress: Address!
+  ): RaiderStateType
+
+  """State for avatar EXP record."""
+  rankingMap(
+    """RankingMapState index. 0 ~ 99"""
+    index: Int!
+  ): RankingMapStateType
+
+  """State for sharded shop."""
+  shardedShop(
+    """
+    ItemSubType for shard. see from https://github.com/planetarium/lib9c/blob/main/Lib9c/Model/Item/ItemType.cs#L13
+    """
+    itemSubType: ItemSubType!
+
+    """
+    Nonce for shard. It's not considered if itemSubtype is kind of costume or title. 0 ~ 15
+    """
+    nonce: Int!
+  ): ShardedShopStateV2Type
+
+  """State for shop."""
+  shop: ShopStateType @deprecated(reason: "Shop is migrated to ShardedShop and not using now. Use shardedShop() instead.")
+  stakeRewards: StakeRewardsType @deprecated(reason: "Since stake3, claim_stake_reward9 actions, each stakers have their own contracts.")
+
+  """State for staking."""
+  stakeState(
+    """Address of agent who staked."""
+    address: Address!
+  ): StakeStateType
+
+  """Staking states having same order as addresses"""
+  stakeStates(
+    """Addresses of agent who staked."""
+    addresses: [Address]!
+  ): [StakeStateType]!
+
+  """List of unlocked equipment recipe sheet row ids."""
+  unlockedRecipeIds(
+    """Address of avatar."""
+    avatarAddress: Address!
+  ): [Int]
+
+  """List of unlocked world sheet row ids."""
+  unlockedWorldIds(
+    """Address of avatar."""
+    avatarAddress: Address!
+  ): [Int]
+
+  """State for weekly arena."""
+  weeklyArena(
+    """WeeklyArenaState index. It increases every 56,000 blocks."""
+    index: Int!
+  ): WeeklyArenaStateType
+
+  """user boss kill reward record by world boss season."""
+  worldBossKillRewardRecord(worldBossKillRewardRecordAddress: Address!): WorldBossKillRewardRecordType
+
+  """world boss season boss information."""
+  worldBossState(bossAddress: Address!): WorldBossStateType
+}
+
+type StatsMapType {
+  aTK: Int!
+  cRI: Int!
+  dEF: Int!
+  hIT: Int!
+  hP: Int!
+  sPD: Int!
+}
+
+type TipChanged {
+  hash: ByteString
+  index: Long!
+}
+
+type Transaction {
+  """A list of actions in this transaction."""
+  actions: [Action!]!
+
+  """The block including the transaction."""
+  blockRef: Block!
+
+  """A unique identifier derived from this transaction content."""
+  id: ID!
+
+  """
+  The number of previous transactions committed by the signer of this tx.
+  """
+  nonce: Long!
+
+  """A PublicKey of the account who signed this transaction."""
+  publicKey: ByteString!
+
+  """A serialized tx payload in base64 string."""
+  serializedPayload: String!
+
+  """A digital signature of the content of this transaction."""
+  signature: ByteString!
+
+  """An address of the account who signed this transaction."""
+  signer: Address!
+
+  """The time this transaction was created and signed."""
+  timestamp: DateTimeOffset!
+
+  """Addresses whose states were affected by Actions."""
+  updatedAddresses: [Address!]!
+}
+
+type TransactionHeadlessQuery {
+  attachSignature(
+    """The base64-encoded signature of the given unsigned transaction."""
+    signature: String!
+
+    """The base64-encoded unsigned transaction to attach the given signature."""
+    unsignedTransaction: String!
+  ): String! @deprecated(reason: "Use signTransaction")
+  createUnsignedTx(
+    """The nonce for Transaction."""
+    nonce: Long
+
+    """The base64-encoded plain value of action for Transaction."""
+    plainValue: String!
+
+    """The base64-encoded public key for Transaction."""
+    publicKey: String!
+  ): String! @deprecated(reason: "API update with action query. use unsignedTransaction")
+  getTx(
+    """transaction id."""
+    txId: TxId!
+  ): TransactionType
+  ncTransactions(
+    """filter tx by having actions' type. It is regular expression."""
+    actionType: String!
+
+    """number of block to query."""
+    limit: Long!
+
+    """start block index for query tx."""
+    startingBlockIndex: Long!
+  ): [TransactionType]
+  nextTxNonce(
+    """Target address to query"""
+    address: Address!
+  ): Long!
+  signTransaction(
+    """The hexadecimal string of signature of the given unsigned transaction."""
+    signature: String!
+
+    """
+    The hexadecimal string of unsigned transaction to attach the given signature.
+    """
+    unsignedTransaction: String!
+  ): ByteString!
+  transactionResult(
+    """transaction id."""
+    txId: TxId!
+  ): TxResultType!
+  unsignedTransaction(
+    maxGasPrice: FungibleAssetValueInputType = {decimalPlaces: 18, minters: null, quantity: 1000000000000000000, ticker: "Mead"}
+
+    """The nonce for Transaction."""
+    nonce: Long
+
+    """The hexadecimal string of plain value for Action."""
+    plainValue: String!
+
+    """The hexadecimal string of public key for Transaction."""
+    publicKey: String!
+  ): ByteString!
+}
+
+type TransactionQuery {
+  """
+  Attach the given signature to the given transaction and return tx as hexadecimal
+  """
+  bindSignature(
+    """The hexadecimal string of the given unsigned transaction."""
+    signature: String!
+
+    """
+    The hexadecimal string of unsigned transaction to attach the given signature.
+    """
+    unsignedTransaction: String!
+  ): String!
+  nextNonce(
+    """Address of the account to get the next tx nonce."""
+    address: Address!
+  ): Long!
+  stagedTransactions(desc: Boolean = false, involvedAddress: Address, limit: Int, offset: Int = 0, signer: Address): [Transaction!]!
+  transaction(id: ID): Transaction
+  transactionResult(
+    """transaction id."""
+    txId: ID!
+  ): TxResultType!
+  transactions(desc: Boolean = false, involvedAddress: Address, limit: Int, offset: Int = 0, signer: Address): [Transaction!]!
+  unsignedTransaction(
+    """The nonce for Transaction."""
+    nonce: Long
+
+    """The hexadecimal string of plain value for Action."""
+    plainValue: String!
+
+    """The hexadecimal string of public key for Transaction."""
+    publicKey: String!
+  ): ByteString!
+}
+
+type TransactionType {
+  """A list of actions in this transaction."""
+  actions: [Action]!
+
+  """A unique identifier derived from this transaction content."""
+  id: TxId!
+
+  """
+  The number of previous transactions committed by the signer of this transaction.
+  """
+  nonce: Long!
+
+  """A PublicKey of the account who signed this transaction."""
+  publicKey: PublicKeyType!
+
+  """A serialized tx payload in base64 string."""
+  serializedPayload: String!
+
+  """A digital signature of the content of this transaction."""
+  signature: ByteString!
+
+  """An address of the account who signed this transaction."""
+  signer: Address!
+
+  """The time this transaction was created and signed."""
+  timestamp: String!
+
+  """Addresses whose states were affected by Actions."""
+  updatedAddresses: [Address]!
+}
+
+type TransferNCGHistoryType {
+  amount: String!
+  blockHash: ByteString!
+  memo: String
+  recipient: Address!
+  sender: Address!
+  txId: ByteString!
+}
+
+scalar TxId
+
+type TxResultType {
+  """The block hash which the target transaction executed."""
+  blockHash: String
+
+  """The block index which the target transaction executed."""
+  blockIndex: Long
+
+  """The name of exception. (when only failed)"""
+  exceptionNames: [String]
+
+  """The input state's root hash which the target transaction executed."""
+  inputState: HashDigest_SHA256
+
+  """The output state's root hash which the target transaction executed."""
+  outputState: HashDigest_SHA256
+
+  """The transaction status."""
+  txStatus: TxStatus!
+}
+
+enum TxStatus {
+  FAILURE
+  INVALID
+  STAGING
+  SUCCESS
+}
+
+type TxType {
+  transaction: TransactionType!
+  txResult: TxResultType
+}
+
+type ValidationQuery {
+  metadata(
+    """The raw value of json metadata."""
+    raw: String!
+  ): Boolean!
+  privateKey(
+    """The raw value of private-key, presented as hexadecimal."""
+    hex: ByteString!
+  ): Boolean!
+  publicKey(
+    """The raw value of public-key, presented as hexadecimal."""
+    hex: ByteString!
+  ): Boolean!
+}
+
+"""A data type holds validator's public key and its voting power."""
+type Validator {
+  """Gets the voting power of the validator."""
+  power: BigInt!
+
+  """The public key of the validator."""
+  publicKey: PublicKey!
+}
+
+type Vote {
+  """Hash of the block voted."""
+  blockHash: String!
+
+  """Flag of the vote"""
+  flag: VoteFlag!
+
+  """Height of the consensus voted."""
+  height: Long!
+
+  """Round of the consensus voted."""
+  round: Int!
+
+  """A digital signature of the content of this vote."""
+  signature: ByteString!
+
+  """The time this vote was created and signed."""
+  timestamp: DateTimeOffset!
+
+  """Public key of the validator which is subject of the vote."""
+  validatorPublicKey: PublicKey!
+}
+
+scalar VoteFlag
+
+type WeeklyArenaStateType {
+  address: Address!
+  ended: Boolean!
+  orderedArenaInfos: [ArenaInfoType]!
+}
+
+type WorldBossKillRewardRecordMapType {
+  bossLevel: Int!
+
+  """check reward already claimed. if already claimed return true."""
+  claimed: Boolean!
+}
+
+type WorldBossKillRewardRecordType {
+  map: [WorldBossKillRewardRecordMapType!]!
+}
+
+type WorldBossStateType {
+  """world boss current hp."""
+  currentHp: BigInt!
+
+  """world boss season ended block index."""
+  endedBlockIndex: Long!
+
+  """world boss season id."""
+  id: Int!
+
+  """world boss current level."""
+  level: Int!
+
+  """world boss season started block index."""
+  startedBlockIndex: Long!
+}
+
+type WorldInformationType {
+  isStageCleared(stageId: Int!): Boolean!
+  isWorldUnlocked(worldId: Int!): Boolean!
+  world(worldId: Int!): WorldType!
+}
+
+type WorldType {
+  id: Int!
+  isStageCleared: Boolean!
+  isUnlocked: Boolean!
+  name: String!
+  stageBegin: Int!
+  stageClearedBlockIndex: Long!
+  stageClearedId: Int!
+  stageEnd: Int!
+  unlockedBlockIndex: Long!
+}
