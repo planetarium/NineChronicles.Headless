@@ -43,6 +43,7 @@ using OpenTelemetry.Metrics;
 
 namespace NineChronicles.Headless.Executable
 {
+    [HasSubCommands(typeof(Cocona.Docs.DocumentCommand), "docs")]
     [HasSubCommands(typeof(AccountCommand), "account")]
     [HasSubCommands(typeof(ValidationCommand), "validation")]
     [HasSubCommands(typeof(ChainCommand), "chain")]
