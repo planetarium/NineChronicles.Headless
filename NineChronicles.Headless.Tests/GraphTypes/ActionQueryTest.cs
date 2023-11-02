@@ -13,6 +13,7 @@ using Lib9c;
 using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
+using Libplanet.Types.Tx;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Action.Garages;
@@ -23,6 +24,7 @@ using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
 using Xunit;
+using Xunit.Abstractions;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
@@ -1339,6 +1341,82 @@ actionPoint: {actionPoint},
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(groupId, action.GroupId);
             Assert.Equal(summonCount, action.SummonCount);
+        }
+
+        [Theory]
+        [InlineData(1)]
+        [InlineData(2)]
+        public async Task ClaimItems(int claimDataCount)
+        {
+            var random = new Random();
+            var tickerList = new List<string> { "Item_T_500000", "Item_T_400000", "Item_T_800201", "Item_NT_49900011" };
+            var claimDataList = new List<(Address, List<FungibleAssetValue>)>();
+            var queryBuilder = new StringBuilder().Append("{claimItems(claimData: [");
+            for (var i = 0; i < claimDataCount; i++)
+            {
+                var avatarAddress = new PrivateKey().ToAddress();
+                var currencyCount = random.Next(1, tickerList.Count + 1);
+                var tickerCandidates = tickerList.OrderBy(i => random.Next()).Take(currencyCount);
+                queryBuilder.Append($@"{{
+                    avatarAddress: ""{avatarAddress}"",
+                    fungibleAssetValues:[
+                ");
+                var favList = tickerCandidates.Select(
+                    ticker => new FungibleAssetValue(
+                        Currency.Uncapped(
+                            ticker: ticker,
+                            decimalPlaces: 0,
+                            minters: new AddressSet(new List<Address>())
+                        ),
+                        random.Next(1, 100), 0
+                    )
+                ).ToList();
+                foreach (var fav in favList)
+                {
+                    queryBuilder.Append($@"{{
+                        ticker: ""{fav.Currency.Ticker}"",
+                        decimalPlaces: 0,
+                        minters: [],
+                        quantity: {fav.MajorUnit}
+                    }}");
+                    if (fav != favList[^1])
+                    {
+                        queryBuilder.Append(",");
+                    }
+                }
+
+                claimDataList.Add((avatarAddress, favList));
+
+                queryBuilder.Append("]}");
+                if (i < claimDataCount - 1)
+                {
+                    queryBuilder.Append(",");
+                }
+            }
+
+            queryBuilder.Append("])}");
+
+            var queryResult =
+                await ExecuteQueryAsync<ActionQuery>(queryBuilder.ToString(), standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["claimItems"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<ClaimItems>(actionBase);
+
+            for (var i = 0; i < claimDataList.Count; i++)
+            {
+                var (expectedAddr, expectedFavList) = claimDataList[i];
+                var (actualAddr, actualFavList) = action.ClaimData[i];
+                Assert.Equal(expectedAddr, actualAddr);
+                Assert.Equal(expectedFavList.Count, actualFavList.Count);
+                for (var j = 0; j < expectedFavList.Count; j++)
+                {
+                    // Assert.Equal(expectedFavList[i], actualFavList[i]);
+                    Assert.Equal(expectedFavList[i].Currency.Ticker, actualFavList[i].Currency.Ticker);
+                    Assert.Equal(expectedFavList[i].RawValue, actualFavList[i].RawValue);
+                }
+            }
         }
     }
 }
