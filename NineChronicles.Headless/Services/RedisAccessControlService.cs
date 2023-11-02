@@ -1,3 +1,4 @@
+using System;
 using StackExchange.Redis;
 using Libplanet.Crypto;
 using Nekoyume.Blockchain;
@@ -15,16 +16,17 @@ namespace NineChronicles.Headless.Services
             _db = redis.GetDatabase();
         }
 
-        public bool IsAccessDenied(Address address)
+        public int? GetTxQuota(Address address)
         {
-            var result = _db.KeyExists(address.ToString());
-            if (result)
+            RedisValue result = _db.StringGet(address.ToString());
+            if (!result.IsNull)
             {
                 Log.ForContext("Source", nameof(IAccessControlService))
-                    .Debug("\"{Address}\" is access denied", address);
+                    .Debug("\"{Address}\" Tx Quota: {Quota}", address, result);
+                return Convert.ToInt32(result);
             }
 
-            return result;
+            return null;
         }
     }
 }

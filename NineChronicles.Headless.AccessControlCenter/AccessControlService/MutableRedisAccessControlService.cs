@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Libplanet.Crypto;
@@ -16,17 +15,17 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
         {
         }
 
-        public void DenyAccess(Address address)
+        public void AddTxQuota(Address address, int quota)
         {
-            _db.StringSet(address.ToString(), "denied");
+            _db.StringSet(address.ToString(), quota.ToString());
         }
 
-        public void AllowAccess(Address address)
+        public void RemoveTxQuota(Address address)
         {
             _db.KeyDelete(address.ToString());
         }
 
-        public List<Address> ListBlockedAddresses(int offset, int limit)
+        public List<Address> ListTxQuotaAddresses(int offset, int limit)
         {
             var server = _db.Multiplexer.GetServer(_db.Multiplexer.GetEndPoints().First());
 
@@ -34,11 +33,10 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
                 server.Execute("SCAN", offset.ToString(), "COUNT", limit.ToString());
             if (result != null)
             {
-                long newCursor = long.Parse((string)result[0]!);
                 RedisKey[] keys = (RedisKey[])result[1]!;
-
                 return keys.Select(k => new Address(k.ToString())).ToList();
             }
+
             return new List<Address>();
         }
     }

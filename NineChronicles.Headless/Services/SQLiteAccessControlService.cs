@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Data.Sqlite;
 using Libplanet.Crypto;
 using Nekoyume.Blockchain;
@@ -8,9 +9,9 @@ namespace NineChronicles.Headless.Services
     public class SQLiteAccessControlService : IAccessControlService
     {
         private const string CreateTableSql =
-            "CREATE TABLE IF NOT EXISTS blocklist (address VARCHAR(42))";
-        private const string CheckAccessSql =
-            "SELECT EXISTS(SELECT 1 FROM blocklist WHERE address=@Address)";
+            "CREATE TABLE IF NOT EXISTS txquotalist (address VARCHAR(42), quota INT)";
+        private const string GetTxQuotaSql =
+            "SELECT quota FROM txquotalist WHERE address=@Address";
 
         protected readonly string _connectionString;
 
@@ -25,26 +26,23 @@ namespace NineChronicles.Headless.Services
             command.ExecuteNonQuery();
         }
 
-        public bool IsAccessDenied(Address address)
+        public int? GetTxQuota(Address address)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
 
             using var command = connection.CreateCommand();
-            command.CommandText = CheckAccessSql;
+            command.CommandText = GetTxQuotaSql;
             command.Parameters.AddWithValue("@Address", address.ToString());
 
             var queryResult = command.ExecuteScalar();
 
-            var result = queryResult is not null && (long)queryResult == 1;
-
-            if (result)
+            if (queryResult != null)
             {
-                Log.ForContext("Source", nameof(IAccessControlService))
-                    .Debug("\"{Address}\" is access denied", address);
+                return Convert.ToInt32(queryResult);
             }
 
-            return result;
+            return null;
         }
     }
 }

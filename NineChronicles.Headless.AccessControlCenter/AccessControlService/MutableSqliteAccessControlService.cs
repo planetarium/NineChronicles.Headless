@@ -8,55 +8,56 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
 {
     public class MutableSqliteAccessControlService : SQLiteAccessControlService, IMutableAccessControlService
     {
-        private const string DenyAccessSql =
-            "INSERT OR IGNORE INTO blocklist (address) VALUES (@Address)";
-        private const string AllowAccessSql = "DELETE FROM blocklist WHERE address=@Address";
+        private const string AddTxQuotaSql =
+            "INSERT OR IGNORE INTO txquotalist (address, quota) VALUES (@Address, @Quota)";
+        private const string RemoveTxQuotaSql = "DELETE FROM txquotalist WHERE address=@Address";
 
         public MutableSqliteAccessControlService(string connectionString) : base(connectionString)
         {
         }
 
-        public void DenyAccess(Address address)
+        public void AddTxQuota(Address address, int quota)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
 
             using var command = connection.CreateCommand();
-            command.CommandText = DenyAccessSql;
+            command.CommandText = AddTxQuotaSql;
+            command.Parameters.AddWithValue("@Address", address.ToString());
+            command.Parameters.AddWithValue("@Quota", quota);
+            command.ExecuteNonQuery();
+        }
+
+        public void RemoveTxQuota(Address address)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = RemoveTxQuotaSql;
             command.Parameters.AddWithValue("@Address", address.ToString());
             command.ExecuteNonQuery();
         }
 
-        public void AllowAccess(Address address)
+        public List<Address> ListTxQuotaAddresses(int offset, int limit)
         {
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-
-            using var command = connection.CreateCommand();
-            command.CommandText = AllowAccessSql;
-            command.Parameters.AddWithValue("@Address", address.ToString());
-            command.ExecuteNonQuery();
-        }
-
-        public List<Address> ListBlockedAddresses(int offset, int limit)
-        {
-            var blockedAddresses = new List<Address>();
+            var txQuotaAddresses = new List<Address>();
 
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
 
             using var command = connection.CreateCommand();
-            command.CommandText = $"SELECT address FROM blocklist LIMIT @Limit OFFSET @Offset";
+            command.CommandText = $"SELECT address FROM txquotalist LIMIT @Limit OFFSET @Offset";
             command.Parameters.AddWithValue("@Limit", limit);
             command.Parameters.AddWithValue("@Offset", offset);
 
             using var reader = command.ExecuteReader();
             while (reader.Read())
             {
-                blockedAddresses.Add(new Address(reader.GetString(0)));
+                txQuotaAddresses.Add(new Address(reader.GetString(0)));
             }
 
-            return blockedAddresses;
+            return txQuotaAddresses;
         }
     }
 }
