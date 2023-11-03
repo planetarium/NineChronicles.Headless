@@ -1413,6 +1413,13 @@ actionPoint: {actionPoint},
                 Assert.Equal(expectedFavList.Count, actualFavList.Count);
                 for (var j = 0; j < expectedFavList.Count; j++)
                 {
+                    /* FIXME: Make Assert.Equal(FAV1, FAV2) works.
+                     This test will fail because:
+                         - GQL currency type does not allow `null` as minters to you should give empty list.
+                         - But inside `Currency`, empty list is changed to null.
+                         - As a result, currency hash are mismatch.
+                         - See https://github.com/planetarium/NineChronicles.Headless/pull/2282#discussion_r1380857437
+                    */
                     // Assert.Equal(expectedFavList[i], actualFavList[i]);
                     Assert.Equal(expectedFavList[j].Currency.Ticker, actualFavList[j].Currency.Ticker);
                     Assert.Equal(expectedFavList[j].RawValue, actualFavList[j].RawValue);
