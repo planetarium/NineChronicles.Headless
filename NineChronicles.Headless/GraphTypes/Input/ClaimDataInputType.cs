@@ -7,7 +7,7 @@ using Libplanet.Types.Assets;
 
 namespace NineChronicles.Headless.GraphTypes.Input;
 
-public class ClaimDataInputType : InputObjectGraphType<(Address avatarAddress, FungibleAssetValue fav)>
+public class ClaimDataInputType : InputObjectGraphType<(Address avatarAddress, IReadOnlyList<FungibleAssetValue> favList)>
 {
     public ClaimDataInputType()
     {
