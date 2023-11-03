@@ -24,7 +24,6 @@ using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
 using Xunit;
-using Xunit.Abstractions;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
@@ -1346,6 +1345,8 @@ actionPoint: {actionPoint},
         [Theory]
         [InlineData(1)]
         [InlineData(2)]
+        [InlineData(10)]
+        [InlineData(100)]
         public async Task ClaimItems(int claimDataCount)
         {
             var random = new Random();
@@ -1366,7 +1367,7 @@ actionPoint: {actionPoint},
                         Currency.Uncapped(
                             ticker: ticker,
                             decimalPlaces: 0,
-                            minters: new AddressSet(new List<Address>())
+                            minters: AddressSet.Empty
                         ),
                         random.Next(1, 100), 0
                     )
@@ -1413,8 +1414,8 @@ actionPoint: {actionPoint},
                 for (var j = 0; j < expectedFavList.Count; j++)
                 {
                     // Assert.Equal(expectedFavList[i], actualFavList[i]);
-                    Assert.Equal(expectedFavList[i].Currency.Ticker, actualFavList[i].Currency.Ticker);
-                    Assert.Equal(expectedFavList[i].RawValue, actualFavList[i].RawValue);
+                    Assert.Equal(expectedFavList[j].Currency.Ticker, actualFavList[j].Currency.Ticker);
+                    Assert.Equal(expectedFavList[j].RawValue, actualFavList[j].RawValue);
                 }
             }
         }
