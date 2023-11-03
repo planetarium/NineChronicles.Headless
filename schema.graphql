@@ -144,6 +144,10 @@ type ActionQuery {
     """Count to summon. Must between 1 and 10."""
     summonCount: Int!
   ): ByteString!
+  claimItems(
+    """List of pair of avatar address, List<FAV> to claim."""
+    claimData: [ClaimDataInputType!]!
+  ): ByteString!
   claimRaidReward(
     """address of avatar state to receive reward."""
     avatarAddress: Address!
@@ -441,6 +445,10 @@ type ActionTxQuery {
 
     """Count to summon. Must between 1 and 10."""
     summonCount: Int!
+  ): ByteString!
+  claimItems(
+    """List of pair of avatar address, List<FAV> to claim."""
+    claimData: [ClaimDataInputType!]!
   ): ByteString!
   claimRaidReward(
     """address of avatar state to receive reward."""
@@ -1024,6 +1032,11 @@ type BoundPeer {
 scalar Byte
 
 scalar ByteString
+
+input ClaimDataInputType {
+  avatarAddress: Address!
+  fungibleAssetValues: [FungibleAssetValueInputType!]!
+}
 
 type CollectionMapType {
   count: Int!
