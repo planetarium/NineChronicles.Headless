@@ -16,10 +16,13 @@ namespace NineChronicles.Headless.GraphTypes.States
                 nameof(CombinationSlotState.UnlockBlockIndex),
                 description: "Block index at the combination slot can be usable.",
                 resolve: context => context.Source.UnlockBlockIndex);
+#pragma warning disable CS0618
             Field<NonNullGraphType<IntGraphType>>(
-                nameof(CombinationSlotState.UnlockStage),
+                nameof(
+                    CombinationSlotState.UnlockStage),
                 description: "Stage id at the combination slot unlock.",
                 resolve: context => context.Source.UnlockStage);
+#pragma warning restore CS0618
             Field<NonNullGraphType<LongGraphType>>(
                 nameof(CombinationSlotState.StartBlockIndex),
                 description: "Block index at the combination started.",
