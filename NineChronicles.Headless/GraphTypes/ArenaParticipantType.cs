@@ -21,14 +21,6 @@ public class ArenaParticipantType : ObjectGraphType<ArenaParticipant>
             nameof(ArenaParticipant.Rank),
             description: "Address of avatar.",
             resolve: context => context.Source.Rank);
-        Field<NonNullGraphType<AvatarStateType>>(
-            nameof(ArenaParticipant.AvatarState),
-            description: "Address of avatar.",
-            resolve: context => context.Source.AvatarState);
-        Field<NonNullGraphType<ListGraphType<RuneStateType>>>(
-            nameof(ArenaParticipant.RuneStates),
-            description: "Address of avatar.",
-            resolve: context => context.Source.RuneStates);
         Field<NonNullGraphType<IntGraphType>>(
             nameof(ArenaParticipant.ExpectDeltaScore.win),
             description: "Address of avatar.",
@@ -37,5 +29,21 @@ public class ArenaParticipantType : ObjectGraphType<ArenaParticipant>
             nameof(ArenaParticipant.ExpectDeltaScore.lose),
             description: "Address of avatar.",
             resolve: context => context.Source.ExpectDeltaScore.lose);
+        Field<NonNullGraphType<IntGraphType>>(
+            nameof(ArenaParticipant.Cp),
+            description: "Address of avatar.",
+            resolve: context => context.Source.Cp);
+        Field<NonNullGraphType<IntGraphType>>(
+            nameof(ArenaParticipant.ArmorId),
+            description: "Address of avatar.",
+            resolve: context => context.Source.ArmorId);
+        Field<NonNullGraphType<IntGraphType>>(
+            nameof(ArenaParticipant.Level),
+            description: "Address of avatar.",
+            resolve: context => context.Source.Level);
+        Field<NonNullGraphType<StringGraphType>>(
+            nameof(ArenaParticipant.NameWithHash),
+            description: "Address of avatar.",
+            resolve: context => context.Source.NameWithHash);
     }
 }

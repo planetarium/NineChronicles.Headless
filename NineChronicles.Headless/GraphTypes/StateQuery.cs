@@ -12,6 +12,7 @@ using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Arena;
+using Nekoyume.Battle;
 using Nekoyume.Extensions;
 using Nekoyume.Model.Arena;
 using Nekoyume.Model.EnumType;
@@ -769,7 +770,11 @@ namespace NineChronicles.Headless.GraphTypes
                         ArenaAvatarState.DeriveAddress(currentAvatarAddr);
 
                     var runeListSheet = context.Source.AccountState.GetSheet<RuneListSheet>();
+                    var costumeSheet = context.Source.AccountState.GetSheet<CostumeStatSheet>();
+                    var characterSheet = context.Source.AccountState.GetSheet<CharacterSheet>();
+                    var runeOptionSheet = context.Source.AccountState.GetSheet<RuneOptionSheet>();
                     var runeIds = runeListSheet.Values.Select(x => x.Id).ToList();
+                    var row = characterSheet[GameConfig.DefaultAvatarCharacterId];
                     var addrBulk = avatarAddrAndScoresWithRank
                         .SelectMany(tuple => new[]
                         {
@@ -802,15 +807,10 @@ namespace NineChronicles.Headless.GraphTypes
                     var result = avatarAddrAndScoresWithRank.Select(tuple =>
                     {
                         var (avatarAddr, score, rank) = tuple;
-                        var avatar = stateBulk[avatarAddr] is Dictionary avatarDict
-                            ? new AvatarState(avatarDict)
-                            : null;
-                        var inventory =
-                            stateBulk[avatarAddr.Derive(LegacyInventoryKey)] is List inventoryList
-                                ? new Inventory(inventoryList)
-                                : null;
-                        if (avatar is { })
+                        var avatar = new AvatarState((Dictionary) stateBulk[avatarAddr]);
+                        if (stateBulk[avatarAddr.Derive(LegacyInventoryKey)] is List inventoryList)
                         {
+                            var inventory = new Inventory(inventoryList);
                             avatar.inventory = inventory;
                         }
 
@@ -853,6 +853,16 @@ namespace NineChronicles.Headless.GraphTypes
 
                         var (win, lose, _) =
                             ArenaHelper.GetScores(playerScore, score);
+                        var equipments = itemSlotState.Equipments
+                            .Select(guid =>
+                                avatar.inventory.Equipments.FirstOrDefault(x => x.ItemId == guid))
+                            .Where(item => item != null).ToList();
+                        var costumes = itemSlotState.Costumes
+                            .Select(guid =>
+                                avatar.inventory.Costumes.FirstOrDefault(x => x.ItemId == guid))
+                            .Where(item => item != null).ToList();
+                        var runeOptions = GetRuneOptions(runeStates, runeOptionSheet);
+                        var cp = CPHelper.TotalCP(equipments, costumes, runeOptions, avatar.level, row, costumeSheet);
                         return new ArenaParticipant(
                             avatarAddr,
                             avatarAddr.Equals(currentAvatarAddr)
@@ -860,16 +870,37 @@ namespace NineChronicles.Headless.GraphTypes
                                 : score,
                             rank,
                             avatar,
-                            itemSlotState,
-                            runeSlotState,
-                            equippedRuneStates,
-                            (win, lose)
+                            (win, lose),
+                            cp
                         );
                     }).ToArray();
 
                     return result;
                 }
             );
+        }
+        
+        public static List<RuneOptionSheet.Row.RuneOptionInfo> GetRuneOptions(
+            List<RuneState> runeStates,
+            RuneOptionSheet sheet)
+        {
+            var result = new List<RuneOptionSheet.Row.RuneOptionInfo>();
+            foreach (var runeState in runeStates)
+            {
+                if (!sheet.TryGetValue(runeState.RuneId, out var row))
+                {
+                    continue;
+                }
+
+                if (!row.LevelOptionMap.TryGetValue(runeState.Level, out var statInfo))
+                {
+                    continue;
+                }
+
+                result.Add(statInfo);
+            }
+
+            return result;
         }
     }
 }
