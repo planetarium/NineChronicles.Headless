@@ -108,8 +108,8 @@ namespace NineChronicles.Headless.Executable.Commands
                 IEnumerable<(Transaction, ActionBase)> actions = block.Transactions
                     .Reverse()
                     .Where(tx => includeFails ||
-                                 !(chain.GetTxExecution(block.Hash, tx.Id) is { } e) ||
-                                 e is TxSuccess)
+                        !(chain.GetTxExecution(block.Hash, tx.Id) is { } e) ||
+                        !e.Fail)
                     .SelectMany(tx => tx.Actions is { } ca
                         ? ca.Reverse().Select(a => (tx, ToAction(a)))
                         : Enumerable.Empty<(Transaction, ActionBase)>());

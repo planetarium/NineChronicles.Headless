@@ -58,7 +58,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockAction = new RewardGold();
             var actionEvaluator = new ActionEvaluator(
                 _ => blockAction,
-                new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
+                new TrieStateStore(new MemoryKeyValueStore()),
                 new NCActionLoader());
             var genesisBlock = BlockChain.ProposeGenesisBlock(
                 actionEvaluator,
@@ -115,6 +115,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ncService.ActionRenderer,
                 ncService.ExceptionRenderer,
                 ncService.NodeStatusRenderer,
+                ncService.BlockChain,
                 "",
                 0,
                 new RpcContext(),

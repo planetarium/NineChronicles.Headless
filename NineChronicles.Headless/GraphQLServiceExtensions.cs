@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Reflection;
 using GraphQL.Types;
-using Libplanet.Action;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Explorer.Interfaces;
 using Libplanet.Explorer.Queries;
@@ -36,8 +35,6 @@ namespace NineChronicles.Headless
             services.TryAddSingleton<ByteStringType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.PublicKeyType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.TxResultType>();
-            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.TxResultType.FungibleAssetBalancesType>();
-            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.TxResultType.UpdatedStateType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.TxStatusType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.BencodexValueType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.FungibleAssetValueType>();
@@ -48,6 +45,7 @@ namespace NineChronicles.Headless
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.VoteType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.BlockCommitType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.BoundPeerType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.HashDigestSHA256Type>();
 
             return services;
         }

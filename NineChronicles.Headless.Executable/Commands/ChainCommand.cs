@@ -131,7 +131,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var blockChainStates = new BlockChainStates(store, stateStore);
             var actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
-                blockChainStates,
+                stateStore,
                 new NCActionLoader());
             BlockChain chain = new BlockChain(
                 blockPolicy,
@@ -284,7 +284,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 snapshotTipHash = hash;
-            } while (!stateStore.ContainsStateRoot(store.GetBlock(snapshotTipHash).StateRootHash));
+            } while (!stateStore.GetStateRoot(store.GetBlock(snapshotTipHash).StateRootHash).Recorded);
 
             var forkedId = Guid.NewGuid();
 
@@ -484,7 +484,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     }
 
                     snapshotTipHash = hash;
-                } while (!stateStore.ContainsStateRoot(store.GetBlock(snapshotTipHash).StateRootHash));
+                } while (!stateStore.GetStateRoot(store.GetBlock(snapshotTipHash).StateRootHash).Recorded);
 
                 var forkedId = Guid.NewGuid();
 

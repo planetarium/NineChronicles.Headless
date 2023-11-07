@@ -43,6 +43,7 @@ using OpenTelemetry.Metrics;
 
 namespace NineChronicles.Headless.Executable
 {
+    [HasSubCommands(typeof(Cocona.Docs.DocumentCommand), "docs")]
     [HasSubCommands(typeof(AccountCommand), "account")]
     [HasSubCommands(typeof(ValidationCommand), "validation")]
     [HasSubCommands(typeof(ChainCommand), "chain")]
@@ -436,7 +437,7 @@ namespace NineChronicles.Headless.Executable
                     : new PrivateKey(ByteUtil.ParseHex(headlessConfig.MinerPrivateKeyString));
                 TimeSpan minerBlockInterval = TimeSpan.FromMilliseconds(headlessConfig.MinerBlockIntervalMilliseconds);
                 var nineChroniclesProperties =
-                    new NineChroniclesNodeServiceProperties(actionLoader, headlessConfig.StateServiceManagerService)
+                    new NineChroniclesNodeServiceProperties(actionLoader, headlessConfig.StateServiceManagerService, headlessConfig.AccessControlService)
                     {
                         MinerPrivateKey = minerPrivateKey,
                         Libplanet = properties,
@@ -480,6 +481,7 @@ namespace NineChronicles.Headless.Executable
                         standaloneContext.NineChroniclesNodeService!.ActionRenderer,
                         standaloneContext.NineChroniclesNodeService!.ExceptionRenderer,
                         standaloneContext.NineChroniclesNodeService!.NodeStatusRenderer,
+                        standaloneContext.NineChroniclesNodeService!.BlockChain,
                         IPAddress.Loopback.ToString(),
                         rpcProperties.RpcListenPort,
                         context,
@@ -509,6 +511,7 @@ namespace NineChronicles.Headless.Executable
                         standaloneContext.NineChroniclesNodeService!.ActionRenderer,
                         standaloneContext.NineChroniclesNodeService!.ExceptionRenderer,
                         standaloneContext.NineChroniclesNodeService!.NodeStatusRenderer,
+                        standaloneContext.NineChroniclesNodeService!.BlockChain,
                         IPAddress.Loopback.ToString(),
                         0,
                         context,
