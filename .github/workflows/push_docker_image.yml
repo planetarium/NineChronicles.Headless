@@ -29,6 +29,8 @@ jobs:
         docker:
           - repo: planetariumhq/ninechronicles-headless
             dockerfile: Dockerfile
+          - repo: planetariumhq/access-control-center
+            dockerfile: Dockerfile.ACC
     if: github.ref_type == 'branch'
     runs-on: ubuntu-latest
     steps:

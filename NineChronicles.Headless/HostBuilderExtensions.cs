@@ -33,6 +33,7 @@ namespace NineChronicles.Headless
         {
             return builder.ConfigureServices(services =>
             {
+                services.AddOptions();
                 services.AddHostedService(provider => service);
                 services.AddSingleton(provider => service);
                 services.AddSingleton(provider => service.Swarm);

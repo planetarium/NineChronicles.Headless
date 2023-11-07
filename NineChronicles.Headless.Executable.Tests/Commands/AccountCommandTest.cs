@@ -49,7 +49,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             IBlockPolicy blockPolicy = new BlockPolicySource().GetPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
-                new BlockChainStates(store, stateStore),
+                stateStore,
                 new NCActionLoader());
             BlockChain chain = BlockChain.Create(
                 blockPolicy,

@@ -12,10 +12,12 @@ namespace NineChronicles.Headless.Properties
 {
     public class NineChroniclesNodeServiceProperties
     {
-        public NineChroniclesNodeServiceProperties(IActionLoader actionLoader, StateServiceManagerServiceOptions? stateServiceManagerServiceOptions)
+        public NineChroniclesNodeServiceProperties(
+            IActionLoader actionLoader, StateServiceManagerServiceOptions? stateServiceManagerServiceOptions, AccessControlServiceOptions? accessControlServiceOptions)
         {
             ActionLoader = actionLoader;
             StateServiceManagerService = stateServiceManagerServiceOptions;
+            AccessControlServiceOptions = accessControlServiceOptions;
         }
 
         /// <summary>
@@ -53,6 +55,8 @@ namespace NineChronicles.Headless.Properties
         public IActionLoader ActionLoader { get; init; }
 
         public StateServiceManagerServiceOptions? StateServiceManagerService { get; }
+
+        public AccessControlServiceOptions? AccessControlServiceOptions { get; }
 
         public static LibplanetNodeServiceProperties
             GenerateLibplanetNodeServiceProperties(

@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 using Xunit;
+using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 
 namespace NineChronicles.Headless.Tests
 {
@@ -23,6 +23,7 @@ namespace NineChronicles.Headless.Tests
                 new ActionRenderer(),
                 new ExceptionRenderer(),
                 new NodeStatusRenderer(),
+                standaloneContext!.BlockChain,
                 "",
                 0,
                 new RpcContext(),

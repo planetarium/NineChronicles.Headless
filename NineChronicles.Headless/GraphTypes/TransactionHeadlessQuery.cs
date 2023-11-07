@@ -216,29 +216,13 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         TxExecution execution = blockChain.GetTxExecution(txExecutedBlockHash, txId);
                         Block txExecutedBlock = blockChain[txExecutedBlockHash];
-                        return execution switch
-                        {
-                            TxSuccess txSuccess => new TxResult(
-                                TxStatus.SUCCESS,
-                                txExecutedBlock.Index,
-                                txExecutedBlock.Hash.ToString(),
-                                null,
-                                txSuccess.UpdatedStates
-                                    .Select(kv => new KeyValuePair<Address, IValue>(
-                                        kv.Key,
-                                        kv.Value))
-                                    .ToImmutableDictionary(),
-                                txSuccess.UpdatedFungibleAssets),
-                            TxFailure txFailure => new TxResult(
-                                TxStatus.FAILURE,
-                                txExecutedBlock.Index,
-                                txExecutedBlock.Hash.ToString(),
-                                txFailure.ExceptionName,
-                                null,
-                                null),
-                            _ => throw new NotImplementedException(
-                                $"{nameof(execution)} is not expected concrete class.")
-                        };
+                        return new TxResult(
+                            execution.Fail ? TxStatus.FAILURE : TxStatus.SUCCESS,
+                            txExecutedBlock.Index,
+                            txExecutedBlock.Hash.ToString(),
+                            execution.InputState,
+                            execution.OutputState,
+                            execution.ExceptionNames);
                     }
                     catch (Exception)
                     {

@@ -50,12 +50,20 @@ jobs:
             -G "https://9c-dx.s3.ap-northeast-2.amazonaws.com/empty-genesis-block-20230511" &
           sleep 60s
           graphql-inspector introspect http://localhost:30000/graphql --write schema.graphql
-      - name: Build
+      - name: Build GraphQL Document
         run: |
           yarn global add spectaql
-          spectaql ./spectaql-config.yaml
+          spectaql --target-dir public/graphql ./spectaql-config.yaml
+      - name: Build CLI Document
+        run: |
+          mkdir -p public/cli
+          dotnet run --project NineChronicles.Headless.Executable -- \
+            docs \
+            public/cli
+      - name: Copy Landing Page to deploy
+        run: cp Docs/resources/landing.html public/index.html
       - name: Copy GraphQL Schema to deploy
-        run: cp schema.graphql doc
+        run: cp schema.graphql public/schema.graphql
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:

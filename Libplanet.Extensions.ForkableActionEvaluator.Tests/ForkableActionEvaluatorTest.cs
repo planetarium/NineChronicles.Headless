@@ -5,11 +5,8 @@ using Libplanet.Action.Loader;
 using Libplanet.Types.Blocks;
 using Libplanet.Common;
 using Libplanet.Crypto;
-using Libplanet.Extensions.ActionEvaluatorCommonComponents;
 using Libplanet.Types.Tx;
-using ActionEvaluation = Libplanet.Extensions.ActionEvaluatorCommonComponents.ActionEvaluation;
 using ArgumentOutOfRangeException = System.ArgumentOutOfRangeException;
-using Random = Libplanet.Extensions.ActionEvaluatorCommonComponents.Random;
 
 namespace Libplanet.Extensions.ForkableActionEvaluator.Tests;
 
@@ -24,11 +21,11 @@ public class ForkableActionEvaluatorTest
             ((101L, long.MaxValue), new PostActionEvaluator()),
         });
 
-        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(0))).Action);
-        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(99))).Action);
-        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(100))).Action);
-        Assert.Equal((Text)"POST", Assert.Single(evaluator.Evaluate(new MockBlock(101))).Action);
-        Assert.Equal((Text)"POST", Assert.Single(evaluator.Evaluate(new MockBlock(long.MaxValue))).Action);
+        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(0), null)).Action);
+        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(99), null)).Action);
+        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(100), null)).Action);
+        Assert.Equal((Text)"POST", Assert.Single(evaluator.Evaluate(new MockBlock(101), null)).Action);
+        Assert.Equal((Text)"POST", Assert.Single(evaluator.Evaluate(new MockBlock(long.MaxValue), null)).Action);
     }
 
     [Fact]
@@ -64,26 +61,23 @@ public class ForkableActionEvaluatorTest
 class PostActionEvaluator : IActionEvaluator
 {
     public IActionLoader ActionLoader => throw new NotSupportedException();
-    public IReadOnlyList<IActionEvaluation> Evaluate(IPreEvaluationBlock block)
+    public IReadOnlyList<ICommittedActionEvaluation> Evaluate(IPreEvaluationBlock block, HashDigest<SHA256>? baseStateroothash)
     {
-        return new IActionEvaluation[]
+        return new ICommittedActionEvaluation[]
         {
-            new ActionEvaluation(
+            new CommittedActionEvaluation(
                 (Text)"POST",
-                new ActionContext(
-                    null,
+                new CommittedActionContext(
                     default,
                     null,
                     default,
                     0,
                     0,
                     false,
-                    new AccountStateDelta(),
-                    new Random(0),
-                    null,
+                    default,
+                    0,
                     false),
-                new AccountStateDelta(),
-                null)
+                default)
         };
     }
 }
@@ -91,26 +85,23 @@ class PostActionEvaluator : IActionEvaluator
 class PreActionEvaluator : IActionEvaluator
 {
     public IActionLoader ActionLoader => throw new NotSupportedException();
-    public IReadOnlyList<IActionEvaluation> Evaluate(IPreEvaluationBlock block)
+    public IReadOnlyList<ICommittedActionEvaluation> Evaluate(IPreEvaluationBlock block, HashDigest<SHA256>? baseStateRootHash)
     {
-        return new IActionEvaluation[]
+        return new ICommittedActionEvaluation[]
         {
-            new ActionEvaluation(
+            new CommittedActionEvaluation(
                 (Text)"PRE",
-                new ActionContext(
-                    null,
+                new CommittedActionContext(
                     default,
                     null,
                     default,
                     0,
                     0,
                     false,
-                    new AccountStateDelta(),
-                    new Random(0),
-                    null,
+                    default,
+                    0,
                     false),
-                new AccountStateDelta(),
-                null)
+                default)
         };
     }
 }
