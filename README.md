@@ -3,165 +3,15 @@
 [![Planetarium Discord invite](https://img.shields.io/discord/539405872346955788?color=6278DA&label=Planetarium&logo=discord&logoColor=white)](https://discord.gg/JyujU8E4SD)
 [![Planetarium-Dev Discord Invite](https://img.shields.io/discord/928926944937013338?color=6278DA&label=Planetarium-dev&logo=discord&logoColor=white)](https://discord.gg/RYJDyFRYY7)
 
-## Table of Contents
-
-- [Run](#run)
-- [Docker Build](#docker-build)
-  * [Format](#format)
-- [How to run NineChronicles Headless on AWS EC2 instance using Docker](#how-to-run-ninechronicles-headless-on-aws-ec2-instance-using-docker)
-  * [On Your AWS EC2 Instance](#on-your-aws-ec2-instance)
-  * [Building Your Own Docker Image from Your Local Machine](#building-your-own-docker-image-from-your-local-machine)
-- [Nine Chronicles GraphQL API Documentation](#nine-chronicles-graphql-api-documentation)
-- [Create A New Genesis Block](#create-a-new-genesis-block)
-
 ## Run
 
+If you want to run node to interact with mainnet, you can run the below command line:
+
 ```
-$ dotnet run --project ./NineChronicles.Headless.Executable/ -- --help
-
-Usage: NineChronicles.Headless.Executable [command]
-Usage: NineChronicles.Headless.Executable 
-
-// basic
-[--app-protocol-version <String>]
-[--trusted-app-protocol-version-signer <String>...]
-[--genesis-block-path <String>] 
-[--host <String>]
-[--port <UInt16>] 
-[--swarm-private-key <String>]
-  
-// Policy
-[--skip-preload] 
-[--chain-tip-stale-behavior-type <String>] 
-[--confirmations <Int32>]
-[--tx-life-time <Int32>] 
-[--message-timeout <Int32>] 
-[--tip-timeout <Int32>] 
-[--demand-buffer <Int32>]
-[--tx-quota-per-signer <Int32>]
-[--maximum-poll-peers <Int32>]
-
-// Store
-[--store-type <String>] 
-[--store-path <String>]
-[--no-reduce-store]
- 
-// Network
-[--network-type <NetworkType>]
-[--ice-server <String>...] 
-[--peer <String>...] 
-[--static-peer <String>...]
-[--minimum-broadcast-target <Int32>] 
-[--bucket-size <Int32>] 
- 
-// render
-[--nonblock-renderer]
-[--nonblock-renderer-queue <Int32>] 
-[--strict-rendering]
-[--log-action-renders]
-
-// consensus
-[--consensus-port <UInt16>] 
-[--consensus-private-key <String>] 
-[--consensus-seed <String>...] 
-
-// RPC
-[--rpc-server]
-[--rpc-listen-host <String>] 
-[--rpc-listen-port <Int32>] 
-[--rpc-remote-server]
-[--rpc-http-server]
-
-// GraphQL
-[--graphql-server] 
-[--graphql-host <String>]
-[--graphql-port <Int32>]
-[--graphql-secret-token-path <String>]
-[--no-cors]
-   
-// Sentry
-[--sentry-dsn <String>] 
-[--sentry-trace-sample-rate <Double>]
-
-// ETC
-[--config <String>] 
-[--help]
-[--version]
-
-// Miner (Deprecated)
-[--no-miner] 
-[--miner-count <Int32>] 
-[--miner-private-key <String>] 
-[--miner.block-interval <Int32>]
-
-
-NineChronicles.Headless.Executable
-
-Commands:
-  account
-  validation
-  chain
-  key
-  apv
-  action
-  state
-  tx
-  market
-  genesis
-  replay
-
-Options:
-  -V, --app-protocol-version <String>                      App protocol version token.
-  -G, --genesis-block-path <String>                        Genesis block path of blockchain. Blockchain is recognized by its genesis block.
-  -H, --host <String>                                      Hostname of this node for another nodes to access. This is not listening host like 0.0.0.0
-  -P, --port <UInt16>                                      Port of this node for another nodes to access.
-  --swarm-private-key <String>                             The private key used for signing messages and to specify your node. If you leave this null, a randomly generated value will be used.
-  --no-miner                                               Disable block mining.
-  --miner-count <Int32>                                    The number of miner task(thread).
-  --miner-private-key <String>                             The private key used for mining blocks. Must not be null if you want to turn on mining with libplanet-node.
-  --miner.block-interval <Int32>                           The miner's break time after mining a block. The unit is millisecond.
-  --store-type <String>                                    The type of storage to store blockchain data. If not provided, "LiteDB" will be used as default. Available type: ["rocksdb", "memory"]
-  --store-path <String>                                    Path of storage. This value is required if you use persistent storage e.g. "rocksdb"
-  --no-reduce-store                                        Do not reduce storage. Enabling this option will use enormous disk spaces.
-  -I, --ice-server <String>...                             ICE server to NAT traverse.
-  --peer <String>...                                       Seed peer list to communicate to another nodes.
-  -T, --trusted-app-protocol-version-signer <String>...    Trustworthy signers who claim new app protocol versions
-  --rpc-server                                             Use this option if you want to make unity clients to communicate with this server with RPC
-  --rpc-listen-host <String>                               RPC listen host
-  --rpc-listen-port <Int32>                                RPC listen port
-  --rpc-remote-server                                      Do a role as RPC remote server? If you enable this option, multiple Unity clients can connect to your RPC server.
-  --rpc-http-server                                        If you enable this option with "rpcRemoteServer" option at the same time, RPC server will use HTTP/1, not gRPC.
-  --graphql-server                                         Use this option if you want to enable GraphQL server to enable querying data.
-  --graphql-host <String>                                  GraphQL listen host
-  --graphql-port <Int32>                                   GraphQL listen port
-  --graphql-secret-token-path <String>                     The path to write GraphQL secret token. If you want to protect this headless application, you should use this option and take it into headers.
-  --no-cors                                                Run without CORS policy.
-  --confirmations <Int32>                                  The number of required confirmations to recognize a block.
-  --nonblock-renderer                                      Uses non-blocking renderer, which prevents the blockchain & swarm from waiting slow rendering. Turned off by default.
-  --nonblock-renderer-queue <Int32>                        The size of the queue used by the non-blocking renderer. Ignored if --nonblock-renderer is turned off.
-  --strict-rendering                                       Flag to turn on validating action renderer.
-  --log-action-renders                                     Log action renders besides block renders. --rpc-server implies this.
-  --network-type <NetworkType>                             Network type. (Allowed values: Main, Internal, Permanent, Test, Default)
-  --tx-life-time <Int32>                                   The lifetime of each transaction, which uses minute as its unit.
-  --message-timeout <Int32>                                The grace period for new messages, which uses second as its unit.
-  --tip-timeout <Int32>                                    The grace period for tip update, which uses second as its unit.
-  --demand-buffer <Int32>                                  A number of block size that determines how far behind the demand the tip of the chain will publish `NodeException` to GraphQL subscriptions.
-  --static-peer <String>...                                A list of peers that the node will continue to maintain.
-  --skip-preload                                           Run node without preloading.
-  --minimum-broadcast-target <Int32>                       Minimum number of peers to broadcast message.
-  --bucket-size <Int32>                                    Number of the peers can be stored in each bucket.
-  --chain-tip-stale-behavior-type <String>                 Determines behavior when the chain's tip is stale. "reboot" and "preload" is available and "reboot" option is selected by default.
-  --tx-quota-per-signer <Int32>                            The number of maximum transactions can be included in stage per signer.
-  --maximum-poll-peers <Int32>                             The maximum number of peers to poll blocks. int.MaxValue by default.
-  --consensus-port <UInt16>                                Port used for communicating consensus related messages.  null by default.
-  --consensus-private-key <String>                         The private key used for signing consensus messages. Cannot be null.
-  --consensus-seed <String>...                             A list of seed peers to join the block consensus.
-  -C, --config <String>                                    Absolute path of "appsettings.json" file to provide headless configurations. (Default: appsettings.json)
-  --sentry-dsn <String>                                    Sentry DSN
-  --sentry-trace-sample-rate <Double>                      Trace sample rate for sentry
-  -h, --help                                               Show help message
-  --version                                                Show version
+dotnet run --project NineChronicles.Headless.Executable -C appsettings.mainnet.json --store-path={PATH_TO_STORE}
 ```
+
+For more information on the command line options, refer to the [CLI Documentation](https://planetarium.github.io/NineChronicles.Headless/cli).
 
 ### Use `appsettings.{network}.json` to provide CLI options
 
@@ -286,7 +136,7 @@ $ docker push [<DOCKER_HUB_ACCOUNT>/<IMAGE_NAME>]:[<TAGNAME>]
 
 Check out [Nine Chronicles GraphQL API Tutorial](https://www.notion.so/Getting-Started-with-Nine-Chronicles-GraphQL-API-a14388a910844a93ab8dc0a2fe269f06) to get you started with using GraphQL API with NineChronicles Headless.
 
-For more information on the GraphQL API, refer to the [NineChronicles Headless GraphQL Documentation](http://api.nine-chronicles.com/).
+For more information on the GraphQL API, refer to the [NineChronicles Headless GraphQL Documentation](https://planetarium.github.io/NineChronicles.Headless/graphql).
 
 ---
 

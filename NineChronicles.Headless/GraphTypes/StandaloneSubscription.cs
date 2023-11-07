@@ -15,6 +15,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Disposables;
+using System.Text.RegularExpressions;
 using Bencodex.Types;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
@@ -145,7 +146,7 @@ namespace NineChronicles.Headless.GraphTypes
                 Arguments = new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
-                        Description = "A type of action in transaction.",
+                        Description = "A regular expression to filter transactions based on action type.",
                         Name = "actionType",
                     }
                 ),
@@ -304,7 +305,7 @@ namespace NineChronicles.Headless.GraphTypes
                         return false;
                     }
 
-                    return typeId == actionType;
+                    return Regex.IsMatch(typeId, actionType);
                 }))
                 .Select(transaction => new Tx
                 {
@@ -321,29 +322,13 @@ namespace NineChronicles.Headless.GraphTypes
             }
             var txExecution = store.GetTxExecution(blockHash, transaction.Id);
             var txExecutedBlock = chain[blockHash];
-
-            return txExecution switch
-            {
-                TxSuccess success => new TxResult(
-                    TxStatus.SUCCESS,
+            return new TxResult(
+                    txExecution.Fail ? TxStatus.FAILURE : TxStatus.SUCCESS,
                     txExecutedBlock.Index,
                     txExecutedBlock.Hash.ToString(),
-                    null,
-                    success.UpdatedStates
-                        .Select(kv => new KeyValuePair<Address, IValue>(
-                            kv.Key,
-                            kv.Value))
-                        .ToImmutableDictionary(),
-                    success.UpdatedFungibleAssets),
-                TxFailure failure => new TxResult(
-                    TxStatus.FAILURE,
-                    txExecutedBlock.Index,
-                    txExecutedBlock.Hash.ToString(),
-                    failure.ExceptionName,
-                    null,
-                    null),
-                _ => null
-            };
+                    txExecution.InputState,
+                    txExecution.OutputState,
+                    txExecution.ExceptionNames);
         }
 
         private void RenderBlock((Block OldTip, Block NewTip) pair)
@@ -465,7 +450,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var agentState = new AgentState(agentDict);
                     Address deriveAddress = MonsterCollectionState.DeriveAddress(address, agentState.MonsterCollectionRound);
                     var subject = subjects.stateSubject;
-                    if (eval.OutputState.GetState(deriveAddress) is Dictionary state)
+                    if (service.BlockChain.GetAccountState(eval.OutputState).GetState(deriveAddress) is Dictionary state)
                     {
                         subject.OnNext(new MonsterCollectionState(state));
                     }

@@ -30,7 +30,7 @@ namespace NineChronicles.Headless.Executable.Tests.Store
             IStore store = storeType.CreateStore(_storePath);
             IActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => new BlockPolicy().BlockAction,
-                new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
+                new TrieStateStore(new MemoryKeyValueStore()),
                 new NCActionLoader());
             Block genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
             Guid chainId = Guid.NewGuid();

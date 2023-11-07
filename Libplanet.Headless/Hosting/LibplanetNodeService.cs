@@ -98,8 +98,7 @@ namespace Libplanet.Headless.Hosting
             (Store, StateStore) = LoadStore(
                 Properties.StorePath,
                 Properties.StoreType,
-                Properties.StoreStatesCacheSize,
-                Properties.NoReduceStore);
+                Properties.StoreStatesCacheSize);
 
             var chainIds = Store.ListChainIds().ToList();
             Log.Debug($"Number of chain ids: {chainIds.Count()}");
@@ -122,10 +121,10 @@ namespace Libplanet.Headless.Hosting
                 return actionEvaluatorConfiguration switch
                 {
                     RemoteActionEvaluatorConfiguration remoteActionEvaluatorConfiguration => new RemoteActionEvaluator(
-                        new Uri(remoteActionEvaluatorConfiguration.StateServiceEndpoint), blockChainStates),
+                        new Uri(remoteActionEvaluatorConfiguration.StateServiceEndpoint)),
                     DefaultActionEvaluatorConfiguration _ => new ActionEvaluator(
                         _ => blockPolicy.BlockAction,
-                        blockChainStates: blockChainStates,
+                        stateStore: StateStore,
                         actionTypeLoader: actionLoader
                     ),
                     ForkableActionEvaluatorConfiguration forkableActionEvaluatorConfiguration => new
@@ -303,7 +302,7 @@ namespace Libplanet.Headless.Hosting
             }
         }
 
-        protected (IStore, IStateStore) LoadStore(string path, string type, int statesCacheSize, bool noReduceStore = false)
+        protected (IStore, IStateStore) LoadStore(string path, string type, int statesCacheSize)
         {
             IStore store = null;
             if (type == "rocksdb")
@@ -344,10 +343,6 @@ namespace Libplanet.Headless.Hosting
             }
 
             store ??= new DefaultStore(path, flush: false);
-            if (!noReduceStore)
-            {
-                store = new ReducedStore(store);
-            }
 
             IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states"));
             IStateStore stateStore = new TrieStateStore(stateKeyValueStore);
