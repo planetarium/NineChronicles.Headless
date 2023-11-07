@@ -649,8 +649,8 @@ namespace NineChronicles.Headless.GraphTypes
 
             RegisterGarages();
 
-            Field<NonNullGraphType<ListGraphType<ArenaParticipantType>>>(
-                "test",
+            Field<NonNullGraphType<ArenaInfoResultType>>(
+                "arenaInfo",
                 arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
                 {
                     Name = "avatarAddress"
@@ -793,7 +793,6 @@ namespace NineChronicles.Headless.GraphTypes
                     addrBulk.Add(playerArenaInfoAddr);
                     addrBulk.Add(purchasedCountAddress);
                     addrBulk.Add(arenaAvatarAddress);
-
                     // NOTE: If the [`addrBulk`] is too large, and split and get separately.
                     var states = context.Source.GetStates(addrBulk);
                     var stateBulk = new Dictionary<Address, IValue>();
@@ -873,9 +872,16 @@ namespace NineChronicles.Headless.GraphTypes
                             (win, lose),
                             cp
                         );
-                    }).ToArray();
-
-                    return result;
+                    }).ToList();
+                    
+                    var purchasedCountDuringInterval = stateBulk[purchasedCountAddress] is Integer iValue
+                        ? (int)iValue
+                        : 0;
+                    var arenaAvatarState = stateBulk[arenaAvatarAddress] is List iValue2
+                        ? new ArenaAvatarState(iValue2)
+                        : null;
+                    long lastBattleBlockIndex = arenaAvatarState?.LastBattleBlockIndex ?? 0L;
+                    return (result, purchasedCountDuringInterval, lastBattleBlockIndex);
                 }
             );
         }
