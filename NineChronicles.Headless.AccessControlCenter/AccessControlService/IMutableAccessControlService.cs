@@ -6,8 +6,8 @@ namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
 {
     public interface IMutableAccessControlService : IAccessControlService
     {
-        void DenyAccess(Address address);
-        void AllowAccess(Address address);
-        List<Address> ListBlockedAddresses(int offset, int limit);
+        void AddTxQuota(Address address, int quota);
+        void RemoveTxQuota(Address address);
+        List<Address> ListTxQuotaAddresses(int offset, int limit);
     }
 }

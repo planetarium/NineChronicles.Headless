@@ -1,6 +1,8 @@
+using System;
 using StackExchange.Redis;
 using Libplanet.Crypto;
 using Nekoyume.Blockchain;
+using Serilog;
 
 namespace NineChronicles.Headless.Services
 {
@@ -14,9 +16,17 @@ namespace NineChronicles.Headless.Services
             _db = redis.GetDatabase();
         }
 
-        public bool IsAccessDenied(Address address)
+        public int? GetTxQuota(Address address)
         {
-            return _db.KeyExists(address.ToString());
+            RedisValue result = _db.StringGet(address.ToString());
+            if (!result.IsNull)
+            {
+                Log.ForContext("Source", nameof(IAccessControlService))
+                    .Debug("\"{Address}\" Tx Quota: {Quota}", address, result);
+                return Convert.ToInt32(result);
+            }
+
+            return null;
         }
     }
 }
