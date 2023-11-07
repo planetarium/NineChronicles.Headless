@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Data.Sqlite;
 using Libplanet.Crypto;
-using Nekoyume.Blockchain;
+using NineChronicles.Headless.AccessControlService;
 using Serilog;
 
 namespace NineChronicles.Headless.Services

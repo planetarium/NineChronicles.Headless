@@ -1,6 +1,6 @@
 using Libplanet.Crypto;
 using System.Collections.Generic;
-using Nekoyume.Blockchain;
+using NineChronicles.Headless.AccessControlService;
 
 namespace NineChronicles.Headless.AccessControlCenter.AccessControlService
 {
