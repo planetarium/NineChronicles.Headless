@@ -1,7 +1,7 @@
 using System;
 using StackExchange.Redis;
 using Libplanet.Crypto;
-using Nekoyume.Blockchain;
+using NineChronicles.Headless.AccessControlService;
 using Serilog;
 
 namespace NineChronicles.Headless.Services

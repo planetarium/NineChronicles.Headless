@@ -1,5 +1,5 @@
 using System;
-using Nekoyume.Blockchain;
+using NineChronicles.Headless.AccessControlService;
 
 namespace NineChronicles.Headless.Services
 {
