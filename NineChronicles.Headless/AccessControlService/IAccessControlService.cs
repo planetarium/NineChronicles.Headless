@@ -1,6 +1,6 @@
 using Libplanet.Crypto;
 
-namespace Nekoyume.Blockchain
+namespace NineChronicles.Headless.AccessControlService
 {
     public interface IAccessControlService
     {
