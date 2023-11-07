@@ -651,14 +651,22 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<ArenaInfoResultType>>(
                 "arenaInfo",
-                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<AddressType>>
-                {
-                    Name = "avatarAddress"
-                }),
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress"
+                    },
+                    new QueryArgument<NonNullGraphType<BooleanGraphType>>
+                    {
+                        Name = "filter",
+                        DefaultValue = true,
+                    }
+                ),
                 resolve: context =>
                 {
                     var blockIndex = context.Source.BlockIndex;
                     var currentAvatarAddr = context.GetArgument<Address>("avatarAddress");
+                    var filter = context.GetArgument<bool>("filter");
                     var currentRoundData = context.Source.AccountState.GetSheet<ArenaSheet>().GetRoundByBlockIndex(blockIndex);
                     var participantsAddr = ArenaParticipants.DeriveAddress(
                         currentRoundData.ChampionshipId,
@@ -681,7 +689,7 @@ namespace NineChronicles.Headless.GraphTypes
                                 currentRoundData.Round)))
                         .ToArray();
                     // NOTE: If addresses is too large, and split and get separately.
-                    int playerScore = 0;
+                    int playerScore = ArenaScore.ArenaScoreDefault;
                     var scores = context.Source.GetStates(
                         avatarAndScoreAddrList.Select(tuple => tuple.Item2).ToList());
                     var avatarAddrAndScores = new List<(Address avatarAddr, int score)>();
@@ -881,6 +889,10 @@ namespace NineChronicles.Headless.GraphTypes
                         ? new ArenaAvatarState(iValue2)
                         : null;
                     long lastBattleBlockIndex = arenaAvatarState?.LastBattleBlockIndex ?? 0L;
+                    if (filter)
+                    {
+                        result = GetBoundsWithPlayerScore(result, currentRoundData.ArenaType, playerScore);
+                    }
                     return (result, purchasedCountDuringInterval, lastBattleBlockIndex);
                 }
             );
@@ -907,6 +919,21 @@ namespace NineChronicles.Headless.GraphTypes
             }
 
             return result;
+        }
+        
+        private static List<ArenaParticipant> GetBoundsWithPlayerScore(
+            List<ArenaParticipant> arenaInformation,
+            ArenaType arenaType,
+            int playerScore)
+        {
+            var bounds = ArenaHelper.ScoreLimits.ContainsKey(arenaType)
+                ? ArenaHelper.ScoreLimits[arenaType]
+                : ArenaHelper.ScoreLimits.First().Value;
+
+            bounds = (bounds.upper + playerScore, bounds.lower + playerScore);
+            return arenaInformation
+                .Where(a => a.Score <= bounds.upper && a.Score >= bounds.lower)
+                .ToList();
         }
     }
 }
