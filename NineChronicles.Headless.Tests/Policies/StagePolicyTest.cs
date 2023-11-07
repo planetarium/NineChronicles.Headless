@@ -1,20 +1,26 @@
-namespace Lib9c.Tests
+namespace NineChronicles.Headless.Tests.Policies
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.Immutable;
     using System.Linq;
     using System.Threading.Tasks;
     using Lib9c.Renderers;
-    using Lib9c.Tests.TestHelper;
     using Libplanet.Action;
     using Libplanet.Blockchain;
     using Libplanet.Blockchain.Policies;
     using Libplanet.Crypto;
+    using Libplanet.Store;
+    using Libplanet.Store.Trie;
+    using Libplanet.Types.Blocks;
     using Libplanet.Types.Tx;
+    using Nekoyume;
     using Nekoyume.Action;
-    using Nekoyume.Blockchain;
+    using Nekoyume.Action.Loader;
     using Nekoyume.Blockchain.Policy;
-    using Serilog.Core;
+    using Nekoyume.Model;
+    using Nekoyume.Model.State;
+    using NineChronicles.Headless.Policies;
     using Xunit;
 
     public class StagePolicyTest
@@ -252,6 +258,67 @@ namespace Lib9c.Tests
                     policy: policy,
                     stagePolicy: stagePolicy);
             return chain;
+        }
+
+        public static class BlockChainHelper
+        {
+            public static BlockChain MakeBlockChain(
+                BlockRenderer[] blockRenderers,
+                IBlockPolicy policy = null,
+                IStagePolicy stagePolicy = null,
+                IStore store = null,
+                IStateStore stateStore = null)
+            {
+                PrivateKey adminPrivateKey = new PrivateKey();
+
+                policy ??= new BlockPolicy();
+                stagePolicy ??= new VolatileStagePolicy();
+                store ??= new DefaultStore(null);
+                stateStore ??= new TrieStateStore(new DefaultKeyValueStore(null));
+                Block genesis = MakeGenesisBlock(adminPrivateKey.ToAddress(), ImmutableHashSet<Address>.Empty);
+                return BlockChain.Create(
+                    policy,
+                    stagePolicy,
+                    store,
+                    stateStore,
+                    genesis,
+                    new ActionEvaluator(
+                        policyBlockActionGetter: _ => policy.BlockAction,
+                        stateStore: stateStore,
+                        actionTypeLoader: new NCActionLoader()
+                    ),
+                    renderers: blockRenderers);
+            }
+
+            public static Block MakeGenesisBlock(
+                Address adminAddress,
+                IImmutableSet<Address> activatedAddresses,
+                AuthorizedMinersState authorizedMinersState = null,
+                DateTimeOffset? timestamp = null,
+                PendingActivationState[] pendingActivations = null
+            )
+            {
+                PrivateKey privateKey = new PrivateKey();
+                if (pendingActivations is null)
+                {
+                    var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
+                    (ActivationKey activationKey, PendingActivationState pendingActivation) =
+                        ActivationKey.Create(privateKey, nonce);
+                    pendingActivations = new[] { pendingActivation };
+                }
+
+                var sheets = TableSheetsImporter.ImportSheets();
+                return BlockHelper.ProposeGenesisBlock(
+                    sheets,
+                    new GoldDistribution[0],
+                    pendingActivations,
+                    new AdminState(adminAddress, 1500000),
+                    activatedAccounts: activatedAddresses,
+                    isActivateAdminAddress: false,
+                    credits: null,
+                    privateKey: privateKey,
+                    timestamp: timestamp ?? DateTimeOffset.MinValue);
+            }
         }
     }
 }
