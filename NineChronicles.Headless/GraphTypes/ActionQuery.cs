@@ -10,7 +10,6 @@ using Libplanet.Crypto;
 using Libplanet.Types.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
-using Nekoyume.Action.Factory;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -543,6 +542,7 @@ namespace NineChronicles.Headless.GraphTypes
             RegisterMead();
             RegisterGarages();
             RegisterSummon();
+            RegisterClaimItems();
 
             Field<NonNullGraphType<CraftQuery>>(
                 name: "craftQuery",
