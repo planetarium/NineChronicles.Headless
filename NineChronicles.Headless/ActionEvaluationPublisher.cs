@@ -462,18 +462,6 @@ namespace NineChronicles.Headless
                                     ? null
                                     : ev.Action;
                                 var extra = new Dictionary<string, IValue>();
-                                IAccountState output = _blockChainStates.GetAccountState(ev.OutputState);
-                                IAccountState input = _blockChainStates.GetAccountState(ev.PreviousState);
-                                AccountDiff diff = AccountDiff.Create(input, output);
-                                var updatedAddresses = diff.StateDiffs.Keys
-                                    .Union(diff.FungibleAssetValueDiffs.Select(kv => kv.Key.Item1))
-                                    .Append(ev.Signer)
-                                    .ToHashSet();
-                                if (!TargetAddresses.Any(updatedAddresses.Contains))
-                                {
-                                    return;
-                                }
-
                                 var encodeElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
 
                                 var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputState, ev.Exception, ev.PreviousState, ev.RandomSeed, extra);
