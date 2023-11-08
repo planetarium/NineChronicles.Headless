@@ -868,7 +868,7 @@ namespace NineChronicles.Headless.GraphTypes
                             .Select(guid =>
                                 avatar.inventory.Costumes.FirstOrDefault(x => x.ItemId == guid))
                             .Where(item => item != null).ToList();
-                        var runeOptions = GetRuneOptions(runeStates, runeOptionSheet);
+                        var runeOptions = GetRuneOptions(equippedRuneStates, runeOptionSheet);
                         var cp = CPHelper.TotalCP(equipments, costumes, runeOptions, avatar.level, row, costumeSheet);
                         return new ArenaParticipant(
                             avatarAddr,
