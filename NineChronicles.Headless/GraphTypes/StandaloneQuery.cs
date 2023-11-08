@@ -28,7 +28,7 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneQuery : ObjectGraphType
     {
-        public StandaloneQuery(StandaloneContext standaloneContext, IConfiguration configuration, ActionEvaluationPublisher publisher)
+        public StandaloneQuery(StandaloneContext standaloneContext, IConfiguration configuration, ActionEvaluationPublisher publisher, ArenaMemoryCache arenaMemoryCache)
         {
             bool useSecretToken = configuration[GraphQLService.SecretTokenKey] is { };
 
@@ -57,7 +57,8 @@ namespace NineChronicles.Headless.GraphTypes
                         {
                             BlockHash bh => chain[bh].Index,
                             null => chain.Tip!.Index,
-                        }
+                        },
+                        arenaMemoryCache
                     );
                 }
             );

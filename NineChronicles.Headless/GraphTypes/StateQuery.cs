@@ -27,8 +27,6 @@ using NineChronicles.Headless.GraphTypes.States.Models;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
 using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
 using NineChronicles.Headless.GraphTypes.States.Models.Table;
-using NineChronicles.Headless.States;
-using static Lib9c.SerializeKeys;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -45,7 +43,7 @@ namespace NineChronicles.Headless.GraphTypes
                     return new AvatarStateType.AvatarStateContext(
                         context.AccountState.GetAvatarState(address),
                         context.AccountState,
-                        context.BlockIndex);
+                        context.BlockIndex, context.ArenaMemoryCache);
                 }
                 catch (InvalidAddressException)
                 {
@@ -236,7 +234,8 @@ namespace NineChronicles.Headless.GraphTypes
                         return new AgentStateType.AgentStateContext(
                             new AgentState(state),
                             context.Source.AccountState,
-                            context.Source.BlockIndex
+                            context.Source.BlockIndex,
+                            context.Source.ArenaMemoryCache
                         );
                     }
 
@@ -253,7 +252,8 @@ namespace NineChronicles.Headless.GraphTypes
                         stakeStateV2,
                         stakeStateAddress,
                         ctx.AccountState,
-                        ctx.BlockIndex
+                        ctx.BlockIndex,
+                        ctx.ArenaMemoryCache
                     );
                 }
 
@@ -670,106 +670,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var currentAvatarAddr = context.GetArgument<Address>("avatarAddress");
                     var filterBounds = context.GetArgument<bool>("filterBounds");
                     var currentRoundData = context.Source.AccountState.GetSheet<ArenaSheet>().GetRoundByBlockIndex(blockIndex);
-                    var participantsAddr = ArenaParticipants.DeriveAddress(
-                        currentRoundData.ChampionshipId,
-                        currentRoundData.Round);
-                    var participants = context.Source.GetState(participantsAddr) is List participantsList
-                            ? new ArenaParticipants(participantsList)
-                            : null;
-                    if (participants is null)
-                    {
-                        return Array.Empty<ArenaParticipant>();
-                    }
-
-                    var avatarAddrList = participants.AvatarAddresses;
-                    var avatarAndScoreAddrList = avatarAddrList
-                        .Select(avatarAddr => (
-                            avatarAddr,
-                            ArenaScore.DeriveAddress(
-                                avatarAddr,
-                                currentRoundData.ChampionshipId,
-                                currentRoundData.Round)))
-                        .ToArray();
-                    // NOTE: If addresses is too large, and split and get separately.
                     int playerScore = ArenaScore.ArenaScoreDefault;
-                    var scores = context.Source.GetStates(
-                        avatarAndScoreAddrList.Select(tuple => tuple.Item2).ToList());
-                    var avatarAddrAndScores = new List<(Address avatarAddr, int score)>();
-                    for (int i = 0; i < avatarAddrList.Count; i++)
-                    {
-                        var tuple = avatarAndScoreAddrList[i];
-                        var score = scores[i] is List scoreList ? (int)(Integer)scoreList[1] : ArenaScore.ArenaScoreDefault;
-                        if (tuple.avatarAddr == currentAvatarAddr)
-                        {
-                            playerScore = score;
-                        }
-                        avatarAddrAndScores.Add((tuple.avatarAddr, score));
-                    }
-                    List<(Address avatarAddr, int score, int rank)> orderedTuples = avatarAddrAndScores
-                        .OrderByDescending(tuple => tuple.score)
-                        .ThenByDescending(tuple => tuple.avatarAddr == currentAvatarAddr)
-                        .ThenBy(tuple => tuple.avatarAddr)
-                        .Select(tuple => (tuple.avatarAddr, tuple.score, 0))
-                        .ToList();
-                    int? currentScore = null;
-                    var currentRank = 1;
-                    var avatarAddrAndScoresWithRank = new List<(Address avatarAddr, int score, int rank)>();
-                    var trunk = new List<(Address avatarAddr, int score, int rank)>();
-                    for (var i = 0; i < orderedTuples.Count; i++)
-                    {
-                        var tuple = orderedTuples[i];
-                        if (!currentScore.HasValue)
-                        {
-                            currentScore = tuple.score;
-                            trunk.Add(tuple);
-                            continue;
-                        }
-
-                        if (currentScore.Value == tuple.score)
-                        {
-                            trunk.Add(tuple);
-                            currentRank++;
-                            if (i < orderedTuples.Count - 1)
-                            {
-                                continue;
-                            }
-
-                            foreach (var tupleInTrunk in trunk)
-                            {
-                                avatarAddrAndScoresWithRank.Add((
-                                    tupleInTrunk.avatarAddr,
-                                    tupleInTrunk.score,
-                                    currentRank));
-                            }
-
-                            trunk.Clear();
-
-                            continue;
-                        }
-
-                        foreach (var tupleInTrunk in trunk)
-                        {
-                            avatarAddrAndScoresWithRank.Add((
-                                tupleInTrunk.avatarAddr,
-                                tupleInTrunk.score,
-                                currentRank));
-                        }
-
-                        trunk.Clear();
-                        if (i < orderedTuples.Count - 1)
-                        {
-                            trunk.Add(tuple);
-                            currentScore = tuple.score;
-                            currentRank++;
-                            continue;
-                        }
-
-                        avatarAddrAndScoresWithRank.Add((
-                            tuple.avatarAddr,
-                            tuple.score,
-                            currentRank + 1));
-                    }
-
                     var playerArenaInfoAddr = ArenaInformation.DeriveAddress(
                         currentAvatarAddr,
                         currentRoundData.ChampionshipId,
@@ -778,31 +679,17 @@ namespace NineChronicles.Headless.GraphTypes
                         playerArenaInfoAddr.Derive(BattleArena.PurchasedCountKey);
                     var arenaAvatarAddress =
                         ArenaAvatarState.DeriveAddress(currentAvatarAddr);
-
-                    var runeListSheet = context.Source.AccountState.GetSheet<RuneListSheet>();
-                    var costumeSheet = context.Source.AccountState.GetSheet<CostumeStatSheet>();
-                    var characterSheet = context.Source.AccountState.GetSheet<CharacterSheet>();
-                    var runeOptionSheet = context.Source.AccountState.GetSheet<RuneOptionSheet>();
-                    var runeIds = runeListSheet.Values.Select(x => x.Id).ToList();
-                    var row = characterSheet[GameConfig.DefaultAvatarCharacterId];
-                    var addrBulk = avatarAddrAndScoresWithRank
-                        .SelectMany(tuple => new[]
-                        {
-                            tuple.avatarAddr,
-                            tuple.avatarAddr.Derive(LegacyInventoryKey),
-                            ItemSlotState.DeriveAddress(tuple.avatarAddr, BattleType.Arena),
-                            RuneSlotState.DeriveAddress(tuple.avatarAddr, BattleType.Arena),
-                        })
-                        .ToList();
-
-                    foreach (var tuple in avatarAddrAndScoresWithRank)
+                    var cacheKey = $"{currentRoundData.ChampionshipId}_{currentRoundData.Round}";
+                    List<ArenaParticipant> result = new();
+                    var scoreAddr = ArenaScore.DeriveAddress(currentAvatarAddr, currentRoundData.ChampionshipId, currentRoundData.Round);
+                    var addrBulk = new List<Address>
                     {
-                        addrBulk.AddRange(runeIds.Select(x => RuneState.DeriveAddress(tuple.avatarAddr, x)));
-                    }
-
-                    addrBulk.Add(playerArenaInfoAddr);
-                    addrBulk.Add(purchasedCountAddress);
-                    addrBulk.Add(arenaAvatarAddress);
+                        playerArenaInfoAddr,
+                        purchasedCountAddress,
+                        arenaAvatarAddress,
+                        scoreAddr,
+                    };
+                    
                     var states = context.Source.GetStates(addrBulk);
                     var stateBulk = new Dictionary<Address, IValue>();
                     for (int i = 0; i < addrBulk.Count; i++)
@@ -811,80 +698,22 @@ namespace NineChronicles.Headless.GraphTypes
                         var value = states[i];
                         stateBulk.TryAdd(address, value ?? Null.Value);
                     }
-                    var runeStates = new List<RuneState>();
-                    var result = avatarAddrAndScoresWithRank.Select(tuple =>
+                    if (stateBulk[scoreAddr] is List scores)
                     {
-                        var (avatarAddr, score, rank) = tuple;
-                        var avatar = new AvatarState((Dictionary) stateBulk[avatarAddr]);
-                        if (stateBulk[avatarAddr.Derive(LegacyInventoryKey)] is List inventoryList)
+                        playerScore = (Integer)scores[1];
+                    }
+                    if (context.Source.ArenaMemoryCache.Cache.TryGetValue(cacheKey,
+                            out var cachedResult))
+                    {
+                        var list = (cachedResult as List<ArenaParticipant>)!;
+                        foreach (var arenaParticipant in list)
                         {
-                            var inventory = new Inventory(inventoryList);
-                            avatar.inventory = inventory;
+                            var (win, lose, _) = ArenaHelper.GetScores(playerScore, arenaParticipant.Score);
+                            arenaParticipant.WinScore = win;
+                            arenaParticipant.LoseScore = lose;
+                            result.Add(arenaParticipant);
                         }
-
-                        var itemSlotState =
-                            stateBulk[ItemSlotState.DeriveAddress(avatarAddr, BattleType.Arena)] is
-                                List itemSlotList
-                                ? new ItemSlotState(itemSlotList)
-                                : new ItemSlotState(BattleType.Arena);
-
-                        var runeSlotState =
-                            stateBulk[RuneSlotState.DeriveAddress(avatarAddr, BattleType.Arena)] is
-                                List runeSlotList
-                                ? new RuneSlotState(runeSlotList)
-                                : new RuneSlotState(BattleType.Arena);
-
-                        runeStates.Clear();
-                        foreach (var id in runeIds)
-                        {
-                            var address = RuneState.DeriveAddress(avatarAddr, id);
-                            if (stateBulk[address] is List runeStateList)
-                            {
-                                runeStates.Add(new RuneState(runeStateList));
-                            }
-                        }
-
-                        var equippedRuneStates = new List<RuneState>();
-                        foreach (var runeId in runeSlotState.GetRuneSlot().Select(slot => slot.RuneId))
-                        {
-                            if (!runeId.HasValue)
-                            {
-                                continue;
-                            }
-
-                            var runeState = runeStates.FirstOrDefault(x => x.RuneId == runeId);
-                            if (runeState != null)
-                            {
-                                equippedRuneStates.Add(runeState);
-                            }
-                        }
-
-                        var (win, lose, _) =
-                            ArenaHelper.GetScores(playerScore, score);
-                        var equipments = itemSlotState.Equipments
-                            .Select(guid =>
-                                avatar.inventory.Equipments.FirstOrDefault(x => x.ItemId == guid))
-                            .Where(item => item != null).ToList();
-                        var costumes = itemSlotState.Costumes
-                            .Select(guid =>
-                                avatar.inventory.Costumes.FirstOrDefault(x => x.ItemId == guid))
-                            .Where(item => item != null).ToList();
-                        var runeOptions = GetRuneOptions(equippedRuneStates, runeOptionSheet);
-                        var cp = CPHelper.TotalCP(equipments, costumes, runeOptions, avatar.level, row, costumeSheet);
-                        var portraitId = GetPortraitId(equipments, costumes);
-                        return new ArenaParticipant(
-                            avatarAddr,
-                            avatarAddr.Equals(currentAvatarAddr)
-                                ? playerScore
-                                : score,
-                            rank,
-                            avatar,
-                            portraitId,
-                            win,
-                            lose,
-                            cp
-                        );
-                    }).ToList();
+                    }
 
                     var purchasedCountDuringInterval = stateBulk[purchasedCountAddress] is Integer iValue
                         ? (int)iValue
@@ -893,15 +722,16 @@ namespace NineChronicles.Headless.GraphTypes
                         ? new ArenaAvatarState(iValue2)
                         : null;
                     long lastBattleBlockIndex = arenaAvatarState?.LastBattleBlockIndex ?? 0L;
+                    var arenaInfo = stateBulk[playerArenaInfoAddr] is List l
+                        ? new ArenaInformation(l)
+                        : new ArenaInformation(currentAvatarAddr, currentRoundData.ChampionshipId,
+                            currentRoundData.Round);
+                    
                     if (filterBounds)
                     {
                         result = GetBoundsWithPlayerScore(result, currentRoundData.ArenaType, playerScore);
                     }
 
-                    var arenaInfo = stateBulk[playerArenaInfoAddr] is List l
-                        ? new ArenaInformation(l)
-                        : new ArenaInformation(currentAvatarAddr, currentRoundData.ChampionshipId,
-                            currentRoundData.Round);
                     return (result, arenaInfo, purchasedCountDuringInterval, lastBattleBlockIndex);
                 }
             );
@@ -930,7 +760,7 @@ namespace NineChronicles.Headless.GraphTypes
             return result;
         }
 
-        private static List<ArenaParticipant> GetBoundsWithPlayerScore(
+        public static List<ArenaParticipant> GetBoundsWithPlayerScore(
             List<ArenaParticipant> arenaInformation,
             ArenaType arenaType,
             int playerScore)
@@ -945,7 +775,7 @@ namespace NineChronicles.Headless.GraphTypes
                 .ToList();
         }
 
-        private static int GetPortraitId(List<Equipment?> equipments, List<Costume?> costumes)
+        public static int GetPortraitId(List<Equipment?> equipments, List<Costume?> costumes)
         {
             var fullCostume = costumes.FirstOrDefault(x => x?.ItemSubType == ItemSubType.FullCostume);
             if (fullCostume != null)
