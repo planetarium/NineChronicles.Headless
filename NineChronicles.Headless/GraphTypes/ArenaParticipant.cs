@@ -22,6 +22,7 @@ public class ArenaParticipant
         int score,
         int rank,
         AvatarState avatarState,
+        int armorId,
         (int win, int lose) expectDeltaScore,
         int cp)
     {
@@ -30,8 +31,7 @@ public class ArenaParticipant
         Rank = rank;
         ExpectDeltaScore = expectDeltaScore;
         Cp = cp;
-        var costume = avatarState.inventory.Costumes.FirstOrDefault(c => c.ItemSubType == ItemSubType.FullCostume && c.Equipped);
-        ArmorId = costume?.Id ?? avatarState.GetArmorId();
+        ArmorId = armorId;
         NameWithHash = avatarState.NameWithHash;
         Level = avatarState.level;
     }

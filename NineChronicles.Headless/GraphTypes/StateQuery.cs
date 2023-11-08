@@ -870,6 +870,7 @@ namespace NineChronicles.Headless.GraphTypes
                             .Where(item => item != null).ToList();
                         var runeOptions = GetRuneOptions(equippedRuneStates, runeOptionSheet);
                         var cp = CPHelper.TotalCP(equipments, costumes, runeOptions, avatar.level, row, costumeSheet);
+                        var armorId = GetPortraitId(equipments, costumes);
                         return new ArenaParticipant(
                             avatarAddr,
                             avatarAddr.Equals(currentAvatarAddr)
@@ -877,6 +878,7 @@ namespace NineChronicles.Headless.GraphTypes
                                 : score,
                             rank,
                             avatar,
+                            armorId,
                             (win, lose),
                             cp
                         );
@@ -934,6 +936,18 @@ namespace NineChronicles.Headless.GraphTypes
             return arenaInformation
                 .Where(a => a.Score <= bounds.upper && a.Score >= bounds.lower)
                 .ToList();
+        }
+        
+        public static int GetPortraitId(List<Equipment?> equipments, List<Costume?> costumes)
+        {
+            var fullCostume = costumes.FirstOrDefault(x => x?.ItemSubType == ItemSubType.FullCostume);
+            if (fullCostume != null)
+            {
+                return fullCostume.Id;
+            }
+
+            var armor = equipments.FirstOrDefault(x => x?.ItemSubType == ItemSubType.Armor);
+            return armor?.Id ?? GameConfig.DefaultAvatarArmorId;
         }
     }
 }
