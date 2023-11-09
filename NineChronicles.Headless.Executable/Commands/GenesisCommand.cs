@@ -57,10 +57,10 @@ namespace NineChronicles.Headless.Executable.Commands
                 {
                     new()
                     {
-                        Address = initialMinter.ToAddress(), 
+                        Address = initialMinter.ToAddress(),
                         AmountPerBlock = DefaultCurrencyValue,
-                        StartBlock = 0, 
-                        EndBlock = 0
+                        StartBlock = 0,
+                        EndBlock = 0,
                     }
                 };
 
@@ -183,7 +183,7 @@ namespace NineChronicles.Headless.Executable.Commands
         }
 
         private void ProcessInitialMeadConfigs(
-            List<MeadConfig>? configs, 
+            List<MeadConfig>? configs,
             out List<PrepareRewardAssets> meadActions
         )
         {
@@ -262,7 +262,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 ProcessInitialMeadConfigs(genesisConfig.InitialMeadConfigs, out var initialMeads);
 
                 ProcessInitialPledgeConfigs(genesisConfig.InitialPledgeConfigs, out var initialPledges);
- 
+
                 // Mine genesis block
                 _console.Out.WriteLine("\nMining genesis block...\n");
                 Block block = BlockHelper.ProposeGenesisBlock(
@@ -391,7 +391,7 @@ namespace NineChronicles.Headless.Executable.Commands
         private struct MeadConfig
         {
             public string Address { get; set; }
-            
+
             public string Amount { get; set; }
         }
 
