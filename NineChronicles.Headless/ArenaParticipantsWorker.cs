@@ -268,7 +268,7 @@ public class ArenaParticipantsWorker : BackgroundService
                 cp
             );
         }).ToList();
-        _cache.Cache.Set(cacheKey, result);
+        _cache.Cache.Set(cacheKey, result, TimeSpan.FromHours(1));
         sw.Stop();
         _logger.Information("Set Arena Cache[{CacheKey}]: {Elapsed}", cacheKey, sw.Elapsed);
     }
