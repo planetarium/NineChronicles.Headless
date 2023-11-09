@@ -705,13 +705,12 @@ namespace NineChronicles.Headless.GraphTypes
                     if (context.Source.ArenaMemoryCache.Cache.TryGetValue(cacheKey,
                             out var cachedResult))
                     {
-                        var list = (cachedResult as List<ArenaParticipant>)!;
-                        foreach (var arenaParticipant in list)
+                        result = (cachedResult as List<ArenaParticipant>)!;
+                        foreach (var arenaParticipant in result)
                         {
                             var (win, lose, _) = ArenaHelper.GetScores(playerScore, arenaParticipant.Score);
                             arenaParticipant.WinScore = win;
                             arenaParticipant.LoseScore = lose;
-                            result.Add(arenaParticipant);
                         }
                     }
 
