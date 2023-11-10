@@ -7,12 +7,12 @@ namespace NineChronicles.Headless.Services;
 
 public class StateService : IDisposable
 {
-    public StateService(string path, int port, string remoteBlockChainStatesEndpoint)
+    public StateService(string path, int port, string stateStorePath)
     {
         Process = new Process();
         Process.StartInfo.FileName = "dotnet";
         Process.StartInfo.Arguments = $"{path} --urls=http://localhost:{port}";
-        Process.StartInfo.EnvironmentVariables["RemoteBlockChainStatesEndpoint"] = remoteBlockChainStatesEndpoint;
+        Process.StartInfo.EnvironmentVariables["StateStorePath"] = stateStorePath;
         Process.Start();
     }
 

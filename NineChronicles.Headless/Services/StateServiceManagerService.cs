@@ -18,7 +18,7 @@ public class StateServiceManagerService : IHostedService, IDisposable
 {
     private IEnumerable<StateService> StateServices { get; init; }
 
-    public StateServiceManagerService(StateServiceManagerServiceOptions options)
+    public StateServiceManagerService(StateServiceManagerServiceOptions options, string path)
     {
         if (options.StateServices is null || options.StateServices.Any(x => x.Path is null))
         {
@@ -36,7 +36,7 @@ public class StateServiceManagerService : IHostedService, IDisposable
         StateServices = options.StateServices.Select(conf =>
             conf.Path is null
                 ? throw new ArgumentException(nameof(options))
-                : new StateService(ToStateServiceDLLPath(conf.Path), conf.Port, options.RemoteBlockChainStatesEndpoint)).ToList();
+                : new StateService(ToStateServiceDLLPath(conf.Path), conf.Port, path)).ToList();
     }
 
     public Task StartAsync(CancellationToken cancellationToken) =>

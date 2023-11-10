@@ -10,9 +10,6 @@ public class StateServiceManagerServiceOptions
     [Required]
     public string StateServicesDownloadPath { get; set; } = null!;
 
-    [Required]
-    public string RemoteBlockChainStatesEndpoint { get; set; } = null!;
-
     public class StateService
     {
         [Required]

@@ -40,15 +40,14 @@ namespace NineChronicles.Headless
                 services.AddSingleton(provider => service.BlockChain);
                 services.AddSingleton(provider => service.Store);
 
-                if (properties.StateServiceManagerService is { } stateServiceManagerServiceOptions)
-                {
-                    var stateServiceManagerService = new StateServiceManagerService(stateServiceManagerServiceOptions);
-                    services.AddSingleton(provider => stateServiceManagerService);
-                }
-
                 if (properties.Libplanet is { } libplanetNodeServiceProperties)
                 {
                     services.AddSingleton<LibplanetNodeServiceProperties>(provider => libplanetNodeServiceProperties);
+                    if (properties.StateServiceManagerService is { } stateServiceManagerServiceOptions)
+                    {
+                        var stateServiceManagerService = new StateServiceManagerService(stateServiceManagerServiceOptions, libplanetNodeServiceProperties.StorePath);
+                        services.AddSingleton(provider => stateServiceManagerService);
+                    }
                 }
 
                 services.AddSingleton(_ => actionEvaluationPublisher);

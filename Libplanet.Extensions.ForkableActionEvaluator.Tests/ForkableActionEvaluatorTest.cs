@@ -19,7 +19,7 @@ public class ForkableActionEvaluatorTest
         {
             ((0L, 100L), new PreActionEvaluator()),
             ((101L, long.MaxValue), new PostActionEvaluator()),
-        });
+        }, null);
 
         Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(0), null)).Action);
         Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(99), null)).Action);
@@ -36,25 +36,25 @@ public class ForkableActionEvaluatorTest
             {
                 ((0L, 100L), new PreActionEvaluator()),
                 ((99L, long.MaxValue), new PostActionEvaluator()),
-            }));
+            }, null));
         Assert.Throws<ArgumentOutOfRangeException>(() => new ForkableActionEvaluator(
             new ((long, long), IActionEvaluator)[]
             {
                 ((0L, 100L), new PreActionEvaluator()),
                 ((100L, long.MaxValue), new PostActionEvaluator()),
-            }));
+            }, null));
         Assert.Throws<ArgumentOutOfRangeException>(() => new ForkableActionEvaluator(
             new ((long, long), IActionEvaluator)[]
             {
                 ((50L, 100L), new PreActionEvaluator()),
                 ((101L, long.MaxValue), new PostActionEvaluator()),
-            }));
+            }, null));
         Assert.Throws<ArgumentOutOfRangeException>(() => new ForkableActionEvaluator(
             new ((long, long), IActionEvaluator)[]
             {
                 ((0L, 100L), new PreActionEvaluator()),
                 ((101L, long.MaxValue - 1), new PostActionEvaluator()),
-            }));
+            }, null));
     }
 }
 
