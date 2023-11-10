@@ -649,8 +649,8 @@ namespace NineChronicles.Headless.GraphTypes
 
             RegisterGarages();
 
-            Field<NonNullGraphType<ArenaParticipantsResultType>>(
-                "arenaInfo",
+            Field<NonNullGraphType<ListGraphType<ArenaParticipantType>>>(
+                "arenaParticipants",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
@@ -671,34 +671,11 @@ namespace NineChronicles.Headless.GraphTypes
                     var filterBounds = context.GetArgument<bool>("filterBounds");
                     var currentRoundData = context.Source.AccountState.GetSheet<ArenaSheet>().GetRoundByBlockIndex(blockIndex);
                     int playerScore = ArenaScore.ArenaScoreDefault;
-                    var playerArenaInfoAddr = ArenaInformation.DeriveAddress(
-                        currentAvatarAddr,
-                        currentRoundData.ChampionshipId,
-                        currentRoundData.Round);
-                    var purchasedCountAddress =
-                        playerArenaInfoAddr.Derive(BattleArena.PurchasedCountKey);
-                    var arenaAvatarAddress =
-                        ArenaAvatarState.DeriveAddress(currentAvatarAddr);
                     var cacheKey = $"{currentRoundData.ChampionshipId}_{currentRoundData.Round}";
                     List<ArenaParticipant> result = new();
                     var scoreAddr = ArenaScore.DeriveAddress(currentAvatarAddr, currentRoundData.ChampionshipId, currentRoundData.Round);
-                    var addrBulk = new List<Address>
-                    {
-                        playerArenaInfoAddr,
-                        purchasedCountAddress,
-                        arenaAvatarAddress,
-                        scoreAddr,
-                    };
-                    
-                    var states = context.Source.GetStates(addrBulk);
-                    var stateBulk = new Dictionary<Address, IValue>();
-                    for (int i = 0; i < addrBulk.Count; i++)
-                    {
-                        var address = addrBulk[i];
-                        var value = states[i];
-                        stateBulk.TryAdd(address, value ?? Null.Value);
-                    }
-                    if (stateBulk[scoreAddr] is List scores)
+                    var scoreState = context.Source.GetState(scoreAddr);
+                    if (scoreState is List scores)
                     {
                         playerScore = (Integer)scores[1];
                     }
@@ -714,24 +691,12 @@ namespace NineChronicles.Headless.GraphTypes
                         }
                     }
 
-                    var purchasedCountDuringInterval = stateBulk[purchasedCountAddress] is Integer iValue
-                        ? (int)iValue
-                        : 0;
-                    var arenaAvatarState = stateBulk[arenaAvatarAddress] is List iValue2
-                        ? new ArenaAvatarState(iValue2)
-                        : null;
-                    long lastBattleBlockIndex = arenaAvatarState?.LastBattleBlockIndex ?? 0L;
-                    var arenaInfo = stateBulk[playerArenaInfoAddr] is List l
-                        ? new ArenaInformation(l)
-                        : new ArenaInformation(currentAvatarAddr, currentRoundData.ChampionshipId,
-                            currentRoundData.Round);
-                    
                     if (filterBounds)
                     {
                         result = GetBoundsWithPlayerScore(result, currentRoundData.ArenaType, playerScore);
                     }
 
-                    return (result, arenaInfo, purchasedCountDuringInterval, lastBattleBlockIndex);
+                    return result;
                 }
             );
         }
