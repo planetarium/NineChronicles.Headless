@@ -28,7 +28,7 @@ public class ArenaParticipantsWorker : BackgroundService
     private ILogger _logger;
     private ArenaMemoryCache _cache;
     private StandaloneContext _context;
-    
+
     public ArenaParticipantsWorker(ArenaMemoryCache memoryCache, StandaloneContext context)
     {
         _cache = memoryCache;
@@ -168,7 +168,7 @@ public class ArenaParticipantsWorker : BackgroundService
                 tuple.score,
                 currentRank + 1));
         }
-        
+
         var runeListSheet = accountState.GetSheet<RuneListSheet>();
         var costumeSheet = accountState.GetSheet<CostumeStatSheet>();
         var characterSheet = accountState.GetSheet<CharacterSheet>();
@@ -202,7 +202,7 @@ public class ArenaParticipantsWorker : BackgroundService
         var result = avatarAddrAndScoresWithRank.Select(tuple =>
         {
             var (avatarAddr, score, rank) = tuple;
-            var avatar = new AvatarState((Dictionary) stateBulk[avatarAddr]);
+            var avatar = new AvatarState((Dictionary)stateBulk[avatarAddr]);
             if (stateBulk[avatarAddr.Derive(LegacyInventoryKey)] is List inventoryList)
             {
                 var inventory = new Inventory(inventoryList);
