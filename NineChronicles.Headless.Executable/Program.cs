@@ -459,6 +459,10 @@ namespace NineChronicles.Headless.Executable
                                 .AddRuntimeInstrumentation()
                                 .AddAspNetCoreInstrumentation()
                                 .AddPrometheusExporter());
+
+                    // worker
+                    services.AddHostedService<ArenaParticipantsWorker>();
+                    services.AddSingleton<ArenaMemoryCache>();
                 });
 
                 NineChroniclesNodeService service =

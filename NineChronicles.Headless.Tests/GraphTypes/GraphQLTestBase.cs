@@ -128,6 +128,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             services.AddLibplanetExplorer();
             services.AddSingleton(ncService);
             services.AddSingleton(ncService.Store);
+            services.AddSingleton<ArenaMemoryCache>();
             ServiceProvider serviceProvider = services.BuildServiceProvider();
             Schema = new StandaloneSchema(serviceProvider);
 
