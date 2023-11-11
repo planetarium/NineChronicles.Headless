@@ -12,7 +12,14 @@ namespace NineChronicles.Headless.Services
 
         public RedisAccessControlService(string storageUri)
         {
-            var redis = ConnectionMultiplexer.Connect(storageUri);
+            var configurationOptions = new ConfigurationOptions
+            {
+                EndPoints = { storageUri },
+                ConnectTimeout = 500,
+                SyncTimeout = 500,
+            };
+
+            var redis = ConnectionMultiplexer.Connect(configurationOptions);
             _db = redis.GetDatabase();
         }
 
