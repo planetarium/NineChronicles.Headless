@@ -142,16 +142,7 @@ For more information on the GraphQL API, refer to the [NineChronicles Headless G
 
 ## Create a new genesis block
 
-### 1. (Optional) Create activation keys and PendingActivationState
-Activation key is the code for 9c account to register/activate into NineChronicles.
-You can create activation key whenever you want later, so you can just skip this step.
-
-```shell
-dotnet run --project NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj -- tx create-activation-keys 10 > ActivationKeys.csv  # Change [10] to your number of new activation keys
-dotnet run --project NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj -- tx create-pending-activations ActivationKeys.csv > PendingActivation
-```
-
-### 2. Create config file for genesis block
+### 1. Create config file for genesis block
 1. Copy `config.json.example` to `config.json`
 2. Change values inside `config.json`
    - `data.tablePath` is required.
@@ -169,6 +160,7 @@ dotnet run --project NineChronicles.Headless.Executable/NineChronicles.Headless.
 | currency.initialCurrencyDeposit[i].amount  | BigInteger          |          | Amount of currency give to depositor. <br/>This amount will be given every block from start to end. ex) 100 from 0 to 9: total 1000 currency will be given.                        |
 | currency.initialCurrencyDeposit[i].start   | long                |          | First block to give currency to depositor. genesis block is #0                                                                                                                     |
 | currency.initialCurrencyDeposit[i].end     | long                |          | Last block to give currency to depositor. <br/>If you want to give only once, set this value as same as `start`.                                                                   |
+| currency.allowMint                         | boolean             |          | Allow/Disallow additional mint or burn against the initial currency.                                                                                                               |
 | admin                                      |                     | Optional | Related to admin setting.                                                                                                                                                          |
 | admin.activate                             | bool                |          | If true, give admin privilege to admin address.                                                                                                                                    |
 | admin.address                              | Address (string)    |          | Address to be admin. If not provided, the `initialMinter` will be set as admin.                                                                                                    |
@@ -176,10 +168,15 @@ dotnet run --project NineChronicles.Headless.Executable/NineChronicles.Headless.
 | initialValidatorSet                        |                     | Optional | Initial Validator set for this blockchain. Do not provide this section if you want to use default setting.                                                                         |   
 | initialValidatorSet[i].publicKey           | PublicKey (string)  |          | Public Key of validator.                                                                                                                                                           |
 | initialValidatorSet[i].power               | long                |          | Voting power of validator. Min. value of voting power is 1.                                                                                                                        |
-| extra                                      |                     | Optional | Extra settings.                                                                                                                                                                    |
-| extra.pendingActivationStatePath           | string              |          | If you want to set activation key inside genesis block to use, create `PendingActivationData` and save to file and provide here.                                                   |
+| initialMeadConfigs                         |                     | Optional | Initial MEAD distributions                                                                                                                                                         |
+| initialMeadConfigs[i].address              | Address (string)    |          | Recipient address                                                                                                                                                                  |
+| initialMeadConfigs[i].amount               | BigInteger          |          | Amount of initial MEAD                                                                                                                                                             |
+| initialPledgeConfigs                       |                     | Optional | Initial pledges introduced from NCIP-15                                                                                                                                            |
+| initialPledgeConfigs[i].agentAddress       | Address (string)    |          | Address of agent who will be funded                                                                                                                                                |
+| initialPledgeConfigs[i].patronAddress      | Address (string)    |          | Address of patron who will fund                                                                                                                                                    |
+| initialPledgeConfigs[i].mead               | int                 |          | Amount of MEAD that will be funded per each blocks                                                                                                                                 |
 
-### 3. Create genesis block
+### 2. Create genesis block
 
 ```shell
 dotnet run --project ./NineChronicles.Headless.Executable/ genesis ./config.json
@@ -187,7 +184,7 @@ dotnet run --project ./NineChronicles.Headless.Executable/ genesis ./config.json
 
 After this step, you will get `genesis-block` file as output and another info in addition.
 
-### 4. Run Headless node with genesis block
+### 3. Run Headless node with genesis block
 
 ```shell
 dotnet run --project ./NineChronicles.Headless.Executable/ \
@@ -200,6 +197,7 @@ dotnet run --project ./NineChronicles.Headless.Executable/ \
     --miner-private-key=[PRIVATE_KEY_OF_BLOCK_MINER]
 ```
 If you see log like this, all process is successfully done:
+
 ```text
 Start mining.
 [BlockChain] 424037645/18484: Starting to mine block #1 with difficulty 5000000 and previous hash 29f53d22...
