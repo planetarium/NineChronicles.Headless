@@ -1,4 +1,4 @@
-namespace NineChronicles.Headless.Policies
+namespace Nekoyume.Blockchain
 {
     using System;
     using System.Collections.Concurrent;
@@ -9,7 +9,6 @@ namespace NineChronicles.Headless.Policies
     using Libplanet.Blockchain.Policies;
     using Libplanet.Crypto;
     using Libplanet.Types.Tx;
-    using NineChronicles.Headless.AccessControlService;
 
     public class NCStagePolicy : IStagePolicy
     {
@@ -36,7 +35,7 @@ namespace NineChronicles.Headless.Policies
         }
 
         public Transaction Get(BlockChain blockChain, TxId id, bool filtered = true)
-            => _impl.Get(blockChain, id, filtered)!;
+            => _impl.Get(blockChain, id, filtered);
 
         public long GetNextTxNonce(BlockChain blockChain, Address address)
             => _impl.GetNextTxNonce(blockChain, address);
@@ -71,7 +70,7 @@ namespace NineChronicles.Headless.Policies
 
                     if (s.Count > txQuotaPerSigner)
                     {
-                        s.Remove(s.Max!);
+                        s.Remove(s.Max);
                     }
                 }
 
@@ -111,11 +110,11 @@ namespace NineChronicles.Headless.Policies
         public bool Unstage(BlockChain blockChain, TxId id)
             => _impl.Unstage(blockChain, id);
 
-        private sealed class TxComparer : IComparer<Transaction>
+        private class TxComparer : IComparer<Transaction>
         {
-            public int Compare(Transaction? x, Transaction? y)
+            public int Compare(Transaction x, Transaction y)
             {
-                if (x!.Nonce < y!.Nonce)
+                if (x.Nonce < y.Nonce)
                 {
                     return -1;
                 }
