@@ -45,6 +45,8 @@ namespace NineChronicles.Headless
 
         public IStore? Store { get; internal set; }
 
+        public IStateStore? StateStore { get; internal set; }
+
         public Swarm? Swarm { get; internal set; }
 
         public CurrencyFactory? CurrencyFactory { get; set; }

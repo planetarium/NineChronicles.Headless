@@ -98,6 +98,7 @@ namespace NineChronicles.Headless.Tests
             {
                 BlockChain = blockchain,
                 Store = store,
+                StateStore = stateStore,
                 CurrencyFactory = currencyFactory,
                 FungibleAssetValueFactory = fungibleAssetValueFactory,
             };
@@ -139,6 +140,7 @@ namespace NineChronicles.Headless.Tests
             {
                 BlockChain = blockchain,
                 Store = store,
+                StateStore = stateStore,
                 CurrencyFactory = currencyFactory,
                 FungibleAssetValueFactory = fungibleAssetValueFactory,
             };

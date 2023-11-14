@@ -53,6 +53,8 @@ namespace NineChronicles.Headless
 
         public IStore Store => NodeService.Store;
 
+        public IStateStore StateStore => NodeService.StateStore;
+
         public PrivateKey? MinerPrivateKey { get; set; }
 
         static NineChroniclesNodeService()
@@ -291,6 +293,7 @@ namespace NineChronicles.Headless
             standaloneContext.NineChroniclesNodeService = this;
             standaloneContext.BlockChain = Swarm.BlockChain;
             standaloneContext.Store = Store;
+            standaloneContext.StateStore = StateStore;
             standaloneContext.Swarm = Swarm;
             standaloneContext.CurrencyFactory =
                 new CurrencyFactory(() => standaloneContext.BlockChain.GetAccountState(standaloneContext.BlockChain.Tip.Hash));

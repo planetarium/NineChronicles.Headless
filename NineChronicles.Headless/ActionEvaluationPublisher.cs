@@ -23,6 +23,8 @@ using Libplanet.Action.State;
 using Libplanet.Blockchain;
 using Libplanet.Common;
 using Libplanet.Crypto;
+using Libplanet.RocksDBStore;
+using Libplanet.Store;
 using Libplanet.Types.Blocks;
 using Libplanet.Types.Tx;
 using MagicOnion.Client;
@@ -46,6 +48,7 @@ namespace NineChronicles.Headless
         private readonly ExceptionRenderer _exceptionRenderer;
         private readonly NodeStatusRenderer _nodeStatusRenderer;
         private readonly IBlockChainStates _blockChainStates;
+        private readonly IDisposable? _catchUpSecondary;
 
         private readonly ConcurrentDictionary<Address, Client> _clients = new();
         private readonly ConcurrentDictionary<Address, string> _clientsByDevice = new();
@@ -62,6 +65,7 @@ namespace NineChronicles.Headless
             ExceptionRenderer exceptionRenderer,
             NodeStatusRenderer nodeStatusRenderer,
             IBlockChainStates blockChainStates,
+            IStateStore stateStore,
             string host,
             int port,
             RpcContext context,
@@ -106,6 +110,21 @@ namespace NineChronicles.Headless
                         new KeyValuePair<string, object?>("account-type", "all")),
                 },
                 description: "Number of RPC clients connected grouped by ips.");
+
+            if (stateStore is TrieStateStore
+            {
+                StateKeyValueStore: RocksDBKeyValueStore
+                {
+                    Type: RocksDbInstanceType.Secondary
+                } secondaryKvStore,
+            })
+            {
+                _catchUpSecondary = _actionRenderer.ActionRenderSubject
+                    .SubscribeOn(NewThreadScheduler.Default)
+                    .Subscribe(_ => {
+                        secondaryKvStore.TryCatchUpWithPrimary();
+                    });
+            }
 
             ActionEvaluationHub.OnClientDisconnected += RemoveClient;
         }
@@ -212,6 +231,7 @@ namespace NineChronicles.Headless
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
+            _catchUpSecondary?.Dispose();
             foreach (Client? client in _clients.Values)
             {
                 if (client is { })

@@ -37,7 +37,7 @@ namespace NineChronicles.Headless.Tests.Common
                 Port = null,
                 ConsensusPort = null,
                 NoMiner = true,
-                Render = false,
+                Render = true,
                 LogActionRenders = false,
                 Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,

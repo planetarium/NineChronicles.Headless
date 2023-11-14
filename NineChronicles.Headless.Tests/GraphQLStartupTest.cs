@@ -24,6 +24,7 @@ namespace NineChronicles.Headless.Tests
                 new ExceptionRenderer(),
                 new NodeStatusRenderer(),
                 standaloneContext!.BlockChain,
+                standaloneContext!.StateStore,
                 "",
                 0,
                 new RpcContext(),

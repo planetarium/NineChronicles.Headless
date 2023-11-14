@@ -349,6 +349,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 BlockChain = _blockChain,
                 Store = _store,
+                StateStore = _stateStore,
                 NineChroniclesNodeService = _service,
                 CurrencyFactory = currencyFactory,
                 FungibleAssetValueFactory = fungibleAssetValueFactory,

@@ -273,6 +273,16 @@ namespace NineChronicles.Headless.Executable
                             return (range, actionEvaluatorConfiguration);
                         }).ToImmutableArray()
                     },
+                    ActionEvaluatorType.StateServiceActionEvaluator => new StateServiceActionEvaluatorConfiguration()
+                    {
+                        StateServices = configuration.GetSection("StateServices").GetChildren().Select(service =>
+                        {
+                            var stateServiceConfiguration = new StateServiceConfiguration();
+                            service.Bind(stateServiceConfiguration);
+                            return stateServiceConfiguration;
+                        }).ToArray(),
+                        StateServiceDownloadPath = configuration.GetValue<string>("StateServiceDownloadPath"),
+                    },
                     _ => throw new InvalidOperationException("Unexpected type."),
                 };
             }
@@ -482,6 +492,7 @@ namespace NineChronicles.Headless.Executable
                         standaloneContext.NineChroniclesNodeService!.ExceptionRenderer,
                         standaloneContext.NineChroniclesNodeService!.NodeStatusRenderer,
                         standaloneContext.NineChroniclesNodeService!.BlockChain,
+                        standaloneContext.NineChroniclesNodeService!.StateStore,
                         IPAddress.Loopback.ToString(),
                         rpcProperties.RpcListenPort,
                         context,
@@ -512,6 +523,7 @@ namespace NineChronicles.Headless.Executable
                         standaloneContext.NineChroniclesNodeService!.ExceptionRenderer,
                         standaloneContext.NineChroniclesNodeService!.NodeStatusRenderer,
                         standaloneContext.NineChroniclesNodeService!.BlockChain,
+                        standaloneContext.NineChroniclesNodeService!.StateStore,
                         IPAddress.Loopback.ToString(),
                         0,
                         context,

@@ -16,7 +16,6 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Nekoyume.Action;
 using NineChronicles.Headless.Middleware;
-using NineChronicles.Headless.Services;
 using Sentry;
 
 namespace NineChronicles.Headless
@@ -43,11 +42,6 @@ namespace NineChronicles.Headless
                 if (properties.Libplanet is { } libplanetNodeServiceProperties)
                 {
                     services.AddSingleton<LibplanetNodeServiceProperties>(provider => libplanetNodeServiceProperties);
-                    if (properties.StateServiceManagerService is { } stateServiceManagerServiceOptions)
-                    {
-                        var stateServiceManagerService = new StateServiceManagerService(stateServiceManagerServiceOptions, libplanetNodeServiceProperties.StorePath);
-                        services.AddSingleton(provider => stateServiceManagerService);
-                    }
                 }
 
                 services.AddSingleton(_ => actionEvaluationPublisher);
