@@ -19,14 +19,9 @@ namespace NineChronicles.Headless.Services
         public int? GetTxQuota(Address address)
         {
             RedisValue result = _db.StringGet(address.ToString());
-            if (!result.IsNull)
-            {
-                Log.ForContext("Source", nameof(IAccessControlService))
-                    .Debug("\"{Address}\" Tx Quota: {Quota}", address, result);
-                return Convert.ToInt32(result);
-            }
-
-            return null;
+            return result.IsNull
+                ? null
+                : Convert.ToInt32(result);
         }
     }
 }
