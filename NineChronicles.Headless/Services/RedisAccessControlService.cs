@@ -22,7 +22,7 @@ namespace NineChronicles.Headless.Services
             if (!result.IsNull)
             {
                 Log.ForContext("Source", nameof(IAccessControlService))
-                    .Debug("\"{Address}\" Tx Quota: {Quota}", address, result);
+                    .Verbose("\"{Address}\" Tx Quota: {Quota}", address, result);
                 return Convert.ToInt32(result);
             }
 
