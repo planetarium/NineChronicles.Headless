@@ -13,7 +13,7 @@ on:
       - release/*
       # This branch is for testing only. Use until the next(v200080) release.
       - test/action-evaluation-publisher-elapse-metric
-      - test/trie-state-store-cache
+      - test/trie-based-account
     tags:
       - "*"
   workflow_dispatch:
