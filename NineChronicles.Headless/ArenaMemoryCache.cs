@@ -9,4 +9,9 @@ public class ArenaMemoryCache
     {
         SizeLimit = null
     }));
+
+    public MemoryCache SheetCache { get; } = new(new OptionsWrapper<MemoryCacheOptions>(new MemoryCacheOptions
+    {
+        SizeLimit = null
+    }));
 }
