@@ -319,7 +319,7 @@ namespace NineChronicles.Headless.GraphTypes
                 return new List<Block>();
             }
 
-            var count = (int)Math.Min(limit, chain.Tip.Index - from);
+            var count = (int)Math.Min(limit, chain.Tip.Index - from + 1);
             var blocks = Enumerable.Range(0, count)
                 .ToList()
                 .AsParallel()
