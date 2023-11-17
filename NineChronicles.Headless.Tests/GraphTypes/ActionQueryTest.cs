@@ -232,15 +232,20 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Theory]
-        [InlineData("NCG", true)]
-        [InlineData("NCG", false)]
-        [InlineData("CRYSTAL", true)]
-        [InlineData("CRYSTAL", false)]
-        public async Task TransferAsset(string currencyType, bool memo)
+        [InlineData("{ ticker: \"NCG\", minters: [], decimalPlaces: 2 }", true)]
+        [InlineData("{ ticker: \"NCG\", minters: [], decimalPlaces: 2 }", false)]
+        [InlineData("{ ticker: \"CRYSTAL\", minters: [], decimalPlaces: 18 }", true)]
+        [InlineData("{ ticker: \"CRYSTAL\", minters: [], decimalPlaces: 18 }", false)]
+        public async Task TransferAsset(string valueType, bool memo)
         {
+            var rawState = _standaloneContext.BlockChain!.GetState(Addresses.GoldCurrency);
+            var goldCurrencyState = new GoldCurrencyState((Dictionary)rawState);
+
             var recipient = new PrivateKey().ToAddress();
             var sender = new PrivateKey().ToAddress();
-            var args = $"recipient: \"{recipient}\", sender: \"{sender}\", amount: \"17.5\", currency: {currencyType}";
+            var valueTypeWithMinter = valueType.Replace("[]", 
+                valueType.Contains("NCG") ? $"[\"{goldCurrencyState.Currency.Minters.First()}\"]" : "[]");
+            var args = $"recipient: \"{recipient}\", sender: \"{sender}\", currency: {valueTypeWithMinter}, amount: \"17.5\"";
             if (memo)
             {
                 args += ", memo: \"memo\"";
@@ -253,9 +258,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.IsType<Dictionary>(plainValue);
             var actionBase = DeserializeNCAction(plainValue);
             var action = Assert.IsType<TransferAsset>(actionBase);
-            var rawState = _standaloneContext.BlockChain!.GetState(Addresses.GoldCurrency);
-            var goldCurrencyState = new GoldCurrencyState((Dictionary)rawState);
-            Currency currency = currencyType == "NCG" ? goldCurrencyState.Currency : CrystalCalculator.CRYSTAL;
+
+            Currency currency = valueType.Contains("NCG") ? goldCurrencyState.Currency : CrystalCalculator.CRYSTAL;
 
             Assert.Equal(recipient, action.Recipient);
             Assert.Equal(sender, action.Sender);
