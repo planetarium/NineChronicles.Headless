@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using Bencodex;
 using Bencodex.Types;
+using Google.Protobuf.WellKnownTypes;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet.Crypto;
@@ -165,10 +166,15 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "Address of recipient.",
                         Name = "recipient",
                     },
-                    new QueryArgument<NonNullGraphType<FungibleAssetValueInputType>>
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
-                        Name = "value",
-                        Description = "FungibleAssetValue to transfer."
+                        Description = "A string value to be transferred.",
+                        Name = "amount",
+                    },
+                    new QueryArgument<NonNullGraphType<CurrencyInputType>>
+                    {
+                        Description = "A currency type to be transferred.",
+                        Name = "currency",
                     },
                     new QueryArgument<StringGraphType>
                     {
@@ -180,9 +186,10 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var sender = context.GetArgument<Address>("sender");
                     var recipient = context.GetArgument<Address>("recipient");
-                    var value = context.GetArgument<FungibleAssetValue>("value");
+                    var currency = context.GetArgument<Currency>("currency");
+                    var amount = FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
                     var memo = context.GetArgument<string?>("memo");
-                    ActionBase action = new TransferAsset(sender, recipient, value, memo);
+                    ActionBase action = new TransferAsset(sender, recipient, amount, memo);
                     return Encode(context, action);
                 });
             Field<NonNullGraphType<ByteStringType>>(
