@@ -473,7 +473,7 @@ namespace NineChronicles.Headless
                                 }
 
                                 var compressed = c.ToArray();
-                                Log.Information(
+                                Log.Verbose(
                                     "[{ClientAddress}] #{BlockIndex} Broadcasting render since the given action {Action}. eval size: {Size}",
                                     _clientAddress,
                                     ev.BlockIndex,
@@ -488,7 +488,7 @@ namespace NineChronicles.Headless
                                 Log
                                     .ForContext("tag", "Metric")
                                     .ForContext("subtag", "ActionEvaluationPublisherElapse")
-                                    .Information(
+                                    .Verbose(
                                         "[{ClientAddress}], #{BlockIndex}, {Action}," +
                                         " {EncodeElapsedMilliseconds}, {BroadcastElapsedMilliseconds}, {TotalElapsedMilliseconds}",
                                         _clientAddress,
