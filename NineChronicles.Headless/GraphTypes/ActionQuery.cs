@@ -165,15 +165,10 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "Address of recipient.",
                         Name = "recipient",
                     },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<FungibleAssetValueInputType>>
                     {
-                        Description = "A string value to be transferred.",
-                        Name = "amount",
-                    },
-                    new QueryArgument<NonNullGraphType<CurrencyEnumType>>
-                    {
-                        Description = "A currency type to be transferred.",
-                        Name = "currency",
+                        Name = "value",
+                        Description = "FungibleAssetValue to transfer."
                     },
                     new QueryArgument<StringGraphType>
                     {
@@ -185,15 +180,9 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var sender = context.GetArgument<Address>("sender");
                     var recipient = context.GetArgument<Address>("recipient");
-                    var currencyEnum = context.GetArgument<CurrencyEnum>("currency");
-                    if (!standaloneContext.CurrencyFactory!.TryGetCurrency(currencyEnum, out var currency))
-                    {
-                        throw new ExecutionError($"Currency {currencyEnum} is not found.");
-                    }
-
-                    var amount = FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));
+                    var value = context.GetArgument<FungibleAssetValue>("value");
                     var memo = context.GetArgument<string?>("memo");
-                    ActionBase action = new TransferAsset(sender, recipient, amount, memo);
+                    ActionBase action = new TransferAsset(sender, recipient, value, memo);
                     return Encode(context, action);
                 });
             Field<NonNullGraphType<ByteStringType>>(
