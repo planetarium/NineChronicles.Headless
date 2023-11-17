@@ -20,7 +20,7 @@ namespace NineChronicles.Headless
         public bool BootstrapEnded { get; set; }
         public bool PreloadEnded { get; set; }
         public bool IsMining { get; set; }
-        public ReplaySubject<NodeStatusType> NodeStatusSubject { get; } = new(1);
+        public ReplaySubject<NodeStatusType> NodeStatusSubject { get; } = new(5);
         public ReplaySubject<BlockSyncState> PreloadStateSubject { get; } = new(5);
 
         public Subject<DifferentAppProtocolVersionEncounter> DifferentAppProtocolVersionEncounterSubject { get; } =
