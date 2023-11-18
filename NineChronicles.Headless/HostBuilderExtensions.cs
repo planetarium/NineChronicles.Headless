@@ -104,6 +104,8 @@ namespace NineChronicles.Headless
                 {
                     hostBuilder.ConfigureKestrel(options =>
                     {
+                        options.Limits.Http2.InitialConnectionWindowSize = 1024 * 1024 * 4;
+                        options.Limits.Http2.InitialStreamWindowSize = 1024 * 1024 * 4;
                         options.ListenAnyIP(properties.RpcListenPort, listenOptions =>
                         {
                             listenOptions.Protocols = HttpProtocols.Http2;
