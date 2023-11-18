@@ -19,6 +19,7 @@ using Libplanet.Types.Blocks;
 using Libplanet.Types.Tx;
 using MagicOnion;
 using MagicOnion.Server;
+using Microsoft.Extensions.Caching.Memory;
 using Nekoyume;
 using Nekoyume.Shared.Services;
 using Serilog;
@@ -40,6 +41,7 @@ namespace NineChronicles.Headless
         private LibplanetNodeServiceProperties _libplanetNodeServiceProperties;
         private ActionEvaluationPublisher _publisher;
         private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
+        private MemoryCache _memoryCache;
 
         public BlockChainService(
             BlockChain blockChain,
@@ -47,7 +49,9 @@ namespace NineChronicles.Headless
             RpcContext context,
             LibplanetNodeServiceProperties libplanetNodeServiceProperties,
             ActionEvaluationPublisher actionEvaluationPublisher,
-            ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces)
+            ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces,
+            ArenaMemoryCache cache
+            )
         {
             _blockChain = blockChain;
             _swarm = swarm;
@@ -56,6 +60,7 @@ namespace NineChronicles.Headless
             _libplanetNodeServiceProperties = libplanetNodeServiceProperties;
             _publisher = actionEvaluationPublisher;
             _sentryTraces = sentryTraces;
+            _memoryCache = cache.SheetCache;
         }
 
         public UnaryResult<bool> PutTransaction(byte[] txBytes)
@@ -197,6 +202,37 @@ namespace NineChronicles.Headless
             for (int i = 0; i < addresses.Length; i++)
             {
                 result.TryAdd(addresses[i].ToByteArray(), _codec.Encode(values[i] ?? Null.Value));
+            }
+
+            return new UnaryResult<Dictionary<byte[], byte[]>>(result);
+        }
+
+        public UnaryResult<Dictionary<byte[], byte[]>> GetSheets(
+            IEnumerable<byte[]> addressBytesList,
+            byte[] stateRootHashBytes)
+        {
+            var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var result = new Dictionary<byte[], byte[]>();
+            List<Address> addresses = new List<Address>();
+            foreach (var b in addressBytesList)
+            {
+                var address = new Address(b);
+                if (_memoryCache.TryGetValue(address.ToString(), out byte[] cached))
+                {
+                    result.TryAdd(b, cached);
+                }
+                else
+                {
+                    addresses.Add(address);
+                }
+            }
+            IReadOnlyList<IValue> values = _blockChain.GetAccountState(_blockChain.Tip.Hash).GetStates(addresses);
+            for (int i = 0; i < addresses.Count; i++)
+            {
+                var address = addresses[i];
+                var value = _codec.Encode(values[i] ?? Null.Value);
+                _memoryCache.Set(address.ToString(), value);
+                result.TryAdd(address.ToByteArray(), value);
             }
 
             return new UnaryResult<Dictionary<byte[], byte[]>>(result);

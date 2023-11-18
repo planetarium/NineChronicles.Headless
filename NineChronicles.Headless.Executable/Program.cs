@@ -448,6 +448,7 @@ namespace NineChronicles.Headless.Executable
                         MinerBlockInterval = minerBlockInterval,
                         TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner,
                     };
+                var arenaMemoryCache = new ArenaMemoryCache();
                 hostBuilder.ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => standaloneContext);
@@ -462,7 +463,7 @@ namespace NineChronicles.Headless.Executable
 
                     // worker
                     services.AddHostedService<ArenaParticipantsWorker>();
-                    services.AddSingleton<ArenaMemoryCache>();
+                    services.AddSingleton(arenaMemoryCache);
                 });
 
                 NineChroniclesNodeService service =
@@ -489,7 +490,8 @@ namespace NineChronicles.Headless.Executable
                         IPAddress.Loopback.ToString(),
                         rpcProperties.RpcListenPort,
                         context,
-                        new ConcurrentDictionary<string, Sentry.ITransaction>()
+                        new ConcurrentDictionary<string, Sentry.ITransaction>(),
+                        arenaMemoryCache
                     );
 
                     hostBuilder.UseNineChroniclesNode(
@@ -519,7 +521,8 @@ namespace NineChronicles.Headless.Executable
                         IPAddress.Loopback.ToString(),
                         0,
                         context,
-                        new ConcurrentDictionary<string, Sentry.ITransaction>()
+                        new ConcurrentDictionary<string, Sentry.ITransaction>(),
+                        arenaMemoryCache
                     );
                     hostBuilder.UseNineChroniclesNode(
                         nineChroniclesProperties,
