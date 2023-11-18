@@ -211,7 +211,6 @@ namespace NineChronicles.Headless
             IEnumerable<byte[]> addressBytesList,
             byte[] stateRootHashBytes)
         {
-            var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
             var result = new Dictionary<byte[], byte[]>();
             List<Address> addresses = new List<Address>();
             foreach (var b in addressBytesList)
@@ -226,13 +225,18 @@ namespace NineChronicles.Headless
                     addresses.Add(address);
                 }
             }
-            IReadOnlyList<IValue> values = _blockChain.GetAccountState(_blockChain.Tip.Hash).GetStates(addresses);
-            for (int i = 0; i < addresses.Count; i++)
+
+            if (addresses.Any())
             {
-                var address = addresses[i];
-                var value = _codec.Encode(values[i] ?? Null.Value);
-                _memoryCache.Set(address.ToString(), value);
-                result.TryAdd(address.ToByteArray(), value);
+                var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+                IReadOnlyList<IValue> values = _blockChain.GetAccountState(stateRootHash).GetStates(addresses);
+                for (int i = 0; i < addresses.Count; i++)
+                {
+                    var address = addresses[i];
+                    var value = _codec.Encode(values[i] ?? Null.Value);
+                    _memoryCache.Set(address.ToString(), value);
+                    result.TryAdd(address.ToByteArray(), value);
+                }
             }
 
             return new UnaryResult<Dictionary<byte[], byte[]>>(result);
