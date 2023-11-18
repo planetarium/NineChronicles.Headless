@@ -20,6 +20,11 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "claimData",
                         Description = "List of pair of avatar address, List<FAV> to claim."
+                    },
+                    new QueryArgument<StringGraphType>
+                    {
+                        Name = "memo",
+                        Description = "Memo to attach to this action."
                     }
                 ),
                 resolve: context =>
@@ -28,7 +33,8 @@ namespace NineChronicles.Headless.GraphTypes
                         context.GetArgument<
                             List<(Address avataAddress, IReadOnlyList<FungibleAssetValue> fungibleAssetValues)>
                         >("claimData").AsReadOnly();
-                    ActionBase action = new ClaimItems(claimData);
+                    var memo = context.GetArgument<string?>("memo");
+                    ActionBase action = new ClaimItems(claimData, memo);
                     return Encode(context, action);
                 }
             );
