@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Bencodex;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
@@ -32,6 +33,8 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public partial class StateQuery : ObjectGraphType<StateContext>
     {
+        private Codec _codec = new();
+
         public StateQuery()
         {
             Name = "StateQuery";
@@ -699,6 +702,39 @@ namespace NineChronicles.Headless.GraphTypes
                     return result;
                 }
             );
+
+            Field<NonNullGraphType<TableCsvType>>(
+                "tableCsv",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
+                    {
+                        Name = "tableNames"
+                    }
+                ),
+                resolve: context =>
+                {
+                    var tableNames = context.GetArgument<List<string>>("tableNames");
+                    var result = new Dictionary<string, string>();
+                    var cache = context.Source.ArenaMemoryCache.SheetCache;
+                    foreach (var tableName in tableNames)
+                    {
+                        var tableAddress = Addresses.GetSheetAddress(tableName);
+                        if (cache.TryGetValue(tableAddress.ToString(), out var cached) && cached is byte[] b)
+                        {
+                            result.TryAdd(tableName, Convert.ToBase64String(b));
+                        }
+                        else
+                        {
+                            var value = context.Source.GetState(tableAddress);
+                            if (value is Text t)
+                            {
+                                result.TryAdd(tableName, Convert.ToBase64String(_codec.Encode(t)));
+                            }
+                        }
+                    }
+
+                    return result;
+                });
         }
 
         public static List<RuneOptionSheet.Row.RuneOptionInfo> GetRuneOptions(
