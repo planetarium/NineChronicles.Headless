@@ -228,7 +228,7 @@ namespace NineChronicles.Headless
 
             if (addresses.Any())
             {
-                var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+                var stateRootHash = new BlockHash(stateRootHashBytes);
                 IReadOnlyList<IValue> values = _blockChain.GetAccountState(stateRootHash).GetStates(addresses);
                 for (int i = 0; i < addresses.Count; i++)
                 {
