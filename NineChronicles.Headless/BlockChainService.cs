@@ -20,6 +20,7 @@ using Libplanet.Types.Blocks;
 using Libplanet.Types.Tx;
 using MagicOnion;
 using MagicOnion.Server;
+using MessagePack;
 using Microsoft.Extensions.Caching.Memory;
 using Nekoyume;
 using Nekoyume.Shared.Services;
@@ -222,7 +223,7 @@ namespace NineChronicles.Headless
                 var address = new Address(b);
                 if (_memoryCache.TryGetValue(address.ToString(), out byte[] cached))
                 {
-                    result.TryAdd(b, cached);
+                    result.TryAdd(b, MessagePackSerializer.Serialize(cached));
                 }
                 else
                 {
@@ -244,7 +245,7 @@ namespace NineChronicles.Headless
                     var address = addresses[i];
                     var value = _codec.Encode(values[i] ?? Null.Value);
                     _memoryCache.Set(address.ToString(), value);
-                    result.TryAdd(address.ToByteArray(), value);
+                    result.TryAdd(address.ToByteArray(), MessagePackSerializer.Serialize(value));
                 }
             }
             Log.Information("[GetSheets]Total: {Elapsed}", DateTime.UtcNow - started);
