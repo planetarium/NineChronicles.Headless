@@ -69,6 +69,15 @@ namespace NineChronicles.Headless.Middleware
                     ipAddress, context.Method, tx.Signer, actionName);
             }
 
+            if (context.Method is "/IBlockChainService/GetSheets")
+            {
+                var httpContext = context.GetHttpContext();
+                var ipAddress = httpContext.Connection.RemoteIpAddress + ":" + httpContext.Connection.RemotePort;
+                _logger.Information(
+                    "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method}",
+                    ipAddress, context.Method);
+            }
+
             return await base.UnaryServerHandler(request, context, continuation);
         }
 
