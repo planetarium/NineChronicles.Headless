@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -211,6 +212,9 @@ namespace NineChronicles.Headless
             IEnumerable<byte[]> addressBytesList,
             byte[] stateRootHashBytes)
         {
+            var started = DateTime.UtcNow;
+            var sw = new Stopwatch();
+            sw.Start();
             var result = new Dictionary<byte[], byte[]>();
             List<Address> addresses = new List<Address>();
             foreach (var b in addressBytesList)
@@ -225,11 +229,16 @@ namespace NineChronicles.Headless
                     addresses.Add(address);
                 }
             }
-
+            sw.Stop();
+            Log.Information("[GetSheets]Get sheet from cache count: {Count}, not Cached: {Count2}, Elapsed: {Elapsed}", result.Count, addresses.Count, sw.Elapsed);
+            sw.Restart();
             if (addresses.Any())
             {
                 var stateRootHash = new BlockHash(stateRootHashBytes);
                 IReadOnlyList<IValue> values = _blockChain.GetAccountState(stateRootHash).GetStates(addresses);
+                sw.Stop();
+                Log.Information("[GetSheets]Get sheet from state: {Count}, Elapsed: {Elapsed}", addresses.Count, sw.Elapsed);
+                sw.Restart();
                 for (int i = 0; i < addresses.Count; i++)
                 {
                     var address = addresses[i];
@@ -238,7 +247,7 @@ namespace NineChronicles.Headless
                     result.TryAdd(address.ToByteArray(), value);
                 }
             }
-
+            Log.Information("[GetSheets]Total: {Elapsed}", DateTime.UtcNow - started);
             return new UnaryResult<Dictionary<byte[], byte[]>>(result);
         }
 
