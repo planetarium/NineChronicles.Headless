@@ -44,6 +44,7 @@ namespace NineChronicles.Headless
         private ActionEvaluationPublisher _publisher;
         private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
         private MemoryCache _memoryCache;
+        private readonly MessagePackSerializerOptions _lz4Options;
 
         public BlockChainService(
             BlockChain blockChain,
@@ -63,6 +64,7 @@ namespace NineChronicles.Headless
             _publisher = actionEvaluationPublisher;
             _sentryTraces = sentryTraces;
             _memoryCache = cache.SheetCache;
+            _lz4Options = MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
         }
 
         public UnaryResult<bool> PutTransaction(byte[] txBytes)
@@ -223,7 +225,7 @@ namespace NineChronicles.Headless
                 var address = new Address(b);
                 if (_memoryCache.TryGetValue(address.ToString(), out byte[] cached))
                 {
-                    result.TryAdd(b, MessagePackSerializer.Serialize(cached));
+                    result.TryAdd(b, MessagePackSerializer.Serialize(cached, _lz4Options));
                 }
                 else
                 {
@@ -245,7 +247,7 @@ namespace NineChronicles.Headless
                     var address = addresses[i];
                     var value = _codec.Encode(values[i] ?? Null.Value);
                     _memoryCache.Set(address.ToString(), value);
-                    result.TryAdd(address.ToByteArray(), MessagePackSerializer.Serialize(value));
+                    result.TryAdd(address.ToByteArray(), MessagePackSerializer.Serialize(value, _lz4Options));
                 }
             }
             Log.Information("[GetSheets]Total: {Elapsed}", DateTime.UtcNow - started);
