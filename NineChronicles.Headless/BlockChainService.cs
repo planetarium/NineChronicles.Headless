@@ -233,7 +233,7 @@ namespace NineChronicles.Headless
                 }
             }
             sw.Stop();
-            Log.Information("[GetSheets]Get sheet from cache count: {Count}, not Cached: {Count2}, Elapsed: {Elapsed}", result.Count, addresses.Count, sw.Elapsed);
+            Log.Information("[GetSheets]Get sheet from cache count: {CachedCount}, not Cached: {CacheMissedCount}, Elapsed: {Elapsed}", result.Count, addresses.Count, sw.Elapsed);
             sw.Restart();
             if (addresses.Any())
             {
