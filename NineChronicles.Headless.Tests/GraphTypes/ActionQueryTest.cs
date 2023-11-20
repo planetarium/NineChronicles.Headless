@@ -232,6 +232,45 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Theory]
+        [InlineData("NCG", true)]
+        [InlineData("NCG", false)]
+        [InlineData("CRYSTAL", true)]
+        [InlineData("CRYSTAL", false)]
+        public async Task TransferAssetWithCurrencyEnum(string currencyType, bool memo)
+        {
+            var recipient = new PrivateKey().ToAddress();
+            var sender = new PrivateKey().ToAddress();
+            var args = $"recipient: \"{recipient}\", sender: \"{sender}\", amount: \"17.5\", currency: {currencyType}";
+            if (memo)
+            {
+                args += ", memo: \"memo\"";
+            }
+
+            var query = $"{{ transferAsset({args}) }}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["transferAsset"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<TransferAsset>(actionBase);
+            var rawState = _standaloneContext.BlockChain!.GetState(Addresses.GoldCurrency);
+            var goldCurrencyState = new GoldCurrencyState((Dictionary)rawState);
+            Currency currency = currencyType == "NCG" ? goldCurrencyState.Currency : CrystalCalculator.CRYSTAL;
+
+            Assert.Equal(recipient, action.Recipient);
+            Assert.Equal(sender, action.Sender);
+            Assert.Equal(FungibleAssetValue.Parse(currency, "17.5"), action.Amount);
+            if (memo)
+            {
+                Assert.Equal("memo", action.Memo);
+            }
+            else
+            {
+                Assert.Null(action.Memo);
+            }
+        }
+
+        [Theory]
         [InlineData("{ ticker: \"NCG\", minters: [], decimalPlaces: 2 }", true)]
         [InlineData("{ ticker: \"NCG\", minters: [], decimalPlaces: 2 }", false)]
         [InlineData("{ ticker: \"CRYSTAL\", minters: [], decimalPlaces: 18 }", true)]
@@ -245,7 +284,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var sender = new PrivateKey().ToAddress();
             var valueTypeWithMinter = valueType.Replace("[]", 
                 valueType.Contains("NCG") ? $"[\"{goldCurrencyState.Currency.Minters.First()}\"]" : "[]");
-            var args = $"recipient: \"{recipient}\", sender: \"{sender}\", currency: {valueTypeWithMinter}, amount: \"17.5\"";
+            var args = $"recipient: \"{recipient}\", sender: \"{sender}\", rawCurrency: {valueTypeWithMinter}, amount: \"17.5\"";
             if (memo)
             {
                 args += ", memo: \"memo\"";
