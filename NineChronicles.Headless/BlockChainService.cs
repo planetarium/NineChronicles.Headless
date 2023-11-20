@@ -225,7 +225,7 @@ namespace NineChronicles.Headless
                 var address = new Address(b);
                 if (_memoryCache.TryGetValue(address.ToString(), out byte[] cached))
                 {
-                    result.TryAdd(b, MessagePackSerializer.Serialize(cached, _lz4Options));
+                    result.TryAdd(b, cached);
                 }
                 else
                 {
@@ -246,8 +246,9 @@ namespace NineChronicles.Headless
                 {
                     var address = addresses[i];
                     var value = _codec.Encode(values[i] ?? Null.Value);
-                    _memoryCache.Set(address.ToString(), value);
-                    result.TryAdd(address.ToByteArray(), MessagePackSerializer.Serialize(value, _lz4Options));
+                    var compressed = MessagePackSerializer.Serialize(value, _lz4Options);
+                    _memoryCache.Set(address.ToString(), compressed);
+                    result.TryAdd(address.ToByteArray(), compressed);
                 }
             }
             Log.Information("[GetSheets]Total: {Elapsed}", DateTime.UtcNow - started);
