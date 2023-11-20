@@ -282,7 +282,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var recipient = new PrivateKey().ToAddress();
             var sender = new PrivateKey().ToAddress();
-            var valueTypeWithMinter = valueType.Replace("[]", 
+            var valueTypeWithMinter = valueType.Replace("[]",
                 valueType.Contains("NCG") ? $"[\"{goldCurrencyState.Currency.Minters.First()}\"]" : "[]");
             var args = $"recipient: \"{recipient}\", sender: \"{sender}\", rawCurrency: {valueTypeWithMinter}, amount: \"17.5\"";
             if (memo)
