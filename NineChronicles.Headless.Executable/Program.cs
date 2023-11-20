@@ -448,7 +448,7 @@ namespace NineChronicles.Headless.Executable
                         MinerBlockInterval = minerBlockInterval,
                         TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner,
                     };
-                var arenaMemoryCache = new ArenaMemoryCache();
+                var arenaMemoryCache = new StateMemoryCache();
                 hostBuilder.ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => standaloneContext);

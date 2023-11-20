@@ -53,7 +53,7 @@ namespace NineChronicles.Headless
             LibplanetNodeServiceProperties libplanetNodeServiceProperties,
             ActionEvaluationPublisher actionEvaluationPublisher,
             ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces,
-            ArenaMemoryCache cache
+            StateMemoryCache cache
             )
         {
             _blockChain = blockChain;

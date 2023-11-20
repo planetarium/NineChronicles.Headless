@@ -44,7 +44,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     stakeState,
                     stakeStateAddress,
                     mockState,
-                    blockIndex, new ArenaMemoryCache()));
+                    blockIndex, new StateMemoryCache()));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
         }

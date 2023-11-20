@@ -14,13 +14,13 @@ namespace NineChronicles.Headless.GraphTypes.States
         public StateContext(
             IAccountState accountState,
             long blockIndex,
-            ArenaMemoryCache arenaMemoryCache)
+            StateMemoryCache stateMemoryCache)
         {
             AccountState = accountState;
             BlockIndex = blockIndex;
             CurrencyFactory = new CurrencyFactory(() => accountState);
             FungibleAssetValueFactory = new FungibleAssetValueFactory(CurrencyFactory);
-            ArenaMemoryCache = arenaMemoryCache;
+            StateMemoryCache = stateMemoryCache;
         }
 
         public IAccountState AccountState { get; }
@@ -37,6 +37,6 @@ namespace NineChronicles.Headless.GraphTypes.States
 
         public FungibleAssetValue GetBalance(Address address, Currency currency) => AccountState.GetBalance(address, currency);
 
-        public ArenaMemoryCache ArenaMemoryCache { get; }
+        public StateMemoryCache StateMemoryCache { get; }
     }
 }

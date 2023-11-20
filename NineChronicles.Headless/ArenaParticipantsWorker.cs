@@ -26,10 +26,10 @@ namespace NineChronicles.Headless;
 public class ArenaParticipantsWorker : BackgroundService
 {
     private ILogger _logger;
-    private ArenaMemoryCache _cache;
+    private StateMemoryCache _cache;
     private StandaloneContext _context;
 
-    public ArenaParticipantsWorker(ArenaMemoryCache memoryCache, StandaloneContext context)
+    public ArenaParticipantsWorker(StateMemoryCache memoryCache, StandaloneContext context)
     {
         _cache = memoryCache;
         _context = context;
@@ -82,7 +82,7 @@ public class ArenaParticipantsWorker : BackgroundService
         var cacheKey = $"{currentRoundData.ChampionshipId}_{currentRoundData.Round}";
         if (participants is null)
         {
-            _cache.Cache.Set(cacheKey, new List<ArenaParticipant>());
+            _cache.ArenaParticipantsCache.Set(cacheKey, new List<ArenaParticipant>());
             return;
         }
 
@@ -268,7 +268,7 @@ public class ArenaParticipantsWorker : BackgroundService
                 cp
             );
         }).ToList();
-        _cache.Cache.Set(cacheKey, result, TimeSpan.FromHours(1));
+        _cache.ArenaParticipantsCache.Set(cacheKey, result, TimeSpan.FromHours(1));
         sw.Stop();
         _logger.Information("Set Arena Cache[{CacheKey}]: {Elapsed}", cacheKey, sw.Elapsed);
     }

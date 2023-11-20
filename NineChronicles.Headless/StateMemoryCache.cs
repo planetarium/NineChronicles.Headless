@@ -3,9 +3,9 @@ using Microsoft.Extensions.Options;
 
 namespace NineChronicles.Headless;
 
-public class ArenaMemoryCache
+public class StateMemoryCache
 {
-    public MemoryCache Cache { get; } = new(new OptionsWrapper<MemoryCacheOptions>(new MemoryCacheOptions
+    public MemoryCache ArenaParticipantsCache { get; } = new(new OptionsWrapper<MemoryCacheOptions>(new MemoryCacheOptions
     {
         SizeLimit = null
     }));

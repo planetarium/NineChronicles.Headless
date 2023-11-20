@@ -41,7 +41,7 @@ namespace NineChronicles.Headless.Tests
             }
 
             services.AddLibplanetExplorer();
-            services.AddSingleton<ArenaMemoryCache>();
+            services.AddSingleton<StateMemoryCache>();
 
             var serviceProvider = services.BuildServiceProvider();
             return ExecuteQueryAsync<TObjectGraphType>(

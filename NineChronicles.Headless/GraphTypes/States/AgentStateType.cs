@@ -19,8 +19,8 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class AgentStateContext : StateContext
         {
-            public AgentStateContext(AgentState agentState, IAccountState accountState, long blockIndex, ArenaMemoryCache arenaMemoryCache)
-                : base(accountState, blockIndex, arenaMemoryCache)
+            public AgentStateContext(AgentState agentState, IAccountState accountState, long blockIndex, StateMemoryCache stateMemoryCache)
+                : base(accountState, blockIndex, stateMemoryCache)
             {
                 AgentState = agentState;
             }
@@ -50,7 +50,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                             x,
                             context.Source.AccountState,
                             context.Source.BlockIndex,
-                            context.Source.ArenaMemoryCache));
+                            context.Source.StateMemoryCache));
                 });
             Field<NonNullGraphType<StringGraphType>>(
                 "gold",

@@ -120,7 +120,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 0,
                 new RpcContext(),
                 new ConcurrentDictionary<string, Sentry.ITransaction>(),
-                new ArenaMemoryCache()
+                new StateMemoryCache()
             );
             services.AddSingleton(publisher);
             services.AddSingleton(StandaloneContextFx);
@@ -129,7 +129,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             services.AddLibplanetExplorer();
             services.AddSingleton(ncService);
             services.AddSingleton(ncService.Store);
-            services.AddSingleton<ArenaMemoryCache>();
+            services.AddSingleton<StateMemoryCache>();
             ServiceProvider serviceProvider = services.BuildServiceProvider();
             Schema = new StandaloneSchema(serviceProvider);
 
