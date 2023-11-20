@@ -379,11 +379,14 @@ type ActionQuery {
     """A string value to be transferred."""
     amount: String!
 
-    """A currency type to be transferred."""
-    currency: CurrencyEnum!
+    """A enum value of currency to be transferred."""
+    currency: CurrencyEnum
 
     """A 80-max length string to note."""
     memo: String
+
+    """A currency to be transferred."""
+    rawCurrency: CurrencyInput
 
     """Address of recipient."""
     recipient: Address!
@@ -681,11 +684,14 @@ type ActionTxQuery {
     """A string value to be transferred."""
     amount: String!
 
-    """A currency type to be transferred."""
-    currency: CurrencyEnum!
+    """A enum value of currency to be transferred."""
+    currency: CurrencyEnum
 
     """A 80-max length string to note."""
     memo: String
+
+    """A currency to be transferred."""
+    rawCurrency: CurrencyInput
 
     """Address of recipient."""
     recipient: Address!
