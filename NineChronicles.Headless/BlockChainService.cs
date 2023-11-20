@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -19,6 +20,7 @@ using Libplanet.Types.Blocks;
 using Libplanet.Types.Tx;
 using MagicOnion;
 using MagicOnion.Server;
+using MessagePack;
 using Microsoft.Extensions.Caching.Memory;
 using Nekoyume;
 using Nekoyume.Shared.Services;
@@ -42,6 +44,7 @@ namespace NineChronicles.Headless
         private ActionEvaluationPublisher _publisher;
         private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
         private MemoryCache _memoryCache;
+        private readonly MessagePackSerializerOptions _lz4Options;
 
         public BlockChainService(
             BlockChain blockChain,
@@ -61,6 +64,7 @@ namespace NineChronicles.Headless
             _publisher = actionEvaluationPublisher;
             _sentryTraces = sentryTraces;
             _memoryCache = cache.SheetCache;
+            _lz4Options = MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
         }
 
         public UnaryResult<bool> PutTransaction(byte[] txBytes)
@@ -211,7 +215,9 @@ namespace NineChronicles.Headless
             IEnumerable<byte[]> addressBytesList,
             byte[] stateRootHashBytes)
         {
-            var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var started = DateTime.UtcNow;
+            var sw = new Stopwatch();
+            sw.Start();
             var result = new Dictionary<byte[], byte[]>();
             List<Address> addresses = new List<Address>();
             foreach (var b in addressBytesList)
@@ -219,22 +225,32 @@ namespace NineChronicles.Headless
                 var address = new Address(b);
                 if (_memoryCache.TryGetValue(address.ToString(), out byte[] cached))
                 {
-                    result.TryAdd(b, cached);
+                    result.TryAdd(b, MessagePackSerializer.Serialize(cached, _lz4Options));
                 }
                 else
                 {
                     addresses.Add(address);
                 }
             }
-            IReadOnlyList<IValue> values = _blockChain.GetAccountState(_blockChain.Tip.Hash).GetStates(addresses);
-            for (int i = 0; i < addresses.Count; i++)
+            sw.Stop();
+            Log.Information("[GetSheets]Get sheet from cache count: {CachedCount}, not Cached: {CacheMissedCount}, Elapsed: {Elapsed}", result.Count, addresses.Count, sw.Elapsed);
+            sw.Restart();
+            if (addresses.Any())
             {
-                var address = addresses[i];
-                var value = _codec.Encode(values[i] ?? Null.Value);
-                _memoryCache.Set(address.ToString(), value);
-                result.TryAdd(address.ToByteArray(), value);
+                var stateRootHash = new BlockHash(stateRootHashBytes);
+                IReadOnlyList<IValue> values = _blockChain.GetAccountState(stateRootHash).GetStates(addresses);
+                sw.Stop();
+                Log.Information("[GetSheets]Get sheet from state: {Count}, Elapsed: {Elapsed}", addresses.Count, sw.Elapsed);
+                sw.Restart();
+                for (int i = 0; i < addresses.Count; i++)
+                {
+                    var address = addresses[i];
+                    var value = _codec.Encode(values[i] ?? Null.Value);
+                    _memoryCache.Set(address.ToString(), value);
+                    result.TryAdd(address.ToByteArray(), MessagePackSerializer.Serialize(value, _lz4Options));
+                }
             }
-
+            Log.Information("[GetSheets]Total: {Elapsed}", DateTime.UtcNow - started);
             return new UnaryResult<Dictionary<byte[], byte[]>>(result);
         }
 
