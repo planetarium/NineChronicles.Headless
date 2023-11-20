@@ -18,6 +18,7 @@ using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
+using NineChronicles.Headless.Properties;
 using Serilog;
 using static Lib9c.SerializeKeys;
 
@@ -28,12 +29,14 @@ public class ArenaParticipantsWorker : BackgroundService
     private ILogger _logger;
     private StateMemoryCache _cache;
     private StandaloneContext _context;
+    private int _interval;
 
-    public ArenaParticipantsWorker(StateMemoryCache memoryCache, StandaloneContext context)
+    public ArenaParticipantsWorker(StateMemoryCache memoryCache, StandaloneContext context, int interval)
     {
         _cache = memoryCache;
         _context = context;
         _logger = Log.Logger.ForContext<ArenaParticipantsWorker>();
+        _interval = interval;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -42,7 +45,7 @@ public class ArenaParticipantsWorker : BackgroundService
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                await Task.Delay(1000, stoppingToken);
+                await Task.Delay(_interval, stoppingToken);
                 GetArenaParticipants();
             }
         }
