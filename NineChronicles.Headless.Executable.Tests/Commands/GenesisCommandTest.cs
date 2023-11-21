@@ -111,8 +111,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             };
             config["admin"] = adminConfig;
 
-            // ExtraConfig: pendingActivationStatePath
-
             // Serialize and write config file
             string json = JsonSerializer.Serialize(config);
             var configPath = Path.GetTempFileName();

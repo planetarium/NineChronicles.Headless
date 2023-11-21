@@ -1386,16 +1386,21 @@ actionPoint: {actionPoint},
         }
 
         [Theory]
-        [InlineData(1)]
-        [InlineData(2)]
-        [InlineData(10)]
-        [InlineData(100)]
-        public async Task ClaimItems(int claimDataCount)
+        [InlineData(1, false)]
+        [InlineData(2, false)]
+        [InlineData(10, false)]
+        [InlineData(100, false)]
+        [InlineData(1, true)]
+        [InlineData(2, true)]
+        [InlineData(10, true)]
+        [InlineData(100, true)]
+        public async Task ClaimItems(int claimDataCount, bool hasMemo)
         {
             var random = new Random();
             var tickerList = new List<string> { "Item_T_500000", "Item_T_400000", "Item_T_800201", "Item_NT_49900011" };
             var claimDataList = new List<(Address, List<FungibleAssetValue>)>();
             var queryBuilder = new StringBuilder().Append("{claimItems(claimData: [");
+            var expectedMemo = "This is test memo";
             for (var i = 0; i < claimDataCount; i++)
             {
                 var avatarAddress = new PrivateKey().ToAddress();
@@ -1438,7 +1443,14 @@ actionPoint: {actionPoint},
                 }
             }
 
-            queryBuilder.Append("])}");
+            queryBuilder.Append("]");
+
+            if (hasMemo)
+            {
+                queryBuilder.Append($", memo: \"{expectedMemo}\"");
+            }
+
+            queryBuilder.Append(")}");
 
             var queryResult =
                 await ExecuteQueryAsync<ActionQuery>(queryBuilder.ToString(), standaloneContext: _standaloneContext);
@@ -1467,6 +1479,15 @@ actionPoint: {actionPoint},
                     Assert.Equal(expectedFavList[j].Currency.Ticker, actualFavList[j].Currency.Ticker);
                     Assert.Equal(expectedFavList[j].RawValue, actualFavList[j].RawValue);
                 }
+            }
+
+            if (hasMemo)
+            {
+                Assert.Equal(expectedMemo, action.Memo);
+            }
+            else
+            {
+                Assert.Null(action.Memo);
             }
         }
     }

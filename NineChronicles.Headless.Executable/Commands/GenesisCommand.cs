@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text.Json;
-using Bencodex;
-using Bencodex.Types;
 using Cocona;
 using Lib9c;
 using Libplanet.Common;
@@ -24,7 +23,6 @@ namespace NineChronicles.Headless.Executable.Commands
     public class GenesisCommand : CoconaLiteConsoleAppBase
     {
         private const int DefaultCurrencyValue = 10000;
-        private static readonly Codec _codec = new Codec();
         private readonly IConsole _console;
 
         public GenesisCommand(IConsole console)
@@ -45,6 +43,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
         private void ProcessCurrency(
             CurrencyConfig? config,
+            out Currency currency,
             out PrivateKey initialMinter,
             out List<GoldDistribution> initialDepositList
         )
@@ -58,10 +57,17 @@ namespace NineChronicles.Headless.Executable.Commands
                 {
                     new()
                     {
-                        Address = initialMinter.ToAddress(), AmountPerBlock = DefaultCurrencyValue,
-                        StartBlock = 0, EndBlock = 0
+                        Address = initialMinter.ToAddress(),
+                        AmountPerBlock = DefaultCurrencyValue,
+                        StartBlock = 0,
+                        EndBlock = 0,
                     }
                 };
+
+#pragma warning disable CS0618
+                // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                currency = Currency.Legacy("NCG", 2, minters: null);
+#pragma warning restore CS0618
                 return;
             }
 
@@ -92,15 +98,24 @@ namespace NineChronicles.Headless.Executable.Commands
             {
                 initialDepositList = config.Value.InitialCurrencyDeposit;
             }
+
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            currency = Currency.Legacy("NCG", 2, minters: config.Value.AllowMint ? null : ImmutableHashSet.Create(initialMinter.ToAddress()));
+#pragma warning restore CS0618
         }
 
-        private void ProcessAdmin(AdminConfig? config, PrivateKey initialMinter,
-            out AdminState adminState, out List<ActionBase> meadActions)
+        private void ProcessAdmin(
+            AdminConfig? config,
+            PrivateKey initialMinter,
+            out AdminState? adminState,
+            out List<ActionBase> meadActions
+        )
         {
             // FIXME: If the `adminState` is not required inside `MineGenesisBlock`,
             //        this logic will be much lighter.
             _console.Out.WriteLine("\nProcessing admin for genesis...");
-            adminState = new AdminState(new Address(), 0);
+            adminState = default;
             meadActions = new List<ActionBase>();
 
             if (config is null)
@@ -111,31 +126,26 @@ namespace NineChronicles.Headless.Executable.Commands
 
             if (config.Value.Activate)
             {
+                Address adminAddress;
                 if (string.IsNullOrEmpty(config.Value.Address))
                 {
                     _console.Out.WriteLine("Admin address not provided. Give admin privilege to initialMinter");
-                    adminState = new AdminState(initialMinter.ToAddress(), config.Value.ValidUntil);
-                    meadActions.Add(new PrepareRewardAssets
-                    {
-                        RewardPoolAddress = initialMinter.ToAddress(),
-                        Assets = new List<FungibleAssetValue>
-                        {
-                            10000 * Currencies.Mead,
-                        },
-                    });
+                    adminAddress = initialMinter.ToAddress();
                 }
                 else
                 {
-                    adminState = new AdminState(new Address(config.Value.Address), config.Value.ValidUntil);
-                    meadActions.Add(new PrepareRewardAssets
-                    {
-                        RewardPoolAddress = new Address(config.Value.Address),
-                        Assets = new List<FungibleAssetValue>
-                        {
-                            10000 * Currencies.Mead,
-                        },
-                    });
+                    adminAddress = new Address(config.Value.Address);
                 }
+
+                adminState = new AdminState(adminAddress, config.Value.ValidUntil);
+                meadActions.Add(new PrepareRewardAssets
+                {
+                    RewardPoolAddress = adminAddress,
+                    Assets = new List<FungibleAssetValue>
+                    {
+                        10000 * Currencies.Mead,
+                    },
+                });
             }
             else
             {
@@ -172,28 +182,57 @@ namespace NineChronicles.Headless.Executable.Commands
             _console.Out.WriteLine($"Initial validator set config done: {str}");
         }
 
-        private void ProcessExtra(ExtraConfig? config,
-            out List<PendingActivationState> pendingActivationStates
+        private void ProcessInitialMeadConfigs(
+            List<MeadConfig>? configs,
+            out List<PrepareRewardAssets> meadActions
         )
         {
-            _console.Out.WriteLine("\nProcessing extra data for genesis...");
-            pendingActivationStates = new List<PendingActivationState>();
+            _console.Out.WriteLine("\nProcessing initial mead distribution...");
 
-            if (config is null)
+            meadActions = new List<PrepareRewardAssets>();
+            if (configs is { })
             {
-                _console.Out.WriteLine("Extra config not provided");
-                return;
+                foreach (MeadConfig config in configs)
+                {
+                    _console.Out.WriteLine($"Preparing initial {config.Amount} MEAD for {config.Address}...");
+                    Address target = new(config.Address);
+                    meadActions.Add(
+                        new PrepareRewardAssets(
+                            target,
+                            new List<FungibleAssetValue>
+                            {
+                                FungibleAssetValue.Parse(Currencies.Mead, config.Amount),
+                            }
+                        )
+                    );
+                }
             }
+        }
 
-            if (!string.IsNullOrEmpty(config.Value.PendingActivationStatePath))
+        private void ProcessInitialPledgeConfigs(
+            List<PledgeConfig>? configs,
+            out List<CreatePledge> pledgeActions
+        )
+        {
+            _console.Out.WriteLine("\nProcessing initial pledges...");
+
+            pledgeActions = new List<CreatePledge>();
+            if (configs is { })
             {
-                string hex = File.ReadAllText(config.Value.PendingActivationStatePath).Trim();
-                List decoded = (List)_codec.Decode(ByteUtil.ParseHex(hex));
-                CreatePendingActivations action = new();
-                action.LoadPlainValue(decoded[1]);
-                pendingActivationStates = action.PendingActivations.Select(
-                    pa => new PendingActivationState(pa.Nonce, new PublicKey(pa.PublicKey))
-                ).ToList();
+                foreach (PledgeConfig config in configs)
+                {
+                    _console.Out.WriteLine($"Preparing a pledge for {config.AgentAddress}...");
+                    Address agentAddress = new(config.AgentAddress);
+                    Address pledgeAddress = agentAddress.GetPledgeAddress();
+                    pledgeActions.Add(
+                        new CreatePledge()
+                        {
+                            AgentAddresses = new[] { (agentAddress, pledgeAddress) },
+                            PatronAddress = new(config.PatronAddress),
+                            Mead = config.Mead,
+                        }
+                    );
+                }
             }
         }
 
@@ -214,26 +253,30 @@ namespace NineChronicles.Headless.Executable.Commands
             {
                 ProcessData(genesisConfig.Data, out var tableSheets);
 
-                ProcessCurrency(genesisConfig.Currency, out var initialMinter, out var initialDepositList);
+                ProcessCurrency(genesisConfig.Currency, out var currency, out var initialMinter, out var initialDepositList);
 
-                ProcessAdmin(genesisConfig.Admin, initialMinter, out var adminState, out var meadActions);
+                ProcessAdmin(genesisConfig.Admin, initialMinter, out var adminState, out var adminMeads);
 
                 ProcessValidator(genesisConfig.InitialValidatorSet, initialMinter, out var initialValidatorSet);
 
-                ProcessExtra(genesisConfig.Extra, out var pendingActivationStates);
+                ProcessInitialMeadConfigs(genesisConfig.InitialMeadConfigs, out var initialMeads);
+
+                ProcessInitialPledgeConfigs(genesisConfig.InitialPledgeConfigs, out var initialPledges);
 
                 // Mine genesis block
                 _console.Out.WriteLine("\nMining genesis block...\n");
                 Block block = BlockHelper.ProposeGenesisBlock(
                     tableSheets: tableSheets,
                     goldDistributions: initialDepositList.ToArray(),
-                    pendingActivationStates: pendingActivationStates.ToArray(),
-                    adminState: adminState,
+                    pendingActivationStates: Array.Empty<PendingActivationState>(),
+                    // FIXME Should remove default value after fixing parameter type on Lib9c side.
+                    adminState: adminState ?? new AdminState(default, 0L),
                     privateKey: initialMinter,
                     initialValidators: initialValidatorSet.ToDictionary(
                         item => new PublicKey(ByteUtil.ParseHex(item.PublicKey)),
                         item => new BigInteger(item.Power)),
-                    actionBases: meadActions
+                    actionBases: adminMeads.Concat(initialMeads).Concat(initialPledges),
+                    goldCurrency: currency
                 );
 
                 Lib9cUtils.ExportBlock(block, "genesis-block");
@@ -309,6 +352,8 @@ namespace NineChronicles.Headless.Executable.Commands
             /// You can see newly created deposition info in <c>initial_deposit.csv</c> file.
             /// </value>
             public List<GoldDistribution>? InitialCurrencyDeposit { get; set; }
+
+            public bool AllowMint { get; set; }
         }
 
         /// <summary>
@@ -342,18 +387,22 @@ namespace NineChronicles.Headless.Executable.Commands
             public long Power { get; set; }
         }
 
-        /// <summary>
-        /// Extra configurations.
-        /// </summary>
         [Serializable]
-        private struct ExtraConfig
+        private struct MeadConfig
         {
-            /// <value>
-            /// Dump file path of pending activation state created using <c>9c-tools</c><br/>
-            /// This will set activation codes that can be used to genesis block. <br/>
-            /// See <see cref="TxCommand"/> to create activation key.
-            /// </value>
-            public string? PendingActivationStatePath { get; set; }
+            public string Address { get; set; }
+
+            public string Amount { get; set; }
+        }
+
+        [Serializable]
+        private struct PledgeConfig
+        {
+            public string AgentAddress { get; set; }
+
+            public string PatronAddress { get; set; }
+
+            public int Mead { get; set; }
         }
 
         /// <summary>
@@ -380,10 +429,6 @@ namespace NineChronicles.Headless.Executable.Commands
         /// <term><see cref="InitialValidatorSet">Initial validator set</see></term>
         /// <description>Optional. Sets game admin and lifespan to genesis block.</description>
         /// </item>
-        /// <item>
-        /// <term><see cref="ExtraConfig">Extra</see></term>
-        /// <description>Optional. Sets extra data (e.g. activation keys) to genesis block.</description>
-        /// </item>
         /// </list>
         [Serializable]
         private struct GenesisConfig
@@ -392,7 +437,10 @@ namespace NineChronicles.Headless.Executable.Commands
             public CurrencyConfig? Currency { get; set; }
             public AdminConfig? Admin { get; set; }
             public List<Validator>? InitialValidatorSet { get; set; }
-            public ExtraConfig? Extra { get; set; }
+
+            public List<MeadConfig>? InitialMeadConfigs { get; set; }
+
+            public List<PledgeConfig>? InitialPledgeConfigs { get; set; }
         }
 #pragma warning restore S3459
     }

@@ -25,8 +25,8 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class StakeStateContext : StateContext
         {
-            public StakeStateContext(StakeStateV2 stakeState, Address address, IAccountState accountState, long blockIndex)
-                : base(accountState, blockIndex)
+            public StakeStateContext(StakeStateV2 stakeState, Address address, IAccountState accountState, long blockIndex, StateMemoryCache stateMemoryCache)
+                : base(accountState, blockIndex, stateMemoryCache)
             {
                 StakeState = stakeState;
                 Address = address;

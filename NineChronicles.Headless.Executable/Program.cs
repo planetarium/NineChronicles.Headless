@@ -209,6 +209,8 @@ namespace NineChronicles.Headless.Executable
             string? sentryDsn = "",
             [Option(Description = "Trace sample rate for sentry")]
             double? sentryTraceSampleRate = null,
+            [Option(Description = "arena participants list sync interval time")]
+            int? arenaParticipantsSyncInterval = null,
             [Ignore] CancellationToken? cancellationToken = null
         )
         {
@@ -290,7 +292,7 @@ namespace NineChronicles.Headless.Executable
                 txLifeTime, messageTimeout, tipTimeout, demandBuffer, skipPreload,
                 minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers,
                 consensusPort, consensusPrivateKeyString, consensusSeedStrings, consensusTargetBlockIntervalMilliseconds,
-                sentryDsn, sentryTraceSampleRate
+                sentryDsn, sentryTraceSampleRate, arenaParticipantsSyncInterval
             );
 
 #if SENTRY || ! DEBUG
@@ -448,6 +450,7 @@ namespace NineChronicles.Headless.Executable
                         MinerBlockInterval = minerBlockInterval,
                         TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner,
                     };
+                var arenaMemoryCache = new StateMemoryCache();
                 hostBuilder.ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => standaloneContext);
@@ -459,6 +462,10 @@ namespace NineChronicles.Headless.Executable
                                 .AddRuntimeInstrumentation()
                                 .AddAspNetCoreInstrumentation()
                                 .AddPrometheusExporter());
+
+                    // worker
+                    services.AddHostedService(_ => new ArenaParticipantsWorker(arenaMemoryCache, standaloneContext, headlessConfig.ArenaParticipantsSyncInterval));
+                    services.AddSingleton(arenaMemoryCache);
                 });
 
                 NineChroniclesNodeService service =
@@ -485,7 +492,8 @@ namespace NineChronicles.Headless.Executable
                         IPAddress.Loopback.ToString(),
                         rpcProperties.RpcListenPort,
                         context,
-                        new ConcurrentDictionary<string, Sentry.ITransaction>()
+                        new ConcurrentDictionary<string, Sentry.ITransaction>(),
+                        arenaMemoryCache
                     );
 
                     hostBuilder.UseNineChroniclesNode(
@@ -515,7 +523,8 @@ namespace NineChronicles.Headless.Executable
                         IPAddress.Loopback.ToString(),
                         0,
                         context,
-                        new ConcurrentDictionary<string, Sentry.ITransaction>()
+                        new ConcurrentDictionary<string, Sentry.ITransaction>(),
+                        arenaMemoryCache
                     );
                     hostBuilder.UseNineChroniclesNode(
                         nineChroniclesProperties,

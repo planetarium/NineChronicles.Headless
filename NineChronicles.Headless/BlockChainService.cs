@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -19,6 +20,8 @@ using Libplanet.Types.Blocks;
 using Libplanet.Types.Tx;
 using MagicOnion;
 using MagicOnion.Server;
+using MessagePack;
+using Microsoft.Extensions.Caching.Memory;
 using Nekoyume;
 using Nekoyume.Shared.Services;
 using Serilog;
@@ -40,6 +43,8 @@ namespace NineChronicles.Headless
         private LibplanetNodeServiceProperties _libplanetNodeServiceProperties;
         private ActionEvaluationPublisher _publisher;
         private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
+        private MemoryCache _memoryCache;
+        private readonly MessagePackSerializerOptions _lz4Options;
 
         public BlockChainService(
             BlockChain blockChain,
@@ -47,7 +52,9 @@ namespace NineChronicles.Headless
             RpcContext context,
             LibplanetNodeServiceProperties libplanetNodeServiceProperties,
             ActionEvaluationPublisher actionEvaluationPublisher,
-            ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces)
+            ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces,
+            StateMemoryCache cache
+            )
         {
             _blockChain = blockChain;
             _swarm = swarm;
@@ -56,6 +63,8 @@ namespace NineChronicles.Headless
             _libplanetNodeServiceProperties = libplanetNodeServiceProperties;
             _publisher = actionEvaluationPublisher;
             _sentryTraces = sentryTraces;
+            _memoryCache = cache.SheetCache;
+            _lz4Options = MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
         }
 
         public UnaryResult<bool> PutTransaction(byte[] txBytes)
@@ -199,6 +208,50 @@ namespace NineChronicles.Headless
                 result.TryAdd(addresses[i].ToByteArray(), _codec.Encode(values[i] ?? Null.Value));
             }
 
+            return new UnaryResult<Dictionary<byte[], byte[]>>(result);
+        }
+
+        public UnaryResult<Dictionary<byte[], byte[]>> GetSheets(
+            IEnumerable<byte[]> addressBytesList,
+            byte[] stateRootHashBytes)
+        {
+            var started = DateTime.UtcNow;
+            var sw = new Stopwatch();
+            sw.Start();
+            var result = new Dictionary<byte[], byte[]>();
+            List<Address> addresses = new List<Address>();
+            foreach (var b in addressBytesList)
+            {
+                var address = new Address(b);
+                if (_memoryCache.TryGetValue(address.ToString(), out byte[] cached))
+                {
+                    result.TryAdd(b, cached);
+                }
+                else
+                {
+                    addresses.Add(address);
+                }
+            }
+            sw.Stop();
+            Log.Information("[GetSheets]Get sheet from cache count: {CachedCount}, not Cached: {CacheMissedCount}, Elapsed: {Elapsed}", result.Count, addresses.Count, sw.Elapsed);
+            sw.Restart();
+            if (addresses.Any())
+            {
+                var stateRootHash = new BlockHash(stateRootHashBytes);
+                IReadOnlyList<IValue> values = _blockChain.GetAccountState(stateRootHash).GetStates(addresses);
+                sw.Stop();
+                Log.Information("[GetSheets]Get sheet from state: {Count}, Elapsed: {Elapsed}", addresses.Count, sw.Elapsed);
+                sw.Restart();
+                for (int i = 0; i < addresses.Count; i++)
+                {
+                    var address = addresses[i];
+                    var value = _codec.Encode(values[i] ?? Null.Value);
+                    var compressed = MessagePackSerializer.Serialize(value, _lz4Options);
+                    _memoryCache.Set(address.ToString(), compressed);
+                    result.TryAdd(address.ToByteArray(), compressed);
+                }
+            }
+            Log.Information("[GetSheets]Total: {Elapsed}", DateTime.UtcNow - started);
             return new UnaryResult<Dictionary<byte[], byte[]>>(result);
         }
 
