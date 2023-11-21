@@ -52,16 +52,18 @@ public class ArenaParticipantsWorker : BackgroundService
         catch (OperationCanceledException)
         {
             //pass
+            _logger.Information("[ArenaParticipantsWorker]Cancel ArenaParticipantsWorker");
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            _logger.Warning("Stopping ArenaParticipantsWorker");
+            _logger.Error(e, "[ArenaParticipantsWorker]Stopping ArenaParticipantsWorker");
             await StopAsync(stoppingToken);
         }
     }
 
     public void GetArenaParticipants()
     {
+        _logger.Information("[ArenaParticipantsWorker]Start Sync Arena Cache");
         var sw = new Stopwatch();
         sw.Start();
         // Copy from NineChronicles RxProps.Arena
@@ -69,6 +71,7 @@ public class ArenaParticipantsWorker : BackgroundService
         var blockChain = _context.BlockChain;
         if (blockChain is null)
         {
+            _logger.Warning("[ArenaParticipantsWorker]BlockChain is null");
             throw new Exception();
         }
 
@@ -86,6 +89,7 @@ public class ArenaParticipantsWorker : BackgroundService
         if (participants is null)
         {
             _cache.ArenaParticipantsCache.Set(cacheKey, new List<ArenaParticipant>());
+            _logger.Information("[ArenaParticipantsWorker] participants({CacheKey}) is null. set empty list", cacheKey);
             return;
         }
 
@@ -273,6 +277,6 @@ public class ArenaParticipantsWorker : BackgroundService
         }).ToList();
         _cache.ArenaParticipantsCache.Set(cacheKey, result, TimeSpan.FromHours(1));
         sw.Stop();
-        _logger.Information("Set Arena Cache[{CacheKey}]: {Elapsed}", cacheKey, sw.Elapsed);
+        _logger.Information("[ArenaParticipantsWorker]Set Arena Cache[{CacheKey}]: {Elapsed}", cacheKey, sw.Elapsed);
     }
 }
