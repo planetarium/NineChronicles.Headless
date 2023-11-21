@@ -147,6 +147,9 @@ type ActionQuery {
   claimItems(
     """List of pair of avatar address, List<FAV> to claim."""
     claimData: [ClaimDataInputType!]!
+
+    """Memo to attach to this action."""
+    memo: String
   ): ByteString!
   claimRaidReward(
     """address of avatar state to receive reward."""
@@ -452,6 +455,9 @@ type ActionTxQuery {
   claimItems(
     """List of pair of avatar address, List<FAV> to claim."""
     claimData: [ClaimDataInputType!]!
+
+    """Memo to attach to this action."""
+    memo: String
   ): ByteString!
   claimRaidReward(
     """address of avatar state to receive reward."""
@@ -845,6 +851,35 @@ type ArenaInformationType {
   ticket: Int!
   ticketResetCount: Int!
   win: Int!
+}
+
+type ArenaParticipantType {
+  """Address of avatar."""
+  avatarAddr: Address!
+
+  """Cp of avatar."""
+  cp: Int!
+
+  """Level of avatar."""
+  level: Int!
+
+  """Score for defeat."""
+  loseScore: Int!
+
+  """Name of avatar."""
+  nameWithHash: String!
+
+  """Portrait icon id."""
+  portraitId: Int!
+
+  """Arena rank of avatar."""
+  rank: Int!
+
+  """Arena score of avatar."""
+  score: Int!
+
+  """Score for victory."""
+  winScore: Int!
 }
 
 type ArenaRecordType {
@@ -2149,6 +2184,7 @@ type StateQuery {
     """Round of championship to get arena information"""
     round: Int!
   ): [ArenaInformationType!]!
+  arenaParticipants(avatarAddress: Address!, filterBounds: Boolean! = true): [ArenaParticipantType]!
 
   """State for avatar."""
   avatar(
