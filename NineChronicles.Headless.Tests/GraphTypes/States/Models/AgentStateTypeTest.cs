@@ -72,7 +72,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
 
             var queryResult = await ExecuteQueryAsync<AgentStateType>(
                 query,
-                source: new AgentStateType.AgentStateContext(agentState, mockState, 0)
+                source: new AgentStateType.AgentStateContext(agentState, mockState, 0, new StateMemoryCache())
             );
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var expected = new Dictionary<string, object>()

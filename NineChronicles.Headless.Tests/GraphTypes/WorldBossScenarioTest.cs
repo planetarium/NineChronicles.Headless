@@ -62,7 +62,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 [1] = true,
                 [2] = false,
             };
-            _stateContext = new StateContext(GetMockState(), 1L);
+            _stateContext = new StateContext(GetMockState(), 1L, new StateMemoryCache());
             var minerPrivateKey = new PrivateKey();
             var initializeStates = new InitializeStates(
                 rankingState: new RankingState0(),

@@ -24,7 +24,17 @@
             "power": 1
         }
     ],
-    "extra": {
-        "pendingActivationStatePath": "PendingActivation"
-    }
+    "initialMeadConfigs": [
+        {
+            "address": "",
+            "amount": "100"
+        }
+    ],
+    "initialPledgeConfigs": [
+        {
+            "agentAddress": "",
+            "patronAddress": "",
+            "mead": ""
+        }
+    ]
 }

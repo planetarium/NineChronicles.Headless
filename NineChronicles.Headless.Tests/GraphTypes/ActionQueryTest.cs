@@ -13,6 +13,7 @@ using Lib9c;
 using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
+using Libplanet.Types.Tx;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Action.Garages;
@@ -1339,6 +1340,112 @@ actionPoint: {actionPoint},
             Assert.Equal(avatarAddress, action.AvatarAddress);
             Assert.Equal(groupId, action.GroupId);
             Assert.Equal(summonCount, action.SummonCount);
+        }
+
+        [Theory]
+        [InlineData(1, false)]
+        [InlineData(2, false)]
+        [InlineData(10, false)]
+        [InlineData(100, false)]
+        [InlineData(1, true)]
+        [InlineData(2, true)]
+        [InlineData(10, true)]
+        [InlineData(100, true)]
+        public async Task ClaimItems(int claimDataCount, bool hasMemo)
+        {
+            var random = new Random();
+            var tickerList = new List<string> { "Item_T_500000", "Item_T_400000", "Item_T_800201", "Item_NT_49900011" };
+            var claimDataList = new List<(Address, List<FungibleAssetValue>)>();
+            var queryBuilder = new StringBuilder().Append("{claimItems(claimData: [");
+            var expectedMemo = "This is test memo";
+            for (var i = 0; i < claimDataCount; i++)
+            {
+                var avatarAddress = new PrivateKey().ToAddress();
+                var currencyCount = random.Next(1, tickerList.Count + 1);
+                var tickerCandidates = tickerList.OrderBy(i => random.Next()).Take(currencyCount);
+                queryBuilder.Append($@"{{
+                    avatarAddress: ""{avatarAddress}"",
+                    fungibleAssetValues:[
+                ");
+                var favList = tickerCandidates.Select(
+                    ticker => new FungibleAssetValue(
+                        Currency.Uncapped(
+                            ticker: ticker,
+                            decimalPlaces: 0,
+                            minters: AddressSet.Empty
+                        ),
+                        random.Next(1, 100), 0
+                    )
+                ).ToList();
+                foreach (var fav in favList)
+                {
+                    queryBuilder.Append($@"{{
+                        ticker: ""{fav.Currency.Ticker}"",
+                        decimalPlaces: 0,
+                        minters: [],
+                        quantity: {fav.MajorUnit}
+                    }}");
+                    if (fav != favList[^1])
+                    {
+                        queryBuilder.Append(",");
+                    }
+                }
+
+                claimDataList.Add((avatarAddress, favList));
+
+                queryBuilder.Append("]}");
+                if (i < claimDataCount - 1)
+                {
+                    queryBuilder.Append(",");
+                }
+            }
+
+            queryBuilder.Append("]");
+
+            if (hasMemo)
+            {
+                queryBuilder.Append($", memo: \"{expectedMemo}\"");
+            }
+
+            queryBuilder.Append(")}");
+
+            var queryResult =
+                await ExecuteQueryAsync<ActionQuery>(queryBuilder.ToString(), standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["claimItems"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<ClaimItems>(actionBase);
+
+            for (var i = 0; i < claimDataList.Count; i++)
+            {
+                var (expectedAddr, expectedFavList) = claimDataList[i];
+                var (actualAddr, actualFavList) = action.ClaimData[i];
+                Assert.Equal(expectedAddr, actualAddr);
+                Assert.Equal(expectedFavList.Count, actualFavList.Count);
+                for (var j = 0; j < expectedFavList.Count; j++)
+                {
+                    /* FIXME: Make Assert.Equal(FAV1, FAV2) works.
+                     This test will fail because:
+                         - GQL currency type does not allow `null` as minters to you should give empty list.
+                         - But inside `Currency`, empty list is changed to null.
+                         - As a result, currency hash are mismatch.
+                         - See https://github.com/planetarium/NineChronicles.Headless/pull/2282#discussion_r1380857437
+                    */
+                    // Assert.Equal(expectedFavList[i], actualFavList[i]);
+                    Assert.Equal(expectedFavList[j].Currency.Ticker, actualFavList[j].Currency.Ticker);
+                    Assert.Equal(expectedFavList[j].RawValue, actualFavList[j].RawValue);
+                }
+            }
+
+            if (hasMemo)
+            {
+                Assert.Equal(expectedMemo, action.Memo);
+            }
+            else
+            {
+                Assert.Null(action.Memo);
+            }
         }
     }
 }

@@ -143,7 +143,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 sb.ToString(),
                 source: new StateContext(
                     mockState,
-                    0L));
+                    0L, new StateMemoryCache()));
             Assert.Null(queryResult.Errors);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var garages = (Dictionary<string, object>)data["garages"];

@@ -33,7 +33,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 source: new AvatarStateType.AvatarStateContext(
                     avatarState,
                     mockState,
-                    0));
+                    0, new StateMemoryCache()));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
         }
@@ -71,7 +71,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 source: new AvatarStateType.AvatarStateContext(
                     avatarState,
                     mockState,
-                    0));
+                    0, new StateMemoryCache()));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
         }

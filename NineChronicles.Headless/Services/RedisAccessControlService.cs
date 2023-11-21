@@ -12,7 +12,14 @@ namespace NineChronicles.Headless.Services
 
         public RedisAccessControlService(string storageUri)
         {
-            var redis = ConnectionMultiplexer.Connect(storageUri);
+            var configurationOptions = new ConfigurationOptions
+            {
+                EndPoints = { storageUri },
+                ConnectTimeout = 500,
+                SyncTimeout = 500,
+            };
+
+            var redis = ConnectionMultiplexer.Connect(configurationOptions);
             _db = redis.GetDatabase();
         }
 
@@ -22,7 +29,7 @@ namespace NineChronicles.Headless.Services
             if (!result.IsNull)
             {
                 Log.ForContext("Source", nameof(IAccessControlService))
-                    .Debug("\"{Address}\" Tx Quota: {Quota}", address, result);
+                    .Verbose("\"{Address}\" Tx Quota: {Quota}", address, result);
                 return Convert.ToInt32(result);
             }
 

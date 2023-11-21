@@ -30,6 +30,7 @@ using MessagePack;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Shared.Hubs;
 using Serilog;
@@ -52,6 +53,7 @@ namespace NineChronicles.Headless
         private readonly ConcurrentDictionary<string, HashSet<string>> _clientsByIp = new();
         private readonly ConcurrentDictionary<List<string>, List<string>> _clientsIpsList = new();
         private readonly IMemoryCache _cache;
+        private MemoryCache _memoryCache;
 
         private RpcContext _context;
         private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
@@ -65,7 +67,8 @@ namespace NineChronicles.Headless
             string host,
             int port,
             RpcContext context,
-            ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces)
+            ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces,
+            StateMemoryCache cache)
         {
             _blockRenderer = blockRenderer;
             _actionRenderer = actionRenderer;
@@ -79,6 +82,7 @@ namespace NineChronicles.Headless
             var memoryCacheOptions = new MemoryCacheOptions();
             var options = Options.Create(memoryCacheOptions);
             _cache = new MemoryCache(options);
+            _memoryCache = cache.SheetCache;
 
             var meter = new Meter("NineChronicles");
             meter.CreateObservableGauge(
@@ -108,6 +112,15 @@ namespace NineChronicles.Headless
                 description: "Number of RPC clients connected grouped by ips.");
 
             ActionEvaluationHub.OnClientDisconnected += RemoveClient;
+            _actionRenderer.EveryRender<PatchTableSheet>().Subscribe(ev =>
+            {
+                if (ev.Exception is null)
+                {
+                    var action = ev.Action;
+                    var sheetAddress = Addresses.GetSheetAddress(action.TableName);
+                    _memoryCache.Set(sheetAddress.ToString(), (Text)action.TableCsv);
+                }
+            });
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -473,7 +486,7 @@ namespace NineChronicles.Headless
                                 }
 
                                 var compressed = c.ToArray();
-                                Log.Information(
+                                Log.Verbose(
                                     "[{ClientAddress}] #{BlockIndex} Broadcasting render since the given action {Action}. eval size: {Size}",
                                     _clientAddress,
                                     ev.BlockIndex,
@@ -488,7 +501,7 @@ namespace NineChronicles.Headless
                                 Log
                                     .ForContext("tag", "Metric")
                                     .ForContext("subtag", "ActionEvaluationPublisherElapse")
-                                    .Information(
+                                    .Verbose(
                                         "[{ClientAddress}], #{BlockIndex}, {Action}," +
                                         " {EncodeElapsedMilliseconds}, {BroadcastElapsedMilliseconds}, {TotalElapsedMilliseconds}",
                                         _clientAddress,
