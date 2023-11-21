@@ -68,7 +68,7 @@ namespace NineChronicles.Headless
             int port,
             RpcContext context,
             ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces,
-            ArenaMemoryCache cache)
+            StateMemoryCache cache)
         {
             _blockRenderer = blockRenderer;
             _actionRenderer = actionRenderer;

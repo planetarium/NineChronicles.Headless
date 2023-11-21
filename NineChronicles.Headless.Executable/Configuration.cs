@@ -91,6 +91,8 @@ namespace NineChronicles.Headless.Executable
 
         public AccessControlServiceOptions? AccessControlService { get; set; }
 
+        public int ArenaParticipantsSyncInterval { get; set; } = 1000;
+
         public void Overwrite(
             string? appProtocolVersionString,
             string[]? trustedAppProtocolVersionSignerStrings,
@@ -138,7 +140,8 @@ namespace NineChronicles.Headless.Executable
             string[]? consensusSeedStrings,
             double? consensusTargetBlockIntervalMilliseconds,
             string? sentryDsn,
-            double? sentryTraceSampleRate
+            double? sentryTraceSampleRate,
+            int? arenaParticipantsSyncInterval
         )
         {
             AppProtocolVersionString = appProtocolVersionString ?? AppProtocolVersionString;
@@ -189,6 +192,7 @@ namespace NineChronicles.Headless.Executable
             ConsensusTargetBlockIntervalMilliseconds = consensusTargetBlockIntervalMilliseconds ?? ConsensusTargetBlockIntervalMilliseconds;
             SentryDsn = sentryDsn ?? SentryDsn;
             SentryTraceSampleRate = sentryTraceSampleRate ?? SentryTraceSampleRate;
+            ArenaParticipantsSyncInterval = arenaParticipantsSyncInterval ?? ArenaParticipantsSyncInterval;
         }
     }
 }

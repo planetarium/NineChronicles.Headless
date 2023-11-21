@@ -18,6 +18,7 @@ using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
+using NineChronicles.Headless.Properties;
 using Serilog;
 using static Lib9c.SerializeKeys;
 
@@ -26,14 +27,16 @@ namespace NineChronicles.Headless;
 public class ArenaParticipantsWorker : BackgroundService
 {
     private ILogger _logger;
-    private ArenaMemoryCache _cache;
+    private StateMemoryCache _cache;
     private StandaloneContext _context;
+    private int _interval;
 
-    public ArenaParticipantsWorker(ArenaMemoryCache memoryCache, StandaloneContext context)
+    public ArenaParticipantsWorker(StateMemoryCache memoryCache, StandaloneContext context, int interval)
     {
         _cache = memoryCache;
         _context = context;
         _logger = Log.Logger.ForContext<ArenaParticipantsWorker>();
+        _interval = interval;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -42,7 +45,7 @@ public class ArenaParticipantsWorker : BackgroundService
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                await Task.Delay(1000, stoppingToken);
+                await Task.Delay(_interval, stoppingToken);
                 GetArenaParticipants();
             }
         }
@@ -82,7 +85,7 @@ public class ArenaParticipantsWorker : BackgroundService
         var cacheKey = $"{currentRoundData.ChampionshipId}_{currentRoundData.Round}";
         if (participants is null)
         {
-            _cache.Cache.Set(cacheKey, new List<ArenaParticipant>());
+            _cache.ArenaParticipantsCache.Set(cacheKey, new List<ArenaParticipant>());
             return;
         }
 
@@ -268,7 +271,7 @@ public class ArenaParticipantsWorker : BackgroundService
                 cp
             );
         }).ToList();
-        _cache.Cache.Set(cacheKey, result, TimeSpan.FromHours(1));
+        _cache.ArenaParticipantsCache.Set(cacheKey, result, TimeSpan.FromHours(1));
         sw.Stop();
         _logger.Information("Set Arena Cache[{CacheKey}]: {Elapsed}", cacheKey, sw.Elapsed);
     }

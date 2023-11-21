@@ -43,7 +43,7 @@ namespace NineChronicles.Headless.GraphTypes
                     return new AvatarStateType.AvatarStateContext(
                         context.AccountState.GetAvatarState(address),
                         context.AccountState,
-                        context.BlockIndex, context.ArenaMemoryCache);
+                        context.BlockIndex, context.StateMemoryCache);
                 }
                 catch (InvalidAddressException)
                 {
@@ -235,7 +235,7 @@ namespace NineChronicles.Headless.GraphTypes
                             new AgentState(state),
                             context.Source.AccountState,
                             context.Source.BlockIndex,
-                            context.Source.ArenaMemoryCache
+                            context.Source.StateMemoryCache
                         );
                     }
 
@@ -253,7 +253,7 @@ namespace NineChronicles.Headless.GraphTypes
                         stakeStateAddress,
                         ctx.AccountState,
                         ctx.BlockIndex,
-                        ctx.ArenaMemoryCache
+                        ctx.StateMemoryCache
                     );
                 }
 
@@ -679,7 +679,7 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         playerScore = (Integer)scores[1];
                     }
-                    if (context.Source.ArenaMemoryCache.Cache.TryGetValue(cacheKey,
+                    if (context.Source.StateMemoryCache.ArenaParticipantsCache.TryGetValue(cacheKey,
                             out var cachedResult))
                     {
                         result = (cachedResult as List<ArenaParticipant>)!;
