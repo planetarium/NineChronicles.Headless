@@ -37,7 +37,7 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
         }
 
         [HttpPost("entries/bulk-add-tx-quota")]
-        public ActionResult AddTxQuota([FromBody] List<string> addresses, [FromBody] int quota)
+        public ActionResult BulkAddTxQuota([FromBody] List<string> addresses, [FromBody] int quota)
         {
             var maxQuota = 10;
             var maxAddressCount = 100;
