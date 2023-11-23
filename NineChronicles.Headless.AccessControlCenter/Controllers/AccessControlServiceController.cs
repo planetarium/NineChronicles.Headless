@@ -23,8 +23,8 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
             return _accessControlService.GetTxQuota(new Address(address));
         }
 
-        [HttpPost("entries/add-tx-quota/{address}/{quota:int}")]
-        public ActionResult AddTxQuota(string address, int quota)
+        [HttpPost("entries/add-tx-quota/{address}")]
+        public ActionResult AddTxQuota(string address, [FromBody] int quota)
         {
             var maxQuota = 10;
             if (quota > maxQuota)
@@ -33,6 +33,27 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
             }
 
             _accessControlService.AddTxQuota(new Address(address), quota);
+            return Ok();
+        }
+
+        [HttpPost("entries/bulk-add-tx-quota")]
+        public ActionResult AddTxQuota([FromBody] List<string> addresses, [FromBody] int quota)
+        {
+            var maxQuota = 10;
+            var maxAddressCount = 100;
+            if (quota > maxQuota)
+            {
+                return BadRequest($"The quota cannot exceed {maxQuota}.");
+            }
+            if (addresses.Count > maxAddressCount)
+            {
+                return BadRequest($"The addresses cannot exceed {maxAddressCount}.");
+            }
+
+            foreach(string address in addresses)
+            {
+                _accessControlService.AddTxQuota(new Address(address), quota);
+            }
             return Ok();
         }
 
