@@ -151,8 +151,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(tx.Timestamp, transaction.Timestamp);
             Assert.Equal(tx.UpdatedAddresses, transaction.UpdatedAddresses);
 
-            var plainValue = ToAction(tx.Actions!.First()).PlainValue.Inspect(true);
-            Assert.Equal(ToAction(transaction.Actions!.First()).PlainValue.Inspect(true), plainValue);
+            var plainValue = ToAction(tx.Actions!.First()).PlainValue.Inspect();
+            Assert.Equal(ToAction(transaction.Actions!.First()).PlainValue.Inspect(), plainValue);
         }
 
         [Theory]
