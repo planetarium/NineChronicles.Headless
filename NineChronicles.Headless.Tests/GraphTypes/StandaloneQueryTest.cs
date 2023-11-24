@@ -100,7 +100,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var privateKey = protectedPrivateKey.Unprotect(passphrase);
             KeyStore.Add(protectedPrivateKey);
 
-            var result = await ExecuteQueryAsync($"query {{ keyStore {{ decryptedPrivateKey(address: \"{privateKey.ToAddress()}\", passphrase: \"{passphrase}\") }} }}");
+            var result = await ExecuteQueryAsync($"query {{ keyStore {{ decryptedPrivateKey(address: \"{privateKey.Address}\", passphrase: \"{passphrase}\") }} }}");
 
             var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             var keyStoreResult = (Dictionary<string, object>)data["keyStore"];
@@ -209,7 +209,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new ActionBase[] { }
             );
 
-            var address = privateKey.ToAddress();
+            var address = privateKey.Address;
             var query = $@"query {{
                 nodeStatus {{
                     stagedTxIds(address: ""{address}"")
@@ -239,7 +239,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 ProposerPrivateKey,
                 userPrivateKey,
-            }.OrderBy(x => x.ToAddress()).ToList();
+            }.OrderBy(x => x.Address).ToList();
             var service = MakeNineChroniclesNodeService(userPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
@@ -423,7 +423,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(privateKeyHex, privateKeyResult["hex"]);
             var publicKeyResult = (Dictionary<string, object>)privateKeyResult["publicKey"];
             Assert.Equal(ByteUtil.Hex(privateKey.PublicKey.Format(compress)), publicKeyResult["hex"]);
-            Assert.Equal(privateKey.ToAddress().ToString(), publicKeyResult["address"]);
+            Assert.Equal(privateKey.Address.ToString(), publicKeyResult["address"]);
         }
 
         [Theory]
@@ -432,7 +432,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task ActivationStatus(bool existsActivatedAccounts)
         {
             var adminPrivateKey = new PrivateKey();
-            var adminAddress = adminPrivateKey.ToAddress();
+            var adminAddress = adminPrivateKey.Address;
             var activatedAccounts = ImmutableHashSet<Address>.Empty;
 
             if (existsActivatedAccounts)
@@ -557,11 +557,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task GoldBalance()
         {
             var userPrivateKey = new PrivateKey();
-            var userAddress = userPrivateKey.ToAddress();
+            var userAddress = userPrivateKey.Address;
             var validators = new List<PrivateKey>
             {
                 ProposerPrivateKey, userPrivateKey
-            }.OrderBy(x => x.ToAddress()).ToList();
+            }.OrderBy(x => x.Address).ToList();
             var service = MakeNineChroniclesNodeService(userPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
@@ -600,7 +600,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task TransferNCGHistories(string? memo)
         {
             PrivateKey senderKey = ProposerPrivateKey, recipientKey = new PrivateKey();
-            Address sender = senderKey.ToAddress(), recipient = recipientKey.ToAddress();
+            Address sender = senderKey.Address, recipient = recipientKey.Address;
 
             Block block = BlockChain.ProposeBlock(
                 ProposerPrivateKey,
@@ -661,7 +661,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task MinerAddress()
         {
             var userPrivateKey = new PrivateKey();
-            var userAddress = userPrivateKey.ToAddress();
+            var userAddress = userPrivateKey.Address;
             var service = MakeNineChroniclesNodeService(userPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
@@ -685,7 +685,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task MonsterCollectionStatus_AgentState_Null(bool miner)
         {
             var userPrivateKey = new PrivateKey();
-            var userAddress = userPrivateKey.ToAddress();
+            var userAddress = userPrivateKey.Address;
             var service = MakeNineChroniclesNodeService(userPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
@@ -723,11 +723,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task MonsterCollectionStatus_MonsterCollectionState_Null(bool miner)
         {
             var userPrivateKey = new PrivateKey();
-            var userAddress = userPrivateKey.ToAddress();
+            var userAddress = userPrivateKey.Address;
             var validators = new List<PrivateKey>
             {
                 ProposerPrivateKey, userPrivateKey
-            }.OrderBy(x => x.ToAddress()).ToList();
+            }.OrderBy(x => x.Address).ToList();
             var service = MakeNineChroniclesNodeService(userPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
@@ -778,11 +778,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task Avatar()
         {
             var userPrivateKey = new PrivateKey();
-            var userAddress = userPrivateKey.ToAddress();
+            var userAddress = userPrivateKey.Address;
             var validators = new List<PrivateKey>
             {
                 ProposerPrivateKey, userPrivateKey
-            }.OrderBy(x => x.ToAddress()).ToList();
+            }.OrderBy(x => x.Address).ToList();
             var service = MakeNineChroniclesNodeService(userPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
@@ -828,7 +828,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task ActivationKeyNonce(bool trim)
         {
             var adminPrivateKey = new PrivateKey();
-            var adminAddress = adminPrivateKey.ToAddress();
+            var adminAddress = adminPrivateKey.Address;
             var activatedAccounts = ImmutableHashSet<Address>.Empty;
             var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
             var privateKey = new PrivateKey();
@@ -919,7 +919,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task ActivationKeyNonce_Throw_ExecutionError(string code, string msg)
         {
             var adminPrivateKey = new PrivateKey();
-            var adminAddress = adminPrivateKey.ToAddress();
+            var adminAddress = adminPrivateKey.Address;
             var activatedAccounts = ImmutableHashSet<Address>.Empty;
             var pendingActivationStates = new List<PendingActivationState>();
 
@@ -1000,7 +1000,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task Balance()
         {
             var adminPrivateKey = new PrivateKey();
-            var adminAddress = adminPrivateKey.ToAddress();
+            var adminAddress = adminPrivateKey.Address;
             var activatedAccounts = ImmutableHashSet<Address>.Empty;
             var pendingActivationStates = new List<PendingActivationState>();
 

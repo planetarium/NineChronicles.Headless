@@ -156,7 +156,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var validators = new List<PrivateKey>
             {
                 ProposerPrivateKey, apvPrivateKey
-            }.OrderBy(x => x.ToAddress()).ToList();
+            }.OrderBy(x => x.Address).ToList();
 
             // 에러로 인하여 NineChroniclesNodeService 를 사용할 수 없습니다. https://git.io/JfS0M
             // 따라서 LibplanetNodeService로 비슷한 환경을 맞춥니다.

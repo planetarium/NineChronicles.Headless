@@ -29,7 +29,7 @@ public class MeadPledgeTypeTest
         Address? address = null;
         if (exist)
         {
-            address = new PrivateKey().ToAddress();
+            address = new PrivateKey().Address;
         }
         (Address?, bool, int) contract = (address, approved, mead);
         var queryResult = await ExecuteQueryAsync<MeadPledgeType>(query, source: contract);

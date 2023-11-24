@@ -224,7 +224,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         private static IEnumerable<object[]> GetMemberDataOfGarages()
         {
-            var agentAddr = new PrivateKey().ToAddress();
+            var agentAddr = new PrivateKey().Address;
             yield return new object[]
             {
                 agentAddr,

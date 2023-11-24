@@ -28,7 +28,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<AddressType>>(
                 name: "address",
                 description: "An address derived from the public-key.",
-                resolve: context => context.Source.ToAddress());
+                resolve: context => context.Source.Address);
         }
     }
 }

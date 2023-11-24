@@ -162,7 +162,7 @@ namespace NineChronicles.Headless.Executable.Commands
         {
             var key = new PrivateKey();
             string priv = ByteUtil.Hex(key.ByteArray);
-            string addr = key.ToAddress().ToString();
+            string addr = key.Address.ToString();
             string pub = ByteUtil.Hex(key.PublicKey.Format(compress: true));
 
             if (!noAddress && publicKey)
