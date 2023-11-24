@@ -50,7 +50,7 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
                 return BadRequest($"The addresses cannot exceed {maxAddressCount}.");
             }
 
-            foreach(string address in addresses)
+            foreach (string address in addresses)
             {
                 _accessControlService.AddTxQuota(new Address(address), quota);
             }
