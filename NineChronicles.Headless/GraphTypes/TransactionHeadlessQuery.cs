@@ -192,42 +192,25 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
+                    var txId = context.GetArgument<TxId>("txId");
+                    return TxResult(standaloneContext, txId);
+                });
 
-                    if (!(standaloneContext.Store is IStore store))
+            Field<NonNullGraphType<ListGraphType<TxResultType>>>(
+                name: "transactionResults",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<TxIdType>>>>
                     {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.Store)} was not set yet!");
+                        Name = "txIds",
+                        Description = "transaction ids."
                     }
-
-                    TxId txId = context.GetArgument<TxId>("txId");
-                    if (!(store.GetFirstTxIdBlockHashIndex(txId) is { } txExecutedBlockHash))
-                    {
-                        return blockChain.GetStagedTransactionIds().Contains(txId)
-                            ? new TxResult(TxStatus.STAGING, null, null, null, null, null)
-                            : new TxResult(TxStatus.INVALID, null, null, null, null, null);
-                    }
-
-                    try
-                    {
-                        TxExecution execution = blockChain.GetTxExecution(txExecutedBlockHash, txId);
-                        Block txExecutedBlock = blockChain[txExecutedBlockHash];
-                        return new TxResult(
-                            execution.Fail ? TxStatus.FAILURE : TxStatus.SUCCESS,
-                            txExecutedBlock.Index,
-                            txExecutedBlock.Hash.ToString(),
-                            execution.InputState,
-                            execution.OutputState,
-                            execution.ExceptionNames);
-                    }
-                    catch (Exception)
-                    {
-                        return new TxResult(TxStatus.INVALID, null, null, null, null, null);
-                    }
+                ),
+                resolve: context =>
+                {
+                    return context.GetArgument<List<TxId>>("txIds")
+                        .AsParallel()
+                        .AsOrdered()
+                        .Select(txId => TxResult(standaloneContext, txId));
                 }
             );
 
@@ -310,6 +293,45 @@ namespace NineChronicles.Headless.GraphTypes
                     return signedTransaction.Serialize();
                 }
             );
+        }
+
+        private static object? TxResult(StandaloneContext standaloneContext, TxId txId)
+        {
+            if (!(standaloneContext.BlockChain is BlockChain blockChain))
+            {
+                throw new ExecutionError(
+                    $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+            }
+
+            if (!(standaloneContext.Store is IStore store))
+            {
+                throw new ExecutionError(
+                    $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.Store)} was not set yet!");
+            }
+
+            if (!(store.GetFirstTxIdBlockHashIndex(txId) is { } txExecutedBlockHash))
+            {
+                return blockChain.GetStagedTransactionIds().Contains(txId)
+                    ? new TxResult(TxStatus.STAGING, null, null, null, null, null)
+                    : new TxResult(TxStatus.INVALID, null, null, null, null, null);
+            }
+
+            try
+            {
+                TxExecution execution = blockChain.GetTxExecution(txExecutedBlockHash, txId);
+                Block txExecutedBlock = blockChain[txExecutedBlockHash];
+                return new TxResult(
+                    execution.Fail ? TxStatus.FAILURE : TxStatus.SUCCESS,
+                    txExecutedBlock.Index,
+                    txExecutedBlock.Hash.ToString(),
+                    execution.InputState,
+                    execution.OutputState,
+                    execution.ExceptionNames);
+            }
+            catch (Exception)
+            {
+                return new TxResult(TxStatus.INVALID, null, null, null, null, null);
+            }
         }
 
         private IEnumerable<Block> ListBlocks(BlockChain chain, long from, long limit)
