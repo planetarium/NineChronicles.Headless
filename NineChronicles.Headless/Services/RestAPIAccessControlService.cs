@@ -29,10 +29,11 @@ namespace NineChronicles.Headless.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    string resultString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                    string? resultString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                     Log.ForContext("Source", nameof(IAccessControlService))
                         .Verbose("\"{Address}\" Tx Quota: {Quota}", address, resultString);
-                    return Convert.ToInt32(resultString);
+
+                    return resultString == null ? null : Convert.ToInt32(resultString);
                 }
             }
             catch (Exception ex)
