@@ -31,7 +31,7 @@ namespace NineChronicles.Headless.Services
                 {
                     string? resultString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                     Log.ForContext("Source", nameof(IAccessControlService))
-                        .Verbose("\"{Address}\" Tx Quota: {Quota}", address, resultString);
+                        .Debug("\"{Address}\" Tx Quota: {Quota}", address, resultString);
 
                     return resultString == null ? null : Convert.ToInt32(resultString);
                 }
