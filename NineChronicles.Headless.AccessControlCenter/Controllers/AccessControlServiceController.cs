@@ -10,6 +10,12 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
     [ApiController]
     public class AccessControlServiceController : ControllerBase
     {
+        public class BulkAddTxQuotaInput
+        {
+            public List<string> Addresses { get; set; } = new List<string>();
+            public int Quota  { get; set; }
+        }
+
         private readonly IMutableAccessControlService _accessControlService;
 
         public AccessControlServiceController(IMutableAccessControlService accessControlService)
@@ -37,22 +43,22 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
         }
 
         [HttpPost("entries/bulk-add-tx-quota")]
-        public ActionResult BulkAddTxQuota([FromBody] List<string> addresses, [FromBody] int quota)
+        public ActionResult BulkAddTxQuota([FromBody] BulkAddTxQuotaInput bulkAddTxQuotaInput)
         {
             var maxQuota = 10;
             var maxAddressCount = 100;
-            if (quota > maxQuota)
+            if (bulkAddTxQuotaInput.Quota > maxQuota)
             {
                 return BadRequest($"The quota cannot exceed {maxQuota}.");
             }
-            if (addresses.Count > maxAddressCount)
+            if (bulkAddTxQuotaInput.Addresses.Count > maxAddressCount)
             {
                 return BadRequest($"The addresses cannot exceed {maxAddressCount}.");
             }
 
-            foreach (string address in addresses)
+            foreach (string address in bulkAddTxQuotaInput.Addresses)
             {
-                _accessControlService.AddTxQuota(new Address(address), quota);
+                _accessControlService.AddTxQuota(new Address(address), bulkAddTxQuotaInput.Quota);
             }
             return Ok();
         }
