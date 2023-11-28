@@ -33,7 +33,7 @@ namespace NineChronicles.Headless.Services
                     Log.ForContext("Source", nameof(IAccessControlService))
                         .Debug("\"{Address}\" Tx Quota: {Quota}", address, resultString);
 
-                    return resultString == null ? null : Convert.ToInt32(resultString);
+                    return Convert.ToInt32(resultString);
                 }
             }
             catch (Exception ex)
