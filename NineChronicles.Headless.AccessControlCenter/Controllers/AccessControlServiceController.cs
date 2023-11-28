@@ -13,7 +13,8 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
         public class BulkAddTxQuotaInput
         {
             public List<string> Addresses { get; set; } = new List<string>();
-            public int Quota  { get; set; }
+
+            public int Quota { get; set; }
         }
 
         private readonly IMutableAccessControlService _accessControlService;
