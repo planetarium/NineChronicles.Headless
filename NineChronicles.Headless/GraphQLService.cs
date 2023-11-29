@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using AspNetCoreRateLimit;
 using GraphQL.Server;
 using GraphQL.Utilities;
@@ -7,6 +9,7 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using Libplanet.Crypto;
 using Libplanet.Explorer.Schemas;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -14,6 +17,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Middleware;
 using NineChronicles.Headless.Properties;
@@ -139,7 +143,24 @@ namespace NineChronicles.Headless
                                     builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
                 }
 
+                var issuer = Configuration.GetSection("Jwt")["Issuer"];
+                var key = Configuration.GetSection("Jwt")["Key"];
                 services.AddTransient<LocalAuthenticationMiddleware>();
+                services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                    .AddJwtBearer(options =>
+                    {
+                        options.TokenValidationParameters = new TokenValidationParameters
+                        {
+                            ValidateIssuer = true,
+                            ValidateAudience = true,
+                            ValidateLifetime = true,
+                            ValidateIssuerSigningKey = true,
+                            ValidIssuer = issuer,
+                            ValidAudience = issuer,
+                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+                        };
+                    });
+
 
                 services.AddHealthChecks();
 
@@ -188,6 +209,7 @@ namespace NineChronicles.Headless
                 }
 
                 app.UseMiddleware<HttpCaptureMiddleware>();
+                app.UseAuthentication();
 
                 app.UseMiddleware<LocalAuthenticationMiddleware>();
                 if (Configuration[NoCorsKey] is null)
