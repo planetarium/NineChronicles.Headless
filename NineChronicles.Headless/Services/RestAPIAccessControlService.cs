@@ -30,9 +30,6 @@ namespace NineChronicles.Headless.Services
                 if (response.IsSuccessStatusCode)
                 {
                     string? resultString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-                    Log.ForContext("Source", nameof(IAccessControlService))
-                        .Debug("\"{Address}\" Tx Quota: {Quota}", address, resultString);
-
                     return Convert.ToInt32(resultString);
                 }
             }
