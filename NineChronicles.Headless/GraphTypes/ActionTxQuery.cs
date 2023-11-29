@@ -35,9 +35,8 @@ namespace NineChronicles.Headless.GraphTypes
                     new TxInvoice(
                         genesisHash: blockChain.Genesis.Hash,
                         timestamp: timestamp,
-                        actions: new TxActionList(new[] { action.PlainValue }),
-                        gasLimit: gasLimit,
-                        maxGasPrice: maxGasPrice),
+                        actions: new TxActionList(new[] { action.PlainValue })
+                    ),
                     new TxSigningMetadata(publicKey: publicKey, nonce: nonce));
 
             return unsignedTransaction.SerializeUnsignedTx().ToArray();
