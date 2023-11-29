@@ -25,7 +25,7 @@ namespace NineChronicles.Headless.GraphTypes
                     $"{nameof(Headless.StandaloneContext)}.{nameof(Headless.StandaloneContext.BlockChain)} was not set yet!");
             }
 
-            Address signer = publicKey.ToAddress();
+            Address signer = publicKey.Address;
             long nonce = context.Parent!.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
             DateTimeOffset? timestamp = context.Parent!.GetArgument<DateTimeOffset?>("timestamp");
             long? gasLimit = action is ITransferAsset or ITransferAssets ? RequestPledge.DefaultRefillMead : 1L;

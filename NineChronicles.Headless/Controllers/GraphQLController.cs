@@ -71,7 +71,7 @@ namespace NineChronicles.Headless.Controllers
                 var privateKey = new PrivateKey(destArray);
                 StandaloneContext.NineChroniclesNodeService.MinerPrivateKey = privateKey;
                 var msg =
-                    $"Private key set ({StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress()}).";
+                    $"Private key set ({StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.Address}).";
                 Log.Information("SetPrivateKey: {Msg}", msg);
                 return Ok(msg);
             }
@@ -234,7 +234,7 @@ namespace NineChronicles.Headless.Controllers
                 Log.Information("PrivateKey is not set. please call SetPrivateKey() first.");
                 return;
             }
-            Address address = StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress();
+            Address address = StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.Address;
             var input = StandaloneContext.NineChroniclesNodeService.BlockChain.GetAccountState(eval.PreviousState);
             var output = StandaloneContext.NineChroniclesNodeService.BlockChain.GetAccountState(eval.OutputState);
             var diff = AccountDiff.Create(input, output);

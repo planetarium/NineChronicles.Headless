@@ -16,9 +16,9 @@ namespace NineChronicles.Headless.Tests
         public static readonly PrivateKey UserPrivateKey =
             new PrivateKey(ByteUtil.ParseHex("b934cb79757b1dec9f89caa01c4b791a6de6937dbecdc102fbdca217156cc2f5"));
 
-        public static readonly Address MinerAddress = new PrivateKey().PublicKey.ToAddress();
+        public static readonly Address MinerAddress = new PrivateKey().PublicKey.Address;
 
-        public static readonly Address UserAddress = UserPrivateKey.PublicKey.ToAddress();
+        public static readonly Address UserAddress = UserPrivateKey.PublicKey.Address;
 
         public static readonly Address AvatarAddress = new Address("983c3Fbfe8243a0e36D55C6C1aE26A7c8Bb6CBd4");
 

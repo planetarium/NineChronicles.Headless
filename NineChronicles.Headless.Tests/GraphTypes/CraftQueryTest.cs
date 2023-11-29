@@ -27,7 +27,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task EventConsumableItemCrafts()
         {
-            var avatarAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
             var eventScheduleId = 1;
             var eventConsumableItemRecipeId = 10;
             var slotIndex = 0;
@@ -61,7 +61,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task EventMaterialItemCrafts()
         {
-            var avatarAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
             var eventScheduleId = 1;
             var eventMaterialItemRecipeId = 10;
             var MaterialsToUse = new Dictionary<int, int>

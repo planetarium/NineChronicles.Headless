@@ -40,8 +40,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             var privateKey = new PrivateKey();
             var privateKey2 = new PrivateKey();
-            var recipient = privateKey.ToAddress();
-            var sender = privateKey2.ToAddress();
+            var recipient = privateKey.Address;
+            var sender = privateKey2.Address;
 
             // Create Action.
             var args = $"recipient: \"{recipient}\", sender: \"{sender}\", amount: \"17.5\", currency: CRYSTAL";
@@ -61,7 +61,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task SignTransaction_Raid(bool gas)
         {
             var privateKey = new PrivateKey();
-            var avatarAddress = privateKey.ToAddress();
+            var avatarAddress = privateKey.Address;
             var guid = Guid.NewGuid();
             string ids = $"[\"{guid}\"]";
 
@@ -87,7 +87,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task SignTransaction_ClaimRaidReward(bool gas)
         {
             var privateKey = new PrivateKey();
-            var avatarAddress = privateKey.ToAddress();
+            var avatarAddress = privateKey.Address;
             // Create Action.
             var args = $"avatarAddress: \"{avatarAddress}\"";
             object plainValue = await GetAction("claimRaidReward", args);
@@ -104,7 +104,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task SignTransaction_ClaimWorldBossKillReward(bool gas)
         {
             var privateKey = new PrivateKey();
-            var avatarAddress = privateKey.ToAddress();
+            var avatarAddress = privateKey.Address;
             // Create Action.
             var args = $"avatarAddress: \"{avatarAddress}\"";
             object plainValue = await GetAction("claimWorldBossKillReward", args);
@@ -121,7 +121,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task SignTransaction_PrepareRewardAssets(bool gas)
         {
             var privateKey = new PrivateKey();
-            var rewardPoolAddress = privateKey.ToAddress();
+            var rewardPoolAddress = privateKey.Address;
             // Create Action.
             var args = $"rewardPoolAddress: \"{rewardPoolAddress}\", assets:[{{ quantity: 100, decimalPlaces: 0, ticker: \"CRYSTAL\" }}]";
             object plainValue = await GetAction("prepareRewardAssets", args);
@@ -142,7 +142,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task SignTransaction_TransferAssets(bool gas)
         {
             var privateKey = new PrivateKey();
-            var sender = privateKey.ToAddress();
+            var sender = privateKey.Address;
             // Create Action.
             var args = $"sender: \"{sender}\", recipients: [{{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 18, ticker: \"CRYSTAL\" }} }}, {{ recipient: \"{sender}\", amount: {{ quantity: 100, decimalPlaces: 0, ticker: \"RUNE_FENRIR1\" }} }}]";
             object plainValue = await GetAction("transferAssets", args);
@@ -158,7 +158,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task SignTransaction_CreatePledge()
         {
             var privateKey = new PrivateKey();
-            var sender = privateKey.ToAddress();
+            var sender = privateKey.Address;
             // Create Action.
             var args = $"patronAddress: \"{MeadConfig.PatronAddress}\", agentAddresses: [\"{sender}\"]";
             object plainValue = await GetAction("createPledge", args);
@@ -184,7 +184,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             // Get Nonce.
             var nonceQuery = $@"query {{
-                    nextTxNonce(address: ""{privateKey.ToAddress()}"")
+                    nextTxNonce(address: ""{privateKey.Address}"")
                 }}";
             var nonceQueryResult =
                 await ExecuteQueryAsync<TransactionHeadlessQuery>(nonceQuery, standaloneContext: StandaloneContextFx);

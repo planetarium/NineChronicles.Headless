@@ -97,7 +97,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var protectedPrivateKey = ProtectedPrivateKey.Protect(privateKey, passphrase);
             KeyStore.Add(protectedPrivateKey);
 
-            var address = privateKey.ToAddress();
+            var address = privateKey.Address;
 
             var result = await ExecuteQueryAsync(
                 $"mutation {{ keyStore {{ revokePrivateKey(address: \"{address.ToHex()}\") {{ address }} }} }}");
@@ -140,7 +140,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     data["activationStatus"])["activateAccount"];
             Assert.True(result);
 
-            Address userAddress = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!.ToAddress();
+            Address userAddress = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!.Address;
             IValue? state = BlockChain.GetState(
                 userAddress.Derive(ActivationKey.DeriveKey)
             );
@@ -159,7 +159,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 (Dictionary)BlockChain.GetState(GoldCurrencyState.Address)
             ).Currency;
 
-            Address senderAddress = service.MinerPrivateKey!.ToAddress();
+            Address senderAddress = service.MinerPrivateKey!.Address;
             var store = service.Store;
             Block block = BlockChain.ProposeBlock(
                 service.MinerPrivateKey,
@@ -177,7 +177,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             );
 
             var recipientKey = new PrivateKey();
-            Address recipient = recipientKey.ToAddress();
+            Address recipient = recipientKey.Address;
             long txNonce = BlockChain.GetNextTxNonce(senderAddress);
 
             var args = $"recipient: \"{recipient}\", txNonce: {txNonce}, amount: \"17.5\"";
@@ -246,7 +246,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 (Dictionary)BlockChain.GetState(GoldCurrencyState.Address)
             ).Currency;
 
-            Address senderAddress = service.MinerPrivateKey!.ToAddress();
+            Address senderAddress = service.MinerPrivateKey!.Address;
 
             var store = service.Store;
             Block block = BlockChain.ProposeBlock(
@@ -265,7 +265,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             );
 
             var recipientKey = new PrivateKey();
-            Address recipient = recipientKey.ToAddress();
+            Address recipient = recipientKey.Address;
             var query = $"mutation {{ transferGold(recipient: \"{recipient}\", amount: \"17.5\") }}";
             ExecutionResult result = await ExecuteQueryAsync(query);
             var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
@@ -736,7 +736,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Block block = BlockChain.ProposeBlock(playerPrivateKey);
             BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
 
-            Assert.NotNull(BlockChain.GetState(playerPrivateKey.ToAddress()));
+            Assert.NotNull(BlockChain.GetState(playerPrivateKey.Address));
             var result = await ExecuteQueryAsync(query);
             var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             Assert.Null(result.Errors);
@@ -761,7 +761,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task ClaimMonsterCollectionReward()
         {
             var playerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
-            var avatarAddress = playerPrivateKey.ToAddress();
+            var avatarAddress = playerPrivateKey.Address;
             string query = $@"mutation {{
                 action {{
                     claimMonsterCollectionReward(avatarAddress: ""{avatarAddress}"")
@@ -781,7 +781,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Block block = BlockChain.ProposeBlock(playerPrivateKey);
             BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
 
-            Assert.NotNull(BlockChain.GetState(playerPrivateKey.ToAddress()));
+            Assert.NotNull(BlockChain.GetState(playerPrivateKey.Address));
 
             var result = await ExecuteQueryAsync(query);
             var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
@@ -824,9 +824,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         //         name = "avatar",
         //     };
         //     BlockChain.MakeTransaction(playerPrivateKey, new[] { createAvatar });
-        //     await BlockChain.MineBlock(playerPrivateKey.ToAddress());
+        //     await BlockChain.MineBlock(playerPrivateKey.Address);
         //
-        //     Assert.NotNull(BlockChain.GetState(playerPrivateKey.ToAddress()));
+        //     Assert.NotNull(BlockChain.GetState(playerPrivateKey.Address));
         //
         //     var result = await ExecuteQueryAsync(query);
         //     Assert.Null(result.Errors);
@@ -951,7 +951,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var console = new StringIOConsole();
             var txCommand = new TxCommand(console);
             var timeStamp = DateTimeOffset.UtcNow;
-            txCommand.Sign(ByteUtil.Hex(privateKey.ByteArray), BlockChain.GetNextTxNonce(privateKey.ToAddress()), ByteUtil.Hex(BlockChain.Genesis.Hash.ByteArray), timeStamp.ToString(), new[] { filePath });
+            txCommand.Sign(ByteUtil.Hex(privateKey.ByteArray), BlockChain.GetNextTxNonce(privateKey.Address), ByteUtil.Hex(BlockChain.Genesis.Hash.ByteArray), timeStamp.ToString(), new[] { filePath });
             var output = console.Out.ToString();
             output = output.Trim();
             var queryResult = await ExecuteQueryAsync(
@@ -965,7 +965,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var result = (bool)data["stageTx"];
             Assert.True(result);
 
-            IValue? state = BlockChain.GetState(privateKey.ToAddress().Derive(ActivationKey.DeriveKey));
+            IValue? state = BlockChain.GetState(privateKey.Address.Derive(ActivationKey.DeriveKey));
             Assert.True((Bencodex.Types.Boolean)state);
         }
 
@@ -989,7 +989,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var pk = new PrivateKey();
             ActionBase action = new ApprovePledge
             {
-                PatronAddress = new PrivateKey().ToAddress()
+                PatronAddress = new PrivateKey().Address
             };
             var tx = Transaction.Create(0, pk, BlockChain.Genesis.Hash, new[] { action.PlainValue });
             var payload = ByteUtil.Hex(tx.Serialize());
