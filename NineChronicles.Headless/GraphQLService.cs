@@ -29,10 +29,12 @@ namespace NineChronicles.Headless
     {
         public const string LocalPolicyKey = "LocalPolicy";
 
+        public const string JwtPolicyKey = "JwtPolicy";
+
         public const string NoCorsPolicyName = "AllowAllOrigins";
 
         public const string SecretTokenKey = "secret";
-
+        
         public const string NoCorsKey = "noCors";
 
         public const string UseMagicOnionKey = "useMagicOnion";
@@ -143,24 +145,8 @@ namespace NineChronicles.Headless
                                     builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
                 }
 
-                var issuer = Configuration.GetSection("Jwt")["Issuer"];
-                var key = Configuration.GetSection("Jwt")["Key"];
                 services.AddTransient<LocalAuthenticationMiddleware>();
-                services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                    .AddJwtBearer(options =>
-                    {
-                        options.TokenValidationParameters = new TokenValidationParameters
-                        {
-                            ValidateIssuer = true,
-                            ValidateAudience = true,
-                            ValidateLifetime = true,
-                            ValidateIssuerSigningKey = true,
-                            ValidIssuer = issuer,
-                            ValidAudience = issuer,
-                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
-                        };
-                    });
-
+                services.AddTransient<JwtAuthenticationMiddleware>();
 
                 services.AddHealthChecks();
 
@@ -182,12 +168,19 @@ namespace NineChronicles.Headless
                     .AddLibplanetExplorer()
                     .AddUserContextBuilder<UserContextBuilder>()
                     .AddGraphQLAuthorization(
-                        options => options.AddPolicy(
-                            LocalPolicyKey,
-                            p =>
-                                p.RequireClaim(
-                                    "role",
-                                    "Admin")));
+                        options =>
+                        {
+                            options.AddPolicy(
+                                LocalPolicyKey,
+                                p =>
+                                    p.RequireClaim(
+                                        "role",
+                                        "Admin"));
+                            options.AddPolicy(
+                                JwtPolicyKey,
+                                p =>
+                                    p.RequireClaim("issuer", "planetariumhq.com"));
+                        });
                 services.AddGraphTypes();
             }
 
@@ -209,9 +202,9 @@ namespace NineChronicles.Headless
                 }
 
                 app.UseMiddleware<HttpCaptureMiddleware>();
-                app.UseAuthentication();
 
                 app.UseMiddleware<LocalAuthenticationMiddleware>();
+                app.UseMiddleware<JwtAuthenticationMiddleware>();
                 if (Configuration[NoCorsKey] is null)
                 {
                     app.UseCors();
