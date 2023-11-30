@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using AspNetCoreRateLimit;
 using GraphQL.Server;
 using GraphQL.Utilities;
@@ -9,7 +7,6 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using Libplanet.Crypto;
 using Libplanet.Explorer.Schemas;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -17,7 +14,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Middleware;
 using NineChronicles.Headless.Properties;
@@ -34,7 +30,7 @@ namespace NineChronicles.Headless
         public const string NoCorsPolicyName = "AllowAllOrigins";
 
         public const string SecretTokenKey = "secret";
-        
+
         public const string NoCorsKey = "noCors";
 
         public const string UseMagicOnionKey = "useMagicOnion";
