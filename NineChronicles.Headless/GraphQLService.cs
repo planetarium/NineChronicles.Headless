@@ -135,6 +135,11 @@ namespace NineChronicles.Headless
                     services.Configure<MultiAccountManagerProperties>(Configuration.GetSection("MultiAccountManaging"));
                 }
 
+                if (Convert.ToBoolean(Configuration.GetSection("Jwt")["EnableJwtAuthentication"]))
+                {
+                    services.Configure<JwtOptions>(Configuration.GetSection("Jwt"));
+                }
+
                 if (!(Configuration[NoCorsKey] is null))
                 {
                     services.AddCors(
@@ -179,7 +184,7 @@ namespace NineChronicles.Headless
                             options.AddPolicy(
                                 JwtPolicyKey,
                                 p =>
-                                    p.RequireClaim("issuer", "planetariumhq.com"));
+                                    p.RequireClaim("iss", "planetariumhq.com"));
                         });
                 services.AddGraphTypes();
             }
