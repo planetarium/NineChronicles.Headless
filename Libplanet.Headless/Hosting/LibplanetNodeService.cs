@@ -126,7 +126,7 @@ namespace Libplanet.Headless.Hosting
                             pluginActionEvaluatorConfiguration.PluginPath,
                             pluginActionEvaluatorConfiguration.TypeName,
                             keyValueStore),
-                    RemoteActionEvaluatorConfiguration remoteActionEvaluatorConfiguration => 
+                    RemoteActionEvaluatorConfiguration remoteActionEvaluatorConfiguration =>
                         new RemoteActionEvaluator(
                             new Uri(remoteActionEvaluatorConfiguration.StateServiceEndpoint)),
                     DefaultActionEvaluatorConfiguration _ =>

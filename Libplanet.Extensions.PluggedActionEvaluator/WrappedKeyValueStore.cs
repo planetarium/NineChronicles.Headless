@@ -3,7 +3,7 @@ using Libplanet.Store.Trie;
 
 namespace Libplanet.Extensions.PluggedActionEvaluator
 {
-    public class WrappedKeyValueStore: IKeyValueStore
+    public class WrappedKeyValueStore : IKeyValueStore
     {
         private readonly IPluginKeyValueStore _pluginKeyValueStore;
 
