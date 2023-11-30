@@ -30,6 +30,10 @@ using NineChronicles.RPC.Shared.Exceptions;
 using Nito.AsyncEx;
 using Serilog;
 using Serilog.Events;
+using Libplanet.Common;
+using System.Security.Cryptography;
+using System.Text;
+using System.IO.Compression;
 
 namespace Libplanet.Headless.Hosting
 {
@@ -122,11 +126,8 @@ namespace Libplanet.Headless.Hosting
                 return actionEvaluatorConfiguration switch
                 {
                     PluggedActionEvaluatorConfiguration pluginActionEvaluatorConfiguration =>
-                        new PluggedActionEvaluator(
-                            pluginActionEvaluatorConfiguration.PluginPath,
-                            pluginActionEvaluatorConfiguration.TypeName,
-                            keyValueStore),
-                    RemoteActionEvaluatorConfiguration remoteActionEvaluatorConfiguration =>
+                        LoadPluggedActionEvaluator(pluginActionEvaluatorConfiguration, keyValueStore),
+                    RemoteActionEvaluatorConfiguration remoteActionEvaluatorConfiguration => 
                         new RemoteActionEvaluator(
                             new Uri(remoteActionEvaluatorConfiguration.StateServiceEndpoint)),
                     DefaultActionEvaluatorConfiguration _ =>
@@ -621,6 +622,26 @@ namespace Libplanet.Headless.Hosting
                 throw new ArgumentException(
                     $"At least, one of {nameof(LibplanetNodeServiceProperties.GenesisBlock)} or {nameof(LibplanetNodeServiceProperties.GenesisBlockPath)} must be set.");
             }
+        }
+
+        public PluggedActionEvaluator LoadPluggedActionEvaluator(PluggedActionEvaluatorConfiguration config, IKeyValueStore kvStore)
+        {
+            if (config.PluginUrl is { } url)
+            {
+                DownloadPluginActionEvaluator(config).RunSynchronously();
+            }
+
+            return new PluggedActionEvaluator(config.PluginPath, config.TypeName, kvStore);
+        }
+
+        public async Task DownloadPluginActionEvaluator(PluggedActionEvaluatorConfiguration config)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(config.PluginPath));
+            using var httpClient = new HttpClient();
+            var downloadPath = Path.Join(config.PluginPath + ".zip");
+            var extractPath = Path.Join(config.PluginPath);
+            await File.WriteAllBytesAsync(downloadPath, await httpClient.GetByteArrayAsync(config.PluginUrl));
+            ZipFile.ExtractToDirectory(downloadPath, extractPath);
         }
 
         public override void Dispose()

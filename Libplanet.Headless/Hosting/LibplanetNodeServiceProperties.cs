@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using Libplanet.Action;
 using Libplanet.Types.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Net;

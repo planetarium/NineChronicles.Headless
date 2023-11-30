@@ -258,6 +258,11 @@ namespace NineChronicles.Headless.Executable
                 return actionEvaluatorType switch
                 {
                     ActionEvaluatorType.Default => new DefaultActionEvaluatorConfiguration(),
+                    ActionEvaluatorType.PluggedActionEvaluator => new PluggedActionEvaluatorConfiguration
+                    {
+                        PluginUrl = configuration.GetValue<string>("PluginUrl"),
+                        PluginPath = configuration.GetValue<string>("PluginPath"),
+                    },
                     ActionEvaluatorType.RemoteActionEvaluator => new RemoteActionEvaluatorConfiguration
                     {
                         StateServiceEndpoint = configuration.GetValue<string>("StateServiceEndpoint"),
