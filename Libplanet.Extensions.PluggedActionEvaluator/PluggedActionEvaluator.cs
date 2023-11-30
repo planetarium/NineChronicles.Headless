@@ -5,6 +5,7 @@ using Libplanet.Action;
 using Libplanet.Action.Loader;
 using Libplanet.Common;
 using Libplanet.Extensions.ActionEvaluatorCommonComponents;
+using Libplanet.Store.Trie;
 using Libplanet.Types.Blocks;
 
 namespace Libplanet.Extensions.PluggedActionEvaluator
@@ -15,9 +16,9 @@ namespace Libplanet.Extensions.PluggedActionEvaluator
 
         public IActionLoader ActionLoader => throw new NotImplementedException();
 
-        public PluggedActionEvaluator(string pluginPath, string typeName, string stateStorePath)
+        public PluggedActionEvaluator(string pluginPath, string typeName, IKeyValueStore keyValueStore)
         {
-            _pluginActionEvaluator = CreateActionEvaluator(pluginPath, typeName, stateStorePath);
+            _pluginActionEvaluator = CreateActionEvaluator(pluginPath, typeName, keyValueStore);
         }
 
         public static Assembly LoadPlugin(string absolutePath)
@@ -26,10 +27,10 @@ namespace Libplanet.Extensions.PluggedActionEvaluator
             return loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(absolutePath)));
         }
 
-        public static IPluginActionEvaluator CreateActionEvaluator(Assembly assembly, string typeName, string stateStorePath)
+        public static IPluginActionEvaluator CreateActionEvaluator(Assembly assembly, string typeName, IPluginKeyValueStore keyValueStore)
         {
             if (assembly.GetType(typeName) is Type type &&
-                Activator.CreateInstance(type, args: stateStorePath) as IPluginActionEvaluator
+                Activator.CreateInstance(type, args: new WrappedKeyValueStore(keyValueStore)) as IPluginActionEvaluator
                 is IPluginActionEvaluator pluginActionEvaluator)
             {
                 return pluginActionEvaluator;
@@ -38,8 +39,8 @@ namespace Libplanet.Extensions.PluggedActionEvaluator
             throw new NullReferenceException("PluginActionEvaluator not found with given parameters");
         }
 
-        public static IPluginActionEvaluator CreateActionEvaluator(string pluginPath, string typeName, string stateStorePath)
-            => CreateActionEvaluator(LoadPlugin(pluginPath), typeName, stateStorePath);
+        public static IPluginActionEvaluator CreateActionEvaluator(string pluginPath, string typeName, IKeyValueStore keyValueStore)
+            => CreateActionEvaluator(LoadPlugin(pluginPath), typeName, new PluginKeyValueStore(keyValueStore));
 
         public IReadOnlyList<ICommittedActionEvaluation> Evaluate(IPreEvaluationBlock block, HashDigest<SHA256>? baseStateRootHash)
             => _pluginActionEvaluator.Evaluate(
