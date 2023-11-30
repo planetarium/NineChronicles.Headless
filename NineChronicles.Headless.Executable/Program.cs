@@ -275,6 +275,10 @@ namespace NineChronicles.Headless.Executable
                             return (range, actionEvaluatorConfiguration);
                         }).ToImmutableArray()
                     },
+                    ActionEvaluatorType.PluggedActionEvaluator => new PluggedActionEvaluatorConfiguration
+                    {
+                        PluginPath = configuration.GetValue<string>("PluginPath"),
+                    },
                     _ => throw new InvalidOperationException("Unexpected type."),
                 };
             }
