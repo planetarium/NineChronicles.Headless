@@ -18,50 +18,51 @@ public class JwtAuthenticationMiddleware : IMiddleware
 
     public JwtAuthenticationMiddleware(IConfiguration configuration)
     {
-        var _issuer = configuration.GetSection("Jwt")["Issuer"];
-        var _key = configuration.GetSection("Jwt")["Key"];
+        var jwtConfig = configuration.GetSection("Jwt");
+        var issuer = jwtConfig["Issuer"] ?? "";
+        var key = jwtConfig["Key"] ?? "";
         _validationParams = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidateAudience = true,
+            ValidateAudience = false,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = _issuer,
-            ValidAudience = _issuer,
-            IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(_key))
+            ValidIssuer = issuer,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key.PadRight(512/8, '\0')))
         };
     }
     
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         context.Request.Headers.TryGetValue("Authorization", out var authorization);
-        try
+        if (authorization.Count > 0)
         {
-            string[] headerValues = authorization[0].Split(" ");
-            string scheme = headerValues[0];
-            if (scheme == "Bearer")
+            try
             {
-                string token = headerValues[1];
-
-                _tokenHandler.ValidateToken(token, _validationParams, out SecurityToken validatedToken);
-                var jwt = (JwtSecurityToken)validatedToken;
-                foreach (var claim in jwt.Claims)
+                string[] headerValues = authorization[0].Split(" ");
+                string scheme = headerValues[0];
+                if (scheme == "Bearer")
                 {
-                    Console.WriteLine($"claim: {claim.Type}, {claim.Value}");
-                    context.User.AddIdentity(
-                        new ClaimsIdentity(
-                            new[]
-                            {
-                                new Claim(claim.Type, claim.Value)
-                            }));
+                    string token = headerValues[1];
+
+                    _tokenHandler.ValidateToken(token, _validationParams, out SecurityToken validatedToken);
+                    var jwt = (JwtSecurityToken)validatedToken;
+                    foreach (var claim in jwt.Claims)
+                    {
+                        context.User.AddIdentity(
+                            new ClaimsIdentity(
+                                new[]
+                                {
+                                    new Claim(claim.Type, claim.Value)
+                                }));
+                    }
                 }
             }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Authorization error {e.Message}");
+            }
         }
-        catch (Exception e)
-        {
-            Console.WriteLine($"Authorization error {e.Message}");
-        }
-
         await next(context);
     }
 }
