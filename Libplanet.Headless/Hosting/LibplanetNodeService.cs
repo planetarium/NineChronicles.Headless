@@ -15,6 +15,7 @@ using Libplanet.Blockchain.Renderers;
 using Libplanet.Types.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Extensions.ForkableActionEvaluator;
+using Libplanet.Extensions.PluggedActionEvaluator;
 using Libplanet.Extensions.RemoteActionEvaluator;
 using Libplanet.Net;
 using Libplanet.Net.Consensus;
@@ -120,19 +121,23 @@ namespace Libplanet.Headless.Hosting
             {
                 return actionEvaluatorConfiguration switch
                 {
-                    RemoteActionEvaluatorConfiguration remoteActionEvaluatorConfiguration => new RemoteActionEvaluator(
-                        new Uri(remoteActionEvaluatorConfiguration.StateServiceEndpoint)),
-                    DefaultActionEvaluatorConfiguration _ => new ActionEvaluator(
-                        _ => blockPolicy.BlockAction,
-                        stateStore: StateStore,
-                        actionTypeLoader: actionLoader
-                    ),
-                    ForkableActionEvaluatorConfiguration forkableActionEvaluatorConfiguration => new
-                        ForkableActionEvaluator(
-                            forkableActionEvaluatorConfiguration.Pairs.Select(pair => (
-                                (pair.Item1.Start, pair.Item1.End), BuildActionEvaluator(pair.Item2)
-                            ))
-                        ),
+                    PluggedActionEvaluatorConfiguration pluginActionEvaluatorConfiguration =>
+                        new PluggedActionEvaluator(
+                            pluginActionEvaluatorConfiguration.PluginPath,
+                            pluginActionEvaluatorConfiguration.TypeName,
+                            Path.Combine(Properties.StorePath, "states")),
+                    RemoteActionEvaluatorConfiguration remoteActionEvaluatorConfiguration => 
+                        new RemoteActionEvaluator(
+                            new Uri(remoteActionEvaluatorConfiguration.StateServiceEndpoint)),
+                    DefaultActionEvaluatorConfiguration _ =>
+                        new ActionEvaluator(
+                            _ => blockPolicy.BlockAction,
+                            stateStore: StateStore,
+                            actionTypeLoader: actionLoader),
+                    ForkableActionEvaluatorConfiguration forkableActionEvaluatorConfiguration =>
+                        new ForkableActionEvaluator(
+                            forkableActionEvaluatorConfiguration.Pairs.Select(
+                                pair => ((pair.Item1.Start, pair.Item1.End), BuildActionEvaluator(pair.Item2)))),
                     _ => throw new InvalidOperationException("Unexpected type."),
                 };
             }
