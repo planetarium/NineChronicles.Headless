@@ -96,7 +96,7 @@ namespace Libplanet.Headless.Hosting
 
             var iceServers = Properties.IceServers;
 
-            (Store, StateStore) = LoadStore(
+            (Store, StateStore, IKeyValueStore keyValueStore) = LoadStore(
                 Properties.StorePath,
                 Properties.StoreType,
                 Properties.StoreStatesCacheSize);
@@ -125,7 +125,7 @@ namespace Libplanet.Headless.Hosting
                         new PluggedActionEvaluator(
                             pluginActionEvaluatorConfiguration.PluginPath,
                             pluginActionEvaluatorConfiguration.TypeName,
-                            Path.Combine(Properties.StorePath, "states")),
+                            keyValueStore),
                     RemoteActionEvaluatorConfiguration remoteActionEvaluatorConfiguration => 
                         new RemoteActionEvaluator(
                             new Uri(remoteActionEvaluatorConfiguration.StateServiceEndpoint)),
@@ -307,7 +307,7 @@ namespace Libplanet.Headless.Hosting
             }
         }
 
-        protected (IStore, IStateStore) LoadStore(string path, string type, int statesCacheSize)
+        protected (IStore, IStateStore, IKeyValueStore) LoadStore(string path, string type, int statesCacheSize)
         {
             IStore store = null;
             if (type == "rocksdb")
@@ -351,7 +351,7 @@ namespace Libplanet.Headless.Hosting
 
             IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states"));
             IStateStore stateStore = new TrieStateStore(stateKeyValueStore);
-            return (store, stateStore);
+            return (store, stateStore, stateKeyValueStore);
         }
 
         private async Task StartSwarm(bool preload, CancellationToken cancellationToken)
