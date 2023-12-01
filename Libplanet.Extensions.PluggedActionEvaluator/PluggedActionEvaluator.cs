@@ -30,7 +30,7 @@ namespace Libplanet.Extensions.PluggedActionEvaluator
         public static IPluginActionEvaluator CreateActionEvaluator(Assembly assembly, string typeName, IPluginKeyValueStore keyValueStore)
         {
             if (assembly.GetType(typeName) is Type type &&
-                Activator.CreateInstance(type, args: new WrappedKeyValueStore(keyValueStore)) as IPluginActionEvaluator
+                Activator.CreateInstance(type, args: keyValueStore) as IPluginActionEvaluator
                 is IPluginActionEvaluator pluginActionEvaluator)
             {
                 return pluginActionEvaluator;
