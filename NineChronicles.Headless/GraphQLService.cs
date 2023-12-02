@@ -13,7 +13,6 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Middleware;
 using NineChronicles.Headless.Properties;
@@ -131,9 +130,11 @@ namespace NineChronicles.Headless
                     services.Configure<MultiAccountManagerProperties>(Configuration.GetSection("MultiAccountManaging"));
                 }
 
-                if (Convert.ToBoolean(Configuration.GetSection("Jwt")["EnableJwtAuthentication"]))
+                var jwtOptions = Configuration.GetSection("Jwt");
+                if (Convert.ToBoolean(jwtOptions["EnableJwtAuthentication"]))
                 {
-                    services.Configure<JwtOptions>(Configuration.GetSection("Jwt"));
+                    services.Configure<JwtOptions>(jwtOptions);
+                    services.AddTransient<JwtAuthenticationMiddleware>();
                 }
 
                 if (!(Configuration[NoCorsKey] is null))
@@ -147,7 +148,6 @@ namespace NineChronicles.Headless
                 }
 
                 services.AddTransient<LocalAuthenticationMiddleware>();
-                services.AddTransient<JwtAuthenticationMiddleware>();
 
                 services.AddHealthChecks();
 
@@ -180,7 +180,7 @@ namespace NineChronicles.Headless
                             options.AddPolicy(
                                 JwtPolicyKey,
                                 p =>
-                                    p.RequireClaim("iss", "planetariumhq.com"));
+                                    p.RequireClaim("iss", jwtOptions["Issuer"]));
                         });
                 services.AddGraphTypes();
             }
@@ -205,7 +205,11 @@ namespace NineChronicles.Headless
                 app.UseMiddleware<HttpCaptureMiddleware>();
 
                 app.UseMiddleware<LocalAuthenticationMiddleware>();
-                app.UseMiddleware<JwtAuthenticationMiddleware>();
+                if (Convert.ToBoolean(Configuration.GetSection("Jwt")["EnableJwtAuthentication"]))
+                {
+                    app.UseMiddleware<JwtAuthenticationMiddleware>();
+                }
+
                 if (Configuration[NoCorsKey] is null)
                 {
                     app.UseCors();
