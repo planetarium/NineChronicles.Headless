@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Bencodex;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
@@ -11,7 +12,6 @@ using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Arena;
-using Nekoyume.Battle;
 using Nekoyume.Extensions;
 using Nekoyume.Model.Arena;
 using Nekoyume.Model.EnumType;
@@ -32,6 +32,8 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public partial class StateQuery : ObjectGraphType<StateContext>
     {
+        private readonly Codec _codec = new Codec();
+
         public StateQuery()
         {
             Name = "StateQuery";
@@ -697,6 +699,22 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return result;
+                }
+            );
+
+            Field<StringGraphType>(
+                name: "cachedSheet",
+                arguments: new QueryArguments(
+                    new QueryArgument<StringGraphType>
+                    {
+                        Name = "tableName"
+                    }
+                ),
+                resolve: context =>
+                {
+                    var tableName = context.GetArgument<string>("tableName");
+                    var cacheKey = Addresses.GetSheetAddress(tableName).ToString();
+                    return context.Source.StateMemoryCache.SheetCache.GetSheet(cacheKey);
                 }
             );
         }
