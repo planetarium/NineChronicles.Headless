@@ -1490,5 +1490,34 @@ actionPoint: {actionPoint},
                 Assert.Null(action.Memo);
             }
         }
+
+        [Fact]
+        public async Task RuneSummon()
+        {
+            var random = new Random();
+            var avatarAddress = new PrivateKey().Address;
+            var groupId = random.Next(20001, 20002 + 1);
+            // FIXME: Change 10 to AuraSummon.SummonLimit
+            var summonCount = random.Next(1, 10 + 1);
+
+            var query = $@"{{
+                runeSummon(
+                    avatarAddress: ""{avatarAddress}"",
+                    groupId: {groupId},
+                    summonCount: {summonCount}
+                )
+            }}";
+
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["runeSummon"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<RuneSummon>(actionBase);
+
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            Assert.Equal(groupId, action.GroupId);
+            Assert.Equal(summonCount, action.SummonCount);
+        }
     }
 }
