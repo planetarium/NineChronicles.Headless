@@ -18,9 +18,9 @@ public class JwtAuthenticationMiddleware : IMiddleware
     private readonly JwtSecurityTokenHandler _tokenHandler = new JwtSecurityTokenHandler();
     private readonly TokenValidationParameters _validationParams;
 
-    public JwtAuthenticationMiddleware(IConfiguration configuration, ILogger logger)
+    public JwtAuthenticationMiddleware(IConfiguration configuration)
     {
-        _logger = logger;
+        _logger = Log.Logger.ForContext<JwtAuthenticationMiddleware>();
         var jwtConfig = configuration.GetSection("Jwt");
         var issuer = jwtConfig["Issuer"] ?? "";
         var key = jwtConfig["Key"] ?? "";
