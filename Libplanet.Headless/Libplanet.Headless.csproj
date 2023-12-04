@@ -25,5 +25,6 @@
     <ProjectReference Include="..\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared.csproj" />
     <ProjectReference Include="..\Lib9c\.Libplanet.Extensions.RemoteActionEvaluator\Libplanet.Extensions.RemoteActionEvaluator.csproj" />
     <ProjectReference Include="..\Libplanet.Extensions.ForkableActionEvaluator\Libplanet.Extensions.ForkableActionEvaluator.csproj" />
+    <ProjectReference Include="..\Libplanet.Extensions.PluggedActionEvaluator\Libplanet.Extensions.PluggedActionEvaluator.csproj" />
   </ItemGroup>
 </Project>
