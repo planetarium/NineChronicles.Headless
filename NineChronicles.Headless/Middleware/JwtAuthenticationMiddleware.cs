@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using Serilog;
 
 namespace NineChronicles.Headless.Middleware;
@@ -51,6 +52,13 @@ public class JwtAuthenticationMiddleware : IMiddleware
             catch (Exception e)
             {
                 _logger.Error($"Authorization error {e.Message}");
+                context.Response.StatusCode = 401;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(
+                    JsonConvert.SerializeObject(
+                        new { errpr = e.Message }
+                        ));
+                return;
             }
         }
         await next(context);

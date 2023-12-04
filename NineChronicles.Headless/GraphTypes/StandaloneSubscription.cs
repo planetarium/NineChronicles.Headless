@@ -26,6 +26,7 @@ using Nekoyume.TableData;
 using Libplanet.Blockchain;
 using Libplanet.Store;
 using Libplanet.Types.Tx;
+using Microsoft.Extensions.Configuration;
 using Serilog;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -128,10 +129,18 @@ namespace NineChronicles.Headless.GraphTypes
         private ISubject<Transaction> _transactionSubject = new Subject<Transaction>();
 
         private StandaloneContext StandaloneContext { get; }
+        
+        private IConfiguration Configuration { get; }
 
-        public StandaloneSubscription(StandaloneContext standaloneContext)
+        public StandaloneSubscription(StandaloneContext standaloneContext, IConfiguration configuration)
         {
             StandaloneContext = standaloneContext;
+            Configuration = configuration;
+            if (Convert.ToBoolean(configuration.GetSection("Jwt")["EnableJwtAuthentication"]))
+            {
+                this.AuthorizeWith(GraphQLService.JwtPolicyKey);
+            }
+
             AddField(new EventStreamFieldType
             {
                 Name = "tipChanged",
