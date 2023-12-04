@@ -343,6 +343,41 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Fact]
+        public async Task TransactionResults()
+        {
+            var privateKey = new PrivateKey();
+            // Because `AddActivatedAccount` doesn't need any prerequisites.
+            var action = new AddActivatedAccount(default);
+            Transaction tx = _blockChain.MakeTransaction(privateKey, new ActionBase[] { action });
+            var action2 = new DailyReward
+            {
+                avatarAddress = default
+            };
+            Transaction tx2 = _blockChain.MakeTransaction(new PrivateKey(), new ActionBase[] { action2 });
+            Block block = _blockChain.ProposeBlock(_proposer);
+            _blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, _proposer));
+            var queryFormat = @"query {{
+                transactionResults(txIds: [""{0}"", ""{1}""]) {{
+                    blockHash
+                    txStatus
+                }}
+            }}";
+            var result = await ExecuteAsync(string.Format(
+                queryFormat,
+                tx.Id.ToString(),
+                tx2.Id.ToString()
+            ));
+            Assert.NotNull(result.Data);
+            var transactionResults =
+                (object[])((Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!)["transactionResults"];
+            Assert.Equal(2, transactionResults.Length);
+            var txStatus = (string)((Dictionary<string, object>)transactionResults[0])["txStatus"];
+            Assert.Equal("SUCCESS", txStatus);
+            txStatus = (string)((Dictionary<string, object>)transactionResults[1])["txStatus"];
+            Assert.Equal("FAILURE", txStatus);
+        }
+
+        [Fact]
         public async Task NcTransactionsOnTip()
         {
             var privateKey = new PrivateKey();
