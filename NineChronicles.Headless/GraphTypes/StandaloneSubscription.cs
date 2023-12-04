@@ -129,7 +129,7 @@ namespace NineChronicles.Headless.GraphTypes
         private ISubject<Transaction> _transactionSubject = new Subject<Transaction>();
 
         private StandaloneContext StandaloneContext { get; }
-        
+
         private IConfiguration Configuration { get; }
 
         public StandaloneSubscription(StandaloneContext standaloneContext, IConfiguration configuration)
