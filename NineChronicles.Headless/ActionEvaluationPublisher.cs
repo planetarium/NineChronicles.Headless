@@ -118,7 +118,7 @@ namespace NineChronicles.Headless
                 {
                     var action = ev.Action;
                     var sheetAddress = Addresses.GetSheetAddress(action.TableName);
-                    _memoryCache.Set(sheetAddress.ToString(), (Text)action.TableCsv);
+                    _memoryCache.SetSheet(sheetAddress.ToString(), (Text)action.TableCsv, TimeSpan.FromMinutes(1));
                 }
             });
         }

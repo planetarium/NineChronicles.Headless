@@ -44,7 +44,6 @@ namespace NineChronicles.Headless
         private ActionEvaluationPublisher _publisher;
         private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
         private MemoryCache _memoryCache;
-        private readonly MessagePackSerializerOptions _lz4Options;
 
         public BlockChainService(
             BlockChain blockChain,
@@ -64,7 +63,6 @@ namespace NineChronicles.Headless
             _publisher = actionEvaluationPublisher;
             _sentryTraces = sentryTraces;
             _memoryCache = cache.SheetCache;
-            _lz4Options = MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
         }
 
         public UnaryResult<bool> PutTransaction(byte[] txBytes)
@@ -245,9 +243,8 @@ namespace NineChronicles.Headless
                 for (int i = 0; i < addresses.Count; i++)
                 {
                     var address = addresses[i];
-                    var value = _codec.Encode(values[i] ?? Null.Value);
-                    var compressed = MessagePackSerializer.Serialize(value, _lz4Options);
-                    _memoryCache.Set(address.ToString(), compressed);
+                    var value = values[i] ?? Null.Value;
+                    var compressed = _memoryCache.SetSheet(address.ToString(), value, TimeSpan.FromMinutes(1));
                     result.TryAdd(address.ToByteArray(), compressed);
                 }
             }
