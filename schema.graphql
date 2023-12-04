@@ -374,6 +374,16 @@ type ActionQuery {
     """The try count to enhance rune"""
     tryCount: Int
   ): ByteString!
+  runeSummon(
+    """Avatar address to get summoned items"""
+    avatarAddress: Address!
+
+    """Summon group id"""
+    groupId: Int!
+
+    """Count to summon. Must between 1 and 10."""
+    summonCount: Int!
+  ): ByteString!
   stake(
     """An amount to stake."""
     amount: BigInt
@@ -681,6 +691,16 @@ type ActionTxQuery {
 
     """The try count to enhance rune"""
     tryCount: Int
+  ): ByteString!
+  runeSummon(
+    """Avatar address to get summoned items"""
+    avatarAddress: Address!
+
+    """Summon group id"""
+    groupId: Int!
+
+    """Count to summon. Must between 1 and 10."""
+    summonCount: Int!
   ): ByteString!
   stake(
     """An amount to stake."""
