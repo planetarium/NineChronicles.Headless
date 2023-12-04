@@ -30,10 +30,10 @@ public class MemoryCacheExtensionsTest
         var value = (Text)csv;
         var compressed = MessagePackSerializer.Serialize(codec.Encode(value), lz4Options);
         cache.SetSheet(cacheKey, value, TimeSpan.FromMilliseconds(100));
-        Assert.True(cache.TryGetSheet(cacheKey, out byte[] cached));
+        Assert.True(cache.TryGetValue(cacheKey, out byte[] cached));
         Assert.Equal(compressed, cached);
         Assert.Equal(csv, cache.GetSheet(cacheKey));
         await Task.Delay(100);
-        Assert.False(cache.TryGetSheet(cacheKey, out byte[] _));
+        Assert.False(cache.TryGetValue(cacheKey, out byte[] _));
     }
 }
