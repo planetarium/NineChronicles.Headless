@@ -2220,6 +2220,7 @@ type StateQuery {
 
   """asset balance by currency."""
   balance(address: Address!, currency: CurrencyInput!): FungibleAssetValueWithCurrencyType!
+  cachedSheet(tableName: String!): String
   crystalMonsterCollectionMultiplierSheet: CrystalMonsterCollectionMultiplierSheetType
 
   """
