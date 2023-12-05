@@ -199,11 +199,8 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<ListGraphType<TxResultType>>>(
                 name: "transactionResults",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<TxIdType>>>>
-                    {
-                        Name = "txIds",
-                        Description = "transaction ids."
-                    }
+                    new QueryArgument<NonNullGraphType<ListGraphType<TxIdType>>>
+                    { Name = "txIds", Description = "transaction ids." }
                 ),
                 resolve: context =>
                 {

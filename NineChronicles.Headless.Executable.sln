@@ -60,25 +60,29 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libplanet.Extensions.Forkab
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".Libplanet", ".Libplanet", "{69F04D28-2B2E-454D-9B15-4D708EEEA8B5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Action", "Lib9c\.Libplanet\Libplanet.Action\Libplanet.Action.csproj", "{EB464A50-9976-4DEA-B170-F72C4FB73A9C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libplanet.Action", "Lib9c\.Libplanet\Libplanet.Action\Libplanet.Action.csproj", "{EB464A50-9976-4DEA-B170-F72C4FB73A9C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Common", "Lib9c\.Libplanet\Libplanet.Common\Libplanet.Common.csproj", "{95FB2620-540C-4498-9DAE-65198E89680C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libplanet.Common", "Lib9c\.Libplanet\Libplanet.Common\Libplanet.Common.csproj", "{95FB2620-540C-4498-9DAE-65198E89680C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Types", "Lib9c\.Libplanet\Libplanet.Types\Libplanet.Types.csproj", "{FC65B031-F6EE-4561-A365-47B6FDD1C114}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libplanet.Types", "Lib9c\.Libplanet\Libplanet.Types\Libplanet.Types.csproj", "{FC65B031-F6EE-4561-A365-47B6FDD1C114}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Store", "Lib9c\.Libplanet\Libplanet.Store\Libplanet.Store.csproj", "{2FF6DADC-5E7A-4F03-94D5-2CF50DED8C29}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libplanet.Store", "Lib9c\.Libplanet\Libplanet.Store\Libplanet.Store.csproj", "{2FF6DADC-5E7A-4F03-94D5-2CF50DED8C29}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Crypto", "Lib9c\.Libplanet\Libplanet.Crypto\Libplanet.Crypto.csproj", "{2C3AD392-38A1-4E07-B1F9-694EE4A1E0C0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libplanet.Crypto", "Lib9c\.Libplanet\Libplanet.Crypto\Libplanet.Crypto.csproj", "{2C3AD392-38A1-4E07-B1F9-694EE4A1E0C0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Extensions.ActionEvaluatorCommonComponents", "Lib9c\.Libplanet.Extensions.ActionEvaluatorCommonComponents\Libplanet.Extensions.ActionEvaluatorCommonComponents.csproj", "{A6922395-36E5-4B0A-BEBD-9BCE34D08722}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libplanet.Extensions.ActionEvaluatorCommonComponents", "Lib9c\.Libplanet.Extensions.ActionEvaluatorCommonComponents\Libplanet.Extensions.ActionEvaluatorCommonComponents.csproj", "{A6922395-36E5-4B0A-BEBD-9BCE34D08722}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lib9c.StateService.Shared", "Lib9c\.Lib9c.StateService.Shared\Lib9c.StateService.Shared.csproj", "{6A410F06-134A-46D9-8B39-381FA2ED861F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lib9c.StateService.Shared", "Lib9c\.Lib9c.StateService.Shared\Lib9c.StateService.Shared.csproj", "{6A410F06-134A-46D9-8B39-381FA2ED861F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Extensions.RemoteActionEvaluator", "Lib9c\.Libplanet.Extensions.RemoteActionEvaluator\Libplanet.Extensions.RemoteActionEvaluator.csproj", "{C41BA817-5D5B-42A5-9CF8-E8F29D1B71EF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libplanet.Extensions.RemoteActionEvaluator", "Lib9c\.Libplanet.Extensions.RemoteActionEvaluator\Libplanet.Extensions.RemoteActionEvaluator.csproj", "{C41BA817-5D5B-42A5-9CF8-E8F29D1B71EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Extensions.RemoteBlockChainStates", "Lib9c\.Libplanet.Extensions.RemoteBlockChainStates\Libplanet.Extensions.RemoteBlockChainStates.csproj", "{8F9E5505-C157-4DF3-A419-FF0108731397}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libplanet.Extensions.RemoteBlockChainStates", "Lib9c\.Libplanet.Extensions.RemoteBlockChainStates\Libplanet.Extensions.RemoteBlockChainStates.csproj", "{8F9E5505-C157-4DF3-A419-FF0108731397}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NineChronicles.Headless.AccessControlCenter", "NineChronicles.Headless.AccessControlCenter\NineChronicles.Headless.AccessControlCenter.csproj", "{162C0F4B-A1D9-4132-BC34-31F1247BC26B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NineChronicles.Headless.AccessControlCenter", "NineChronicles.Headless.AccessControlCenter\NineChronicles.Headless.AccessControlCenter.csproj", "{162C0F4B-A1D9-4132-BC34-31F1247BC26B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libplanet.Extensions.PluggedActionEvaluator", "Libplanet.Extensions.PluggedActionEvaluator\Libplanet.Extensions.PluggedActionEvaluator.csproj", "{DE91C36D-3999-47B6-A0BD-848C8EBA2A76}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lib9c.Plugin.Shared", "Lib9c\.Lib9c.Plugin.Shared\Lib9c.Plugin.Shared.csproj", "{3D32DA34-E619-429F-8421-848FF4F14417}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -723,6 +727,42 @@ Global
 		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.Release|x64.Build.0 = Release|Any CPU
 		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.Release|x86.ActiveCfg = Release|Any CPU
 		{162C0F4B-A1D9-4132-BC34-31F1247BC26B}.Release|x86.Build.0 = Release|Any CPU
+		{DE91C36D-3999-47B6-A0BD-848C8EBA2A76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE91C36D-3999-47B6-A0BD-848C8EBA2A76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE91C36D-3999-47B6-A0BD-848C8EBA2A76}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DE91C36D-3999-47B6-A0BD-848C8EBA2A76}.Debug|x64.Build.0 = Debug|Any CPU
+		{DE91C36D-3999-47B6-A0BD-848C8EBA2A76}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DE91C36D-3999-47B6-A0BD-848C8EBA2A76}.Debug|x86.Build.0 = Debug|Any CPU
+		{DE91C36D-3999-47B6-A0BD-848C8EBA2A76}.DevEx|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE91C36D-3999-47B6-A0BD-848C8EBA2A76}.DevEx|Any CPU.Build.0 = Debug|Any CPU
+		{DE91C36D-3999-47B6-A0BD-848C8EBA2A76}.DevEx|x64.ActiveCfg = Debug|Any CPU
+		{DE91C36D-3999-47B6-A0BD-848C8EBA2A76}.DevEx|x64.Build.0 = Debug|Any CPU
+		{DE91C36D-3999-47B6-A0BD-848C8EBA2A76}.DevEx|x86.ActiveCfg = Debug|Any CPU
+		{DE91C36D-3999-47B6-A0BD-848C8EBA2A76}.DevEx|x86.Build.0 = Debug|Any CPU
+		{DE91C36D-3999-47B6-A0BD-848C8EBA2A76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE91C36D-3999-47B6-A0BD-848C8EBA2A76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE91C36D-3999-47B6-A0BD-848C8EBA2A76}.Release|x64.ActiveCfg = Release|Any CPU
+		{DE91C36D-3999-47B6-A0BD-848C8EBA2A76}.Release|x64.Build.0 = Release|Any CPU
+		{DE91C36D-3999-47B6-A0BD-848C8EBA2A76}.Release|x86.ActiveCfg = Release|Any CPU
+		{DE91C36D-3999-47B6-A0BD-848C8EBA2A76}.Release|x86.Build.0 = Release|Any CPU
+		{3D32DA34-E619-429F-8421-848FF4F14417}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D32DA34-E619-429F-8421-848FF4F14417}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D32DA34-E619-429F-8421-848FF4F14417}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3D32DA34-E619-429F-8421-848FF4F14417}.Debug|x64.Build.0 = Debug|Any CPU
+		{3D32DA34-E619-429F-8421-848FF4F14417}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3D32DA34-E619-429F-8421-848FF4F14417}.Debug|x86.Build.0 = Debug|Any CPU
+		{3D32DA34-E619-429F-8421-848FF4F14417}.DevEx|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D32DA34-E619-429F-8421-848FF4F14417}.DevEx|Any CPU.Build.0 = Debug|Any CPU
+		{3D32DA34-E619-429F-8421-848FF4F14417}.DevEx|x64.ActiveCfg = Debug|Any CPU
+		{3D32DA34-E619-429F-8421-848FF4F14417}.DevEx|x64.Build.0 = Debug|Any CPU
+		{3D32DA34-E619-429F-8421-848FF4F14417}.DevEx|x86.ActiveCfg = Debug|Any CPU
+		{3D32DA34-E619-429F-8421-848FF4F14417}.DevEx|x86.Build.0 = Debug|Any CPU
+		{3D32DA34-E619-429F-8421-848FF4F14417}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D32DA34-E619-429F-8421-848FF4F14417}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D32DA34-E619-429F-8421-848FF4F14417}.Release|x64.ActiveCfg = Release|Any CPU
+		{3D32DA34-E619-429F-8421-848FF4F14417}.Release|x64.Build.0 = Release|Any CPU
+		{3D32DA34-E619-429F-8421-848FF4F14417}.Release|x86.ActiveCfg = Release|Any CPU
+		{3D32DA34-E619-429F-8421-848FF4F14417}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

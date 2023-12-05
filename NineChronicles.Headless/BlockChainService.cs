@@ -221,7 +221,7 @@ namespace NineChronicles.Headless
             foreach (var b in addressBytesList)
             {
                 var address = new Address(b);
-                if (_memoryCache.TryGetValue(address.ToString(), out byte[] cached))
+                if (_memoryCache.TryGetSheet(address.ToString(), out byte[] cached))
                 {
                     result.TryAdd(b, cached);
                 }

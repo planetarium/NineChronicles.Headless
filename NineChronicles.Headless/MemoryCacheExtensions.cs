@@ -18,9 +18,14 @@ public static class MemoryCacheExtensions
         return compressed;
     }
 
+    public static bool TryGetSheet<T>(this MemoryCache cache, string cacheKey, out T cached)
+    {
+        return cache.TryGetValue(cacheKey, out cached);
+    }
+
     public static string? GetSheet(this MemoryCache cache, string cacheKey)
     {
-        if (cache.TryGetValue(cacheKey, out byte[] cached))
+        if (cache.TryGetSheet(cacheKey, out byte[] cached))
         {
             return (Text)Codec.Decode(MessagePackSerializer.Deserialize<byte[]>(cached, Lz4Options));
         }

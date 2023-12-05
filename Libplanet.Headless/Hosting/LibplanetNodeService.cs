@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -15,6 +16,7 @@ using Libplanet.Blockchain.Renderers;
 using Libplanet.Types.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Extensions.ForkableActionEvaluator;
+using Libplanet.Extensions.PluggedActionEvaluator;
 using Libplanet.Extensions.RemoteActionEvaluator;
 using Libplanet.Net;
 using Libplanet.Net.Consensus;
@@ -95,7 +97,7 @@ namespace Libplanet.Headless.Hosting
 
             var iceServers = Properties.IceServers;
 
-            (Store, StateStore) = LoadStore(
+            (Store, StateStore, IKeyValueStore keyValueStore) = LoadStore(
                 Properties.StorePath,
                 Properties.StoreType,
                 Properties.StoreStatesCacheSize);
@@ -116,23 +118,28 @@ namespace Libplanet.Headless.Hosting
             }
 
             var blockChainStates = new BlockChainStates(Store, StateStore);
+
             IActionEvaluator BuildActionEvaluator(IActionEvaluatorConfiguration actionEvaluatorConfiguration)
             {
                 return actionEvaluatorConfiguration switch
                 {
-                    RemoteActionEvaluatorConfiguration remoteActionEvaluatorConfiguration => new RemoteActionEvaluator(
-                        new Uri(remoteActionEvaluatorConfiguration.StateServiceEndpoint)),
-                    DefaultActionEvaluatorConfiguration _ => new ActionEvaluator(
-                        _ => blockPolicy.BlockAction,
-                        stateStore: StateStore,
-                        actionTypeLoader: actionLoader
-                    ),
-                    ForkableActionEvaluatorConfiguration forkableActionEvaluatorConfiguration => new
-                        ForkableActionEvaluator(
-                            forkableActionEvaluatorConfiguration.Pairs.Select(pair => (
-                                (pair.Item1.Start, pair.Item1.End), BuildActionEvaluator(pair.Item2)
-                            ))
-                        ),
+                    PluggedActionEvaluatorConfiguration pluginActionEvaluatorConfiguration =>
+                        new PluggedActionEvaluator(
+                            ResolvePluginPath(pluginActionEvaluatorConfiguration.PluginPath),
+                            pluginActionEvaluatorConfiguration.TypeName,
+                            keyValueStore),
+                    RemoteActionEvaluatorConfiguration remoteActionEvaluatorConfiguration =>
+                        new RemoteActionEvaluator(
+                            new Uri(remoteActionEvaluatorConfiguration.StateServiceEndpoint)),
+                    DefaultActionEvaluatorConfiguration _ =>
+                        new ActionEvaluator(
+                            _ => blockPolicy.BlockAction,
+                            stateStore: StateStore,
+                            actionTypeLoader: actionLoader),
+                    ForkableActionEvaluatorConfiguration forkableActionEvaluatorConfiguration =>
+                        new ForkableActionEvaluator(
+                            forkableActionEvaluatorConfiguration.Pairs.Select(
+                                pair => ((pair.Item1.Start, pair.Item1.End), BuildActionEvaluator(pair.Item2)))),
                     _ => throw new InvalidOperationException("Unexpected type."),
                 };
             }
@@ -302,7 +309,7 @@ namespace Libplanet.Headless.Hosting
             }
         }
 
-        protected (IStore, IStateStore) LoadStore(string path, string type, int statesCacheSize)
+        protected (IStore, IStateStore, IKeyValueStore) LoadStore(string path, string type, int statesCacheSize)
         {
             IStore store = null;
             if (type == "rocksdb")
@@ -346,7 +353,7 @@ namespace Libplanet.Headless.Hosting
 
             IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states"));
             IStateStore stateStore = new TrieStateStore(stateKeyValueStore);
-            return (store, stateStore);
+            return (store, stateStore, stateKeyValueStore);
         }
 
         private async Task StartSwarm(bool preload, CancellationToken cancellationToken)
@@ -568,7 +575,7 @@ namespace Libplanet.Headless.Hosting
                     if (grace == count)
                     {
                         var message = "No any peers are connected even seed peers were given. " +
-                                     $"(grace: {grace}";
+                            $"(grace: {grace}";
                         Log.Error(message);
                         // _exceptionHandlerAction(RPCException.NetworkException, message);
                         Properties.NodeExceptionOccurred(NodeExceptionType.NoAnyPeer, message);
@@ -627,6 +634,32 @@ namespace Libplanet.Headless.Hosting
 
             (Store as IDisposable)?.Dispose();
             Log.Debug("Store disposed.");
+        }
+
+        private string ResolvePluginPath(string path) =>
+            Uri.IsWellFormedUriString(path, UriKind.Absolute)
+                ? DownloadPlugin(path).Result
+                : path;
+
+        private async Task<string> DownloadPlugin(string url)
+        {
+            var path = Path.Combine(Environment.CurrentDirectory, "plugins");
+            Directory.CreateDirectory(path);
+            var hashed = url.GetHashCode().ToString();
+            var logger = Log.ForContext("LibplanetNodeService", hashed);
+            using var httpClient = new HttpClient();
+            var downloadPath = Path.Join(path, hashed + ".zip");
+            var extractPath = Path.Join(path, hashed);
+            logger.Debug("Downloading...");
+            await File.WriteAllBytesAsync(
+                downloadPath,
+                await httpClient.GetByteArrayAsync(url, SwarmCancellationToken),
+                SwarmCancellationToken);
+            logger.Debug("Finished downloading.");
+            logger.Debug("Extracting...");
+            ZipFile.ExtractToDirectory(downloadPath, extractPath);
+            logger.Debug("Finished extracting.");
+            return Path.Combine(extractPath, "Lib9c.Plugin.dll");
         }
 
         // FIXME: Request libplanet provide default implementation.
