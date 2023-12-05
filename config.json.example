@@ -1,4 +1,5 @@
 {
+    "$schema": "./config.schema.json",
     "data": {
         "tablePath": "Lib9c/Lib9c/TableCSV"
     },
