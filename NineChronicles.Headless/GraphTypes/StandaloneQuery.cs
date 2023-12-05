@@ -31,6 +31,10 @@ namespace NineChronicles.Headless.GraphTypes
         public StandaloneQuery(StandaloneContext standaloneContext, IConfiguration configuration, ActionEvaluationPublisher publisher, StateMemoryCache stateMemoryCache)
         {
             bool useSecretToken = configuration[GraphQLService.SecretTokenKey] is { };
+            if (Convert.ToBoolean(configuration.GetSection("Jwt")["EnableJwtAuthentication"]))
+            {
+                this.AuthorizeWith(GraphQLService.JwtPolicyKey);
+            }
 
             Field<NonNullGraphType<StateQuery>>(name: "stateQuery", arguments: new QueryArguments(
                 new QueryArgument<ByteStringType>
