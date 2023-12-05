@@ -87,15 +87,18 @@ namespace NineChronicles.Headless.Executable.Commands
                 return action;
             }).ToList();
 
+#pragma warning disable S3358   // Extract ternary condition.
             Transaction tx = Transaction.Create(
                 nonce: nonce,
                 privateKey: new PrivateKey(ByteUtil.ParseHex(privateKey)),
                 genesisHash: BlockHash.FromString(genesisHash),
                 timestamp: DateTimeOffset.Parse(timestamp),
-                gasLimit: parsedActions.Any(a => a is ITransferAssets or ITransferAsset) ? 4 : 1,
+                gasLimit: maxGasPrice.HasValue
+                    ? parsedActions.Any(a => a is ITransferAssets or ITransferAsset) ? 4 : 1
+                    : null,
                 maxGasPrice: maxGasPrice.HasValue ? maxGasPrice.Value * Currencies.Mead : null,
-                actions: parsedActions.ToPlainValues()
-            );
+                actions: parsedActions.ToPlainValues());
+#pragma warning restore S3358
             byte[] raw = tx.Serialize();
 
             if (bytes)

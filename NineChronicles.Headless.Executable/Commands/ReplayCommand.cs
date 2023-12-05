@@ -145,19 +145,20 @@ namespace NineChronicles.Headless.Executable.Commands
                         outputSw?.WriteLine(msg);
                     }
 
+                    var inputState = actionEvaluation.InputContext.PreviousState;
+                    var outputState = actionEvaluation.OutputState;
+                    var accountDiff = AccountDiff.Create(inputState.Trie, outputState.Trie);
+
                     var states = actionEvaluation.OutputState;
                     var addressNum = 1;
-                    foreach (var (updatedAddress, updatedState) in states.Delta.States)
+                    foreach (var (updatedAddress, stateDiff) in accountDiff.StateDiffs)
                     {
                         if (verbose)
                         {
-                            msg = $"- action #{actionNum} updated address #{addressNum}({updatedAddress}) beginning..";
+                            msg = $"- action #{actionNum} updated value at address #{addressNum} ({updatedAddress})";
                             _console.Out.WriteLine(msg);
                             outputSw?.WriteLine(msg);
-                            msg = $"{updatedState}";
-                            _console.Out.WriteLine(msg);
-                            outputSw?.WriteLine(msg);
-                            msg = $"- action #{actionNum} updated address #{addressNum}({updatedAddress}) end..";
+                            msg = $"  from {stateDiff.Item1} to {stateDiff.Item2}";
                             _console.Out.WriteLine(msg);
                             outputSw?.WriteLine(msg);
                         }
@@ -643,13 +644,13 @@ namespace NineChronicles.Headless.Executable.Commands
                 _console.Out.WriteLine($"- action #{index + 1}: {type.Name}(\"{actionType}\")");
             }
 
-            var states = evaluation.OutputState.Delta.States;
-            var indexedStates = states.Select((x, i) => (x.Key, x.Value, i: i));
-            foreach (var (updatedAddress, updatedState, addressIndex) in indexedStates)
+            var inputState = evaluation.InputContext.PreviousState;
+            var outputState = evaluation.OutputState;
+            var accountDiff = AccountDiff.Create(inputState.Trie, outputState.Trie);
+            foreach (var (updatedAddress, stateDiff, addressIndex) in accountDiff.StateDiffs.Select((x, i) => (x.Key, x.Value, i)))
             {
-                _console.Out.WriteLine($"- action #{index + 1} updated address #{addressIndex + 1}({updatedAddress}) beginning...");
-                _console.Out.WriteLine(updatedState);
-                _console.Out.WriteLine($"- action #{index + 1} updated address #{addressIndex + 1}({updatedAddress}) end...");
+                _console.Out.WriteLine($"- action #{index + 1} updated value at address #{addressIndex + 1} ({updatedAddress})");
+                _console.Out.WriteLine($"  from {stateDiff.Item1} to {stateDiff.Item2}");
             }
         }
     }

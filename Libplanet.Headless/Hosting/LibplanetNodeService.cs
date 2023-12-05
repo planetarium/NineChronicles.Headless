@@ -17,7 +17,6 @@ using Libplanet.Types.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Extensions.ForkableActionEvaluator;
 using Libplanet.Extensions.PluggedActionEvaluator;
-using Libplanet.Extensions.RemoteActionEvaluator;
 using Libplanet.Net;
 using Libplanet.Net.Consensus;
 using Libplanet.Net.Options;
@@ -128,9 +127,6 @@ namespace Libplanet.Headless.Hosting
                             ResolvePluginPath(pluginActionEvaluatorConfiguration.PluginPath),
                             pluginActionEvaluatorConfiguration.TypeName,
                             keyValueStore),
-                    RemoteActionEvaluatorConfiguration remoteActionEvaluatorConfiguration =>
-                        new RemoteActionEvaluator(
-                            new Uri(remoteActionEvaluatorConfiguration.StateServiceEndpoint)),
                     DefaultActionEvaluatorConfiguration _ =>
                         new ActionEvaluator(
                             _ => blockPolicy.BlockAction,
