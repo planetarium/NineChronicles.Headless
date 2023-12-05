@@ -297,14 +297,8 @@ namespace NineChronicles.Headless.Executable.Commands
                     randomSeed: randomSeed);
             }
 
-            byte[] hashedSignature;
-            using (var hasher = SHA1.Create())
-            {
-                hashedSignature = hasher.ComputeHash(signature);
-            }
-
             byte[] preEvaluationHashBytes = preEvaluationHash.ToByteArray();
-            int seed = ActionEvaluator.GenerateRandomSeed(preEvaluationHashBytes, hashedSignature, signature, 0);
+            int seed = ActionEvaluator.GenerateRandomSeed(preEvaluationHashBytes, signature, 0);
 
             IAccount states = previousStates;
             foreach (IAction action in actions)

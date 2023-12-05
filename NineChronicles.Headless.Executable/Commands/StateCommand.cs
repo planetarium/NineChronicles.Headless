@@ -429,69 +429,6 @@ namespace NineChronicles.Headless.Executable.Commands
                 _dictionary.Keys;
         }
 
-        private static ImmutableDictionary<string, IValue> GetTotalDelta(
-            IReadOnlyList<IActionEvaluation> actionEvaluations,
-            Func<Address, string> toStateKey,
-            Func<(Address, Currency), string> toFungibleAssetKey,
-            Func<Currency, string> toTotalSupplyKey,
-            string validatorSetKey)
-        {
-            IImmutableSet<Address> stateUpdatedAddresses = actionEvaluations
-                .SelectMany(a => a.OutputState.Delta.StateUpdatedAddresses)
-                .ToImmutableHashSet();
-            IImmutableSet<(Address, Currency)> updatedFungibleAssets = actionEvaluations
-                .SelectMany(a => a.OutputState.Delta.UpdatedFungibleAssets)
-                .ToImmutableHashSet();
-            IImmutableSet<Currency> updatedTotalSupplies = actionEvaluations
-                .SelectMany(a => a.OutputState.Delta.UpdatedTotalSupplyCurrencies)
-                .ToImmutableHashSet();
-
-            if (actionEvaluations.Count == 0)
-            {
-                return ImmutableDictionary<string, IValue>.Empty;
-            }
-
-            IAccount lastStates = actionEvaluations[actionEvaluations.Count - 1].OutputState;
-
-            ImmutableDictionary<string, IValue> totalDelta =
-                stateUpdatedAddresses.ToImmutableDictionary(
-                    toStateKey,
-                    a => lastStates.GetState(a) ??
-                         throw new InvalidOperationException(
-                             "If it was updated well, the output states will include it also.")
-                ).SetItems(
-                    updatedFungibleAssets.Select(pair =>
-                        new KeyValuePair<string, IValue>(
-                            toFungibleAssetKey(pair),
-                            new Bencodex.Types.Integer(
-                                lastStates.GetBalance(pair.Item1, pair.Item2).RawValue
-                            )
-                        )
-                    )
-                );
-
-            foreach (var currency in updatedTotalSupplies)
-            {
-                if (lastStates.GetTotalSupply(currency).RawValue is { } rawValue)
-                {
-                    totalDelta = totalDelta.SetItem(
-                        toTotalSupplyKey(currency),
-                        new Bencodex.Types.Integer(rawValue)
-                    );
-                }
-            }
-
-            if (lastStates.GetValidatorSet() is { } validatorSet && validatorSet.Validators.Any())
-            {
-                totalDelta = totalDelta.SetItem(
-                    validatorSetKey,
-                    validatorSet.Bencoded
-                );
-            }
-
-            return totalDelta;
-        }
-
         private static string ToStateKey(Address address) => ByteUtil.Hex(address.ByteArray);
 
         private static string ToFungibleAssetKey(Address address, Currency currency) =>
