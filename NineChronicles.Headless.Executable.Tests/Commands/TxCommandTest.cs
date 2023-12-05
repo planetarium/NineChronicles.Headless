@@ -131,11 +131,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         {
             var timeStamp = DateTimeOffset.FromUnixTimeSeconds(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
             var hashHex = ByteUtil.Hex(_blockHash.ByteArray);
-            long? maxGasPrice = null;
-            if (gas)
-            {
-                maxGasPrice = 1L;
-            }
+            long? maxGasPrice = gas ? (long?)1L : null;
             _command.Sign(ByteUtil.Hex(_privateKey.ByteArray), txNonce, hashHex, timeStamp.ToString(),
                 new[] { filePath }, maxGasPrice: maxGasPrice);
             var output = _console.Out.ToString();
@@ -146,11 +142,12 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             Assert.Equal(_privateKey.Address, tx.Signer);
             Assert.Equal(timeStamp, tx.Timestamp);
             ActionBase action = (ActionBase)new NCActionLoader().LoadAction(1L, tx.Actions.Single());
-            long expectedGasLimit = 1L;
-            if (action is ITransferAsset || action is ITransferAssets)
-            {
-                expectedGasLimit = 4L;
-            }
+            long? expectedGasLimit = gas
+                ? action is ITransferAsset || action is ITransferAssets
+                    ? (long?)4L
+                    : (long?)1L
+                : null;
+
             Assert.Equal(expectedGasLimit, tx.GasLimit);
             if (gas)
             {
