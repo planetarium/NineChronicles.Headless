@@ -2429,7 +2429,7 @@ type TransactionHeadlessQuery {
   ): TxResultType!
   transactionResults(
     """transaction ids."""
-    txIds: [TxId!]!
+    txIds: [TxId]!
   ): [TxResultType]!
   unsignedTransaction(
     maxGasPrice: FungibleAssetValueInputType = {decimalPlaces: 18, minters: null, quantity: 1000000000000000000, ticker: "Mead"}
