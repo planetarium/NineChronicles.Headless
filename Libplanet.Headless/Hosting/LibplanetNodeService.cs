@@ -81,8 +81,7 @@ namespace Libplanet.Headless.Hosting
             Action<bool> preloadStatusHandlerAction,
             IActionLoader actionLoader,
             bool ignoreBootstrapFailure = false,
-            bool ignorePreloadFailure = false,
-            bool useRemoteActionEvaluator = false
+            bool ignorePreloadFailure = false
         )
         {
             if (blockPolicy is null)
