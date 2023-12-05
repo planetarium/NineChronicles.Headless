@@ -1,0 +1,103 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Genesis config",
+    "description": "Config file for headless genesis block generation",
+    "type": "object",
+    "properties": {
+        "data": {
+            "type": "object",
+            "properties": {
+                "tablePath": {
+                    "type": "string"
+                }
+            }
+        },
+        "currency": {
+            "type": "object",
+            "properties": {
+                "initialMinter": {
+                    "type": "string"
+                },
+                "initialCurrencyDeposit": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "address": {
+                                "type": "string"
+                            },
+                            "amount": {
+                                "type": "integer"
+                            },
+                            "start": {
+                                "type": "integer"
+                            },
+                            "end": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "admin": {
+            "type": "object",
+            "properties": {
+                "activate": {
+                    "type": "boolean"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "validUntil": {
+                    "type": "integer"
+                }
+            }
+        },
+        "initialValidatorSet": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "publicKey": {
+                        "type": "string"
+                    },
+                    "power": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "initialMeadConfigs": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "address": {
+                        "type": "string"
+                    },
+                    "amount": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "initialPledgeConfigs": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "agentAddress": {
+                        "type": "string"
+                    },
+                    "patronAddress": {
+                        "type": "string"
+                    },
+                    "mead": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}
