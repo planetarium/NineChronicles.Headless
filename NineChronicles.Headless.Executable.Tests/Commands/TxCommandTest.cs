@@ -73,8 +73,8 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
             var actionCommand = new ActionCommand(_console);
             actionCommand.TransferAsset(
-                _privateKey.ToAddress().ToHex(),
-                new PrivateKey().ToAddress().ToHex(),
+                _privateKey.Address.ToHex(),
+                new PrivateKey().Address.ToHex(),
                 Convert.ToString(amount),
                 filePath);
             Assert_Tx(1, filePath, gas);
@@ -143,7 +143,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var tx = Transaction.Deserialize(rawTx);
             Assert.Equal(txNonce, tx.Nonce);
             Assert.Equal(_blockHash, tx.GenesisHash);
-            Assert.Equal(_privateKey.ToAddress(), tx.Signer);
+            Assert.Equal(_privateKey.Address, tx.Signer);
             Assert.Equal(timeStamp, tx.Timestamp);
             ActionBase action = (ActionBase)new NCActionLoader().LoadAction(1L, tx.Actions.Single());
             long expectedGasLimit = 1L;

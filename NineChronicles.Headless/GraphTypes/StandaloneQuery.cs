@@ -263,7 +263,7 @@ namespace NineChronicles.Headless.GraphTypes
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.NineChroniclesNodeService)}.{nameof(StandaloneContext.NineChroniclesNodeService.MinerPrivateKey)} is null.");
                     }
 
-                    return standaloneContext.NineChroniclesNodeService.MinerPrivateKey.ToAddress();
+                    return standaloneContext.NineChroniclesNodeService.MinerPrivateKey.Address;
                 });
 
             Field<MonsterCollectionStatusType>(
@@ -295,7 +295,7 @@ namespace NineChronicles.Headless.GraphTypes
                                 $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.NineChroniclesNodeService)}.{nameof(StandaloneContext.NineChroniclesNodeService.MinerPrivateKey)} is null.");
                         }
 
-                        agentAddress = standaloneContext.NineChroniclesNodeService!.MinerPrivateKey!.ToAddress();
+                        agentAddress = standaloneContext.NineChroniclesNodeService!.MinerPrivateKey!.Address;
                     }
                     else
                     {

@@ -28,8 +28,6 @@ namespace NineChronicles.Headless.Services
             RedisValue result = _db.StringGet(address.ToString());
             if (!result.IsNull)
             {
-                Log.ForContext("Source", nameof(IAccessControlService))
-                    .Verbose("\"{Address}\" Tx Quota: {Quota}", address, result);
                 return Convert.ToInt32(result);
             }
 

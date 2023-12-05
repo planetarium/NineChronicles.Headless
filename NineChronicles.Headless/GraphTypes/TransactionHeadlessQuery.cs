@@ -140,7 +140,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var action = NCActionUtils.ToAction(plainValue);
 
                     var publicKey = new PublicKey(Convert.FromBase64String(context.GetArgument<string>("publicKey")));
-                    Address signer = publicKey.ToAddress();
+                    Address signer = publicKey.Address;
                     long nonce = context.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
                     UnsignedTx unsignedTransaction =
                         new UnsignedTx(
@@ -248,7 +248,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var action = NCActionUtils.ToAction(plainValue);
 
                     var publicKey = new PublicKey(ByteUtil.ParseHex(context.GetArgument<string>("publicKey")));
-                    Address signer = publicKey.ToAddress();
+                    Address signer = publicKey.Address;
                     long nonce = context.GetArgument<long?>("nonce") ?? blockChain.GetNextTxNonce(signer);
                     long? gasLimit = action is ITransferAsset or ITransferAssets ? RequestPledge.DefaultRefillMead : 1L;
                     FungibleAssetValue? maxGasPrice = context.GetArgument<FungibleAssetValue?>("maxGasPrice");

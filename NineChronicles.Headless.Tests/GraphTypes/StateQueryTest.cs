@@ -245,7 +245,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     0L, cache));
             Assert.Null(queryResult.Errors);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
-            Assert.Equal(cached, cache.SheetCache.TryGetSheet(cacheKey, out byte[] _));
+            Assert.Equal(cached, cache.SheetCache.TryGetValue(cacheKey, out _));
             if (cached)
             {
                 Assert.Equal(expected, data["cachedSheet"]);
@@ -258,7 +258,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         private static IEnumerable<object[]> GetMemberDataOfGarages()
         {
-            var agentAddr = new PrivateKey().ToAddress();
+            var agentAddr = new PrivateKey().Address;
             yield return new object[]
             {
                 agentAddr,

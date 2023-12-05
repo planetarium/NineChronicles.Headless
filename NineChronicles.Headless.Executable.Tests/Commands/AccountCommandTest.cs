@@ -40,7 +40,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         {
             IStore store = storeType.CreateStore(_storePath);
             var statesPath = Path.Combine(_storePath, "states");
-            Address targetAddress = new PrivateKey().ToAddress();
+            Address targetAddress = new PrivateKey().Address;
             int targetCurrency = 10000; // 100 NCG
             Block genesisBlock = GenesisHelper.MineGenesisBlock(targetAddress, targetCurrency);
             var stateKeyValueStore = new RocksDBKeyValueStore(statesPath);

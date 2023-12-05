@@ -21,8 +21,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task Query(string? memo)
         {
             Random random = new Random();
-            Address sender = new PrivateKey().ToAddress(),
-                recipient = new PrivateKey().ToAddress();
+            Address sender = new PrivateKey().Address,
+                recipient = new PrivateKey().Address;
 #pragma warning disable CS0618
             // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
             Currency currency = Currency.Legacy("NCG", 2, null);

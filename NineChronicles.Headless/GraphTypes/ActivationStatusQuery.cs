@@ -41,7 +41,7 @@ namespace NineChronicles.Headless.GraphTypes
                             throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
                         }
 
-                        Address userAddress = privateKey.ToAddress();
+                        Address userAddress = privateKey.Address;
                         Address activatedAddress = userAddress.Derive(ActivationKey.DeriveKey);
 
                         if (blockChain.GetState(activatedAddress) is Bencodex.Types.Boolean)

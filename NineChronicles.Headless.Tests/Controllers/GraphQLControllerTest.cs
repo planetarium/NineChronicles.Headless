@@ -132,7 +132,7 @@ namespace NineChronicles.Headless.Tests.Controllers
         [InlineData(false)]
         public void RemoveSubscribe(bool exist)
         {
-            var address = new PrivateKey().ToAddress();
+            var address = new PrivateKey().Address;
             if (exist)
             {
                 _standaloneContext.AgentAddresses[address] = (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(), new ReplaySubject<string>());

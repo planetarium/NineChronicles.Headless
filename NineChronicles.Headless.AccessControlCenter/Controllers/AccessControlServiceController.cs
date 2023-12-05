@@ -10,6 +10,13 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
     [ApiController]
     public class AccessControlServiceController : ControllerBase
     {
+        public class BulkAddTxQuotaInput
+        {
+            public List<string> Addresses { get; set; } = new List<string>();
+
+            public int Quota { get; set; }
+        }
+
         private readonly IMutableAccessControlService _accessControlService;
 
         public AccessControlServiceController(IMutableAccessControlService accessControlService)
@@ -20,11 +27,13 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
         [HttpGet("entries/{address}")]
         public ActionResult<int?> GetTxQuota(string address)
         {
-            return _accessControlService.GetTxQuota(new Address(address));
+            var result = _accessControlService.GetTxQuota(new Address(address));
+
+            return result != null ? result : NotFound();
         }
 
-        [HttpPost("entries/add-tx-quota/{address}/{quota:int}")]
-        public ActionResult AddTxQuota(string address, int quota)
+        [HttpPost("entries/add-tx-quota/{address}")]
+        public ActionResult AddTxQuota(string address, [FromBody] int quota)
         {
             var maxQuota = 10;
             if (quota > maxQuota)
@@ -33,6 +42,27 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
             }
 
             _accessControlService.AddTxQuota(new Address(address), quota);
+            return Ok();
+        }
+
+        [HttpPost("entries/bulk-add-tx-quota")]
+        public ActionResult BulkAddTxQuota([FromBody] BulkAddTxQuotaInput bulkAddTxQuotaInput)
+        {
+            var maxQuota = 10;
+            var maxAddressCount = 100;
+            if (bulkAddTxQuotaInput.Quota > maxQuota)
+            {
+                return BadRequest($"The quota cannot exceed {maxQuota}.");
+            }
+            if (bulkAddTxQuotaInput.Addresses.Count > maxAddressCount)
+            {
+                return BadRequest($"The addresses cannot exceed {maxAddressCount}.");
+            }
+
+            foreach (string address in bulkAddTxQuotaInput.Addresses)
+            {
+                _accessControlService.AddTxQuota(new Address(address), bulkAddTxQuotaInput.Quota);
+            }
             return Ok();
         }
 

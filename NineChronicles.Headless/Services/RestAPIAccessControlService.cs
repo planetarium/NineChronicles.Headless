@@ -1,0 +1,44 @@
+using System;
+using System.Net.Http;
+using Libplanet.Crypto;
+using Nekoyume.Blockchain;
+using Serilog;
+
+namespace NineChronicles.Headless.Services
+{
+    public class RestAPIAccessControlService : IAccessControlService
+    {
+        private readonly HttpClient _httpClient;
+        private readonly string _baseUrl;
+
+        public RestAPIAccessControlService(string baseUrl)
+        {
+            _baseUrl = baseUrl;
+            _httpClient = new HttpClient
+            {
+                Timeout = TimeSpan.FromMilliseconds(500)
+            };
+        }
+
+        public int? GetTxQuota(Address address)
+        {
+            try
+            {
+                string requestUri = $"{_baseUrl}/entries/{address}";
+                HttpResponseMessage response = _httpClient.GetAsync(requestUri).GetAwaiter().GetResult();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string resultString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                    return Convert.ToInt32(resultString);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error occurred while calling Rest API.");
+            }
+
+            return null;
+        }
+    }
+}
