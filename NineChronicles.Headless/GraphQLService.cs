@@ -13,7 +13,6 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Middleware;
 using NineChronicles.Headless.Properties;
@@ -24,6 +23,8 @@ namespace NineChronicles.Headless
     public class GraphQLService
     {
         public const string LocalPolicyKey = "LocalPolicy";
+
+        public const string JwtPolicyKey = "JwtPolicy";
 
         public const string NoCorsPolicyName = "AllowAllOrigins";
 
@@ -129,6 +130,13 @@ namespace NineChronicles.Headless
                     services.Configure<MultiAccountManagerProperties>(Configuration.GetSection("MultiAccountManaging"));
                 }
 
+                var jwtOptions = Configuration.GetSection("Jwt");
+                if (Convert.ToBoolean(jwtOptions["EnableJwtAuthentication"]))
+                {
+                    services.Configure<JwtOptions>(jwtOptions);
+                    services.AddTransient<JwtAuthenticationMiddleware>();
+                }
+
                 if (!(Configuration[NoCorsKey] is null))
                 {
                     services.AddCors(
@@ -161,12 +169,19 @@ namespace NineChronicles.Headless
                     .AddLibplanetExplorer()
                     .AddUserContextBuilder<UserContextBuilder>()
                     .AddGraphQLAuthorization(
-                        options => options.AddPolicy(
-                            LocalPolicyKey,
-                            p =>
-                                p.RequireClaim(
-                                    "role",
-                                    "Admin")));
+                        options =>
+                        {
+                            options.AddPolicy(
+                                LocalPolicyKey,
+                                p =>
+                                    p.RequireClaim(
+                                        "role",
+                                        "Admin"));
+                            options.AddPolicy(
+                                JwtPolicyKey,
+                                p =>
+                                    p.RequireClaim("iss", jwtOptions["Issuer"]));
+                        });
                 services.AddGraphTypes();
             }
 
@@ -190,6 +205,11 @@ namespace NineChronicles.Headless
                 app.UseMiddleware<HttpCaptureMiddleware>();
 
                 app.UseMiddleware<LocalAuthenticationMiddleware>();
+                if (Convert.ToBoolean(Configuration.GetSection("Jwt")["EnableJwtAuthentication"]))
+                {
+                    app.UseMiddleware<JwtAuthenticationMiddleware>();
+                }
+
                 if (Configuration[NoCorsKey] is null)
                 {
                     app.UseCors();

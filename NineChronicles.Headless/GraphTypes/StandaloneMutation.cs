@@ -28,6 +28,10 @@ namespace NineChronicles.Headless.GraphTypes
             {
                 this.AuthorizeWith(GraphQLService.LocalPolicyKey);
             }
+            else if (Convert.ToBoolean(configuration.GetSection("Jwt")["EnableJwtAuthentication"]))
+            {
+                this.AuthorizeWith(GraphQLService.JwtPolicyKey);
+            }
 
             Field<KeyStoreMutation>(
                 name: "keyStore",
