@@ -258,10 +258,6 @@ namespace NineChronicles.Headless.Executable
                 return actionEvaluatorType switch
                 {
                     ActionEvaluatorType.Default => new DefaultActionEvaluatorConfiguration(),
-                    ActionEvaluatorType.RemoteActionEvaluator => new RemoteActionEvaluatorConfiguration
-                    {
-                        StateServiceEndpoint = configuration.GetValue<string>("StateServiceEndpoint"),
-                    },
                     ActionEvaluatorType.ForkableActionEvaluator => new ForkableActionEvaluatorConfiguration
                     {
                         Pairs = (configuration.GetSection("Pairs") ??
@@ -274,6 +270,10 @@ namespace NineChronicles.Headless.Executable
                                 throw new KeyNotFoundException();
                             return (range, actionEvaluatorConfiguration);
                         }).ToImmutableArray()
+                    },
+                    ActionEvaluatorType.PluggedActionEvaluator => new PluggedActionEvaluatorConfiguration
+                    {
+                        PluginPath = configuration.GetValue<string>("PluginPath"),
                     },
                     _ => throw new InvalidOperationException("Unexpected type."),
                 };
