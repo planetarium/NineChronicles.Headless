@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet.Crypto;
+using MessagePack;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
 using Nekoyume;
@@ -86,9 +87,10 @@ public class ArenaParticipantsWorker : BackgroundService
                 ? new ArenaParticipants(participantsList)
                 : null;
         var cacheKey = $"{currentRoundData.ChampionshipId}_{currentRoundData.Round}";
+        var ex = TimeSpan.FromHours(1);
         if (participants is null)
         {
-            _cache.ArenaParticipantsCache.Set(cacheKey, new List<ArenaParticipant>());
+            _cache.ArenaParticipantsCache.SetArenaParticipants(cacheKey, new List<ArenaParticipant>(), ex);
             _logger.Information("[ArenaParticipantsWorker] participants({CacheKey}) is null. set empty list", cacheKey);
             return;
         }
@@ -268,14 +270,15 @@ public class ArenaParticipantsWorker : BackgroundService
                 avatarAddr,
                 score,
                 rank,
-                avatar,
+                avatar.NameWithHash,
+                avatar.level,
                 portraitId,
                 0,
                 0,
                 cp
             );
         }).ToList();
-        _cache.ArenaParticipantsCache.Set(cacheKey, result, TimeSpan.FromHours(1));
+        _cache.ArenaParticipantsCache.SetArenaParticipants(cacheKey, result, ex);
         sw.Stop();
         _logger.Information("[ArenaParticipantsWorker]Set Arena Cache[{CacheKey}/{TotalCount}]:  {Elapsed}", cacheKey, result.Count, sw.Elapsed);
     }

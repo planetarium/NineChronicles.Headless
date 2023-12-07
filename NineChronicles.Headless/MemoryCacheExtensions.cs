@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Bencodex;
 using Bencodex.Types;
 using MessagePack;
@@ -31,5 +32,23 @@ public static class MemoryCacheExtensions
         }
 
         return null;
+    }
+
+    public static byte[] SetArenaParticipants(this MemoryCache cache, string cacheKey,
+        List<ArenaParticipant> arenaParticipants, TimeSpan ex)
+    {
+        var compressed = MessagePackSerializer.Serialize(arenaParticipants, Lz4Options);
+        cache.Set(cacheKey, compressed, ex);
+        return compressed;
+    }
+
+    public static List<ArenaParticipant> GetArenaParticipants(this MemoryCache cache, string cacheKey)
+    {
+        if (cache.TryGetValue(cacheKey, out byte[] cached))
+        {
+            return MessagePackSerializer.Deserialize<List<ArenaParticipant>>(cached, Lz4Options);
+        }
+
+        return new List<ArenaParticipant>();
     }
 }

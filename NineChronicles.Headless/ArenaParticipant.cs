@@ -1,25 +1,40 @@
+using Lib9c.Formatters;
 using Libplanet.Crypto;
+using MessagePack;
 using Nekoyume.Model.State;
 
 namespace NineChronicles.Headless;
 
+[MessagePackObject]
 public class ArenaParticipant
 {
+    [Key(0)]
+    [MessagePackFormatter(typeof(AddressFormatter))]
     public readonly Address AvatarAddr;
+    [Key(1)]
     public readonly int Score;
+    [Key(2)]
     public readonly int Rank;
-    public int WinScore;
-    public int LoseScore;
-    public readonly int Cp;
-    public readonly int PortraitId;
+    [Key(3)]
     public readonly string NameWithHash;
+    [Key(4)]
     public readonly int Level;
+    [Key(5)]
+    public readonly int PortraitId;
+    [Key(6)]
+    public int WinScore;
+    [Key(7)]
+    public int LoseScore;
+    [Key(8)]
+    public readonly int Cp;
 
+    [SerializationConstructor]
     public ArenaParticipant(
         Address avatarAddr,
         int score,
         int rank,
-        AvatarState avatarState,
+        string nameWithHash,
+        int level,
         int portraitId,
         int winScore,
         int loseScore,
@@ -32,7 +47,7 @@ public class ArenaParticipant
         LoseScore = loseScore;
         Cp = cp;
         PortraitId = portraitId;
-        NameWithHash = avatarState.NameWithHash;
-        Level = avatarState.level;
+        NameWithHash = nameWithHash;
+        Level = level;
     }
 }

@@ -674,17 +674,15 @@ namespace NineChronicles.Headless.GraphTypes
                     var currentRoundData = context.Source.AccountState.GetSheet<ArenaSheet>().GetRoundByBlockIndex(blockIndex);
                     int playerScore = ArenaScore.ArenaScoreDefault;
                     var cacheKey = $"{currentRoundData.ChampionshipId}_{currentRoundData.Round}";
-                    List<ArenaParticipant> result = new();
                     var scoreAddr = ArenaScore.DeriveAddress(currentAvatarAddr, currentRoundData.ChampionshipId, currentRoundData.Round);
                     var scoreState = context.Source.GetState(scoreAddr);
                     if (scoreState is List scores)
                     {
                         playerScore = (Integer)scores[1];
                     }
-                    if (context.Source.StateMemoryCache.ArenaParticipantsCache.TryGetValue(cacheKey,
-                            out var cachedResult))
+                    List<ArenaParticipant> result = context.Source.StateMemoryCache.ArenaParticipantsCache.GetArenaParticipants(cacheKey);
+                    if (result.Any())
                     {
-                        result = (cachedResult as List<ArenaParticipant>)!;
                         foreach (var arenaParticipant in result)
                         {
                             var (win, lose, _) = ArenaHelper.GetScores(playerScore, arenaParticipant.Score);
