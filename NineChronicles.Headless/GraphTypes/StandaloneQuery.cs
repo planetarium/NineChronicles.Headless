@@ -184,6 +184,10 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Get the peer's block chain state",
                 resolve: context => new PeerChainStateQuery(standaloneContext));
 
+            Field<NonNullGraphType<ActionEvaluatorQuery>>(
+                name: "actionEvaluator",
+                resolve: context => new ActionEvaluatorQuery(standaloneContext));
+
             Field<NonNullGraphType<StringGraphType>>(
                 name: "goldBalance",
                 arguments: new QueryArguments(

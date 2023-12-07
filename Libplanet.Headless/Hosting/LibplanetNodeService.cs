@@ -45,6 +45,8 @@ namespace Libplanet.Headless.Hosting
 
         public readonly Swarm Swarm;
 
+        public readonly IActionEvaluator ActionEvaluator;
+
         public readonly LibplanetNodeServiceProperties Properties;
 
         public AsyncManualResetEvent BootstrapEnded { get; }
@@ -144,6 +146,7 @@ namespace Libplanet.Headless.Hosting
             }
 
             IActionEvaluator actionEvaluator = BuildActionEvaluator(properties.ActionEvaluatorConfiguration);
+            ActionEvaluator = actionEvaluator;
 
             if (Store.GetCanonicalChainId() is { })
             {

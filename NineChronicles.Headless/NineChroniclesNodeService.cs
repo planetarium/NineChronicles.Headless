@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Lib9c.Renderers;
+using Libplanet.Action;
 using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
@@ -14,7 +15,6 @@ using Libplanet.Headless;
 using Libplanet.Headless.Hosting;
 using Libplanet.Net;
 using Libplanet.Store;
-using Libplanet.Types.Blocks;
 using Microsoft.Extensions.Hosting;
 using Nekoyume.Blockchain;
 using Nekoyume.Blockchain.Policy;
@@ -46,6 +46,8 @@ namespace NineChronicles.Headless
         public AsyncManualResetEvent BootstrapEnded => NodeService.BootstrapEnded;
 
         public AsyncManualResetEvent PreloadEnded => NodeService.PreloadEnded;
+
+        public IActionEvaluator ActionEvaluator => NodeService.ActionEvaluator;
 
         public Swarm Swarm => NodeService.Swarm;
 
