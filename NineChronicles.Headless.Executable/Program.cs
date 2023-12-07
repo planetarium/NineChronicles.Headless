@@ -468,7 +468,7 @@ namespace NineChronicles.Headless.Executable
                     // worker
                     if (arenaParticipantsSync)
                     {
-                        services.AddHostedService(_ => new ArenaParticipantsWorker(arenaMemoryCache, standaloneContext, headlessConfig.ArenaParticipantsSyncInterval));
+                        services.AddHostedService(_ => new ArenaParticipantsWorker(standaloneContext, headlessConfig.ArenaParticipantsSyncInterval));
                     }
                     services.AddSingleton(arenaMemoryCache);
                 });

@@ -6,12 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet.Crypto;
-using MessagePack;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
 using Nekoyume;
 using Nekoyume.Action;
-using Nekoyume.Arena;
 using Nekoyume.Battle;
 using Nekoyume.Model.Arena;
 using Nekoyume.Model.EnumType;
@@ -19,7 +16,7 @@ using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
-using NineChronicles.Headless.Properties;
+using NineChronicles.Headless.Utils;
 using Serilog;
 using static Lib9c.SerializeKeys;
 
@@ -28,13 +25,11 @@ namespace NineChronicles.Headless;
 public class ArenaParticipantsWorker : BackgroundService
 {
     private ILogger _logger;
-    private StateMemoryCache _cache;
     private StandaloneContext _context;
     private int _interval;
 
-    public ArenaParticipantsWorker(StateMemoryCache memoryCache, StandaloneContext context, int interval)
+    public ArenaParticipantsWorker(StandaloneContext context, int interval)
     {
-        _cache = memoryCache;
         _context = context;
         _logger = Log.Logger.ForContext<ArenaParticipantsWorker>();
         _interval = interval;
@@ -90,7 +85,7 @@ public class ArenaParticipantsWorker : BackgroundService
         var ex = TimeSpan.FromHours(1);
         if (participants is null)
         {
-            _cache.ArenaParticipantsCache.SetArenaParticipants(cacheKey, new List<ArenaParticipant>(), ex);
+            ArenaParticipantsUtils.SetArenaParticipants(cacheKey, new List<ArenaParticipant>());
             _logger.Information("[ArenaParticipantsWorker] participants({CacheKey}) is null. set empty list", cacheKey);
             return;
         }
@@ -278,7 +273,7 @@ public class ArenaParticipantsWorker : BackgroundService
                 cp
             );
         }).ToList();
-        _cache.ArenaParticipantsCache.SetArenaParticipants(cacheKey, result, ex);
+        ArenaParticipantsUtils.SetArenaParticipants(cacheKey, result);
         sw.Stop();
         _logger.Information("[ArenaParticipantsWorker]Set Arena Cache[{CacheKey}/{TotalCount}]:  {Elapsed}", cacheKey, result.Count, sw.Elapsed);
     }

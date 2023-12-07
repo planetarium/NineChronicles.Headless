@@ -27,6 +27,7 @@ using NineChronicles.Headless.GraphTypes.States.Models;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
 using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
 using NineChronicles.Headless.GraphTypes.States.Models.Table;
+using NineChronicles.Headless.Utils;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -680,7 +681,7 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         playerScore = (Integer)scores[1];
                     }
-                    List<ArenaParticipant> result = context.Source.StateMemoryCache.ArenaParticipantsCache.GetArenaParticipants(cacheKey);
+                    List<ArenaParticipant> result = ArenaParticipantsUtils.GetArenaParticipants(cacheKey);
                     if (result.Any())
                     {
                         foreach (var arenaParticipant in result)
