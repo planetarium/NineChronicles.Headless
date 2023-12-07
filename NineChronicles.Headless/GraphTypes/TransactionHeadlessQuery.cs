@@ -205,28 +205,42 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     TxId txId = context.GetArgument<TxId>("txId");
-                    if (!(store.GetFirstTxIdBlockHashIndex(txId) is { } txExecutedBlockHash))
+
+                    Block? blockContainingTx = null;
+                    var blockHashCandidates = store.IterateTxIdBlockHashIndex(txId);
+                    foreach (var blockHashCandidate in blockHashCandidates)
+                    {
+                        blockContainingTx = blockChain[blockHashCandidate];
+                    }
+
+                    if (blockContainingTx is { } block)
+                    {
+                        if (blockChain.GetTxExecution(block.Hash, txId) is { } execution)
+                        {
+                            return new TxResult(
+                                execution.Fail ? TxStatus.FAILURE : TxStatus.SUCCESS,
+                                block.Index,
+                                block.Hash.ToString(),
+                                execution.InputState,
+                                execution.OutputState,
+                                execution.ExceptionNames);
+                        }
+                        else
+                        {
+                            return new TxResult(
+                                TxStatus.INCLUDED,
+                                block.Index,
+                                block.Hash.ToString(),
+                                null,
+                                null,
+                                null);
+                        }
+                    }
+                    else
                     {
                         return blockChain.GetStagedTransactionIds().Contains(txId)
                             ? new TxResult(TxStatus.STAGING, null, null, null, null, null)
                             : new TxResult(TxStatus.INVALID, null, null, null, null, null);
-                    }
-
-                    try
-                    {
-                        TxExecution execution = blockChain.GetTxExecution(txExecutedBlockHash, txId);
-                        Block txExecutedBlock = blockChain[txExecutedBlockHash];
-                        return new TxResult(
-                            execution.Fail ? TxStatus.FAILURE : TxStatus.SUCCESS,
-                            txExecutedBlock.Index,
-                            txExecutedBlock.Hash.ToString(),
-                            execution.InputState,
-                            execution.OutputState,
-                            execution.ExceptionNames);
-                    }
-                    catch (Exception)
-                    {
-                        return new TxResult(TxStatus.INVALID, null, null, null, null, null);
                     }
                 }
             );
