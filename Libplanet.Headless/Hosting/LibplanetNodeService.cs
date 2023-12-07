@@ -125,7 +125,8 @@ namespace Libplanet.Headless.Hosting
                         new PluggedActionEvaluator(
                             ResolvePluginPath(pluginActionEvaluatorConfiguration.PluginPath),
                             pluginActionEvaluatorConfiguration.TypeName,
-                            keyValueStore),
+                            keyValueStore,
+                            actionLoader),
                     DefaultActionEvaluatorConfiguration _ =>
                         new ActionEvaluator(
                             _ => blockPolicy.BlockAction,
@@ -134,7 +135,10 @@ namespace Libplanet.Headless.Hosting
                     ForkableActionEvaluatorConfiguration forkableActionEvaluatorConfiguration =>
                         new ForkableActionEvaluator(
                             forkableActionEvaluatorConfiguration.Pairs.Select(
-                                pair => ((pair.Item1.Start, pair.Item1.End), BuildActionEvaluator(pair.Item2)))),
+                                pair => (
+                                        (pair.Item1.Start, pair.Item1.End),
+                                        BuildActionEvaluator(pair.Item2))),
+                            actionLoader),
                     _ => throw new InvalidOperationException("Unexpected type."),
                 };
             }
