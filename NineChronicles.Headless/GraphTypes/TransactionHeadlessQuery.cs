@@ -352,7 +352,7 @@ namespace NineChronicles.Headless.GraphTypes
                 // FIXME: Try statement here is probably redundant.
                 // This part should not be run under normal circumstances.
                 // Should be removed when possible.
-                Log.Debug("Failed to properly fetch TxResult {Excetion}", e);
+                Log.Debug("Failed to properly fetch TxResult {Exception}.", e);
                 return new TxResult(TxStatus.INVALID, null, null, null, null, null);
             }
         }
