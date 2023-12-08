@@ -23,6 +23,7 @@ using Libplanet.Types.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Store;
 using Nekoyume.Action;
+using Serilog;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -306,42 +307,53 @@ namespace NineChronicles.Headless.GraphTypes
                     $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.Store)} was not set yet!");
             }
 
-            List<BlockHash> blockHashCandidates = store
-                .IterateTxIdBlockHashIndex(txId)
-                .Where(bhc => blockChain.ContainsBlock(bhc))
-                .ToList();
-            Block? blockContainingTx = blockHashCandidates.Any()
-                ? blockChain[blockHashCandidates.First()]
-                : null;
-
-            if (blockContainingTx is { } block)
+            try
             {
-                if (blockChain.GetTxExecution(block.Hash, txId) is { } execution)
+                List<BlockHash> blockHashCandidates = store
+                    .IterateTxIdBlockHashIndex(txId)
+                    .Where(bhc => blockChain.ContainsBlock(bhc))
+                    .ToList();
+                Block? blockContainingTx = blockHashCandidates.Any()
+                    ? blockChain[blockHashCandidates.First()]
+                    : null;
+
+                if (blockContainingTx is { } block)
                 {
-                    return new TxResult(
-                        execution.Fail ? TxStatus.FAILURE : TxStatus.SUCCESS,
-                        block.Index,
-                        block.Hash.ToString(),
-                        execution.InputState,
-                        execution.OutputState,
-                        execution.ExceptionNames);
+                    if (blockChain.GetTxExecution(block.Hash, txId) is { } execution)
+                    {
+                        return new TxResult(
+                            execution.Fail ? TxStatus.FAILURE : TxStatus.SUCCESS,
+                            block.Index,
+                            block.Hash.ToString(),
+                            execution.InputState,
+                            execution.OutputState,
+                            execution.ExceptionNames);
+                    }
+                    else
+                    {
+                        return new TxResult(
+                            TxStatus.INCLUDED,
+                            block.Index,
+                            block.Hash.ToString(),
+                            null,
+                            null,
+                            null);
+                    }
                 }
                 else
                 {
-                    return new TxResult(
-                        TxStatus.INCLUDED,
-                        block.Index,
-                        block.Hash.ToString(),
-                        null,
-                        null,
-                        null);
+                    return blockChain.GetStagedTransactionIds().Contains(txId)
+                        ? new TxResult(TxStatus.STAGING, null, null, null, null, null)
+                        : new TxResult(TxStatus.INVALID, null, null, null, null, null);
                 }
             }
-            else
+            catch (Exception e)
             {
-                return blockChain.GetStagedTransactionIds().Contains(txId)
-                    ? new TxResult(TxStatus.STAGING, null, null, null, null, null)
-                    : new TxResult(TxStatus.INVALID, null, null, null, null, null);
+                // FIXME: Try statement here is probably redundant.
+                // This part should not be run under normal circumstances.
+                // Should be removed when possible.
+                Log.Debug("Failed to properly fetch TxResult {Excetion}", e);
+                return new TxResult(TxStatus.INVALID, null, null, null, null, null);
             }
         }
 
