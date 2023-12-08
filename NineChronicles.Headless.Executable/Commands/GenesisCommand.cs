@@ -275,7 +275,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     initialValidators: initialValidatorSet.ToDictionary(
                         item => new PublicKey(ByteUtil.ParseHex(item.PublicKey)),
                         item => new BigInteger(item.Power)),
-                    actionBases: adminMeads.Concat(initialMeads).Concat(initialPledges).Concat(GetAppendingActionBases()),
+                    actionBases: adminMeads.Concat(initialMeads).Concat(initialPledges).Concat(GetAdditionalActionBases()),
                     goldCurrency: currency
                 );
 
@@ -320,7 +320,7 @@ namespace NineChronicles.Headless.Executable.Commands
             }
         }
 
-        private List<ActionBase> GetAppendingActionBases()
+        private List<ActionBase> GetAdditionalActionBases()
         {
             return new List<ActionBase>
             {
