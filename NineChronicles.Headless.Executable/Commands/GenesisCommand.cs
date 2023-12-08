@@ -239,14 +239,14 @@ namespace NineChronicles.Headless.Executable.Commands
         [Command(Description = "Mine a new genesis block")]
         public void Mine(
             [Argument("CONFIG", Description = "JSON config path to mine genesis block")]
-            string configPath)
+            string? configPath)
         {
             var options = new JsonSerializerOptions
             {
                 AllowTrailingCommas = true,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             };
-            string json = File.ReadAllText(configPath);
+            string json = File.ReadAllText(configPath ?? "./config.json");
             GenesisConfig genesisConfig = JsonSerializer.Deserialize<GenesisConfig>(json, options);
 
             try
@@ -275,7 +275,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     initialValidators: initialValidatorSet.ToDictionary(
                         item => new PublicKey(ByteUtil.ParseHex(item.PublicKey)),
                         item => new BigInteger(item.Power)),
-                    actionBases: adminMeads.Concat(initialMeads).Concat(initialPledges),
+                    actionBases: adminMeads.Concat(initialMeads).Concat(initialPledges).Concat(GetAppendingActionBases()),
                     goldCurrency: currency
                 );
 
@@ -318,6 +318,14 @@ namespace NineChronicles.Headless.Executable.Commands
             {
                 throw CoconaUtils.Error(e.Message);
             }
+        }
+
+        private List<ActionBase> GetAppendingActionBases()
+        {
+            return new List<ActionBase>
+            {
+
+            };
         }
 
 #pragma warning disable S3459
