@@ -306,28 +306,42 @@ namespace NineChronicles.Headless.GraphTypes
                     $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.Store)} was not set yet!");
             }
 
-            if (!(store.GetFirstTxIdBlockHashIndex(txId) is { } txExecutedBlockHash))
+            List<BlockHash> blockHashCandidates = store
+                .IterateTxIdBlockHashIndex(txId)
+                .Where(bhc => blockChain.ContainsBlock(bhc))
+                .ToList();
+            Block? blockContainingTx = blockHashCandidates.Any()
+                ? blockChain[blockHashCandidates.First()]
+                : null;
+
+            if (blockContainingTx is { } block)
+            {
+                if (blockChain.GetTxExecution(block.Hash, txId) is { } execution)
+                {
+                    return new TxResult(
+                        execution.Fail ? TxStatus.FAILURE : TxStatus.SUCCESS,
+                        block.Index,
+                        block.Hash.ToString(),
+                        execution.InputState,
+                        execution.OutputState,
+                        execution.ExceptionNames);
+                }
+                else
+                {
+                    return new TxResult(
+                        TxStatus.INCLUDED,
+                        block.Index,
+                        block.Hash.ToString(),
+                        null,
+                        null,
+                        null);
+                }
+            }
+            else
             {
                 return blockChain.GetStagedTransactionIds().Contains(txId)
                     ? new TxResult(TxStatus.STAGING, null, null, null, null, null)
                     : new TxResult(TxStatus.INVALID, null, null, null, null, null);
-            }
-
-            try
-            {
-                TxExecution execution = blockChain.GetTxExecution(txExecutedBlockHash, txId);
-                Block txExecutedBlock = blockChain[txExecutedBlockHash];
-                return new TxResult(
-                    execution.Fail ? TxStatus.FAILURE : TxStatus.SUCCESS,
-                    txExecutedBlock.Index,
-                    txExecutedBlock.Hash.ToString(),
-                    execution.InputState,
-                    execution.OutputState,
-                    execution.ExceptionNames);
-            }
-            catch (Exception)
-            {
-                return new TxResult(TxStatus.INVALID, null, null, null, null, null);
             }
         }
 
