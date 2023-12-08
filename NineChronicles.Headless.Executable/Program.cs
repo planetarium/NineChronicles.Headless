@@ -39,7 +39,9 @@ using Libplanet.Headless.Hosting;
 using Libplanet.Net.Transports;
 using Nekoyume.Action.Loader;
 using OpenTelemetry;
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 
 namespace NineChronicles.Headless.Executable
 {
@@ -453,6 +455,7 @@ namespace NineChronicles.Headless.Executable
                         TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner,
                     };
                 var arenaMemoryCache = new StateMemoryCache();
+                const string oltpEndpoint = @"http://opentelemetry-opentelemetry-collector.monitoring.svc.cluster.local:4318";
                 hostBuilder.ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => standaloneContext);
@@ -463,7 +466,21 @@ namespace NineChronicles.Headless.Executable
                                 .AddMeter("NineChronicles")
                                 .AddRuntimeInstrumentation()
                                 .AddAspNetCoreInstrumentation()
-                                .AddPrometheusExporter());
+                                .AddOtlpExporter(opt =>
+                                {
+                                    opt.Endpoint = new Uri(oltpEndpoint + "/metrics");
+                                    opt.Protocol = OtlpExportProtocol.HttpProtobuf;
+                                }))
+                        .WithTracing(
+                            builder => builder
+                                .AddAspNetCoreInstrumentation()
+                                .AddGrpcClientInstrumentation()
+                                .AddOtlpExporter(opt =>
+                                {
+                                    opt.Endpoint = new Uri(oltpEndpoint + "/tracing");
+                                    opt.Protocol = OtlpExportProtocol.HttpProtobuf;
+                                })
+                            );
 
                     // worker
                     if (arenaParticipantsSync)
