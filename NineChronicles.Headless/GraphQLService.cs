@@ -160,6 +160,11 @@ namespace NineChronicles.Headless
                             {
                                 Log.Error(context.Exception.ToString());
                                 Log.Error(context.ErrorMessage);
+
+                                context.Exception.Data["exception"] = context.Exception.GetType().ToString();
+                                context.Exception.Data["message"] = context.Exception.Message;
+                                context.Exception.Data["innerException"] = context.Exception.InnerException?.GetType().ToString();
+                                context.Exception.Data["stackTrace"] = context.Exception.StackTrace;
                             };
                         })
                     .AddSystemTextJson()
