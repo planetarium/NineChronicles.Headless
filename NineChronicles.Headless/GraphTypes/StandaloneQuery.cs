@@ -1,7 +1,11 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL;
@@ -28,6 +32,97 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneQuery : ObjectGraphType
     {
+        public static string Pretty (IValue value)
+        {
+            return PrettyInternal(value).Line;
+        }
+
+        public static (string Line, bool Single) PrettyInternal (IValue value)
+        {
+            switch (value)
+            {
+                case Null n:
+                    return (n.Inspect(false), true);
+                case Bencodex.Types.Boolean boolean:
+                    return (boolean.Inspect(false), true);
+                case Integer integer:
+                    return (integer.Inspect(false), true);
+                case Text text:
+                    var prettyText = text.Value
+                        .Replace("\\", "\\\\")
+                        .Replace("\n", "\\n")
+                        .Replace("\"", "\\\"");
+                    return ($"\"{prettyText}\"", true);
+                case Binary binary:
+                    return ($"x\"{ByteUtil.Hex(binary.ByteArray)}\"", true);
+                case List list:
+                    switch (list.Count)
+                    {
+                        case 0:
+                            return ("[]", true);
+
+                        case 1:
+                            IValue single = list.Single();
+                            if (single.Kind == ValueKind.List || single.Kind == ValueKind.Dictionary)
+                            {
+                                var middle = PrettyInternal(single);
+                                if (middle.Single)
+                                {
+                                    return ($"[{middle.Line}]", true);
+                                }
+                                else
+                                {
+                                    var padded = $"  {middle.Line.Replace("\n", "\n  ")},\n";
+                                    return ($"[\n{padded}]", false);
+                                }
+                            }
+                            else
+                            {
+                                return ($"[{PrettyInternal(single).Line}]", true);
+                            }
+
+                        default:
+                            IEnumerable<string> elements = list
+                                .Select(elem => $"  {PrettyInternal(elem).Line.Replace("\n", "\n  ")},\n");
+                            return ($"[\n{string.Join(string.Empty, elements)}]", false);
+                    }
+                case Dictionary dict:
+                    switch (dict.Count)
+                    {
+                        case 0:
+                            return ("{}", true);
+
+                        case 1:
+                            KeyValuePair<IKey, IValue> kv = dict.Single();
+                            if (kv.Value.Kind == ValueKind.List || kv.Value.Kind == ValueKind.Dictionary)
+                            {
+                                var middle = PrettyInternal(kv.Value);
+                                if (middle.Single)
+                                {
+                                    return ($"{{{PrettyInternal(kv.Key).Line}: {middle.Line}}}", true);
+                                }
+                                else
+                                {
+                                    var padded = $"  {PrettyInternal(kv.Key).Line}: {middle.Line.Replace("\n", "\n  ")},\n";
+                                    return ($"{{\n{padded}}}", false);
+                                }
+                            }
+                            else
+                            {
+                                return ($"{{{PrettyInternal(kv.Key).Line}: {PrettyInternal(kv.Value).Line}}}", true);
+                            }
+
+                        default:
+                            IEnumerable<string> elements = dict
+                                .Select(kv =>
+                                    $"  {PrettyInternal(kv.Key).Line}: {PrettyInternal(kv.Value).Line.Replace("\n", "\n  ")},\n");
+                            return ($"{{\n{string.Join(string.Empty, elements)}}}", false);
+                    }
+                default:
+                    throw new ArgumentException($"Unknown {nameof(IValue)} type encountered: {value.GetType()}");
+            }
+        }
+
         public StandaloneQuery(StandaloneContext standaloneContext, IConfiguration configuration, ActionEvaluationPublisher publisher, StateMemoryCache stateMemoryCache)
         {
             bool useSecretToken = configuration[GraphQLService.SecretTokenKey] is { };
@@ -63,11 +158,179 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
+            Field<StringGraphType>(
+                name: "stateByStateRootHash",
+                description: "Fetches the state at given address from the global state with given state root hash as its root hash.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "address",
+                        Description = "The address of the state to fetch."
+                    },
+                    new QueryArgument<ByteStringType>
+                    {
+                        Name = "stateRootHash",
+                        Description = "The state root hash of the state to fetch the value from."
+                    },
+                    new QueryArgument<StringGraphType>
+                    {
+                        Name = "encoding",
+                        DefaultValue = "hex",
+                        Description = "The type of encoding to use for returned value.  Possible values are \"hex\", \"inspect\", \"json\", and \"pretty\".  Set to \"hex\" by default."
+                    }
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    var address = context.GetArgument<Address>("address");
+                    var stateRootHashArray = context.GetArgument<byte[]>("stateRootHash");
+                    var encoding = context.GetArgument<string>("encoding");
+                    var stateRootHash = stateRootHashArray is { } array
+                        ? new HashDigest<SHA256>(array)
+                        : (HashDigest<SHA256>?)null;
+
+                    var accountState = blockChain.GetAccountState(stateRootHash);
+                    if (!accountState.Trie.Recorded)
+                    {
+                        var stateRootHashHex = stateRootHash is { } hash
+                            ? ByteUtil.Hex(hash.ByteArray)
+                            : null;
+                        throw new ExecutionError(
+                            $"No recorded state root found that corresponds to state root hash {stateRootHashHex}.");
+                    }
+
+                    var value = accountState.GetState(address);
+                    switch (encoding)
+                    {
+                        case "hex":
+                            var codec = new Codec();
+                            return value is { } v1
+                                ? ByteUtil.Hex(codec.Encode(v1))
+                                : null;
+                        case "inspection":
+                            return value is { } v2
+                                ? v2.Inspect(false)
+                                : null;
+                        case "json":
+                            if (value is { } v3)
+                            {
+                                var converter = new Bencodex.Json.BencodexJsonConverter();
+                                var buffer = new MemoryStream();
+                                var writer = new Utf8JsonWriter(buffer);
+                                converter.Write(writer, v3, new JsonSerializerOptions());
+                                return Encoding.UTF8.GetString(buffer.ToArray());
+                            }
+                            else
+                            {
+                                return null;
+                            }
+                        case "pretty":
+                            return value is { } v4
+                                ? Pretty(v4)
+                                : null;
+                        default:
+                            throw new ExecutionError(
+                                $"Unsupported encoding type: {encoding}");
+                    }
+                }
+            );
+
+            Field<StringGraphType>(
+                name: "stateByBlockHash",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "address",
+                        Description = "The address of the state to fetch."
+                    },
+                    new QueryArgument<ByteStringType>
+                    {
+                        Name = "stateRootHash",
+                        Description = "The block hash of the state to fetch the value from."
+                    },
+                    new QueryArgument<StringGraphType>
+                    {
+                        Name = "encoding",
+                        DefaultValue = "hex",
+                        Description = "The type of encoding to use for returned value.  Possible values are \"hex\", \"inspect\", \"json\", and \"pretty\".  Set to \"hex\" by default."
+                    }
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    var address = context.GetArgument<Address>("address");
+                    var blockHashByteArray = context.GetArgument<byte[]>("hash");
+                    var blockHash = blockHashByteArray is null
+                        ? blockChain.Tip.Hash
+                        : new BlockHash(blockHashByteArray);
+
+                    var encoding = context.GetArgument<string>("encoding");
+                    var accountState = blockChain.GetAccountState(blockHash);
+                    if (!accountState.Trie.Recorded)
+                    {
+                        throw new ExecutionError(
+                            $"No recorded state root found that corresponds to block hash {ByteUtil.Hex(blockHash.ByteArray)}.");
+                    }
+
+                    var value = accountState.GetState(address);
+                    switch (encoding)
+                    {
+                        case "hex":
+                            var codec = new Codec();
+                            return value is { } v1
+                                ? ByteUtil.Hex(codec.Encode(v1))
+                                : null;
+                        case "inspection":
+                            return value is { } v2
+                                ? v2.Inspect(false)
+                                : null;
+                        case "json":
+                            if (value is { } v3)
+                            {
+                                var converter = new Bencodex.Json.BencodexJsonConverter();
+                                var buffer = new MemoryStream();
+                                var writer = new Utf8JsonWriter(buffer);
+                                converter.Write(writer, v3, new JsonSerializerOptions());
+                                return Encoding.UTF8.GetString(buffer.ToArray());
+                            }
+                            else
+                            {
+                                return null;
+                            }
+                        case "pretty":
+                            return value is { } v4
+                                ? Pretty(v4)
+                                : null;
+                        default:
+                            throw new ExecutionError(
+                                $"Unsupported encoding type: {encoding}");
+                    }
+                }
+            );
+
             Field<ByteStringType>(
                 name: "state",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "The address of state to fetch from the chain." },
-                    new QueryArgument<ByteStringType> { Name = "hash", Description = "The hash of the block used to fetch state from chain." }
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "address",
+                        Description = "The address of state to fetch from the chain.",
+                    },
+                    new QueryArgument<ByteStringType>
+                    {
+                        Name = "hash",
+                        Description = "The hash of the block used to fetch state from chain.",
+                    }
                 ),
                 resolve: context =>
                 {
