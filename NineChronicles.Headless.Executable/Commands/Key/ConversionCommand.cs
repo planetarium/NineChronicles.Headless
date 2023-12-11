@@ -30,7 +30,7 @@ namespace NineChronicles.Headless.Executable.Commands.Key
             var privateKey = new PrivateKey(ByteUtil.ParseHex(privateKeyHex));
             if (address)
             {
-                _console.Out.WriteLine(privateKey.ToAddress().ToHex());
+                _console.Out.WriteLine(privateKey.Address.ToHex());
             }
 
             if (publicKey)

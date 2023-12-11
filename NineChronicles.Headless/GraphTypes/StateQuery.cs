@@ -705,7 +705,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<StringGraphType>(
                 name: "cachedSheet",
                 arguments: new QueryArguments(
-                    new QueryArgument<StringGraphType>
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
                         Name = "tableName"
                     }

@@ -508,7 +508,7 @@ namespace NineChronicles.Headless.GraphTypes
                         }
 
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
-                        Address agentAddress = service.MinerPrivateKey.ToAddress();
+                        Address agentAddress = service.MinerPrivateKey.Address;
                         AgentState agentState = new AgentState((Dictionary)service.BlockChain.GetState(agentAddress));
 
                         var action = new ClaimMonsterCollectionReward

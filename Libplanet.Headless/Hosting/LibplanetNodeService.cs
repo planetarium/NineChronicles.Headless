@@ -17,7 +17,6 @@ using Libplanet.Types.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Extensions.ForkableActionEvaluator;
 using Libplanet.Extensions.PluggedActionEvaluator;
-using Libplanet.Extensions.RemoteActionEvaluator;
 using Libplanet.Net;
 using Libplanet.Net.Consensus;
 using Libplanet.Net.Options;
@@ -82,8 +81,7 @@ namespace Libplanet.Headless.Hosting
             Action<bool> preloadStatusHandlerAction,
             IActionLoader actionLoader,
             bool ignoreBootstrapFailure = false,
-            bool ignorePreloadFailure = false,
-            bool useRemoteActionEvaluator = false
+            bool ignorePreloadFailure = false
         )
         {
             if (blockPolicy is null)
@@ -127,10 +125,8 @@ namespace Libplanet.Headless.Hosting
                         new PluggedActionEvaluator(
                             ResolvePluginPath(pluginActionEvaluatorConfiguration.PluginPath),
                             pluginActionEvaluatorConfiguration.TypeName,
-                            keyValueStore),
-                    RemoteActionEvaluatorConfiguration remoteActionEvaluatorConfiguration =>
-                        new RemoteActionEvaluator(
-                            new Uri(remoteActionEvaluatorConfiguration.StateServiceEndpoint)),
+                            keyValueStore,
+                            actionLoader),
                     DefaultActionEvaluatorConfiguration _ =>
                         new ActionEvaluator(
                             _ => blockPolicy.BlockAction,
@@ -139,7 +135,10 @@ namespace Libplanet.Headless.Hosting
                     ForkableActionEvaluatorConfiguration forkableActionEvaluatorConfiguration =>
                         new ForkableActionEvaluator(
                             forkableActionEvaluatorConfiguration.Pairs.Select(
-                                pair => ((pair.Item1.Start, pair.Item1.End), BuildActionEvaluator(pair.Item2)))),
+                                pair => (
+                                        (pair.Item1.Start, pair.Item1.End),
+                                        BuildActionEvaluator(pair.Item2))),
+                            actionLoader),
                     _ => throw new InvalidOperationException("Unexpected type."),
                 };
             }

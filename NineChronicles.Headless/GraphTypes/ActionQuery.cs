@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using Bencodex;
 using Bencodex.Types;
+using Google.Protobuf.WellKnownTypes;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet.Crypto;
@@ -170,10 +171,15 @@ namespace NineChronicles.Headless.GraphTypes
                         Description = "A string value to be transferred.",
                         Name = "amount",
                     },
-                    new QueryArgument<NonNullGraphType<CurrencyEnumType>>
+                    new QueryArgument<CurrencyEnumType>
                     {
-                        Description = "A currency type to be transferred.",
+                        Description = "A enum value of currency to be transferred.",
                         Name = "currency",
+                    },
+                    new QueryArgument<CurrencyInputType>
+                    {
+                        Description = "A currency to be transferred.",
+                        Name = "rawCurrency",
                     },
                     new QueryArgument<StringGraphType>
                     {
@@ -185,10 +191,30 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var sender = context.GetArgument<Address>("sender");
                     var recipient = context.GetArgument<Address>("recipient");
-                    var currencyEnum = context.GetArgument<CurrencyEnum>("currency");
-                    if (!standaloneContext.CurrencyFactory!.TryGetCurrency(currencyEnum, out var currency))
+                    var nullableRawCurrency = context.GetArgument<Currency?>("rawCurrency");
+                    var nullableCurrencyEnum = context.GetArgument<CurrencyEnum?>("currency");
+
+                    Currency currency;
+                    if (nullableRawCurrency is not null && nullableCurrencyEnum is not null)
                     {
-                        throw new ExecutionError($"Currency {currencyEnum} is not found.");
+                        throw new ExecutionError("Only one of currency and rawCurrency must be set.");
+                    }
+                    if (nullableCurrencyEnum is { } currencyEnum)
+                    {
+                        if (!standaloneContext.CurrencyFactory!.TryGetCurrency(currencyEnum, out var currencyFromEnum))
+                        {
+                            throw new ExecutionError($"Currency {currencyEnum} is not found.");
+                        }
+
+                        currency = currencyFromEnum;
+                    }
+                    else if (nullableRawCurrency is { } rawCurrency)
+                    {
+                        currency = rawCurrency;
+                    }
+                    else
+                    {
+                        throw new ExecutionError("Either currency or rawCurrency must be set.");
                     }
 
                     var amount = FungibleAssetValue.Parse(currency, context.GetArgument<string>("amount"));

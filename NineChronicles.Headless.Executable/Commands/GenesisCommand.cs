@@ -57,7 +57,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 {
                     new()
                     {
-                        Address = initialMinter.ToAddress(),
+                        Address = initialMinter.Address,
                         AmountPerBlock = DefaultCurrencyValue,
                         StartBlock = 0,
                         EndBlock = 0,
@@ -88,7 +88,7 @@ namespace NineChronicles.Headless.Executable.Commands
                                        $"Give initial {DefaultCurrencyValue} currency to InitialMinter");
                 initialDepositList.Add(new GoldDistribution
                 {
-                    Address = initialMinter.ToAddress(),
+                    Address = initialMinter.Address,
                     AmountPerBlock = DefaultCurrencyValue,
                     StartBlock = 0,
                     EndBlock = 0
@@ -101,7 +101,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
 #pragma warning disable CS0618
             // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
-            currency = Currency.Legacy("NCG", 2, minters: config.Value.AllowMint ? null : ImmutableHashSet.Create(initialMinter.ToAddress()));
+            currency = Currency.Legacy("NCG", 2, minters: config.Value.AllowMint ? null : ImmutableHashSet.Create(initialMinter.Address));
 #pragma warning restore CS0618
         }
 
@@ -130,7 +130,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 if (string.IsNullOrEmpty(config.Value.Address))
                 {
                     _console.Out.WriteLine("Admin address not provided. Give admin privilege to initialMinter");
-                    adminAddress = initialMinter.ToAddress();
+                    adminAddress = initialMinter.Address;
                 }
                 else
                 {
@@ -303,7 +303,7 @@ namespace NineChronicles.Headless.Executable.Commands
                         File.WriteAllText("initial_deposit.csv",
                             "Address,PrivateKey,AmountPerBlock,StartBlock,EndBlock\n");
                         File.AppendAllText("initial_deposit.csv",
-                            $"{initialMinter.ToAddress()},{ByteUtil.Hex(initialMinter.ByteArray)},{DefaultCurrencyValue},0,0");
+                            $"{initialMinter.Address},{ByteUtil.Hex(initialMinter.ByteArray)},{DefaultCurrencyValue},0,0");
                     }
                     else
                     {

@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using Bencodex.Types;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
+using Libplanet.Action.State;
 using Libplanet.Types.Blocks;
 using Libplanet.Common;
 using Libplanet.Crypto;
@@ -19,7 +20,7 @@ public class ForkableActionEvaluatorTest
         {
             ((0L, 100L), new PreActionEvaluator()),
             ((101L, long.MaxValue), new PostActionEvaluator()),
-        });
+        }, new SingleActionLoader(typeof(MockAction)));
 
         Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(0), null)).Action);
         Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(99), null)).Action);
@@ -36,25 +37,25 @@ public class ForkableActionEvaluatorTest
             {
                 ((0L, 100L), new PreActionEvaluator()),
                 ((99L, long.MaxValue), new PostActionEvaluator()),
-            }));
+            }, new SingleActionLoader(typeof(MockAction))));
         Assert.Throws<ArgumentOutOfRangeException>(() => new ForkableActionEvaluator(
             new ((long, long), IActionEvaluator)[]
             {
                 ((0L, 100L), new PreActionEvaluator()),
                 ((100L, long.MaxValue), new PostActionEvaluator()),
-            }));
+            }, new SingleActionLoader(typeof(MockAction))));
         Assert.Throws<ArgumentOutOfRangeException>(() => new ForkableActionEvaluator(
             new ((long, long), IActionEvaluator)[]
             {
                 ((50L, 100L), new PreActionEvaluator()),
                 ((101L, long.MaxValue), new PostActionEvaluator()),
-            }));
+            }, new SingleActionLoader(typeof(MockAction))));
         Assert.Throws<ArgumentOutOfRangeException>(() => new ForkableActionEvaluator(
             new ((long, long), IActionEvaluator)[]
             {
                 ((0L, 100L), new PreActionEvaluator()),
                 ((101L, long.MaxValue - 1), new PostActionEvaluator()),
-            }));
+            }, new SingleActionLoader(typeof(MockAction))));
     }
 }
 
@@ -73,7 +74,6 @@ class PostActionEvaluator : IActionEvaluator
                     default,
                     0,
                     0,
-                    false,
                     default,
                     0,
                     false),
@@ -97,13 +97,23 @@ class PreActionEvaluator : IActionEvaluator
                     default,
                     0,
                     0,
-                    false,
                     default,
                     0,
                     false),
                 default)
         };
     }
+}
+
+class MockAction : IAction
+{
+    public IValue PlainValue => default(Null);
+
+    public void LoadPlainValue(IValue plainValue)
+    {
+    }
+
+    public IAccount Execute(IActionContext context) => context.PreviousState;
 }
 
 class MockBlock : IPreEvaluationBlock

@@ -116,8 +116,8 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var recipientPrivateKey = new PrivateKey();
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
             var resultCode = _command.TransferAsset(
-                senderPrivateKey.ToAddress().ToHex(),
-                recipientPrivateKey.ToAddress().ToHex(),
+                senderPrivateKey.Address.ToHex(),
+                recipientPrivateKey.Address.ToHex(),
                 Convert.ToString(amount),
                 filePath,
                 memo);
@@ -134,8 +134,8 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 action.LoadPlainValue(plainValue);
                 Assert.Equal(memo, action.Memo);
                 Assert.Equal(amount, action.Amount.MajorUnit);
-                Assert.Equal(senderPrivateKey.ToAddress(), action.Sender);
-                Assert.Equal(recipientPrivateKey.ToAddress(), action.Recipient);
+                Assert.Equal(senderPrivateKey.Address, action.Sender);
+                Assert.Equal(recipientPrivateKey.Address, action.Recipient);
             }
             else
             {
@@ -205,7 +205,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         public void ClaimStakeRewardWithBlockIndex(long blockIndex, Type expectedActionType)
         {
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
-            var addr = new PrivateKey().ToAddress();
+            var addr = new PrivateKey().Address;
             var resultCode = _command.ClaimStakeReward(
                 addr.ToHex(),
                 filePath,
@@ -236,7 +236,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             for (var i = actionVersionMin; i < actionVersionMax + 1; i++)
             {
                 var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
-                var addr = new PrivateKey().ToAddress();
+                var addr = new PrivateKey().Address;
                 var resultCode = _command.ClaimStakeReward(
                     addr.ToHex(),
                     filePath,

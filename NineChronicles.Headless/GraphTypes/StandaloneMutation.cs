@@ -28,6 +28,10 @@ namespace NineChronicles.Headless.GraphTypes
             {
                 this.AuthorizeWith(GraphQLService.LocalPolicyKey);
             }
+            else if (Convert.ToBoolean(configuration.GetSection("Jwt")["EnableJwtAuthentication"]))
+            {
+                this.AuthorizeWith(GraphQLService.JwtPolicyKey);
+            }
 
             Field<KeyStoreMutation>(
                 name: "keyStore",
@@ -205,7 +209,7 @@ namespace NineChronicles.Headless.GraphTypes
                         new ActionBase[]
                         {
                             new TransferAsset(
-                                privateKey.ToAddress(),
+                                privateKey.Address,
                                 recipient,
                                 amount,
                                 memo
@@ -261,7 +265,7 @@ namespace NineChronicles.Headless.GraphTypes
                         new ActionBase[]
                         {
                             new TransferAsset(
-                                privateKey.ToAddress(),
+                                privateKey.Address,
                                 recipient,
                                 amount
                             ),

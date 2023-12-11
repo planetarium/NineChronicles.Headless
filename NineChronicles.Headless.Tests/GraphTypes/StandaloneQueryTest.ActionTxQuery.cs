@@ -32,7 +32,7 @@ query {{
             var stake = Assert.IsType<string>(actionTxQueryData["stake"]);
             var tx = TxMarshaler.DeserializeUnsignedTx(ByteUtil.ParseHex(stake));
             Assert.Equal(publicKey, tx.PublicKey);
-            Assert.Equal(publicKey.ToAddress(), tx.Signer);
+            Assert.Equal(publicKey.Address, tx.Signer);
             Assert.Equal(0, tx.Nonce);
             Assert.Equal(1, tx.GasLimit);
             Assert.Equal(1 * Currencies.Mead, tx.MaxGasPrice);
@@ -67,7 +67,7 @@ query {{
         public async Task ActionTxQuery_With_Gas()
         {
             var publicKey = new PrivateKey().PublicKey;
-            var address = new PrivateKey().ToAddress();
+            var address = new PrivateKey().Address;
             long nonce = 0;
             var result = await ExecuteQueryAsync($@"
 query {{
@@ -81,7 +81,7 @@ query {{
             var stake = Assert.IsType<string>(actionTxQueryData["requestPledge"]);
             var tx = TxMarshaler.DeserializeUnsignedTx(ByteUtil.ParseHex(stake));
             Assert.Equal(publicKey, tx.PublicKey);
-            Assert.Equal(publicKey.ToAddress(), tx.Signer);
+            Assert.Equal(publicKey.Address, tx.Signer);
             Assert.Equal(0, tx.Nonce);
             Assert.IsType<DateTimeOffset>(tx.Timestamp);
             Assert.Equal(1, tx.GasLimit);
