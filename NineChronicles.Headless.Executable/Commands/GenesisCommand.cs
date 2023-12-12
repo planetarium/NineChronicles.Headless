@@ -239,14 +239,14 @@ namespace NineChronicles.Headless.Executable.Commands
         [Command(Description = "Mine a new genesis block")]
         public void Mine(
             [Argument("CONFIG", Description = "JSON config path to mine genesis block")]
-            string? configPath)
+            string configPath = "./config.json")
         {
             var options = new JsonSerializerOptions
             {
                 AllowTrailingCommas = true,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             };
-            string json = File.ReadAllText(configPath ?? "./config.json");
+            string json = File.ReadAllText(configPath);
             GenesisConfig genesisConfig = JsonSerializer.Deserialize<GenesisConfig>(json, options);
 
             try
