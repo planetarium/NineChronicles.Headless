@@ -320,7 +320,12 @@ namespace NineChronicles.Headless.Executable.Commands
             }
         }
 
-        private List<ActionBase> GetAdditionalActionBases()
+        /// <summary>
+        /// Actions to be appended on end of transaction actions.
+        /// You can add actions code to this method before generate genesis block.
+        /// </summary>
+        /// <returns></returns>
+        private static List<ActionBase> GetAdditionalActionBases()
         {
             return new List<ActionBase>
             {
