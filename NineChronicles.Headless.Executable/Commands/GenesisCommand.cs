@@ -239,7 +239,7 @@ namespace NineChronicles.Headless.Executable.Commands
         [Command(Description = "Mine a new genesis block")]
         public void Mine(
             [Argument("CONFIG", Description = "JSON config path to mine genesis block")]
-            string configPath)
+            string configPath = "./config.json")
         {
             var options = new JsonSerializerOptions
             {
@@ -275,7 +275,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     initialValidators: initialValidatorSet.ToDictionary(
                         item => new PublicKey(ByteUtil.ParseHex(item.PublicKey)),
                         item => new BigInteger(item.Power)),
-                    actionBases: adminMeads.Concat(initialMeads).Concat(initialPledges),
+                    actionBases: adminMeads.Concat(initialMeads).Concat(initialPledges).Concat(GetAdditionalActionBases()),
                     goldCurrency: currency
                 );
 
@@ -318,6 +318,19 @@ namespace NineChronicles.Headless.Executable.Commands
             {
                 throw CoconaUtils.Error(e.Message);
             }
+        }
+
+        /// <summary>
+        /// Actions to be appended on end of transaction actions.
+        /// You can add actions code to this method before generate genesis block.
+        /// </summary>
+        /// <returns></returns>
+        private static List<ActionBase> GetAdditionalActionBases()
+        {
+            return new List<ActionBase>
+            {
+
+            };
         }
 
 #pragma warning disable S3459
