@@ -1,0 +1,28 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "TransferAsset action",
+    "description": "The latest TransferAsset action JSON format schema ",
+    "type": "object",
+    "properties": {
+        "\uFEFFtype_id": {
+            "const": "\uFEFFtransfer_asset5"
+        },
+        "\uFEFFvalues": {
+            "type": "object",
+            "properties": {
+                "\uFEFFrecipient": {
+                    "$ref": "../address.schema.json"
+                },
+                "\uFEFFsender": {
+                    "$ref": "../address.schema.json"
+                },
+                "\uFEFFamount": {
+                    "$ref": "../fav.schema.json"
+                },
+                "\uFEFFmemo": {
+                    "$ref": "../bstring.schema.json"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,14 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Libplanet FungibleAssetValue",
+    "type": "array",
+    "prefixItems": [
+        {
+            "$ref": "./currency.schema.json"
+        },
+        {
+            "type": "integer"
+        }
+    ],
+    "unevaluatedItems": false
+}

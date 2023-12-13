@@ -1,0 +1,10 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Lib9c Actions",
+    "description": "Action definitions in JSON format",
+    "oneOf": [
+        {
+            "$ref": "./actions/TransferAsset.schema.json"
+        }
+    ]
+}
