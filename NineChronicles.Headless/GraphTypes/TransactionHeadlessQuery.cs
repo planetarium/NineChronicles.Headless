@@ -332,7 +332,7 @@ namespace NineChronicles.Headless.GraphTypes
                     else
                     {
                         return new TxResult(
-                            TxStatus.INCLUDED,
+                            TxStatus.INVALID,
                             block.Index,
                             block.Hash.ToString(),
                             null,
