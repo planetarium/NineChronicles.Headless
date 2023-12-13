@@ -260,6 +260,10 @@ namespace NineChronicles.Headless.Executable
                 return actionEvaluatorType switch
                 {
                     ActionEvaluatorType.Default => new DefaultActionEvaluatorConfiguration(),
+                    ActionEvaluatorType.RemoteActionEvaluator => new RemoteActionEvaluatorConfiguration
+                    {
+                        StateServiceEndpoint = configuration.GetValue<string>("StateServiceEndpoint"),
+                    },
                     ActionEvaluatorType.ForkableActionEvaluator => new ForkableActionEvaluatorConfiguration
                     {
                         Pairs = (configuration.GetSection("Pairs") ??
