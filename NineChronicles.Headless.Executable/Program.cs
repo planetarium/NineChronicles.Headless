@@ -211,6 +211,8 @@ namespace NineChronicles.Headless.Executable
             double? sentryTraceSampleRate = null,
             [Option(Description = "arena participants list sync interval time")]
             int? arenaParticipantsSyncInterval = null,
+            [Option(Description = "arena participants list sync enable")]
+            bool arenaParticipantsSync = true,
             [Ignore] CancellationToken? cancellationToken = null
         )
         {
@@ -464,7 +466,10 @@ namespace NineChronicles.Headless.Executable
                                 .AddPrometheusExporter());
 
                     // worker
-                    services.AddHostedService(_ => new ArenaParticipantsWorker(arenaMemoryCache, standaloneContext, headlessConfig.ArenaParticipantsSyncInterval));
+                    if (arenaParticipantsSync)
+                    {
+                        services.AddHostedService(_ => new ArenaParticipantsWorker(arenaMemoryCache, standaloneContext, headlessConfig.ArenaParticipantsSyncInterval));
+                    }
                     services.AddSingleton(arenaMemoryCache);
                 });
 

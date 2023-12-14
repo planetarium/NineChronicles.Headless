@@ -14,11 +14,15 @@ namespace Libplanet.Extensions.PluggedActionEvaluator
     {
         private readonly IPluginActionEvaluator _pluginActionEvaluator;
 
-        public IActionLoader ActionLoader => throw new NotImplementedException();
+        public IActionLoader ActionLoader
+        {
+            get;
+        }
 
-        public PluggedActionEvaluator(string pluginPath, string typeName, IKeyValueStore keyValueStore)
+        public PluggedActionEvaluator(string pluginPath, string typeName, IKeyValueStore keyValueStore, IActionLoader actionLoader)
         {
             _pluginActionEvaluator = CreateActionEvaluator(pluginPath, typeName, keyValueStore);
+            ActionLoader = actionLoader;
         }
 
         public static Assembly LoadPlugin(string absolutePath)
