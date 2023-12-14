@@ -2545,6 +2545,7 @@ type TxResultType {
 
 enum TxStatus {
   FAILURE
+  INCLUDED
   INVALID
   STAGING
   SUCCESS

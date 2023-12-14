@@ -520,6 +520,16 @@
           <div class="ml-6 text-sm text-slate-400"></div>
           <div class="ml-6">arena participants list sync interval time</div>
       </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">arena-participants-sync</span>
+            <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : True</div>
+          <div class="ml-6">arena participants list sync enable</div>
+      </li>
 </ul>
 </li>
 <li class="border-b border-slate-700"></li>
@@ -2084,7 +2094,7 @@
             <span class="text-slate-400 text-sm">&lt;String[]&gt;</span>
           </div>
           <div class="ml-6 text-sm text-slate-400"></div>
-          <div class="ml-6">Filter by item type.  This implicitly filters out transactions made with Buy action version prior to Buy5.  This can be applied multiple times (meaning: match any of them).  The list of available types can be found in ItemSubType enum declared in Lib9c/Model/Item/ItemType.cs file.</div>
+          <div class="ml-6">Filter by item type.  This implicitly filters out transactions made with Buy.  This can be applied multiple times (meaning: match any of them).  The list of available types can be found in ItemSubType enum declared in Lib9c/Model/Item/ItemType.cs file.</div>
       </li>
 
         <li class="flex flex-col gap-2">
