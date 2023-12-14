@@ -455,7 +455,7 @@ namespace NineChronicles.Headless.Executable
                         TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner,
                     };
                 var arenaMemoryCache = new StateMemoryCache();
-                const string oltpEndpoint = @"http://opentelemetry-opentelemetry-collector.monitoring.svc.cluster.local:4318";
+                const string otlpEndpoint = @"http://opentelemetry-opentelemetry-collector.monitoring.svc.cluster.local:4318";
                 hostBuilder.ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => standaloneContext);
@@ -468,7 +468,7 @@ namespace NineChronicles.Headless.Executable
                                 .AddAspNetCoreInstrumentation()
                                 .AddOtlpExporter(opt =>
                                 {
-                                    opt.Endpoint = new Uri(oltpEndpoint + "/metrics");
+                                    opt.Endpoint = new Uri(otlpEndpoint + "/v1/metrics");
                                     opt.Protocol = OtlpExportProtocol.HttpProtobuf;
                                 }))
                         .WithTracing(
@@ -477,7 +477,7 @@ namespace NineChronicles.Headless.Executable
                                 .AddGrpcClientInstrumentation()
                                 .AddOtlpExporter(opt =>
                                 {
-                                    opt.Endpoint = new Uri(oltpEndpoint + "/tracing");
+                                    opt.Endpoint = new Uri(otlpEndpoint + "/v1/traces");
                                     opt.Protocol = OtlpExportProtocol.HttpProtobuf;
                                 })
                             );
