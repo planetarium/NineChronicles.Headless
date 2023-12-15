@@ -90,7 +90,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var observable = stream.Take(1);
 
             var targetAction = new Grinding { AvatarAddress = new Address(), EquipmentIds = new List<Guid>() };
-            var nonTargetAction = new DailyReward6 { avatarAddress = new Address() };
+            var nonTargetAction = new DailyReward { avatarAddress = new Address() };
 
             Task<ExecutionResult> task = Task.Run(async () => await observable);
             var (block, transactions) = AppendBlock(targetAction, nonTargetAction);

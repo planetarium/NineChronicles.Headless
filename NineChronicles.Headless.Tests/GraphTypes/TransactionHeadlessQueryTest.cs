@@ -128,7 +128,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 data
             );
 
-            var action = new CreateAvatar2
+            var action = new CreateAvatar
             {
                 index = 0,
                 hair = 1,
@@ -165,7 +165,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             PublicKey publicKey = privateKey.PublicKey;
             Address signer = publicKey.Address;
             long expectedNonce = nonce ?? _blockChain.GetNextTxNonce(signer);
-            ActionBase action = new CreateAvatar2
+            ActionBase action = new CreateAvatar
             {
                 index = 0,
                 hair = 1,
