@@ -175,7 +175,6 @@ namespace NineChronicles.Headless.Tests.Controllers
                     IceServers = new List<IceServer>(),
                 },
                 NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test, StaticActionLoaderSingleton.Instance),
-                NetworkType.Test,
                 StaticActionLoaderSingleton.Instance);
         }
     }

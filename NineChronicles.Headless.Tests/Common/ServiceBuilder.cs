@@ -52,7 +52,6 @@ namespace NineChronicles.Headless.Tests.Common
                 privateKey,
                 properties,
                 BlockPolicy,
-                NetworkType.Test,
                 StaticActionLoaderSingleton.Instance);
         }
     }
