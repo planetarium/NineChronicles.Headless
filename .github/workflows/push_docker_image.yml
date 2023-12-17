@@ -13,7 +13,7 @@ on:
       - release/*
       # This branch is for testing only. Use until the next(v200080) release.
       - test/action-evaluation-publisher-elapse-metric
-      - test/3.9.1-fix
+      - test/gql-queries
     tags:
       - "*"
   workflow_dispatch:
