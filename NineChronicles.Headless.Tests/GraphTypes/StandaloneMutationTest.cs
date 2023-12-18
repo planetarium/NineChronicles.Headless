@@ -722,7 +722,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }
             }";
 
-            ActionBase createAvatar = new CreateAvatar2
+            ActionBase createAvatar = new CreateAvatar
             {
                 index = 0,
                 hair = 0,
@@ -768,7 +768,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 }}
             }}";
 
-            ActionBase createAvatar = new CreateAvatar2
+            ActionBase createAvatar = new CreateAvatar
             {
                 index = 0,
                 hair = 0,

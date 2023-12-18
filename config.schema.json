@@ -1,0 +1,115 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Genesis config",
+    "description": "Config file for headless genesis block generation",
+    "type": "object",
+    "properties": {
+        "data": {
+            "type": "object",
+            "description": "Game data to set into genesis block.",
+            "properties": {
+                "tablePath": {
+                    "type": "string",
+                    "description": "A Path of game data table directory."
+                }
+            }
+        },
+        "currency": {
+            "type": "object",
+            "description": "Currency related configurations. Set initial minter(Tx signer) and/or initial currency depositions. If not provided, default values will set.",
+            "properties": {
+                "allowMint": {
+                    "type": "boolean"
+                },
+                "initialMinter": {
+                    "type": "string",
+                    "description": "Private Key of initial currency minter. If not provided, a new private key will be created and used."
+                },
+                "initialCurrencyDeposit": {
+                    "type": "array",
+                    "description": "Initial currency deposition list. If you leave it empty list or even not provide, the `InitialMinter` will get 10000 currency. You can see newly created deposition info in `initial_deposit.csv` file",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "address": {
+                                "type": "string"
+                            },
+                            "amount": {
+                                "type": "integer"
+                            },
+                            "start": {
+                                "type": "integer"
+                            },
+                            "end": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "admin": {
+            "type": "object",
+            "description": "Admin related configurations. If not provided, no admin will be set.",
+            "properties": {
+                "activate": {
+                    "type": "boolean",
+                    "description": "Whether active admin address or not."
+                },
+                "address": {
+                    "type": "string",
+                    "description": "Address to give admin privilege. If `Activate` is `true` and no `address` provided, the minter will get admin privilege."
+                },
+                "validUntil": {
+                    "type": "integer",
+                    "description": "The block count to persist admin privilege. After this block, admin will no longer be admin."
+                }
+            }
+        },
+        "initialValidatorSet": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "publicKey": {
+                        "type": "string"
+                    },
+                    "power": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "initialMeadConfigs": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "address": {
+                        "type": "string"
+                    },
+                    "amount": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "initialPledgeConfigs": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "agentAddress": {
+                        "type": "string"
+                    },
+                    "patronAddress": {
+                        "type": "string"
+                    },
+                    "mead": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}

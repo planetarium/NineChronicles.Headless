@@ -50,10 +50,9 @@ namespace NineChronicles.Headless.Executable.Commands
             [Option(
                 'T',
                 Description = "Filter by item type.  This implicitly filters out transactions " +
-                              "made with " + nameof(Buy) + " action version prior to " + nameof(Buy5) +
-                              ".  This can be applied multiple times (meaning: match any of them).  " +
-                              "The list of available types can be found in " + nameof(ItemSubType) +
-                              " enum declared in Lib9c/Model/Item/ItemType.cs file.")]
+                              "made with " + nameof(Buy) + ".  This can be applied multiple times " +
+                              "(meaning: match any of them).  The list of available types can be found in " +
+                              nameof(ItemSubType) + " enum declared in Lib9c/Model/Item/ItemType.cs file.")]
             string[]? itemType = null,
             [Option('c', Description = "Optional chain ID.  Default is the canonical chain ID.")]
             Guid? chainId = null

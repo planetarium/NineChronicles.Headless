@@ -735,7 +735,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 StandaloneContextFx.NineChroniclesNodeService.MinerPrivateKey = null;
             }
-            var action = new CreateAvatar2
+            var action = new CreateAvatar
             {
                 index = 0,
                 hair = 1,
@@ -786,7 +786,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var service = MakeNineChroniclesNodeService(userPrivateKey);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
-            var action = new CreateAvatar2
+            var action = new CreateAvatar
             {
                 index = 0,
                 hair = 1,
@@ -806,7 +806,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var avatarAddress = userAddress.Derive(
                 string.Format(
                     CultureInfo.InvariantCulture,
-                    CreateAvatar2.DeriveFormat,
+                    CreateAvatar.DeriveFormat,
                     0
                 )
             );
