@@ -455,7 +455,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(statesPath);
                 IKeyValueStore newStateKeyValueStore = new RocksDBKeyValueStore(newStatesPath);
                 TrieStateStore stateStore = new TrieStateStore(stateKeyValueStore);
-                var newStateStore = new TrieStateStore(newStateKeyValueStore);
+                TrieStateStore newStateStore = new TrieStateStore(newStateKeyValueStore);
 
                 var canonicalChainId = store.GetCanonicalChainId();
                 if (!(canonicalChainId is { } chainId))
@@ -530,8 +530,9 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 var blockCommitBlock = store.GetBlock(tipHash);
 
-                // Add last block commits to store from tip until --block-before + 5 for buffer
-                for (var i = 0; i < blockBefore + 5; i++)
+                // Add last block commits to store from tip until --block-before + 5 or tip if too short for buffer
+                var blockCommitRange = blockBefore + 5 < tip.Index ? blockBefore + 5 : tip.Index - 1;
+                for (var i = 0; i < blockCommitRange; i++)
                 {
                     _console.Out.WriteLine("Adding block #{0}'s block commit to the store", blockCommitBlock.Index - 1);
                     store.PutBlockCommit(blockCommitBlock.LastCommit);
@@ -570,10 +571,10 @@ namespace NineChronicles.Headless.Executable.Commands
                 ImmutableHashSet<HashDigest<SHA256>> stateHashes =
                     ImmutableHashSet<HashDigest<SHA256>>.Empty.Add((HashDigest<SHA256>)snapshotTipStateRootHash!);
 
-                // Get 2 block digest before snapshot tip using snapshot previous block hash.
+                // Get 1 block digest before snapshot tip using snapshot previous block hash.
                 BlockHash? previousBlockHash = snapshotTipDigest?.Hash;
                 int count = 0;
-                const int maxStateDepth = 2;
+                const int maxStateDepth = 1;
 
                 while (previousBlockHash is { } pbh &&
                        store.GetBlockDigest(pbh) is { } previousBlockDigest &&
@@ -888,16 +889,22 @@ namespace NineChronicles.Headless.Executable.Commands
             var storeTxBIndexPath = Path.Combine(storePath, "txbindex");
             var storeStatesPath = Path.Combine(storePath, "states");
             var storeChainPath = Path.Combine(storePath, "chain");
+            var storeBlockCommitPath = Path.Combine(storePath, "blockcommit");
+            var storeTxExecPath = Path.Combine(storePath, "txexec");
             var stateDirBlockIndexPath = Path.Combine(stateDirectory, "block", "blockindex");
             var stateDirTxIndexPath = Path.Combine(stateDirectory, "tx", "txindex");
             var stateDirTxBIndexPath = Path.Combine(stateDirectory, "txbindex");
             var stateDirStatesPath = Path.Combine(stateDirectory, "states");
             var stateDirChainPath = Path.Combine(stateDirectory, "chain");
+            var stateDirBlockCommitPath = Path.Combine(stateDirectory, "blockcommit");
+            var stateDirTxExecPath = Path.Combine(stateDirectory, "txexec");
             CopyDirectory(storeBlockIndexPath, stateDirBlockIndexPath, true);
             CopyDirectory(storeTxIndexPath, stateDirTxIndexPath, true);
             CopyDirectory(storeTxBIndexPath, stateDirTxBIndexPath, true);
             CopyDirectory(storeStatesPath, stateDirStatesPath, true);
             CopyDirectory(storeChainPath, stateDirChainPath, true);
+            CopyDirectory(storeBlockCommitPath, stateDirBlockCommitPath, true);
+            CopyDirectory(storeTxExecPath, stateDirTxExecPath, true);
         }
 
         private int GetMetaDataEpoch(
@@ -915,7 +922,7 @@ namespace NineChronicles.Headless.Executable.Commands
             }
             catch (InvalidOperationException e)
             {
-                Console.Error.WriteLine(e.Message);
+                _console.Error.WriteLine(e.Message);
                 return 0;
             }
         }
@@ -1016,6 +1023,10 @@ namespace NineChronicles.Headless.Executable.Commands
             IStore store)
         {
             store.ForkBlockIndexes(src, dest, branchPointHash);
+            if (store.GetBlockCommit(branchPointHash) is { })
+            {
+                store.PutChainBlockCommit(dest, store.GetBlockCommit(branchPointHash));
+            }
             store.ForkTxNonces(src, dest);
 
             for (
