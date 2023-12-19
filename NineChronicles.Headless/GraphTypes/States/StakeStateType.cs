@@ -153,7 +153,12 @@ namespace NineChronicles.Headless.GraphTypes.States
                         itemSheet, rewardSteps);
                     var (itemResult, favResult) = StakeRewardCalculator.CalculateRewards(ncg, stakedNcg, stakingLevel, rewardSteps,
                         stakeRegularRewardSheet, itemSheet, random);
-                    result = (Dictionary<ItemBase, int>) result.Union(itemResult);
+                    foreach (var pair in itemResult)
+                    {
+                        var item = pair.Key;
+                        result.TryAdd(item, 0);
+                        result[item] += pair.Value;
+                    }
                     return (result, favResult);
                 }
             );
