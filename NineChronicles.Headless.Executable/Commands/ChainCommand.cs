@@ -437,7 +437,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 var stateHashesPath = Path.Combine(storePath, "state_hashes");
 
                 var staleDirectories =
-                    new[] {mainPath, statePath, stateRefPath, stateHashesPath};
+                    new[] { mainPath, statePath, stateRefPath, stateHashesPath };
                 staleDirectories.Where(Directory.Exists).ToList()
                     .ForEach(staleDirectory => Directory.Delete(staleDirectory, true));
 
@@ -487,7 +487,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 var tip = store.GetBlock(tipHash);
 
                 var potentialSnapshotTipIndex = tipIndex - blockBefore;
-                var potentialSnapshotTipHash = (BlockHash) store.IndexBlockHash(chainId, potentialSnapshotTipIndex)!;
+                var potentialSnapshotTipHash = (BlockHash)store.IndexBlockHash(chainId, potentialSnapshotTipIndex)!;
                 var snapshotTip = store.GetBlock(potentialSnapshotTipHash);
 
                 _console.Out.WriteLine(
@@ -521,7 +521,7 @@ namespace NineChronicles.Headless.Executable.Commands
                         potentialSnapshotTipIndex);
                     blockBefore += 1;
                     potentialSnapshotTipBlockCommit = store
-                        .GetBlock((BlockHash) store.IndexBlockHash(chainId, tip.Index - blockBefore + 1)!).LastCommit;
+                        .GetBlock((BlockHash)store.IndexBlockHash(chainId, tip.Index - blockBefore + 1)!).LastCommit;
                     store.PutBlockCommit(tipBlockCommit);
                     store.PutChainBlockCommit(chainId, tipBlockCommit);
                     store.PutBlockCommit(potentialSnapshotTipBlockCommit);
@@ -536,7 +536,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     _console.Out.WriteLine("Adding block #{0}'s block commit to the store", blockCommitBlock.Index - 1);
                     store.PutBlockCommit(blockCommitBlock.LastCommit);
                     store.PutChainBlockCommit(chainId, blockCommitBlock.LastCommit);
-                    blockCommitBlock = store.GetBlock((BlockHash) blockCommitBlock.PreviousHash!);
+                    blockCommitBlock = store.GetBlock((BlockHash)blockCommitBlock.PreviousHash!);
                 }
 
                 var snapshotTipIndex = Math.Max(tipIndex - (blockBefore + 1), 0);
@@ -568,7 +568,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 var snapshotTipDigest = store.GetBlockDigest(snapshotTipHash);
                 var snapshotTipStateRootHash = store.GetStateRootHash(snapshotTipHash);
                 ImmutableHashSet<HashDigest<SHA256>> stateHashes =
-                    ImmutableHashSet<HashDigest<SHA256>>.Empty.Add((HashDigest<SHA256>) snapshotTipStateRootHash!);
+                    ImmutableHashSet<HashDigest<SHA256>>.Empty.Add((HashDigest<SHA256>)snapshotTipStateRootHash!);
 
                 // Get 2 block digest before snapshot tip using snapshot previous block hash.
                 BlockHash? previousBlockHash = snapshotTipDigest?.Hash;
@@ -587,7 +587,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 var newChain = new BlockChain(blockPolicy, stagePolicy, store, stateStore,
                     store.GetBlock(genesisHash), blockChainStates, actionEvaluator);
                 var newTip = newChain.Tip;
-                var latestEpoch = (int) (newTip.Timestamp.ToUnixTimeSeconds() / epochUnitSeconds);
+                var latestEpoch = (int)(newTip.Timestamp.ToUnixTimeSeconds() / epochUnitSeconds);
                 _console.Out.WriteLine(
                     "Official Snapshot Tip: #{0}\n1. Timestamp: {1}\n2. Latest Epoch: {2}\n3. BlockCommit in Chain: {3}\n4. BlockCommit in Store: {4}",
                     newTip.Index, newTip.Timestamp.UtcDateTime, latestEpoch, newChain.GetBlockCommit(newTip.Hash),
