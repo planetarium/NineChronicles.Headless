@@ -253,6 +253,7 @@ namespace NineChronicles.Headless.GraphTypes
                     return new StakeStateType.StakeStateContext(
                         stakeStateV2,
                         stakeStateAddress,
+                        agentAddress,
                         ctx.AccountState,
                         ctx.BlockIndex,
                         ctx.StateMemoryCache
