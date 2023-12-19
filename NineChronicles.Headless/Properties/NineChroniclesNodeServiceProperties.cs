@@ -36,10 +36,6 @@ namespace NineChronicles.Headless.Properties
 
         public bool StrictRender { get; set; }
 
-        public int BlockInterval { get; set; }
-
-        public int ReorgInterval { get; set; }
-
         public TimeSpan TxLifeTime { get; set; }
 
         public bool IgnoreBootstrapFailure { get; set; } = true;
@@ -74,7 +70,6 @@ namespace NineChronicles.Headless.Properties
                 string[]? trustedAppProtocolVersionSigners = null,
                 bool noMiner = false,
                 bool render = false,
-                int workers = 5,
                 int confirmations = 0,
                 bool nonblockRenderer = false,
                 int nonblockRendererQueue = 512,
