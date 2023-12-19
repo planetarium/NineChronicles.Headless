@@ -15,17 +15,15 @@ namespace NineChronicles.Headless.GraphTypes.Abstractions
             Field<ListGraphType<FungibleAssetValueType>>(
                 "favs",
                 resolve: context => context.Source.favs);
-            Field<ListGraphType<FungibleItemType>>(
+            Field<ListGraphType<InventoryItemType>>(
                 "items",
                 resolve: context =>
                 {
-                    var result = new List<IFungibleItem>();
+                    var result = new List<Inventory.Item>();
                     foreach (var pair in context.Source.itemResult)
                     {
-                        for (int i = 0; i < pair.Value; i++)
-                        {
-                            result.Add((IFungibleItem)pair.Key);
-                        }
+                        var item = new Inventory.Item(pair.Key, pair.Value);
+                        result.Add(item);
                     }
 
                     return result;

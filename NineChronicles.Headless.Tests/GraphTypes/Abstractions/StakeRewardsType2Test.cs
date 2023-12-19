@@ -24,6 +24,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.Abstractions
                     currency
                 }
                 items {
+                    count
                     fungibleItemId
                 }
             }";
