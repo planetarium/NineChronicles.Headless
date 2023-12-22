@@ -1397,6 +1397,7 @@ scalar HashDigest_SHA256
 type InventoryItemType {
   """A count of item"""
   count: Int!
+  fungibleItemId: String
 
   """An Id of item"""
   id: Int!
