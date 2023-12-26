@@ -649,6 +649,11 @@ namespace Libplanet.Headless.Hosting
             using var httpClient = new HttpClient();
             var downloadPath = Path.Join(path, hashed + ".zip");
             var extractPath = Path.Join(path, hashed);
+            if (File.Exists(downloadPath))
+            {
+                logger.Debug("Already downloaded.");
+                return Path.Combine(extractPath, "Lib9c.Plugin.dll");
+            }
             logger.Debug("Downloading...");
             await File.WriteAllBytesAsync(
                 downloadPath,
