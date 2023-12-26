@@ -456,7 +456,7 @@ namespace NineChronicles.Headless.Executable
                         TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner,
                     };
                 var arenaMemoryCache = new StateMemoryCache();
-                const string otlpEndpoint = @"http://opentelemetry-opentelemetry-collector.monitoring.svc.cluster.local:4318";
+                string otlpEndpoint = Environment.GetEnvironmentVariable("OPTL_ENDPOINT") ?? "http://localhost:4317";
                 hostBuilder.ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => standaloneContext);
@@ -483,7 +483,10 @@ namespace NineChronicles.Headless.Executable
                                 }))
                         .WithTracing(
                             builder => builder
-                                .AddSource("Libplanet.Net")
+                                .AddSource("Libplanet.Action.State")
+                                .AddSource("Libplanet.Blockchain.BlockChainStates")
+                                .AddSource("Libplanet.Net.Transports.NetMQTransport")
+                                .AddSource("NineChronicles.Headless.BlockChainService")
                                 .AddAspNetCoreInstrumentation()
                                 .AddGrpcClientInstrumentation()
                                 .AddOtlpExporter(opt =>

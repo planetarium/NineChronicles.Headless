@@ -43,6 +43,7 @@ namespace NineChronicles.Headless
         private LibplanetNodeServiceProperties _libplanetNodeServiceProperties;
         private ActionEvaluationPublisher _publisher;
         private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
+        private ActivitySource _activitySource;
         private MemoryCache _memoryCache;
 
         public BlockChainService(
@@ -53,7 +54,7 @@ namespace NineChronicles.Headless
             ActionEvaluationPublisher actionEvaluationPublisher,
             ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces,
             StateMemoryCache cache
-            )
+        )
         {
             _blockChain = blockChain;
             _swarm = swarm;
@@ -62,6 +63,7 @@ namespace NineChronicles.Headless
             _libplanetNodeServiceProperties = libplanetNodeServiceProperties;
             _publisher = actionEvaluationPublisher;
             _sentryTraces = sentryTraces;
+            _activitySource = new ActivitySource("NineChronicles.Headless.BlockChainService");
             _memoryCache = cache.SheetCache;
         }
 
@@ -136,6 +138,10 @@ namespace NineChronicles.Headless
         {
             var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
             var address = new Address(addressBytes);
+            using Activity a = _activitySource
+                .StartActivity(ActivityKind.Producer)?
+                .AddTag("Address", address.ToString())
+                .AddTag("StateRootHash", stateRootHash.ToString());
             IValue state = _blockChain.GetAccountState(stateRootHash).GetState(address);
             byte[] encoded = _codec.Encode(state ?? Null.Value);
             return new UnaryResult<byte[]>(encoded);
@@ -260,13 +266,13 @@ namespace NineChronicles.Headless
             var hash = new BlockHash(blockHashBytes);
             FungibleAssetValue balance = _blockChain.GetAccountState(hash).GetBalance(address, currency);
             byte[] encoded = _codec.Encode(
-              new Bencodex.Types.List(
-                new IValue[]
-                {
-                  balance.Currency.Serialize(),
-                  (Integer) balance.RawValue,
-                }
-              )
+                new Bencodex.Types.List(
+                    new IValue[]
+                    {
+                        balance.Currency.Serialize(),
+                        (Integer) balance.RawValue,
+                    }
+                )
             );
             return new UnaryResult<byte[]>(encoded);
         }
@@ -279,13 +285,13 @@ namespace NineChronicles.Headless
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
             FungibleAssetValue balance = _blockChain.GetAccountState(stateRootHash).GetBalance(address, currency);
             byte[] encoded = _codec.Encode(
-              new Bencodex.Types.List(
-                new IValue[]
-                {
-                  balance.Currency.Serialize(),
-                  (Integer) balance.RawValue,
-                }
-              )
+                new Bencodex.Types.List(
+                    new IValue[]
+                    {
+                        balance.Currency.Serialize(),
+                        (Integer) balance.RawValue,
+                    }
+                )
             );
             return new UnaryResult<byte[]>(encoded);
         }
