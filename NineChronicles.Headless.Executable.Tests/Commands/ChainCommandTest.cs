@@ -306,7 +306,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             };
             Guid chainId = chain.Id;
 
-            for (var i = 0; i < 2; i++)
+            for (var i = 0; i < 5; i++)
             {
                 chain.MakeTransaction(GenesisHelper.ValidatorKey, new ActionBase[] { action });
                 Block block = chain.ProposeBlock(
@@ -334,9 +334,10 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             IStore storeAfterSnapshot = storeType.CreateStore(_storePath);
             chainId = storeAfterSnapshot.GetCanonicalChainId() ?? new Guid();
             var tipHashAfterSnapshot = storeAfterSnapshot.IndexBlockHash(chainId, -1);
+            var snapshotTipIndex = storeAfterSnapshot.GetBlockIndex((BlockHash)tipHashAfterSnapshot!);
             var expectedGenesisPartitionSnapshotPath = Path.Combine(outputDirectory, "partition", $"snapshot-{genesisBlockEpoch}-{genesisBlockEpoch}.zip");
             var expectedGenesisMetadataPath = Path.Combine(outputDirectory, "metadata", $"snapshot-{genesisBlockEpoch}-{genesisBlockEpoch}.json");
-            var expectedFullSnapshotPath = Path.Combine(outputDirectory, "full", $"{genesisHash}-snapshot-{tipHashAfterSnapshot}.zip");
+            var expectedFullSnapshotPath = Path.Combine(outputDirectory, "full", $"{genesisHash}-snapshot-{tipHashAfterSnapshot}-{snapshotTipIndex}.zip");
             storeAfterSnapshot.Dispose();
 
             Assert.True(File.Exists(expectedGenesisPartitionSnapshotPath));
@@ -360,8 +361,8 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             Assert.True(File.Exists(expectedPartitionSnapshotPath));
             Assert.True(File.Exists(expectedStateSnapshotPath));
             Assert.True(File.Exists(expectedMetadataPath));
-            Assert.Equal(3, indexCountBeforeSnapshot);
-            Assert.Equal(2, indexCountAfterSnapshot);
+            Assert.Equal(6, indexCountBeforeSnapshot);
+            Assert.Equal(5, indexCountAfterSnapshot);
 
             Directory.Delete(outputDirectory, true);
         }
