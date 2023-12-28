@@ -10,15 +10,13 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
 using Nekoyume;
 using Nekoyume.Action;
-using Nekoyume.Arena;
 using Nekoyume.Battle;
 using Nekoyume.Model.Arena;
 using Nekoyume.Model.EnumType;
-using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
-using NineChronicles.Headless.Properties;
 using Serilog;
 using static Lib9c.SerializeKeys;
 
@@ -77,12 +75,12 @@ public class ArenaParticipantsWorker : BackgroundService
 
         var tip = blockChain.Tip;
         var blockIndex = blockChain.Tip.Index;
-        var accountState = blockChain.GetAccountState(tip.Hash);
-        var currentRoundData = accountState.GetSheet<ArenaSheet>().GetRoundByBlockIndex(blockIndex);
+        var worldState = blockChain.GetWorldState(tip.Hash);
+        var currentRoundData = worldState.GetSheet<ArenaSheet>().GetRoundByBlockIndex(blockIndex);
         var participantsAddr = ArenaParticipants.DeriveAddress(
             currentRoundData.ChampionshipId,
             currentRoundData.Round);
-        var participants = accountState.GetState(participantsAddr) is List participantsList
+        var participants = worldState.GetLegacyState(participantsAddr) is List participantsList
                 ? new ArenaParticipants(participantsList)
                 : null;
         var cacheKey = $"{currentRoundData.ChampionshipId}_{currentRoundData.Round}";
@@ -103,7 +101,7 @@ public class ArenaParticipantsWorker : BackgroundService
                     currentRoundData.Round)))
             .ToArray();
         // NOTE: If addresses is too large, and split and get separately.
-        var scores = accountState.GetStates(
+        var scores = worldState.GetLegacyStates(
             avatarAndScoreAddrList.Select(tuple => tuple.Item2).ToList());
         var avatarAddrAndScores = new List<(Address avatarAddr, int score)>();
         for (int i = 0; i < avatarAddrList.Count; i++)
@@ -176,10 +174,10 @@ public class ArenaParticipantsWorker : BackgroundService
                 currentRank + 1));
         }
 
-        var runeListSheet = accountState.GetSheet<RuneListSheet>();
-        var costumeSheet = accountState.GetSheet<CostumeStatSheet>();
-        var characterSheet = accountState.GetSheet<CharacterSheet>();
-        var runeOptionSheet = accountState.GetSheet<RuneOptionSheet>();
+        var runeListSheet = worldState.GetSheet<RuneListSheet>();
+        var costumeSheet = worldState.GetSheet<CostumeStatSheet>();
+        var characterSheet = worldState.GetSheet<CharacterSheet>();
+        var runeOptionSheet = worldState.GetSheet<RuneOptionSheet>();
         var runeIds = runeListSheet.Values.Select(x => x.Id).ToList();
         var row = characterSheet[GameConfig.DefaultAvatarCharacterId];
         var addrBulk = avatarAddrAndScoresWithRank
@@ -197,33 +195,19 @@ public class ArenaParticipantsWorker : BackgroundService
             addrBulk.AddRange(runeIds.Select(x => RuneState.DeriveAddress(tuple.avatarAddr, x)));
         }
 
-        var states = accountState.GetStates(addrBulk);
-        var stateBulk = new Dictionary<Address, IValue>();
-        for (int i = 0; i < addrBulk.Count; i++)
-        {
-            var address = addrBulk[i];
-            var value = states[i];
-            stateBulk.TryAdd(address, value ?? Null.Value);
-        }
         var runeStates = new List<RuneState>();
         var result = avatarAddrAndScoresWithRank.Select(tuple =>
         {
             var (avatarAddr, score, rank) = tuple;
-            var avatar = new AvatarState((Dictionary)stateBulk[avatarAddr]);
-            if (stateBulk[avatarAddr.Derive(LegacyInventoryKey)] is List inventoryList)
-            {
-                var inventory = new Inventory(inventoryList);
-                avatar.inventory = inventory;
-            }
-
+            var avatar = worldState.GetAvatarState(avatarAddr);
             var itemSlotState =
-                stateBulk[ItemSlotState.DeriveAddress(avatarAddr, BattleType.Arena)] is
+                worldState.GetLegacyState(ItemSlotState.DeriveAddress(avatarAddr, BattleType.Arena)) is
                     List itemSlotList
                     ? new ItemSlotState(itemSlotList)
                     : new ItemSlotState(BattleType.Arena);
 
             var runeSlotState =
-                stateBulk[RuneSlotState.DeriveAddress(avatarAddr, BattleType.Arena)] is
+                worldState.GetLegacyState(RuneSlotState.DeriveAddress(avatarAddr, BattleType.Arena)) is
                     List runeSlotList
                     ? new RuneSlotState(runeSlotList)
                     : new RuneSlotState(BattleType.Arena);
@@ -232,7 +216,7 @@ public class ArenaParticipantsWorker : BackgroundService
             foreach (var id in runeIds)
             {
                 var address = RuneState.DeriveAddress(avatarAddr, id);
-                if (stateBulk[address] is List runeStateList)
+                if (worldState.GetLegacyState(address) is List runeStateList)
                 {
                     runeStates.Add(new RuneState(runeStateList));
                 }

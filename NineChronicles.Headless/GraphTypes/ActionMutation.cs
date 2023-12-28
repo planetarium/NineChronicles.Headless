@@ -1,4 +1,3 @@
-using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet.Crypto;
@@ -10,6 +9,7 @@ using Nekoyume.Model.State;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using Nekoyume.Module;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -439,49 +439,6 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            Field<NonNullGraphType<TxIdType>>(nameof(MonsterCollect),
-                description: "Start monster collect.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "level",
-                        Description = "The monster collection level.(1 ~ 7)"
-                    }
-                ),
-                resolve: context =>
-                {
-                    try
-                    {
-                        BlockChain? blockChain = service.BlockChain;
-                        if (blockChain is null)
-                        {
-                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
-                        }
-
-                        if (service.MinerPrivateKey is null)
-                        {
-                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
-                        }
-
-                        int level = context.GetArgument<int>("level");
-                        var action = new MonsterCollect
-                        {
-                            level = level,
-                        };
-
-                        var actions = new ActionBase[] { action };
-                        Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
-                        return tx.Id;
-                    }
-                    catch (Exception e)
-                    {
-                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
-                        context.Errors.Add(new ExecutionError(msg, e));
-                        throw;
-                    }
-                }
-            );
-
             Field<NonNullGraphType<TxIdType>>(nameof(ClaimMonsterCollectionReward),
                 description: "Get monster collection reward.",
                 arguments: new QueryArguments(
@@ -509,8 +466,10 @@ namespace NineChronicles.Headless.GraphTypes
 
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
                         Address agentAddress = service.MinerPrivateKey.Address;
-                        AgentState agentState = new AgentState((Dictionary)service.BlockChain.GetState(agentAddress));
-
+                        AgentState agentState = 
+                            service.BlockChain.GetWorldState().GetAgentState(agentAddress) ??
+                            throw new InvalidOperationException($"Given agent of address {agentAddress} does not exist.");
+ 
                         var action = new ClaimMonsterCollectionReward
                         {
                             avatarAddress = avatarAddress,

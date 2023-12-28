@@ -22,11 +22,11 @@ public class ForkableActionEvaluatorTest
             ((101L, long.MaxValue), new PostActionEvaluator()),
         }, new SingleActionLoader(typeof(MockAction)));
 
-        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(0), null)).Action);
-        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(99), null)).Action);
-        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(100), null)).Action);
-        Assert.Equal((Text)"POST", Assert.Single(evaluator.Evaluate(new MockBlock(101), null)).Action);
-        Assert.Equal((Text)"POST", Assert.Single(evaluator.Evaluate(new MockBlock(long.MaxValue), null)).Action);
+        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(0), null, out _)).Action);
+        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(99), null, out _)).Action);
+        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(100), null, out _)).Action);
+        Assert.Equal((Text)"POST", Assert.Single(evaluator.Evaluate(new MockBlock(101), null, out _)).Action);
+        Assert.Equal((Text)"POST", Assert.Single(evaluator.Evaluate(new MockBlock(long.MaxValue), null, out _)).Action);
     }
 
     [Fact]
@@ -62,8 +62,10 @@ public class ForkableActionEvaluatorTest
 class PostActionEvaluator : IActionEvaluator
 {
     public IActionLoader ActionLoader => throw new NotSupportedException();
-    public IReadOnlyList<ICommittedActionEvaluation> Evaluate(IPreEvaluationBlock block, HashDigest<SHA256>? baseStateroothash)
+    public IReadOnlyList<ICommittedActionEvaluation> Evaluate(
+        IPreEvaluationBlock block, HashDigest<SHA256>? baseStateRootHash, out HashDigest<SHA256> stateRootHash)
     {
+        stateRootHash = new HashDigest<SHA256>();
         return new ICommittedActionEvaluation[]
         {
             new CommittedActionEvaluation(
@@ -85,8 +87,10 @@ class PostActionEvaluator : IActionEvaluator
 class PreActionEvaluator : IActionEvaluator
 {
     public IActionLoader ActionLoader => throw new NotSupportedException();
-    public IReadOnlyList<ICommittedActionEvaluation> Evaluate(IPreEvaluationBlock block, HashDigest<SHA256>? baseStateRootHash)
+    public IReadOnlyList<ICommittedActionEvaluation> Evaluate(
+        IPreEvaluationBlock block, HashDigest<SHA256>? baseStateRootHash, out HashDigest<SHA256> stateRootHash)
     {
+        stateRootHash = new HashDigest<SHA256>();
         return new ICommittedActionEvaluation[]
         {
             new CommittedActionEvaluation(
@@ -113,7 +117,7 @@ class MockAction : IAction
     {
     }
 
-    public IAccount Execute(IActionContext context) => context.PreviousState;
+    public IWorld Execute(IActionContext context) => context.PreviousState;
 }
 
 class MockBlock : IPreEvaluationBlock

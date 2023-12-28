@@ -12,7 +12,6 @@ using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
 using Nekoyume.Action;
-using Nekoyume.Action.Factory;
 using Nekoyume.Model;
 using NineChronicles.Headless.Executable.IO;
 
@@ -121,47 +120,6 @@ namespace NineChronicles.Headless.Executable.Commands
             }
 
             return typeIds.OrderBy(type => type);
-        }
-
-
-        [Command(Description = "Create MonsterCollect action.")]
-        public int MonsterCollect(
-            [Range(0, 7)] int level,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")]
-            string? filePath = null
-        )
-        {
-            try
-            {
-                Nekoyume.Action.MonsterCollect action = new MonsterCollect
-                {
-                    level = level
-                };
-
-                byte[] raw = Codec.Encode(new List(
-                    new[]
-                    {
-                        (Text) nameof(Nekoyume.Action.MonsterCollect),
-                        action.PlainValue
-                    }
-                ));
-                string encoded = Convert.ToBase64String(raw);
-                if (filePath is null)
-                {
-                    _console.Out.Write(encoded);
-                }
-                else
-                {
-                    File.WriteAllText(filePath, encoded);
-                }
-
-                return 0;
-            }
-            catch (Exception e)
-            {
-                _console.Error.WriteLine(e);
-                return -1;
-            }
         }
 
         [Command(Description = "Create ClaimMonsterCollectionReward action.")]
@@ -303,44 +261,14 @@ namespace NineChronicles.Headless.Executable.Commands
             [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")]
             string encodedAddress,
             [Argument("PATH", Description = "A file path of base64 encoded action.")]
-            string? filePath = null,
-            [Option("BLOCK-INDEX", Description = "A block index which is used to specifying the action version.")]
-            long? blockIndex = null,
-            [Option("ACTION-VERSION", Description = "A version of action.")]
-            int? actionVersion = null
+            string? filePath = null
         )
         {
             try
             {
-                if (blockIndex.HasValue && actionVersion.HasValue)
-                {
-                    throw new CommandExitedException(
-                        "You can't specify both block index and action version at the same time.",
-                        -1);
-                }
-
                 Address avatarAddress = new Address(ByteUtil.ParseHex(encodedAddress));
                 IClaimStakeReward? action = null;
-                if (blockIndex.HasValue)
-                {
-                    action = ClaimStakeRewardFactory.CreateByBlockIndex(
-                        blockIndex.Value,
-                        avatarAddress);
-                }
-                else if (actionVersion.HasValue)
-                {
-                    action = ClaimStakeRewardFactory.CreateByVersion(
-                        actionVersion.Value,
-                        avatarAddress);
-                }
-
-                // NOTE: If neither block index nor action version is specified,
-                //       it will be created by the type of the class.
-                //       I considered to create action with max value of
-                //       block index(i.e., long.MaxValue), but it is not good
-                //       because the action of the next version may come along
-                //       with the current version.
-                action ??= new ClaimStakeReward(avatarAddress);
+                action = new ClaimStakeReward(avatarAddress);
 
                 byte[] raw = Codec.Encode(new List(
                     new[]

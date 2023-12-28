@@ -14,7 +14,6 @@ using Cocona;
 using Cocona.Help;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.SystemTextJson;
-using Libplanet;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
@@ -32,7 +31,6 @@ using Nekoyume.Action.Loader;
 using Nekoyume.Blockchain.Policy;
 using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Executable.Store;
-using Serilog.Core;
 using static NineChronicles.Headless.NCActionUtils;
 
 namespace NineChronicles.Headless.Executable.Commands
@@ -100,15 +98,14 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 // Evaluate tx.
-                IAccountState previousBlockStates = blockChain.GetAccountState(previousBlock.Hash);
-                IAccount previousStates = new Account(previousBlockStates);
+                IWorld previousWorld = new World(blockChain.GetWorldState(previousBlock.Hash));
                 var actions = tx.Actions.Select(a => ToAction(a));
                 var actionEvaluations = EvaluateActions(
                     preEvaluationHash: targetBlock.PreEvaluationHash,
                     blockIndex: targetBlock.Index,
                     blockProtocolVersion: targetBlock.ProtocolVersion,
                     txid: tx.Id,
-                    previousStates: previousStates,
+                    previousStates: previousWorld,
                     miner: targetBlock.Miner,
                     signer: tx.Signer,
                     signature: tx.Signature,
@@ -400,7 +397,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 cacheDirectory ?? Path.Join(Path.GetTempPath(), "ncd-replay-remote-tx-cache"));
 
             var previousBlockHash = BlockHash.FromString(previousBlockHashValue);
-            var previousStates = new Account(blockChainStates.GetAccountState(previousBlockHash));
+            var previousStates = new World(blockChainStates.GetWorldState(previousBlockHash));
 
             var actions = transaction.Actions
                 .Select(ToAction)

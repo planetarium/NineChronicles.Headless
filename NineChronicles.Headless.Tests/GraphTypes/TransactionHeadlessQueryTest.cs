@@ -10,9 +10,7 @@ using GraphQL;
 using GraphQL.Execution;
 using GraphQL.NewtonsoftJson;
 using Lib9c;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.Action.Loader;
 using Libplanet.Action.Sys;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
@@ -403,7 +401,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         private Task<ExecutionResult> ExecuteAsync(string query)
         {
-            var currencyFactory = new CurrencyFactory(() => _blockChain.GetAccountState(_blockChain.Tip.Hash));
+            var currencyFactory = new CurrencyFactory(() => _blockChain.GetWorldState(_blockChain.Tip.Hash));
             var fungibleAssetValueFactory = new FungibleAssetValueFactory(currencyFactory);
             return GraphQLTestUtils.ExecuteQueryAsync<TransactionHeadlessQuery>(query, standaloneContext: new StandaloneContext
             {

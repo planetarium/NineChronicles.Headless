@@ -10,6 +10,7 @@ using Libplanet.Types.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Model.Garages;
+using Nekoyume.Module;
 using NineChronicles.Headless.GraphTypes.States;
 
 namespace NineChronicles.Headless.GraphTypes;
@@ -66,7 +67,7 @@ public partial class StateQuery
                             throw new ExecutionError($"Invalid currency enum: {currencyEnum}");
                         }
 
-                        var balance = context.Source.GetBalance(garageBalanceAddr, currency);
+                        var balance = context.Source.WorldState.GetBalance(garageBalanceAddr, currency);
                         garageBalances.Add(balance);
                     }
                 }
@@ -79,7 +80,7 @@ public partial class StateQuery
                             throw new ExecutionError($"Invalid currency ticker: {currencyTicker}");
                         }
 
-                        var balance = context.Source.GetBalance(garageBalanceAddr, currency);
+                        var balance = context.Source.WorldState.GetBalance(garageBalanceAddr, currency);
                         garageBalances.Add(balance);
                     }
                 }
@@ -97,7 +98,8 @@ public partial class StateQuery
                             agentAddr,
                             HashDigest<SHA256>.FromString(fungibleItemId)))
                         .ToArray();
-                    fungibleItemGarages = context.Source.GetStates(fungibleItemGarageAddresses)
+                    fungibleItemGarages = fungibleItemGarageAddresses
+                        .Select(address => context.Source.WorldState.GetLegacyState(address))
                         .Select((value, i) => value is null or Null
                             ? (fungibleItemIds[i], fungibleItemGarageAddresses[i], null)
                             : (fungibleItemIds[i], fungibleItemGarageAddresses[i], new FungibleItemGarage(value)));

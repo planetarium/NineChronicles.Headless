@@ -7,6 +7,7 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Lib9c;
+using Libplanet.Action.State;
 using Libplanet.Blockchain;
 using Libplanet.Common;
 using Libplanet.Crypto;
@@ -20,6 +21,7 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using Nekoyume.Model;
+using Nekoyume.Module;
 using NineChronicles.Headless.GraphTypes.States;
 using static NineChronicles.Headless.NCActionUtils;
 using Transaction = Libplanet.Types.Tx.Transaction;
@@ -56,7 +58,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     return new StateContext(
-                        chain.GetAccountState(blockHash),
+                        chain.GetWorldState(blockHash),
                         blockHash switch
                         {
                             BlockHash bh => chain[bh].Index,
@@ -70,7 +72,8 @@ namespace NineChronicles.Headless.GraphTypes
             Field<ByteStringType>(
                 name: "state",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "The address of state to fetch from the chain." },
+                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "The address of state to fetch from the account." },
+                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "accountAddress", Description = "The address of account to fetch from the chain." },
                     new QueryArgument<ByteStringType> { Name = "hash", Description = "The hash of the block used to fetch state from chain." }
                 ),
                 resolve: context =>
@@ -82,12 +85,13 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     var address = context.GetArgument<Address>("address");
+                    var accountAddress = context.GetArgument<Address>("accountAddress");
                     var blockHashByteArray = context.GetArgument<byte[]>("hash");
                     var blockHash = blockHashByteArray is null
                         ? blockChain.Tip.Hash
                         : new BlockHash(blockHashByteArray);
 
-                    var state = blockChain.GetStates(new[] { address }, blockHash)[0];
+                    var state = blockChain.GetState(address, accountAddress, blockHash);
 
                     if (state is null)
                     {
@@ -204,13 +208,12 @@ namespace NineChronicles.Headless.GraphTypes
                         ? blockChain.Tip.Hash
                         : new BlockHash(blockHashByteArray);
                     Currency currency = new GoldCurrencyState(
-                        (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
+                        (Dictionary)blockChain.GetWorldState(blockHash).GetLegacyState(GoldCurrencyState.Address)
                     ).Currency;
 
-                    return blockChain.GetBalance(
+                    return blockChain.GetWorldState(blockHash).GetBalance(
                         address,
-                        currency,
-                        blockHash
+                        currency
                     ).GetQuantityString();
                 }
             );
@@ -308,24 +311,22 @@ namespace NineChronicles.Headless.GraphTypes
 
 
                     BlockHash offset = blockChain.Tip.Hash;
+                    IWorldState worldState = blockChain.GetWorldState(offset);
 #pragma warning disable S3247
-                    if (blockChain.GetStates(new[] { agentAddress }, offset)[0] is Dictionary agentDict)
+                    if (worldState.GetAgentState(agentAddress) is { } agentState)
 #pragma warning restore S3247
                     {
-                        AgentState agentState = new AgentState(agentDict);
-                        Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
+                        Address deriveAddress =
+                            MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
                         Currency currency = new GoldCurrencyState(
-                            (Dictionary)blockChain.GetStates(new[] { Addresses.GoldCurrency }, offset)[0]
-                            ).Currency;
+                            (Dictionary)worldState.GetLegacyState(Addresses.GoldCurrency)).Currency;
 
-                        FungibleAssetValue balance = blockChain.GetBalance(agentAddress, currency, offset);
-                        if (blockChain.GetStates(new[] { deriveAddress }, offset)[0] is Dictionary mcDict)
+                        FungibleAssetValue balance = worldState.GetBalance(agentAddress, currency);
+                        if (worldState.GetLegacyState(deriveAddress) is Dictionary mcDict)
                         {
                             var rewardSheet = new MonsterCollectionRewardSheet();
-                            var csv = blockChain.GetStates(
-                                new[] { Addresses.GetSheetAddress<MonsterCollectionRewardSheet>() },
-                                offset
-                            )[0].ToDotnetString();
+                            var csv = worldState.GetLegacyState(
+                                Addresses.GetSheetAddress<MonsterCollectionRewardSheet>()).ToDotnetString();
                             rewardSheet.Set(csv);
                             var monsterCollectionState = new MonsterCollectionState(mcDict);
                             long tipIndex = blockChain.Tip.Index;
@@ -371,7 +372,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     string invitationCode = context.GetArgument<string>("invitationCode");
                     ActivationKey activationKey = ActivationKey.Decode(invitationCode);
-                    if (blockChain.GetState(activationKey.PendingAddress) is Dictionary dictionary)
+                    if (blockChain.GetWorldState().GetLegacyState(activationKey.PendingAddress) is Dictionary dictionary)
                     {
                         var pending = new PendingActivationState(dictionary);
                         ActivateAccount action = activationKey.CreateActivateAccount(pending.Nonce);
@@ -415,7 +416,7 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         throw new ExecutionError("invitationCode format is invalid.");
                     }
-                    if (blockChain.GetState(activationKey.PendingAddress) is Dictionary dictionary)
+                    if (blockChain.GetWorldState().GetLegacyState(activationKey.PendingAddress) is Dictionary dictionary)
                     {
                         var pending = new PendingActivationState(dictionary);
                         return ByteUtil.Hex(pending.Nonce);

@@ -1,10 +1,15 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using GraphQL.Execution;
 using Lib9c;
+using Libplanet.Action.State;
+using Libplanet.Crypto;
+using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using NineChronicles.Headless.GraphTypes.States;
 using NineChronicles.Headless.Tests.Common;
 using Xunit;
@@ -25,14 +30,20 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 index
                 inventoryAddress
             }";
-            MockState mockState = MockState.Empty
-                .SetState(Fixtures.AvatarAddress, Fixtures.AvatarStateFX.Serialize())
-                .SetState(Fixtures.UserAddress, Fixtures.AgentStateFx.Serialize());
+            IWorld mockWorld = new MockWorld(new MockWorldState());
+            mockWorld = mockWorld.SetAvatarState(
+                Fixtures.AvatarAddress,
+                Fixtures.AvatarStateFX,
+                true,
+                true,
+                true,
+                true);
+            mockWorld = mockWorld.SetAgentState(Fixtures.UserAddress, Fixtures.AgentStateFx);
             var queryResult = await ExecuteQueryAsync<AvatarStateType>(
                 query,
                 source: new AvatarStateType.AvatarStateContext(
                     avatarState,
-                    mockState,
+                    mockWorld,
                     0, new StateMemoryCache()));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
@@ -54,14 +65,20 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 }
             }
             ";
-            MockState mockState = MockState.Empty
-                .SetState(Fixtures.AvatarAddress, Fixtures.AvatarStateFX.Serialize())
-                .SetState(Fixtures.UserAddress, Fixtures.AgentStateFx.Serialize());
+            IWorld mockWorld = new MockWorld(new MockWorldState());
+            mockWorld = mockWorld.SetAvatarState(
+                Fixtures.AvatarAddress,
+                Fixtures.AvatarStateFX,
+                true,
+                true,
+                true,
+                true);
+            mockWorld = mockWorld.SetAgentState(Fixtures.UserAddress, Fixtures.AgentStateFx);
 
             for (int i = 0; i < Fixtures.AvatarStateFX.combinationSlotAddresses.Count; i++)
             {
-                mockState = mockState
-                    .SetState(
+                mockWorld = mockWorld
+                    .SetLegacyState(
                         Fixtures.AvatarStateFX.combinationSlotAddresses[i],
                         Fixtures.CombinationSlotStatesFx[i].Serialize());
             }
@@ -70,7 +87,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 query,
                 source: new AvatarStateType.AvatarStateContext(
                     avatarState,
-                    mockState,
+                    mockWorld,
                     0, new StateMemoryCache()));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);

@@ -35,7 +35,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 Address miner,
                 long blockIndex,
                 int blockProtocolVersion,
-                IAccount previousState,
+                IWorld previousState,
                 int randomSeed,
                 bool rehearsal = false)
             {
@@ -61,7 +61,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public bool Rehearsal { get; }
 
-            public IAccount PreviousState { get; }
+            public IWorld PreviousState { get; }
 
             public int RandomSeed { get; }
 
@@ -100,73 +100,148 @@ namespace NineChronicles.Headless.Executable.Commands
                 var options = new DbOptions().SetCreateIfMissing();
                 _rocksDb = RocksDb.Open(options, cacheDirectory);
             }
-
-            public IValue? GetState(Address address, BlockHash? offset)
-            {
-                return GetAccountState(offset).GetState(address);
-            }
-
-            public IReadOnlyList<IValue?> GetStates(IReadOnlyList<Address> addresses, BlockHash? offset)
-            {
-                return GetAccountState(offset).GetStates(addresses);
-            }
-
-            public FungibleAssetValue GetBalance(Address address, Currency currency, BlockHash? offset)
-            {
-                return GetAccountState(offset).GetBalance(address, currency);
-            }
-
-            public FungibleAssetValue GetTotalSupply(Currency currency, BlockHash? offset)
-            {
-                return GetAccountState(offset).GetTotalSupply(currency);
-            }
-
-            public ValidatorSet GetValidatorSet(BlockHash? offset)
-            {
-                return GetAccountState(offset).GetValidatorSet();
-            }
-
-            public IAccountState GetAccountState(BlockHash? offset)
-            {
-                return new LocalCacheAccountState(
-                    _rocksDb,
+            public IWorldState GetWorldState(BlockHash? offset)
+                => new LocalCacheWorldState(
+                    _source.GetWorldState(offset),
                     _source.GetAccountState,
-                    offset);
-            }
+                    _rocksDb);
+
+            public IWorldState GetWorldState(HashDigest<SHA256>? hash)
+                => new LocalCacheWorldState(
+                    _source.GetWorldState(hash),
+                    _source.GetAccountState,
+                    _rocksDb);
 
             public IAccountState GetAccountState(HashDigest<SHA256>? hash)
-                => _source.GetAccountState(hash);
+                => new LocalCacheAccountState(
+                    _source.GetAccountState(hash),
+                    _rocksDb);
+
+            public IAccountState GetAccountState(Address address, BlockHash? offset)
+                => new LocalCacheAccountState(
+                    _source.GetAccountState(address, offset),
+                    _rocksDb);
+
+            public IValue? GetState(Address address, Address accountAddress, BlockHash? offset)
+                => GetAccountState(accountAddress, offset).GetState(address);
+
+            public IValue? GetState(Address address, HashDigest<SHA256>? stateRootHash)
+                => GetAccountState(stateRootHash).GetState(address);
+
+            public FungibleAssetValue GetBalance(Address address, Currency currency, HashDigest<SHA256>? stateRootHash)
+                => GetAccountState(stateRootHash).GetBalance(address, currency);
+
+            public FungibleAssetValue GetBalance(Address address, Currency currency, Address accountAddress, BlockHash? offset)
+                => GetAccountState(accountAddress, offset).GetBalance(address, currency);
+
+            public FungibleAssetValue GetTotalSupply(Currency currency, HashDigest<SHA256>? stateRootHash)
+                => GetAccountState(stateRootHash).GetTotalSupply(currency);
+
+            public FungibleAssetValue GetTotalSupply(Currency currency, Address accountAddress, BlockHash? offset)
+                => GetAccountState(accountAddress, offset).GetTotalSupply(currency);
+
+            public ValidatorSet GetValidatorSet(HashDigest<SHA256>? stateRootHash)
+                => GetAccountState(stateRootHash).GetValidatorSet();
+
+            public ValidatorSet GetValidatorSet(Address accountAddress, BlockHash? offset)
+                => GetAccountState(accountAddress, offset).GetValidatorSet();
+        }
+
+        private sealed class LocalCacheWorldState : IWorldState
+        {
+            private static readonly Codec Codec = new Codec();
+            private readonly IWorldState _worldState;
+            private readonly Func<HashDigest<SHA256>?, IAccountState> _accountStateGetter;
+            private readonly RocksDb _rocksDb;
+
+            public LocalCacheWorldState(
+                IWorldState worldState,
+                Func<HashDigest<SHA256>?, IAccountState> accountStateGetter,
+                RocksDb rocksDb)
+            {
+                _worldState = worldState;
+                _accountStateGetter = accountStateGetter;
+                _rocksDb = rocksDb;
+            }
+
+            public ITrie Trie => _worldState.Trie;
+
+            public bool Legacy => _worldState.Legacy;
+
+            public IAccount GetAccount(Address address)
+            {
+                var key = WithStateRootHash(address.ToByteArray());
+                try
+                {
+                    return GetAccount(key);
+                }
+                catch (KeyNotFoundException)
+                {
+                    var account = _worldState.GetAccount(address);
+                    SetAccount(key, account);
+                    return account;
+                }
+            }
+
+            public IAccount GetAccount(byte[] key)
+            {
+                if (_rocksDb.Get(key) is not { } bytes)
+                {
+                    throw new KeyNotFoundException();
+                }
+
+                return new Account(_accountStateGetter(
+                    new HashDigest<SHA256>(((Binary)Codec.Decode(bytes)).ToImmutableArray())));
+            }
+
+            private void SetAccount(byte[] key, IAccount? account)
+            {
+                _rocksDb.Put(key, account is null ? new byte[] { 0x78 } : account.Trie.Hash.ToByteArray());
+            }
+
+            private byte[] WithStateRootHash(params byte[][] suffixes)
+            {
+                if (Trie.Hash is { } stateRootHash)
+                {
+                    var stream = new MemoryStream(HashDigest<SHA256>.Size + suffixes.Sum(s => s.Length));
+                    stream.Write(stateRootHash.ToByteArray());
+                    foreach (var suffix in suffixes)
+                    {
+                        stream.Write(suffix);
+                    }
+
+                    return stream.ToArray();
+                }
+                throw new InvalidOperationException();
+            }
         }
 
         private sealed class LocalCacheAccountState : IAccountState
         {
             private static readonly Codec _codec = new Codec();
+            private readonly IAccountState _accountState;
             private readonly RocksDb _rocksDb;
-            private readonly Func<BlockHash?, IAccountState> _sourceAccountStateGetter;
-            private readonly BlockHash? _offset;
 
             public LocalCacheAccountState(
-                RocksDb rocksDb,
-                Func<BlockHash?, IAccountState> sourceAccountStateGetterWithBlockHash,
-                BlockHash? offset)
+                IAccountState accountState,
+                RocksDb rocksDb)
             {
+                _accountState = accountState;
                 _rocksDb = rocksDb;
-                _sourceAccountStateGetter = sourceAccountStateGetterWithBlockHash;
-                _offset = offset;
             }
 
-            public ITrie Trie => _sourceAccountStateGetter(_offset).Trie;
+            public ITrie Trie => _accountState.Trie;
 
             public IValue? GetState(Address address)
             {
-                var key = WithBlockHash(address.ToByteArray());
+                var key = WithStateRootHash(address.ToByteArray());
                 try
                 {
                     return GetValue(key);
                 }
                 catch (KeyNotFoundException)
                 {
-                    var state = _sourceAccountStateGetter(_offset).GetState(address);
+                    var state = _accountState.GetState(address);
                     SetValue(key, state);
                     return state;
                 }
@@ -179,7 +254,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public FungibleAssetValue GetBalance(Address address, Currency currency)
             {
-                var key = WithBlockHash(address.ToByteArray(), currency.Hash.ToByteArray());
+                var key = WithStateRootHash(address.ToByteArray(), currency.Hash.ToByteArray());
                 try
                 {
                     var state = GetValue(key);
@@ -192,7 +267,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
                 catch (KeyNotFoundException)
                 {
-                    var fav = _sourceAccountStateGetter(_offset).GetBalance(address, currency);
+                    var fav = _accountState.GetBalance(address, currency);
                     SetValue(key, (Integer)fav.RawValue);
                     return fav;
                 }
@@ -200,7 +275,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public FungibleAssetValue GetTotalSupply(Currency currency)
             {
-                var key = WithBlockHash(currency.Hash.ToByteArray());
+                var key = WithStateRootHash(currency.Hash.ToByteArray());
                 try
                 {
                     var state = GetValue(key);
@@ -213,7 +288,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
                 catch (KeyNotFoundException)
                 {
-                    var fav = _sourceAccountStateGetter(_offset).GetTotalSupply(currency);
+                    var fav = _accountState.GetTotalSupply(currency);
                     SetValue(key, (Integer)fav.RawValue);
                     return fav;
                 }
@@ -221,7 +296,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public ValidatorSet GetValidatorSet()
             {
-                var key = WithBlockHash(new byte[] { 0x5f, 0x5f, 0x5f });
+                var key = WithStateRootHash(new byte[] { 0x5f, 0x5f, 0x5f });
                 try
                 {
                     var state = GetValue(key);
@@ -229,7 +304,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
                 catch (KeyNotFoundException)
                 {
-                    var validatorSet = _sourceAccountStateGetter(_offset).GetValidatorSet();
+                    var validatorSet = _accountState.GetValidatorSet();
                     SetValue(key, validatorSet.Bencoded);
                     return validatorSet;
                 }
@@ -250,21 +325,20 @@ namespace NineChronicles.Headless.Executable.Commands
                 _rocksDb.Put(key, value is null ? new byte[] { 0x78 } : _codec.Encode(value));
             }
 
-            private byte[] WithBlockHash(params byte[][] suffixes)
+            private byte[] WithStateRootHash(params byte[][] suffixes)
             {
-                if (_offset is not { } blockHash)
+                if (Trie.Hash is { } stateRootHash)
                 {
-                    throw new InvalidOperationException();
-                }
+                    var stream = new MemoryStream(HashDigest<SHA256>.Size + suffixes.Sum(s => s.Length));
+                    stream.Write(stateRootHash.ToByteArray());
+                    foreach (var suffix in suffixes)
+                    {
+                        stream.Write(suffix);
+                    }
 
-                var stream = new MemoryStream(Libplanet.Types.Blocks.BlockHash.Size + suffixes.Sum(s => s.Length));
-                stream.Write(blockHash.ToByteArray());
-                foreach (var suffix in suffixes)
-                {
-                    stream.Write(suffix);
+                    return stream.ToArray();
                 }
-
-                return stream.ToArray();
+                throw new InvalidOperationException();
             }
         }
 
@@ -276,7 +350,7 @@ namespace NineChronicles.Headless.Executable.Commands
             long blockIndex,
             int blockProtocolVersion,
             TxId? txid,
-            IAccount previousStates,
+            IWorld previousStates,
             Address miner,
             Address signer,
             byte[] signature,
@@ -284,7 +358,7 @@ namespace NineChronicles.Headless.Executable.Commands
             ILogger? logger = null)
         {
             ActionContext CreateActionContext(
-                IAccount prevState,
+                IWorld prevState,
                 int randomSeed)
             {
                 return new ActionContext(
@@ -300,11 +374,11 @@ namespace NineChronicles.Headless.Executable.Commands
             byte[] preEvaluationHashBytes = preEvaluationHash.ToByteArray();
             int seed = ActionEvaluator.GenerateRandomSeed(preEvaluationHashBytes, signature, 0);
 
-            IAccount states = previousStates;
+            IWorld states = previousStates;
             foreach (IAction action in actions)
             {
                 Exception? exc = null;
-                IAccount nextStates = states;
+                IWorld nextStates = states;
                 ActionContext context = CreateActionContext(nextStates, seed);
 
                 try

@@ -11,7 +11,7 @@ namespace NineChronicles.Headless.Tests.Common.Actions
         {
         }
 
-        public IAccount Execute(IActionContext context)
+        public IWorld Execute(IActionContext context)
         {
             return context.PreviousState;
         }

@@ -66,17 +66,10 @@ namespace NineChronicles.Headless.Executable.Commands
                 ActionBase action = type switch
                 {
                     nameof(ActivateAccount) => new ActivateAccount(),
-                    nameof(MonsterCollect) => new MonsterCollect(),
                     nameof(ClaimMonsterCollectionReward) => new ClaimMonsterCollectionReward(),
                     nameof(Stake) => new Stake(),
                     // FIXME: This `ClaimStakeReward` cases need to reduce to one case.
-                    nameof(ClaimStakeReward1) => new ClaimStakeReward1(),
                     nameof(ClaimStakeReward2) => new ClaimStakeReward2(),
-                    nameof(ClaimStakeReward3) => new ClaimStakeReward3(),
-                    nameof(ClaimStakeReward4) => new ClaimStakeReward4(),
-                    nameof(ClaimStakeReward5) => new ClaimStakeReward5(),
-                    nameof(ClaimStakeReward7) => new ClaimStakeReward7(),
-                    nameof(ClaimStakeReward8) => new ClaimStakeReward8(),
                     nameof(ClaimStakeReward) => new ClaimStakeReward(),
                     nameof(TransferAsset) => new TransferAsset(),
                     nameof(MigrateMonsterCollection) => new MigrateMonsterCollection(),
@@ -180,20 +173,6 @@ namespace NineChronicles.Headless.Executable.Commands
 
             var bencoded = new List(
                 (Text)nameof(PatchTableSheet),
-                action.PlainValue
-            );
-
-            byte[] raw = _codec.Encode(bencoded);
-            _console.Out.WriteLine(ByteUtil.Hex(raw));
-        }
-
-        [Command(Description = "Create MigrationLegacyShop action and dump it.")]
-        public void MigrationLegacyShop()
-        {
-            var action = new MigrationLegacyShop();
-
-            var bencoded = new List(
-                (Text)nameof(Nekoyume.Action.MigrationLegacyShop),
                 action.PlainValue
             );
 

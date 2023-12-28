@@ -22,9 +22,9 @@ public class ForkableActionEvaluator : IActionEvaluator
     }
 
     public IReadOnlyList<ICommittedActionEvaluation> Evaluate(
-        IPreEvaluationBlock block, HashDigest<SHA256>? baseStateRootHash)
+        IPreEvaluationBlock block, HashDigest<SHA256>? baseStateRootHash, out HashDigest<SHA256> stateRootHash)
     {
         var actionEvaluator = _router.GetEvaluator(block.Index);
-        return actionEvaluator.Evaluate(block, baseStateRootHash);
+        return actionEvaluator.Evaluate(block, baseStateRootHash, out stateRootHash);
     }
 }

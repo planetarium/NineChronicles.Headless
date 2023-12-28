@@ -46,10 +46,18 @@ namespace Libplanet.Extensions.PluggedActionEvaluator
         public static IPluginActionEvaluator CreateActionEvaluator(string pluginPath, string typeName, IKeyValueStore keyValueStore)
             => CreateActionEvaluator(LoadPlugin(pluginPath), typeName, new PluginKeyValueStore(keyValueStore));
 
-        public IReadOnlyList<ICommittedActionEvaluation> Evaluate(IPreEvaluationBlock block, HashDigest<SHA256>? baseStateRootHash)
-            => _pluginActionEvaluator.Evaluate(
-                PreEvaluationBlockMarshaller.Serialize(block),
-                baseStateRootHash is { } srh ? srh.ToByteArray() : null)
+        public IReadOnlyList<ICommittedActionEvaluation> Evaluate(
+            IPreEvaluationBlock block,
+            HashDigest<SHA256>? baseStateRootHash,
+            out HashDigest<SHA256> stateRootHash)
+        {
+            var evaluations = _pluginActionEvaluator.Evaluate(
+                    PreEvaluationBlockMarshaller.Serialize(block),
+                    baseStateRootHash is { } srh ? srh.ToByteArray() : null,
+                    out var stateRootHashBytes)
                 .Select(eval => ActionEvaluationMarshaller.Deserialize(eval)).ToList().AsReadOnly();
+            stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            return evaluations;
+        }
     }
 }
