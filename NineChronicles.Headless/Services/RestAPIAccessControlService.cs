@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using System.Net.Http;
 using Libplanet.Crypto;
 using Nekoyume.Blockchain;
@@ -33,9 +34,15 @@ namespace NineChronicles.Headless.Services
                     return Convert.ToInt32(resultString);
                 }
             }
-            catch (Exception ex)
+            catch (TaskCanceledException)
             {
-                Log.Error(ex, "Error occurred while calling Rest API.");
+                Log.ForContext("Source", nameof(IAccessControlService))
+                    .Error("RestAPI timeout for \"{Address}\".", address);
+            }
+            catch (HttpRequestException ex)
+            {
+                Log.ForContext("Source", nameof(IAccessControlService))
+                    .Error(ex, "HttpRequestException occurred for \"{Address}\".", address);
             }
 
             return null;
