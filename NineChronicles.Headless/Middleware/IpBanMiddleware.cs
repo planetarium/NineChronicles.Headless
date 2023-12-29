@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -11,23 +12,25 @@ namespace NineChronicles.Headless.Middleware
 {
     public class IpBanMiddleware
     {
-        private static Dictionary<string, DateTimeOffset> _bannedIps = new();
+        private static ConcurrentDictionary<string, DateTimeOffset> _bannedIps = new();
         private readonly RequestDelegate _next;
         private readonly ILogger _logger;
         private readonly IOptions<CustomIpRateLimitOptions> _options;
+        private DateTimeOffset _timer;
 
-        public IpBanMiddleware(RequestDelegate next, IOptions<CustomIpRateLimitOptions> options)
+        public IpBanMiddleware(RequestDelegate next, IOptions<CustomIpRateLimitOptions> options, DateTimeOffset timer)
         {
             _next = next;
             _options = options;
             _logger = Log.Logger.ForContext<IpBanMiddleware>();
+            _timer = timer;
         }
 
         public static void BanIp(string ip)
         {
             if (!_bannedIps.ContainsKey(ip))
             {
-                _bannedIps.Add(ip, DateTimeOffset.Now);
+                _bannedIps[ip] = DateTimeOffset.Now;
             }
         }
 
@@ -35,7 +38,7 @@ namespace NineChronicles.Headless.Middleware
         {
             if (_bannedIps.ContainsKey(ip))
             {
-                _bannedIps.Remove(ip);
+                _bannedIps.TryRemove(ip, out _);
             }
         }
 

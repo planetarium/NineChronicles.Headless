@@ -82,11 +82,12 @@ namespace NineChronicles.Headless
                         options.MaxReceiveMessageSize = null;
                         if (Convert.ToBoolean(configuration.GetSection("MultiAccountManaging")["EnableManaging"]))
                         {
-                            Dictionary<string, HashSet<Address>> ipSignerList = new();
+                            ConcurrentDictionary<string, HashSet<Address>> ipSignerList = new();
                             options.Interceptors.Add<GrpcMultiAccountManagementMiddleware>(
                                 standaloneContext,
                                 ipSignerList,
-                                actionEvaluationPublisher);
+                                actionEvaluationPublisher,
+                                DateTimeOffset.Now);
                         }
 
                         options.Interceptors.Add<GrpcCaptureMiddleware>(actionEvaluationPublisher);
