@@ -4,7 +4,6 @@ namespace NineChronicles.Headless.Properties
     {
         Main,
         Internal,
-        Permanent,
         Test,
         Default,
     }
