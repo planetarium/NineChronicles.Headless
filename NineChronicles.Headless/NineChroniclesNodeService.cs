@@ -261,14 +261,10 @@ namespace NineChronicles.Headless
             {
                 NetworkType.Main => source.GetPolicy(),
                 NetworkType.Internal => source.GetInternalPolicy(),
-                NetworkType.Test => source.GetTestPolicy(),
                 NetworkType.Default => source.GetDefaultPolicy(),
                 _ => throw new ArgumentOutOfRangeException(nameof(networkType), networkType, null),
             };
         }
-
-        internal static IBlockPolicy GetTestBlockPolicy() =>
-            new BlockPolicySource().GetTestPolicy();
 
         public Task<bool> CheckPeer(string addr) => NodeService?.CheckPeer(addr) ?? throw new InvalidOperationException();
 
