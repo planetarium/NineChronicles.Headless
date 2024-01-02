@@ -27,7 +27,7 @@ namespace NineChronicles.Headless.Middleware
         {
             if (!_bannedIps.ContainsKey(ip))
             {
-                _bannedIps[ip] = DateTimeOffset.Now;
+                _bannedIps.TryAdd(ip, DateTimeOffset.Now);
             }
         }
 
