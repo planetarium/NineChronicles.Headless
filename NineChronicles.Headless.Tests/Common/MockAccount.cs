@@ -59,6 +59,10 @@
 
         /// <inheritdoc/>
         [Pure]
+        public IAccount RemoveState(Address address) => UpdateState(address);
+
+        /// <inheritdoc/>
+        [Pure]
         public FungibleAssetValue GetBalance(Address address, Currency currency) =>
             _state.GetBalance(address, currency);
 
@@ -191,6 +195,14 @@
             new MockAccount(
                 new MockAccountState(
                     MockTrie.Add(ToStateKey(address), value)),
+                TotalUpdatedFungibleAssets);
+
+        [Pure]
+        private MockAccount UpdateState(
+            Address address) =>
+            new MockAccount(
+                new MockAccountState(
+                    MockTrie.Remove(ToStateKey(address))),
                 TotalUpdatedFungibleAssets);
 
         [Pure]
