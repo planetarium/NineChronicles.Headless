@@ -4,9 +4,7 @@ using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.Properties;
-using System.Net;
 using Lib9c.Formatters;
-using Libplanet.Action;
 using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
 using MessagePack;
@@ -14,10 +12,8 @@ using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
-using Nekoyume.Action;
 using NineChronicles.Headless.Middleware;
 using NineChronicles.Headless.Services;
-using Sentry;
 
 namespace NineChronicles.Headless
 {
@@ -82,7 +78,7 @@ namespace NineChronicles.Headless
                         options.MaxReceiveMessageSize = null;
                         if (Convert.ToBoolean(configuration.GetSection("MultiAccountManaging")["EnableManaging"]))
                         {
-                            Dictionary<string, HashSet<Address>> ipSignerList = new();
+                            ConcurrentDictionary<string, HashSet<Address>> ipSignerList = new();
                             options.Interceptors.Add<GrpcMultiAccountManagementMiddleware>(
                                 standaloneContext,
                                 ipSignerList,

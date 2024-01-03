@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,19 +19,19 @@ namespace NineChronicles.Headless.Middleware
 {
     public class HttpMultiAccountManagementMiddleware
     {
-        private static readonly Dictionary<Address, DateTimeOffset> MultiAccountTxIntervalTracker = new();
-        private static readonly Dictionary<Address, DateTimeOffset> MultiAccountManagementList = new();
+        private static readonly ConcurrentDictionary<Address, DateTimeOffset> MultiAccountTxIntervalTracker = new();
+        private static readonly ConcurrentDictionary<Address, DateTimeOffset> MultiAccountManagementList = new();
         private readonly RequestDelegate _next;
         private readonly ILogger _logger;
         private StandaloneContext _standaloneContext;
-        private readonly Dictionary<string, HashSet<Address>> _ipSignerList;
+        private readonly ConcurrentDictionary<string, HashSet<Address>> _ipSignerList;
         private readonly IOptions<MultiAccountManagerProperties> _options;
         private ActionEvaluationPublisher _publisher;
 
         public HttpMultiAccountManagementMiddleware(
             RequestDelegate next,
             StandaloneContext standaloneContext,
-            Dictionary<string, HashSet<Address>> ipSignerList,
+            ConcurrentDictionary<string, HashSet<Address>> ipSignerList,
             IOptions<MultiAccountManagerProperties> options,
             ActionEvaluationPublisher publisher)
         {
@@ -44,12 +45,12 @@ namespace NineChronicles.Headless.Middleware
 
         private static void ManageMultiAccount(Address agent)
         {
-            MultiAccountManagementList.Add(agent, DateTimeOffset.Now);
+            MultiAccountManagementList.TryAdd(agent, DateTimeOffset.Now);
         }
 
         private static void RestoreMultiAccount(Address agent)
         {
-            MultiAccountManagementList.Remove(agent);
+            MultiAccountManagementList.TryRemove(agent, out _);
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -92,20 +93,20 @@ namespace NineChronicles.Headless.Middleware
                                         if (!MultiAccountTxIntervalTracker.ContainsKey(agent))
                                         {
                                             _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Adding agent {agent} to the agent tracker.");
-                                            MultiAccountTxIntervalTracker.Add(agent, DateTimeOffset.Now);
+                                            MultiAccountTxIntervalTracker.TryAdd(agent, DateTimeOffset.Now);
                                         }
                                         else
                                         {
                                             if ((DateTimeOffset.Now - MultiAccountTxIntervalTracker[agent]).Minutes >= _options.Value.TxIntervalMinutes)
                                             {
                                                 _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Resetting Agent {agent}'s time because it has been more than {_options.Value.TxIntervalMinutes} minutes since the last transaction.");
-                                                MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
+                                                MultiAccountTxIntervalTracker.TryUpdate(agent, DateTimeOffset.Now, MultiAccountTxIntervalTracker[agent]);
                                             }
                                             else
                                             {
                                                 _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Managing Agent {agent} for {_options.Value.ManagementTimeMinutes} minutes due to {_ipSignerList[remoteIp].Count} associated accounts.");
                                                 ManageMultiAccount(agent);
-                                                MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now;
+                                                MultiAccountTxIntervalTracker.TryUpdate(agent, DateTimeOffset.Now, MultiAccountTxIntervalTracker[agent]);
                                                 await CancelRequestAsync(context);
                                                 return;
                                             }
@@ -118,7 +119,7 @@ namespace NineChronicles.Headless.Middleware
                                         {
                                             _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Restoring Agent {agent} after {_options.Value.ManagementTimeMinutes} minutes.");
                                             RestoreMultiAccount(agent);
-                                            MultiAccountTxIntervalTracker[agent] = DateTimeOffset.Now.AddMinutes(-_options.Value.TxIntervalMinutes);
+                                            MultiAccountTxIntervalTracker.TryUpdate(agent, DateTimeOffset.Now.AddMinutes(-_options.Value.TxIntervalMinutes), MultiAccountTxIntervalTracker[agent]);
                                             _logger.Information($"[GRAPHQL-MULTI-ACCOUNT-MANAGER] Current time: {DateTimeOffset.Now} Added time: {DateTimeOffset.Now.AddMinutes(-_options.Value.TxIntervalMinutes)}.");
                                         }
                                         else
