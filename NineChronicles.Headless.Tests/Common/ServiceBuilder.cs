@@ -8,6 +8,7 @@ using System.IO;
 using Libplanet.Blockchain.Policies;
 using NineChronicles.Headless.Properties;
 using Nekoyume.Blockchain.Policy;
+using Nekoyume;
 
 namespace NineChronicles.Headless.Tests.Common
 {
@@ -53,7 +54,7 @@ namespace NineChronicles.Headless.Tests.Common
                 privateKey,
                 properties,
                 BlockPolicy,
-                NetworkType.Main,
+                Planet.Odin,
                 StaticActionLoaderSingleton.Instance);
         }
     }

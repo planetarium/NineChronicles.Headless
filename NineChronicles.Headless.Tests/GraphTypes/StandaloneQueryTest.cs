@@ -516,7 +516,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var blockPolicy = new BlockPolicySource().GetPolicy();
 
             var service = new NineChroniclesNodeService(
-                userPrivateKey, properties, blockPolicy, NetworkType.Main, StaticActionLoaderSingleton.Instance);
+                userPrivateKey, properties, blockPolicy, Planet.Odin, StaticActionLoaderSingleton.Instance);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
@@ -897,8 +897,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
 
-            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(NetworkType.Main, StaticActionLoaderSingleton.Instance);
-            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Main, StaticActionLoaderSingleton.Instance);
+            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(Planet.Odin, StaticActionLoaderSingleton.Instance);
+            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, Planet.Odin, StaticActionLoaderSingleton.Instance);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
@@ -986,7 +986,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             var blockPolicy = new BlockPolicySource().GetPolicy();
 
-            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Main, StaticActionLoaderSingleton.Instance);
+            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, Planet.Odin, StaticActionLoaderSingleton.Instance);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
@@ -1064,7 +1064,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             var blockPolicy = new BlockPolicySource().GetPolicy();
 
-            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, NetworkType.Main, StaticActionLoaderSingleton.Instance);
+            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, Planet.Odin, StaticActionLoaderSingleton.Instance);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
@@ -1173,7 +1173,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty,
             };
 
-            return new NineChroniclesNodeService(privateKey, properties, blockPolicy, NetworkType.Main, StaticActionLoaderSingleton.Instance);
+            return new NineChroniclesNodeService(privateKey, properties, blockPolicy, Planet.Odin, StaticActionLoaderSingleton.Instance);
         }
 
         private (ProtectedPrivateKey, string) CreateProtectedPrivateKey()

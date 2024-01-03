@@ -25,6 +25,7 @@ using Nito.AsyncEx;
 using Serilog;
 using Serilog.Events;
 using StrictRenderer = Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer;
+using Nekoyume;
 
 namespace NineChronicles.Headless
 {
@@ -71,7 +72,7 @@ namespace NineChronicles.Headless
             PrivateKey? minerPrivateKey,
             LibplanetNodeServiceProperties properties,
             IBlockPolicy blockPolicy,
-            NetworkType networkType,
+            Planet planet,
             IActionLoader actionLoader,
             Progress<BlockSyncState>? preloadProgress = null,
             bool ignoreBootstrapFailure = false,
@@ -200,14 +201,15 @@ namespace NineChronicles.Headless
                     );
                 };
 
-            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(
-                properties.NetworkType,
-                properties.ActionLoader);
+            IBlockPolicy blockPolicy = GetBlockPolicy(
+                properties.Planet,
+                properties.ActionLoader
+            );
             var service = new NineChroniclesNodeService(
                 properties.MinerPrivateKey,
                 properties.Libplanet,
                 blockPolicy,
-                properties.NetworkType,
+                properties.Planet,
                 properties.ActionLoader,
                 preloadProgress: progress,
                 ignoreBootstrapFailure: properties.IgnoreBootstrapFailure,
@@ -254,15 +256,17 @@ namespace NineChronicles.Headless
             return service;
         }
 
-        internal static IBlockPolicy GetBlockPolicy(NetworkType networkType, IActionLoader actionLoader)
+        internal static IBlockPolicy GetBlockPolicy(Planet planet, IActionLoader actionLoader)
         {
             var source = new BlockPolicySource(actionLoader);
-            return networkType switch
+            return planet switch
             {
-                NetworkType.Main => source.GetPolicy(),
-                NetworkType.Internal => source.GetInternalPolicy(),
-                NetworkType.Default => source.GetDefaultPolicy(),
-                _ => throw new ArgumentOutOfRangeException(nameof(networkType), networkType, null),
+                Planet.Odin => source.GetPolicy(),
+                Planet.OdinInternal => source.GetInternalPolicy(),
+                _ => throw new ArgumentException(
+                    $"Can't retrieve policy for given planet ({planet})",
+                    nameof(planet)
+                ),
             };
         }
 
