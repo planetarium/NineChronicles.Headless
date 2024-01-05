@@ -117,34 +117,34 @@ namespace NineChronicles.Headless.Executable.Commands
                     _source.GetAccountState(hash),
                     _rocksDb);
 
-            public IAccountState GetAccountState(Address address, BlockHash? offset)
+            public IAccountState GetAccountState(BlockHash? offset, Address address)
                 => new LocalCacheAccountState(
-                    _source.GetAccountState(address, offset),
+                    _source.GetAccountState(offset, address),
                     _rocksDb);
 
-            public IValue? GetState(Address address, Address accountAddress, BlockHash? offset)
-                => GetAccountState(accountAddress, offset).GetState(address);
+            public IValue? GetState(BlockHash? offset, Address accountAddress, Address address)
+                => GetAccountState(offset, accountAddress).GetState(address);
 
-            public IValue? GetState(Address address, HashDigest<SHA256>? stateRootHash)
+            public IValue? GetState(HashDigest<SHA256>? stateRootHash, Address address)
                 => GetAccountState(stateRootHash).GetState(address);
 
-            public FungibleAssetValue GetBalance(Address address, Currency currency, HashDigest<SHA256>? stateRootHash)
+            public FungibleAssetValue GetBalance(HashDigest<SHA256>? stateRootHash, Address address, Currency currency)
                 => GetAccountState(stateRootHash).GetBalance(address, currency);
 
-            public FungibleAssetValue GetBalance(Address address, Currency currency, Address accountAddress, BlockHash? offset)
-                => GetAccountState(accountAddress, offset).GetBalance(address, currency);
+            public FungibleAssetValue GetBalance(BlockHash? offset, Address address, Currency currency)
+                => GetAccountState(offset, ReservedAddresses.LegacyAccount).GetBalance(address, currency);
 
-            public FungibleAssetValue GetTotalSupply(Currency currency, HashDigest<SHA256>? stateRootHash)
+            public FungibleAssetValue GetTotalSupply(HashDigest<SHA256>? stateRootHash, Currency currency)
                 => GetAccountState(stateRootHash).GetTotalSupply(currency);
 
-            public FungibleAssetValue GetTotalSupply(Currency currency, Address accountAddress, BlockHash? offset)
-                => GetAccountState(accountAddress, offset).GetTotalSupply(currency);
+            public FungibleAssetValue GetTotalSupply(BlockHash? offset, Currency currency)
+                => GetAccountState(offset, ReservedAddresses.LegacyAccount).GetTotalSupply(currency);
 
             public ValidatorSet GetValidatorSet(HashDigest<SHA256>? stateRootHash)
                 => GetAccountState(stateRootHash).GetValidatorSet();
 
-            public ValidatorSet GetValidatorSet(Address accountAddress, BlockHash? offset)
-                => GetAccountState(accountAddress, offset).GetValidatorSet();
+            public ValidatorSet GetValidatorSet(BlockHash? offset)
+                => GetAccountState(offset, ReservedAddresses.LegacyAccount).GetValidatorSet();
         }
 
         private sealed class LocalCacheWorldState : IWorldState

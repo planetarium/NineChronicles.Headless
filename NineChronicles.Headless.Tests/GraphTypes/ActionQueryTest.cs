@@ -1134,7 +1134,6 @@ actionPoint: {actionPoint},
             var actualAction = Assert.IsType<LoadIntoMyGarages>(actionBase);
             Assert.True(expectedAction.FungibleAssetValues?.SequenceEqual(actualAction.FungibleAssetValues) ??
                         actualAction.FungibleAssetValues is null);
-            Assert.Equal(expectedAction.InventoryAddr, actualAction.InventoryAddr);
             Assert.True(expectedAction.FungibleIdAndCounts?.SequenceEqual(actualAction.FungibleIdAndCounts) ??
                         actualAction.FungibleIdAndCounts is null);
             Assert.Equal(expectedAction.Memo, actualAction.Memo);

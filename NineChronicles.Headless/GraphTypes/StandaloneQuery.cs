@@ -72,9 +72,9 @@ namespace NineChronicles.Headless.GraphTypes
             Field<ByteStringType>(
                 name: "state",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "The address of state to fetch from the account." },
+                    new QueryArgument<ByteStringType> { Name = "hash", Description = "The hash of the block used to fetch state from chain." },
                     new QueryArgument<NonNullGraphType<AddressType>> { Name = "accountAddress", Description = "The address of account to fetch from the chain." },
-                    new QueryArgument<ByteStringType> { Name = "hash", Description = "The hash of the block used to fetch state from chain." }
+                    new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "The address of state to fetch from the account." }
                 ),
                 resolve: context =>
                 {
@@ -84,14 +84,14 @@ namespace NineChronicles.Headless.GraphTypes
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
                     }
 
-                    var address = context.GetArgument<Address>("address");
-                    var accountAddress = context.GetArgument<Address>("accountAddress");
                     var blockHashByteArray = context.GetArgument<byte[]>("hash");
                     var blockHash = blockHashByteArray is null
                         ? blockChain.Tip.Hash
                         : new BlockHash(blockHashByteArray);
+                    var accountAddress = context.GetArgument<Address>("accountAddress");
+                    var address = context.GetArgument<Address>("address");
 
-                    var state = blockChain.GetState(address, accountAddress, blockHash);
+                    var state = blockChain.GetState(blockHash, accountAddress, address);
 
                     if (state is null)
                     {
