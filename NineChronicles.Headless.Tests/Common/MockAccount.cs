@@ -1,4 +1,4 @@
-﻿namespace NineChronicles.Headless.Tests.Common
+namespace NineChronicles.Headless.Tests.Common
 {
     using System;
     using System.Collections.Generic;
@@ -56,6 +56,10 @@
         /// <inheritdoc/>
         [Pure]
         public IAccount SetState(Address address, IValue state) => UpdateState(address, state);
+
+        /// <inheritdoc/>
+        [Pure]
+        public IAccount RemoveState(Address address) => UpdateState(address);
 
         /// <inheritdoc/>
         [Pure]
@@ -191,6 +195,14 @@
             new MockAccount(
                 new MockAccountState(
                     MockTrie.Add(ToStateKey(address), value)),
+                TotalUpdatedFungibleAssets);
+
+        [Pure]
+        private MockAccount UpdateState(
+            Address address) =>
+            new MockAccount(
+                new MockAccountState(
+                    MockTrie.Remove(ToStateKey(address))),
                 TotalUpdatedFungibleAssets);
 
         [Pure]

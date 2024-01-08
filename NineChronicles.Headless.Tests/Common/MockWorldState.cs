@@ -1,4 +1,4 @@
-﻿using Libplanet.Store.Trie;
+using Libplanet.Store.Trie;
 
 namespace NineChronicles.Headless.Tests.Common
 {
