@@ -104,7 +104,7 @@ namespace NineChronicles.Headless.Tests.Common
         public MockAccountState SubtractBalance(Address address, Currency currency, BigInteger rawAmount) =>
             SubtractBalance((address, currency), rawAmount);
 
-        public MockAccountState SubtractBalance((Address Address, Currency Currency) pair, BigInteger rawAmount) 
+        public MockAccountState SubtractBalance((Address Address, Currency Currency) pair, BigInteger rawAmount)
         {
             var amount = GetBalance(pair.Address, pair.Currency).RawValue - rawAmount;
             return SetBalance(pair, amount);

@@ -1,4 +1,4 @@
-﻿namespace NineChronicles.Headless.Tests.Common
+namespace NineChronicles.Headless.Tests.Common
 {
     using System;
     using System.Collections.Generic;

@@ -466,10 +466,10 @@ namespace NineChronicles.Headless.GraphTypes
 
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
                         Address agentAddress = service.MinerPrivateKey.Address;
-                        AgentState agentState = 
+                        AgentState agentState =
                             service.BlockChain.GetWorldState().GetAgentState(agentAddress) ??
                             throw new InvalidOperationException($"Given agent of address {agentAddress} does not exist.");
- 
+
                         var action = new ClaimMonsterCollectionReward
                         {
                             avatarAddress = avatarAddress,

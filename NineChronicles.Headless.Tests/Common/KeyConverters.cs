@@ -1,10 +1,10 @@
-﻿using Libplanet.Crypto;
+using Libplanet.Crypto;
 using Libplanet.Store.Trie;
 using Libplanet.Types.Assets;
 
 namespace NineChronicles.Headless.Tests.Common
 {
-    
+
     /// <summary>
     /// A rough replica of https://github.com/planetarium/libplanet/blob/main/Libplanet.Action/State/KeyConverters.cs
     /// except this has its constructors exposed as public for testing.
