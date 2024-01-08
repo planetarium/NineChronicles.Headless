@@ -35,7 +35,9 @@ namespace NineChronicles.Headless.Tests.Common
         public IImmutableDictionary<KeyBytes, IValue> MockTrie { get; }
 
         /// <inheritdoc cref="IAccountState.GetState"/>
-        public IValue GetState(Address address) => MockTrie[ToStateKey(address)];
+        public IValue? GetState(Address address) => MockTrie.TryGetValue(ToStateKey(address), out var v)
+            ? v
+            : null;
 
         /// <inheritdoc cref="IAccountState.GetStates"/>
         public IReadOnlyList<IValue?> GetStates(IReadOnlyList<Address> addresses) =>
@@ -44,7 +46,9 @@ namespace NineChronicles.Headless.Tests.Common
         /// <inheritdoc cref="IAccountState.GetBalance"/>
         public FungibleAssetValue GetBalance(Address address, Currency currency)
         {
-            IValue? value = MockTrie[ToFungibleAssetKey(address, currency)];
+            IValue? value = MockTrie.TryGetValue(ToFungibleAssetKey(address, currency), out var v)
+                ? v
+                : null;
             return value is Integer i
                 ? FungibleAssetValue.FromRawValue(currency, i)
                 : currency * 0;
@@ -58,7 +62,9 @@ namespace NineChronicles.Headless.Tests.Common
                 throw TotalSupplyNotTrackableException.WithDefaultMessage(currency);
             }
 
-            IValue? value = MockTrie[ToTotalSupplyKey(currency)];
+            IValue? value = MockTrie.TryGetValue(ToTotalSupplyKey(currency), out var v)
+                ? v
+                : null;
             return value is Integer i
                 ? FungibleAssetValue.FromRawValue(currency, i)
                 : currency * 0;
@@ -67,7 +73,9 @@ namespace NineChronicles.Headless.Tests.Common
         /// <inheritdoc cref="IAccountState.GetValidatorSet"/>
         public ValidatorSet GetValidatorSet()
         {
-            IValue? value = MockTrie[ValidatorSetKey];
+            IValue? value = MockTrie.TryGetValue(ValidatorSetKey, out var v)
+                ? v
+                : null;
             return value is List list
                 ? new ValidatorSet(list)
                 : new ValidatorSet();
