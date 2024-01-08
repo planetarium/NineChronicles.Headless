@@ -12,6 +12,7 @@ using Nekoyume;
 using Nekoyume.Model.Garages;
 using Nekoyume.Module;
 using NineChronicles.Headless.GraphTypes.States;
+using System;
 
 namespace NineChronicles.Headless.GraphTypes;
 
@@ -102,7 +103,8 @@ public partial class StateQuery
                         .Select(address => context.Source.WorldState.GetLegacyState(address))
                         .Select((value, i) => value is null or Null
                             ? (fungibleItemIds[i], fungibleItemGarageAddresses[i], null)
-                            : (fungibleItemIds[i], fungibleItemGarageAddresses[i], new FungibleItemGarage(value)));
+                            : (fungibleItemIds[i], fungibleItemGarageAddresses[i], new FungibleItemGarage(value)))
+                        .ToArray();
                 }
 
                 return new GaragesType.Value(
