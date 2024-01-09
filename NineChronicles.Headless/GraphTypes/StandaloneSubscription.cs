@@ -28,6 +28,7 @@ using Libplanet.Types.Tx;
 using Microsoft.Extensions.Configuration;
 using Nekoyume.Module;
 using Serilog;
+using Libplanet.Action.State;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -449,7 +450,10 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     Address deriveAddress = MonsterCollectionState.DeriveAddress(address, agentState.MonsterCollectionRound);
                     var subject = subjects.stateSubject;
-                    if (service.BlockChain.GetAccountState(eval.OutputState).GetState(deriveAddress) is Dictionary state)
+                    if (service.BlockChain
+                        .GetWorldState(eval.OutputState)
+                        .GetAccount(ReservedAddresses.LegacyAccount)
+                        .GetState(deriveAddress) is Dictionary state)
                     {
                         subject.OnNext(new MonsterCollectionState(state));
                     }
