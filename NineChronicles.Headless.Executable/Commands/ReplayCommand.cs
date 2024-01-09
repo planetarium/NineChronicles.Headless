@@ -354,12 +354,7 @@ namespace NineChronicles.Headless.Executable.Commands
             [Option("tx", new[] { 't' }, Description = "The transaction id")]
             string transactionId,
             [Option("endpoint", new[] { 'e' }, Description = "GraphQL endpoint to get remote state")]
-            string endpoint,
-            [Option(
-                "cache-directory",
-                new [] { 'c' },
-                Description = "A directory to store states, balances, etc as cache")]
-            string? cacheDirectory=null)
+            string endpoint)
         {
             var graphQlClient = new GraphQLHttpClient(new Uri(endpoint), new SystemTextJsonSerializer());
             var transactionResponse = GetTransactionData(graphQlClient, transactionId);
@@ -392,9 +387,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var miner = new Address(minerValue);
 
             var explorerEndpoint = $"{endpoint}/explorer";
-            var blockChainStates = new LocalCacheBlockChainStates(
-                new RemoteBlockChainStates(new Uri(explorerEndpoint)),
-                cacheDirectory ?? Path.Join(Path.GetTempPath(), "ncd-replay-remote-tx-cache"));
+            var blockChainStates = new RemoteBlockChainStates(new Uri(explorerEndpoint));
 
             var previousBlockHash = BlockHash.FromString(previousBlockHashValue);
             var previousStates = new World(blockChainStates.GetWorldState(previousBlockHash));
