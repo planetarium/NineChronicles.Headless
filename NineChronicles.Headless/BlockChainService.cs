@@ -120,27 +120,40 @@ namespace NineChronicles.Headless
             }
         }
 
-        public UnaryResult<byte[]> GetState(byte[] blockHashBytes, byte[] accountAddressBytes, byte[] addressBytes)
+        public UnaryResult<byte[]> GetStateByBlockHash(
+            byte[] blockHashBytes,
+            byte[] accountAddressBytes,
+            byte[] addressBytes)
         {
             var hash = new BlockHash(blockHashBytes);
             var accountAddress = new Address(accountAddressBytes);
             var address = new Address(addressBytes);
-            IValue state = _blockChain.GetState(hash, accountAddress, address);
+            IValue state = _blockChain
+                .GetWorldState(hash)
+                .GetAccount(accountAddress)
+                .GetState(address);
             // FIXME: Null과 null 구분해서 반환해야 할 듯
             byte[] encoded = _codec.Encode(state ?? Null.Value);
             return new UnaryResult<byte[]>(encoded);
         }
 
-        public UnaryResult<byte[]> GetStateBySrh(byte[] stateRootHashBytes, byte[] addressBytes)
+        public UnaryResult<byte[]> GetStateByStateRootHash(
+            byte[] stateRootHashBytes,
+            byte[] accountAddressBytes,
+            byte[] addressBytes)
         {
             var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var accountAddress = new Address(accountAddressBytes);
             var address = new Address(addressBytes);
-            IValue state = _blockChain.GetState(stateRootHash, address);
+            IValue state = _blockChain
+                .GetWorldState(stateRootHash)
+                .GetAccount(accountAddress)
+                .GetState(address);
             byte[] encoded = _codec.Encode(state ?? Null.Value);
             return new UnaryResult<byte[]>(encoded);
         }
 
-        public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStates(
+        public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStatesByBlockHash(
             byte[] blockHashBytes,
             IEnumerable<byte[]> addressBytesList)
         {
@@ -159,12 +172,12 @@ namespace NineChronicles.Headless
             return result.ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
-        public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStatesBySrh(
-            byte[] worldStateRootHashBytes,
+        public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStatesByStateRootHash(
+            byte[] stateRootHashBytes,
             IEnumerable<byte[]> addressBytesList)
         {
             var addresses = addressBytesList.Select(a => new Address(a)).ToList();
-            var stateRootHash = new HashDigest<SHA256>(worldStateRootHashBytes);
+            var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
             var worldState = _blockChain.GetWorldState(stateRootHash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
             var taskList = addresses
@@ -180,18 +193,18 @@ namespace NineChronicles.Headless
             return result.ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
-        public UnaryResult<Dictionary<byte[], byte[]>> GetStateBulk(
+        public UnaryResult<Dictionary<byte[], byte[]>> GetBulkStateByBlockHash(
             byte[] blockHashBytes,
-            byte[] accountBytes,
+            byte[] accountAddressBytes,
             IEnumerable<byte[]> addressBytesList)
         {
-            var hash = new BlockHash(blockHashBytes);
+            var blockHash = new BlockHash(blockHashBytes);
+            var accountAddress = new Address(accountAddressBytes);
+            List<Address> addresses = addressBytesList.Select(b => new Address(b)).ToList();
+
             var result = new Dictionary<byte[], byte[]>();
-            Address[] addresses = addressBytesList.Select(b => new Address(b)).ToArray();
-            var accountAddress = new Address(accountBytes);
-            IReadOnlyList<IValue> values =
-                addresses.Select(address => _blockChain.GetState(hash, accountAddress, address)).ToList();
-            for (int i = 0; i < addresses.Length; i++)
+            IReadOnlyList<IValue> values = _blockChain.GetWorldState(blockHash).GetAccount(accountAddress).GetStates(addresses);
+            for (int i = 0; i < addresses.Count; i++)
             {
                 result.TryAdd(addresses[i].ToByteArray(), _codec.Encode(values[i] ?? Null.Value));
             }
@@ -199,15 +212,18 @@ namespace NineChronicles.Headless
             return new UnaryResult<Dictionary<byte[], byte[]>>(result);
         }
 
-        public UnaryResult<Dictionary<byte[], byte[]>> GetStateBulkBySrh(
+        public UnaryResult<Dictionary<byte[], byte[]>> GetBulkStateByStateRootHash(
             byte[] stateRootHashBytes,
+            byte[] accountAddressBytes,
             IEnumerable<byte[]> addressBytesList)
         {
             var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var accountAddress = new Address(accountAddressBytes);
+            List<Address> addresses = addressBytesList.Select(b => new Address(b)).ToList();
+
             var result = new Dictionary<byte[], byte[]>();
-            Address[] addresses = addressBytesList.Select(b => new Address(b)).ToArray();
-            IReadOnlyList<IValue> values = _blockChain.GetAccountState(stateRootHash).GetStates(addresses);
-            for (int i = 0; i < addresses.Length; i++)
+            IReadOnlyList<IValue> values = _blockChain.GetWorldState(stateRootHash).GetAccount(accountAddress).GetStates(addresses);
+            for (int i = 0; i < addresses.Count; i++)
             {
                 result.TryAdd(addresses[i].ToByteArray(), _codec.Encode(values[i] ?? Null.Value));
             }
@@ -258,19 +274,21 @@ namespace NineChronicles.Headless
             return new UnaryResult<Dictionary<byte[], byte[]>>(result);
         }
 
-        public UnaryResult<byte[]> GetBalance(
+        public UnaryResult<byte[]> GetBalanceByBlockHash(
             byte[] blockHashBytes,
-            byte[] accountBytes,
+            byte[] accountAddressBytes,
             byte[] addressBytes,
             byte[] currencyBytes)
         {
             var blockHash = new BlockHash(blockHashBytes);
-            var accountAddress = new Address(accountBytes);
+            var accountAddress = new Address(accountAddressBytes);
             var address = new Address(addressBytes);
             var serializedCurrency = (Bencodex.Types.Dictionary)_codec.Decode(currencyBytes);
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
-            FungibleAssetValue balance = _blockChain.GetWorldState(blockHash)
-                .GetAccount(accountAddress).GetBalance(address, currency);
+            FungibleAssetValue balance = _blockChain
+                .GetWorldState(blockHash)
+                .GetAccount(accountAddress)
+                .GetBalance(address, currency);
             byte[] encoded = _codec.Encode(
               new Bencodex.Types.List(
                 new IValue[]
@@ -283,13 +301,21 @@ namespace NineChronicles.Headless
             return new UnaryResult<byte[]>(encoded);
         }
 
-        public UnaryResult<byte[]> GetBalanceBySrh(byte[] stateRootHashBytes, byte[] addressBytes, byte[] currencyBytes)
+        public UnaryResult<byte[]> GetBalanceByStateRootHash(
+            byte[] stateRootHashBytes,
+            byte[] accountAddressBytes,
+            byte[] addressBytes,
+            byte[] currencyBytes)
         {
             var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var accountAddress = new Address(accountAddressBytes);
             var address = new Address(addressBytes);
             var serializedCurrency = (Bencodex.Types.Dictionary)_codec.Decode(currencyBytes);
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
-            FungibleAssetValue balance = _blockChain.GetAccountState(stateRootHash).GetBalance(address, currency);
+            FungibleAssetValue balance = _blockChain
+                .GetWorldState(stateRootHash)
+                .GetAccount(accountAddress)
+                .GetBalance(address, currency);
             byte[] encoded = _codec.Encode(
               new Bencodex.Types.List(
                 new IValue[]
