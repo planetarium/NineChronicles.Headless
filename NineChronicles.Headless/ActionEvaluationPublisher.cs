@@ -477,7 +477,16 @@ namespace NineChronicles.Headless
                                 var extra = new Dictionary<string, IValue>();
                                 var encodeElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
 
-                                var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputState, ev.Exception, ev.PreviousState, ev.RandomSeed, extra);
+                                var eval = new NCActionEvaluation(
+                                    pa,
+                                    ev.Signer,
+                                    ev.BlockIndex,
+                                    ev.OutputState,
+                                    ev.Exception,
+                                    ev.PreviousState,
+                                    ev.RandomSeed,
+                                    extra,
+                                    ev.TxId);
                                 var encoded = MessagePackSerializer.Serialize(eval);
                                 var c = new MemoryStream();
                                 await using (var df = new DeflateStream(c, CompressionLevel.Fastest))
