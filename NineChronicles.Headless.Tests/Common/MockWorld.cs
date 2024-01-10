@@ -2,6 +2,7 @@ using Libplanet.Store.Trie;
 
 namespace NineChronicles.Headless.Tests.Common
 {
+    using System;
     using System.Diagnostics.Contracts;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
@@ -44,10 +45,25 @@ namespace NineChronicles.Headless.Tests.Common
         [Pure]
         public IAccount GetAccount(Address address)
         {
-            return Delta.Accounts.TryGetValue(address, out IAccount? account)
-                ? account
-                : _baseState.GetAccount(address);
+            if (Delta.Accounts.TryGetValue(address, out IAccount? account))
+            {
+                return account;
+            }
+            else
+            {
+                switch (_baseState.GetAccountState(address))
+                {
+                    case MockAccount mockAccount:
+                        return mockAccount;
+                    case MockAccountState mockAccountState:
+                        return new MockAccount(mockAccountState);
+                    default:
+                        throw new InvalidOperationException();
+                }
+            }
         }
+
+        public IAccountState GetAccountState(Address address) => GetAccount(address);
 
         /// <inheritdoc/>
         [Pure]
@@ -59,7 +75,7 @@ namespace NineChronicles.Headless.Tests.Common
                 return this;
             }
 
-            return new World(
+            return new MockWorld(
                 this,
                 Delta.SetAccount(address, account));
         }
