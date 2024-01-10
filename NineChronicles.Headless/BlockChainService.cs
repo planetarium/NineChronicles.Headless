@@ -130,7 +130,7 @@ namespace NineChronicles.Headless
             var address = new Address(addressBytes);
             IValue state = _blockChain
                 .GetWorldState(hash)
-                .GetAccount(accountAddress)
+                .GetAccountState(accountAddress)
                 .GetState(address);
             // FIXME: Null과 null 구분해서 반환해야 할 듯
             byte[] encoded = _codec.Encode(state ?? Null.Value);
@@ -147,7 +147,7 @@ namespace NineChronicles.Headless
             var address = new Address(addressBytes);
             IValue state = _blockChain
                 .GetWorldState(stateRootHash)
-                .GetAccount(accountAddress)
+                .GetAccountState(accountAddress)
                 .GetState(address);
             byte[] encoded = _codec.Encode(state ?? Null.Value);
             return new UnaryResult<byte[]>(encoded);
@@ -203,7 +203,10 @@ namespace NineChronicles.Headless
             List<Address> addresses = addressBytesList.Select(b => new Address(b)).ToList();
 
             var result = new Dictionary<byte[], byte[]>();
-            IReadOnlyList<IValue> values = _blockChain.GetWorldState(blockHash).GetAccount(accountAddress).GetStates(addresses);
+            IReadOnlyList<IValue> values = _blockChain
+                .GetWorldState(blockHash)
+                .GetAccountState(accountAddress)
+                .GetStates(addresses);
             for (int i = 0; i < addresses.Count; i++)
             {
                 result.TryAdd(addresses[i].ToByteArray(), _codec.Encode(values[i] ?? Null.Value));
@@ -222,7 +225,10 @@ namespace NineChronicles.Headless
             List<Address> addresses = addressBytesList.Select(b => new Address(b)).ToList();
 
             var result = new Dictionary<byte[], byte[]>();
-            IReadOnlyList<IValue> values = _blockChain.GetWorldState(stateRootHash).GetAccount(accountAddress).GetStates(addresses);
+            IReadOnlyList<IValue> values = _blockChain
+                .GetWorldState(stateRootHash)
+                .GetAccountState(accountAddress)
+                .GetStates(addresses);
             for (int i = 0; i < addresses.Count; i++)
             {
                 result.TryAdd(addresses[i].ToByteArray(), _codec.Encode(values[i] ?? Null.Value));
@@ -287,7 +293,7 @@ namespace NineChronicles.Headless
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
             FungibleAssetValue balance = _blockChain
                 .GetWorldState(blockHash)
-                .GetAccount(accountAddress)
+                .GetAccountState(accountAddress)
                 .GetBalance(address, currency);
             byte[] encoded = _codec.Encode(
               new Bencodex.Types.List(
@@ -314,7 +320,7 @@ namespace NineChronicles.Headless
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
             FungibleAssetValue balance = _blockChain
                 .GetWorldState(stateRootHash)
-                .GetAccount(accountAddress)
+                .GetAccountState(accountAddress)
                 .GetBalance(address, currency);
             byte[] encoded = _codec.Encode(
               new Bencodex.Types.List(

@@ -91,7 +91,10 @@ namespace NineChronicles.Headless.GraphTypes
                     var accountAddress = context.GetArgument<Address>("accountAddress");
                     var address = context.GetArgument<Address>("address");
 
-                    var state = blockChain.GetWorldState(blockHash).GetAccount(accountAddress).GetState(address);
+                    var state = blockChain
+                        .GetWorldState(blockHash)
+                        .GetAccountState(accountAddress)
+                        .GetState(address);
 
                     if (state is null)
                     {

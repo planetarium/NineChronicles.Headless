@@ -27,7 +27,7 @@ namespace NineChronicles.Headless.Tests.Common
 
         public IImmutableDictionary<Address, IAccount> Accounts => _accounts;
 
-        public IAccount GetAccount(Address address) => _accounts.TryGetValue(address, out IAccount? account)
+        public IAccountState GetAccountState(Address address) => _accounts.TryGetValue(address, out IAccount? account)
             ? account
             : new MockAccount(new MockAccountState());
     }

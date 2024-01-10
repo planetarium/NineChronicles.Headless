@@ -452,7 +452,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var subject = subjects.stateSubject;
                     if (service.BlockChain
                         .GetWorldState(eval.OutputState)
-                        .GetAccount(ReservedAddresses.LegacyAccount)
+                        .GetAccountState(ReservedAddresses.LegacyAccount)
                         .GetState(deriveAddress) is Dictionary state)
                     {
                         subject.OnNext(new MonsterCollectionState(state));
