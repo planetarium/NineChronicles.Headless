@@ -43,6 +43,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 source: new StakeStateType.StakeStateContext(
                     stakeState,
                     stakeStateAddress,
+                    stakeStateAddress,
                     mockState,
                     blockIndex, new StateMemoryCache()));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
