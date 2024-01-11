@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
+using Libplanet.Action.State;
 using Libplanet.Blockchain;
 using Libplanet.Common;
 using Libplanet.Crypto;
@@ -21,10 +22,11 @@ using MagicOnion;
 using MagicOnion.Server;
 using Microsoft.Extensions.Caching.Memory;
 using Nekoyume;
-using Nekoyume.Shared.Services;
-using Serilog;
+using Nekoyume.Model.State;
 using Nekoyume.Module;
+using Nekoyume.Shared.Services;
 using Sentry;
+using Serilog;
 using static NineChronicles.Headless.NCActionUtils;
 using NodeExceptionType = Libplanet.Headless.NodeExceptionType;
 using Transaction = Libplanet.Types.Tx.Transaction;
@@ -153,6 +155,26 @@ namespace NineChronicles.Headless
             return new UnaryResult<byte[]>(encoded);
         }
 
+        public UnaryResult<byte[]> GetAgentStateByBlockHash(
+            byte[] blockHashBytes,
+            byte[] addressBytes)
+        {
+            var hash = new BlockHash(blockHashBytes);
+            var worldState = _blockChain.GetWorldState(hash);
+            var address = new Address(addressBytes);
+            return new UnaryResult<byte[]>(_codec.Encode(worldState.GetResolvedState(address, Addresses.Agent)));
+        }
+
+        public UnaryResult<byte[]> GetAgentStateByStateRootHash(
+            byte[] stateRootHashBytes,
+            byte[] addressBytes)
+        {
+            var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var worldState = _blockChain.GetWorldState(stateRootHash);
+            var address = new Address(addressBytes);
+            return new UnaryResult<byte[]>(_codec.Encode(worldState.GetResolvedState(address, Addresses.Agent)));
+        }
+
         public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStatesByBlockHash(
             byte[] blockHashBytes,
             IEnumerable<byte[]> addressBytesList)
@@ -165,7 +187,7 @@ namespace NineChronicles.Headless
             {
                 result.TryAdd(
                     address.ToByteArray(),
-                    new Codec().Encode(worldState.GetAvatarState(address).SerializeList()));
+                    _codec.Encode(worldState.GetFullAvatarStateRaw(address)));
             }));
 
             await Task.WhenAll(taskList);
@@ -185,7 +207,7 @@ namespace NineChronicles.Headless
                 {
                     result.TryAdd(
                         address.ToByteArray(),
-                        new Codec().Encode(worldState.GetAvatarState(address).SerializeList()));
+                        _codec.Encode(worldState.GetFullAvatarStateRaw(address)));
                 }))
                 .ToList();
 
@@ -282,18 +304,16 @@ namespace NineChronicles.Headless
 
         public UnaryResult<byte[]> GetBalanceByBlockHash(
             byte[] blockHashBytes,
-            byte[] accountAddressBytes,
             byte[] addressBytes,
             byte[] currencyBytes)
         {
             var blockHash = new BlockHash(blockHashBytes);
-            var accountAddress = new Address(accountAddressBytes);
             var address = new Address(addressBytes);
             var serializedCurrency = (Bencodex.Types.Dictionary)_codec.Decode(currencyBytes);
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
             FungibleAssetValue balance = _blockChain
                 .GetWorldState(blockHash)
-                .GetAccountState(accountAddress)
+                .GetAccountState(ReservedAddresses.LegacyAccount)
                 .GetBalance(address, currency);
             byte[] encoded = _codec.Encode(
               new Bencodex.Types.List(
@@ -309,18 +329,16 @@ namespace NineChronicles.Headless
 
         public UnaryResult<byte[]> GetBalanceByStateRootHash(
             byte[] stateRootHashBytes,
-            byte[] accountAddressBytes,
             byte[] addressBytes,
             byte[] currencyBytes)
         {
             var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
-            var accountAddress = new Address(accountAddressBytes);
             var address = new Address(addressBytes);
             var serializedCurrency = (Bencodex.Types.Dictionary)_codec.Decode(currencyBytes);
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
             FungibleAssetValue balance = _blockChain
                 .GetWorldState(stateRootHash)
-                .GetAccountState(accountAddress)
+                .GetAccountState(ReservedAddresses.LegacyAccount)
                 .GetBalance(address, currency);
             byte[] encoded = _codec.Encode(
               new Bencodex.Types.List(
