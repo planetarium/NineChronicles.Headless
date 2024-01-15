@@ -41,7 +41,7 @@ namespace NineChronicles.Headless
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.TxStatusType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.AccountStateType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.BencodexValueType>();
-            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.LegacyBencodexValueType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.IValueType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.FungibleAssetValueType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.CurrencyType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.CurrencyInputType>();
