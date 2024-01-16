@@ -11,26 +11,26 @@ type AccountState {
   """Balance at given address and currency hash pair."""
   balance(
     """The address to look up."""
-    address: address!
+    address: Address!
 
     """The currency hash to look up."""
     currencyHash: HashDigestSHA1!
-  ): BencodexValue
+  ): IValue
 
   """Balances at given addresses and currency hash pair."""
   balances(
     """The list of addresses to look up."""
-    addresses: [address!]!
+    addresses: [Address!]!
 
     """The currency hash to look up."""
     currencyHash: HashDigestSHA1!
-  ): [BencodexValue]!
+  ): [IValue]!
 
   """The state at given address."""
   state(
     """The address to look up."""
-    address: address!
-  ): BencodexValue
+    address: Address!
+  ): IValue
 
   """The state root hash associated with this account state."""
   stateRootHash: HashDigestSHA256!
@@ -38,17 +38,17 @@ type AccountState {
   """The states at given addresses."""
   states(
     """The list of addresses to look up."""
-    addresses: [address!]!
-  ): [BencodexValue]!
+    addresses: [Address!]!
+  ): [IValue]!
 
   """Total supply in circulation, if recorded, for given currency hash."""
   totalSupply(
     """The currency hash to look up."""
     currencyHash: HashDigestSHA1!
-  ): BencodexValue
+  ): IValue
 
   """The validator set."""
-  validatorSet: BencodexValue
+  validatorSet: IValue
 }
 
 type Action {
@@ -66,19 +66,19 @@ type ActionMutation {
   """Charge Action Points using Material."""
   chargeActionPoint(
     """Avatar to use potion."""
-    avatarAddress: address!
+    avatarAddress: Address!
   ): TxId!
 
   """Get monster collection reward."""
   claimMonsterCollectionReward(
     """Address of avatar for get reward."""
-    avatarAddress: address!
+    avatarAddress: Address!
   ): TxId!
 
   """Combine new Consumable."""
   combinationConsumable(
     """Avatar address to combine consumable."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """ConsumableRecipe ID from ConsumableRecipeSheet."""
     recipeId: Int!
@@ -90,7 +90,7 @@ type ActionMutation {
   """Combine new equipment."""
   combinationEquipment(
     """Avatar address to create equipment."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """EquipmentRecipe ID from EquipmentRecipeSheet."""
     recipeId: Int!
@@ -126,13 +126,13 @@ type ActionMutation {
   """Get daily reward."""
   dailyReward(
     """Avatar address to receive reward."""
-    avatarAddress: address!
+    avatarAddress: Address!
   ): TxId!
 
   """Start stage to get material."""
   hackAndSlash(
     """Avatar address."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """List of consumable id for use."""
     consumableIds: [Guid]
@@ -156,7 +156,7 @@ type ActionMutation {
   """Upgrade equipment."""
   itemEnhancement(
     """Avatar address to upgrade equipment."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """Equipment Guid for upgrade."""
     itemId: Guid!
@@ -180,10 +180,10 @@ type ActionQuery {
     """Activation code that you've get."""
     activationCode: String!
   ): ByteString! @deprecated(reason: "Since NCIP-15, it doesn't care account activation.")
-  approvePledge(patronAddress: address!): ByteString!
+  approvePledge(patronAddress: Address!): ByteString!
   auraSummon(
     """Avatar address to get summoned items"""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """Summon group id"""
     groupId: Int!
@@ -200,19 +200,19 @@ type ActionQuery {
   ): ByteString!
   claimRaidReward(
     """address of avatar state to receive reward."""
-    avatarAddress: address!
+    avatarAddress: Address!
   ): ByteString!
   claimStakeReward(
     """The avatar address to receive staking rewards."""
-    avatarAddress: address
+    avatarAddress: Address
   ): ByteString
   claimWorldBossKillReward(
     """address of avatar state to receive reward."""
-    avatarAddress: address!
+    avatarAddress: Address!
   ): ByteString!
   combinationConsumable(
     """Avatar address to combine consumable"""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """Recipe ID to combine consumable"""
     recipeId: Int!
@@ -222,7 +222,7 @@ type ActionQuery {
   ): ByteString!
   combinationEquipment(
     """Avatar address to combine equipment"""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """Pay crystal co combine equipment?"""
     payByCrystal: Boolean
@@ -261,10 +261,10 @@ type ActionQuery {
     """tail index of avatar."""
     tail: Int = 0
   ): ByteString!
-  createPledge(agentAddresses: [address!]!, mead: Int = 4, patronAddress: address!): ByteString!
+  createPledge(agentAddresses: [Address!]!, mead: Int = 4, patronAddress: Address!): ByteString!
   dailyReward(
     """Avatar address to get daily reward"""
-    avatarAddress: address!
+    avatarAddress: Address!
   ): ByteString!
   deliverToOthersGarages(
     """Array of currency ticket and quantity to deliver."""
@@ -277,12 +277,12 @@ type ActionQuery {
     memo: String
 
     """Recipient agent address"""
-    recipientAgentAddr: address!
+    recipientAgentAddr: Address!
   ): ByteString!
-  endPledge(agentAddress: address!): ByteString!
+  endPledge(agentAddress: Address!): ByteString!
   grinding(
     """Address of avatar."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """Flag to Charge Action Point."""
     chargeAp: Boolean
@@ -292,7 +292,7 @@ type ActionQuery {
   ): ByteString
   hackAndSlash(
     """Avatar address."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """List of consumable id for use."""
     consumableIds: [Guid]
@@ -323,7 +323,7 @@ type ActionQuery {
     apStoneCount: Int
 
     """Avatar address."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """List of costume id for equip."""
     costumeIds: [Guid]
@@ -342,7 +342,7 @@ type ActionQuery {
   ): ByteString!
   itemEnhancement(
     """Avatar address to enhance item"""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """Target item ID to enhance"""
     itemId: Guid!
@@ -361,14 +361,14 @@ type ActionQuery {
     fungibleIdAndCounts: [FungibleIdAndCountInput!]
 
     """Inventory Address"""
-    inventoryAddr: address
+    inventoryAddr: Address
 
     """Memo"""
     memo: String
   ): ByteString!
   migrateMonsterCollection(
     """The avatar address to receive monster collection rewards."""
-    avatarAddress: address
+    avatarAddress: Address
   ): ByteString!
   patchTableSheet(
     """table data."""
@@ -382,11 +382,11 @@ type ActionQuery {
     assets: [FungibleAssetValueInputType!]!
 
     """address of reward pool for charge reward."""
-    rewardPoolAddress: address!
+    rewardPoolAddress: Address!
   ): ByteString!
   raid(
     """address of avatar state."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """list of costume id."""
     costumeIds: [Guid] = []
@@ -405,15 +405,15 @@ type ActionQuery {
   ): ByteString!
   rapidCombination(
     """Avatar address to execute rapid combination"""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """Slot index to execute rapid"""
     slotIndex: Int!
   ): ByteString!
-  requestPledge(agentAddress: address!, mead: Int = 4): ByteString!
+  requestPledge(agentAddress: Address!, mead: Int = 4): ByteString!
   runeEnhancement(
     """The avatar address to enhance rune."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """Rune ID to enhance."""
     runeId: Int!
@@ -423,7 +423,7 @@ type ActionQuery {
   ): ByteString!
   runeSummon(
     """Avatar address to get summoned items"""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """Summon group id"""
     groupId: Int!
@@ -449,10 +449,10 @@ type ActionQuery {
     rawCurrency: CurrencyInput
 
     """Address of recipient."""
-    recipient: address!
+    recipient: Address!
 
     """Address of sender."""
-    sender: address!
+    sender: Address!
   ): ByteString
   transferAssets(
     """A 80-max length string to note."""
@@ -462,7 +462,7 @@ type ActionQuery {
     recipients: [RecipientsInputType!]!
 
     """Address of sender."""
-    sender: address!
+    sender: Address!
   ): ByteString!
   unloadFromMyGarages(
     """Array of balance address and currency ticker and quantity to send."""
@@ -475,18 +475,18 @@ type ActionQuery {
     memo: String
 
     """Recipient avatar address"""
-    recipientAvatarAddr: address!
+    recipientAvatarAddr: Address!
   ): ByteString!
   unlockEquipmentRecipe(
     """Address of avatar."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """List of EquipmentRecipeSheet row ids to unlock."""
     recipeIds: [Int]!
   ): ByteString
   unlockWorld(
     """Address of avatar."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """List of WorldUnlockSheet row world_id_to_unlock."""
     worldIds: [Int]!
@@ -498,10 +498,10 @@ type ActionTxQuery {
     """Activation code that you've get."""
     activationCode: String!
   ): ByteString! @deprecated(reason: "Since NCIP-15, it doesn't care account activation.")
-  approvePledge(patronAddress: address!): ByteString!
+  approvePledge(patronAddress: Address!): ByteString!
   auraSummon(
     """Avatar address to get summoned items"""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """Summon group id"""
     groupId: Int!
@@ -518,19 +518,19 @@ type ActionTxQuery {
   ): ByteString!
   claimRaidReward(
     """address of avatar state to receive reward."""
-    avatarAddress: address!
+    avatarAddress: Address!
   ): ByteString!
   claimStakeReward(
     """The avatar address to receive staking rewards."""
-    avatarAddress: address
+    avatarAddress: Address
   ): ByteString
   claimWorldBossKillReward(
     """address of avatar state to receive reward."""
-    avatarAddress: address!
+    avatarAddress: Address!
   ): ByteString!
   combinationConsumable(
     """Avatar address to combine consumable"""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """Recipe ID to combine consumable"""
     recipeId: Int!
@@ -540,7 +540,7 @@ type ActionTxQuery {
   ): ByteString!
   combinationEquipment(
     """Avatar address to combine equipment"""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """Pay crystal co combine equipment?"""
     payByCrystal: Boolean
@@ -579,10 +579,10 @@ type ActionTxQuery {
     """tail index of avatar."""
     tail: Int = 0
   ): ByteString!
-  createPledge(agentAddresses: [address!]!, mead: Int = 4, patronAddress: address!): ByteString!
+  createPledge(agentAddresses: [Address!]!, mead: Int = 4, patronAddress: Address!): ByteString!
   dailyReward(
     """Avatar address to get daily reward"""
-    avatarAddress: address!
+    avatarAddress: Address!
   ): ByteString!
   deliverToOthersGarages(
     """Array of currency ticket and quantity to deliver."""
@@ -595,12 +595,12 @@ type ActionTxQuery {
     memo: String
 
     """Recipient agent address"""
-    recipientAgentAddr: address!
+    recipientAgentAddr: Address!
   ): ByteString!
-  endPledge(agentAddress: address!): ByteString!
+  endPledge(agentAddress: Address!): ByteString!
   grinding(
     """Address of avatar."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """Flag to Charge Action Point."""
     chargeAp: Boolean
@@ -610,7 +610,7 @@ type ActionTxQuery {
   ): ByteString
   hackAndSlash(
     """Avatar address."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """List of consumable id for use."""
     consumableIds: [Guid]
@@ -641,7 +641,7 @@ type ActionTxQuery {
     apStoneCount: Int
 
     """Avatar address."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """List of costume id for equip."""
     costumeIds: [Guid]
@@ -660,7 +660,7 @@ type ActionTxQuery {
   ): ByteString!
   itemEnhancement(
     """Avatar address to enhance item"""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """Target item ID to enhance"""
     itemId: Guid!
@@ -679,14 +679,14 @@ type ActionTxQuery {
     fungibleIdAndCounts: [FungibleIdAndCountInput!]
 
     """Inventory Address"""
-    inventoryAddr: address
+    inventoryAddr: Address
 
     """Memo"""
     memo: String
   ): ByteString!
   migrateMonsterCollection(
     """The avatar address to receive monster collection rewards."""
-    avatarAddress: address
+    avatarAddress: Address
   ): ByteString!
   patchTableSheet(
     """table data."""
@@ -700,11 +700,11 @@ type ActionTxQuery {
     assets: [FungibleAssetValueInputType!]!
 
     """address of reward pool for charge reward."""
-    rewardPoolAddress: address!
+    rewardPoolAddress: Address!
   ): ByteString!
   raid(
     """address of avatar state."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """list of costume id."""
     costumeIds: [Guid] = []
@@ -723,15 +723,15 @@ type ActionTxQuery {
   ): ByteString!
   rapidCombination(
     """Avatar address to execute rapid combination"""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """Slot index to execute rapid"""
     slotIndex: Int!
   ): ByteString!
-  requestPledge(agentAddress: address!, mead: Int = 4): ByteString!
+  requestPledge(agentAddress: Address!, mead: Int = 4): ByteString!
   runeEnhancement(
     """The avatar address to enhance rune."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """Rune ID to enhance."""
     runeId: Int!
@@ -741,7 +741,7 @@ type ActionTxQuery {
   ): ByteString!
   runeSummon(
     """Avatar address to get summoned items"""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """Summon group id"""
     groupId: Int!
@@ -767,10 +767,10 @@ type ActionTxQuery {
     rawCurrency: CurrencyInput
 
     """Address of recipient."""
-    recipient: address!
+    recipient: Address!
 
     """Address of sender."""
-    sender: address!
+    sender: Address!
   ): ByteString
   transferAssets(
     """A 80-max length string to note."""
@@ -780,7 +780,7 @@ type ActionTxQuery {
     recipients: [RecipientsInputType!]!
 
     """Address of sender."""
-    sender: address!
+    sender: Address!
   ): ByteString!
   unloadFromMyGarages(
     """Array of balance address and currency ticker and quantity to send."""
@@ -793,18 +793,18 @@ type ActionTxQuery {
     memo: String
 
     """Recipient avatar address"""
-    recipientAvatarAddr: address!
+    recipientAvatarAddr: Address!
   ): ByteString!
   unlockEquipmentRecipe(
     """Address of avatar."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """List of EquipmentRecipeSheet row ids to unlock."""
     recipeIds: [Int]!
   ): ByteString
   unlockWorld(
     """Address of avatar."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """List of WorldUnlockSheet row world_id_to_unlock."""
     worldIds: [Int]!
@@ -817,8 +817,10 @@ type ActivationStatusMutation {
 
 type ActivationStatusQuery {
   activated: Boolean! @deprecated(reason: "Since NCIP-15, it doesn't care account activation.")
-  addressActivated(address: address!): Boolean! @deprecated(reason: "Since NCIP-15, it doesn't care account activation.")
+  addressActivated(address: Address!): Boolean! @deprecated(reason: "Since NCIP-15, it doesn't care account activation.")
 }
+
+scalar Address
 
 type AddressQuery {
   """currency minters address."""
@@ -827,48 +829,48 @@ type AddressQuery {
     A currency type. see also: https://github.com/planetarium/NineChronicles.Headless/blob/main/NineChronicles.Headless/GraphTypes/CurrencyEnumType.cs
     """
     currency: CurrencyEnum!
-  ): [address!]
+  ): [Address!]
 
   """pledge information address."""
   pledgeAddress(
     """address of agent state."""
-    agentAddress: address!
-  ): address!
+    agentAddress: Address!
+  ): Address!
 
   """user information address by world boss season."""
   raiderAddress(
     """address of avatar state."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """world boss season id."""
     raidId: Int!
-  ): address!
+  ): Address!
 
   """raider list address by world boss season."""
   raiderListAddress(
     """world boss season id."""
     raidId: Int!
-  ): address!
+  ): Address!
 
   """boss information address by world boss season."""
   worldBossAddress(
     """world boss season id."""
     raidId: Int!
-  ): address!
+  ): Address!
 
   """user boss kill reward record address by world boss season."""
   worldBossKillRewardRecordAddress(
     """address of avatar state."""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """world boss season id."""
     raidId: Int!
-  ): address!
+  ): Address!
 }
 
 type AgentStateType {
   """Address of agent."""
-  address: address!
+  address: Address!
 
   """List of avatar."""
   avatarStates: [AvatarStateType!]
@@ -893,23 +895,23 @@ type AgentStateType {
 type AppProtocolVersionType {
   extra: ByteString
   signature: ByteString!
-  signer: address!
+  signer: Address!
   version: Int!
 }
 
 type ArenaInfoType {
   active: Boolean!
-  agentAddress: address!
+  agentAddress: Address!
   arenaRecord: ArenaRecordType!
-  avatarAddress: address!
+  avatarAddress: Address!
   avatarName: String!
   dailyChallengeCount: Int!
   score: Int!
 }
 
 type ArenaInformationType {
-  address: address!
-  avatarAddress: address!
+  address: Address!
+  avatarAddress: Address!
   lose: Int!
   purchasedTicketCount: Int!
   score: Int!
@@ -920,7 +922,7 @@ type ArenaInformationType {
 
 type ArenaParticipantType {
   """Address of avatar."""
-  avatarAddr: address!
+  avatarAddr: Address!
 
   """Cp of avatar."""
   cp: Int!
@@ -958,10 +960,10 @@ type AvatarStateType {
   actionPoint: Int!
 
   """Address of avatar."""
-  address: address!
+  address: Address!
 
   """Address of agent."""
-  agentAddress: address!
+  agentAddress: Address!
 
   """Block index at the latest executed action."""
   blockIndex: Int!
@@ -970,7 +972,7 @@ type AvatarStateType {
   characterId: Int!
 
   """Address list of combination slot."""
-  combinationSlotAddresses: [address!]!
+  combinationSlotAddresses: [Address!]!
 
   """Combination slots."""
   combinationSlots: [CombinationSlotStateType!]!
@@ -997,7 +999,7 @@ type AvatarStateType {
   inventory: InventoryType!
 
   """Avatar inventory address."""
-  inventoryAddress: address!
+  inventoryAddress: Address!
 
   """List of acquired item ID."""
   itemMap: CollectionMapType!
@@ -1038,27 +1040,13 @@ type AvatarStateType {
 
 input BalanceInput {
   """Balance Address."""
-  balanceAddr: address
+  balanceAddr: Address
 
   """Fungible asset value ticker and amount."""
   value: SimplifyFungibleAssetValueInput
 }
 
-type BencodexValue {
-  """A base64 representation of the bencodex value encoded to byte array."""
-  base64: String!
-
-  """
-  A hexadecimal representation of the bencodex value encoded as byte array.
-  """
-  hex: String!
-
-  """A human readable representation of the bencodex value."""
-  inspection: String!
-
-  """A JSON representation of the bencodex value"""
-  json: String!
-}
+scalar BencodexValue
 
 scalar BigInt
 
@@ -1067,7 +1055,7 @@ type Block {
   difficulty: Long! @deprecated(reason: "Block does not have Difficulty field in PBFT.")
 
   """A block's hash."""
-  hash: blockHash!
+  hash: BlockHash!
 
   """The height of the block."""
   index: Long!
@@ -1076,7 +1064,7 @@ type Block {
   lastCommit: BlockCommit
 
   """The address of the miner."""
-  miner: address!
+  miner: Address!
 
   """The proof-of-work nonce which satisfies the required difficulty."""
   nonce: ByteString! @deprecated(reason: "Block does not have Nonce field in PBFT.")
@@ -1090,7 +1078,7 @@ type Block {
   previousBlock: Block
 
   """The public key of the Miner."""
-  publicKey: publicKey
+  publicKey: PublicKey
 
   """
   The digital signature of the whole block content (except for hash, which is derived from the signature and other contents)
@@ -1114,7 +1102,7 @@ type Block {
 
 type BlockCommit {
   """The hash of the block which contains block commit."""
-  blockHash: blockHash!
+  blockHash: BlockHash!
 
   """The height of the block commit."""
   height: Long!
@@ -1126,16 +1114,18 @@ type BlockCommit {
   votes: [Vote!]!
 }
 
+scalar BlockHash
+
 type BlockHeader {
   hash: String!
   id: ID!
   index: Int!
-  miner: address
+  miner: Address
 }
 
 type BlockQuery {
-  block(hash: blockHash, index: Long): Block
-  blocks(desc: Boolean = false, excludeEmptyTxs: Boolean = false, limit: Int, miner: address, offset: Int = 0): [Block!]!
+  block(hash: BlockHash, index: Long): Block
+  blocks(desc: Boolean = false, excludeEmptyTxs: Boolean = false, limit: Int, miner: Address, offset: Int = 0): [Block!]!
 }
 
 type BoundPeer {
@@ -1146,7 +1136,7 @@ type BoundPeer {
   publicIpAddress: String
 
   """The public key of the peer."""
-  publicKey: publicKey!
+  publicKey: PublicKey!
 }
 
 scalar Byte
@@ -1154,7 +1144,7 @@ scalar Byte
 scalar ByteString
 
 input ClaimDataInputType {
-  avatarAddress: address!
+  avatarAddress: Address!
   fungibleAssetValues: [FungibleAssetValueInputType!]!
 }
 
@@ -1165,7 +1155,7 @@ type CollectionMapType {
 
 type CombinationSlotStateType {
   """Address of combination slot."""
-  address: address!
+  address: Address!
 
   """Pet id used in equipment"""
   petId: Int
@@ -1227,7 +1217,7 @@ type CostumeType {
 type CraftQuery {
   eventConsumableItemCrafts(
     """Avatar address to craft event item"""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """Recipe ID of event item to craft"""
     eventConsumableItemRecipeId: Int!
@@ -1240,7 +1230,7 @@ type CraftQuery {
   ): ByteString!
   eventMaterialItemCrafts(
     """Avatar address to craft item"""
-    avatarAddress: address!
+    avatarAddress: Address!
 
     """Recipe ID of event item to craft"""
     eventMaterialItemRecipeId: Int!
@@ -1277,7 +1267,7 @@ type Currency {
   """
   The addresses who can mint this currency.  If this is null anyone can mint the currency.  On the other hand, unlike null, an empty set means no one can mint the currency.
   """
-  minters: [address!]
+  minters: [Address!]
 
   """The ticker symbol, e.g., USD."""
   ticker: String!
@@ -1303,7 +1293,7 @@ input CurrencyInput {
   """
   The addresses who can mint this currency.  If this is null anyone can mint the currency.  On the other hand, unlike null, an empty set means no one can mint the currency.
   """
-  minters: [address!]
+  minters: [Address!]
 
   """The ticker symbol, e.g., USD."""
   ticker: String!
@@ -1314,7 +1304,7 @@ input CurrencyInput {
 
 type CurrencyType {
   decimalPlaces: Byte!
-  minters: [address]
+  minters: [Address]
   ticker: String!
 }
 
@@ -1403,7 +1393,7 @@ type FungibleAssetValue {
 
 input FungibleAssetValueInputType {
   decimalPlaces: Byte!
-  minters: [address!]
+  minters: [Address!]
   quantity: BigInt!
   ticker: String!
 }
@@ -1427,7 +1417,7 @@ input FungibleIdAndCountInput {
 }
 
 type FungibleItemGarageWithAddressType {
-  addr: address
+  addr: Address
   count: Int
   fungibleItemId: String
   item: FungibleItemType
@@ -1444,10 +1434,10 @@ type FungibleItemType {
 }
 
 type GaragesType {
-  agentAddr: address
+  agentAddr: Address
   fungibleItemGarages: [FungibleItemGarageWithAddressType]
   garageBalances: [FungibleAssetValue]
-  garageBalancesAddr: address
+  garageBalancesAddr: Address
 }
 
 scalar Guid
@@ -1462,13 +1452,29 @@ type HelperQuery {
   bencodexValue(
     """The byte array in hex representation to decode."""
     hex: String!
-  ): BencodexValue!
+  ): IValue!
 
   """Converts currency info to currency hash."""
   currencyHash(
     """The currency to convert."""
     currency: CurrencyInput!
   ): HashDigestSHA1!
+}
+
+type IValue {
+  """A base64 representation of the bencodex value encoded to byte array."""
+  base64: String!
+
+  """
+  A hexadecimal representation of the bencodex value encoded as byte array.
+  """
+  hex: String!
+
+  """A human readable representation of the bencodex value."""
+  inspection: String!
+
+  """A JSON representation of the bencodex value"""
+  json: String!
 }
 
 type InventoryItemType {
@@ -1580,11 +1586,11 @@ type ItemUsableType {
 
 type KeyStoreMutation {
   createPrivateKey(passphrase: String!, privateKey: ByteString): PrivateKeyType!
-  revokePrivateKey(address: address!): ProtectedPrivateKeyType!
+  revokePrivateKey(address: Address!): ProtectedPrivateKeyType!
 }
 
 type KeyStoreType {
-  decryptedPrivateKey(address: address!, passphrase: String!): ByteString!
+  decryptedPrivateKey(address: Address!, passphrase: String!): ByteString!
 
   """An API to provide conversion to public-key, address."""
   privateKey(
@@ -1594,15 +1600,13 @@ type KeyStoreType {
   protectedPrivateKeys: [ProtectedPrivateKeyType!]!
 }
 
-scalar LegacyBencodexValue
-
 type LibplanetStateQuery {
   """
   Gets the account state associated with given block hash or state root hash. Exactly one of the arguments must be specified.
   """
   account(
     """A block hash to use as a pointer."""
-    blockHash: blockHash
+    blockHash: BlockHash
 
     """A state root hash to use as a pointer."""
     stateRootHash: HashDigestSHA256
@@ -1613,15 +1617,15 @@ type LibplanetStateQuery {
   """
   accounts(
     """A list of block hashes to use as pointers."""
-    blockHashes: [blockHash!]
+    blockHashes: [BlockHash!]
 
     """A list of state root hashes to use as pointers."""
     stateRootHashes: [HashDigestSHA256!]
   ): [AccountState!]!
-  balance(currency: CurrencyInput!, offsetBlockHash: blockHash, offsetStateRootHash: HashDigestSHA256, owner: address!): FungibleAssetValue!
-  states(addresses: [address!]!, offsetBlockHash: blockHash, offsetStateRootHash: HashDigestSHA256): [LegacyBencodexValue]!
-  totalSupply(currency: CurrencyInput!, offsetBlockHash: blockHash, offsetStateRootHash: HashDigestSHA256): FungibleAssetValue
-  validators(offsetBlockHash: blockHash, offsetStateRootHash: HashDigestSHA256): [Validator!]
+  balance(currency: CurrencyInput!, offsetBlockHash: BlockHash, offsetStateRootHash: HashDigestSHA256, owner: Address!): FungibleAssetValue!
+  states(addresses: [Address!]!, offsetBlockHash: BlockHash, offsetStateRootHash: HashDigestSHA256): [BencodexValue]!
+  totalSupply(currency: CurrencyInput!, offsetBlockHash: BlockHash, offsetStateRootHash: HashDigestSHA256): FungibleAssetValue
+  validators(offsetBlockHash: BlockHash, offsetStateRootHash: HashDigestSHA256): [Validator!]
 }
 
 scalar Long
@@ -1667,7 +1671,7 @@ input MaterialsToUseInputType {
 type MeadPledgeType {
   approved: Boolean!
   mead: Int!
-  patronAddress: address
+  patronAddress: Address
 }
 
 type MonsterCollectionRewardInfoType {
@@ -1686,7 +1690,7 @@ type MonsterCollectionSheetType {
 }
 
 type MonsterCollectionStateType {
-  address: address!
+  address: Address!
   claimableBlockIndex: Long!
   expiredBlockIndex: Long!
   level: Long!
@@ -1750,14 +1754,14 @@ type NodeStatusType {
   """Ids of staged transactions from the current node."""
   stagedTxIds(
     """Target address to query"""
-    address: address
+    address: Address
   ): [TxId]
 
   """The number of ids of staged transactions from the current node."""
   stagedTxIdsCount: Int
 
   """A list of subscribers' address"""
-  subscriberAddresses: [address]
+  subscriberAddresses: [Address]
 
   """The number of a list of subscribers' address"""
   subscriberAddressesCount: Int
@@ -1773,7 +1777,7 @@ type NodeStatusType {
     """
     List only blocks mined by the given address.  (List everything if omitted.)
     """
-    miner: address
+    miner: Address
 
     """The number of blocks to skip from tip."""
     offset: Int = 0
@@ -1798,7 +1802,7 @@ type NotificationType {
 }
 
 type OrderDigestListStateType {
-  address: address
+  address: Address
   orderDigestList: [OrderDigestType]!
 }
 
@@ -1822,7 +1826,7 @@ type OrderDigestType {
   price: String!
 
   """Address of seller agent."""
-  sellerAgentAddress: address!
+  sellerAgentAddress: Address!
 
   """Block index order started."""
   startedBlockIndex: Int!
@@ -1859,12 +1863,14 @@ type PrivateKeyType {
 }
 
 type ProtectedPrivateKeyType {
-  address: address!
+  address: Address!
 }
+
+scalar PublicKey
 
 type PublicKeyType {
   """An address derived from the public-key."""
-  address: address!
+  address: Address!
 
   """A representation of public-key with hexadecimal format."""
   hex(
@@ -1879,7 +1885,7 @@ type QuestListType {
 
 type RaiderStateType {
   """address of avatar state."""
-  avatarAddress: address!
+  avatarAddress: Address!
 
   """name of avatar state."""
   avatarName: String!
@@ -1923,13 +1929,13 @@ type RaiderStateType {
 
 type RankingInfoType {
   """Address of agent."""
-  agentAddress: address!
+  agentAddress: Address!
 
   """Equipped Armor ID from EquipmentItemSheet."""
   armorId: Int!
 
   """Address of avatar."""
-  avatarAddress: address!
+  avatarAddress: Address!
 
   """Avatar name."""
   avatarName: String!
@@ -1949,7 +1955,7 @@ type RankingInfoType {
 
 type RankingMapStateType {
   """Address of RankingMapState."""
-  address: address!
+  address: Address!
 
   """RankingMapState Capacity."""
   capacity: Int!
@@ -1960,15 +1966,15 @@ type RankingMapStateType {
 
 input RecipientsInputType {
   amount: FungibleAssetValueInputType!
-  recipient: address!
+  recipient: Address!
 }
 
 type RpcInformationQuery {
   """List of address connected to this node."""
-  clients: [address]!
+  clients: [Address]!
 
   """clients connected to this node by device."""
-  clientsByDevice(device: String!): [address!]!
+  clientsByDevice(device: String!): [Address!]!
 
   """clients connected to this node grouped by Ip addresses."""
   clientsByIps(minimum: Int!): [MultiAccountInfo]!
@@ -1998,7 +2004,7 @@ type RuneStateType {
 
 type ShardedShopStateV2Type {
   """Address of sharded shop."""
-  address: address!
+  address: Address!
 
   """List of OrderDigest."""
   orderDigestList(
@@ -2024,15 +2030,15 @@ type ShopItemType {
   productId: Guid!
 
   """Address of seller agent."""
-  sellerAgentAddress: address!
+  sellerAgentAddress: Address!
 
   """Address of seller avatar."""
-  sellerAvatarAddress: address!
+  sellerAvatarAddress: Address!
 }
 
 type ShopStateType {
   """Address of shop."""
-  address: address!
+  address: Address!
 
   """List of ShopItem."""
   products(
@@ -2115,7 +2121,7 @@ type StakeStateType {
   achievements: StakeAchievementsType @deprecated(reason: "Since StakeStateV2, the achievement became removed.")
 
   """The address of current state."""
-  address: address!
+  address: Address!
 
   """The block index the user can cancel the staking."""
   cancellableBlockIndex: Long!
@@ -2169,12 +2175,12 @@ type StandaloneMutation {
     memo: String
 
     """A hex-encoded value for address of recipient."""
-    recipient: address!
+    recipient: Address!
 
     """A sender's transaction counter. You can get it through nextTxNonce()."""
     txNonce: Long!
   ): TxId
-  transferGold(amount: String!, recipient: address!): TxId @deprecated(reason: "Incorrect remittance may occur when using transferGold() to the same address consecutively. Use transfer() instead.")
+  transferGold(amount: String!, recipient: Address!): TxId @deprecated(reason: "Incorrect remittance may occur when using transferGold() to the same address consecutively. Use transfer() instead.")
 }
 
 type StandaloneQuery {
@@ -2207,7 +2213,7 @@ type StandaloneQuery {
   ): TransactionType @deprecated(reason: "The root query is not the best place for getTx so it was moved. Use transaction.getTx()")
   goldBalance(
     """Target address to query"""
-    address: address!
+    address: Address!
 
     """Offset block hash for query."""
     hash: ByteString
@@ -2215,16 +2221,16 @@ type StandaloneQuery {
   keyStore: KeyStoreType @deprecated(reason: "Use `planet key` command instead.  https://www.npmjs.com/package/@planetarium/cli")
 
   """Address of current node."""
-  minerAddress: address
+  minerAddress: Address
 
   """Get monster collection status by address."""
   monsterCollectionStatus(
     """agent address."""
-    address: address
+    address: Address
   ): MonsterCollectionStatusType
   nextTxNonce(
     """Target address to query"""
-    address: address!
+    address: Address!
   ): Long! @deprecated(reason: "The root query is not the best place for nextTxNonce so it was moved. Use transaction.nextTxNonce()")
   nodeStatus: NodeStatusType!
 
@@ -2235,7 +2241,7 @@ type StandaloneQuery {
   rpcInformation: RpcInformationQuery!
   state(
     """The address of state to fetch from the chain."""
-    address: address!
+    address: Address!
 
     """The hash of the block used to fetch state from chain."""
     hash: ByteString
@@ -2247,7 +2253,7 @@ type StandaloneQuery {
 
   """Query for transaction."""
   transaction: TransactionHeadlessQuery!
-  transferNCGHistories(blockHash: ByteString!, recipient: address): [TransferNCGHistoryType!]!
+  transferNCGHistories(blockHash: ByteString!, recipient: Address): [TransferNCGHistoryType!]!
 
   """The validation method provider for Libplanet types."""
   validation: ValidationQuery!
@@ -2256,7 +2262,7 @@ type StandaloneQuery {
 type StandaloneSubscription {
   balanceByAgent(
     """A hex-encoded address of agent."""
-    address: address!
+    address: Address!
   ): String!
   differentAppProtocolVersionEncounter: DifferentAppProtocolVersionEncounterType!
   nodeException: NodeExceptionType!
@@ -2289,13 +2295,13 @@ type StateQuery {
   """State for agent."""
   agent(
     """Address of agent."""
-    address: address!
+    address: Address!
   ): AgentStateType
 
   """List of arena information of requested arena and avatar list"""
   arenaInformation(
     """List of avatar address to get arena information"""
-    avatarAddresses: [address!]!
+    avatarAddresses: [Address!]!
 
     """Championship ID to get arena information"""
     championshipId: Int!
@@ -2303,22 +2309,22 @@ type StateQuery {
     """Round of championship to get arena information"""
     round: Int!
   ): [ArenaInformationType!]!
-  arenaParticipants(avatarAddress: address!, filterBounds: Boolean! = true): [ArenaParticipantType]!
+  arenaParticipants(avatarAddress: Address!, filterBounds: Boolean! = true): [ArenaParticipantType]!
 
   """State for avatar."""
   avatar(
     """Address of avatar."""
-    avatarAddress: address!
+    avatarAddress: Address!
   ): AvatarStateType
 
   """Avatar states having some order as addresses"""
   avatars(
     """Addresses of avatars to query."""
-    addresses: [address!]!
+    addresses: [Address!]!
   ): [AvatarStateType]!
 
   """asset balance by currency."""
-  balance(address: address!, currency: CurrencyInput!): FungibleAssetValueWithCurrencyType!
+  balance(address: Address!, currency: CurrencyInput!): FungibleAssetValueWithCurrencyType!
   cachedSheet(tableName: String!): String
   crystalMonsterCollectionMultiplierSheet: CrystalMonsterCollectionMultiplierSheetType
 
@@ -2328,7 +2334,7 @@ type StateQuery {
   """
   garages(
     """Agent address to get balances and fungible items in garages"""
-    agentAddr: address!
+    agentAddr: Address!
 
     """List of currency enums to get balances in garages"""
     currencyEnums: [CurrencyEnum!]
@@ -2347,10 +2353,10 @@ type StateQuery {
   """State for monster collection."""
   monsterCollectionState(
     """Address of agent."""
-    agentAddress: address!
+    agentAddress: Address!
   ): MonsterCollectionStateType
-  orderDigestList(avatarAddress: address!): OrderDigestListStateType
-  pledge(agentAddress: address!): MeadPledgeType!
+  orderDigestList(avatarAddress: Address!): OrderDigestListStateType
+  pledge(agentAddress: Address!): MeadPledgeType!
 
   """world boss season id by block index."""
   raidId(
@@ -2361,12 +2367,12 @@ type StateQuery {
   ): Int!
 
   """raider address list by world boss season."""
-  raiderList(raiderListAddress: address!): [address!]
+  raiderList(raiderListAddress: Address!): [Address!]
 
   """world boss season user information."""
   raiderState(
     """address of world boss season."""
-    raiderAddress: address!
+    raiderAddress: Address!
   ): RaiderStateType
 
   """State for avatar EXP record."""
@@ -2395,25 +2401,25 @@ type StateQuery {
   """State for staking."""
   stakeState(
     """Address of agent who staked."""
-    address: address!
+    address: Address!
   ): StakeStateType
 
   """Staking states having same order as addresses"""
   stakeStates(
     """Addresses of agent who staked."""
-    addresses: [address]!
+    addresses: [Address]!
   ): [StakeStateType]!
 
   """List of unlocked equipment recipe sheet row ids."""
   unlockedRecipeIds(
     """Address of avatar."""
-    avatarAddress: address!
+    avatarAddress: Address!
   ): [Int]
 
   """List of unlocked world sheet row ids."""
   unlockedWorldIds(
     """Address of avatar."""
-    avatarAddress: address!
+    avatarAddress: Address!
   ): [Int]
 
   """State for weekly arena."""
@@ -2423,10 +2429,10 @@ type StateQuery {
   ): WeeklyArenaStateType
 
   """user boss kill reward record by world boss season."""
-  worldBossKillRewardRecord(worldBossKillRewardRecordAddress: address!): WorldBossKillRewardRecordType
+  worldBossKillRewardRecord(worldBossKillRewardRecordAddress: Address!): WorldBossKillRewardRecordType
 
   """world boss season boss information."""
-  worldBossState(bossAddress: address!): WorldBossStateType
+  worldBossState(bossAddress: Address!): WorldBossStateType
 }
 
 type StatsMapType {
@@ -2451,7 +2457,7 @@ type Transaction {
   blockRef: Block!
 
   """A unique identifier derived from this transaction content."""
-  id: txId!
+  id: TxId!
 
   """
   The number of previous transactions committed by the signer of this tx.
@@ -2468,13 +2474,13 @@ type Transaction {
   signature: ByteString!
 
   """An address of the account who signed this transaction."""
-  signer: address!
+  signer: Address!
 
   """The time this transaction was created and signed."""
   timestamp: DateTimeOffset!
 
   """Addresses whose states were affected by Actions."""
-  updatedAddresses: [address!]!
+  updatedAddresses: [Address!]!
 }
 
 type TransactionHeadlessQuery {
@@ -2511,7 +2517,7 @@ type TransactionHeadlessQuery {
   ): [TransactionType]
   nextTxNonce(
     """Target address to query"""
-    address: address!
+    address: Address!
   ): Long!
   signTransaction(
     """The hexadecimal string of signature of the given unsigned transaction."""
@@ -2525,11 +2531,11 @@ type TransactionHeadlessQuery {
   transactionResult(
     """transaction id."""
     txId: TxId!
-  ): TxResultType!
+  ): TxResult!
   transactionResults(
     """transaction ids."""
     txIds: [TxId]!
-  ): [TxResultType]!
+  ): [TxResult]!
   unsignedTransaction(
     maxGasPrice: FungibleAssetValueInputType = {decimalPlaces: 18, minters: null, quantity: 1000000000000000000, ticker: "Mead"}
 
@@ -2559,15 +2565,15 @@ type TransactionQuery {
   ): String!
   nextNonce(
     """Address of the account to get the next tx nonce."""
-    address: address!
+    address: Address!
   ): Long!
-  stagedTransactions(desc: Boolean = false, limit: Int, offset: Int = 0, signer: address): [Transaction!]!
-  transaction(id: txId!): Transaction
+  stagedTransactions(desc: Boolean = false, limit: Int, offset: Int = 0, signer: Address): [Transaction!]!
+  transaction(id: TxId!): Transaction
   transactionResult(
     """transaction id."""
-    txId: txId!
-  ): TxResultType!
-  transactions(desc: Boolean = false, limit: Int, offset: Int = 0, signer: address): [Transaction!]!
+    txId: TxId!
+  ): TxResult!
+  transactions(desc: Boolean = false, limit: Int, offset: Int = 0, signer: Address): [Transaction!]!
   unsignedTransaction(
     """The nonce for Transaction."""
     nonce: Long
@@ -2602,27 +2608,27 @@ type TransactionType {
   signature: ByteString!
 
   """An address of the account who signed this transaction."""
-  signer: address!
+  signer: Address!
 
   """The time this transaction was created and signed."""
   timestamp: String!
 
   """Addresses whose states were affected by Actions."""
-  updatedAddresses: [address]!
+  updatedAddresses: [Address]!
 }
 
 type TransferNCGHistoryType {
   amount: String!
   blockHash: ByteString!
   memo: String
-  recipient: address!
-  sender: address!
+  recipient: Address!
+  sender: Address!
   txId: ByteString!
 }
 
 scalar TxId
 
-type TxResultType {
+type TxResult {
   """The block hash which the target transaction executed."""
   blockHash: String
 
@@ -2652,7 +2658,7 @@ enum TxStatus {
 
 type TxType {
   transaction: TransactionType!
-  txResult: TxResultType
+  txResult: TxResult
 }
 
 type ValidationQuery {
@@ -2676,7 +2682,7 @@ type Validator {
   power: BigInt!
 
   """The public key of the validator."""
-  publicKey: publicKey!
+  publicKey: PublicKey!
 }
 
 type Vote {
@@ -2699,13 +2705,13 @@ type Vote {
   timestamp: DateTimeOffset!
 
   """Public key of the validator which is subject of the vote."""
-  validatorPublicKey: publicKey!
+  validatorPublicKey: PublicKey!
 }
 
 scalar VoteFlag
 
 type WeeklyArenaStateType {
-  address: address!
+  address: Address!
   ended: Boolean!
   orderedArenaInfos: [ArenaInfoType]!
 }
@@ -2755,11 +2761,3 @@ type WorldType {
   stageEnd: Int!
   unlockedBlockIndex: Long!
 }
-
-scalar address
-
-scalar blockHash
-
-scalar publicKey
-
-scalar txId
