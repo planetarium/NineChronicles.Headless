@@ -48,15 +48,12 @@ namespace Libplanet.Extensions.PluggedActionEvaluator
 
         public IReadOnlyList<ICommittedActionEvaluation> Evaluate(
             IPreEvaluationBlock block,
-            HashDigest<SHA256>? baseStateRootHash,
-            out HashDigest<SHA256> stateRootHash)
+            HashDigest<SHA256>? baseStateRootHash)
         {
             var evaluations = _pluginActionEvaluator.Evaluate(
                     PreEvaluationBlockMarshaller.Serialize(block),
-                    baseStateRootHash is { } srh ? srh.ToByteArray() : null,
-                    out var stateRootHashBytes)
+                    baseStateRootHash is { } srh ? srh.ToByteArray() : null)
                 .Select(eval => ActionEvaluationMarshaller.Deserialize(eval)).ToList().AsReadOnly();
-            stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
             return evaluations;
         }
     }
