@@ -22,11 +22,11 @@ public class ForkableActionEvaluatorTest
             ((101L, long.MaxValue), new PostActionEvaluator()),
         }, new SingleActionLoader(typeof(MockAction)));
 
-        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(0), null, out _)).Action);
-        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(99), null, out _)).Action);
-        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(100), null, out _)).Action);
-        Assert.Equal((Text)"POST", Assert.Single(evaluator.Evaluate(new MockBlock(101), null, out _)).Action);
-        Assert.Equal((Text)"POST", Assert.Single(evaluator.Evaluate(new MockBlock(long.MaxValue), null, out _)).Action);
+        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(0), null)).Action);
+        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(99), null)).Action);
+        Assert.Equal((Text)"PRE", Assert.Single(evaluator.Evaluate(new MockBlock(100), null)).Action);
+        Assert.Equal((Text)"POST", Assert.Single(evaluator.Evaluate(new MockBlock(101), null)).Action);
+        Assert.Equal((Text)"POST", Assert.Single(evaluator.Evaluate(new MockBlock(long.MaxValue), null)).Action);
     }
 
     [Fact]
@@ -63,9 +63,8 @@ class PostActionEvaluator : IActionEvaluator
 {
     public IActionLoader ActionLoader => throw new NotSupportedException();
     public IReadOnlyList<ICommittedActionEvaluation> Evaluate(
-        IPreEvaluationBlock block, HashDigest<SHA256>? baseStateRootHash, out HashDigest<SHA256> stateRootHash)
+        IPreEvaluationBlock block, HashDigest<SHA256>? baseStateRootHash)
     {
-        stateRootHash = new HashDigest<SHA256>();
         return new ICommittedActionEvaluation[]
         {
             new CommittedActionEvaluation(
@@ -88,9 +87,8 @@ class PreActionEvaluator : IActionEvaluator
 {
     public IActionLoader ActionLoader => throw new NotSupportedException();
     public IReadOnlyList<ICommittedActionEvaluation> Evaluate(
-        IPreEvaluationBlock block, HashDigest<SHA256>? baseStateRootHash, out HashDigest<SHA256> stateRootHash)
+        IPreEvaluationBlock block, HashDigest<SHA256>? baseStateRootHash)
     {
-        stateRootHash = new HashDigest<SHA256>();
         return new ICommittedActionEvaluation[]
         {
             new CommittedActionEvaluation(
