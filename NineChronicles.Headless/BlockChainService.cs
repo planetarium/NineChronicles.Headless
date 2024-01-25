@@ -155,24 +155,42 @@ namespace NineChronicles.Headless
             return new UnaryResult<byte[]>(encoded);
         }
 
-        public UnaryResult<byte[]> GetAgentStateByBlockHash(
+        public async UnaryResult<Dictionary<byte[], byte[]>> GetAgentStatesByBlockHash(
             byte[] blockHashBytes,
-            byte[] addressBytes)
+            IEnumerable<byte[]> addressBytesList)
         {
             var hash = new BlockHash(blockHashBytes);
             var worldState = _blockChain.GetWorldState(hash);
-            var address = new Address(addressBytes);
-            return new UnaryResult<byte[]>(_codec.Encode(worldState.GetResolvedState(address, Addresses.Agent)));
+            var result = new ConcurrentDictionary<byte[], byte[]>();
+            var addresses = addressBytesList.Select(a => new Address(a)).ToList();
+            var taskList = addresses.Select(address => Task.Run(() =>
+            {
+                result.TryAdd(
+                    address.ToByteArray(),
+                    _codec.Encode(worldState.GetResolvedState(address, Addresses.Agent)));
+            }));
+
+            await Task.WhenAll(taskList);
+            return result.ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
-        public UnaryResult<byte[]> GetAgentStateByStateRootHash(
+        public async UnaryResult<Dictionary<byte[], byte[]>> GetAgentStatesByStateRootHash(
             byte[] stateRootHashBytes,
-            byte[] addressBytes)
+            IEnumerable<byte[]> addressBytesList)
         {
             var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
             var worldState = _blockChain.GetWorldState(stateRootHash);
-            var address = new Address(addressBytes);
-            return new UnaryResult<byte[]>(_codec.Encode(worldState.GetResolvedState(address, Addresses.Agent)));
+            var result = new ConcurrentDictionary<byte[], byte[]>();
+            var addresses = addressBytesList.Select(a => new Address(a)).ToList();
+            var taskList = addresses.Select(address => Task.Run(() =>
+            {
+                result.TryAdd(
+                    address.ToByteArray(),
+                    _codec.Encode(worldState.GetResolvedState(address, Addresses.Agent)));
+            }));
+
+            await Task.WhenAll(taskList);
+            return result.ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
         public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStatesByBlockHash(
