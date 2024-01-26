@@ -162,11 +162,10 @@ namespace NineChronicles.Headless
             var hash = new BlockHash(blockHashBytes);
             var worldState = _blockChain.GetWorldState(hash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
-            var addresses = addressBytesList.Select(a => new Address(a)).ToList();
-            var taskList = addresses.Select(address => Task.Run(() =>
+            var taskList = addressBytesList.Select(addressByte => Task.Run(() =>
             {
-                var value = worldState.GetResolvedState(address, Addresses.Agent);
-                result.TryAdd(address.ToByteArray(), _codec.Encode(value ?? Null.Value));
+                var value = worldState.GetResolvedState(new Address(addressByte), Addresses.Agent);
+                result.TryAdd(addressByte, _codec.Encode(value ?? Null.Value));
             }));
 
             await Task.WhenAll(taskList);
@@ -180,11 +179,10 @@ namespace NineChronicles.Headless
             var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
             var worldState = _blockChain.GetWorldState(stateRootHash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
-            var addresses = addressBytesList.Select(a => new Address(a)).ToList();
-            var taskList = addresses.Select(address => Task.Run(() =>
+            var taskList = addressBytesList.Select(addressByte => Task.Run(() =>
             {
-                var value = worldState.GetResolvedState(address, Addresses.Agent);
-                result.TryAdd(address.ToByteArray(), _codec.Encode(value ?? Null.Value));
+                var value = worldState.GetResolvedState(new Address(addressByte), Addresses.Agent);
+                result.TryAdd(addressByte, _codec.Encode(value ?? Null.Value));
             }));
 
             await Task.WhenAll(taskList);
