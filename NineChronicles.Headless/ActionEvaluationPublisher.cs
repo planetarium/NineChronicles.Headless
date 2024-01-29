@@ -330,6 +330,8 @@ namespace NineChronicles.Headless
                             {
                                 adjacencyList[id] = new List<string>();
                             }
+
+                            adjacencyList[id].Add(ip);
                         }
                         catch (Exception ex)
                         {
@@ -339,8 +341,6 @@ namespace NineChronicles.Headless
                                 ex.Message,
                                 ex.StackTrace);  
                         }
-
-                        adjacencyList[id].Add(ip);
                     }
                 }
 
