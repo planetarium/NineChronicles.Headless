@@ -324,10 +324,22 @@ namespace NineChronicles.Headless
                     {
                         adjacencyList[ip].Add(id);
 
-                        if (!adjacencyList.ContainsKey(id))
+                        try
                         {
-                            adjacencyList[id] = new List<string>();
+                            if (!adjacencyList.ContainsKey(id))
+                            {
+                                adjacencyList[id] = new List<string>();
+                            }
                         }
+                        catch (Exception ex)
+                        {
+                            Log.Error(
+                                "[AEP-ERROR] Id: {id}, Message: {message}, StackTrace: {stacktrace}",
+                                id,
+                                ex.Message,
+                                ex.StackTrace);  
+                        }
+
                         adjacencyList[id].Add(ip);
                     }
                 }
