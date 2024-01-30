@@ -339,7 +339,7 @@ namespace NineChronicles.Headless
                                 "[AEP-ERROR] Id: {id}, Message: {message}, StackTrace: {stacktrace}",
                                 id,
                                 ex.Message,
-                                ex.StackTrace);  
+                                ex.StackTrace);
                         }
                     }
                 }
@@ -348,12 +348,23 @@ namespace NineChronicles.Headless
                 var groups = new List<(HashSet<string> IPs, HashSet<string> IDs)>();
                 foreach (var node in adjacencyList.Keys)
                 {
-                    if (!visited.Contains(node))
+                    try
                     {
-                        var ips = new HashSet<string>();
-                        var ids = new HashSet<string>();
-                        DFS(node, ips, ids, dict);
-                        groups.Add((ips, ids));
+                        if (!visited.Contains(node))
+                        {
+                            var ips = new HashSet<string>();
+                            var ids = new HashSet<string>();
+                            DFS(node, ips, ids, dict);
+                            groups.Add((ips, ids));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(
+                            "[AEP-ERROR-DFS] Node: {node}, Message: {message}, StackTrace: {stacktrace}",
+                            node,
+                            ex.Message,
+                            ex.StackTrace);
                     }
                 }
 
