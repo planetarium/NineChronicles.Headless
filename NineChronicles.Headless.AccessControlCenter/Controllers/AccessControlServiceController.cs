@@ -35,7 +35,7 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
         [HttpPost("entries/add-tx-quota/{address}")]
         public ActionResult AddTxQuota(string address, [FromBody] int quota)
         {
-            var maxQuota = 10;
+            var maxQuota = 100;
             if (quota > maxQuota)
             {
                 return BadRequest($"The quota cannot exceed {maxQuota}.");
@@ -48,7 +48,7 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
         [HttpPost("entries/bulk-add-tx-quota")]
         public ActionResult BulkAddTxQuota([FromBody] BulkAddTxQuotaInput bulkAddTxQuotaInput)
         {
-            var maxQuota = 10;
+            var maxQuota = 100;
             var maxAddressCount = 100;
             if (bulkAddTxQuotaInput.Quota > maxQuota)
             {

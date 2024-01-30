@@ -45,6 +45,17 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
 
                     return null;
                 });
+            Field<StringGraphType>(
+                "fungibleItemId",
+                resolve: context =>
+                {
+                    if (context.Source.item is IFungibleItem fungibleItem)
+                    {
+                        return fungibleItem.FungibleId.ToString();
+                    }
+
+                    return null;
+                });
         }
     }
 }

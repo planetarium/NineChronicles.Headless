@@ -17,12 +17,14 @@ using Libplanet.Types.Blocks;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
+using Microsoft.Extensions.Configuration;
 using Nekoyume.Action.Loader;
 using Nekoyume.Blockchain.Policy;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Executable.Store;
+using Serilog;
 using Serilog.Core;
 using static NineChronicles.Headless.NCActionUtils;
 using CoconaUtils = Libplanet.Extensions.Cocona.Utils;
@@ -380,39 +382,46 @@ namespace NineChronicles.Headless.Executable.Commands
             string? storePath = null,
             [Argument("BLOCK-BEFORE",
                 Description = "Number of blocks to truncate from the tip")]
-            int blockBefore = 10,
+            int blockBefore = 1,
             [Argument("SNAPSHOT-TYPE",
                 Description = "Type of snapshot to take (full, partition, or all)")]
             SnapshotType snapshotType = SnapshotType.Partition)
         {
             try
             {
-                // If store changed epoch unit seconds, this will be changed too
-                const int blockEpochUnitSeconds = 86400;
-                const int txEpochUnitSeconds = 86400;
+                var snapshotStart = DateTimeOffset.Now;
+                _console.Out.WriteLine($"Create Snapshot-{snapshotType.ToString()} start.");
 
+                // If store changed epoch unit seconds, this will be changed too
+                const int epochUnitSeconds = 86400;
                 string defaultStorePath = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     "planetarium",
                     "9c"
                 );
 
-                var metadataDirectory = Path.Combine(outputDirectory, "metadata");
+                if (blockBefore < 0)
+                {
+                    throw new CommandExitedException("The --block-before option must be greater than or equal to 0.",
+                        -1);
+                }
 
                 Directory.CreateDirectory(outputDirectory);
                 Directory.CreateDirectory(Path.Combine(outputDirectory, "partition"));
                 Directory.CreateDirectory(Path.Combine(outputDirectory, "state"));
-                Directory.CreateDirectory(metadataDirectory);
+                Directory.CreateDirectory(Path.Combine(outputDirectory, "metadata"));
                 Directory.CreateDirectory(Path.Combine(outputDirectory, "full"));
+                Directory.CreateDirectory(Path.Combine(outputDirectory, "temp"));
 
                 outputDirectory = string.IsNullOrEmpty(outputDirectory)
                     ? Environment.CurrentDirectory
                     : outputDirectory;
 
+                var metadataDirectory = Path.Combine(outputDirectory, "metadata");
+                var tempDirectory = Path.Combine(outputDirectory, "temp");
                 int currentMetadataBlockEpoch = GetMetaDataEpoch(metadataDirectory, "BlockEpoch");
                 int currentMetadataTxEpoch = GetMetaDataEpoch(metadataDirectory, "TxEpoch");
                 int previousMetadataBlockEpoch = GetMetaDataEpoch(metadataDirectory, "PreviousBlockEpoch");
-                int previousMetadataTxEpoch = GetMetaDataEpoch(metadataDirectory, "PreviousTxEpoch");
 
                 storePath = string.IsNullOrEmpty(storePath) ? defaultStorePath : storePath;
                 if (!Directory.Exists(storePath))
@@ -428,25 +437,21 @@ namespace NineChronicles.Headless.Executable.Commands
                 var stateHashesPath = Path.Combine(storePath, "state_hashes");
 
                 var staleDirectories =
-                new[] { mainPath, statePath, stateRefPath, stateHashesPath };
-#pragma warning disable S3267
-                foreach (var staleDirectory in staleDirectories)
+                    new[] { mainPath, statePath, stateRefPath, stateHashesPath };
+                staleDirectories.Where(Directory.Exists).ToList()
+                    .ForEach(staleDirectory => Directory.Delete(staleDirectory, true));
+
+
+                if (RocksDBStore.MigrateChainDBFromColumnFamilies(Path.Combine(storePath, "chain")))
                 {
-                    if (Directory.Exists(staleDirectory))
-                    {
-                        Directory.Delete(staleDirectory, true);
-                    }
+                    _console.Out.WriteLine("Successfully migrated IndexDB.");
                 }
-#pragma warning restore S3267
+                else
+                {
+                    _console.Out.WriteLine("Migration not required.");
+                }
 
-                _console.Out.WriteLine(RocksDBStore.MigrateChainDBFromColumnFamilies(Path.Combine(storePath, "chain"))
-                    ? "Successfully migrated IndexDB."
-                    : "Migration not required.");
-
-                IStore store = new RocksDBStore(
-                    storePath,
-                    blockEpochUnitSeconds: blockEpochUnitSeconds,
-                    txEpochUnitSeconds: txEpochUnitSeconds);
+                RocksDBStore store = new RocksDBStore(storePath);
                 IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(statesPath);
                 IKeyValueStore newStateKeyValueStore = new RocksDBKeyValueStore(newStatesPath);
                 TrieStateStore stateStore = new TrieStateStore(stateKeyValueStore);
@@ -460,7 +465,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 var genesisHash = store.IterateIndexes(chainId, 0, 1).First();
                 var tipHash = store.IndexBlockHash(chainId, -1)
-                    ?? throw new CommandExitedException("The given chain seems empty.", -1);
+                              ?? throw new CommandExitedException("The given chain seems empty.", -1);
                 if (!(store.GetBlockIndex(tipHash) is { } tipIndex))
                 {
                     throw new CommandExitedException(
@@ -468,7 +473,73 @@ namespace NineChronicles.Headless.Executable.Commands
                         -1);
                 }
 
-                Block tip = store.GetBlock(tipHash);
+                IStagePolicy stagePolicy = new VolatileStagePolicy();
+                IBlockPolicy blockPolicy =
+                    new BlockPolicy();
+                var blockChainStates = new BlockChainStates(store, stateStore);
+                var actionEvaluator = new ActionEvaluator(
+                    _ => blockPolicy.BlockAction,
+                    stateStore,
+                    new NCActionLoader()
+                );
+                var originalChain = new BlockChain(blockPolicy, stagePolicy, store, stateStore,
+                    store.GetBlock(genesisHash), blockChainStates, actionEvaluator);
+                var tip = store.GetBlock(tipHash);
+
+                var potentialSnapshotTipIndex = tipIndex - blockBefore;
+                var potentialSnapshotTipHash = (BlockHash)store.IndexBlockHash(chainId, potentialSnapshotTipIndex)!;
+                var snapshotTip = store.GetBlock(potentialSnapshotTipHash);
+
+                _console.Out.WriteLine(
+                    "Original Store Tip: #{0}\n1. LastCommit: {1}\n2. BlockCommit in Chain: {2}\n3. BlockCommit in Store: {3}",
+                    tip.Index, tip.LastCommit, originalChain.GetBlockCommit(tipHash), store.GetBlockCommit(tipHash));
+                _console.Out.WriteLine(
+                    "Potential Snapshot Tip: #{0}\n1. LastCommit: {1}\n2. BlockCommit in Chain: {2}\n3. BlockCommit in Store: {3}",
+                    potentialSnapshotTipIndex, snapshotTip.LastCommit,
+                    originalChain.GetBlockCommit(potentialSnapshotTipHash),
+                    store.GetBlockCommit(potentialSnapshotTipHash));
+
+                var tipBlockCommit = store.GetBlockCommit(tipHash) ??
+                                     originalChain.GetBlockCommit(tipHash);
+                var potentialSnapshotTipBlockCommit = store.GetBlockCommit(potentialSnapshotTipHash) ??
+                                                      originalChain.GetBlockCommit(potentialSnapshotTipHash);
+
+                // Add tip and the snapshot tip's block commit to store to avoid block validation during preloading
+                if (potentialSnapshotTipBlockCommit != null)
+                {
+                    _console.Out.WriteLine("Adding the tip(#{0}) and the snapshot tip(#{1})'s block commit to the store",
+                        tipIndex, snapshotTip.Index);
+                    store.PutBlockCommit(tipBlockCommit);
+                    store.PutChainBlockCommit(chainId, tipBlockCommit);
+                    store.PutBlockCommit(potentialSnapshotTipBlockCommit);
+                    store.PutChainBlockCommit(chainId, potentialSnapshotTipBlockCommit);
+                }
+                else
+                {
+                    _console.Out.WriteLine(
+                        "There is no block commit associated with the potential snapshot tip: #{0}. Snapshot will automatically truncate 1 more block from the original chain tip.",
+                        potentialSnapshotTipIndex);
+                    blockBefore += 1;
+                    potentialSnapshotTipBlockCommit = store
+                        .GetBlock((BlockHash)store.IndexBlockHash(chainId, tip.Index - blockBefore + 1)!).LastCommit;
+                    store.PutBlockCommit(tipBlockCommit);
+                    store.PutChainBlockCommit(chainId, tipBlockCommit);
+                    store.PutBlockCommit(potentialSnapshotTipBlockCommit);
+                    store.PutChainBlockCommit(chainId, potentialSnapshotTipBlockCommit);
+                }
+
+                var blockCommitBlock = store.GetBlock(tipHash);
+
+                // Add last block commits to store from tip until --block-before + 5 or tip if too short for buffer
+                var blockCommitRange = blockBefore + 5 < tip.Index ? blockBefore + 5 : tip.Index - 1;
+                for (var i = 0; i < blockCommitRange; i++)
+                {
+                    _console.Out.WriteLine("Adding block #{0}'s block commit to the store", blockCommitBlock.Index - 1);
+                    store.PutBlockCommit(blockCommitBlock.LastCommit);
+                    store.PutChainBlockCommit(chainId, blockCommitBlock.LastCommit);
+                    blockCommitBlock = store.GetBlock((BlockHash)blockCommitBlock.PreviousHash!);
+                }
+
                 var snapshotTipIndex = Math.Max(tipIndex - (blockBefore + 1), 0);
                 BlockHash snapshotTipHash;
 
@@ -487,7 +558,6 @@ namespace NineChronicles.Headless.Executable.Commands
                 } while (!stateStore.GetStateRoot(store.GetBlock(snapshotTipHash).StateRootHash).Recorded);
 
                 var forkedId = Guid.NewGuid();
-
                 Fork(chainId, forkedId, snapshotTipHash, tip, store);
 
                 store.SetCanonicalChainId(forkedId);
@@ -498,60 +568,69 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 var snapshotTipDigest = store.GetBlockDigest(snapshotTipHash);
                 var snapshotTipStateRootHash = store.GetStateRootHash(snapshotTipHash);
+                ImmutableHashSet<HashDigest<SHA256>> stateHashes =
+                    ImmutableHashSet<HashDigest<SHA256>>.Empty.Add((HashDigest<SHA256>)snapshotTipStateRootHash!);
 
-                _console.Out.WriteLine("CopyStates Start.");
-                var start = DateTimeOffset.Now;
-                stateStore.CopyStates(ImmutableHashSet<HashDigest<SHA256>>.Empty
-#pragma warning disable CS8629
-                    .Add((HashDigest<SHA256>)snapshotTipStateRootHash), newStateStore);
-#pragma warning restore CS8629
-                var end = DateTimeOffset.Now;
-                var stringData = $"CopyStates Done. Time Taken: {(end - start).Minutes} min";
-                _console.Out.WriteLine(stringData);
+                // Get 1 block digest before snapshot tip using snapshot previous block hash.
+                BlockHash? previousBlockHash = snapshotTipDigest?.Hash;
+                int count = 0;
+                const int maxStateDepth = 1;
 
-                var latestBlockEpoch = (int)(tip.Timestamp.ToUnixTimeSeconds() / blockEpochUnitSeconds);
-                var latestBlockWithTx = tip;
-                while (!latestBlockWithTx.Transactions.Any())
+                while (previousBlockHash is { } pbh &&
+                       store.GetBlockDigest(pbh) is { } previousBlockDigest &&
+                       count < maxStateDepth)
                 {
-                    if (latestBlockWithTx.PreviousHash is { } newHash)
-                    {
-                        latestBlockWithTx = store.GetBlock(newHash);
-                    }
+                    stateHashes = stateHashes.Add(previousBlockDigest.StateRootHash);
+                    previousBlockHash = previousBlockDigest.PreviousHash;
+                    count++;
                 }
 
-                var txTimeSecond = latestBlockWithTx.Transactions.Max(tx => tx.Timestamp.ToUnixTimeSeconds());
-                var latestTxEpoch = (int)(txTimeSecond / txEpochUnitSeconds);
+                var newChain = new BlockChain(blockPolicy, stagePolicy, store, stateStore,
+                    store.GetBlock(genesisHash), blockChainStates, actionEvaluator);
+                var newTip = newChain.Tip;
+                var latestEpoch = (int)(newTip.Timestamp.ToUnixTimeSeconds() / epochUnitSeconds);
+                _console.Out.WriteLine(
+                    "Official Snapshot Tip: #{0}\n1. Timestamp: {1}\n2. Latest Epoch: {2}\n3. BlockCommit in Chain: {3}\n4. BlockCommit in Store: {4}",
+                    newTip.Index, newTip.Timestamp.UtcDateTime, latestEpoch, newChain.GetBlockCommit(newTip.Hash),
+                    store.GetBlockCommit(newTip.Hash));
+
+                _console.Out.WriteLine($"Snapshot-{snapshotType.ToString()} CopyStates Start.");
+                var start = DateTimeOffset.Now;
+                stateStore.CopyStates(stateHashes, newStateStore);
+                _console.Out.WriteLine(
+                    $"Snapshot-{snapshotType.ToString()} CopyStates Done. Time Taken: {(DateTimeOffset.Now - start).TotalMinutes} min.");
 
                 store.Dispose();
                 stateStore.Dispose();
+                stateKeyValueStore.Dispose();
+                newStateStore.Dispose();
                 newStateKeyValueStore.Dispose();
 
-                _console.Out.WriteLine("Move States Start.");
+                _console.Out.WriteLine($"Snapshot-{snapshotType.ToString()} Move States Start.");
                 start = DateTimeOffset.Now;
                 Directory.Delete(statesPath, recursive: true);
                 Directory.Move(newStatesPath, statesPath);
-                end = DateTimeOffset.Now;
-                stringData = $"Move States Done. Time Taken: {(end - start).Minutes} min";
-                _console.Out.WriteLine(stringData);
+                _console.Out.WriteLine(
+                    $"Snapshot-{snapshotType.ToString()} Move States Done. Time Taken: {(DateTimeOffset.Now - start).TotalMinutes} min");
 
                 var partitionBaseFilename = GetPartitionBaseFileName(
                     currentMetadataBlockEpoch,
                     currentMetadataTxEpoch,
-                    latestBlockEpoch);
-                var stateBaseFilename = $"state_latest";
+                    latestEpoch);
+                var stateBaseFilename = "state_latest";
 
                 var fullSnapshotDirectory = Path.Combine(outputDirectory, "full");
                 var genesisHashHex = ByteUtil.Hex(genesisHash.ToByteArray());
                 var snapshotTipHashHex = ByteUtil.Hex(snapshotTipHash.ToByteArray());
-                var fullSnapshotFilename = $"{genesisHashHex}-snapshot-{snapshotTipHashHex}.zip";
+                var fullSnapshotFilename = $"{genesisHashHex}-snapshot-{snapshotTipHashHex}-{snapshotTipIndex}.zip";
                 var fullSnapshotPath = Path.Combine(fullSnapshotDirectory, fullSnapshotFilename);
 
                 var partitionSnapshotFilename = $"{partitionBaseFilename}.zip";
                 var partitionSnapshotPath = Path.Combine(outputDirectory, "partition", partitionSnapshotFilename);
                 var stateSnapshotFilename = $"{stateBaseFilename}.zip";
                 var stateSnapshotPath = Path.Combine(outputDirectory, "state", stateSnapshotFilename);
-                string partitionDirectory = Path.Combine(Path.GetTempPath(), "snapshot");
-                string stateDirectory = Path.Combine(Path.GetTempPath(), "state");
+                string partitionDirectory = Path.Combine(tempDirectory, "snapshot");
+                string stateDirectory = Path.Combine(tempDirectory, "state");
 
                 if (Directory.Exists(partitionDirectory))
                 {
@@ -563,84 +642,73 @@ namespace NineChronicles.Headless.Executable.Commands
                     Directory.Delete(stateDirectory, true);
                 }
 
-                _console.Out.WriteLine("Clean Store Start.");
+                _console.Out.WriteLine($"Snapshot-{snapshotType.ToString()} Clean Store Start.");
                 start = DateTimeOffset.Now;
                 CleanStore(
                     partitionSnapshotPath,
                     stateSnapshotPath,
                     fullSnapshotPath,
                     storePath);
-                end = DateTimeOffset.Now;
-                stringData = $"Clean Store Done. Time Taken: {(end - start).Minutes} min";
-                _console.Out.WriteLine(stringData);
+                _console.Out.WriteLine(
+                    $"Snapshot-{snapshotType.ToString()} Clean Store Done. Time Taken: {(DateTimeOffset.Now - start).TotalMinutes} min.");
 
-                if (snapshotType is SnapshotType.Partition or SnapshotType.All)
+                if (snapshotType == SnapshotType.Partition || snapshotType == SnapshotType.All)
                 {
                     var storeBlockPath = Path.Combine(storePath, "block");
                     var storeTxPath = Path.Combine(storePath, "tx");
                     var partitionDirBlockPath = Path.Combine(partitionDirectory, "block");
                     var partitionDirTxPath = Path.Combine(partitionDirectory, "tx");
-                    _console.Out.WriteLine("Clone Partition Directory Start.");
+                    _console.Out.WriteLine($"Snapshot-{snapshotType.ToString()} Clone Partition Directory Start.");
                     start = DateTimeOffset.Now;
                     CopyDirectory(storeBlockPath, partitionDirBlockPath, true);
                     CopyDirectory(storeTxPath, partitionDirTxPath, true);
-                    end = DateTimeOffset.Now;
-                    stringData = $"Clone Partition Directory Done. Time Taken: {(end - start).Minutes} min";
-                    _console.Out.WriteLine(stringData);
+                    _console.Out.WriteLine(
+                        $"Snapshot-{snapshotType.ToString()} Clone Partition Directory Done. Time Taken: {(DateTimeOffset.Now - start).TotalMinutes} min.");
 
                     // get epoch limit for block & tx
-                    var blockEpochLimit = GetEpochLimit(
-                        latestBlockEpoch,
+                    var epochLimit = GetEpochLimit(
+                        latestEpoch,
                         currentMetadataBlockEpoch,
                         previousMetadataBlockEpoch);
-                    var txEpochLimit = GetEpochLimit(
-                        latestTxEpoch,
-                        currentMetadataTxEpoch,
-                        previousMetadataTxEpoch);
+                    _console.Out.WriteLine($"Snapshot-{snapshotType.ToString()} Clean Partition Store Start.");
 
-                    _console.Out.WriteLine("Clean Partition Store Start.");
-                    start = DateTimeOffset.Now;
                     // clean epoch directories in block & tx
-                    CleanEpoch(partitionDirBlockPath, blockEpochLimit);
-                    CleanEpoch(partitionDirTxPath, txEpochLimit);
-
+                    start = DateTimeOffset.Now;
+                    CleanEpoch(partitionDirBlockPath, epochLimit);
+                    CleanEpoch(partitionDirTxPath, epochLimit);
                     CleanPartitionStore(partitionDirectory);
-                    end = DateTimeOffset.Now;
-                    stringData = $"Clean Partition Store Done. Time Taken: {(end - start).Minutes} min";
-                    _console.Out.WriteLine(stringData);
+                    _console.Out.WriteLine(
+                        $"Snapshot-{snapshotType.ToString()} Clean Partition Store Done. Time Taken: {(DateTimeOffset.Now - start).TotalMinutes} min.");
 
-                    _console.Out.WriteLine("Clone State Directory Start.");
+                    _console.Out.WriteLine($"Snapshot-{snapshotType.ToString()} Clone State Directory Start.");
                     start = DateTimeOffset.Now;
                     CopyStateStore(storePath, stateDirectory);
-                    end = DateTimeOffset.Now;
-                    stringData = $"Clone State Directory Done. Time Taken: {(end - start).Minutes} min";
-                    _console.Out.WriteLine(stringData);
+                    _console.Out.WriteLine(
+                        $"Snapshot-{snapshotType.ToString()} Clone State Directory Done. Time Taken: {(DateTimeOffset.Now - start).TotalMinutes} min.");
                 }
 
-                if (snapshotType is SnapshotType.Full or SnapshotType.All)
+                if (snapshotType == SnapshotType.Full || snapshotType == SnapshotType.All)
                 {
-                    _console.Out.WriteLine("Create Full ZipFile Start.");
+                    _console.Out.WriteLine($"Snapshot-{snapshotType.ToString()} Create Full ZipFile Start.");
                     start = DateTimeOffset.Now;
                     ZipFile.CreateFromDirectory(storePath, fullSnapshotPath);
-                    end = DateTimeOffset.Now;
-                    stringData = $"Create Full ZipFile Done. Time Taken: {(end - start).Minutes} min";
-                    _console.Out.WriteLine(stringData);
+                    _console.Out.WriteLine(
+                        $"Snapshot-{snapshotType.ToString()} Create Full ZipFile Done. Time Taken: {(DateTimeOffset.Now - start).TotalMinutes} min.");
                 }
 
-                if (snapshotType is SnapshotType.Partition or SnapshotType.All)
+                if (snapshotType == SnapshotType.Partition || snapshotType == SnapshotType.All)
                 {
-                    _console.Out.WriteLine("Create Partition ZipFile Start.");
+                    _console.Out.WriteLine($"Snapshot-{snapshotType.ToString()} Create Partition ZipFile Start.");
                     start = DateTimeOffset.Now;
                     ZipFile.CreateFromDirectory(partitionDirectory, partitionSnapshotPath);
-                    end = DateTimeOffset.Now;
-                    stringData = $"Create Partition ZipFile Done. Time Taken: {(end - start).Minutes} min";
-                    _console.Out.WriteLine(stringData);
-                    _console.Out.WriteLine("Create State ZipFile Start.");
+                    _console.Out.WriteLine(
+                        $"Snapshot-{snapshotType.ToString()} Create Partition ZipFile Done. Time Taken: {(DateTimeOffset.Now - start).TotalMinutes} min.");
+
+                    _console.Out.WriteLine($"Snapshot-{snapshotType.ToString()} Create State ZipFile Start.");
                     start = DateTimeOffset.Now;
                     ZipFile.CreateFromDirectory(stateDirectory, stateSnapshotPath);
-                    end = DateTimeOffset.Now;
-                    stringData = $"Create State ZipFile Done. Time Taken: {(end - start).Minutes} min";
-                    _console.Out.WriteLine(stringData);
+                    _console.Out.WriteLine(
+                        $"Snapshot-{snapshotType.ToString()} Create State ZipFile Done. Time Taken: {(DateTimeOffset.Now - start).TotalMinutes} min.");
 
                     if (snapshotTipDigest is null)
                     {
@@ -653,7 +721,7 @@ namespace NineChronicles.Headless.Executable.Commands
                         currentMetadataBlockEpoch,
                         currentMetadataTxEpoch,
                         previousMetadataBlockEpoch,
-                        latestBlockEpoch);
+                        latestEpoch);
                     var metadataFilename = $"{partitionBaseFilename}.json";
                     var metadataPath = Path.Combine(metadataDirectory, metadataFilename);
 
@@ -666,10 +734,14 @@ namespace NineChronicles.Headless.Executable.Commands
                     Directory.Delete(partitionDirectory, true);
                     Directory.Delete(stateDirectory, true);
                 }
+
+                _console.Out.WriteLine(
+                    $"Create Snapshot-{snapshotType.ToString()} Complete. Time Taken: {(DateTimeOffset.Now - snapshotStart).TotalMinutes} min.");
             }
             catch (Exception ex)
             {
-                _console.Out.WriteLine(ex.Message);
+                _console.Error.WriteLine(ex.Message);
+                _console.Error.WriteLine(ex.StackTrace);
             }
         }
 
@@ -817,16 +889,22 @@ namespace NineChronicles.Headless.Executable.Commands
             var storeTxBIndexPath = Path.Combine(storePath, "txbindex");
             var storeStatesPath = Path.Combine(storePath, "states");
             var storeChainPath = Path.Combine(storePath, "chain");
+            var storeBlockCommitPath = Path.Combine(storePath, "blockcommit");
+            var storeTxExecPath = Path.Combine(storePath, "txexec");
             var stateDirBlockIndexPath = Path.Combine(stateDirectory, "block", "blockindex");
             var stateDirTxIndexPath = Path.Combine(stateDirectory, "tx", "txindex");
             var stateDirTxBIndexPath = Path.Combine(stateDirectory, "txbindex");
             var stateDirStatesPath = Path.Combine(stateDirectory, "states");
             var stateDirChainPath = Path.Combine(stateDirectory, "chain");
+            var stateDirBlockCommitPath = Path.Combine(stateDirectory, "blockcommit");
+            var stateDirTxExecPath = Path.Combine(stateDirectory, "txexec");
             CopyDirectory(storeBlockIndexPath, stateDirBlockIndexPath, true);
             CopyDirectory(storeTxIndexPath, stateDirTxIndexPath, true);
             CopyDirectory(storeTxBIndexPath, stateDirTxBIndexPath, true);
             CopyDirectory(storeStatesPath, stateDirStatesPath, true);
             CopyDirectory(storeChainPath, stateDirChainPath, true);
+            CopyDirectory(storeBlockCommitPath, stateDirBlockCommitPath, true);
+            CopyDirectory(storeTxExecPath, stateDirTxExecPath, true);
         }
 
         private int GetMetaDataEpoch(
@@ -844,7 +922,7 @@ namespace NineChronicles.Headless.Executable.Commands
             }
             catch (InvalidOperationException e)
             {
-                Console.Error.WriteLine(e.Message);
+                _console.Error.WriteLine(e.Message);
                 return 0;
             }
         }
@@ -945,6 +1023,10 @@ namespace NineChronicles.Headless.Executable.Commands
             IStore store)
         {
             store.ForkBlockIndexes(src, dest, branchPointHash);
+            if (store.GetBlockCommit(branchPointHash) is { })
+            {
+                store.PutChainBlockCommit(dest, store.GetBlockCommit(branchPointHash));
+            }
             store.ForkTxNonces(src, dest);
 
             for (
