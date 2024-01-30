@@ -213,9 +213,21 @@ namespace NineChronicles.Headless
             ConcurrentDictionary<List<string>, List<string>> clientsIpList = new();
             foreach (var group in groups)
             {
-                if (group.IDs.Count >= minimum)
+                try
                 {
-                    clientsIpList.TryAdd(group.IPs.ToList(), group.IDs.ToList());
+                    if (group.IDs.Count >= minimum)
+                    {
+                        clientsIpList.TryAdd(group.IPs.ToList(), group.IDs.ToList());
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[AEP-ERROR-CLIENTSBYIP] Ids: {ids}, Ips: {ips}, Message: {message}, StackTrace: {stacktrace}",
+                        group.IDs,
+                        group.IPs,
+                        ex.Message,
+                        ex.StackTrace);
                 }
             }
 
