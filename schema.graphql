@@ -69,12 +69,6 @@ type ActionMutation {
     avatarAddress: Address!
   ): TxId!
 
-  """Get monster collection reward."""
-  claimMonsterCollectionReward(
-    """Address of avatar for get reward."""
-    avatarAddress: Address!
-  ): TxId!
-
   """Combine new Consumable."""
   combinationConsumable(
     """Avatar address to combine consumable."""
@@ -166,12 +160,6 @@ type ActionMutation {
 
     """The empty combination slot index to upgrade equipment. 0 ~ 3"""
     slotIndex: Int!
-  ): TxId!
-
-  """Start monster collect."""
-  monsterCollect(
-    """The monster collection level.(1 ~ 7)"""
-    level: Int!
   ): TxId!
 }
 
