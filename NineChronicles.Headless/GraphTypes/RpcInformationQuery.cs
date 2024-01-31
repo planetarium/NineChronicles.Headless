@@ -73,22 +73,35 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "clients connected to this node grouped by Ip addresses.",
                 resolve: context =>
                 {
-                    int minimum = context.GetArgument<int>("minimum");
-                    var a = new List<MultiAccountInfoGraphType.MultiAccountInfo>();
-                    var data = publisher.GetClientsByIp(minimum);
-                    foreach (var i in data)
+                    try
                     {
-                        var b = new MultiAccountInfoGraphType.MultiAccountInfo
+                        int minimum = context.GetArgument<int>("minimum");
+                        var a = new List<MultiAccountInfoGraphType.MultiAccountInfo>();
+                        var data = publisher.GetClientsByIp(minimum);
+                        foreach (var i in data)
                         {
-                            Key = i.Key.First(),
-                            Ips = i.Key,
-                            Agents = i.Value,
-                            IpsCount = i.Key.Count,
-                            AgentsCount = i.Value.Count,
-                        };
-                        a.Add(b);
+                            var b = new MultiAccountInfoGraphType.MultiAccountInfo
+                            {
+                                Key = i.Key.First(),
+                                Ips = i.Key,
+                                Agents = i.Value,
+                                IpsCount = i.Key.Count,
+                                AgentsCount = i.Value.Count,
+                            };
+                            a.Add(b);
+                        }
+
+                        return a.OrderByDescending(x => x.AgentsCount);
                     }
-                    return a.OrderByDescending(x => x.AgentsCount);
+                    catch (Exception ex)
+                    {
+                        Log.Error(
+                                "[AEP-ERROR] Message: {message}, StackTrace: {stacktrace}",
+                                ex.Message,
+                                ex.StackTrace);
+                    }
+
+                    return new List<MultiAccountInfoGraphType.MultiAccountInfo>();
                 });
         }
     }
