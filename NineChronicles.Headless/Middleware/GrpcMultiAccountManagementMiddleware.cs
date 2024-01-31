@@ -151,16 +151,18 @@ namespace NineChronicles.Headless.Middleware
             if (!_ipSignerList.ContainsKey(ip))
             {
                 _logger.Information(
-                    "[GRPC-MULTI-ACCOUNT-MANAGER] Creating a new list for IP: {IP}",
-                    ip);
+                    "[GRPC-MULTI-ACCOUNT-MANAGER] Creating a new list for IP: {IP} Address: {agent}",
+                    ip,
+                    agent);
                 _ipSignerList[ip] = new HashSet<Address>();
             }
             else
             {
                 _logger.Information(
-                    "[GRPC-MULTI-ACCOUNT-MANAGER] List already created for IP: {IP} Count: {Count}",
+                    "[GRPC-MULTI-ACCOUNT-MANAGER] List already created for IP: {IP} Count: {Count} Address: {agent}",
                     ip,
-                    _ipSignerList[ip].Count);
+                    _ipSignerList[ip].Count,
+                    agent);
             }
 
             _ipSignerList[ip].Add(agent);
