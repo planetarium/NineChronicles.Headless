@@ -66,8 +66,6 @@ namespace NineChronicles.Headless.Executable.Commands
                 ActionBase action = type switch
                 {
                     nameof(ActivateAccount) => new ActivateAccount(),
-                    nameof(MonsterCollect) => new MonsterCollect(),
-                    nameof(ClaimMonsterCollectionReward) => new ClaimMonsterCollectionReward(),
                     nameof(Stake) => new Stake(),
                     // FIXME: This `ClaimStakeReward` cases need to reduce to one case.
                     nameof(ClaimStakeReward1) => new ClaimStakeReward1(),
