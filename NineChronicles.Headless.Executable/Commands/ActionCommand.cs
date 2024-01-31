@@ -122,48 +122,6 @@ namespace NineChronicles.Headless.Executable.Commands
             return typeIds.OrderBy(type => type);
         }
 
-        [Command(Description = "Create ClaimMonsterCollectionReward action.")]
-        public int ClaimMonsterCollectionReward(
-            [Argument("AVATAR-ADDRESS", Description = "A hex-encoded avatar address.")]
-            string encodedAddress,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")]
-            string? filePath = null
-        )
-        {
-            try
-            {
-                Address avatarAddress = new Address(ByteUtil.ParseHex(encodedAddress));
-                Nekoyume.Action.ClaimMonsterCollectionReward action = new ClaimMonsterCollectionReward
-                {
-                    avatarAddress = avatarAddress
-                };
-
-                byte[] raw = Codec.Encode(new List(
-                    new[]
-                    {
-                        (Text) nameof(Nekoyume.Action.ClaimMonsterCollectionReward),
-                        action.PlainValue
-                    }
-                ));
-                string encoded = Convert.ToBase64String(raw);
-                if (filePath is null)
-                {
-                    _console.Out.Write(encoded);
-                }
-                else
-                {
-                    File.WriteAllText(filePath, encoded);
-                }
-
-                return 0;
-            }
-            catch (Exception e)
-            {
-                _console.Error.WriteLine(e);
-                return -1;
-            }
-        }
-
         [Command(Description = "Create TransferAsset action.")]
         public int TransferAsset(
             [Argument("SENDER-ADDRESS", Description = "A hex-encoded sender address.")]

@@ -228,33 +228,6 @@ namespace NineChronicles.Headless.GraphTypes
             blockRenderer.BlockSubject
                 .ObserveOn(NewThreadScheduler.Default)
                 .Subscribe(RenderBlock);
-
-            ActionRenderer actionRenderer = standaloneContext.NineChroniclesNodeService!.ActionRenderer;
-            actionRenderer.EveryRender<ClaimMonsterCollectionReward>()
-                .ObserveOn(NewThreadScheduler.Default)
-                .Subscribe(RenderMonsterCollectionStateSubject);
-        }
-
-        private IObservable<MonsterCollectionState> SubscribeMonsterCollectionState(IResolveEventStreamContext context)
-        {
-            var address = context.GetArgument<Address>("address");
-
-            StandaloneContext.AgentAddresses.TryAdd(address,
-                (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(),
-                    new ReplaySubject<string>()));
-            StandaloneContext.AgentAddresses.TryGetValue(address, out var subjects);
-            return subjects.stateSubject.AsObservable();
-        }
-
-        private IObservable<MonsterCollectionStatus> SubscribeMonsterCollectionStatus(IResolveEventStreamContext context)
-        {
-            var address = context.GetArgument<Address>("address");
-
-            StandaloneContext.AgentAddresses.TryAdd(address,
-                (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(),
-                    new ReplaySubject<string>()));
-            StandaloneContext.AgentAddresses.TryGetValue(address, out var subjects);
-            return subjects.statusSubject.AsObservable();
         }
 
         private IObservable<string> SubscribeBalance(IResolveEventStreamContext context)
@@ -424,43 +397,6 @@ namespace NineChronicles.Headless.GraphTypes
                         monsterCollectionState.IsLocked(tipHeader.Index)
                     );
                     statusSubject.OnNext(monsterCollectionStatus);
-                }
-            }
-        }
-
-        private void RenderMonsterCollectionStateSubject<T>(ActionEvaluation<T> eval)
-            where T : ActionBase
-        {
-            if (!(StandaloneContext.NineChroniclesNodeService is { } service))
-            {
-                throw new InvalidOperationException(
-                    $"{nameof(NineChroniclesNodeService)} is null.");
-            }
-
-            // Skip when error.
-            if (eval.Exception is { })
-            {
-                return;
-            }
-
-            foreach (var (address, subjects) in StandaloneContext.AgentAddresses)
-            {
-                if (eval.Signer.Equals(address) &&
-                    service.BlockChain.GetWorldState(_tipHeader?.Hash).GetAgentState(address) is { } agentState)
-                {
-                    Address deriveAddress = MonsterCollectionState.DeriveAddress(address, agentState.MonsterCollectionRound);
-                    var subject = subjects.stateSubject;
-                    if (service.BlockChain
-                        .GetWorldState(eval.OutputState)
-                        .GetAccountState(ReservedAddresses.LegacyAccount)
-                        .GetState(deriveAddress) is Dictionary state)
-                    {
-                        subject.OnNext(new MonsterCollectionState(state));
-                    }
-                    else
-                    {
-                        subject.OnNext(null!);
-                    }
                 }
             }
         }

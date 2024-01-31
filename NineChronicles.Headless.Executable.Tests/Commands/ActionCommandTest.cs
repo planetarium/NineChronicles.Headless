@@ -59,33 +59,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         }
 
         [Theory]
-        [InlineData("0xab1dce17dCE1Db1424BB833Af6cC087cd4F5CB6d", -1)]
-        [InlineData("ab1dce17dCE1Db1424BB833Af6cC087cd4F5CB6d", 0)]
-        public void ClaimMonsterCollectReward(string addressString, int expectedCode)
-        {
-            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
-            var resultCode = _command.ClaimMonsterCollectionReward(addressString, filePath);
-            Assert.Equal(expectedCode, resultCode);
-
-            if (resultCode == 0)
-            {
-                var rawAction = Convert.FromBase64String(File.ReadAllText(filePath));
-                var decoded = (List)_codec.Decode(rawAction);
-                string type = (Text)decoded[0];
-                Assert.Equal(nameof(ClaimMonsterCollectionReward), type);
-
-                Dictionary plainValue = (Dictionary)decoded[1];
-                var action = new ClaimMonsterCollectionReward();
-                action.LoadPlainValue(plainValue);
-                Assert.Equal(new Address(addressString), action.avatarAddress);
-            }
-            else
-            {
-                Assert.Contains("System.FormatException: Input string was not in a correct format.", _console.Error.ToString());
-            }
-        }
-
-        [Theory]
         [InlineData(10, 0, "transfer asset test1.")]
         [InlineData(100, 0, "transfer asset test2.")]
         [InlineData(1000, 0, null)]

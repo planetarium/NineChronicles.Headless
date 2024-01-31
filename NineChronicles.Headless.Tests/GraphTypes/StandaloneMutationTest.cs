@@ -712,52 +712,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             },
         };
 
-        [Fact]
-        public async Task ClaimMonsterCollectionReward()
-        {
-            var playerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
-            var avatarAddress = playerPrivateKey.Address;
-            string query = $@"mutation {{
-                action {{
-                    claimMonsterCollectionReward(avatarAddress: ""{avatarAddress}"")
-                }}
-            }}";
-
-            ActionBase createAvatar = new CreateAvatar
-            {
-                index = 0,
-                hair = 0,
-                lens = 0,
-                ear = 0,
-                tail = 0,
-                name = "avatar",
-            };
-            BlockChain.MakeTransaction(playerPrivateKey, new[] { createAvatar });
-            Block block = BlockChain.ProposeBlock(playerPrivateKey);
-            BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-
-            Assert.NotNull(BlockChain.GetWorldState().GetAgentState(playerPrivateKey.Address));
-
-            var result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
-            Assert.Null(result.Errors);
-
-            var txIds = BlockChain.GetStagedTransactionIds();
-            Assert.Single(txIds);
-            var tx = BlockChain.GetTransaction(txIds.First());
-            var expected = new Dictionary<string, object>
-            {
-                ["action"] = new Dictionary<string, object>
-                {
-                    ["claimMonsterCollectionReward"] = tx.Id.ToString(),
-                }
-            };
-            Assert.Equal(expected, data);
-            Assert.Single(tx.Actions);
-            var action = (ClaimMonsterCollectionReward)ToAction(tx.Actions!.First());
-            Assert.Equal(avatarAddress, action.avatarAddress);
-        }
-
         // [Fact]
         // public async Task CancelMonsterCollect()
         // {
