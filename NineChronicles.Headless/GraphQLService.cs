@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using AspNetCoreRateLimit;
 using GraphQL.Server;
@@ -200,7 +201,7 @@ namespace NineChronicles.Headless
                 // Capture requests
                 if (Convert.ToBoolean(Configuration.GetSection("MultiAccountManaging")["EnableManaging"]))
                 {
-                    Dictionary<string, HashSet<Address>> ipSignerList = new();
+                    ConcurrentDictionary<string, HashSet<Address>> ipSignerList = new();
                     app.UseMiddleware<HttpMultiAccountManagementMiddleware>(
                         StandaloneContext,
                         ipSignerList,

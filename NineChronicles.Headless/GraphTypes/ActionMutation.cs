@@ -438,55 +438,6 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 }
             );
-
-            Field<NonNullGraphType<TxIdType>>(nameof(ClaimMonsterCollectionReward),
-                description: "Get monster collection reward.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "avatarAddress",
-                        Description = "Address of avatar for get reward."
-                    }
-                ),
-                resolve: context =>
-                {
-                    try
-                    {
-                        BlockChain? blockChain = service.BlockChain;
-                        if (blockChain is null)
-                        {
-                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
-                        }
-
-
-                        if (service.MinerPrivateKey is null)
-                        {
-                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
-                        }
-
-                        Address avatarAddress = context.GetArgument<Address>("avatarAddress");
-                        Address agentAddress = service.MinerPrivateKey.Address;
-                        AgentState agentState =
-                            service.BlockChain.GetWorldState().GetAgentState(agentAddress) ??
-                            throw new InvalidOperationException($"Given agent of address {agentAddress} does not exist.");
-
-                        var action = new ClaimMonsterCollectionReward
-                        {
-                            avatarAddress = avatarAddress,
-                        };
-
-                        var actions = new ActionBase[] { action };
-                        Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
-                        return tx.Id;
-                    }
-                    catch (Exception e)
-                    {
-                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
-                        context.Errors.Add(new ExecutionError(msg, e));
-                        throw;
-                    }
-                }
-            );
         }
     }
 }
