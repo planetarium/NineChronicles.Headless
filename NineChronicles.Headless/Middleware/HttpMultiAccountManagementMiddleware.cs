@@ -58,13 +58,13 @@ namespace NineChronicles.Headless.Middleware
             // Prevent to harm HTTP/2 communication.
             if (context.Request.Protocol == "HTTP/1.1")
             {
-                context.Request.EnableBuffering();
-                var remoteIp = context.Connection.RemoteIpAddress!.ToString();
-                var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
-                context.Request.Body.Seek(0, SeekOrigin.Begin);
-                if (_options.Value.EnableManaging && body.Contains("stageTransaction"))
+                try
                 {
-                    try
+                    context.Request.EnableBuffering();
+                    var remoteIp = context.Connection.RemoteIpAddress!.ToString();
+                    var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
+                    context.Request.Body.Seek(0, SeekOrigin.Begin);
+                    if (_options.Value.EnableManaging && body.Contains("stageTransaction"))
                     {
                         var pattern = "64313.*6565";
                         var txPayload = Regex.Match(body, pattern).ToString();
@@ -137,13 +137,13 @@ namespace NineChronicles.Headless.Middleware
                             }
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        _logger.Error(
-                            "[GRAPHQL-MULTI-ACCOUNT-MANAGER] Error message: {message} Stacktrace: {stackTrace}",
-                            ex.Message,
-                            ex.StackTrace);
-                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(
+                        "[GRAPHQL-MULTI-ACCOUNT-MANAGER] Error message: {message} Stacktrace: {stackTrace}",
+                        ex.Message,
+                        ex.StackTrace);
                 }
             }
 
