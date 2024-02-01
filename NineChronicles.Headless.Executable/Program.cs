@@ -255,7 +255,7 @@ namespace NineChronicles.Headless.Executable
 
             if (networkType is { })
             {
-                Log.Warning("networkType has been deprecated and has no effect. please use `planet` instead.");
+                Log.Warning("'--network-type' option has been deprecated and has no effect. please use `--planet` instead.");
             }
 
             IActionEvaluatorConfiguration? GetActionEvaluatorConfiguration(IConfiguration configuration)
