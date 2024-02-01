@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Numerics;
 using System.Threading.Tasks;
 using Bencodex.Types;
@@ -298,17 +299,20 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
             }
         }
 
-        private IAccountState GetMockState()
+        private IWorldState GetMockState()
         {
-            return MockState.Empty
-                .SetState(_raiderStateAddress, _raiderState.Serialize())
-                .SetState(Addresses.GetSheetAddress<WorldBossListSheet>(), @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
+            return new MockWorld(new MockWorldState(ImmutableDictionary<Address, IAccount>.Empty.Add(
+                ReservedAddresses.LegacyAccount,
+                new MockAccount(new MockAccountState()
+                    .SetState(_raiderStateAddress, _raiderState.Serialize())
+                    .SetState(Addresses.GetSheetAddress<WorldBossListSheet>(),
+                        @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
 1,205005,0,100,300,200,100,10
 2,205005,200,300,300,200,100,10
 ".Serialize())
-                .SetState(_worldBossAddress, _worldBossState.Serialize())
-                .SetState(_worldBossKillRewardRecordAddress, _worldBossKillRewardRecord.Serialize())
-                .SetState(_raiderListAddress, List.Empty.Add(_raiderStateAddress.Serialize()));
+                    .SetState(_worldBossAddress, _worldBossState.Serialize())
+                    .SetState(_worldBossKillRewardRecordAddress, _worldBossKillRewardRecord.Serialize())
+                    .SetState(_raiderListAddress, List.Empty.Add(_raiderStateAddress.Serialize()))))));
         }
 
         private async Task<int> GetRaidId(long blockIndex, bool prev)

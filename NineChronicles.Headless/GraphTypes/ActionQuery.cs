@@ -13,6 +13,7 @@ using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -437,7 +438,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var activationCode = context.GetArgument<string>("activationCode");
                     var activationKey = ActivationKey.Decode(activationCode);
-                    if (standaloneContext.BlockChain!.GetState(activationKey.PendingAddress) is Dictionary dictionary)
+                    if (standaloneContext.BlockChain!.GetWorldState().GetLegacyState(activationKey.PendingAddress) is Dictionary dictionary)
                     {
                         var pending = new PendingActivationState(dictionary);
                         var action = activationKey.CreateActivateAccount(pending.Nonce);

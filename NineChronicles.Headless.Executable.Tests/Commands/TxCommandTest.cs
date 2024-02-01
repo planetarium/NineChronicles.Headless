@@ -78,7 +78,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [InlineData(ClaimStakeReward2.ObsoletedIndex - 1, null, false)]
         [InlineData(ClaimStakeReward2.ObsoletedIndex, null, true)]
         [InlineData(ClaimStakeReward2.ObsoletedIndex + 1, null, false)]
-        [InlineData(ClaimStakeReward3.ObsoleteBlockIndex - 1, null, true)]
         [InlineData(long.MaxValue, null, true)]
         [InlineData(null, 1, false)]
         [InlineData(null, 2, true)]
@@ -92,9 +91,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var avatarAddress = new Address();
             actionCommand.ClaimStakeReward(
                 avatarAddress.ToHex(),
-                filePath,
-                blockIndex,
-                actionVersion);
+                filePath);
             Assert_Tx(1, filePath, gas);
         }
 
