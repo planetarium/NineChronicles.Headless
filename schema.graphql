@@ -1589,31 +1589,18 @@ type KeyStoreType {
 }
 
 type LibplanetStateQuery {
-  """
-  Gets the account state associated with given block hash or state root hash. Exactly one of the arguments must be specified.
-  """
-  account(
-    """A block hash to use as a pointer."""
-    blockHash: BlockHash
-
-    """A state root hash to use as a pointer."""
-    stateRootHash: HashDigestSHA256
-  ): AccountState!
-
-  """
-  Gets the account states associated with given block hashes or state root hashes. Exactly one of the arguments must be specified.
-  """
-  accounts(
-    """A list of block hashes to use as pointers."""
-    blockHashes: [BlockHash!]
-
-    """A list of state root hashes to use as pointers."""
-    stateRootHashes: [HashDigestSHA256!]
-  ): [AccountState!]!
+  """Retrieves balance from the legacy account."""
   balance(currency: CurrencyInput!, offsetBlockHash: BlockHash, offsetStateRootHash: HashDigestSHA256, owner: Address!): FungibleAssetValue!
+
+  """Retrieves states from the legacy account."""
   states(addresses: [Address!]!, offsetBlockHash: BlockHash, offsetStateRootHash: HashDigestSHA256): [BencodexValue]!
+
+  """Retrieves total supply from the legacy account."""
   totalSupply(currency: CurrencyInput!, offsetBlockHash: BlockHash, offsetStateRootHash: HashDigestSHA256): FungibleAssetValue
+
+  """Retrieves validator set from the legacy account."""
   validators(offsetBlockHash: BlockHash, offsetStateRootHash: HashDigestSHA256): [Validator!]
+  world(blockHash: BlockHash, stateRootHash: HashDigestSHA256): WorldState!
 }
 
 scalar Long
@@ -2228,7 +2215,10 @@ type StandaloneQuery {
   """Query for rpc mode information."""
   rpcInformation: RpcInformationQuery!
   state(
-    """The address of state to fetch from the chain."""
+    """The address of account to fetch from the chain."""
+    accountAddress: Address!
+
+    """The address of state to fetch from the account."""
     address: Address!
 
     """The hash of the block used to fetch state from chain."""
@@ -2736,6 +2726,26 @@ type WorldInformationType {
   isStageCleared(stageId: Int!): Boolean!
   isWorldUnlocked(worldId: Int!): Boolean!
   world(worldId: Int!): WorldType!
+}
+
+type WorldState {
+  """Gets the account associated with given address."""
+  account(
+    """The address of an account to retrieve."""
+    address: Address!
+  ): AccountState!
+
+  """Gets the accounts associated with given addresses."""
+  accounts(
+    """The list of addresses of accounts to retrieve."""
+    addresses: [Address!]!
+  ): [AccountState!]!
+
+  """The legacy flag of the world state."""
+  legacy: Boolean!
+
+  """The state root hash of the world state."""
+  stateRootHash: HashDigestSHA256!
 }
 
 type WorldType {
