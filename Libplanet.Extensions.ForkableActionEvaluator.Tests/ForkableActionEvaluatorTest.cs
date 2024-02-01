@@ -62,7 +62,8 @@ public class ForkableActionEvaluatorTest
 class PostActionEvaluator : IActionEvaluator
 {
     public IActionLoader ActionLoader => throw new NotSupportedException();
-    public IReadOnlyList<ICommittedActionEvaluation> Evaluate(IPreEvaluationBlock block, HashDigest<SHA256>? baseStateroothash)
+    public IReadOnlyList<ICommittedActionEvaluation> Evaluate(
+        IPreEvaluationBlock block, HashDigest<SHA256>? baseStateRootHash)
     {
         return new ICommittedActionEvaluation[]
         {
@@ -85,7 +86,8 @@ class PostActionEvaluator : IActionEvaluator
 class PreActionEvaluator : IActionEvaluator
 {
     public IActionLoader ActionLoader => throw new NotSupportedException();
-    public IReadOnlyList<ICommittedActionEvaluation> Evaluate(IPreEvaluationBlock block, HashDigest<SHA256>? baseStateRootHash)
+    public IReadOnlyList<ICommittedActionEvaluation> Evaluate(
+        IPreEvaluationBlock block, HashDigest<SHA256>? baseStateRootHash)
     {
         return new ICommittedActionEvaluation[]
         {
@@ -113,7 +115,7 @@ class MockAction : IAction
     {
     }
 
-    public IAccount Execute(IActionContext context) => context.PreviousState;
+    public IWorld Execute(IActionContext context) => context.PreviousState;
 }
 
 class MockBlock : IPreEvaluationBlock

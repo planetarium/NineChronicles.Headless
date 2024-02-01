@@ -1,4 +1,3 @@
-using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet.Crypto;
@@ -10,6 +9,7 @@ using Nekoyume.Model.State;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using Nekoyume.Module;
 
 namespace NineChronicles.Headless.GraphTypes
 {

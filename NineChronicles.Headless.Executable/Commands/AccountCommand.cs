@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Bencodex;
 using Cocona;
+using Libplanet.Action.State;
 using Libplanet.Blockchain;
 using Libplanet.Crypto;
 using Libplanet.Store;
@@ -11,6 +12,7 @@ using Libplanet.Types.Blocks;
 using Libplanet.Types.Tx;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using NineChronicles.Headless.Executable.IO;
 using Serilog.Core;
 using static NineChronicles.Headless.NCActionUtils;
@@ -52,15 +54,16 @@ namespace NineChronicles.Headless.Executable.Commands
             Block offset = DevExUtils.ParseBlockOffset(chain, block);
             _console.Error.WriteLine("The offset block: #{0} {1}.", offset.Index, offset.Hash);
 
+            IWorldState worldState = chain.GetWorldState(offset.Hash);
             Bencodex.Types.Dictionary goldCurrencyStateDict = (Bencodex.Types.Dictionary)
-                chain.GetState(GoldCurrencyState.Address);
+                worldState.GetLegacyState(GoldCurrencyState.Address);
             GoldCurrencyState goldCurrencyState = new GoldCurrencyState(goldCurrencyStateDict);
             Currency gold = goldCurrencyState.Currency;
 
             if (address is { } addrStr)
             {
                 Address addr = DevExUtils.ParseAddress(addrStr);
-                FungibleAssetValue balance = chain.GetBalance(addr, gold, offset.Hash);
+                FungibleAssetValue balance = worldState.GetBalance(addr, gold);
                 _console.Out.WriteLine("{0}\t{1}", addr, balance);
                 return;
             }
@@ -96,7 +99,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 {
                     if (!printed.Contains(addr))
                     {
-                        FungibleAssetValue balance = chain.GetBalance(addr, gold, offset.Hash);
+                        FungibleAssetValue balance = worldState.GetBalance(addr, gold);
                         _console.Out.WriteLine("{0}\t{1}", addr, balance);
                         printed.Add(addr);
                     }
