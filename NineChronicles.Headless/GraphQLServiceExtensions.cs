@@ -53,6 +53,7 @@ namespace NineChronicles.Headless
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.WorldStateType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.HashDigestType<SHA1>>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.HashDigestType<SHA256>>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.HashDigestSHA256Type>();
 
             return services;
         }
