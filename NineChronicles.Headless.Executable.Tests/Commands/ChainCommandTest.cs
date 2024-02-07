@@ -90,7 +90,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             IStore store = storeType.CreateStore(_storePath);
             IStateStore stateStore = new TrieStateStore(new RocksDBKeyValueStore(Path.Combine(_storePath, "states")));
             IStagePolicy stagePolicy = new VolatileStagePolicy();
-            IBlockPolicy blockPolicy = new BlockPolicySource().GetTestPolicy();
+            IBlockPolicy blockPolicy = new BlockPolicySource().GetPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 stateStore,
@@ -151,7 +151,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             IStore store = storeType.CreateStore(_storePath);
             IStateStore stateStore = new TrieStateStore(new RocksDBKeyValueStore(Path.Combine(_storePath, "states")));
             IStagePolicy stagePolicy = new VolatileStagePolicy();
-            IBlockPolicy blockPolicy = new BlockPolicySource().GetTestPolicy();
+            IBlockPolicy blockPolicy = new BlockPolicySource().GetPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 stateStore,

@@ -7,6 +7,7 @@ using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
 using Libplanet.Headless;
+using Nekoyume;
 
 namespace NineChronicles.Headless.Properties
 {
@@ -29,7 +30,7 @@ namespace NineChronicles.Headless.Properties
 
         public LibplanetNodeServiceProperties? Libplanet { get; set; }
 
-        public NetworkType NetworkType { get; set; } = NetworkType.Main;
+        public Planet Planet { get; set; } = Planet.Odin;
 
         // FIXME: Replaced by NetworkType.Dev (not exist yet).
         public bool Dev { get; set; }
