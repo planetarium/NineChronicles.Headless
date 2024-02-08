@@ -13,6 +13,7 @@ using Nekoyume.Action;
 using Nekoyume.Battle;
 using Nekoyume.Model.Arena;
 using Nekoyume.Model.EnumType;
+using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
 using Nekoyume.Module;
 using Nekoyume.TableData;
@@ -92,6 +93,7 @@ public class ArenaParticipantsWorker : BackgroundService
         }
 
         var avatarAddrList = participants.AvatarAddresses;
+        var collectionStates = worldState.GetCollectionStates(avatarAddrList);
         var avatarAndScoreAddrList = avatarAddrList
             .Select(avatarAddr => (
                 avatarAddr,
@@ -180,6 +182,15 @@ public class ArenaParticipantsWorker : BackgroundService
         var runeOptionSheet = worldState.GetSheet<RuneOptionSheet>();
         var runeIds = runeListSheet.Values.Select(x => x.Id).ToList();
         var row = characterSheet[GameConfig.DefaultAvatarCharacterId];
+        CollectionSheet collectionSheet = new CollectionSheet();
+        try
+        {
+            collectionSheet = worldState.GetSheet<CollectionSheet>();
+        }
+        catch (Exception)
+        {
+            // pass
+        }
         var addrBulk = avatarAddrAndScoresWithRank
             .SelectMany(tuple => new[]
             {
@@ -196,7 +207,7 @@ public class ArenaParticipantsWorker : BackgroundService
         }
 
         var runeStates = new List<RuneState>();
-        var result = avatarAddrAndScoresWithRank.Select(tuple =>
+        var result = avatarAddrAndScoresWithRank.Select((tuple, index) =>
         {
             var (avatarAddr, score, rank) = tuple;
             var avatar = worldState.GetAvatarState(avatarAddr);
@@ -246,7 +257,18 @@ public class ArenaParticipantsWorker : BackgroundService
                     avatar.inventory.Costumes.FirstOrDefault(x => x.ItemId == guid))
                 .Where(item => item != null).ToList();
             var runeOptions = StateQuery.GetRuneOptions(equippedRuneStates, runeOptionSheet);
-            var cp = CPHelper.TotalCP(equipments, costumes, runeOptions, avatar.level, row, costumeSheet);
+            var collectionState = collectionStates[index];
+            var collectionExist = collectionState is not null;
+            var collectionModifiers = new List<StatModifier>();
+            if (collectionExist)
+            {
+                foreach (var collectionId in collectionState!.Ids)
+                {
+                    collectionModifiers.AddRange(collectionSheet[collectionId].StatModifiers);
+                }
+            }
+
+            var cp = CPHelper.TotalCP(equipments, costumes, runeOptions, avatar.level, row, costumeSheet, collectionModifiers);
             var portraitId = StateQuery.GetPortraitId(equipments, costumes);
             return new ArenaParticipant(
                 avatarAddr,
