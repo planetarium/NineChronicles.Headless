@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Libplanet.Headless;
+using Nekoyume;
 using NineChronicles.Headless.Properties;
 
 namespace NineChronicles.Headless.Executable
@@ -38,8 +39,9 @@ namespace NineChronicles.Headless.Executable
         public string? MinerPrivateKeyString { get; set; }
         public int MinerBlockIntervalMilliseconds { get; set; }
 
+        public Planet Planet { get; set; } = Planet.Odin;
+
         // Networking
-        public NetworkType NetworkType { get; set; } = NetworkType.Main;
         public string[]? IceServerStrings { get; set; }
         public string[]? PeerStrings { get; set; }
 
@@ -107,7 +109,7 @@ namespace NineChronicles.Headless.Executable
             int? minerCount,
             string? minerPrivateKeyString,
             int? minerBlockIntervalMilliseconds,
-            NetworkType? networkType,
+            Planet? planet,
             string[]? iceServerStrings,
             string[]? peerStrings,
             bool? rpcServer,
@@ -158,7 +160,7 @@ namespace NineChronicles.Headless.Executable
             MinerCount = minerCount ?? MinerCount;
             MinerPrivateKeyString = minerPrivateKeyString ?? MinerPrivateKeyString;
             MinerBlockIntervalMilliseconds = minerBlockIntervalMilliseconds ?? MinerBlockIntervalMilliseconds;
-            NetworkType = networkType ?? NetworkType;
+            Planet = planet ?? Planet;
             IceServerStrings = iceServerStrings ?? IceServerStrings;
             PeerStrings = peerStrings ?? PeerStrings;
             RpcServer = rpcServer ?? RpcServer;

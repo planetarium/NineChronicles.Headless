@@ -40,6 +40,7 @@ using Libplanet.Net.Transports;
 using Nekoyume.Action.Loader;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
+using Nekoyume;
 
 namespace NineChronicles.Headless.Executable
 {
@@ -160,8 +161,10 @@ namespace NineChronicles.Headless.Executable
             bool? strictRendering = null,
             [Option(Description = "Log action renders besides block renders. --rpc-server implies this.")]
             bool? logActionRenders = null,
-            [Option("network-type", Description = "Network type.")]
-            NetworkType? networkType = null,
+            [Option("network-type", Description = "(deprecated) Network type.")]
+            string? networkType = null,
+            [Option("planet", Description = "Planet")]
+            Planet? planet = null,
             [Option(Description =
                 "The lifetime of each transaction, which uses minute as its unit.")]
             int? txLifeTime = null,
@@ -250,6 +253,11 @@ namespace NineChronicles.Headless.Executable
             var headlessConfig = new Configuration();
             configuration.Bind("Headless", headlessConfig);
 
+            if (networkType is { })
+            {
+                Log.Warning("'--network-type' option has been deprecated and has no effect. please use `--planet` instead.");
+            }
+
             IActionEvaluatorConfiguration? GetActionEvaluatorConfiguration(IConfiguration configuration)
             {
                 if (!(configuration.GetValue<ActionEvaluatorType>("Type") is { } actionEvaluatorType))
@@ -287,7 +295,7 @@ namespace NineChronicles.Headless.Executable
             headlessConfig.Overwrite(
                 appProtocolVersionToken, trustedAppProtocolVersionSigners, genesisBlockPath, host, port,
                 swarmPrivateKeyString, storeType, storePath, noReduceStore, noMiner, minerCount,
-                minerPrivateKeyString, minerBlockIntervalMilliseconds, networkType, iceServerStrings, peerStrings, rpcServer, rpcListenHost,
+                minerPrivateKeyString, minerBlockIntervalMilliseconds, planet, iceServerStrings, peerStrings, rpcServer, rpcListenHost,
                 rpcListenPort, rpcRemoteServer, rpcHttpServer, graphQLServer, graphQLHost, graphQLPort,
                 graphQLSecretTokenPath, noCors, nonblockRenderer, nonblockRendererQueue, strictRendering,
                 logActionRenders, confirmations,
@@ -445,7 +453,7 @@ namespace NineChronicles.Headless.Executable
                     {
                         MinerPrivateKey = minerPrivateKey,
                         Libplanet = properties,
-                        NetworkType = headlessConfig.NetworkType,
+                        Planet = headlessConfig.Planet,
                         StrictRender = headlessConfig.StrictRendering,
                         TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime),
                         MinerCount = headlessConfig.MinerCount,
