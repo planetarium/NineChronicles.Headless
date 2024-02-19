@@ -1043,7 +1043,7 @@ type Block {
   difficulty: Long! @deprecated(reason: "Block does not have Difficulty field in PBFT.")
 
   """A block's hash."""
-  hash: BlockHash!
+  hash: ID!
 
   """The height of the block."""
   index: Long!
@@ -1058,7 +1058,7 @@ type Block {
   nonce: ByteString! @deprecated(reason: "Block does not have Nonce field in PBFT.")
 
   """The hash of PreEvaluationBlock."""
-  preEvaluationHash: HashDigestSHA256!
+  preEvaluationHash: ByteString!
 
   """
   The previous block.  If it's a genesis block (i.e., its index is 0) this must be null.
@@ -1076,7 +1076,7 @@ type Block {
   """
   The hash of the resulting states after evaluating transactions and a block action (if exists)
   """
-  stateRootHash: HashDigestSHA256!
+  stateRootHash: ByteString!
   timestamp: DateTimeOffset!
 
   """
@@ -1090,7 +1090,7 @@ type Block {
 
 type BlockCommit {
   """The hash of the block which contains block commit."""
-  blockHash: BlockHash!
+  blockHash: ID!
 
   """The height of the block commit."""
   height: Long!
@@ -1112,7 +1112,7 @@ type BlockHeader {
 }
 
 type BlockQuery {
-  block(hash: BlockHash, index: Long): Block
+  block(hash: ID, index: ID): Block
   blocks(desc: Boolean = false, excludeEmptyTxs: Boolean = false, limit: Int, miner: Address, offset: Int = 0): [Block!]!
 }
 
@@ -1245,7 +1245,7 @@ type Currency {
   decimalPlaces: Byte!
 
   """The deterministic hash derived from other fields."""
-  hash: HashDigestSHA1!
+  hash: ByteString!
 
   """
   The uppermost quantity of currency allowed to exist.  null means unlimited supply.
@@ -1434,6 +1434,8 @@ scalar HashDigestSHA1
 
 scalar HashDigestSHA256
 
+scalar HashDigest_SHA256
+
 """A number of queries for convenience."""
 type HelperQuery {
   """Decodes hex encoded bencodex value"""
@@ -1590,16 +1592,16 @@ type KeyStoreType {
 
 type LibplanetStateQuery {
   """Retrieves balance from the legacy account."""
-  balance(currency: CurrencyInput!, offsetBlockHash: BlockHash, offsetStateRootHash: HashDigestSHA256, owner: Address!): FungibleAssetValue!
+  balance(currency: CurrencyInput!, offsetBlockHash: ID, offsetStateRootHash: HashDigest_SHA256, owner: Address!): FungibleAssetValue!
 
   """Retrieves states from the legacy account."""
-  states(addresses: [Address!]!, offsetBlockHash: BlockHash, offsetStateRootHash: HashDigestSHA256): [BencodexValue]!
+  states(addresses: [Address!]!, offsetBlockHash: ID, offsetStateRootHash: HashDigest_SHA256): [BencodexValue]!
 
   """Retrieves total supply from the legacy account."""
-  totalSupply(currency: CurrencyInput!, offsetBlockHash: BlockHash, offsetStateRootHash: HashDigestSHA256): FungibleAssetValue
+  totalSupply(currency: CurrencyInput!, offsetBlockHash: ID, offsetStateRootHash: HashDigest_SHA256): FungibleAssetValue
 
   """Retrieves validator set from the legacy account."""
-  validators(offsetBlockHash: BlockHash, offsetStateRootHash: HashDigestSHA256): [Validator!]
+  validators(offsetBlockHash: ID, offsetStateRootHash: HashDigest_SHA256): [Validator!]
   world(blockHash: BlockHash, stateRootHash: HashDigestSHA256): WorldState!
 }
 
@@ -2435,7 +2437,7 @@ type Transaction {
   blockRef: Block!
 
   """A unique identifier derived from this transaction content."""
-  id: TxId!
+  id: ID!
 
   """
   The number of previous transactions committed by the signer of this tx.
@@ -2509,11 +2511,11 @@ type TransactionHeadlessQuery {
   transactionResult(
     """transaction id."""
     txId: TxId!
-  ): TxResult!
+  ): TxResultType!
   transactionResults(
     """transaction ids."""
     txIds: [TxId]!
-  ): [TxResult]!
+  ): [TxResultType]!
   unsignedTransaction(
     maxGasPrice: FungibleAssetValueInputType = {decimalPlaces: 18, minters: null, quantity: 1000000000000000000, ticker: "Mead"}
 
@@ -2545,13 +2547,13 @@ type TransactionQuery {
     """Address of the account to get the next tx nonce."""
     address: Address!
   ): Long!
-  stagedTransactions(desc: Boolean = false, limit: Int, offset: Int = 0, signer: Address): [Transaction!]!
-  transaction(id: TxId!): Transaction
+  stagedTransactions(desc: Boolean = false, involvedAddress: Address, limit: Int, offset: Int = 0, signer: Address): [Transaction!]!
+  transaction(id: ID): Transaction
   transactionResult(
     """transaction id."""
-    txId: TxId!
-  ): TxResult!
-  transactions(desc: Boolean = false, limit: Int, offset: Int = 0, signer: Address): [Transaction!]!
+    txId: ID!
+  ): TxResultType!
+  transactions(desc: Boolean = false, involvedAddress: Address, limit: Int, offset: Int = 0, signer: Address): [Transaction!]!
   unsignedTransaction(
     """The nonce for Transaction."""
     nonce: Long
@@ -2606,7 +2608,7 @@ type TransferNCGHistoryType {
 
 scalar TxId
 
-type TxResult {
+type TxResultType {
   """The block hash which the target transaction executed."""
   blockHash: String
 
@@ -2617,10 +2619,10 @@ type TxResult {
   exceptionNames: [String]
 
   """The input state's root hash which the target transaction executed."""
-  inputState: HashDigestSHA256
+  inputState: HashDigest_SHA256
 
   """The output state's root hash which the target transaction executed."""
-  outputState: HashDigestSHA256
+  outputState: HashDigest_SHA256
 
   """The transaction status."""
   txStatus: TxStatus!
@@ -2636,7 +2638,7 @@ enum TxStatus {
 
 type TxType {
   transaction: TransactionType!
-  txResult: TxResult
+  txResult: TxResultType
 }
 
 type ValidationQuery {
