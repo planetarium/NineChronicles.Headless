@@ -25,13 +25,18 @@ namespace NineChronicles.Headless.Services
 
         public int? GetTxQuota(Address address)
         {
-            RedisValue result = _db.StringGet(address.ToString());
-            if (!result.IsNull)
+            try
             {
-                return Convert.ToInt32(result);
-            }
+                RedisValue result = _db.StringGet(address.ToString());
 
-            return null;
+                return !result.IsNull ? Convert.ToInt32(result) : null;
+            }
+            catch (RedisTimeoutException)
+            {
+                Log.ForContext("Source", nameof(IAccessControlService))
+                    .Error("\"{Address}\" Redis timeout.", address);
+                return null;
+            }
         }
     }
 }

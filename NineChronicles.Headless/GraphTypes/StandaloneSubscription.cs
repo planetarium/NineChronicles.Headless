@@ -9,7 +9,6 @@ using Libplanet.Headless;
 using Libplanet.Net;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -27,7 +26,9 @@ using Libplanet.Blockchain;
 using Libplanet.Store;
 using Libplanet.Types.Tx;
 using Microsoft.Extensions.Configuration;
+using Nekoyume.Module;
 using Serilog;
+using Libplanet.Action.State;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -227,39 +228,6 @@ namespace NineChronicles.Headless.GraphTypes
             blockRenderer.BlockSubject
                 .ObserveOn(NewThreadScheduler.Default)
                 .Subscribe(RenderBlock);
-
-            ActionRenderer actionRenderer = standaloneContext.NineChroniclesNodeService!.ActionRenderer;
-            actionRenderer.EveryRender<MonsterCollect>()
-                .ObserveOn(NewThreadScheduler.Default)
-                .Subscribe(RenderMonsterCollectionStateSubject);
-            actionRenderer.EveryRender<CancelMonsterCollect>()
-                .ObserveOn(NewThreadScheduler.Default)
-                .Subscribe(RenderMonsterCollectionStateSubject);
-            actionRenderer.EveryRender<ClaimMonsterCollectionReward>()
-                .ObserveOn(NewThreadScheduler.Default)
-                .Subscribe(RenderMonsterCollectionStateSubject);
-        }
-
-        private IObservable<MonsterCollectionState> SubscribeMonsterCollectionState(IResolveEventStreamContext context)
-        {
-            var address = context.GetArgument<Address>("address");
-
-            StandaloneContext.AgentAddresses.TryAdd(address,
-                (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(),
-                    new ReplaySubject<string>()));
-            StandaloneContext.AgentAddresses.TryGetValue(address, out var subjects);
-            return subjects.stateSubject.AsObservable();
-        }
-
-        private IObservable<MonsterCollectionStatus> SubscribeMonsterCollectionStatus(IResolveEventStreamContext context)
-        {
-            var address = context.GetArgument<Address>("address");
-
-            StandaloneContext.AgentAddresses.TryAdd(address,
-                (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(),
-                    new ReplaySubject<string>()));
-            StandaloneContext.AgentAddresses.TryGetValue(address, out var subjects);
-            return subjects.statusSubject.AsObservable();
         }
 
         private IObservable<string> SubscribeBalance(IResolveEventStreamContext context)
@@ -368,13 +336,11 @@ namespace NineChronicles.Headless.GraphTypes
             BlockChain blockChain = StandaloneContext.NineChroniclesNodeService.BlockChain;
             Currency currency =
                 new GoldCurrencyState(
-                    (Dictionary)blockChain.GetStates(new[] { Addresses.GoldCurrency }, _tipHeader.Hash)[0]
+                    (Dictionary)blockChain.GetWorldState(_tipHeader.Hash).GetLegacyState(Addresses.GoldCurrency)
                 ).Currency;
             var rewardSheet = new MonsterCollectionRewardSheet();
-            var csv = blockChain.GetStates(
-                new[] { Addresses.GetSheetAddress<MonsterCollectionRewardSheet>() },
-                _tipHeader.Hash
-            )[0].ToDotnetString();
+            var csv = blockChain.GetWorldState(_tipHeader.Hash)
+                .GetLegacyState(Addresses.GetSheetAddress<MonsterCollectionRewardSheet>()).ToDotnetString();
             rewardSheet.Set(csv);
             Log.Debug($"StandaloneSubscription.RenderBlock target addresses. (count: {StandaloneContext.AgentAddresses.Count})");
             StandaloneContext.AgentAddresses
@@ -409,15 +375,14 @@ namespace NineChronicles.Headless.GraphTypes
             ReplaySubject<string> balanceSubject,
             MonsterCollectionRewardSheet rewardSheet)
         {
-            FungibleAssetValue agentBalance = blockChain.GetBalance(address, currency, tipHeader.Hash);
+            FungibleAssetValue agentBalance = blockChain.GetWorldState(tipHeader.Hash).GetBalance(address, currency);
             balanceSubject.OnNext(agentBalance.GetQuantityString(true));
-            if (blockChain.GetStates(new[] { address }, tipHeader.Hash)[0] is Dictionary rawAgent)
+            if (blockChain.GetWorldState(tipHeader.Hash).GetAgentState(address) is { } agentState)
             {
-                AgentState agentState = new AgentState(rawAgent);
                 Address deriveAddress =
                     MonsterCollectionState.DeriveAddress(address, agentState.MonsterCollectionRound);
                 if (agentState.avatarAddresses.Any() &&
-                    blockChain.GetStates(new[] { deriveAddress }, tipHeader.Hash)[0] is Dictionary collectDict)
+                    blockChain.GetWorldState(tipHeader.Hash).GetLegacyState(deriveAddress) is Dictionary collectDict)
                 {
                     var monsterCollectionState = new MonsterCollectionState(collectDict);
                     List<MonsterCollectionRewardSheet.RewardInfo> rewards = monsterCollectionState.CalculateRewards(
@@ -432,41 +397,6 @@ namespace NineChronicles.Headless.GraphTypes
                         monsterCollectionState.IsLocked(tipHeader.Index)
                     );
                     statusSubject.OnNext(monsterCollectionStatus);
-                }
-            }
-        }
-
-        private void RenderMonsterCollectionStateSubject<T>(ActionEvaluation<T> eval)
-            where T : ActionBase
-        {
-            if (!(StandaloneContext.NineChroniclesNodeService is { } service))
-            {
-                throw new InvalidOperationException(
-                    $"{nameof(NineChroniclesNodeService)} is null.");
-            }
-
-            // Skip when error.
-            if (eval.Exception is { })
-            {
-                return;
-            }
-
-            foreach (var (address, subjects) in StandaloneContext.AgentAddresses)
-            {
-                if (eval.Signer.Equals(address) &&
-                    service.BlockChain.GetStates(new[] { address }, _tipHeader?.Hash)[0] is Dictionary agentDict)
-                {
-                    var agentState = new AgentState(agentDict);
-                    Address deriveAddress = MonsterCollectionState.DeriveAddress(address, agentState.MonsterCollectionRound);
-                    var subject = subjects.stateSubject;
-                    if (service.BlockChain.GetAccountState(eval.OutputState).GetState(deriveAddress) is Dictionary state)
-                    {
-                        subject.OnNext(new MonsterCollectionState(state));
-                    }
-                    else
-                    {
-                        subject.OnNext(null!);
-                    }
                 }
             }
         }

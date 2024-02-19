@@ -14,6 +14,7 @@ using Libplanet.Store;
 using Libplanet.Types.Tx;
 using Nekoyume.Action;
 using Nekoyume.Model.Item;
+using Nekoyume.Module;
 using NineChronicles.Headless.Executable.IO;
 using Serilog.Core;
 using static NineChronicles.Headless.NCActionUtils;
@@ -130,7 +131,7 @@ namespace NineChronicles.Headless.Executable.Commands
                         {
                             int? quantity = null;
                             if (p.OrderId is { } oid &&
-                                chain.GetState(GetOrderAddress(oid)) is Dictionary rawOrder)
+                                chain.GetWorldState().GetLegacyState(GetOrderAddress(oid)) is Dictionary rawOrder)
                             {
                                 if (OrderFactory.Deserialize(rawOrder) is FungibleOrder fo)
                                 {

@@ -20,13 +20,13 @@ using Libplanet.Types.Blocks;
 using Libplanet.Types.Tx;
 using MagicOnion;
 using MagicOnion.Server;
-using MessagePack;
 using Microsoft.Extensions.Caching.Memory;
 using Nekoyume;
-using Nekoyume.Shared.Services;
-using Serilog;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
+using Nekoyume.Shared.Services;
 using Sentry;
+using Serilog;
 using static NineChronicles.Headless.NCActionUtils;
 using NodeExceptionType = Libplanet.Headless.NodeExceptionType;
 using Transaction = Libplanet.Types.Tx.Transaction;
@@ -122,70 +122,124 @@ namespace NineChronicles.Headless
             }
         }
 
-        public UnaryResult<byte[]> GetState(byte[] addressBytes, byte[] blockHashBytes)
+        public UnaryResult<byte[]> GetStateByBlockHash(
+            byte[] blockHashBytes,
+            byte[] accountAddressBytes,
+            byte[] addressBytes)
         {
-            var address = new Address(addressBytes);
             var hash = new BlockHash(blockHashBytes);
-            IValue state = _blockChain.GetAccountState(hash).GetState(address);
+            var accountAddress = new Address(accountAddressBytes);
+            var address = new Address(addressBytes);
+            IValue state = _blockChain
+                .GetWorldState(hash)
+                .GetAccountState(accountAddress)
+                .GetState(address);
             // FIXME: Null과 null 구분해서 반환해야 할 듯
             byte[] encoded = _codec.Encode(state ?? Null.Value);
             return new UnaryResult<byte[]>(encoded);
         }
 
-        public UnaryResult<byte[]> GetStateBySrh(byte[] addressBytes, byte[] stateRootHashBytes)
+        public UnaryResult<byte[]> GetStateByStateRootHash(
+            byte[] stateRootHashBytes,
+            byte[] accountAddressBytes,
+            byte[] addressBytes)
         {
             var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var accountAddress = new Address(accountAddressBytes);
             var address = new Address(addressBytes);
-            IValue state = _blockChain.GetAccountState(stateRootHash).GetState(address);
+            IValue state = _blockChain
+                .GetWorldState(stateRootHash)
+                .GetAccountState(accountAddress)
+                .GetState(address);
             byte[] encoded = _codec.Encode(state ?? Null.Value);
             return new UnaryResult<byte[]>(encoded);
         }
 
-        public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStates(IEnumerable<byte[]> addressBytesList, byte[] blockHashBytes)
+        public async UnaryResult<Dictionary<byte[], byte[]>> GetAgentStatesByBlockHash(
+            byte[] blockHashBytes,
+            IEnumerable<byte[]> addressBytesList)
         {
             var hash = new BlockHash(blockHashBytes);
-            var accountState = _blockChain.GetAccountState(hash);
+            var worldState = _blockChain.GetWorldState(hash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
-            var addresses = addressBytesList.Select(a => new Address(a)).ToList();
-            var rawAvatarStates = accountState.GetRawAvatarStates(addresses);
-            var taskList = rawAvatarStates
-                .Select(pair => Task.Run(() =>
-                {
-                    result.TryAdd(pair.Key.ToByteArray(), _codec.Encode(pair.Value));
-                }))
-                .ToList();
+            var taskList = addressBytesList.Select(addressByte => Task.Run(() =>
+            {
+                var value = worldState.GetResolvedState(new Address(addressByte), Addresses.Agent);
+                result.TryAdd(addressByte, _codec.Encode(value ?? Null.Value));
+            }));
 
             await Task.WhenAll(taskList);
             return result.ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
-        public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStatesBySrh(
-            IEnumerable<byte[]> addressBytesList,
-            byte[] stateRootHashBytes)
+        public async UnaryResult<Dictionary<byte[], byte[]>> GetAgentStatesByStateRootHash(
+            byte[] stateRootHashBytes,
+            IEnumerable<byte[]> addressBytesList)
         {
             var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
-            var accountState = _blockChain.GetAccountState(stateRootHash);
+            var worldState = _blockChain.GetWorldState(stateRootHash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
-            var addresses = addressBytesList.Select(a => new Address(a)).ToList();
-            var rawAvatarStates = accountState.GetRawAvatarStates(addresses);
-            var taskList = rawAvatarStates
-                .Select(pair => Task.Run(() =>
-                {
-                    result.TryAdd(pair.Key.ToByteArray(), _codec.Encode(pair.Value));
-                }))
-                .ToList();
+            var taskList = addressBytesList.Select(addressByte => Task.Run(() =>
+            {
+                var value = worldState.GetResolvedState(new Address(addressByte), Addresses.Agent);
+                result.TryAdd(addressByte, _codec.Encode(value ?? Null.Value));
+            }));
 
             await Task.WhenAll(taskList);
             return result.ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
-        public UnaryResult<Dictionary<byte[], byte[]>> GetStateBulk(IEnumerable<byte[]> addressBytesList, byte[] blockHashBytes)
+        public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStatesByBlockHash(
+            byte[] blockHashBytes,
+            IEnumerable<byte[]> addressBytesList)
         {
             var hash = new BlockHash(blockHashBytes);
+            var worldState = _blockChain.GetWorldState(hash);
+            var result = new ConcurrentDictionary<byte[], byte[]>();
+            var addresses = addressBytesList.Select(a => new Address(a)).ToList();
+            var taskList = addresses.Select(address => Task.Run(() =>
+            {
+                var value = worldState.GetFullAvatarStateRaw(address);
+                result.TryAdd(address.ToByteArray(), _codec.Encode(value ?? Null.Value));
+            }));
+
+            await Task.WhenAll(taskList);
+            return result.ToDictionary(kv => kv.Key, kv => kv.Value);
+        }
+
+        public async UnaryResult<Dictionary<byte[], byte[]>> GetAvatarStatesByStateRootHash(
+            byte[] stateRootHashBytes,
+            IEnumerable<byte[]> addressBytesList)
+        {
+            var addresses = addressBytesList.Select(a => new Address(a)).ToList();
+            var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var worldState = _blockChain.GetWorldState(stateRootHash);
+            var result = new ConcurrentDictionary<byte[], byte[]>();
+            var taskList = addresses.Select(address => Task.Run(() =>
+            {
+                var value = worldState.GetFullAvatarStateRaw(address);
+                result.TryAdd(address.ToByteArray(), _codec.Encode(value ?? Null.Value));
+            }));
+
+            await Task.WhenAll(taskList);
+            return result.ToDictionary(kv => kv.Key, kv => kv.Value);
+        }
+
+        public UnaryResult<Dictionary<byte[], byte[]>> GetBulkStateByBlockHash(
+            byte[] blockHashBytes,
+            byte[] accountAddressBytes,
+            IEnumerable<byte[]> addressBytesList)
+        {
+            var blockHash = new BlockHash(blockHashBytes);
+            var accountAddress = new Address(accountAddressBytes);
+            List<Address> addresses = addressBytesList.Select(b => new Address(b)).ToList();
+
             var result = new Dictionary<byte[], byte[]>();
-            Address[] addresses = addressBytesList.Select(b => new Address(b)).ToArray();
-            IReadOnlyList<IValue> values = _blockChain.GetStates(addresses, hash);
-            for (int i = 0; i < addresses.Length; i++)
+            IReadOnlyList<IValue> values = _blockChain
+                .GetWorldState(blockHash)
+                .GetAccountState(accountAddress)
+                .GetStates(addresses);
+            for (int i = 0; i < addresses.Count; i++)
             {
                 result.TryAdd(addresses[i].ToByteArray(), _codec.Encode(values[i] ?? Null.Value));
             }
@@ -193,15 +247,21 @@ namespace NineChronicles.Headless
             return new UnaryResult<Dictionary<byte[], byte[]>>(result);
         }
 
-        public UnaryResult<Dictionary<byte[], byte[]>> GetStateBulkBySrh(
-            IEnumerable<byte[]> addressBytesList,
-            byte[] stateRootHashBytes)
+        public UnaryResult<Dictionary<byte[], byte[]>> GetBulkStateByStateRootHash(
+            byte[] stateRootHashBytes,
+            byte[] accountAddressBytes,
+            IEnumerable<byte[]> addressBytesList)
         {
             var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var accountAddress = new Address(accountAddressBytes);
+            List<Address> addresses = addressBytesList.Select(b => new Address(b)).ToList();
+
             var result = new Dictionary<byte[], byte[]>();
-            Address[] addresses = addressBytesList.Select(b => new Address(b)).ToArray();
-            IReadOnlyList<IValue> values = _blockChain.GetAccountState(stateRootHash).GetStates(addresses);
-            for (int i = 0; i < addresses.Length; i++)
+            IReadOnlyList<IValue> values = _blockChain
+                .GetWorldState(stateRootHash)
+                .GetAccountState(accountAddress)
+                .GetStates(addresses);
+            for (int i = 0; i < addresses.Count; i++)
             {
                 result.TryAdd(addresses[i].ToByteArray(), _codec.Encode(values[i] ?? Null.Value));
             }
@@ -210,8 +270,8 @@ namespace NineChronicles.Headless
         }
 
         public UnaryResult<Dictionary<byte[], byte[]>> GetSheets(
-            IEnumerable<byte[]> addressBytesList,
-            byte[] stateRootHashBytes)
+            byte[] stateRootHashBytes,
+            IEnumerable<byte[]> addressBytesList)
         {
             var started = DateTime.UtcNow;
             var sw = new Stopwatch();
@@ -236,7 +296,7 @@ namespace NineChronicles.Headless
             if (addresses.Any())
             {
                 var stateRootHash = new BlockHash(stateRootHashBytes);
-                IReadOnlyList<IValue> values = _blockChain.GetAccountState(stateRootHash).GetStates(addresses);
+                IReadOnlyList<IValue> values = _blockChain.GetWorldState(stateRootHash).GetLegacyStates(addresses);
                 sw.Stop();
                 Log.Information("[GetSheets]Get sheet from state: {Count}, Elapsed: {Elapsed}", addresses.Count, sw.Elapsed);
                 sw.Restart();
@@ -252,13 +312,19 @@ namespace NineChronicles.Headless
             return new UnaryResult<Dictionary<byte[], byte[]>>(result);
         }
 
-        public UnaryResult<byte[]> GetBalance(byte[] addressBytes, byte[] currencyBytes, byte[] blockHashBytes)
+        public UnaryResult<byte[]> GetBalanceByBlockHash(
+            byte[] blockHashBytes,
+            byte[] addressBytes,
+            byte[] currencyBytes)
         {
+            var blockHash = new BlockHash(blockHashBytes);
             var address = new Address(addressBytes);
             var serializedCurrency = (Bencodex.Types.Dictionary)_codec.Decode(currencyBytes);
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
-            var hash = new BlockHash(blockHashBytes);
-            FungibleAssetValue balance = _blockChain.GetAccountState(hash).GetBalance(address, currency);
+            FungibleAssetValue balance = _blockChain
+                .GetWorldState(blockHash)
+                .GetAccountState(ReservedAddresses.LegacyAccount)
+                .GetBalance(address, currency);
             byte[] encoded = _codec.Encode(
               new Bencodex.Types.List(
                 new IValue[]
@@ -271,13 +337,19 @@ namespace NineChronicles.Headless
             return new UnaryResult<byte[]>(encoded);
         }
 
-        public UnaryResult<byte[]> GetBalanceBySrh(byte[] addressBytes, byte[] currencyBytes, byte[] stateRootHashBytes)
+        public UnaryResult<byte[]> GetBalanceByStateRootHash(
+            byte[] stateRootHashBytes,
+            byte[] addressBytes,
+            byte[] currencyBytes)
         {
-            var address = new Address(addressBytes);
             var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var address = new Address(addressBytes);
             var serializedCurrency = (Bencodex.Types.Dictionary)_codec.Decode(currencyBytes);
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
-            FungibleAssetValue balance = _blockChain.GetAccountState(stateRootHash).GetBalance(address, currency);
+            FungibleAssetValue balance = _blockChain
+                .GetWorldState(stateRootHash)
+                .GetAccountState(ReservedAddresses.LegacyAccount)
+                .GetBalance(address, currency);
             byte[] encoded = _codec.Encode(
               new Bencodex.Types.List(
                 new IValue[]

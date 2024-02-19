@@ -21,6 +21,7 @@ using Nekoyume.Helper;
 using Nekoyume.Model;
 using Nekoyume.Model.EnumType;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
 using Xunit;
@@ -253,7 +254,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.IsType<Dictionary>(plainValue);
             var actionBase = DeserializeNCAction(plainValue);
             var action = Assert.IsType<TransferAsset>(actionBase);
-            var rawState = _standaloneContext.BlockChain!.GetState(Addresses.GoldCurrency);
+            var rawState = _standaloneContext.BlockChain!.GetWorldState().GetLegacyState(Addresses.GoldCurrency);
             var goldCurrencyState = new GoldCurrencyState((Dictionary)rawState);
             Currency currency = currencyType == "NCG" ? goldCurrencyState.Currency : CrystalCalculator.CRYSTAL;
 
@@ -277,7 +278,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [InlineData("{ ticker: \"CRYSTAL\", minters: [], decimalPlaces: 18 }", false)]
         public async Task TransferAsset(string valueType, bool memo)
         {
-            var rawState = _standaloneContext.BlockChain!.GetState(Addresses.GoldCurrency);
+            var rawState = _standaloneContext.BlockChain!.GetWorldState().GetLegacyState(Addresses.GoldCurrency);
             var goldCurrencyState = new GoldCurrencyState((Dictionary)rawState);
 
             var recipient = new PrivateKey().Address;
@@ -1133,7 +1134,6 @@ actionPoint: {actionPoint},
             var actualAction = Assert.IsType<LoadIntoMyGarages>(actionBase);
             Assert.True(expectedAction.FungibleAssetValues?.SequenceEqual(actualAction.FungibleAssetValues) ??
                         actualAction.FungibleAssetValues is null);
-            Assert.Equal(expectedAction.InventoryAddr, actualAction.InventoryAddr);
             Assert.True(expectedAction.FungibleIdAndCounts?.SequenceEqual(actualAction.FungibleIdAndCounts) ??
                         actualAction.FungibleIdAndCounts is null);
             Assert.Equal(expectedAction.Memo, actualAction.Memo);

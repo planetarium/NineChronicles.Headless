@@ -8,6 +8,7 @@ using Libplanet.Explorer.GraphTypes;
 using Libplanet.Action.State;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States.Models;
 using NineChronicles.Headless.GraphTypes.States.Models.World;
@@ -21,8 +22,8 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class AvatarStateContext : StateContext
         {
-            public AvatarStateContext(AvatarState avatarState, IAccountState accountState, long blockIndex, StateMemoryCache stateMemoryCache)
-                : base(accountState, blockIndex, stateMemoryCache)
+            public AvatarStateContext(AvatarState avatarState, IWorldState worldState, long blockIndex, StateMemoryCache stateMemoryCache)
+                : base(worldState, blockIndex, stateMemoryCache)
             {
                 AvatarState = avatarState;
             }
@@ -57,12 +58,12 @@ namespace NineChronicles.Headless.GraphTypes.States
                 description: "The index of this avatar state among its agent's avatar addresses.",
                 resolve: context =>
                 {
-                    if (!(context.Source.GetState(context.Source.AvatarState.agentAddress) is Dictionary dictionary))
+                    if (context.Source.WorldState.GetAgentState(context.Source.AvatarState.agentAddress) is not
+                        { } agentState)
                     {
                         throw new InvalidOperationException();
                     }
 
-                    var agentState = new AgentState(dictionary);
                     return agentState.avatarAddresses
                         .First(x => x.Value.Equals(context.Source.AvatarState.address))
                         .Key;
@@ -118,11 +119,11 @@ namespace NineChronicles.Headless.GraphTypes.States
                 description: "Rune list of avatar",
                 resolve: context =>
                 {
-                    var runeSheet = context.Source.AccountState.GetSheet<RuneSheet>();
+                    var runeSheet = context.Source.WorldState.GetSheet<RuneSheet>();
                     var runeList = new List<RuneState>();
                     foreach (var rune in runeSheet)
                     {
-                        var runeState = context.Source.GetState(
+                        var runeState = context.Source.WorldState.GetLegacyState(
                             RuneState.DeriveAddress(context.Source.AvatarState.address, rune.Id)
                         );
                         if (runeState is not null)
@@ -144,7 +145,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context =>
                 {
                     var addresses = context.Source.AvatarState.combinationSlotAddresses;
-                    return context.Source.AccountState.GetStates(addresses)
+                    return context.Source.WorldState.GetLegacyStates(addresses)
                         .OfType<Dictionary>()
                         .Select(x => new CombinationSlotState(x));
                 });

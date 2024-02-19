@@ -30,6 +30,7 @@ using GraphQL.Execution;
 using Lib9c;
 using Lib9c.Tests;
 using Nekoyume;
+using Nekoyume.Module;
 using NineChronicles.Headless.Executable.Commands;
 using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Executable.Tests.IO;
@@ -141,9 +142,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.True(result);
 
             Address userAddress = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!.Address;
-            IValue? state = BlockChain.GetState(
-                userAddress.Derive(ActivationKey.DeriveKey)
-            );
+            IValue? state = BlockChain.GetWorldState().GetLegacyState(userAddress.Derive(ActivationKey.DeriveKey));
             Assert.True((Bencodex.Types.Boolean)state);
         }
 
@@ -156,7 +155,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             NineChroniclesNodeService service = StandaloneContextFx.NineChroniclesNodeService!;
             Currency goldCurrency = new GoldCurrencyState(
-                (Dictionary)BlockChain.GetState(GoldCurrencyState.Address)
+                (Dictionary)BlockChain.GetWorldState().GetLegacyState(GoldCurrencyState.Address)
             ).Currency;
 
             Address senderAddress = service.MinerPrivateKey!.Address;
@@ -173,7 +172,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             // 10 + 10 (mining rewards)
             Assert.Equal(
                 20 * goldCurrency,
-                BlockChain.GetBalance(senderAddress, goldCurrency)
+                BlockChain.GetWorldState().GetBalance(senderAddress, goldCurrency)
             );
 
             var recipientKey = new PrivateKey();
@@ -227,13 +226,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 // 10 + 10 - 17.5(transfer)
                 Assert.Equal(
                     FungibleAssetValue.Parse(goldCurrency, "2.5"),
-                    BlockChain.GetBalance(senderAddress, goldCurrency)
+                    BlockChain.GetWorldState().GetBalance(senderAddress, goldCurrency)
                 );
 
                 // 0 + 17.5(transfer) + 10(mining reward)
                 Assert.Equal(
                     FungibleAssetValue.Parse(goldCurrency, "27.5"),
-                    BlockChain.GetBalance(recipient, goldCurrency)
+                    BlockChain.GetWorldState().GetBalance(recipient, goldCurrency)
                 );
             }
         }
@@ -243,7 +242,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             NineChroniclesNodeService service = StandaloneContextFx.NineChroniclesNodeService!;
             Currency goldCurrency = new GoldCurrencyState(
-                (Dictionary)BlockChain.GetState(GoldCurrencyState.Address)
+                (Dictionary)BlockChain.GetWorldState().GetLegacyState(GoldCurrencyState.Address)
             ).Currency;
 
             Address senderAddress = service.MinerPrivateKey!.Address;
@@ -261,7 +260,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             // 10 + 10 (mining rewards)
             Assert.Equal(
                 20 * goldCurrency,
-                BlockChain.GetBalance(senderAddress, goldCurrency)
+                BlockChain.GetWorldState().GetBalance(senderAddress, goldCurrency)
             );
 
             var recipientKey = new PrivateKey();
@@ -288,13 +287,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             // 10 + 10 - 17.5(transfer)
             Assert.Equal(
                 FungibleAssetValue.Parse(goldCurrency, "2.5"),
-                BlockChain.GetBalance(senderAddress, goldCurrency)
+                BlockChain.GetWorldState().GetBalance(senderAddress, goldCurrency)
             );
 
             // 0 + 17.5(transfer) + 10(mining reward)
             Assert.Equal(
                 FungibleAssetValue.Parse(goldCurrency, "27.5"),
-                BlockChain.GetBalance(recipient, goldCurrency)
+                BlockChain.GetWorldState().GetBalance(recipient, goldCurrency)
             );
         }
 
@@ -713,96 +712,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             },
         };
 
-        [Fact]
-        public async Task MonsterCollect()
-        {
-            const string query = @"mutation {
-                action {
-                    monsterCollect(level: 1)
-                }
-            }";
-
-            ActionBase createAvatar = new CreateAvatar
-            {
-                index = 0,
-                hair = 0,
-                lens = 0,
-                ear = 0,
-                tail = 0,
-                name = "avatar",
-            };
-            var playerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
-            BlockChain.MakeTransaction(playerPrivateKey, new[] { createAvatar });
-            Block block = BlockChain.ProposeBlock(playerPrivateKey);
-            BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-
-            Assert.NotNull(BlockChain.GetState(playerPrivateKey.Address));
-            var result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
-            Assert.Null(result.Errors);
-
-            var txIds = BlockChain.GetStagedTransactionIds();
-            Assert.Single(txIds);
-            var tx = BlockChain.GetTransaction(txIds.First());
-            var expected = new Dictionary<string, object>
-            {
-                ["action"] = new Dictionary<string, object>
-                {
-                    ["monsterCollect"] = tx.Id.ToString(),
-                }
-            };
-            Assert.Equal(expected, data);
-            Assert.Single(tx.Actions);
-            var action = (MonsterCollect)ToAction(tx.Actions!.First());
-            Assert.Equal(1, action.level);
-        }
-
-        [Fact]
-        public async Task ClaimMonsterCollectionReward()
-        {
-            var playerPrivateKey = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!;
-            var avatarAddress = playerPrivateKey.Address;
-            string query = $@"mutation {{
-                action {{
-                    claimMonsterCollectionReward(avatarAddress: ""{avatarAddress}"")
-                }}
-            }}";
-
-            ActionBase createAvatar = new CreateAvatar
-            {
-                index = 0,
-                hair = 0,
-                lens = 0,
-                ear = 0,
-                tail = 0,
-                name = "avatar",
-            };
-            BlockChain.MakeTransaction(playerPrivateKey, new[] { createAvatar });
-            Block block = BlockChain.ProposeBlock(playerPrivateKey);
-            BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-
-            Assert.NotNull(BlockChain.GetState(playerPrivateKey.Address));
-
-            var result = await ExecuteQueryAsync(query);
-            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
-            Assert.Null(result.Errors);
-
-            var txIds = BlockChain.GetStagedTransactionIds();
-            Assert.Single(txIds);
-            var tx = BlockChain.GetTransaction(txIds.First());
-            var expected = new Dictionary<string, object>
-            {
-                ["action"] = new Dictionary<string, object>
-                {
-                    ["claimMonsterCollectionReward"] = tx.Id.ToString(),
-                }
-            };
-            Assert.Equal(expected, data);
-            Assert.Single(tx.Actions);
-            var action = (ClaimMonsterCollectionReward)ToAction(tx.Actions!.First());
-            Assert.Equal(avatarAddress, action.avatarAddress);
-        }
-
         // [Fact]
         // public async Task CancelMonsterCollect()
         // {
@@ -965,7 +874,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var result = (bool)data["stageTx"];
             Assert.True(result);
 
-            IValue? state = BlockChain.GetState(privateKey.Address.Derive(ActivationKey.DeriveKey));
+            IValue? state = BlockChain.GetWorldState().GetLegacyState(privateKey.Address.Derive(ActivationKey.DeriveKey));
             Assert.True((Bencodex.Types.Boolean)state);
         }
 
