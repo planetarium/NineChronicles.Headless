@@ -13,6 +13,7 @@ using Nekoyume.Action;
 using Nekoyume.Battle;
 using Nekoyume.Model.Arena;
 using Nekoyume.Model.EnumType;
+using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
 using Nekoyume.Module;
 using Nekoyume.TableData;
@@ -246,7 +247,7 @@ public class ArenaParticipantsWorker : BackgroundService
                     avatar.inventory.Costumes.FirstOrDefault(x => x.ItemId == guid))
                 .Where(item => item != null).ToList();
             var runeOptions = StateQuery.GetRuneOptions(equippedRuneStates, runeOptionSheet);
-            var cp = CPHelper.TotalCP(equipments, costumes, runeOptions, avatar.level, row, costumeSheet);
+            var cp = CPHelper.TotalCP(equipments, costumes, runeOptions, avatar.level, row, costumeSheet, new List<StatModifier>());
             var portraitId = StateQuery.GetPortraitId(equipments, costumes);
             return new ArenaParticipant(
                 avatarAddr,
