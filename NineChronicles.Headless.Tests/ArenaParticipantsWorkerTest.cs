@@ -177,7 +177,7 @@ public class ArenaParticipantsWorkerTest
             .SetLegacyState(itemSlotAddress, itemSlotState.Serialize())
             .SetLegacyState(RuneState.DeriveAddress(avatarAddress, runeId), runeState.Serialize())
             .SetLegacyState(runeSlotAddress, runeSlotState.Serialize())
-            .SetCollectionState(avatarAddress, collectionState)
+            .SetCollectionState(avatar2Address, collectionState)
             .SetLegacyState(participantsAddr, participants.Serialize())
             .SetLegacyState(arenaScore.Address, arenaScore.Serialize());
         foreach (var (key, s) in _sheets)
@@ -197,6 +197,6 @@ public class ArenaParticipantsWorkerTest
         Assert.Equal(1000, second.Score);
         Assert.Equal(2, second.Rank);
         Assert.Equal(GameConfig.DefaultAvatarArmorId, second.PortraitId);
-        Assert.True(first.Cp > second.Cp);
+        Assert.True(first.Cp < second.Cp);
     }
 }
