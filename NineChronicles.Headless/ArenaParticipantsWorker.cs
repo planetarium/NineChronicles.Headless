@@ -211,7 +211,7 @@ public class ArenaParticipantsWorker : BackgroundService
             collectionSheetExist = false;
         }
 
-        var result = avatarAddrAndScoresWithRank.Select((tuple, index) =>
+        var result = avatarAddrAndScoresWithRank.Select(tuple =>
         {
             var (avatarAddr, score, rank) = tuple;
             var runeStates = new List<RuneState>();
@@ -261,12 +261,12 @@ public class ArenaParticipantsWorker : BackgroundService
                     avatar.inventory.Costumes.FirstOrDefault(x => x.ItemId == guid))
                 .Where(item => item != null).ToList();
             var runeOptions = StateQuery.GetRuneOptions(equippedRuneStates, runeOptionSheet);
-            var collectionState = collectionStates[index];
-            var collectionExist = collectionState is not null;
+            var collectionExist = collectionStates.ContainsKey(avatarAddr);
             var collectionModifiers = new List<StatModifier>();
             if (collectionSheetExist && collectionExist)
             {
-                foreach (var collectionId in collectionState!.Ids)
+                var collectionState = collectionStates[avatarAddr];
+                foreach (var collectionId in collectionState.Ids)
                 {
                     collectionModifiers.AddRange(collectionSheet[collectionId].StatModifiers);
                 }
