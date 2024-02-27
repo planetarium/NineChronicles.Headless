@@ -27,6 +27,7 @@ using NineChronicles.Headless.Tests.Common;
 using NineChronicles.Headless.Utils;
 using Xunit;
 using static NineChronicles.Headless.NCActionUtils;
+using Nekoyume.Blockchain.Policy;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -42,7 +43,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             _store = new DefaultStore(null);
             _stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            IBlockPolicy policy = NineChroniclesNodeService.GetTestBlockPolicy();
+            IBlockPolicy policy = new BlockPolicySource().GetPolicy();
             var actionEvaluator = new ActionEvaluator(
                 _ => policy.BlockAction,
                 _stateStore,

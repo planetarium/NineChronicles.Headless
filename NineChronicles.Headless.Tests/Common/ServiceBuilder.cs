@@ -7,6 +7,8 @@ using System.Collections.Immutable;
 using System.IO;
 using Libplanet.Blockchain.Policies;
 using NineChronicles.Headless.Properties;
+using Nekoyume.Blockchain.Policy;
+using Nekoyume;
 
 namespace NineChronicles.Headless.Tests.Common
 {
@@ -17,7 +19,7 @@ namespace NineChronicles.Headless.Tests.Common
         public const int MaximumTransactions = 100;
 
         public static IBlockPolicy BlockPolicy =>
-            NineChroniclesNodeService.GetTestBlockPolicy();
+            new BlockPolicySource().GetPolicy();
 
         public static NineChroniclesNodeService CreateNineChroniclesNodeService(
             Block genesis,
@@ -52,7 +54,7 @@ namespace NineChronicles.Headless.Tests.Common
                 privateKey,
                 properties,
                 BlockPolicy,
-                NetworkType.Test,
+                Planet.Odin,
                 StaticActionLoaderSingleton.Instance);
         }
     }
