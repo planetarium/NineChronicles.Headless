@@ -31,10 +31,9 @@ namespace NineChronicles.Headless
         public NineChroniclesNodeService? NineChroniclesNodeService { get; set; }
 
         public ConcurrentDictionary<Address,
-                (ReplaySubject<MonsterCollectionStatus> statusSubject, ReplaySubject<MonsterCollectionState> stateSubject, ReplaySubject<string> balanceSubject)>
+                ReplaySubject<string>>
             AgentAddresses
-        { get; } = new ConcurrentDictionary<Address,
-            (ReplaySubject<MonsterCollectionStatus>, ReplaySubject<MonsterCollectionState>, ReplaySubject<string>)>();
+        { get; } = new ConcurrentDictionary<Address, ReplaySubject<string>>();
 
         public NodeStatusType NodeStatus => new(this)
         {
