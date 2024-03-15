@@ -1519,5 +1519,26 @@ actionPoint: {actionPoint},
             Assert.Equal(groupId, action.GroupId);
             Assert.Equal(summonCount, action.SummonCount);
         }
+
+        [Fact]
+        public async Task RetrieveAvatarAssets()
+        {
+            var avatarAddress = new PrivateKey().Address;
+
+            var query = $@"{{
+                retrieveAvatarAssets(
+                    avatarAddress: ""{avatarAddress}""
+                )
+            }}";
+
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["retrieveAvatarAssets"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<RetrieveAvatarAssets>(actionBase);
+
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+        }
     }
 }
