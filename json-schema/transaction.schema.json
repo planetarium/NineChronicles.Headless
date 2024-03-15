@@ -1,0 +1,14 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Libplanet Transaction",
+    "description": "Transaction definition in JSON format",
+    "type": "object",
+    "properties": {
+        "\uFEFFactions": {
+            "type": "array",
+            "items": {
+                "$ref": "./actions.schema.json"
+            }
+        }
+    }
+}

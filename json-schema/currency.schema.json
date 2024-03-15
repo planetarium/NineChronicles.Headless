@@ -1,0 +1,26 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Libplanet Currency",
+    "type": "object",
+    "properties": {
+        "\uFEFFticker": {
+            "type": "string"
+        },
+        "\uFEFFminters": {
+            "oneOf": [
+                {
+                    "const": null
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./address.schema.json"
+                    }
+                }
+            ]
+        },
+        "\uFEFFdecimalPlaces": {
+            "$ref": "./byte.schema.json"
+        }
+    }
+}
