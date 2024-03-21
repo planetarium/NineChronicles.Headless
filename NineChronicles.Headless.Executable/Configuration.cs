@@ -85,6 +85,8 @@ namespace NineChronicles.Headless.Executable
         public ushort? ConsensusPort { get; set; }
         public double? ConsensusTargetBlockIntervalMilliseconds { get; set; }
 
+        public int? MaxTransactionPerBlock { get; set; }
+
         public string SentryDsn { get; set; } = "";
 
         public double SentryTraceSampleRate { get; set; } = 0.01;
@@ -141,6 +143,7 @@ namespace NineChronicles.Headless.Executable
             string? consensusPrivateKeyString,
             string[]? consensusSeedStrings,
             double? consensusTargetBlockIntervalMilliseconds,
+            int? maxTransactionPerBlock,
             string? sentryDsn,
             double? sentryTraceSampleRate,
             int? arenaParticipantsSyncInterval
@@ -192,6 +195,7 @@ namespace NineChronicles.Headless.Executable
             ConsensusSeedStrings = consensusSeedStrings ?? ConsensusSeedStrings;
             ConsensusPrivateKeyString = consensusPrivateKeyString ?? ConsensusPrivateKeyString;
             ConsensusTargetBlockIntervalMilliseconds = consensusTargetBlockIntervalMilliseconds ?? ConsensusTargetBlockIntervalMilliseconds;
+            MaxTransactionPerBlock = maxTransactionPerBlock ?? MaxTransactionPerBlock;
             SentryDsn = sentryDsn ?? SentryDsn;
             SentryTraceSampleRate = sentryTraceSampleRate ?? SentryTraceSampleRate;
             ArenaParticipantsSyncInterval = arenaParticipantsSyncInterval ?? ArenaParticipantsSyncInterval;

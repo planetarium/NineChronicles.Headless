@@ -53,6 +53,8 @@ namespace NineChronicles.Headless.Properties
 
         public int TxQuotaPerSigner { get; set; }
 
+        public int? MaxTransactionPerBlock { get; set; }
+
         public IActionLoader ActionLoader { get; init; }
 
         public StateServiceManagerServiceOptions? StateServiceManagerService { get; }
