@@ -897,7 +897,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
 
-            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(Planet.Odin, StaticActionLoaderSingleton.Instance);
+            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(Planet.Odin, StaticActionLoaderSingleton.Instance, null);
             var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, Planet.Odin, StaticActionLoaderSingleton.Instance);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;

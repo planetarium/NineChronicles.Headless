@@ -205,6 +205,9 @@ namespace NineChronicles.Headless.Executable
             [Option("consensus-target-block-interval",
                 Description = "A target block interval used in consensus context. The unit is millisecond.")]
             double? consensusTargetBlockIntervalMilliseconds = null,
+            [Option("maximum-transaction-per-block",
+                Description = "Maximum transactions allowed in a block. null by default.")]
+            int? maxTransactionPerBlock = null,
             [Option("config", new[] { 'C' },
                 Description = "Absolute path of \"appsettings.json\" file to provide headless configurations.")]
             string? configPath = "appsettings.json",
@@ -302,7 +305,7 @@ namespace NineChronicles.Headless.Executable
                 txLifeTime, messageTimeout, tipTimeout, demandBuffer, skipPreload,
                 minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers,
                 consensusPort, consensusPrivateKeyString, consensusSeedStrings, consensusTargetBlockIntervalMilliseconds,
-                sentryDsn, sentryTraceSampleRate, arenaParticipantsSyncInterval
+                maxTransactionPerBlock, sentryDsn, sentryTraceSampleRate, arenaParticipantsSyncInterval
             );
 
 #if SENTRY || ! DEBUG
@@ -348,6 +351,14 @@ namespace NineChronicles.Headless.Executable
             {
                 throw new CommandExitedException(
                     "--miner-private-key must be present to turn on mining at libplanet node.",
+                    -1
+                );
+            }
+
+            if (headlessConfig.ConsensusPrivateKeyString is null && headlessConfig.MaxTransactionPerBlock is not null)
+            {
+                throw new CommandExitedException(
+                    "--maximum-transaction-per-block can only be used when --consensus-private-key is provided.",
                     -1
                 );
             }
@@ -459,6 +470,7 @@ namespace NineChronicles.Headless.Executable
                         MinerCount = headlessConfig.MinerCount,
                         MinerBlockInterval = minerBlockInterval,
                         TxQuotaPerSigner = headlessConfig.TxQuotaPerSigner,
+                        MaxTransactionPerBlock = headlessConfig.MaxTransactionPerBlock
                     };
                 var arenaMemoryCache = new StateMemoryCache();
                 hostBuilder.ConfigureServices(services =>
