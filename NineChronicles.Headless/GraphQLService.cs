@@ -8,6 +8,7 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using Libplanet.Crypto;
 using Libplanet.Explorer.Schemas;
+using Libplanet.Store.Remote.Server;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -255,6 +256,7 @@ namespace NineChronicles.Headless
                             endpoints.MapMagicOnionSwagger("swagger",
                                 app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()!
                                     .MethodHandlers, "/_/");
+                            endpoints.MapGrpcService<RemoteKeyValueService>();
                         }
                     }
                     endpoints.MapHealthChecks("/health-check");
