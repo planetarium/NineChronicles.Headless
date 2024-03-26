@@ -14,6 +14,7 @@ using Cocona;
 using Cocona.Help;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.SystemTextJson;
+using Grpc.Net.Client;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
@@ -25,6 +26,8 @@ using Libplanet.Action.State;
 using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Store;
+using Libplanet.Store.Remote;
+using Libplanet.Store.Remote.Client;
 using Libplanet.Types.Tx;
 using Nekoyume.Action;
 using Nekoyume.Action.Loader;
@@ -353,8 +356,10 @@ namespace NineChronicles.Headless.Executable.Commands
         public int RemoteTx(
             [Option("tx", new[] { 't' }, Description = "The transaction id")]
             string transactionId,
-            [Option("endpoint", new[] { 'e' }, Description = "GraphQL endpoint to get remote state")]
-            string endpoint)
+            [Option("endpoint", new[] { 'e' }, Description = "GraphQL endpoint to get block data.")]
+            string endpoint,
+            [Option("grpc-endpoint", new []{ 'g' }, Description = "gRPC endpoint to get remote states.")]
+            string grpcEndpoint)
         {
             var graphQlClient = new GraphQLHttpClient(new Uri(endpoint), new SystemTextJsonSerializer());
             var transactionResponse = GetTransactionData(graphQlClient, transactionId);
@@ -386,8 +391,27 @@ namespace NineChronicles.Headless.Executable.Commands
             }
             var miner = new Address(minerValue);
 
-            var explorerEndpoint = $"{endpoint}/explorer";
-            var blockChainStates = new RemoteBlockChainStates(new Uri(explorerEndpoint));
+            var channel = GrpcChannel.ForAddress(grpcEndpoint);
+            var keyValueServiceClient = new KeyValueStore.KeyValueStoreClient(channel);
+            var keyValueStore = new RemoteKeyValueStore(keyValueServiceClient);
+            var store = new AnonymousStore
+            {
+                GetBlockDigest = hash =>
+                {
+                    var stateRootHash = HashDigest<SHA256>.FromString(block?.StateRootHash!);
+                    return new BlockDigest(
+                        new BlockHeader(
+                            new PreEvaluationBlockHeader(
+                                new BlockMetadata(0, DateTimeOffset.Now, new PrivateKey().PublicKey, null, null, null),
+                                new HashDigest<SHA256>()),
+                            stateRootHash,
+                            null,
+                            new BlockHash()
+                        ), ImmutableArray<ImmutableArray<byte>>.Empty);
+                }
+            };
+
+            var blockChainStates = new BlockChainStates(store, new TrieStateStore(keyValueStore));
 
             var previousBlockHash = BlockHash.FromString(previousBlockHashValue);
             var previousStates = new World(blockChainStates.GetWorldState(previousBlockHash));
