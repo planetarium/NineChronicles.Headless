@@ -48,6 +48,7 @@ public partial class ReplayCommand
                     previousBlock {
                         hash
                     }
+                    stateRootHash
                 }
             }}
         }
@@ -87,6 +88,7 @@ public partial class ReplayCommand
         public string? Miner { get; set; }
         public string? PreEvaluationHash { get; set; }
         public BlockType? PreviousBlock { get; set; }
+        public string? StateRootHash { get; set; }
     }
 
     private sealed class TransactionQueryType
