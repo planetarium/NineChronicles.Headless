@@ -14,6 +14,7 @@ using Libplanet.Headless;
 using Libplanet.Headless.Hosting;
 using Libplanet.Net;
 using Libplanet.Store;
+using Libplanet.Store.Trie;
 using Microsoft.Extensions.Hosting;
 using Nekoyume.Blockchain;
 using Nekoyume.Blockchain.Policy;
@@ -52,6 +53,8 @@ namespace NineChronicles.Headless
         public BlockChain BlockChain => NodeService.BlockChain;
 
         public IStore Store => NodeService.Store;
+        
+        public IKeyValueStore StateKeyValueStore => NodeService.StateKeyValueStore;
 
         public PrivateKey? MinerPrivateKey { get; set; }
 
