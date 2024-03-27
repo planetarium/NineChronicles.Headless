@@ -241,6 +241,7 @@ namespace NineChronicles.Headless
 
                 app.UseEndpoints(endpoints =>
                 {
+                    endpoints.MapGrpcService<RemoteKeyValueService>();
                     endpoints.MapControllers();
                     if (!(Configuration[UseMagicOnionKey] is null))
                     {
@@ -260,9 +261,10 @@ namespace NineChronicles.Headless
                             endpoints.MapMagicOnionSwagger("swagger",
                                 app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()!
                                     .MethodHandlers, "/_/");
-                            endpoints.MapGrpcService<RemoteKeyValueService>();
+                            
                         }
                     }
+
                     endpoints.MapHealthChecks("/health-check");
                 });
 
