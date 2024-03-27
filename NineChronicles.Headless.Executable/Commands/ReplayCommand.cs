@@ -398,16 +398,14 @@ namespace NineChronicles.Headless.Executable.Commands
             {
                 GetBlockDigest = hash =>
                 {
-                    var stateRootHash = HashDigest<SHA256>.FromString(block?.StateRootHash!);
-                    return new BlockDigest(
-                        new BlockHeader(
-                            new PreEvaluationBlockHeader(
-                                new BlockMetadata(0, DateTimeOffset.Now, new PrivateKey().PublicKey, null, null, null),
-                                new HashDigest<SHA256>()),
-                            stateRootHash,
-                            null,
-                            new BlockHash()
-                        ), ImmutableArray<ImmutableArray<byte>>.Empty);
+                    var stateRootHash = HashDigest<SHA256>.FromString(block!.StateRootHash!);
+                    var privateKey = new PrivateKey();
+                    var blockMetadata = new BlockMetadata(
+                        0, DateTimeOffset.Now, privateKey.PublicKey, null, null, null);
+                    var blockContent = new BlockContent(blockMetadata);
+                    var preEvaluationBlock = blockContent.Propose();
+                    var b = preEvaluationBlock.Sign(privateKey, stateRootHash);
+                    return new BlockDigest(b.Header, ImmutableArray<ImmutableArray<byte>>.Empty);
                 }
             };
 
