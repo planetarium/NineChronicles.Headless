@@ -43,6 +43,8 @@ namespace Libplanet.Headless.Hosting
 
         public readonly IStateStore StateStore;
 
+        public readonly IKeyValueStore StateKeyValueStore;
+
         public readonly BlockChain BlockChain;
 
         public readonly Swarm Swarm;
@@ -173,6 +175,8 @@ namespace Libplanet.Headless.Hosting
                     actionEvaluator: actionEvaluator
                 );
             }
+
+            StateKeyValueStore = keyValueStore;
 
             _obsoletedChainIds = chainIds.Where(chainId => chainId != BlockChain.Id).ToList();
 

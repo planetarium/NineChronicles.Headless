@@ -35,6 +35,7 @@ namespace NineChronicles.Headless
                 services.AddSingleton(provider => service.Swarm);
                 services.AddSingleton(provider => service.BlockChain);
                 services.AddSingleton(provider => service.Store);
+                services.AddSingleton(provider => service.StateKeyValueStore);
 
                 if (properties.StateServiceManagerService is { } stateServiceManagerServiceOptions)
                 {
