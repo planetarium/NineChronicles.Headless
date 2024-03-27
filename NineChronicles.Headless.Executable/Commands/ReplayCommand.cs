@@ -393,7 +393,11 @@ namespace NineChronicles.Headless.Executable.Commands
 
             var channel = GrpcChannel.ForAddress(grpcEndpoint);
             var keyValueServiceClient = new KeyValueStore.KeyValueStoreClient(channel);
-            var keyValueStore = new RemoteKeyValueStore(keyValueServiceClient);
+            var cacheKeyValueStore =
+                new RocksDBKeyValueStore(Path.Combine(Path.GetTempPath(), "9c-headless-replay-remotetx"));
+            var keyValueStore = new ReplicableKeyValueStore(
+                new RemoteKeyValueStore(keyValueServiceClient),
+                cacheKeyValueStore);
             var store = new AnonymousStore
             {
                 GetBlockDigest = hash =>
