@@ -298,6 +298,11 @@ namespace NineChronicles.Headless.GraphTypes
                 return null;
             }
             var txExecution = store.GetTxExecution(blockHash, transaction.Id);
+            if (txExecution is null)
+            {
+                return null;
+            }
+
             var txExecutedBlock = chain[blockHash];
             return new TxResult(
                     txExecution.Fail ? TxStatus.FAILURE : TxStatus.SUCCESS,

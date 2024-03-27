@@ -76,6 +76,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 _console.Error.Flush();
                 IEnumerable<Address> addrs = digest.TxIds
                     .Select(txId => store.GetTransaction(new TxId(txId.ToArray())))
+                    .OfType<Transaction>()
                     .SelectMany(tx => tx.Actions is { } ca
                         ? ca.Select(a => ToAction(a))
                             .SelectMany(a =>

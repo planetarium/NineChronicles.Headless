@@ -22,7 +22,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context => context.Source.Signature.ToBuilder().ToArray());
             Field<ByteStringType>(
                 name: "extra",
-                resolve: context => _codec.Encode(context.Source.Extra));
+                resolve: context => context.Source.Extra is { } extra ? _codec.Encode(extra) : null);
         }
     }
 }

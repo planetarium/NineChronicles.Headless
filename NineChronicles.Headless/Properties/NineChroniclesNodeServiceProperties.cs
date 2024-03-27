@@ -95,6 +95,11 @@ namespace NineChronicles.Headless.Properties
                 double? consensusTargetBlockIntervalMilliseconds = null,
                 IActionEvaluatorConfiguration? actionEvaluatorConfiguration = null)
         {
+            if (appProtocolVersionToken is null)
+            {
+                throw new ArgumentNullException(nameof(appProtocolVersionToken));
+            }
+
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
                 : new PrivateKey(ByteUtil.ParseHex(swarmPrivateKeyString));

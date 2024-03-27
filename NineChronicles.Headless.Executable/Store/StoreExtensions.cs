@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Libplanet.Action;
 using Libplanet.Types.Blocks;
@@ -18,7 +19,8 @@ namespace NineChronicles.Headless.Executable.Store
             }
 
             BlockHash genesisBlockHash = store.IterateIndexes(chainId.Value).First();
-            Block genesisBlock = store.GetBlock(genesisBlockHash);
+            Block genesisBlock = store.GetBlock(genesisBlockHash) ?? throw new KeyNotFoundException();
+
             return genesisBlock;
         }
     }

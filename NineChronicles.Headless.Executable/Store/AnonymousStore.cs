@@ -9,6 +9,7 @@ namespace NineChronicles.Headless.Executable.Store;
 
 public class AnonymousStore : IStore
 {
+#pragma warning disable CS8618
     public Func<IEnumerable<Guid>> ListChainIds { get; set; }
     public Action<Guid> DeleteChainId { get; set; }
     public Func<Guid?> GetCanonicalChainId { get; set; }
@@ -46,7 +47,8 @@ public class AnonymousStore : IStore
     public Action<BlockCommit> PutBlockCommit { get; set; }
     public Action<BlockHash> DeleteBlockCommit { get; set; }
     public Func<IEnumerable<BlockHash>> GetBlockCommitHashes { get; set; }
-    
+#pragma warning restore CS8618
+
     void IDisposable.Dispose()
     {
     }

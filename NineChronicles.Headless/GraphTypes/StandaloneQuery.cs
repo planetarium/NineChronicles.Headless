@@ -134,13 +134,14 @@ namespace NineChronicles.Headless.GraphTypes
 
                     IEnumerable<Transaction> blockTxs = digest.TxIds
                         .Select(bytes => new TxId(bytes))
-                        .Select(store.GetTransaction);
+                        .Select(store.GetTransaction)
+                        .OfType<Transaction>();
 
                     var filtered = blockTxs
                         .Where(tx => tx.Actions.Count == 1)
                         .Select(tx => (store.GetTxExecution(blockHash, tx.Id), ToAction(tx.Actions[0])))
                         .Where(pair => pair.Item1 is { } && pair.Item2 is ITransferAsset)
-                        .Select(pair => (pair.Item1, (ITransferAsset)pair.Item2))
+                        .Select(pair => (pair.Item1!, (ITransferAsset)pair.Item2))
                         .Where(pair => !pair.Item1.Fail &&
                             (!recipient.HasValue || pair.Item2.Recipient == recipient) &&
                             pair.Item2.Amount.Currency.Ticker == "NCG");
