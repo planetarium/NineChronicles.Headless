@@ -47,6 +47,7 @@ public partial class ReplayCommand
                     preEvaluationHash
                     previousBlock {
                         hash
+                        stateRootHash
                     }
                     stateRootHash
                 }

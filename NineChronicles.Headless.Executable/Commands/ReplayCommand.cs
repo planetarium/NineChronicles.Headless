@@ -383,9 +383,10 @@ namespace NineChronicles.Headless.Executable.Commands
 
             var block = GetBlockData(graphQlClient, transactionResult.BlockHash)?.ChainQuery?.BlockQuery?.Block;
             var previousBlockHashValue = block?.PreviousBlock?.Hash;
+            var previousBlockHashStateRootHash = block?.PreviousBlock?.StateRootHash;
             var preEvaluationHashValue = block?.PreEvaluationHash;
             var minerValue = block?.Miner;
-            if (previousBlockHashValue is null || preEvaluationHashValue is null || minerValue is null)
+            if (previousBlockHashValue is null || preEvaluationHashValue is null || minerValue is null || previousBlockHashStateRootHash is null)
             {
                 throw new CommandExitedException("Failed to get block from query", -1);
             }
@@ -413,10 +414,10 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
             };
 
+            var previousStateRootHash = HashDigest<SHA256>.FromString(previousBlockHashStateRootHash);
             var blockChainStates = new BlockChainStates(store, new TrieStateStore(keyValueStore));
 
-            var previousBlockHash = BlockHash.FromString(previousBlockHashValue);
-            var previousStates = new World(blockChainStates.GetWorldState(previousBlockHash));
+            var previousStates = new World(blockChainStates.GetWorldState(previousStateRootHash));
 
             var actions = transaction.Actions
                 .Select(ToAction)
