@@ -298,7 +298,7 @@ namespace NineChronicles.Headless.GraphTypes
             var txExecution = store.GetTxExecution(blockHash, transaction.Id);
             var txExecutedBlock = chain[blockHash];
             return new TxResult(
-                    txExecution.Fail ? TxStatus.FAILURE : TxStatus.SUCCESS,
+                    txExecution!.Fail ? TxStatus.FAILURE : TxStatus.SUCCESS,
                     txExecutedBlock.Index,
                     txExecutedBlock.Hash.ToString(),
                     txExecution.InputState,

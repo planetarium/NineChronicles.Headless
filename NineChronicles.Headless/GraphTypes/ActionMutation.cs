@@ -5,11 +5,12 @@ using Libplanet.Blockchain;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Types.Tx;
 using Nekoyume.Action;
-using Nekoyume.Model.State;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using Nekoyume.Module;
+using Libplanet.Types.Assets;
+using Nekoyume.Action.DPoS.Sys;
+using Delegate = Nekoyume.Action.DPoS.Sys.Delegate;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -427,6 +428,90 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new ActionBase[] { action };
+                        Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+
+            Field<NonNullGraphType<TxIdType>>("promoteValidator",
+                description: "Promote validator.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<PublicKeyType>>
+                    {
+                        Name = "validator",
+                        Description = "Validator public key to promote."
+                    },
+                    new QueryArgument<NonNullGraphType<FungibleAssetValueType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount of NCG to stake."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        PublicKey validator = context.GetArgument<PublicKey>("validator");
+                        FungibleAssetValue amount = context.GetArgument<FungibleAssetValue>("amount");
+
+                        var action = new PromoteValidator(validator, amount);
+
+                        var actions = new[] { action };
+                        Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+
+            Field<NonNullGraphType<TxIdType>>("delegate",
+                description: "Promote validator.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "validator",
+                        Description = "Validator address to delegate."
+                    },
+                    new QueryArgument<NonNullGraphType<FungibleAssetValueType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount of NCG to delegate."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        Address validator = context.GetArgument<Address>("validator");
+                        FungibleAssetValue amount = context.GetArgument<FungibleAssetValue>("amount");
+
+                        var action = new Delegate(validator, amount);
+
+                        var actions = new[] { action };
                         Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
                         return tx.Id;
                     }

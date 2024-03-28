@@ -120,8 +120,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     throw new CommandExitedException(1);
                 }
 
-                Block block =
-                    store.GetBlock(blockHash);
+                Block block = store.GetBlock(blockHash)!;
                 var preEvalBlock = new PreEvaluationBlock(
                     block,
                     block.Transactions

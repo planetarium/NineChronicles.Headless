@@ -8,6 +8,7 @@ using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Action;
 using Libplanet.Action.State;
+using Libplanet.Types.Blocks;
 using Libplanet.Types.Tx;
 using Serilog;
 
@@ -49,6 +50,8 @@ namespace NineChronicles.Headless.Executable.Commands
             public long BlockIndex { get; }
 
             public int BlockProtocolVersion { get; }
+            
+            public BlockCommit? LastCommit { get; }
 
             public bool Rehearsal { get; }
 

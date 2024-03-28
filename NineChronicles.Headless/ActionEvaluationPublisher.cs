@@ -20,7 +20,6 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using Lib9c.Renderers;
 using Libplanet.Action.State;
-using Libplanet.Blockchain;
 using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Types.Blocks;
@@ -32,6 +31,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Action.DPoS;
 using Nekoyume.Shared.Hubs;
 using Serilog;
 
@@ -471,7 +471,7 @@ namespace NineChronicles.Headless
                             {
                                 Stopwatch stopwatch = new Stopwatch();
                                 stopwatch.Start();
-                                ActionBase? pa = ev.Action is RewardGold
+                                ActionBase? pa = ev.Action is PoSAction
                                     ? null
                                     : ev.Action;
                                 var extra = new Dictionary<string, IValue>();
