@@ -35,6 +35,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet.Types.Tx;
+using Nekoyume.Action.DPoS;
 using Xunit.Abstractions;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
@@ -55,7 +56,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 #pragma warning restore CS0618
 
             var sheets = TableSheetsImporter.ImportSheets();
-            var blockAction = new RewardGold();
+            var blockAction = new PoSAction();
             var actionEvaluator = new ActionEvaluator(
                 _ => blockAction,
                 new TrieStateStore(new MemoryKeyValueStore()),

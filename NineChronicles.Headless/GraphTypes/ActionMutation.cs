@@ -8,7 +8,9 @@ using Nekoyume.Action;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Libplanet.Types.Assets;
+using Nekoyume.Action.DPoS.Misc;
 using Nekoyume.Action.DPoS.Sys;
 using Delegate = Nekoyume.Action.DPoS.Sys.Delegate;
 
@@ -443,12 +445,12 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<TxIdType>>("promoteValidator",
                 description: "Promote validator.",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<PublicKeyType>>
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
                         Name = "validator",
                         Description = "Validator public key to promote."
                     },
-                    new QueryArgument<NonNullGraphType<FungibleAssetValueType>>
+                    new QueryArgument<NonNullGraphType<BigIntGraphType>>
                     {
                         Name = "amount",
                         Description = "Amount of NCG to stake."
@@ -458,19 +460,26 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
+                        Console.WriteLine("[PromoteValidator] PromoteValidator called");
                         BlockChain? blockChain = service.BlockChain;
                         if (blockChain is null)
                         {
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
                         }
 
-                        PublicKey validator = context.GetArgument<PublicKey>("validator");
-                        FungibleAssetValue amount = context.GetArgument<FungibleAssetValue>("amount");
+                        Console.WriteLine("[PromoteValidator] BlockChain is not null");
+                        string validatorString = context.GetArgument<string>("validator");
+                        PublicKey validator = PublicKey.FromHex(validatorString);
+                        BigInteger amount = context.GetArgument<BigInteger>("amount");
+                        Console.WriteLine($"[PromoteValidator] Validator: {validator}, amount: {amount}");
+                        var fav = new FungibleAssetValue(Asset.GovernanceToken, amount, 0);
 
-                        var action = new PromoteValidator(validator, amount);
+                        var action = new PromoteValidator(validator, fav);
+                        Console.WriteLine("[PromoteValidator] PromoteValidator action successfully created");
 
                         var actions = new[] { action };
                         Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        Console.WriteLine("[PromoteValidator] PromoteValidator transaction staged");
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -490,7 +499,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Name = "validator",
                         Description = "Validator address to delegate."
                     },
-                    new QueryArgument<NonNullGraphType<FungibleAssetValueType>>
+                    new QueryArgument<NonNullGraphType<BigIntGraphType>>
                     {
                         Name = "amount",
                         Description = "Amount of NCG to delegate."
@@ -507,9 +516,10 @@ namespace NineChronicles.Headless.GraphTypes
                         }
 
                         Address validator = context.GetArgument<Address>("validator");
-                        FungibleAssetValue amount = context.GetArgument<FungibleAssetValue>("amount");
+                        BigInteger amount = context.GetArgument<BigInteger>("amount");
+                        var fav = new FungibleAssetValue(Asset.GovernanceToken, amount, 0);
 
-                        var action = new Delegate(validator, amount);
+                        var action = new Delegate(validator, fav);
 
                         var actions = new[] { action };
                         Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
