@@ -17,6 +17,7 @@ using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
 using Nekoyume.Module;
 using Nekoyume.TableData;
+using Nekoyume.TableData.Rune;
 using NineChronicles.Headless.GraphTypes;
 using Serilog;
 
