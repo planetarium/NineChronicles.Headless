@@ -116,7 +116,6 @@ public class ArenaParticipantsWorkerTest
             agentAddress,
             0,
             tableSheets.GetAvatarSheets(),
-            new GameConfigState(),
             new Address(),
             "avatar_state"
         );
@@ -126,7 +125,6 @@ public class ArenaParticipantsWorkerTest
             agentAddress,
             0,
             tableSheets.GetAvatarSheets(),
-            new GameConfigState(),
             new Address(),
             "avatar_state2"
         );
