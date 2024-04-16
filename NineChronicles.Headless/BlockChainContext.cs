@@ -16,9 +16,9 @@ namespace NineChronicles.Headless
         }
 
         public bool Preloaded => _standaloneContext.NodeStatus.PreloadEnded;
-        public BlockChain? BlockChain => _standaloneContext.BlockChain;
-        public IStore? Store => _standaloneContext.Store;
-        public Swarm? Swarm => _standaloneContext.Swarm;
+        public BlockChain BlockChain => _standaloneContext.BlockChain;
+        public IStore Store => _standaloneContext.Store;
+        public Swarm Swarm => _standaloneContext.Swarm;
         public IBlockChainIndex Index => new RocksDbBlockChainIndex("/tmp/no/no/no/store");
     }
 }
