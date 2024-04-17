@@ -137,19 +137,18 @@ namespace NineChronicles.Headless.GraphTypes
                         .Select(txid =>
                         {
                             return store.GetTransaction(txid) ??
-                                throw new InvalidOperationException($"Transaction '{txid}' not found.");
+                                throw new InvalidOperationException($"Transaction {txid} not found.");
                         });
 
                     var filtered = blockTxs
                         .Where(tx => tx.Actions.Count == 1)
                         .Select(tx =>
-                        {
-                            var item1 = store.GetTxExecution(blockHash, tx.Id) ??
-                                throw new InvalidOperationException($"TxExecution '{tx.Id}' not found.");
-                            var item2 = ToAction(tx.Actions[0]);
-                            return (item1, item2);
-                        })
-                        .Where(pair => pair.Item1 is { } && pair.Item2 is ITransferAsset)
+                        (
+                            store.GetTxExecution(blockHash, tx.Id) ??
+                                throw new InvalidOperationException($"TxExecution {tx.Id} not found."),
+                            ToAction(tx.Actions[0])
+                        ))
+                        .Where(pair => pair.Item2 is ITransferAsset)
                         .Select(pair => (pair.Item1!, (ITransferAsset)pair.Item2))
                         .Where(pair => !pair.Item1.Fail &&
                             (!recipient.HasValue || pair.Item2.Recipient == recipient) &&
