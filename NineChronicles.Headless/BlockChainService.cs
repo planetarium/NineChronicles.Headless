@@ -323,7 +323,6 @@ namespace NineChronicles.Headless
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
             FungibleAssetValue balance = _blockChain
                 .GetWorldState(blockHash)
-                .GetAccountState(ReservedAddresses.LegacyAccount)
                 .GetBalance(address, currency);
             byte[] encoded = _codec.Encode(
               new Bencodex.Types.List(
@@ -348,7 +347,6 @@ namespace NineChronicles.Headless
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
             FungibleAssetValue balance = _blockChain
                 .GetWorldState(stateRootHash)
-                .GetAccountState(ReservedAddresses.LegacyAccount)
                 .GetBalance(address, currency);
             byte[] encoded = _codec.Encode(
               new Bencodex.Types.List(

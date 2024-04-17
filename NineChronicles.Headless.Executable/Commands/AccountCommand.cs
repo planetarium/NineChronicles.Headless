@@ -75,7 +75,11 @@ namespace NineChronicles.Headless.Executable.Commands
                 _console.Error.WriteLine("Scanning block #{0} {1}...", digest.Index, digest.Hash);
                 _console.Error.Flush();
                 IEnumerable<Address> addrs = digest.TxIds
-                    .Select(txId => store.GetTransaction(new TxId(txId.ToArray())))
+                    .Select(txId =>
+                    {
+                        return store.GetTransaction(new TxId(txId.ToArray())) ??
+                            throw new InvalidOperationException($"Transaction #{txId} is not found in the store.");
+                    })
                     .SelectMany(tx => tx.Actions is { } ca
                         ? ca.Select(a => ToAction(a))
                             .SelectMany(a =>
