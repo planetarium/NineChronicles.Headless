@@ -1113,7 +1113,28 @@ type BlockHeader {
 
 type BlockQuery {
   block(hash: ID, index: ID): Block
-  blocks(desc: Boolean = false, excludeEmptyTxs: Boolean = false, limit: Int, miner: Address, offset: Int = 0): [Block!]!
+  blocks(
+    """Whether to query blocks in descending order or not."""
+    desc: Boolean! = false
+
+    """
+    Whether to include empty blocks with no transactions or not. Default is set to false, i.e. to return empty blocks.
+    """
+    excludeEmptyTxs: Boolean! = false
+
+    """
+    The maximum number of blocks to return.  This limits the offset index range to query, not the result, i.e. excluded blocks due to a block being empty or not matching the miner (if specified in other arguments) are still counted.
+    """
+    limit: Int
+
+    """
+    If not null, returns blocks only by mined by the address given. Default is set to null.
+    """
+    miner: Address
+
+    """The offset of the first queried block."""
+    offset: Int! = 0
+  ): [Block!]!
 }
 
 type BoundPeer {
@@ -1700,9 +1721,9 @@ type NodeExceptionType {
 }
 
 type NodeState {
-  peers: [BoundPeer!]
+  peers: [BoundPeer!]!
   preloaded: Boolean!
-  validators: [BoundPeer!]
+  validators: [BoundPeer!]!
 }
 
 type NodeStatusType {
