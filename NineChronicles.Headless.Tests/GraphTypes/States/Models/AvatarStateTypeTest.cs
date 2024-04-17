@@ -6,6 +6,7 @@ using GraphQL.Execution;
 using Lib9c;
 using Libplanet.Action.State;
 using Libplanet.Crypto;
+using Libplanet.Mocks;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
@@ -30,7 +31,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 index
                 inventoryAddress
             }";
-            IWorld mockWorld = new MockWorld(new MockWorldState());
+            IWorld mockWorld = new World(MockWorldState.CreateModern());
             mockWorld = mockWorld.SetAvatarState(
                 Fixtures.AvatarAddress,
                 Fixtures.AvatarStateFX,
@@ -65,19 +66,19 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 }
             }
             ";
-            IWorld mockWorld = new MockWorld(new MockWorldState());
-            mockWorld = mockWorld.SetAvatarState(
+            IWorld world = new World(MockWorldState.CreateModern());
+            world = world.SetAvatarState(
                 Fixtures.AvatarAddress,
                 Fixtures.AvatarStateFX,
                 true,
                 true,
                 true,
                 true);
-            mockWorld = mockWorld.SetAgentState(Fixtures.UserAddress, Fixtures.AgentStateFx);
+            world = world.SetAgentState(Fixtures.UserAddress, Fixtures.AgentStateFx);
 
             for (int i = 0; i < Fixtures.AvatarStateFX.combinationSlotAddresses.Count; i++)
             {
-                mockWorld = mockWorld
+                world = world
                     .SetLegacyState(
                         Fixtures.AvatarStateFX.combinationSlotAddresses[i],
                         Fixtures.CombinationSlotStatesFx[i].Serialize());
@@ -87,7 +88,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 query,
                 source: new AvatarStateType.AvatarStateContext(
                     avatarState,
-                    mockWorld,
+                    world,
                     0, new StateMemoryCache()));
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             Assert.Equal(expected, data);
