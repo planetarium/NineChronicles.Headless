@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
+using Libplanet.Action.State;
 using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
