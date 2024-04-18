@@ -348,7 +348,7 @@ namespace Libplanet.Headless.Hosting
                 Log.Debug($"{message}. DefaultStore will be used.");
             }
 
-            store ??= new DefaultStore(path, flush: false);
+            store ??= new DefaultStore(path);
 
             IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states"));
             IStateStore stateStore = new TrieStateStore(stateKeyValueStore);
