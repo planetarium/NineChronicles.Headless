@@ -263,7 +263,7 @@ public class ArenaParticipantsWorker : BackgroundService
                     collectionModifiers.AddRange(collectionSheet[collectionId].StatModifiers);
                 }
             }
-    
+
             var cp = CPHelper.TotalCP(equipments, costumes, runeOptions, avatar.level, row, costumeSheet, collectionModifiers,
                 RuneHelper.CalculateRuneLevelBonus(runeStates, runeListSheet, worldState.GetSheet<RuneLevelBonusSheet>())
             );
