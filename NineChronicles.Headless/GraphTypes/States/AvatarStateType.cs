@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Bencodex.Types;
 using GraphQL.Types;
@@ -9,7 +8,6 @@ using Libplanet.Action.State;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.Module;
-using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States.Models;
 using NineChronicles.Headless.GraphTypes.States.Models.World;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
@@ -119,20 +117,8 @@ namespace NineChronicles.Headless.GraphTypes.States
                 description: "Rune list of avatar",
                 resolve: context =>
                 {
-                    var runeSheet = context.Source.WorldState.GetSheet<RuneSheet>();
-                    var runeList = new List<RuneState>();
-                    foreach (var rune in runeSheet)
-                    {
-                        var runeState = context.Source.WorldState.GetLegacyState(
-                            RuneState.DeriveAddress(context.Source.AvatarState.address, rune.Id)
-                        );
-                        if (runeState is not null)
-                        {
-                            runeList.Add(new RuneState(runeState as List));
-                        }
-                    }
-
-                    return runeList;
+                    var runeStates = context.Source.WorldState.GetRuneState(context.Source.AvatarState.address, out _);
+                    return runeStates.Runes.Values.ToList();
                 }
             );
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>(
