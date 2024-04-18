@@ -119,6 +119,7 @@ public class ArenaParticipantsWorker : BackgroundService
             var score = scores[i] is List scoreList ? (int)(Integer)scoreList[1] : ArenaScore.ArenaScoreDefault;
             avatarAddrAndScores.Add((tuple.avatarAddr, score));
         }
+
         List<(Address avatarAddr, int score, int rank)> orderedTuples = avatarAddrAndScores
             .OrderByDescending(tuple => tuple.score)
             .ThenBy(tuple => tuple.avatarAddr)
