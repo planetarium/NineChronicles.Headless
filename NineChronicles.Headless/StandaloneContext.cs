@@ -15,8 +15,23 @@ namespace NineChronicles.Headless
 {
     public class StandaloneContext
     {
-        public BlockChain? BlockChain { get; set; }
-        public IKeyStore? KeyStore { get; set; }
+        private BlockChain? _blockChain;
+        private IKeyStore? _keyStore;
+        private IStore? _store;
+        private Swarm? _swarm;
+
+        public BlockChain BlockChain
+        {
+            get => _blockChain ??
+                throw new InvalidOperationException($"{nameof(BlockChain)} property is not set yet.");
+            set => _blockChain = value;
+        }
+        public IKeyStore KeyStore
+        {
+            get => _keyStore ??
+                throw new InvalidOperationException($"{nameof(KeyStore)} property is not set yet.");
+            set => _keyStore = value;
+        }
         public bool BootstrapEnded { get; set; }
         public bool PreloadEnded { get; set; }
         public bool IsMining { get; set; }
@@ -31,10 +46,9 @@ namespace NineChronicles.Headless
         public NineChroniclesNodeService? NineChroniclesNodeService { get; set; }
 
         public ConcurrentDictionary<Address,
-                (ReplaySubject<MonsterCollectionStatus> statusSubject, ReplaySubject<MonsterCollectionState> stateSubject, ReplaySubject<string> balanceSubject)>
+                ReplaySubject<string>>
             AgentAddresses
-        { get; } = new ConcurrentDictionary<Address,
-            (ReplaySubject<MonsterCollectionStatus>, ReplaySubject<MonsterCollectionState>, ReplaySubject<string>)>();
+        { get; } = new ConcurrentDictionary<Address, ReplaySubject<string>>();
 
         public NodeStatusType NodeStatus => new(this)
         {
@@ -43,9 +57,19 @@ namespace NineChronicles.Headless
             IsMining = IsMining,
         };
 
-        public IStore? Store { get; internal set; }
+        public IStore Store
+        {
+            get => _store ??
+                throw new InvalidOperationException($"{nameof(Store)} property is not set yet.");
+            internal set => _store = value;
+        }
 
-        public Swarm? Swarm { get; internal set; }
+        public Swarm Swarm
+        {
+            get => _swarm ??
+                throw new InvalidOperationException($"{nameof(Swarm)} property is not set yet.");
+            internal set => _swarm = value;
+        }
 
         public CurrencyFactory? CurrencyFactory { get; set; }
 

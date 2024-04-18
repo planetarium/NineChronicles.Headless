@@ -4,6 +4,7 @@ using System.Linq;
 using Lib9c.Tests;
 using Libplanet.Action.State;
 using Libplanet.Crypto;
+using Libplanet.Mocks;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.Arena;
@@ -25,7 +26,7 @@ public class ArenaParticipantsWorkerTest
 
     public ArenaParticipantsWorkerTest()
     {
-        _world = new MockWorld(new MockWorldState());
+        _world = new World(MockWorldState.CreateModern());
         _sheets = TableSheetsImporter.ImportSheets();
     }
 
@@ -115,7 +116,6 @@ public class ArenaParticipantsWorkerTest
             agentAddress,
             0,
             tableSheets.GetAvatarSheets(),
-            new GameConfigState(),
             new Address(),
             "avatar_state"
         );
@@ -125,7 +125,6 @@ public class ArenaParticipantsWorkerTest
             agentAddress,
             0,
             tableSheets.GetAvatarSheets(),
-            new GameConfigState(),
             new Address(),
             "avatar_state2"
         );
