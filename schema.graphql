@@ -399,6 +399,10 @@ type ActionQuery {
     slotIndex: Int!
   ): ByteString!
   requestPledge(agentAddress: Address!, mead: Int = 4): ByteString!
+  retrieveAvatarAssets(
+    """Avatar address to retrieve assets"""
+    avatarAddress: Address!
+  ): ByteString!
   runeEnhancement(
     """The avatar address to enhance rune."""
     avatarAddress: Address!
@@ -717,6 +721,10 @@ type ActionTxQuery {
     slotIndex: Int!
   ): ByteString!
   requestPledge(agentAddress: Address!, mead: Int = 4): ByteString!
+  retrieveAvatarAssets(
+    """Avatar address to retrieve assets"""
+    avatarAddress: Address!
+  ): ByteString!
   runeEnhancement(
     """The avatar address to enhance rune."""
     avatarAddress: Address!
