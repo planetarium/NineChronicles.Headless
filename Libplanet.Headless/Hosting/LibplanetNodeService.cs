@@ -5,6 +5,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
@@ -635,30 +637,68 @@ namespace Libplanet.Headless.Hosting
             Log.Debug("Store disposed.");
         }
 
-        private string ResolvePluginPath(string path) =>
-            Uri.IsWellFormedUriString(path, UriKind.Absolute)
-                ? DownloadPlugin(path).Result
-                : path;
-
-        private async Task<string> DownloadPlugin(string url)
+        private string ResolvePluginPath(string path)
         {
-            var path = Path.Combine(Environment.CurrentDirectory, "plugins");
+            if (Uri.IsWellFormedUriString(path, UriKind.Absolute))
+            {
+                // Run the download on a background thread
+                return Task.Run(() => DownloadPlugin(path, SwarmCancellationToken)).GetAwaiter().GetResult();
+            }
+            return path;
+        }
+
+        private async Task<string> DownloadPlugin(string url, CancellationToken cancellationToken)
+        {
+            var basePath = Environment.GetEnvironmentVariable("PLUGIN_PATH") ?? Environment.CurrentDirectory;
+            var path = Path.Combine(basePath, "plugins");
             Directory.CreateDirectory(path);
-            var hashed = url.GetHashCode().ToString();
+            var hashed = CreateSha256Hash(url);
             var logger = Log.ForContext("LibplanetNodeService", hashed);
             using var httpClient = new HttpClient();
             var downloadPath = Path.Join(path, hashed + ".zip");
             var extractPath = Path.Join(path, hashed);
-            logger.Debug("Downloading...");
-            await File.WriteAllBytesAsync(
-                downloadPath,
-                await httpClient.GetByteArrayAsync(url, SwarmCancellationToken),
-                SwarmCancellationToken);
-            logger.Debug("Finished downloading.");
-            logger.Debug("Extracting...");
-            ZipFile.ExtractToDirectory(downloadPath, extractPath);
-            logger.Debug("Finished extracting.");
+            logger.Debug("Download Path: {downloadPath}", downloadPath);
+            logger.Debug("Extract Path: {extractPath}", extractPath);
+
+            if (!File.Exists(downloadPath))
+            {
+                logger.Debug("Downloading...");
+                var content = await httpClient.GetByteArrayAsync(url, cancellationToken);
+                await File.WriteAllBytesAsync(downloadPath, content, cancellationToken);
+                logger.Debug("Finished downloading.");
+            }
+            else
+            {
+                logger.Debug("Download skipped, file already exists.");
+            }
+
+            if (!Directory.Exists(extractPath))
+            {
+                logger.Debug("Extracting...");
+                ZipFile.ExtractToDirectory(downloadPath, extractPath);
+                logger.Debug("Finished extracting.");
+            }
+            else
+            {
+                logger.Debug("Extraction skipped, folder already exists.");
+            }
+
             return Path.Combine(extractPath, "Lib9c.Plugin.dll");
+        }
+
+        private static string CreateSha256Hash(string input)
+        {
+            using SHA256 sha256Hash = SHA256.Create();
+            // ComputeHash - returns byte array
+            byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(input));
+
+            // Convert byte array to a string
+            StringBuilder builder = new StringBuilder();
+            foreach (var t in bytes)
+            {
+                builder.Append(t.ToString("x2"));
+            }
+            return builder.ToString();
         }
 
         // FIXME: Request libplanet provide default implementation.
