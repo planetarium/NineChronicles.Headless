@@ -6,6 +6,8 @@
     <Nullable>enable</Nullable>
     <Configurations>Debug;Release;DevEx</Configurations>
     <Platforms>AnyCPU</Platforms>
+    <!-- These should be removed once upgraded to patched packages -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1902;NU1904</WarningsNotAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'DevEx' ">
