@@ -644,6 +644,7 @@ namespace Libplanet.Headless.Hosting
                 // Run the download on a background thread
                 return Task.Run(() => DownloadPlugin(path, SwarmCancellationToken)).GetAwaiter().GetResult();
             }
+
             return path;
         }
 
@@ -689,6 +690,7 @@ namespace Libplanet.Headless.Hosting
         private static string CreateSha256Hash(string input)
         {
             using SHA256 sha256Hash = SHA256.Create();
+
             // ComputeHash - returns byte array
             byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(input));
 
