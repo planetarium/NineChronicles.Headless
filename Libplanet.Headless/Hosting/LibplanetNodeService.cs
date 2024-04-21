@@ -687,6 +687,17 @@ namespace Libplanet.Headless.Hosting
             return Path.Combine(extractPath, "Lib9c.Plugin.dll");
         }
 
+        // FIXME: Request libplanet provide default implementation.
+        private sealed class ActionTypeLoaderContext : IActionTypeLoaderContext
+        {
+            public ActionTypeLoaderContext(long index)
+            {
+                Index = index;
+            }
+
+            public long Index { get; }
+        }
+
         private static string CreateSha256Hash(string input)
         {
             using SHA256 sha256Hash = SHA256.Create();
@@ -701,17 +712,6 @@ namespace Libplanet.Headless.Hosting
                 builder.Append(t.ToString("x2"));
             }
             return builder.ToString();
-        }
-
-        // FIXME: Request libplanet provide default implementation.
-        private sealed class ActionTypeLoaderContext : IActionTypeLoaderContext
-        {
-            public ActionTypeLoaderContext(long index)
-            {
-                Index = index;
-            }
-
-            public long Index { get; }
         }
     }
 }
