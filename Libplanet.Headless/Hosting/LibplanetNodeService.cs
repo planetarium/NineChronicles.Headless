@@ -642,13 +642,13 @@ namespace Libplanet.Headless.Hosting
             if (Uri.IsWellFormedUriString(path, UriKind.Absolute))
             {
                 // Run the download on a background thread
-                return Task.Run(() => DownloadPlugin(path, SwarmCancellationToken)).GetAwaiter().GetResult();
+                return Task.Run(() => DownloadPlugin(path)).GetAwaiter().GetResult();
             }
 
             return path;
         }
 
-        private async Task<string> DownloadPlugin(string url, CancellationToken cancellationToken)
+        private async Task<string> DownloadPlugin(string url)
         {
             var basePath = Environment.GetEnvironmentVariable("PLUGIN_PATH") ?? Environment.CurrentDirectory;
             var path = Path.Combine(basePath, "plugins");
@@ -658,14 +658,16 @@ namespace Libplanet.Headless.Hosting
             using var httpClient = new HttpClient();
             var downloadPath = Path.Join(path, hashed + ".zip");
             var extractPath = Path.Join(path, hashed);
+            var checksumPath = Path.Join(extractPath, "checksum.txt");
+
             logger.Debug("Download Path: {downloadPath}", downloadPath);
             logger.Debug("Extract Path: {extractPath}", extractPath);
 
             if (!File.Exists(downloadPath))
             {
                 logger.Debug("Downloading...");
-                var content = await httpClient.GetByteArrayAsync(url, cancellationToken);
-                await File.WriteAllBytesAsync(downloadPath, content, cancellationToken);
+                var content = await httpClient.GetByteArrayAsync(url);
+                await File.WriteAllBytesAsync(downloadPath, content);
                 logger.Debug("Finished downloading.");
             }
             else
@@ -673,18 +675,45 @@ namespace Libplanet.Headless.Hosting
                 logger.Debug("Download skipped, file already exists.");
             }
 
-            if (!Directory.Exists(extractPath))
+            if (!Directory.Exists(extractPath) || (File.Exists(checksumPath) && CalculateDirectoryChecksum(extractPath) != await File.ReadAllTextAsync(checksumPath)))
             {
+                Directory.CreateDirectory(extractPath);
                 logger.Debug("Extracting...");
-                ZipFile.ExtractToDirectory(downloadPath, extractPath);
+                ZipFile.ExtractToDirectory(downloadPath, extractPath, true);
                 logger.Debug("Finished extracting.");
+
+                // Calculate checksum of extracted files and save it
+                var checksum = CalculateDirectoryChecksum(extractPath);
+                await File.WriteAllTextAsync(checksumPath, checksum);
             }
             else
             {
-                logger.Debug("Extraction skipped, folder already exists.");
+                logger.Debug("Extraction skipped, folder already exists and is verified.");
             }
 
             return Path.Combine(extractPath, "Lib9c.Plugin.dll");
+        }
+
+        private string CalculateDirectoryChecksum(string directoryPath)
+        {
+            using var md5 = MD5.Create();
+            var files = Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories)
+                .OrderBy(p => p).ToArray();
+
+            foreach (var file in files)
+            {
+                // hash path
+                var pathBytes = Encoding.UTF8.GetBytes(file.Substring(directoryPath.Length));
+                md5.TransformBlock(pathBytes, 0, pathBytes.Length, pathBytes, 0);
+
+                // hash contents
+                var contentBytes = File.ReadAllBytes(file);
+                md5.TransformBlock(contentBytes, 0, contentBytes.Length, contentBytes, 0);
+            }
+
+            // Handles empty content.
+            md5.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+            return BitConverter.ToString(md5.Hash!).Replace("-", "").ToLowerInvariant();
         }
 
         // FIXME: Request libplanet provide default implementation.
