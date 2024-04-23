@@ -21,7 +21,7 @@ namespace NineChronicles.Headless.Services
             };
         }
 
-        public int? GetTxQuota(Address address)
+        public Task<int?> GetTxQuotaAsync(Address address)
         {
             try
             {
@@ -31,7 +31,7 @@ namespace NineChronicles.Headless.Services
                 if (response.IsSuccessStatusCode)
                 {
                     string resultString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-                    return Convert.ToInt32(resultString);
+                    return Task.FromResult<int?>(Convert.ToInt32(resultString));
                 }
             }
             catch (TaskCanceledException)
@@ -45,7 +45,7 @@ namespace NineChronicles.Headless.Services
                     .Error(ex, "HttpRequestException occurred for \"{Address}\".", address);
             }
 
-            return null;
+            return Task.FromResult<int?>(null);
         }
     }
 }
