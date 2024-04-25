@@ -112,7 +112,7 @@ namespace NineChronicles.Headless.Properties
                 Host = swarmHost,
                 Port = swarmPort,
                 SwarmPrivateKey = swarmPrivateKey,
-                AppProtocolVersion = AppProtocolVersion.FromToken(appProtocolVersionToken),
+                AppProtocolVersion = AppProtocolVersion.FromToken(appProtocolVersionToken!),
                 TrustedAppProtocolVersionSigners = trustedAppProtocolVersionSigners
                     ?.Select(s => new PublicKey(ByteUtil.ParseHex(s)))
                     ?.ToHashSet(),

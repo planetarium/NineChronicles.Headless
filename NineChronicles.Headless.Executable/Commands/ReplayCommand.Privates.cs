@@ -8,6 +8,8 @@ using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Action;
 using Libplanet.Action.State;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
 using Libplanet.Types.Tx;
 using Serilog;
 
@@ -28,6 +30,8 @@ namespace NineChronicles.Headless.Executable.Commands
                 int blockProtocolVersion,
                 IWorld previousState,
                 int randomSeed,
+                bool isBlockAction,
+                FungibleAssetValue? maxGasPrice,
                 bool rehearsal = false)
             {
                 Signer = signer;
@@ -38,6 +42,8 @@ namespace NineChronicles.Headless.Executable.Commands
                 Rehearsal = rehearsal;
                 PreviousState = previousState;
                 RandomSeed = randomSeed;
+                IsBlockAction = isBlockAction;
+                MaxGasPrice = maxGasPrice;
             }
 
             public Address Signer { get; }
@@ -49,6 +55,8 @@ namespace NineChronicles.Headless.Executable.Commands
             public long BlockIndex { get; }
 
             public int BlockProtocolVersion { get; }
+            
+            public BlockCommit? LastCommit { get; }
 
             public bool Rehearsal { get; }
 
@@ -56,7 +64,9 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public int RandomSeed { get; }
 
-            public bool BlockAction => TxId is null;
+            public bool IsBlockAction { get; }
+            
+            public FungibleAssetValue? MaxGasPrice { get; }
 
             public void UseGas(long gas)
             {
@@ -93,6 +103,8 @@ namespace NineChronicles.Headless.Executable.Commands
             Address signer,
             byte[] signature,
             IImmutableList<IAction> actions,
+            bool isBlockAction,
+            FungibleAssetValue? maxGasPrice,
             ILogger? logger = null)
         {
             ActionContext CreateActionContext(
@@ -106,7 +118,9 @@ namespace NineChronicles.Headless.Executable.Commands
                     blockIndex: blockIndex,
                     blockProtocolVersion: blockProtocolVersion,
                     previousState: prevState,
-                    randomSeed: randomSeed);
+                    randomSeed: randomSeed,
+                    isBlockAction: isBlockAction,
+                    maxGasPrice: maxGasPrice);
             }
 
             byte[] preEvaluationHashBytes = preEvaluationHash.ToByteArray();

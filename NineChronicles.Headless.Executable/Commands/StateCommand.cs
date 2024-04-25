@@ -109,7 +109,11 @@ namespace NineChronicles.Headless.Executable.Commands
                 new MemoryStore(),
                 sStore);
             var actionEvaluator = new ActionEvaluator(
-                _ => policy.BlockAction,
+                new PolicyActionsRegistry(
+                    beginBlockActionsGetter: _ => policy.BeginBlockActions,
+                    endBlockActionsGetter: _ => policy.EndBlockActions,
+                    beginTxActionsGetter: _ => policy.BeginTxActions,
+                    endTxActionsGetter: _ => policy.EndTxActions),
                 sStore,
                 new NCActionLoader());
 
@@ -120,8 +124,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     throw new CommandExitedException(1);
                 }
 
-                Block block =
-                    store.GetBlock(blockHash);
+                Block block = store.GetBlock(blockHash)!;
                 var preEvalBlock = new PreEvaluationBlock(
                     block,
                     block.Transactions

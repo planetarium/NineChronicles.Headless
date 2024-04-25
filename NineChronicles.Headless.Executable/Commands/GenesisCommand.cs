@@ -13,6 +13,7 @@ using Libplanet.Types.Assets;
 using Libplanet.Types.Blocks;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Action.DPoS.Misc;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.Executable.IO;
 using CoconaUtils = Libplanet.Extensions.Cocona.Utils;
@@ -236,6 +237,28 @@ namespace NineChronicles.Headless.Executable.Commands
             }
         }
 
+        private void ProcessInitialNCGConfigs(
+            List<NCGConfig>? configs,
+            out Dictionary<Address, FungibleAssetValue> initialNCGs
+        )
+        {
+            _console.Out.WriteLine("\nProcessing initial NCG...");
+
+            initialNCGs = new Dictionary<Address, FungibleAssetValue>();
+            if (configs is { })
+            {
+                foreach (NCGConfig config in configs)
+                {
+                    _console.Out.WriteLine($"Preparing {config.Amount} NCG for {config.Address}...");
+                    Address agentAddress = new(config.Address);
+                    initialNCGs.Add(
+                        agentAddress,
+                        new FungibleAssetValue(Asset.GovernanceToken, config.Amount, 0)
+                    );
+                }
+            }
+        }
+
         [Command(Description = "Mine a new genesis block")]
         public void Mine(
             [Argument("CONFIG", Description = "JSON config path to mine genesis block")]
@@ -263,6 +286,8 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 ProcessInitialPledgeConfigs(genesisConfig.InitialPledgeConfigs, out var initialPledges);
 
+                ProcessInitialNCGConfigs(genesisConfig.InitialNCGConfigs, out var initialNCGs);
+
                 // Mine genesis block
                 _console.Out.WriteLine("\nMining genesis block...\n");
                 Block block = BlockHelper.ProposeGenesisBlock(
@@ -276,7 +301,8 @@ namespace NineChronicles.Headless.Executable.Commands
                         item => new PublicKey(ByteUtil.ParseHex(item.PublicKey)),
                         item => new BigInteger(item.Power)),
                     actionBases: adminMeads.Concat(initialMeads).Concat(initialPledges).Concat(GetAdditionalActionBases()),
-                    goldCurrency: currency
+                    goldCurrency: currency,
+                    initialFavs: initialNCGs
                 );
 
                 Lib9cUtils.ExportBlock(block, "genesis-block");
@@ -418,6 +444,14 @@ namespace NineChronicles.Headless.Executable.Commands
             public int Mead { get; set; }
         }
 
+        [Serializable]
+        private struct NCGConfig
+        {
+            public string Address { get; set; }
+
+            public int Amount { get; set; }
+        }
+
         /// <summary>
         /// Config to mine new genesis block.
         /// </summary>
@@ -454,6 +488,8 @@ namespace NineChronicles.Headless.Executable.Commands
             public List<MeadConfig>? InitialMeadConfigs { get; set; }
 
             public List<PledgeConfig>? InitialPledgeConfigs { get; set; }
+
+            public List<NCGConfig>? InitialNCGConfigs { get; set; }
         }
 #pragma warning restore S3459
     }

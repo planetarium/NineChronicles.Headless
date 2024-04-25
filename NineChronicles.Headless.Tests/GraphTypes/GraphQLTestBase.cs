@@ -35,6 +35,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet.Types.Tx;
+using Nekoyume.Action.DPoS;
 using Xunit.Abstractions;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
@@ -55,9 +56,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 #pragma warning restore CS0618
 
             var sheets = TableSheetsImporter.ImportSheets();
-            var blockAction = new RewardGold();
             var actionEvaluator = new ActionEvaluator(
-                _ => blockAction,
+                new PolicyActionsRegistry(
+                    _ => new DebugPolicy().BeginBlockActions,
+                    _ => new DebugPolicy().EndBlockActions,
+                    _ => new DebugPolicy().BeginTxActions,
+                    _ => new DebugPolicy().EndTxActions),
                 new TrieStateStore(new MemoryKeyValueStore()),
                 new NCActionLoader());
             var genesisBlock = BlockChain.ProposeGenesisBlock(
@@ -250,6 +254,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             hash,
                             DateTimeOffset.UtcNow,
                             validator.PublicKey,
+                            BigInteger.One,
                             VoteFlag.PreCommit).Sign(validator)).ToImmutableArray())
                 : (BlockCommit?)null;
         }

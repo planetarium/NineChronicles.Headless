@@ -17,15 +17,12 @@ using Libplanet.Types.Blocks;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
-using Microsoft.Extensions.Configuration;
 using Nekoyume.Action.Loader;
 using Nekoyume.Blockchain.Policy;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NineChronicles.Headless.Executable.IO;
 using NineChronicles.Headless.Executable.Store;
-using Serilog;
-using Serilog.Core;
 using static NineChronicles.Headless.NCActionUtils;
 using CoconaUtils = Libplanet.Extensions.Cocona.Utils;
 
@@ -82,7 +79,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             BlockHash tipHash = store.IndexBlockHash(chainId, -1)
                           ?? throw new CommandExitedException("The given chain seems empty.", -1);
-            Block tip = store.GetBlock(tipHash);
+            Block tip = store.GetBlock(tipHash)!;
             _console.Out.WriteLine(CoconaUtils.SerializeHumanReadable(tip.Header));
             store.Dispose();
         }
@@ -129,10 +126,14 @@ namespace NineChronicles.Headless.Executable.Commands
                 throw new CommandExitedException($"There is no genesis block: {storePath}", -1);
             }
 
-            Block genesisBlock = store.GetBlock(gHash);
+            Block genesisBlock = store.GetBlock(gHash)!;
             var blockChainStates = new BlockChainStates(store, stateStore);
             var actionEvaluator = new ActionEvaluator(
-                _ => blockPolicy.BlockAction,
+                new PolicyActionsRegistry(
+                    beginBlockActionsGetter: _ => blockPolicy.BeginBlockActions,
+                    endBlockActionsGetter: _ => blockPolicy.EndBlockActions,
+                    beginTxActionsGetter: _ => blockPolicy.BeginTxActions,
+                    endTxActionsGetter: _ => blockPolicy.EndTxActions),
                 stateStore,
                 new NCActionLoader());
             BlockChain chain = new BlockChain(
@@ -165,10 +166,10 @@ namespace NineChronicles.Headless.Executable.Commands
             {
                 var block = store.GetBlock(item.value);
                 var previousBlock = store.GetBlock(
-                    block.PreviousHash ?? block.Hash
+                    block!.PreviousHash ?? block.Hash
                 );
 
-                var miningTime = block.Timestamp - previousBlock.Timestamp;
+                var miningTime = block.Timestamp - previousBlock!.Timestamp;
                 var txCount = 0;
                 var hackAndSlashCount = 0;
                 var rankingBattleCount = 0;
@@ -286,11 +287,11 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 snapshotTipHash = hash;
-            } while (!stateStore.GetStateRoot(store.GetBlock(snapshotTipHash).StateRootHash).Recorded);
+            } while (!stateStore.GetStateRoot(store.GetBlock(snapshotTipHash)!.StateRootHash).Recorded);
 
             var forkedId = Guid.NewGuid();
 
-            Fork(chainId, forkedId, snapshotTipHash, tip, store);
+            Fork(chainId, forkedId, snapshotTipHash, tip!, store);
 
             store.SetCanonicalChainId(forkedId);
             foreach (var id in store.ListChainIds().Where(id => !id.Equals(forkedId)))
@@ -478,17 +479,21 @@ namespace NineChronicles.Headless.Executable.Commands
                     new BlockPolicy();
                 var blockChainStates = new BlockChainStates(store, stateStore);
                 var actionEvaluator = new ActionEvaluator(
-                    _ => blockPolicy.BlockAction,
+                    new PolicyActionsRegistry(
+                        beginBlockActionsGetter: _ => blockPolicy.BeginBlockActions,
+                        endBlockActionsGetter: _ => blockPolicy.EndBlockActions,
+                        beginTxActionsGetter: _ => blockPolicy.BeginTxActions,
+                        endTxActionsGetter: _ => blockPolicy.EndTxActions),
                     stateStore,
                     new NCActionLoader()
                 );
                 var originalChain = new BlockChain(blockPolicy, stagePolicy, store, stateStore,
                     store.GetBlock(genesisHash), blockChainStates, actionEvaluator);
-                var tip = store.GetBlock(tipHash);
+                Block tip = store.GetBlock(tipHash)!;
 
                 var potentialSnapshotTipIndex = tipIndex - blockBefore;
                 var potentialSnapshotTipHash = (BlockHash)store.IndexBlockHash(chainId, potentialSnapshotTipIndex)!;
-                var snapshotTip = store.GetBlock(potentialSnapshotTipHash);
+                var snapshotTip = store.GetBlock(potentialSnapshotTipHash)!;
 
                 _console.Out.WriteLine(
                     "Original Store Tip: #{0}\n1. LastCommit: {1}\n2. BlockCommit in Chain: {2}\n3. BlockCommit in Store: {3}",
@@ -521,23 +526,27 @@ namespace NineChronicles.Headless.Executable.Commands
                         potentialSnapshotTipIndex);
                     blockBefore += 1;
                     potentialSnapshotTipBlockCommit = store
-                        .GetBlock((BlockHash)store.IndexBlockHash(chainId, tip.Index - blockBefore + 1)!).LastCommit;
+                        .GetBlock((BlockHash)store.IndexBlockHash(chainId, tip.Index - blockBefore + 1)!)!.LastCommit;
                     store.PutBlockCommit(tipBlockCommit);
                     store.PutChainBlockCommit(chainId, tipBlockCommit);
-                    store.PutBlockCommit(potentialSnapshotTipBlockCommit);
-                    store.PutChainBlockCommit(chainId, potentialSnapshotTipBlockCommit);
+                    store.PutBlockCommit(potentialSnapshotTipBlockCommit!);
+                    store.PutChainBlockCommit(chainId, potentialSnapshotTipBlockCommit!);
                 }
 
-                var blockCommitBlock = store.GetBlock(tipHash);
+                Block? blockCommitBlock = store.GetBlock(tipHash);
+                if (blockCommitBlock is not { } blockCommitBlockNotNull)
+                {
+                    throw new NullReferenceException(nameof(blockChainStates));
+                }
 
                 // Add last block commits to store from tip until --block-before + 5 or tip if too short for buffer
                 var blockCommitRange = blockBefore + 5 < tip.Index ? blockBefore + 5 : tip.Index - 1;
                 for (var i = 0; i < blockCommitRange; i++)
                 {
-                    _console.Out.WriteLine("Adding block #{0}'s block commit to the store", blockCommitBlock.Index - 1);
-                    store.PutBlockCommit(blockCommitBlock.LastCommit);
-                    store.PutChainBlockCommit(chainId, blockCommitBlock.LastCommit);
-                    blockCommitBlock = store.GetBlock((BlockHash)blockCommitBlock.PreviousHash!);
+                    _console.Out.WriteLine("Adding block #{0}'s block commit to the store", blockCommitBlockNotNull.Index - 1);
+                    store.PutBlockCommit(blockCommitBlockNotNull.LastCommit!);
+                    store.PutChainBlockCommit(chainId, blockCommitBlockNotNull.LastCommit!);
+                    blockCommitBlock = store.GetBlock((BlockHash)blockCommitBlockNotNull.PreviousHash!);
                 }
 
                 var snapshotTipIndex = Math.Max(tipIndex - (blockBefore + 1), 0);
@@ -555,7 +564,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     }
 
                     snapshotTipHash = hash;
-                } while (!stateStore.GetStateRoot(store.GetBlock(snapshotTipHash).StateRootHash).Recorded);
+                } while (!stateStore.GetStateRoot(store.GetBlock(snapshotTipHash)!.StateRootHash).Recorded);
 
                 var forkedId = Guid.NewGuid();
                 Fork(chainId, forkedId, snapshotTipHash, tip, store);
@@ -1025,7 +1034,7 @@ namespace NineChronicles.Headless.Executable.Commands
             store.ForkBlockIndexes(src, dest, branchPointHash);
             if (store.GetBlockCommit(branchPointHash) is { })
             {
-                store.PutChainBlockCommit(dest, store.GetBlockCommit(branchPointHash));
+                store.PutChainBlockCommit(dest, store.GetBlockCommit(branchPointHash)!);
             }
             store.ForkTxNonces(src, dest);
 
@@ -1033,7 +1042,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 Block block = tip;
                 block.PreviousHash is { } hash
                 && !block.Hash.Equals(branchPointHash);
-                block = store.GetBlock(hash))
+                block = store.GetBlock(hash)!)
             {
                 IEnumerable<(Address, int)> signers = block
                     .Transactions

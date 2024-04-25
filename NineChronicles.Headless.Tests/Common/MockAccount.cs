@@ -188,6 +188,9 @@ namespace NineChronicles.Headless.Tests.Common
         public IAccount SetValidator(Validator validator) =>
             UpdateValidatorSet(GetValidatorSet().Update(validator));
 
+        public IAccount SetValidatorSet(ValidatorSet validatorSet) =>
+            UpdateValidatorSet(validatorSet);
+
         [Pure]
         private MockAccount UpdateState(
             Address address,

@@ -19,6 +19,7 @@ using Libplanet.Action.Sys;
 using Libplanet.Types.Assets;
 using Libplanet.Types.Blocks;
 using Libplanet.Blockchain;
+using Libplanet.Blockchain.Policies;
 using Libplanet.Types.Consensus;
 using Libplanet.Crypto;
 using Libplanet.Headless;
@@ -133,8 +134,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
+            var blockPolicy = new BlockPolicy();
             var actionEvaluator = new ActionEvaluator(
-                _ => null,
+                new PolicyActionsRegistry(
+                    _ => blockPolicy.BeginBlockActions,
+                    _ => blockPolicy.EndBlockActions,
+                    _ => blockPolicy.BeginTxActions,
+                    _ => blockPolicy.EndTxActions),
                 new TrieStateStore(new MemoryKeyValueStore()),
                 new SingleActionLoader(typeof(EmptyAction)));
             var genesisBlock = BlockChain.ProposeGenesisBlock(
