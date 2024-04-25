@@ -919,7 +919,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             RankingState0? rankingState = null)
         {
             var actionEvaluator = new ActionEvaluator(
-                _ => ServiceBuilder.BlockPolicy.BlockAction,
+                new PolicyActionsRegistry(
+                    _ => ServiceBuilder.BlockPolicy.BeginBlockActions,
+                    _ => ServiceBuilder.BlockPolicy.EndBlockActions,
+                    _ => ServiceBuilder.BlockPolicy.BeginTxActions,
+                    _ => ServiceBuilder.BlockPolicy.EndTxActions),
                 new TrieStateStore(new MemoryKeyValueStore()),
                 new NCActionLoader());
             return BlockChain.ProposeGenesisBlock(

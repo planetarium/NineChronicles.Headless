@@ -32,6 +32,7 @@ using Microsoft.Extensions.Options;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Action.DPoS;
+using Nekoyume.Action.DPoS.Sys;
 using Nekoyume.Shared.Hubs;
 using Serilog;
 
@@ -471,9 +472,7 @@ namespace NineChronicles.Headless
                             {
                                 Stopwatch stopwatch = new Stopwatch();
                                 stopwatch.Start();
-                                ActionBase? pa = ev.Action is PoSAction
-                                    ? null
-                                    : ev.Action;
+                                ActionBase pa = ev.Action;
                                 var extra = new Dictionary<string, IValue>();
                                 var encodeElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
 

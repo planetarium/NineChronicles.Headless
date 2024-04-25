@@ -15,6 +15,7 @@ using Libplanet.Action;
 using Libplanet.Action.State;
 using Libplanet.Action.Sys;
 using Libplanet.Blockchain;
+using Libplanet.Blockchain.Policies;
 using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
@@ -119,8 +120,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
+            var blockPolicy = new BlockPolicy();
             var actionEvaluator = new ActionEvaluator(
-                _ => null,
+                new PolicyActionsRegistry(
+                    _ => blockPolicy.BeginBlockActions,
+                    _ => blockPolicy.EndBlockActions,
+                    _ => blockPolicy.BeginTxActions,
+                    _ => blockPolicy.EndTxActions),
                 new TrieStateStore(new MemoryKeyValueStore()),
                 new NCActionLoader());
             var genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
@@ -447,8 +453,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 new Libplanet.Types.Consensus.Validator(ProposerPrivateKey.PublicKey, BigInteger.One),
             }.ToList());
+            var blockPolicy = new BlockPolicySource().GetPolicy();
             var actionEvaluator = new ActionEvaluator(
-                _ => null,
+                new PolicyActionsRegistry(
+                    _ => blockPolicy.BeginBlockActions,
+                    _ => blockPolicy.EndBlockActions,
+                    _ => blockPolicy.BeginTxActions,
+                    _ => blockPolicy.EndTxActions),
                 new TrieStateStore(new MemoryKeyValueStore()),
                 new NCActionLoader());
             Block genesis =
@@ -513,7 +524,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ConsensusSeeds = ImmutableList<BoundPeer>.Empty,
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
-            var blockPolicy = new BlockPolicySource().GetPolicy();
 
             var service = new NineChroniclesNodeService(
                 userPrivateKey, properties, blockPolicy, Planet.Odin, StaticActionLoaderSingleton.Instance);
@@ -840,8 +850,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 pendingActivation,
             };
+            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(Planet.Odin, StaticActionLoaderSingleton.Instance);
             var actionEvaluator = new ActionEvaluator(
-                _ => null,
+                new PolicyActionsRegistry(
+                    _ => blockPolicy.BeginBlockActions,
+                    _ => blockPolicy.EndBlockActions,
+                    _ => blockPolicy.BeginTxActions,
+                    _ => blockPolicy.EndTxActions),
                 new TrieStateStore(new MemoryKeyValueStore()),
                 new NCActionLoader());
             Block genesis =
@@ -897,7 +912,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
 
-            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(Planet.Odin, StaticActionLoaderSingleton.Instance);
             var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, Planet.Odin, StaticActionLoaderSingleton.Instance);
             StandaloneContextFx.NineChroniclesNodeService = service;
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
@@ -925,8 +939,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var activatedAccounts = ImmutableHashSet<Address>.Empty;
             var pendingActivationStates = new List<PendingActivationState>();
 
+            var blockPolicy = new BlockPolicySource().GetPolicy();
             var actionEvaluator = new ActionEvaluator(
-                _ => null,
+                new PolicyActionsRegistry(
+                    _ => blockPolicy.BeginBlockActions,
+                    _ => blockPolicy.EndBlockActions,
+                    _ => blockPolicy.BeginTxActions,
+                    _ => blockPolicy.EndTxActions),
                 new TrieStateStore(new MemoryKeyValueStore()),
                 new NCActionLoader());
             Block genesis =
@@ -984,7 +1003,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ConsensusSeeds = ImmutableList<BoundPeer>.Empty,
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
-            var blockPolicy = new BlockPolicySource().GetPolicy();
 
             var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, Planet.Odin, StaticActionLoaderSingleton.Instance);
             StandaloneContextFx.NineChroniclesNodeService = service;
@@ -1006,8 +1024,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var activatedAccounts = ImmutableHashSet<Address>.Empty;
             var pendingActivationStates = new List<PendingActivationState>();
 
+            var blockPolicy = new BlockPolicySource().GetPolicy();
             var actionEvaluator = new ActionEvaluator(
-                _ => null,
+                new PolicyActionsRegistry(
+                    _ => blockPolicy.BeginBlockActions,
+                    _ => blockPolicy.EndBlockActions,
+                    _ => blockPolicy.BeginTxActions,
+                    _ => blockPolicy.EndTxActions),
                 new TrieStateStore(new MemoryKeyValueStore()),
                 new NCActionLoader());
             Block genesis =
@@ -1062,7 +1085,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ConsensusSeeds = ImmutableList<BoundPeer>.Empty,
                 ConsensusPeers = ImmutableList<BoundPeer>.Empty
             };
-            var blockPolicy = new BlockPolicySource().GetPolicy();
 
             var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, Planet.Odin, StaticActionLoaderSingleton.Instance);
             StandaloneContextFx.NineChroniclesNodeService = service;
@@ -1112,7 +1134,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new Libplanet.Types.Consensus.Validator(privateKey.PublicKey, BigInteger.One),
             }.ToList());
             var actionEvaluator = new ActionEvaluator(
-                _ => blockPolicy.BlockAction,
+                new PolicyActionsRegistry(
+                    _ => blockPolicy.BeginBlockActions,
+                    _ => blockPolicy.EndBlockActions,
+                    _ => blockPolicy.BeginTxActions,
+                    _ => blockPolicy.EndTxActions),
                 new TrieStateStore(new MemoryKeyValueStore()),
                 new NCActionLoader());
             Block genesis =

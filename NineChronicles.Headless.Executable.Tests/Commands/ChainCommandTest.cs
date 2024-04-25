@@ -58,7 +58,11 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         public void Tip(StoreType storeType)
         {
             var actionEvaluator = new ActionEvaluator(
-                _ => new BlockPolicy().BlockAction,
+                new PolicyActionsRegistry(
+                    _ => new BlockPolicy().BeginBlockActions,
+                    _ => new BlockPolicy().EndBlockActions,
+                    _ => new BlockPolicy().BeginTxActions,
+                    _ => new BlockPolicy().EndTxActions),
                 new TrieStateStore(new MemoryKeyValueStore()),
                 new NCActionLoader());
             Block genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
@@ -92,7 +96,11 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             IStagePolicy stagePolicy = new VolatileStagePolicy();
             IBlockPolicy blockPolicy = new BlockPolicySource().GetPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
-                _ => blockPolicy.BlockAction,
+                new PolicyActionsRegistry(
+                    _ => blockPolicy.BeginBlockActions,
+                    _ => blockPolicy.EndBlockActions,
+                    _ => blockPolicy.BeginTxActions,
+                    _ => blockPolicy.EndTxActions),
                 stateStore,
                 new NCActionLoader());
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
@@ -153,7 +161,11 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             IStagePolicy stagePolicy = new VolatileStagePolicy();
             IBlockPolicy blockPolicy = new BlockPolicySource().GetPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
-                _ => blockPolicy.BlockAction,
+                new PolicyActionsRegistry(
+                    _ => blockPolicy.BeginBlockActions,
+                    _ => blockPolicy.EndBlockActions,
+                    _ => blockPolicy.BeginTxActions,
+                    _ => blockPolicy.EndTxActions),
                 stateStore,
                 new NCActionLoader());
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
@@ -232,7 +244,11 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             IStagePolicy stagePolicy = new VolatileStagePolicy();
             IBlockPolicy blockPolicy = new BlockPolicySource().GetPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
-                _ => blockPolicy.BlockAction,
+                new PolicyActionsRegistry(
+                    _ => blockPolicy.BeginBlockActions,
+                    _ => blockPolicy.EndBlockActions,
+                    _ => blockPolicy.BeginTxActions,
+                    _ => blockPolicy.EndTxActions),
                 stateStore,
                 new NCActionLoader());
             BlockChain chain = BlockChain.Create(
@@ -284,7 +300,11 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             IStagePolicy stagePolicy = new VolatileStagePolicy();
             IBlockPolicy blockPolicy = new BlockPolicySource().GetPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
-                _ => blockPolicy.BlockAction,
+                new PolicyActionsRegistry(
+                    _ => blockPolicy.BeginBlockActions,
+                    _ => blockPolicy.EndBlockActions,
+                    _ => blockPolicy.BeginTxActions,
+                    _ => blockPolicy.EndTxActions),
                 stateStore,
                 new NCActionLoader());
             BlockChain chain = BlockChain.Create(
@@ -445,6 +465,7 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
                         block.Hash,
                         DateTimeOffset.UtcNow,
                         validator.PublicKey,
+                        BigInteger.One,
                         VoteFlag.PreCommit).Sign(validator)))
                 : null;
         }

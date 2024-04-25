@@ -45,7 +45,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             _stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             IBlockPolicy policy = new BlockPolicySource().GetPolicy();
             var actionEvaluator = new ActionEvaluator(
-                _ => policy.BlockAction,
+                new PolicyActionsRegistry(
+                    _ => policy.BeginBlockActions,
+                    _ => policy.EndTxActions,
+                    _ => policy.BeginTxActions,
+                    _ => policy.EndTxActions),
                 _stateStore,
                 new NCActionLoader());
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
@@ -428,6 +432,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             hash,
                             DateTimeOffset.UtcNow,
                             validator.PublicKey,
+                            BigInteger.One,
                             VoteFlag.PreCommit).Sign(validator)))
                 : (BlockCommit?)null;
         }

@@ -10,9 +10,8 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Libplanet.Types.Assets;
+using Nekoyume.Action.DPoS;
 using Nekoyume.Action.DPoS.Misc;
-using Nekoyume.Action.DPoS.Sys;
-using Delegate = Nekoyume.Action.DPoS.Sys.Delegate;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -519,7 +518,7 @@ namespace NineChronicles.Headless.GraphTypes
                         BigInteger amount = context.GetArgument<BigInteger>("amount");
                         var fav = new FungibleAssetValue(Asset.GovernanceToken, amount, 0);
 
-                        var action = new Delegate(validator, fav);
+                        var action = new Nekoyume.Action.DPoS.Delegate(validator, fav);
 
                         var actions = new[] { action };
                         Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);

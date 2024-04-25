@@ -129,7 +129,11 @@ namespace NineChronicles.Headless.Executable.Commands
             Block genesisBlock = store.GetBlock(gHash)!;
             var blockChainStates = new BlockChainStates(store, stateStore);
             var actionEvaluator = new ActionEvaluator(
-                _ => blockPolicy.BlockAction,
+                new PolicyActionsRegistry(
+                    beginBlockActionsGetter: _ => blockPolicy.BeginBlockActions,
+                    endBlockActionsGetter: _ => blockPolicy.EndBlockActions,
+                    beginTxActionsGetter: _ => blockPolicy.BeginTxActions,
+                    endTxActionsGetter: _ => blockPolicy.EndTxActions),
                 stateStore,
                 new NCActionLoader());
             BlockChain chain = new BlockChain(
@@ -475,7 +479,11 @@ namespace NineChronicles.Headless.Executable.Commands
                     new BlockPolicy();
                 var blockChainStates = new BlockChainStates(store, stateStore);
                 var actionEvaluator = new ActionEvaluator(
-                    _ => blockPolicy.BlockAction,
+                    new PolicyActionsRegistry(
+                        beginBlockActionsGetter: _ => blockPolicy.BeginBlockActions,
+                        endBlockActionsGetter: _ => blockPolicy.EndBlockActions,
+                        beginTxActionsGetter: _ => blockPolicy.BeginTxActions,
+                        endTxActionsGetter: _ => blockPolicy.EndTxActions),
                     stateStore,
                     new NCActionLoader()
                 );

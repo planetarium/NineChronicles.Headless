@@ -109,8 +109,9 @@ namespace NineChronicles.Headless.Executable.Commands
                     miner: targetBlock.Miner,
                     signer: tx.Signer,
                     signature: tx.Signature,
-                    actions: actions.Cast<IAction>().ToImmutableList()
-                );
+                    actions: actions.Cast<IAction>().ToImmutableList(),
+                    isBlockAction: false,
+                    maxGasPrice: tx.MaxGasPrice);
                 var actionNum = 1;
                 foreach (var actionEvaluation in actionEvaluations)
                 {
@@ -405,7 +406,9 @@ namespace NineChronicles.Headless.Executable.Commands
                 miner: miner,
                 signer: transaction.Signer,
                 signature: transaction.Signature,
-                actions: actions);
+                actions: actions,
+                isBlockAction: true,
+                maxGasPrice: transaction.MaxGasPrice);
 
             actionEvaluations
                 .Select((evaluation, index) => (evaluation, index))
@@ -473,7 +476,11 @@ namespace NineChronicles.Headless.Executable.Commands
             var stateStore = new TrieStateStore(stateKeyValueStore);
             var blockChainStates = new BlockChainStates(store, stateStore);
             var actionEvaluator = new ActionEvaluator(
-                _ => policy.BlockAction,
+                new PolicyActionsRegistry(
+                    beginBlockActionsGetter: _ => policy.BeginBlockActions,
+                    endBlockActionsGetter: _ => policy.EndBlockActions,
+                    beginTxActionsGetter: _ => policy.BeginTxActions,
+                    endTxActionsGetter: _ => policy.EndTxActions),
                 stateStore,
                 new NCActionLoader());
             return (
@@ -520,7 +527,11 @@ namespace NineChronicles.Headless.Executable.Commands
             var policy = new BlockPolicySource().GetPolicy();
             IActionLoader actionLoader = new NCActionLoader();
             return new ActionEvaluator(
-                _ => policy.BlockAction,
+                new PolicyActionsRegistry(
+                    beginBlockActionsGetter: _ => policy.BeginBlockActions,
+                    endBlockActionsGetter: _ => policy.EndBlockActions,
+                    beginTxActionsGetter: _ => policy.BeginTxActions,
+                    endTxActionsGetter: _ => policy.EndTxActions),
                 stateStore: stateStore,
                 actionTypeLoader: actionLoader);
         }
