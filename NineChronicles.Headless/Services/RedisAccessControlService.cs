@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using StackExchange.Redis;
 using Libplanet.Crypto;
 using Nekoyume.Blockchain;
@@ -23,18 +24,17 @@ namespace NineChronicles.Headless.Services
             _db = redis.GetDatabase();
         }
 
-        public int? GetTxQuota(Address address)
+        public async Task<int?> GetTxQuotaAsync(Address address)
         {
             try
             {
-                RedisValue result = _db.StringGet(address.ToString());
-
+                RedisValue result = await _db.StringGetAsync(address.ToString());
                 return !result.IsNull ? Convert.ToInt32(result) : null;
             }
-            catch (RedisTimeoutException)
+            catch (RedisTimeoutException ex)
             {
                 Log.ForContext("Source", nameof(IAccessControlService))
-                    .Error("\"{Address}\" Redis timeout.", address);
+                    .Error(ex, "\"{Address}\" Redis timeout encountered.", address);
                 return null;
             }
         }
