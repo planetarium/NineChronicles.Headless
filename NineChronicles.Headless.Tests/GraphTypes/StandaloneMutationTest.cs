@@ -1,5 +1,6 @@
 using GraphQL;
 using Libplanet.Action;
+using Libplanet.Action.State;
 using Libplanet.Action.Sys;
 using Libplanet.Blockchain;
 using Libplanet.Common;

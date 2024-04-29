@@ -58,6 +58,9 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public bool BlockAction => TxId is null;
 
+            // NOTE: Replay does not support block actions.
+            public IReadOnlyList<ITransaction> Txs => ImmutableList<ITransaction>.Empty;
+
             public void UseGas(long gas)
             {
             }

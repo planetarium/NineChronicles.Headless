@@ -183,11 +183,15 @@ namespace NineChronicles.Headless
                                     p.RequireClaim(
                                         "role",
                                         "Admin"));
+
+                            // FIXME: Use ConfigurationException after bumping to .NET 8 or later.
                             options.AddPolicy(
                                 JwtPolicyKey,
                                 p =>
-                                    p.RequireClaim("iss", jwtOptions["Issuer"]));
+                                    p.RequireClaim("iss",
+                                        jwtOptions["Issuer"] ?? throw new ArgumentException("jwtOptions[\"Issuer\"] is null.")));
                         });
+
                 services.AddGraphTypes();
             }
 

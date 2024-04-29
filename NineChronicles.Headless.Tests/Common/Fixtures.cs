@@ -31,7 +31,6 @@ namespace NineChronicles.Headless.Tests
             UserAddress,
             0,
             TableSheetsFX.GetAvatarSheets(),
-            new GameConfigState(),
             new Address(),
             "avatar_state_fx"
         );

@@ -5,6 +5,7 @@ using Bencodex.Types;
 using GraphQL.Execution;
 using Libplanet.Action.State;
 using Libplanet.Crypto;
+using Libplanet.Mocks;
 using Libplanet.Types.Assets;
 using Nekoyume;
 using Nekoyume.Action;
@@ -60,21 +61,23 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             MonsterCollectionState monsterCollectionState = new MonsterCollectionState(monsterCollectionAddress, 7, 0, Fixtures.TableSheetsFX.MonsterCollectionRewardSheet);
             Address pledgeAddress = agentState.address.GetPledgeAddress();
 
-            MockAccountState mockAccountState = new MockAccountState()
-                .SetState(GoldCurrencyState.Address, new GoldCurrencyState(goldCurrency).Serialize())
-                .SetState(monsterCollectionAddress, monsterCollectionState.Serialize())
-                .SetState(
-                    pledgeAddress,
-                    List.Empty
-                        .Add(MeadConfig.PatronAddress.Serialize())
-                        .Add(true.Serialize())
-                        .Add(4.Serialize()))
+            MockWorldState mockWorldState = MockWorldState.CreateModern();
+            mockWorldState = mockWorldState
+                .SetAccount(
+                    ReservedAddresses.LegacyAccount,
+                    new Account(mockWorldState.GetAccountState(ReservedAddresses.LegacyAccount))
+                        .SetState(GoldCurrencyState.Address, new GoldCurrencyState(goldCurrency).Serialize())
+                        .SetState(monsterCollectionAddress, monsterCollectionState.Serialize())
+                        .SetState(
+                            pledgeAddress,
+                            List.Empty
+                                .Add(MeadConfig.PatronAddress.Serialize())
+                                .Add(true.Serialize())
+                                .Add(4.Serialize())))
                 .SetBalance(agentState.address, CrystalCalculator.CRYSTAL * crystalBalance)
                 .SetBalance(agentState.address, goldCurrency * goldBalance);
-            IWorld mockWorld = new MockWorld(new MockWorldState(ImmutableDictionary<Address, IAccount>.Empty.Add(
-                ReservedAddresses.LegacyAccount,
-                new MockAccount(mockAccountState))));
-            mockWorld = mockWorld.SetAvatarState(
+            IWorld world = new World(mockWorldState);
+            world = world.SetAvatarState(
                 Fixtures.AvatarAddress,
                 Fixtures.AvatarStateFX,
                 true,
@@ -84,7 +87,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
 
             var queryResult = await ExecuteQueryAsync<AgentStateType>(
                 query,
-                source: new AgentStateType.AgentStateContext(agentState, mockWorld, 0, new StateMemoryCache())
+                source: new AgentStateType.AgentStateContext(agentState, world, 0, new StateMemoryCache())
             );
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var expected = new Dictionary<string, object>()

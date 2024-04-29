@@ -6,6 +6,7 @@ using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
 using Lib9c.Model.Order;
+using Libplanet.Action.State;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
 using Libplanet.Explorer.GraphTypes;

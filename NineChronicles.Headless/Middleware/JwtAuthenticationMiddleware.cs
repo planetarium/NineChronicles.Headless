@@ -66,7 +66,11 @@ public class JwtAuthenticationMiddleware : IMiddleware
 
     private (string scheme, string token) ExtractSchemeAndToken(StringValues authorizationHeader)
     {
-        var headerValues = authorizationHeader[0].Split(" ");
+        if (authorizationHeader[0]?.Split(" ") is not string[] headerValues)
+        {
+            throw new ArgumentException("Authorization header isn't given.");
+        }
+
         if (headerValues.Length < 2)
         {
             throw new ArgumentException("Invalid Authorization header format.");

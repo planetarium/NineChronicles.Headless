@@ -11,12 +11,14 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
 using Nekoyume;
 using Nekoyume.Battle;
+using Nekoyume.Helper;
 using Nekoyume.Model.Arena;
 using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
 using Nekoyume.Module;
 using Nekoyume.TableData;
+using Nekoyume.TableData.Rune;
 using NineChronicles.Headless.GraphTypes;
 using Serilog;
 
@@ -117,6 +119,7 @@ public class ArenaParticipantsWorker : BackgroundService
             var score = scores[i] is List scoreList ? (int)(Integer)scoreList[1] : ArenaScore.ArenaScoreDefault;
             avatarAddrAndScores.Add((tuple.avatarAddr, score));
         }
+
         List<(Address avatarAddr, int score, int rank)> orderedTuples = avatarAddrAndScores
             .OrderByDescending(tuple => tuple.score)
             .ThenBy(tuple => tuple.avatarAddr)
@@ -214,7 +217,7 @@ public class ArenaParticipantsWorker : BackgroundService
         var result = avatarAddrAndScoresWithRank.Select(tuple =>
         {
             var (avatarAddr, score, rank) = tuple;
-            var runeStates = new List<RuneState>();
+            var runeStates = worldState.GetRuneState(avatarAddr, out _);
             var avatar = worldState.GetAvatarState(avatarAddr);
             var itemSlotState =
                 worldState.GetLegacyState(ItemSlotState.DeriveAddress(avatarAddr, BattleType.Arena)) is
@@ -228,15 +231,6 @@ public class ArenaParticipantsWorker : BackgroundService
                     ? new RuneSlotState(runeSlotList)
                     : new RuneSlotState(BattleType.Arena);
 
-            foreach (var id in runeIds)
-            {
-                var address = RuneState.DeriveAddress(avatarAddr, id);
-                if (worldState.GetLegacyState(address) is List runeStateList)
-                {
-                    runeStates.Add(new RuneState(runeStateList));
-                }
-            }
-
             var equippedRuneStates = new List<RuneState>();
             foreach (var runeId in runeSlotState.GetRuneSlot().Select(slot => slot.RuneId))
             {
@@ -245,8 +239,7 @@ public class ArenaParticipantsWorker : BackgroundService
                     continue;
                 }
 
-                var runeState = runeStates.FirstOrDefault(x => x.RuneId == runeId);
-                if (runeState != null)
+                if (runeStates.TryGetRuneState(runeId.Value, out var runeState))
                 {
                     equippedRuneStates.Add(runeState);
                 }
@@ -272,7 +265,9 @@ public class ArenaParticipantsWorker : BackgroundService
                 }
             }
 
-            var cp = CPHelper.TotalCP(equipments, costumes, runeOptions, avatar.level, row, costumeSheet, collectionModifiers);
+            var cp = CPHelper.TotalCP(equipments, costumes, runeOptions, avatar.level, row, costumeSheet, collectionModifiers,
+                RuneHelper.CalculateRuneLevelBonus(runeStates, runeListSheet, worldState.GetSheet<RuneLevelBonusSheet>())
+            );
             var portraitId = StateQuery.GetPortraitId(equipments, costumes);
             return new ArenaParticipant(
                 avatarAddr,

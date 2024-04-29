@@ -12,6 +12,7 @@ using Lib9c;
 using Libplanet.Action.State;
 using Libplanet.Common;
 using Libplanet.Crypto;
+using Libplanet.Mocks;
 using Libplanet.Types.Assets;
 using Nekoyume;
 using Nekoyume.Model.Elemental;
@@ -92,10 +93,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 2,
                 new Address("0x47D082a115c63E7b58B1532d20E631538eaFADde"));
 #pragma warning restore CS0618
-            MockAccountState mockAccountState = new MockAccountState();
+            MockWorldState mockWorldState = MockWorldState.CreateModern();
+            IAccount account = new Account(mockWorldState.GetAccountState(ReservedAddresses.LegacyAccount));
 
             // NCG
-            mockAccountState = mockAccountState
+            account = account
                 .SetState(
                     Addresses.GoldCurrency,
                     new GoldCurrencyState(goldCurrency).Serialize());
@@ -122,7 +124,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             .SetItem("elemental_type", ElementalType.Normal.Serialize())
                             .SetItem("item_id", HashDigest<SHA256>.FromString(fid).Serialize()));
 
-                        mockAccountState = mockAccountState
+                        account = account
                             .SetState(
                                 Addresses.GetGarageAddress(
                                     agentAddr,
@@ -137,7 +139,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             // testing without setting up any balance passes the tests;
             // also this is different from the original test setup as there is no way
             // to allow state to have "infinite" FAVs with all possible addresses having FAVs
-            mockAccountState = mockAccountState
+            mockWorldState = mockWorldState
+                .SetAccount(ReservedAddresses.LegacyAccount, account)
                 .SetBalance(agentAddr, new FungibleAssetValue(goldCurrency, 99, 99))
                 .SetBalance(agentAddr, new FungibleAssetValue(Currencies.Crystal, 99, 123456789012345678))
                 .SetBalance(agentAddr, new FungibleAssetValue(Currencies.Garage, 99, 123456789012345678))
@@ -146,10 +149,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var queryResult = await ExecuteQueryAsync<StateQuery>(
                 sb.ToString(),
                 source: new StateContext(
-                    new MockWorld(new MockWorldState(
-                        ImmutableDictionary<Address, IAccount>.Empty.Add(
-                            ReservedAddresses.LegacyAccount,
-                            new MockAccount(mockAccountState)))),
+                    new World(mockWorldState),
                     0L, new StateMemoryCache()));
             Assert.Null(queryResult.Errors);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
@@ -245,7 +245,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var queryResult = await ExecuteQueryAsync<StateQuery>(
                 query,
                 source: new StateContext(
-                    new MockWorld(new MockWorldState()),
+                    new World(MockWorldState.CreateModern()),
                     0L, cache));
             Assert.Null(queryResult.Errors);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;

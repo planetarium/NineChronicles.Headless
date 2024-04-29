@@ -234,18 +234,16 @@ namespace NineChronicles.Headless.GraphTypes
         {
             var address = context.GetArgument<Address>("address");
 
-            StandaloneContext.AgentAddresses.TryAdd(address,
-                (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(),
-                    new ReplaySubject<string>()));
+            StandaloneContext.AgentAddresses.TryAdd(address, new ReplaySubject<string>());
             StandaloneContext.AgentAddresses.TryGetValue(address, out var subjects);
 
             return Observable.Create<string>(observer =>
             {
-                var subscription = subjects.balanceSubject.Subscribe(observer);
+                var subscription = subjects?.Subscribe(observer);
 
                 return Disposable.Create(() =>
                 {
-                    subscription.Dispose();
+                    subscription?.Dispose();
                     StandaloneContext.AgentAddresses.TryRemove(address, out _);
                 });
             });
@@ -297,7 +295,8 @@ namespace NineChronicles.Headless.GraphTypes
             {
                 return null;
             }
-            var txExecution = store.GetTxExecution(blockHash, transaction.Id);
+            var txExecution = store.GetTxExecution(blockHash, transaction.Id) ??
+                throw new InvalidOperationException("Not found tx execution.");
             var txExecutedBlock = chain[blockHash];
             return new TxResult(
                     txExecution.Fail ? TxStatus.FAILURE : TxStatus.SUCCESS,
@@ -349,16 +348,14 @@ namespace NineChronicles.Headless.GraphTypes
                 .ForAll(kv =>
                 {
                     Address address = kv.Key;
-                    (ReplaySubject<MonsterCollectionStatus> statusSubject, _, ReplaySubject<string> balanceSubject) =
+                    ReplaySubject<string> balanceSubject =
                         kv.Value;
                     RenderForAgent(
                         blockChain,
                         _tipHeader,
                         address,
                         currency,
-                        statusSubject,
-                        balanceSubject,
-                        rewardSheet
+                        balanceSubject
                     );
                 });
 
@@ -371,34 +368,10 @@ namespace NineChronicles.Headless.GraphTypes
             BlockHeader tipHeader,
             Address address,
             Currency currency,
-            ReplaySubject<MonsterCollectionStatus> statusSubject,
-            ReplaySubject<string> balanceSubject,
-            MonsterCollectionRewardSheet rewardSheet)
+            ReplaySubject<string> balanceSubject)
         {
             FungibleAssetValue agentBalance = blockChain.GetWorldState(tipHeader.Hash).GetBalance(address, currency);
             balanceSubject.OnNext(agentBalance.GetQuantityString(true));
-            if (blockChain.GetWorldState(tipHeader.Hash).GetAgentState(address) is { } agentState)
-            {
-                Address deriveAddress =
-                    MonsterCollectionState.DeriveAddress(address, agentState.MonsterCollectionRound);
-                if (agentState.avatarAddresses.Any() &&
-                    blockChain.GetWorldState(tipHeader.Hash).GetLegacyState(deriveAddress) is Dictionary collectDict)
-                {
-                    var monsterCollectionState = new MonsterCollectionState(collectDict);
-                    List<MonsterCollectionRewardSheet.RewardInfo> rewards = monsterCollectionState.CalculateRewards(
-                        rewardSheet,
-                        tipHeader.Index
-                    );
-
-                    var monsterCollectionStatus = new MonsterCollectionStatus(
-                        agentBalance,
-                        rewards,
-                        tipHeader.Index,
-                        monsterCollectionState.IsLocked(tipHeader.Index)
-                    );
-                    statusSubject.OnNext(monsterCollectionStatus);
-                }
-            }
         }
     }
 }

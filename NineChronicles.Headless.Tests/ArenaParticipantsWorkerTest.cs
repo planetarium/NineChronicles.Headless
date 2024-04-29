@@ -4,6 +4,7 @@ using System.Linq;
 using Lib9c.Tests;
 using Libplanet.Action.State;
 using Libplanet.Crypto;
+using Libplanet.Mocks;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.Arena;
@@ -12,7 +13,6 @@ using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.Module;
 using Nekoyume.TableData;
-using NineChronicles.Headless.Tests.Common;
 using Xunit;
 using Random = Libplanet.Extensions.ActionEvaluatorCommonComponents.Random;
 
@@ -25,7 +25,7 @@ public class ArenaParticipantsWorkerTest
 
     public ArenaParticipantsWorkerTest()
     {
-        _world = new MockWorld(new MockWorldState());
+        _world = new World(MockWorldState.CreateModern());
         _sheets = TableSheetsImporter.ImportSheets();
     }
 
@@ -115,7 +115,6 @@ public class ArenaParticipantsWorkerTest
             agentAddress,
             0,
             tableSheets.GetAvatarSheets(),
-            new GameConfigState(),
             new Address(),
             "avatar_state"
         );
@@ -125,7 +124,6 @@ public class ArenaParticipantsWorkerTest
             agentAddress,
             0,
             tableSheets.GetAvatarSheets(),
-            new GameConfigState(),
             new Address(),
             "avatar_state2"
         );
@@ -154,7 +152,7 @@ public class ArenaParticipantsWorkerTest
         {
             runeSlotInfo,
         }, runeListSheet);
-        var runeState = new RuneState(runeId);
+        var runeStates = new AllRuneState(runeId);
 
         // collection
         var collectionSheet = tableSheets.CollectionSheet;
@@ -175,7 +173,7 @@ public class ArenaParticipantsWorkerTest
             .SetAvatarState(avatarAddress, avatarState, true, true, true, true)
             .SetAvatarState(avatar2Address, avatarState2, true, true, true, true)
             .SetLegacyState(itemSlotAddress, itemSlotState.Serialize())
-            .SetLegacyState(RuneState.DeriveAddress(avatarAddress, runeId), runeState.Serialize())
+            .SetRuneState(avatarAddress, runeStates)
             .SetLegacyState(runeSlotAddress, runeSlotState.Serialize())
             .SetCollectionState(avatar2Address, collectionState)
             .SetLegacyState(participantsAddr, participants.Serialize())
