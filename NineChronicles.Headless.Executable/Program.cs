@@ -481,8 +481,6 @@ namespace NineChronicles.Headless.Executable
                         .WithMetrics(
                             builder => builder
                                 .AddMeter("NineChronicles")
-                                .AddRuntimeInstrumentation()
-                                .AddAspNetCoreInstrumentation()
                                 .AddPrometheusExporter());
 
                     // worker
