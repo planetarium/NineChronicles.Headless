@@ -7,6 +7,7 @@ using Bencodex.Types;
 using GraphQL.Execution;
 using Libplanet.Action.State;
 using Libplanet.Crypto;
+using Libplanet.Mocks;
 using Libplanet.Types.Assets;
 using Nekoyume;
 using Nekoyume.Action;
@@ -301,9 +302,10 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
 
         private IWorldState GetMockState()
         {
-            return new MockWorld(new MockWorldState(ImmutableDictionary<Address, IAccount>.Empty.Add(
+            MockWorldState mockWorldState = MockWorldState.CreateModern();
+            return new World(mockWorldState.SetAccount(
                 ReservedAddresses.LegacyAccount,
-                new MockAccount(new MockAccountState()
+                new Account(mockWorldState.GetAccountState(ReservedAddresses.LegacyAccount))
                     .SetState(_raiderStateAddress, _raiderState.Serialize())
                     .SetState(Addresses.GetSheetAddress<WorldBossListSheet>(),
                         @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
@@ -312,7 +314,7 @@ worldBossKillRewardRecordAddress(avatarAddress: ""{_avatarAddress}"", raidId: {r
 ".Serialize())
                     .SetState(_worldBossAddress, _worldBossState.Serialize())
                     .SetState(_worldBossKillRewardRecordAddress, _worldBossKillRewardRecord.Serialize())
-                    .SetState(_raiderListAddress, List.Empty.Add(_raiderStateAddress.Serialize()))))));
+                    .SetState(_raiderListAddress, List.Empty.Add(_raiderStateAddress.Serialize()))));
         }
 
         private async Task<int> GetRaidId(long blockIndex, bool prev)

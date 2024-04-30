@@ -42,6 +42,7 @@
     <ProjectReference Include="..\NineChronicles.Headless.Executable.Tests\NineChronicles.Headless.Executable.Tests.csproj" />
     <ProjectReference Include="..\NineChronicles.Headless.Executable\NineChronicles.Headless.Executable.csproj" />
     <ProjectReference Include="..\NineChronicles.Headless\NineChronicles.Headless.csproj" />
+    <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet.Mocks\Libplanet.Mocks.csproj" />
   </ItemGroup>
 
 </Project>

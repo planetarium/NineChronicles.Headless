@@ -19,7 +19,11 @@ namespace NineChronicles.Headless.Executable.Store
             }
 
             BlockHash genesisBlockHash = store.IterateIndexes(chainId.Value).First();
-            Block genesisBlock = store.GetBlock(genesisBlockHash) ?? throw new KeyNotFoundException();
+            Block? genesisBlock = store.GetBlock(genesisBlockHash);
+            if (genesisBlock == null)
+            {
+                throw new InvalidOperationException("The store doesn't have genesis block.");
+            }
 
             return genesisBlock;
         }

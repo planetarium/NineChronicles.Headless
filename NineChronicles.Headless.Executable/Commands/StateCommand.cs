@@ -121,7 +121,8 @@ namespace NineChronicles.Headless.Executable.Commands
                 }
 
                 Block block =
-                    store.GetBlock(blockHash) ?? throw new KeyNotFoundException();
+                    store.GetBlock(blockHash) ??
+                        throw new CommandExitedException($"The block of {blockHash} doesn't exist.", -1);
                 var preEvalBlock = new PreEvaluationBlock(
                     block,
                     block.Transactions

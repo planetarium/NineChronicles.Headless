@@ -345,7 +345,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Currency currency = Currency.Legacy("NCG", 2, null);
 #pragma warning restore CS0618
             FungibleAssetValue fungibleAssetValue = new FungibleAssetValue(currency, major, minor);
-            StandaloneContextFx.AgentAddresses[address].balanceSubject.OnNext(fungibleAssetValue.GetQuantityString(true));
+            StandaloneContextFx.AgentAddresses[address].OnNext(fungibleAssetValue.GetQuantityString(true));
             ExecutionResult rawEvents = await stream.Take(1);
             var data = ((RootExecutionNode)rawEvents.Data.GetValue()).SubFields![0].Result!;
             Assert.Equal(decimalString, data);

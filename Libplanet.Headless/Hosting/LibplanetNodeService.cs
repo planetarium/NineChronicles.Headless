@@ -5,6 +5,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
@@ -639,30 +641,83 @@ namespace Libplanet.Headless.Hosting
             Log.Debug("Store disposed.");
         }
 
-        private string ResolvePluginPath(string path) =>
-            Uri.IsWellFormedUriString(path, UriKind.Absolute)
-                ? DownloadPlugin(path).Result
-                : path;
+        private string ResolvePluginPath(string path)
+        {
+            if (Uri.IsWellFormedUriString(path, UriKind.Absolute))
+            {
+                // Run the download on a background thread
+                return Task.Run(() => DownloadPlugin(path)).GetAwaiter().GetResult();
+            }
+
+            return path;
+        }
 
         private async Task<string> DownloadPlugin(string url)
         {
-            var path = Path.Combine(Environment.CurrentDirectory, "plugins");
+            var basePath = Environment.GetEnvironmentVariable("PLUGIN_PATH") ?? Environment.CurrentDirectory;
+            var path = Path.Combine(basePath, "plugins");
             Directory.CreateDirectory(path);
-            var hashed = url.GetHashCode().ToString();
+            var hashed = CreateSha256Hash(url);
             var logger = Log.ForContext("LibplanetNodeService", hashed);
             using var httpClient = new HttpClient();
             var downloadPath = Path.Join(path, hashed + ".zip");
             var extractPath = Path.Join(path, hashed);
-            logger.Debug("Downloading...");
-            await File.WriteAllBytesAsync(
-                downloadPath,
-                await httpClient.GetByteArrayAsync(url, SwarmCancellationToken),
-                SwarmCancellationToken);
-            logger.Debug("Finished downloading.");
-            logger.Debug("Extracting...");
-            ZipFile.ExtractToDirectory(downloadPath, extractPath);
-            logger.Debug("Finished extracting.");
+            var checksumPath = Path.Join(extractPath, "checksum.txt");
+
+            logger.Debug("Download Path: {downloadPath}", downloadPath);
+            logger.Debug("Extract Path: {extractPath}", extractPath);
+
+            if (!File.Exists(downloadPath))
+            {
+                logger.Debug("Downloading...");
+                var content = await httpClient.GetByteArrayAsync(url);
+                await File.WriteAllBytesAsync(downloadPath, content);
+                logger.Debug("Finished downloading.");
+            }
+            else
+            {
+                logger.Debug("Download skipped, file already exists.");
+            }
+
+            if (!Directory.Exists(extractPath) || (File.Exists(checksumPath) && CalculateDirectoryChecksum(extractPath) != await File.ReadAllTextAsync(checksumPath)))
+            {
+                Directory.CreateDirectory(extractPath);
+                logger.Debug("Extracting...");
+                ZipFile.ExtractToDirectory(downloadPath, extractPath, true);
+                logger.Debug("Finished extracting.");
+
+                // Calculate checksum of extracted files and save it
+                var checksum = CalculateDirectoryChecksum(extractPath);
+                await File.WriteAllTextAsync(checksumPath, checksum);
+            }
+            else
+            {
+                logger.Debug("Extraction skipped, folder already exists and is verified.");
+            }
+
             return Path.Combine(extractPath, "Lib9c.Plugin.dll");
+        }
+
+        private string CalculateDirectoryChecksum(string directoryPath)
+        {
+            using var md5 = MD5.Create();
+            var files = Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories)
+                .OrderBy(p => p).ToArray();
+
+            foreach (var file in files)
+            {
+                // hash path
+                var pathBytes = Encoding.UTF8.GetBytes(file.Substring(directoryPath.Length));
+                md5.TransformBlock(pathBytes, 0, pathBytes.Length, pathBytes, 0);
+
+                // hash contents
+                var contentBytes = File.ReadAllBytes(file);
+                md5.TransformBlock(contentBytes, 0, contentBytes.Length, contentBytes, 0);
+            }
+
+            // Handles empty content.
+            md5.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+            return BitConverter.ToString(md5.Hash!).Replace("-", "").ToLowerInvariant();
         }
 
         // FIXME: Request libplanet provide default implementation.
@@ -674,6 +729,22 @@ namespace Libplanet.Headless.Hosting
             }
 
             public long Index { get; }
+        }
+
+        private static string CreateSha256Hash(string input)
+        {
+            using SHA256 sha256Hash = SHA256.Create();
+
+            // ComputeHash - returns byte array
+            byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(input));
+
+            // Convert byte array to a string
+            StringBuilder builder = new StringBuilder();
+            foreach (var t in bytes)
+            {
+                builder.Append(t.ToString("x2"));
+            }
+            return builder.ToString();
         }
     }
 }
