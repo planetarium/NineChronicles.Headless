@@ -80,6 +80,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libplanet.Extensions.Plugge
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lib9c.Plugin.Shared", "Lib9c\.Lib9c.Plugin.Shared\Lib9c.Plugin.Shared.csproj", "{3D32DA34-E619-429F-8421-848FF4F14417}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Store.Remote", "Lib9c\.Libplanet\Libplanet.Store.Remote\Libplanet.Store.Remote.csproj", "{D1E15F81-8765-4DCA-9299-675415686C23}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -723,6 +725,24 @@ Global
 		{3D32DA34-E619-429F-8421-848FF4F14417}.Release|x64.Build.0 = Release|Any CPU
 		{3D32DA34-E619-429F-8421-848FF4F14417}.Release|x86.ActiveCfg = Release|Any CPU
 		{3D32DA34-E619-429F-8421-848FF4F14417}.Release|x86.Build.0 = Release|Any CPU
+		{D1E15F81-8765-4DCA-9299-675415686C23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1E15F81-8765-4DCA-9299-675415686C23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1E15F81-8765-4DCA-9299-675415686C23}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D1E15F81-8765-4DCA-9299-675415686C23}.Debug|x64.Build.0 = Debug|Any CPU
+		{D1E15F81-8765-4DCA-9299-675415686C23}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D1E15F81-8765-4DCA-9299-675415686C23}.Debug|x86.Build.0 = Debug|Any CPU
+		{D1E15F81-8765-4DCA-9299-675415686C23}.DevEx|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1E15F81-8765-4DCA-9299-675415686C23}.DevEx|Any CPU.Build.0 = Debug|Any CPU
+		{D1E15F81-8765-4DCA-9299-675415686C23}.DevEx|x64.ActiveCfg = Debug|Any CPU
+		{D1E15F81-8765-4DCA-9299-675415686C23}.DevEx|x64.Build.0 = Debug|Any CPU
+		{D1E15F81-8765-4DCA-9299-675415686C23}.DevEx|x86.ActiveCfg = Debug|Any CPU
+		{D1E15F81-8765-4DCA-9299-675415686C23}.DevEx|x86.Build.0 = Debug|Any CPU
+		{D1E15F81-8765-4DCA-9299-675415686C23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1E15F81-8765-4DCA-9299-675415686C23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1E15F81-8765-4DCA-9299-675415686C23}.Release|x64.ActiveCfg = Release|Any CPU
+		{D1E15F81-8765-4DCA-9299-675415686C23}.Release|x64.Build.0 = Release|Any CPU
+		{D1E15F81-8765-4DCA-9299-675415686C23}.Release|x86.ActiveCfg = Release|Any CPU
+		{D1E15F81-8765-4DCA-9299-675415686C23}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
