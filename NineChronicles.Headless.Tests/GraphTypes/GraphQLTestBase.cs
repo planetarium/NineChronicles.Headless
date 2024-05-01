@@ -55,13 +55,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 #pragma warning restore CS0618
 
             var sheets = TableSheetsImporter.ImportSheets();
-            var blockAction = new RewardGold();
-            var actionEvaluator = new ActionEvaluator(
-                _ => blockAction,
-                new TrieStateStore(new MemoryKeyValueStore()),
-                new NCActionLoader());
             var genesisBlock = BlockChain.ProposeGenesisBlock(
-                actionEvaluator,
                 transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(0,
                     AdminPrivateKey, null, new ActionBase[]
                     {

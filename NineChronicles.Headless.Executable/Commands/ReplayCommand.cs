@@ -18,7 +18,6 @@ using Libplanet.Action;
 using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
-using Libplanet.Extensions.RemoteBlockChainStates;
 using Libplanet.Types.Blocks;
 using Libplanet.RocksDBStore;
 using Libplanet.Action.State;
@@ -247,6 +246,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 var currentBlockIndex = startIndex.Value;
                 while (currentBlockIndex <= endIndex)
                 {
+                    var previousBlock = blockChain[currentBlockIndex];
                     var block = blockChain[currentBlockIndex++];
                     if (verbose)
                     {
@@ -268,7 +268,8 @@ namespace NineChronicles.Headless.Executable.Commands
 
                         try
                         {
-                            var rootHash = blockChain.DetermineBlockStateRootHash(block,
+                            var rootHash = blockChain.DetermineNextBlockStateRootHash(
+                                previousBlock,
                                 out IReadOnlyList<ICommittedActionEvaluation> actionEvaluations);
 
                             if (verbose)
@@ -299,7 +300,8 @@ namespace NineChronicles.Headless.Executable.Commands
                             outputSw?.WriteLine(msg);
 
                             var actionEvaluator = GetActionEvaluator(stateStore);
-                            var actionEvaluations = blockChain.DetermineBlockStateRootHash(block,
+                            var actionEvaluations = blockChain.DetermineNextBlockStateRootHash(
+                                previousBlock,
                                 out IReadOnlyList<ICommittedActionEvaluation> failedActionEvaluations);
                             LoggingActionEvaluations(failedActionEvaluations, outputSw);
 
@@ -386,7 +388,7 @@ namespace NineChronicles.Headless.Executable.Commands
             }
             var miner = new Address(minerValue);
 
-            var explorerEndpoint = $"{endpoint}/explorer";
+            /*var explorerEndpoint = $"{endpoint}/explorer";
             var blockChainStates = new RemoteBlockChainStates(new Uri(explorerEndpoint));
 
             var previousBlockHash = BlockHash.FromString(previousBlockHashValue);
@@ -410,7 +412,7 @@ namespace NineChronicles.Headless.Executable.Commands
             actionEvaluations
                 .Select((evaluation, index) => (evaluation, index))
                 .ToList()
-                .ForEach(x => PrintEvaluation(x.evaluation, x.index));
+                .ForEach(x => PrintEvaluation(x.evaluation, x.index));*/
 
             return 0;
         }
