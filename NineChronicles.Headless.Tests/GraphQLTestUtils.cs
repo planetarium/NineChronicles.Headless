@@ -176,7 +176,7 @@ namespace NineChronicles.Headless.Tests
                 .ToImmutableArray());
 
             blockchain.Append(block, blockCommit);
-            var ncg = new GoldCurrencyState((Dictionary)blockchain.GetWorldState().GetLegacyState(Addresses.GoldCurrency))
+            var ncg = new GoldCurrencyState((Dictionary)blockchain.GetNextWorldState().GetLegacyState(Addresses.GoldCurrency))
                 .Currency;
             var currencyFactory = new CurrencyFactory(() => blockchain.GetWorldState(blockchain.Tip.Hash), ncg);
             var fungibleAssetValueFactory = new FungibleAssetValueFactory(currencyFactory);

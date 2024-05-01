@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "NineChronicles.Headless.AccessControlCenter": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:57500;http://localhost:57501"
+    }
+  }
+}
