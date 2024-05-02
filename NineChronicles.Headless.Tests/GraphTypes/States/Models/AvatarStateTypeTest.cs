@@ -94,6 +94,38 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             Assert.Equal(expected, data);
         }
 
+        [Theory]
+        [MemberData(nameof(ActionPointMembers))]
+        public async Task QueryActionPoint(bool modern, Dictionary<string, object> expected)
+        {
+            const string query = @"
+            {
+                actionPoint
+                dailyRewardReceivedIndex
+            }";
+            IWorld mockWorld = new World(MockWorldState.CreateModern());
+            mockWorld = mockWorld.SetAvatarState(
+                Fixtures.AvatarAddress,
+                Fixtures.AvatarStateFX,
+                true,
+                true,
+                true,
+                true);
+            mockWorld = mockWorld.SetAgentState(Fixtures.UserAddress, Fixtures.AgentStateFx);
+            if (modern)
+            {
+                mockWorld = mockWorld.SetDailyRewardReceivedBlockIndex(Fixtures.AvatarAddress, 1L)
+                    .SetActionPoint(Fixtures.AvatarAddress, 5);
+            }
+            var queryResult = await ExecuteQueryAsync<AvatarStateType>(
+                query,
+                source: new AvatarStateType.AvatarStateContext(
+                    Fixtures.AvatarStateFX,
+                    mockWorld,
+                    0, new StateMemoryCache()));
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            Assert.Equal(expected, data);
+        }
         public static IEnumerable<object[]> Members => new List<object[]>
         {
             new object[]
@@ -125,6 +157,28 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                         ["startBlockIndex"] = x.StartBlockIndex,
                         ["petId"] = x.PetId
                     }).ToArray<object>(),
+                }
+            }
+        };
+
+        public static IEnumerable<object[]> ActionPointMembers = new List<object[]>()
+        {
+            new object[]
+            {
+                false,
+                new Dictionary<string, object>
+                {
+                    ["actionPoint"] = Fixtures.AvatarStateFX.actionPoint,
+                    ["dailyRewardReceivedIndex"] = Fixtures.AvatarStateFX.dailyRewardReceivedIndex,
+                }
+            },
+            new object[]
+            {
+                true,
+                new Dictionary<string, object>
+                {
+                    ["actionPoint"] = 5,
+                    ["dailyRewardReceivedIndex"] = 1L,
                 }
             }
         };
