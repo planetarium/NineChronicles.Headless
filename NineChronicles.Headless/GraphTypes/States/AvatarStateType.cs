@@ -46,7 +46,18 @@ namespace NineChronicles.Headless.GraphTypes.States
             Field<NonNullGraphType<LongGraphType>>(
                 nameof(AvatarState.dailyRewardReceivedIndex),
                 description: "Block index at the DailyReward execution.",
-                resolve: context => context.Source.AvatarState.dailyRewardReceivedIndex);
+                resolve: context =>
+                {
+                    try
+                    {
+                        return context.Source.WorldState.GetDailyRewardReceivedBlockIndex(context.Source.AvatarState
+                            .address);
+                    }
+                    catch (FailedLoadStateException)
+                    {
+                        return context.Source.AvatarState.dailyRewardReceivedIndex;
+                    }
+                });
             Field<NonNullGraphType<AddressType>>(
                 nameof(AvatarState.agentAddress),
                 description: "Address of agent.",
@@ -86,7 +97,17 @@ namespace NineChronicles.Headless.GraphTypes.States
             Field<NonNullGraphType<IntGraphType>>(
                 nameof(AvatarState.actionPoint),
                 description: "Current ActionPoint.",
-                resolve: context => context.Source.AvatarState.actionPoint);
+                resolve: context =>
+                {
+                    try
+                    {
+                        return context.Source.WorldState.GetActionPoint(context.Source.AvatarState.address);
+                    }
+                    catch (FailedLoadStateException)
+                    {
+                        return context.Source.AvatarState.actionPoint;
+                    }
+                });
             Field<NonNullGraphType<IntGraphType>>(
                 nameof(AvatarState.ear),
                 description: "Index of ear color.",
