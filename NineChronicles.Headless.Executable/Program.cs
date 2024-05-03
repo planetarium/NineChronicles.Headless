@@ -205,6 +205,9 @@ namespace NineChronicles.Headless.Executable
             [Option("consensus-target-block-interval",
                 Description = "A target block interval used in consensus context. The unit is millisecond.")]
             double? consensusTargetBlockIntervalMilliseconds = null,
+            [Option("consensus-propose-second-base",
+                Description = "A propose second base for consensus context timeout. The unit is second.")]
+            int? consensusProposeSecondBase = null,
             [Option("maximum-transaction-per-block",
                 Description = "Maximum transactions allowed in a block. null by default.")]
             int? maxTransactionPerBlock = null,
@@ -304,7 +307,7 @@ namespace NineChronicles.Headless.Executable
                 logActionRenders, confirmations,
                 txLifeTime, messageTimeout, tipTimeout, demandBuffer, skipPreload,
                 minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers,
-                consensusPort, consensusPrivateKeyString, consensusSeedStrings, consensusTargetBlockIntervalMilliseconds,
+                consensusPort, consensusPrivateKeyString, consensusSeedStrings, consensusTargetBlockIntervalMilliseconds, consensusProposeSecondBase,
                 maxTransactionPerBlock, sentryDsn, sentryTraceSampleRate, arenaParticipantsSyncInterval
             );
 
@@ -406,6 +409,7 @@ namespace NineChronicles.Headless.Executable
                         consensusPrivateKeyString: headlessConfig.ConsensusPrivateKeyString,
                         consensusSeedStrings: headlessConfig.ConsensusSeedStrings,
                         consensusTargetBlockIntervalMilliseconds: headlessConfig.ConsensusTargetBlockIntervalMilliseconds,
+                        consensusProposeSecondBase: headlessConfig.ConsensusProposeSecondBase,
                         maximumPollPeers: headlessConfig.MaximumPollPeers,
                         actionEvaluatorConfiguration: actionEvaluatorConfiguration
                     );
