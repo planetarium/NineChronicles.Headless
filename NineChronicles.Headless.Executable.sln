@@ -80,6 +80,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libplanet.Extensions.Plugge
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lib9c.Plugin.Shared", "Lib9c\.Lib9c.Plugin.Shared\Lib9c.Plugin.Shared.csproj", "{3D32DA34-E619-429F-8421-848FF4F14417}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Mocks", "Lib9c\.Libplanet\Libplanet.Mocks\Libplanet.Mocks.csproj", "{F79B695B-6FCC-43F5-AEE4-88E484382B9B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -723,6 +725,24 @@ Global
 		{3D32DA34-E619-429F-8421-848FF4F14417}.Release|x64.Build.0 = Release|Any CPU
 		{3D32DA34-E619-429F-8421-848FF4F14417}.Release|x86.ActiveCfg = Release|Any CPU
 		{3D32DA34-E619-429F-8421-848FF4F14417}.Release|x86.Build.0 = Release|Any CPU
+		{F79B695B-6FCC-43F5-AEE4-88E484382B9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F79B695B-6FCC-43F5-AEE4-88E484382B9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F79B695B-6FCC-43F5-AEE4-88E484382B9B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F79B695B-6FCC-43F5-AEE4-88E484382B9B}.Debug|x64.Build.0 = Debug|Any CPU
+		{F79B695B-6FCC-43F5-AEE4-88E484382B9B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F79B695B-6FCC-43F5-AEE4-88E484382B9B}.Debug|x86.Build.0 = Debug|Any CPU
+		{F79B695B-6FCC-43F5-AEE4-88E484382B9B}.DevEx|Any CPU.ActiveCfg = Debug|Any CPU
+		{F79B695B-6FCC-43F5-AEE4-88E484382B9B}.DevEx|Any CPU.Build.0 = Debug|Any CPU
+		{F79B695B-6FCC-43F5-AEE4-88E484382B9B}.DevEx|x64.ActiveCfg = Debug|Any CPU
+		{F79B695B-6FCC-43F5-AEE4-88E484382B9B}.DevEx|x64.Build.0 = Debug|Any CPU
+		{F79B695B-6FCC-43F5-AEE4-88E484382B9B}.DevEx|x86.ActiveCfg = Debug|Any CPU
+		{F79B695B-6FCC-43F5-AEE4-88E484382B9B}.DevEx|x86.Build.0 = Debug|Any CPU
+		{F79B695B-6FCC-43F5-AEE4-88E484382B9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F79B695B-6FCC-43F5-AEE4-88E484382B9B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F79B695B-6FCC-43F5-AEE4-88E484382B9B}.Release|x64.ActiveCfg = Release|Any CPU
+		{F79B695B-6FCC-43F5-AEE4-88E484382B9B}.Release|x64.Build.0 = Release|Any CPU
+		{F79B695B-6FCC-43F5-AEE4-88E484382B9B}.Release|x86.ActiveCfg = Release|Any CPU
+		{F79B695B-6FCC-43F5-AEE4-88E484382B9B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
