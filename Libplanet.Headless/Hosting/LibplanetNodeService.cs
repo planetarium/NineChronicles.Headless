@@ -235,6 +235,7 @@ namespace Libplanet.Headless.Hosting
                     ConsensusPrivateKey = Properties.ConsensusPrivateKey,
                     ConsensusWorkers = 500,
                     TargetBlockInterval = TimeSpan.FromMilliseconds(Properties.ConsensusTargetBlockIntervalMilliseconds ?? 7000),
+                    ContextTimeoutOptions = Properties.ContextTimeoutOption,
                 };
             }
 
