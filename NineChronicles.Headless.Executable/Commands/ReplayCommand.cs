@@ -111,7 +111,8 @@ namespace NineChronicles.Headless.Executable.Commands
                     miner: targetBlock.Miner,
                     signer: tx.Signer,
                     signature: tx.Signature,
-                    actions: actions.Cast<IAction>().ToImmutableList()
+                    actions: actions.Cast<IAction>().ToImmutableList(),
+                    isBlockAction: false
                 );
                 var actionNum = 1;
                 foreach (var actionEvaluation in actionEvaluations)
@@ -507,7 +508,11 @@ namespace NineChronicles.Headless.Executable.Commands
             var stateStore = new TrieStateStore(stateKeyValueStore);
             var blockChainStates = new BlockChainStates(store, stateStore);
             var actionEvaluator = new ActionEvaluator(
-                _ => policy.BlockAction,
+                new PolicyActionsRegistry(
+                    _ => policy.BeginBlockActions,
+                    _ => policy.EndBlockActions,
+                    _ => policy.BeginTxActions,
+                    _ => policy.EndTxActions),
                 stateStore,
                 new NCActionLoader());
             return (
@@ -554,7 +559,11 @@ namespace NineChronicles.Headless.Executable.Commands
             var policy = new BlockPolicySource().GetPolicy();
             IActionLoader actionLoader = new NCActionLoader();
             return new ActionEvaluator(
-                _ => policy.BlockAction,
+                new PolicyActionsRegistry(
+                    _ => policy.BeginBlockActions,
+                    _ => policy.EndBlockActions,
+                    _ => policy.BeginTxActions,
+                    _ => policy.EndTxActions),
                 stateStore: stateStore,
                 actionTypeLoader: actionLoader);
         }

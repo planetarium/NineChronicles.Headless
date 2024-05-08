@@ -133,7 +133,11 @@ namespace Libplanet.Headless.Hosting
                             actionLoader),
                     DefaultActionEvaluatorConfiguration _ =>
                         new ActionEvaluator(
-                            _ => blockPolicy.BlockAction,
+                            new PolicyActionsRegistry(
+                                _ => blockPolicy.BeginBlockActions,
+                                _ => blockPolicy.EndBlockActions,
+                                _ => blockPolicy.BeginTxActions,
+                                _ => blockPolicy.EndTxActions),
                             stateStore: StateStore,
                             actionTypeLoader: actionLoader),
                     ForkableActionEvaluatorConfiguration forkableActionEvaluatorConfiguration =>
