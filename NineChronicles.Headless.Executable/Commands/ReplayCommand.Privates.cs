@@ -8,6 +8,8 @@ using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Action;
 using Libplanet.Action.State;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
 using Libplanet.Types.Tx;
 using Serilog;
 
@@ -28,6 +30,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 int blockProtocolVersion,
                 IWorld previousState,
                 int randomSeed,
+                bool isBlockAction,
                 bool rehearsal = false)
             {
                 Signer = signer;
@@ -38,6 +41,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 Rehearsal = rehearsal;
                 PreviousState = previousState;
                 RandomSeed = randomSeed;
+                IsBlockAction = isBlockAction;
             }
 
             public Address Signer { get; }
@@ -49,14 +53,15 @@ namespace NineChronicles.Headless.Executable.Commands
             public long BlockIndex { get; }
 
             public int BlockProtocolVersion { get; }
+            public BlockCommit? LastCommit { get; }
 
             public bool Rehearsal { get; }
 
             public IWorld PreviousState { get; }
 
             public int RandomSeed { get; }
-
-            public bool BlockAction => TxId is null;
+            
+            public bool IsBlockAction { get; }
 
             // NOTE: Replay does not support block actions.
             public IReadOnlyList<ITransaction> Txs => ImmutableList<ITransaction>.Empty;
@@ -68,6 +73,8 @@ namespace NineChronicles.Headless.Executable.Commands
             public long GasUsed() => 0;
 
             public long GasLimit() => 0;
+            
+            public FungibleAssetValue? MaxGasPrice => null;
 
             public IRandom GetRandom() => new Random(RandomSeed);
         }
@@ -96,6 +103,7 @@ namespace NineChronicles.Headless.Executable.Commands
             Address signer,
             byte[] signature,
             IImmutableList<IAction> actions,
+            bool isBlockAction,
             ILogger? logger = null)
         {
             ActionContext CreateActionContext(
@@ -109,7 +117,8 @@ namespace NineChronicles.Headless.Executable.Commands
                     blockIndex: blockIndex,
                     blockProtocolVersion: blockProtocolVersion,
                     previousState: prevState,
-                    randomSeed: randomSeed);
+                    randomSeed: randomSeed,
+                    isBlockAction: isBlockAction);
             }
 
             byte[] preEvaluationHashBytes = preEvaluationHash.ToByteArray();

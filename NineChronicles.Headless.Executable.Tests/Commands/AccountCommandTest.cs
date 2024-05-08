@@ -48,7 +48,11 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             IStagePolicy stagePolicy = new VolatileStagePolicy();
             IBlockPolicy blockPolicy = new BlockPolicySource().GetPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
-                _ => blockPolicy.BlockAction,
+                new PolicyActionsRegistry(
+                    _ => blockPolicy.BeginBlockActions,
+                    _ => blockPolicy.EndBlockActions,
+                    _ => blockPolicy.BeginTxActions,
+                    _ => blockPolicy.EndTxActions),
                 stateStore,
                 new NCActionLoader());
             BlockChain chain = BlockChain.Create(
