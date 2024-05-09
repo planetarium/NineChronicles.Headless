@@ -42,15 +42,7 @@ namespace NineChronicles.Headless.Executable.Tests
             _storePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             Directory.CreateDirectory(_storePath);
             _genesisBlockPath = Path.Combine(_storePath, "./genesis");
-
-            IStateStore stateStore = new TrieStateStore(new MemoryKeyValueStore());
-            IActionLoader actionLoader = new NCActionLoader();
-            IBlockPolicy blockPolicy = new BlockPolicySource(actionLoader, 1).GetPolicy(Nekoyume.Planet.Odin);
-            IActionEvaluator actionEvaluator = new ActionEvaluator(
-                _ => blockPolicy.BlockAction,
-                stateStore: stateStore,
-                actionTypeLoader: actionLoader);
-            var genesis = BlockChain.ProposeGenesisBlock(actionEvaluator);
+            var genesis = BlockChain.ProposeGenesisBlock();
 
             Bencodex.Codec codec = new Bencodex.Codec();
             _genesisBlockHash = ByteUtil.Hex(genesis.Hash.ByteArray);

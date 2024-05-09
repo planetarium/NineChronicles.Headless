@@ -30,11 +30,7 @@ namespace Libplanet.Headless.Tests.Hosting
                 new MemoryStore(),
                 stateStore);
             var actionLoader = new SingleActionLoader(typeof(DummyAction));
-            var actionEvaluator = new ActionEvaluator(
-                _ => policy.BlockAction,
-                stateStore,
-                actionLoader);
-            var genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
+            var genesisBlock = BlockChain.ProposeGenesisBlock();
             var service = new LibplanetNodeService(
                 new LibplanetNodeServiceProperties()
                 {

@@ -49,7 +49,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 _stateStore,
                 new NCActionLoader());
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
-                actionEvaluator,
                 transactions: new IAction[]
                     {
                         new Initialize(

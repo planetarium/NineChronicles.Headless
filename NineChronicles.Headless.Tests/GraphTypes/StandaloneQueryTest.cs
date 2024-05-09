@@ -119,11 +119,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var actionEvaluator = new ActionEvaluator(
-                _ => null,
-                new TrieStateStore(new MemoryKeyValueStore()),
-                new NCActionLoader());
-            var genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
+            var genesisBlock = BlockChain.ProposeGenesisBlock();
 
             // 에러로 인하여 NineChroniclesNodeService 를 사용할 수 없습니다. https://git.io/JfS0M
             // 따라서 LibplanetNodeService로 비슷한 환경을 맞춥니다.
@@ -447,13 +443,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 new Libplanet.Types.Consensus.Validator(ProposerPrivateKey.PublicKey, BigInteger.One),
             }.ToList());
-            var actionEvaluator = new ActionEvaluator(
-                _ => null,
-                new TrieStateStore(new MemoryKeyValueStore()),
-                new NCActionLoader());
             Block genesis =
                 BlockChain.ProposeGenesisBlock(
-                    actionEvaluator,
                     transactions: ImmutableList<Transaction>.Empty
                         .Add(Transaction.Create(0, ProposerPrivateKey, null,
                             new ActionBase[]
@@ -840,13 +831,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 pendingActivation,
             };
-            var actionEvaluator = new ActionEvaluator(
-                _ => null,
-                new TrieStateStore(new MemoryKeyValueStore()),
-                new NCActionLoader());
             Block genesis =
                 BlockChain.ProposeGenesisBlock(
-                    actionEvaluator,
                     transactions: ImmutableList<Transaction>.Empty.Add(
                         Transaction.Create(0, new PrivateKey(), null,
                             new ActionBase[]
@@ -925,13 +911,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var activatedAccounts = ImmutableHashSet<Address>.Empty;
             var pendingActivationStates = new List<PendingActivationState>();
 
-            var actionEvaluator = new ActionEvaluator(
-                _ => null,
-                new TrieStateStore(new MemoryKeyValueStore()),
-                new NCActionLoader());
             Block genesis =
                 BlockChain.ProposeGenesisBlock(
-                    actionEvaluator,
                     transactions: ImmutableList<Transaction>.Empty
                         .Add(Transaction.Create(
                             0,
@@ -1006,13 +987,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var activatedAccounts = ImmutableHashSet<Address>.Empty;
             var pendingActivationStates = new List<PendingActivationState>();
 
-            var actionEvaluator = new ActionEvaluator(
-                _ => null,
-                new TrieStateStore(new MemoryKeyValueStore()),
-                new NCActionLoader());
             Block genesis =
                 BlockChain.ProposeGenesisBlock(
-                    actionEvaluator,
                     transactions: ImmutableList<Transaction>.Empty.Add(
                         Transaction.Create(0, new PrivateKey(), null,
                             new ActionBase[]
@@ -1111,13 +1087,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new Libplanet.Types.Consensus.Validator(ProposerPrivateKey.PublicKey, BigInteger.One),
                 new Libplanet.Types.Consensus.Validator(privateKey.PublicKey, BigInteger.One),
             }.ToList());
-            var actionEvaluator = new ActionEvaluator(
-                _ => blockPolicy.BlockAction,
-                new TrieStateStore(new MemoryKeyValueStore()),
-                new NCActionLoader());
             Block genesis =
                 BlockChain.ProposeGenesisBlock(
-                    actionEvaluator,
                     transactions: ImmutableList<Transaction>.Empty
                         .Add(
                             Transaction.Create(0, ProposerPrivateKey, null,
