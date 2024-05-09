@@ -247,6 +247,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 var currentBlockIndex = startIndex.Value;
                 while (currentBlockIndex <= endIndex)
                 {
+                    var previousBlock = blockChain[currentBlockIndex];
                     var block = blockChain[currentBlockIndex++];
                     if (verbose)
                     {
@@ -268,7 +269,8 @@ namespace NineChronicles.Headless.Executable.Commands
 
                         try
                         {
-                            var rootHash = blockChain.DetermineBlockStateRootHash(block,
+                            var rootHash = blockChain.DetermineNextBlockStateRootHash(
+                                previousBlock,
                                 out IReadOnlyList<ICommittedActionEvaluation> actionEvaluations);
 
                             if (verbose)
@@ -299,7 +301,8 @@ namespace NineChronicles.Headless.Executable.Commands
                             outputSw?.WriteLine(msg);
 
                             var actionEvaluator = GetActionEvaluator(stateStore);
-                            var actionEvaluations = blockChain.DetermineBlockStateRootHash(block,
+                            var actionEvaluations = blockChain.DetermineNextBlockStateRootHash(
+                                previousBlock,
                                 out IReadOnlyList<ICommittedActionEvaluation> failedActionEvaluations);
                             LoggingActionEvaluations(failedActionEvaluations, outputSw);
 

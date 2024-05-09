@@ -28,11 +28,7 @@ namespace NineChronicles.Headless.Executable.Tests.Store
         public void GetGenesisBlock(StoreType storeType)
         {
             IStore store = storeType.CreateStore(_storePath);
-            IActionEvaluator actionEvaluator = new ActionEvaluator(
-                _ => new BlockPolicy().BlockAction,
-                new TrieStateStore(new MemoryKeyValueStore()),
-                new NCActionLoader());
-            Block genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
+            Block genesisBlock = BlockChain.ProposeGenesisBlock();
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
             store.PutBlock(genesisBlock);

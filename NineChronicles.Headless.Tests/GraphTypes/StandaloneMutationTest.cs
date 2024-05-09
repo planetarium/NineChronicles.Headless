@@ -919,12 +919,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             IImmutableSet<Address> activatedAccounts,
             RankingState0? rankingState = null)
         {
-            var actionEvaluator = new ActionEvaluator(
-                _ => ServiceBuilder.BlockPolicy.BlockAction,
-                new TrieStateStore(new MemoryKeyValueStore()),
-                new NCActionLoader());
             return BlockChain.ProposeGenesisBlock(
-                actionEvaluator,
                 transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(0,
                     AdminPrivateKey, null, new ActionBase[]
                     {

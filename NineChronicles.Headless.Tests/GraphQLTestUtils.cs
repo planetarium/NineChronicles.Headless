@@ -86,7 +86,7 @@ namespace NineChronicles.Headless.Tests
                 _ => policy.BlockAction,
                 stateStore,
                 new NCActionLoader());
-            var genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
+            var genesisBlock = BlockChain.ProposeGenesisBlock();
             var blockchain = BlockChain.Create(
                 new BlockPolicy(),
                 new VolatileStagePolicy(),
@@ -118,7 +118,6 @@ namespace NineChronicles.Headless.Tests
                 stateStore,
                 new NCActionLoader());
             var genesisBlock = BlockChain.ProposeGenesisBlock(
-                actionEvaluator,
                 transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(
                     0, minerPrivateKey, null, new ActionBase[]
                     {
@@ -133,7 +132,7 @@ namespace NineChronicles.Headless.Tests
                 stateStore,
                 genesisBlock,
                 actionEvaluator);
-            var ncg = new GoldCurrencyState((Dictionary)blockchain.GetWorldState().GetLegacyState(Addresses.GoldCurrency))
+            var ncg = new GoldCurrencyState((Dictionary)blockchain.GetNextWorldState().GetLegacyState(Addresses.GoldCurrency))
                 .Currency;
             var currencyFactory = new CurrencyFactory(() => blockchain.GetWorldState(blockchain.Tip.Hash), ncg);
             var fungibleAssetValueFactory = new FungibleAssetValueFactory(currencyFactory);
