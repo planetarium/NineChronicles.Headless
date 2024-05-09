@@ -399,7 +399,7 @@ namespace NineChronicles.Headless.Executable.Commands
             }
             var miner = new Address(minerValue);
 
-            var channel = GrpcChannel.ForAddress(grpcEndpoint);
+            /*var channel = GrpcChannel.ForAddress(grpcEndpoint);
             var keyValueServiceClient = new KeyValueStore.KeyValueStoreClient(channel);
             var cacheKeyValueStore =
                 new RocksDBKeyValueStore(Path.Combine(Path.GetTempPath(), "9c-headless-replay-remotetx"));
@@ -444,7 +444,7 @@ namespace NineChronicles.Headless.Executable.Commands
             actionEvaluations
                 .Select((evaluation, index) => (evaluation, index))
                 .ToList()
-                .ForEach(x => PrintEvaluation(x.evaluation, x.index));
+                .ForEach(x => PrintEvaluation(x.evaluation, x.index));*/
 
             return 0;
         }
