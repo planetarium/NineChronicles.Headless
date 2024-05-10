@@ -199,7 +199,7 @@ namespace NineChronicles.Headless
             var addresses = addressBytesList.Select(a => new Address(a)).ToList();
             var taskList = addresses.Select(address => Task.Run(() =>
             {
-                var value = worldState.GetFullAvatarStateRaw(address);
+                var value = GetFullAvatarStateRaw(worldState, address);
                 result.TryAdd(address.ToByteArray(), _codec.Encode(value ?? Null.Value));
             }));
 
@@ -217,7 +217,7 @@ namespace NineChronicles.Headless
             var result = new ConcurrentDictionary<byte[], byte[]>();
             var taskList = addresses.Select(address => Task.Run(() =>
             {
-                var value = worldState.GetFullAvatarStateRaw(address);
+                var value = GetFullAvatarStateRaw(worldState, address);
                 result.TryAdd(address.ToByteArray(), _codec.Encode(value ?? Null.Value));
             }));
 
@@ -446,6 +446,34 @@ namespace NineChronicles.Headless
             var address = new Address(addressBytes);
             _publisher.RemoveClient(address).Wait();
             return new UnaryResult<bool>(true);
+        }
+
+        // Returning value is a list of [ Avatar, Inventory, QuestList, WorldInformation ]
+        private static IValue GetFullAvatarStateRaw(IWorldState worldState, Address address)
+        {
+            var serializedAvatarRaw = worldState.GetAccountState(Addresses.Avatar).GetState(address);
+            if (serializedAvatarRaw is not List)
+            {
+                Log.Warning(
+                    "Avatar state ({AvatarAddress}) should be " +
+                    "List but: {Raw}",
+                    address.ToHex(),
+                    serializedAvatarRaw);
+                return null;
+            }
+
+            var serializedInventoryRaw =
+                worldState.GetAccountState(Addresses.Inventory).GetState(address);
+            var serializedQuestListRaw =
+                worldState.GetAccountState(Addresses.QuestList).GetState(address);
+            var serializedWorldInformationRaw =
+                worldState.GetAccountState(Addresses.WorldInformation).GetState(address);
+
+            return new List(
+                serializedAvatarRaw,
+                serializedInventoryRaw!,
+                serializedQuestListRaw!,
+                serializedWorldInformationRaw!);
         }
     }
 }
