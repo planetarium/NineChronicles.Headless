@@ -247,5 +247,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             VoteFlag.PreCommit).Sign(validator)).ToImmutableArray())
                 : (BlockCommit?)null;
         }
+
+        public void AppendEmptyBlock(IEnumerable<PrivateKey> validators)
+        {
+            var block = BlockChain.ProposeBlock(ProposerPrivateKey, BlockChain.GetBlockCommit(BlockChain.Tip.Index));
+            var blockCommit = GenerateBlockCommit(block.Index, block.Hash, validators.ToList());
+            BlockChain.Append(block, blockCommit);
+        }
     }
 }

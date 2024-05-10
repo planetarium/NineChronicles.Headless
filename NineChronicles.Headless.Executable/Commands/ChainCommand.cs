@@ -37,9 +37,11 @@ namespace NineChronicles.Headless.Executable.Commands
 
         public enum SnapshotType
         {
+#pragma warning disable SA1602 // Enumeration items should be documented
             Full,
             Partition,
             All
+#pragma warning restore SA1602 // Enumeration items should be documented
         }
 
         public ChainCommand(IConsole console)
