@@ -64,6 +64,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(AdminAddress, adminState.AdminAddress);
         }
 
+        [Fact]
+        public async Task GetStates()
+        {
+            throw new NotImplementedException();
+        }
+
         [Theory]
         [InlineData(2)]
         [InlineData(16)]

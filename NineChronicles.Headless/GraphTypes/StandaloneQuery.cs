@@ -105,6 +105,52 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
+            Field<NonNullGraphType<ListGraphType<ByteStringType>>>(
+                name: "states",
+                arguments: new QueryArguments(
+                    new QueryArgument<ByteStringType>
+                    {
+                        Name = "blockHash",
+                        Description = "The hash of the block used to fetch state from chain.",
+                    },
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "accountAddress",
+                        Description = "The address of account to fetch from the chain.",
+                    },
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>
+                    {
+                        Name = "stateAddresses",
+                        Description = "The address of state to fetch from the account.",
+                    }
+                ),
+                resolve: context =>
+                {
+                    if (standaloneContext.BlockChain is not { } blockChain)
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
+                    }
+
+                    var blockHashByteArray = context.GetArgument<byte[]?>("blockHash");
+                    var blockHash = blockHashByteArray is null
+                        ? blockChain.Tip.Hash
+                        : new BlockHash(blockHashByteArray);
+                    var accountAddress = context.GetArgument<Address>("accountAddress");
+                    var stateAddresses = context.GetArgument<List<Address>>("stateAddresses");
+                    var states = blockChain
+                        .GetWorldState(blockHash)
+                        .GetAccountState(accountAddress)
+                        .GetStates(stateAddresses);
+                    var codec = new Codec();
+                    return states
+                        .Select(e => e is null
+                            ? null
+                            : codec.Encode(e))
+                        .ToList();
+                }
+            );
+
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<TransferNCGHistoryType>>>>(
                 "transferNCGHistories",
                 arguments: new QueryArguments(
