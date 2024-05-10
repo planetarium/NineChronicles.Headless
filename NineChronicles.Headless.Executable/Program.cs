@@ -55,6 +55,7 @@ namespace NineChronicles.Headless.Executable
     [HasSubCommands(typeof(NineChronicles.Headless.Executable.Commands.TxCommand), "tx")]
     [HasSubCommands(typeof(MarketCommand), "market")]
     [HasSubCommands(typeof(GenesisCommand), "genesis")]
+    [HasSubCommands(typeof(DPoSGenesisCommand), "dpos-genesis")]
     [HasSubCommands(typeof(ReplayCommand), "replay")]
     public class Program : CoconaLiteConsoleAppBase
     {

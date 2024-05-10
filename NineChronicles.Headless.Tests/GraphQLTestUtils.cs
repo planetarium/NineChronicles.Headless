@@ -180,8 +180,15 @@ namespace NineChronicles.Headless.Tests
                 0,
                 block.Hash,
                 ValidatorPrivateKeys.Select(
-                    k => new VoteMetadata(block.Index, 0, block.Hash, block.Timestamp, k.PublicKey, VoteFlag.PreCommit).Sign(k))
-                .ToImmutableArray());
+                        k => new VoteMetadata(
+                            block.Index,
+                            0,
+                            block.Hash,
+                            block.Timestamp,
+                            k.PublicKey,
+                            BigInteger.One,
+                            VoteFlag.PreCommit).Sign(k))
+                    .ToImmutableArray());
 
             blockchain.Append(block, blockCommit);
             var ncg = new GoldCurrencyState((Dictionary)blockchain.GetNextWorldState().GetLegacyState(Addresses.GoldCurrency))
