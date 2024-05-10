@@ -1,0 +1,40 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "DPoS Genesis config",
+    "description": "Config file for dpos-based headless genesis block generation",
+    "type": "object",
+    "properties": {
+        "proposer": {
+            "type": "string",
+            "description": "Private key of the genesis block's proposer."
+        },
+        "initialAssets": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "address": {
+                        "type": "string"
+                    },
+                    "amount": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "initialValidators": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "publicKey": {
+                        "type": "string"
+                    },
+                    "power": {
+                        "type": "integer"
+                    }
+                }
+            }
+        }
+    }
+}
