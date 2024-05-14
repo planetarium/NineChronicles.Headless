@@ -54,6 +54,8 @@ namespace NineChronicles.Headless
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.HashDigestType<SHA1>>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.HashDigestType<SHA256>>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.HashDigestSHA256Type>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.KeyBytesType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.TrieType>();
 
             return services;
         }
@@ -79,6 +81,7 @@ namespace NineChronicles.Headless
             services.TryAddSingleton<TransactionQuery>();
             services.TryAddSingleton<ExplorerQuery>();
             services.TryAddSingleton<HelperQuery>();
+            services.TryAddSingleton<RawStateQuery>();
             services.TryAddSingleton(_ => new StateQuery()
             {
                 Name = "LibplanetStateQuery",
