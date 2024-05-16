@@ -36,6 +36,8 @@ namespace NineChronicles.Headless
 
         public const string UseMagicOnionKey = "useMagicOnion";
 
+        public const string UseRemoteKeyValueServiceKey = "useRemoteKeyValueService";
+
         public const string MagicOnionTargetKey = "magicOnionTarget";
 
         private StandaloneContext StandaloneContext { get; }
@@ -80,6 +82,11 @@ namespace NineChronicles.Headless
                         if (GraphQlNodeServiceProperties.UseMagicOnion)
                         {
                             dictionary[UseMagicOnionKey] = string.Empty;
+                        }
+                        
+                        if (GraphQlNodeServiceProperties.UseRemoteKeyValueService)
+                        {
+                            dictionary[UseRemoteKeyValueServiceKey] = string.Empty;
                         }
 
                         if (GraphQlNodeServiceProperties.HttpOptions is { } options)
@@ -241,8 +248,13 @@ namespace NineChronicles.Headless
 
                 app.UseEndpoints(endpoints =>
                 {
-                    endpoints.MapGrpcService<RemoteKeyValueService>();
                     endpoints.MapControllers();
+
+                    if (Configuration[UseRemoteKeyValueServiceKey] is not null)
+                    {
+                        endpoints.MapGrpcService<RemoteKeyValueService>();   
+                    }
+
                     if (!(Configuration[UseMagicOnionKey] is null))
                     {
                         endpoints.MapMagicOnionService();

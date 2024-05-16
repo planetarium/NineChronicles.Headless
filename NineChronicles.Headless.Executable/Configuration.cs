@@ -51,6 +51,9 @@ namespace NineChronicles.Headless.Executable
         public int? RpcListenPort { get; set; }
         public bool? RpcRemoteServer { get; set; }
         public bool? RpcHttpServer { get; set; }
+        
+        // RemoteKeyValueService
+        public bool RemoteKeyValueService { get; set; } = false;
 
         // GraphQL Server
         public bool GraphQLServer { get; set; }
@@ -148,7 +151,8 @@ namespace NineChronicles.Headless.Executable
             int? maxTransactionPerBlock,
             string? sentryDsn,
             double? sentryTraceSampleRate,
-            int? arenaParticipantsSyncInterval
+            int? arenaParticipantsSyncInterval,
+            bool? remoteKeyValueService
         )
         {
             AppProtocolVersionString = appProtocolVersionString ?? AppProtocolVersionString;
@@ -202,6 +206,7 @@ namespace NineChronicles.Headless.Executable
             SentryDsn = sentryDsn ?? SentryDsn;
             SentryTraceSampleRate = sentryTraceSampleRate ?? SentryTraceSampleRate;
             ArenaParticipantsSyncInterval = arenaParticipantsSyncInterval ?? ArenaParticipantsSyncInterval;
+            RemoteKeyValueService = remoteKeyValueService ?? RemoteKeyValueService;
         }
     }
 }

@@ -222,6 +222,8 @@ namespace NineChronicles.Headless.Executable
             int? arenaParticipantsSyncInterval = null,
             [Option(Description = "arena participants list sync enable")]
             bool arenaParticipantsSync = true,
+            [Option(Description = "[DANGER] Turn on RemoteKeyValueService to debug.")]
+            bool remoteKeyValueService = false,
             [Ignore] CancellationToken? cancellationToken = null
         )
         {
@@ -308,7 +310,7 @@ namespace NineChronicles.Headless.Executable
                 txLifeTime, messageTimeout, tipTimeout, demandBuffer, skipPreload,
                 minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers,
                 consensusPort, consensusPrivateKeyString, consensusSeedStrings, consensusTargetBlockIntervalMilliseconds, consensusProposeSecondBase,
-                maxTransactionPerBlock, sentryDsn, sentryTraceSampleRate, arenaParticipantsSyncInterval
+                maxTransactionPerBlock, sentryDsn, sentryTraceSampleRate, arenaParticipantsSyncInterval, remoteKeyValueService
             );
 
 #if SENTRY || ! DEBUG
@@ -579,6 +581,7 @@ namespace NineChronicles.Headless.Executable
                         SecretToken = secretToken,
                         NoCors = headlessConfig.NoCors,
                         UseMagicOnion = headlessConfig.RpcServer,
+                        UseRemoteKeyValueService = headlessConfig.RemoteKeyValueService,
                         HttpOptions = headlessConfig.RpcServer && headlessConfig.RpcHttpServer == true
                             ? new GraphQLNodeServiceProperties.MagicOnionHttpOptions(
                                 $"{headlessConfig.RpcListenHost}:{headlessConfig.RpcListenPort}")

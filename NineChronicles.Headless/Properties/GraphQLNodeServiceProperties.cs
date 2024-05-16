@@ -13,6 +13,7 @@ namespace NineChronicles.Headless.Properties
         public bool NoCors { get; set; }
 
         public bool UseMagicOnion { get; set; }
+        public bool UseRemoteKeyValueService { get; set; }
 
         public MagicOnionHttpOptions? HttpOptions { get; set; }
 
