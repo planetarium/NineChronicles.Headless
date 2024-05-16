@@ -43,13 +43,20 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     Name = "hash",
                     Description = "Offset block hash for query.",
+                },
+                new QueryArgument<LongGraphType>
+                {
+                    Name = "index",
+                    Description = "Offset block index for query."
                 }),
                 resolve: context =>
                 {
-                    BlockHash? blockHash = context.GetArgument<byte[]>("hash") switch
+                    BlockHash? blockHash = (context.GetArgument<byte[]?>("hash"), context.GetArgument<long?>("index")) switch
                     {
-                        byte[] bytes => new BlockHash(bytes),
-                        null => standaloneContext.BlockChain?.Tip?.Hash,
+                        ({ } bytes, null) => new BlockHash(bytes),
+                        (null, { } index) => standaloneContext.BlockChain[index].Hash,
+                        (not null, not null) => throw new ArgumentException("Only one of 'hash' and 'index' must be given."),
+                        (null, null) => standaloneContext.BlockChain?.Tip?.Hash,
                     };
 
                     if (!(standaloneContext.BlockChain is { } chain))
