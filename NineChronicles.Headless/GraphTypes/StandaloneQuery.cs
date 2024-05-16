@@ -80,6 +80,7 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "state",
                 arguments: new QueryArguments(
                     new QueryArgument<ByteStringType> { Name = "hash", Description = "The hash of the block used to fetch state from chain." },
+                    new QueryArgument<LongGraphType> { Name = "index", Description = "The index of the block used to fetch state from chain." },
                     new QueryArgument<NonNullGraphType<AddressType>> { Name = "accountAddress", Description = "The address of account to fetch from the chain." },
                     new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "The address of state to fetch from the account." }
                 ),
@@ -91,10 +92,14 @@ namespace NineChronicles.Headless.GraphTypes
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
                     }
 
-                    var blockHashByteArray = context.GetArgument<byte[]>("hash");
-                    var blockHash = blockHashByteArray is null
-                        ? blockChain.Tip.Hash
-                        : new BlockHash(blockHashByteArray);
+                    var blockHash = (context.GetArgument<byte[]?>("hash"), context.GetArgument<long?>("index")) switch
+                    {
+                        (not null, not null) => throw new ArgumentException(
+                            "Only one of 'hash' and 'index' must be given."),
+                        (null, { } index) => blockChain[index].Hash,
+                        ({ } bytes, null) => new BlockHash(bytes),
+                        (null, null) => blockChain.Tip.Hash,
+                    };
                     var accountAddress = context.GetArgument<Address>("accountAddress");
                     var address = context.GetArgument<Address>("address");
 
