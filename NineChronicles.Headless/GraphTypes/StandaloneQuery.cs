@@ -51,12 +51,12 @@ namespace NineChronicles.Headless.GraphTypes
                 }),
                 resolve: context =>
                 {
-                    BlockHash? blockHash = (context.GetArgument<byte[]?>("hash"), context.GetArgument<long?>("index")) switch
+                    BlockHash blockHash = (context.GetArgument<byte[]?>("hash"), context.GetArgument<long?>("index")) switch
                     {
                         ({ } bytes, null) => new BlockHash(bytes),
                         (null, { } index) => standaloneContext.BlockChain[index].Hash,
                         (not null, not null) => throw new ArgumentException("Only one of 'hash' and 'index' must be given."),
-                        (null, null) => standaloneContext.BlockChain?.Tip?.Hash,
+                        (null, null) => standaloneContext.BlockChain.Tip.Hash,
                     };
 
                     if (!(standaloneContext.BlockChain is { } chain))
@@ -66,11 +66,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return new StateContext(
                         chain.GetWorldState(blockHash),
-                        blockHash switch
-                        {
-                            BlockHash bh => chain[bh].Index,
-                            null => chain.Tip!.Index,
-                        },
+                        chain[blockHash].Index,
                         stateMemoryCache
                     );
                 }
