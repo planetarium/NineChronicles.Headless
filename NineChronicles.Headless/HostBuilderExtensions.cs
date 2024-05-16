@@ -38,12 +38,6 @@ namespace NineChronicles.Headless
                 services.AddSingleton<Serilog.ILogger>(provider => Serilog.Log.Logger);
                 services.AddSingleton(provider => service.StateKeyValueStore);
 
-                if (properties.StateServiceManagerService is { } stateServiceManagerServiceOptions)
-                {
-                    var stateServiceManagerService = new StateServiceManagerService(stateServiceManagerServiceOptions);
-                    services.AddSingleton(provider => stateServiceManagerService);
-                }
-
                 if (properties.Libplanet is { } libplanetNodeServiceProperties)
                 {
                     services.AddSingleton<LibplanetNodeServiceProperties>(provider => libplanetNodeServiceProperties);

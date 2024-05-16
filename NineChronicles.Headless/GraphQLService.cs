@@ -83,7 +83,7 @@ namespace NineChronicles.Headless
                         {
                             dictionary[UseMagicOnionKey] = string.Empty;
                         }
-                        
+
                         if (GraphQlNodeServiceProperties.UseRemoteKeyValueService)
                         {
                             dictionary[UseRemoteKeyValueServiceKey] = string.Empty;
@@ -252,7 +252,7 @@ namespace NineChronicles.Headless
 
                     if (Configuration[UseRemoteKeyValueServiceKey] is not null)
                     {
-                        endpoints.MapGrpcService<RemoteKeyValueService>();   
+                        endpoints.MapGrpcService<RemoteKeyValueService>();
                     }
 
                     if (!(Configuration[UseMagicOnionKey] is null))
@@ -273,7 +273,6 @@ namespace NineChronicles.Headless
                             endpoints.MapMagicOnionSwagger("swagger",
                                 app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()!
                                     .MethodHandlers, "/_/");
-                            
                         }
                     }
 

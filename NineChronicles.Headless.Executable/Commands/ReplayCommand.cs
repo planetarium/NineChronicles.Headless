@@ -19,7 +19,6 @@ using Libplanet.Action;
 using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
-using Libplanet.Extensions.RemoteBlockChainStates;
 using Libplanet.Types.Blocks;
 using Libplanet.RocksDBStore;
 using Libplanet.Action.State;

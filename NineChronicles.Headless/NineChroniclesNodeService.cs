@@ -53,7 +53,7 @@ namespace NineChronicles.Headless
         public BlockChain BlockChain => NodeService.BlockChain;
 
         public IStore Store => NodeService.Store;
-        
+
         public IKeyValueStore StateKeyValueStore => NodeService.StateKeyValueStore;
 
         public PrivateKey? MinerPrivateKey { get; set; }

@@ -51,7 +51,7 @@ namespace NineChronicles.Headless.Executable
         public int? RpcListenPort { get; set; }
         public bool? RpcRemoteServer { get; set; }
         public bool? RpcHttpServer { get; set; }
-        
+
         // RemoteKeyValueService
         public bool RemoteKeyValueService { get; set; } = false;
 
@@ -94,8 +94,6 @@ namespace NineChronicles.Headless.Executable
         public string SentryDsn { get; set; } = "";
 
         public double SentryTraceSampleRate { get; set; } = 0.01;
-
-        public StateServiceManagerServiceOptions? StateServiceManagerService { get; set; }
 
         public AccessControlServiceOptions? AccessControlService { get; set; }
 
