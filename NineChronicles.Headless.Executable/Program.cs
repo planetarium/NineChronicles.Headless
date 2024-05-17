@@ -222,6 +222,8 @@ namespace NineChronicles.Headless.Executable
             int? arenaParticipantsSyncInterval = null,
             [Option(Description = "arena participants list sync enable")]
             bool arenaParticipantsSync = true,
+            [Option(Description = "[DANGER] Turn on RemoteKeyValueService to debug.")]
+            bool remoteKeyValueService = false,
             [Ignore] CancellationToken? cancellationToken = null
         )
         {
@@ -308,7 +310,7 @@ namespace NineChronicles.Headless.Executable
                 txLifeTime, messageTimeout, tipTimeout, demandBuffer, skipPreload,
                 minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers,
                 consensusPort, consensusPrivateKeyString, consensusSeedStrings, consensusTargetBlockIntervalMilliseconds, consensusProposeSecondBase,
-                maxTransactionPerBlock, sentryDsn, sentryTraceSampleRate, arenaParticipantsSyncInterval
+                maxTransactionPerBlock, sentryDsn, sentryTraceSampleRate, arenaParticipantsSyncInterval, remoteKeyValueService
             );
 
 #if SENTRY || ! DEBUG
@@ -364,11 +366,6 @@ namespace NineChronicles.Headless.Executable
                     "--maximum-transaction-per-block can only be used when --consensus-private-key is provided.",
                     -1
                 );
-            }
-
-            if (headlessConfig.StateServiceManagerService is { } stateServiceManagerServiceOptions)
-            {
-                await DownloadStateServices(stateServiceManagerServiceOptions);
             }
 
             try
@@ -464,7 +461,7 @@ namespace NineChronicles.Headless.Executable
                     : new PrivateKey(ByteUtil.ParseHex(headlessConfig.MinerPrivateKeyString));
                 TimeSpan minerBlockInterval = TimeSpan.FromMilliseconds(headlessConfig.MinerBlockIntervalMilliseconds);
                 var nineChroniclesProperties =
-                    new NineChroniclesNodeServiceProperties(actionLoader, headlessConfig.StateServiceManagerService, headlessConfig.AccessControlService)
+                    new NineChroniclesNodeServiceProperties(actionLoader, headlessConfig.AccessControlService)
                     {
                         MinerPrivateKey = minerPrivateKey,
                         Libplanet = properties,
@@ -579,6 +576,7 @@ namespace NineChronicles.Headless.Executable
                         SecretToken = secretToken,
                         NoCors = headlessConfig.NoCors,
                         UseMagicOnion = headlessConfig.RpcServer,
+                        UseRemoteKeyValueService = headlessConfig.RemoteKeyValueService,
                         HttpOptions = headlessConfig.RpcServer && headlessConfig.RpcHttpServer == true
                             ? new GraphQLNodeServiceProperties.MagicOnionHttpOptions(
                                 $"{headlessConfig.RpcListenHost}:{headlessConfig.RpcListenPort}")
@@ -617,37 +615,6 @@ namespace NineChronicles.Headless.Executable
 
         static void ConfigureSentryOptions(SentryOptions o)
         {
-        }
-
-        private static Task DownloadStateServices(StateServiceManagerServiceOptions options)
-        {
-            Log.Information("Downloading StateServices...");
-
-            if (Directory.Exists(options.StateServicesDownloadPath))
-            {
-                Directory.Delete(options.StateServicesDownloadPath, true);
-            }
-
-            Directory.CreateDirectory(options.StateServicesDownloadPath);
-
-            async Task DownloadStateService(string url)
-            {
-                var hashed =
-                    Convert.ToHexString(HashDigest<SHA256>.DeriveFrom(Encoding.UTF8.GetBytes(url)).ToByteArray());
-                var logger = Log.ForContext("StateService", hashed);
-                using var httpClient = new HttpClient();
-                var downloadPath = Path.Join(options.StateServicesDownloadPath, hashed + ".zip");
-                var extractPath = Path.Join(options.StateServicesDownloadPath, hashed);
-                logger.Debug("Downloading...");
-                await File.WriteAllBytesAsync(downloadPath, await httpClient.GetByteArrayAsync(url));
-                logger.Debug("Finished downloading.");
-                logger.Debug("Extracting...");
-                ZipFile.ExtractToDirectory(downloadPath, extractPath);
-                logger.Debug("Finished extracting.");
-            }
-
-            return Task.WhenAll(options.StateServices.Select(stateService => DownloadStateService(stateService.Path)))
-                .ContinueWith(_ => Log.Information("Finished downloading StateServices..."));
         }
     }
 }

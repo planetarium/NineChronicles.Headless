@@ -8,6 +8,7 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using Libplanet.Crypto;
 using Libplanet.Explorer.Schemas;
+using Libplanet.Store.Remote.Server;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -34,6 +35,8 @@ namespace NineChronicles.Headless
         public const string NoCorsKey = "noCors";
 
         public const string UseMagicOnionKey = "useMagicOnion";
+
+        public const string UseRemoteKeyValueServiceKey = "useRemoteKeyValueService";
 
         public const string MagicOnionTargetKey = "magicOnionTarget";
 
@@ -79,6 +82,11 @@ namespace NineChronicles.Headless
                         if (GraphQlNodeServiceProperties.UseMagicOnion)
                         {
                             dictionary[UseMagicOnionKey] = string.Empty;
+                        }
+
+                        if (GraphQlNodeServiceProperties.UseRemoteKeyValueService)
+                        {
+                            dictionary[UseRemoteKeyValueServiceKey] = string.Empty;
                         }
 
                         if (GraphQlNodeServiceProperties.HttpOptions is { } options)
@@ -241,6 +249,12 @@ namespace NineChronicles.Headless
                 app.UseEndpoints(endpoints =>
                 {
                     endpoints.MapControllers();
+
+                    if (Configuration[UseRemoteKeyValueServiceKey] is not null)
+                    {
+                        endpoints.MapGrpcService<RemoteKeyValueService>();
+                    }
+
                     if (!(Configuration[UseMagicOnionKey] is null))
                     {
                         endpoints.MapMagicOnionService();
@@ -261,6 +275,7 @@ namespace NineChronicles.Headless
                                     .MethodHandlers, "/_/");
                         }
                     }
+
                     endpoints.MapHealthChecks("/health-check");
                 });
 

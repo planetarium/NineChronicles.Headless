@@ -15,10 +15,9 @@ namespace NineChronicles.Headless.Properties
     public class NineChroniclesNodeServiceProperties
     {
         public NineChroniclesNodeServiceProperties(
-            IActionLoader actionLoader, StateServiceManagerServiceOptions? stateServiceManagerServiceOptions, AccessControlServiceOptions? accessControlServiceOptions)
+            IActionLoader actionLoader, AccessControlServiceOptions? accessControlServiceOptions)
         {
             ActionLoader = actionLoader;
-            StateServiceManagerService = stateServiceManagerServiceOptions;
             AccessControlServiceOptions = accessControlServiceOptions;
         }
 
@@ -57,8 +56,6 @@ namespace NineChronicles.Headless.Properties
         public int? MaxTransactionPerBlock { get; set; }
 
         public IActionLoader ActionLoader { get; init; }
-
-        public StateServiceManagerServiceOptions? StateServiceManagerService { get; }
 
         public AccessControlServiceOptions? AccessControlServiceOptions { get; }
 
