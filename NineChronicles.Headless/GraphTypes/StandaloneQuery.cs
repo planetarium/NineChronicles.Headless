@@ -43,13 +43,20 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     Name = "hash",
                     Description = "Offset block hash for query.",
+                },
+                new QueryArgument<LongGraphType>
+                {
+                    Name = "index",
+                    Description = "Offset block index for query."
                 }),
                 resolve: context =>
                 {
-                    BlockHash? blockHash = context.GetArgument<byte[]>("hash") switch
+                    BlockHash blockHash = (context.GetArgument<byte[]?>("hash"), context.GetArgument<long?>("index")) switch
                     {
-                        byte[] bytes => new BlockHash(bytes),
-                        null => standaloneContext.BlockChain?.Tip?.Hash,
+                        ({ } bytes, null) => new BlockHash(bytes),
+                        (null, { } index) => standaloneContext.BlockChain[index].Hash,
+                        (not null, not null) => throw new ArgumentException("Only one of 'hash' and 'index' must be given."),
+                        (null, null) => standaloneContext.BlockChain.Tip.Hash,
                     };
 
                     if (!(standaloneContext.BlockChain is { } chain))
@@ -59,11 +66,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return new StateContext(
                         chain.GetWorldState(blockHash),
-                        blockHash switch
-                        {
-                            BlockHash bh => chain[bh].Index,
-                            null => chain.Tip!.Index,
-                        },
+                        chain[blockHash].Index,
                         stateMemoryCache
                     );
                 }
@@ -73,6 +76,7 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "state",
                 arguments: new QueryArguments(
                     new QueryArgument<ByteStringType> { Name = "hash", Description = "The hash of the block used to fetch state from chain." },
+                    new QueryArgument<LongGraphType> { Name = "index", Description = "The index of the block used to fetch state from chain." },
                     new QueryArgument<NonNullGraphType<AddressType>> { Name = "accountAddress", Description = "The address of account to fetch from the chain." },
                     new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "The address of state to fetch from the account." }
                 ),
@@ -84,10 +88,14 @@ namespace NineChronicles.Headless.GraphTypes
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
                     }
 
-                    var blockHashByteArray = context.GetArgument<byte[]>("hash");
-                    var blockHash = blockHashByteArray is null
-                        ? blockChain.Tip.Hash
-                        : new BlockHash(blockHashByteArray);
+                    var blockHash = (context.GetArgument<byte[]?>("hash"), context.GetArgument<long?>("index")) switch
+                    {
+                        (not null, not null) => throw new ArgumentException(
+                            "Only one of 'hash' and 'index' must be given."),
+                        (null, { } index) => blockChain[index].Hash,
+                        ({ } bytes, null) => new BlockHash(bytes),
+                        (null, null) => blockChain.Tip.Hash,
+                    };
                     var accountAddress = context.GetArgument<Address>("accountAddress");
                     var address = context.GetArgument<Address>("address");
 
