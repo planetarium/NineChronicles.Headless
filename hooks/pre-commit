@@ -2,4 +2,7 @@
 
 dotnet format \
     --exclude Lib9c \
-    --exclude NineChronicles.RPC.Shared
+    --exclude NineChronicles.RPC.Shared \
+    -v=d \
+    --no-restore \
+    --verify-no-changes
