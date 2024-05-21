@@ -282,6 +282,7 @@ namespace NineChronicles.Headless
             standaloneContext.NineChroniclesNodeService = this;
             standaloneContext.BlockChain = Swarm.BlockChain;
             standaloneContext.Store = Store;
+            standaloneContext.StateStore = NodeService.StateStore;
             standaloneContext.Swarm = Swarm;
             standaloneContext.CurrencyFactory =
                 new CurrencyFactory(() => standaloneContext.BlockChain.GetWorldState(standaloneContext.BlockChain.Tip.Hash));

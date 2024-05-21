@@ -25,6 +25,8 @@ using Nekoyume.Module;
 using NineChronicles.Headless.GraphTypes.States;
 using static NineChronicles.Headless.NCActionUtils;
 using Transaction = Libplanet.Types.Tx.Transaction;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -69,6 +71,91 @@ namespace NineChronicles.Headless.GraphTypes
                         chain[blockHash].Index,
                         stateMemoryCache
                     );
+                }
+            );
+
+            Field<ListGraphType<RootStateDiffType>>(
+                name: "diffs",
+                arguments: new QueryArguments(
+                    new QueryArgument<LongGraphType>
+                    {
+                        Name = "baseIndex",
+                        Description = "The index of the block used to fetch state from chain."
+                    },
+                    new QueryArgument<LongGraphType>
+                    {
+                        Name = "changedIndex",
+                        Description = "The index of the block used to fetch state from chain."
+                    }
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!"
+                        );
+                    }
+
+                    var baseIndex = context.GetArgument<long?>("baseIndex");
+                    var changedIndex = context.GetArgument<long?>("changedIndex");
+
+                    long latestBlockIndex = blockChain.Tip.Index;
+                    var filledChangedIndex = baseIndex ?? latestBlockIndex;
+                    var filledBaseIndex = changedIndex ?? filledChangedIndex - 1;
+
+                    var baseBlockStateRootHash = blockChain[filledBaseIndex].StateRootHash.ToString();
+                    var changedBlockStateRootHash = blockChain[filledChangedIndex].StateRootHash.ToString();
+
+                    var blockInterval = filledChangedIndex - filledBaseIndex;
+
+                    if (blockInterval >= 10)
+                    {
+                        throw new ExecutionError(
+                            "Block interval should be under 10"
+                        );
+                    }
+
+                    var baseStateRootHash = HashDigest<SHA256>.FromString(baseBlockStateRootHash);
+                    var targetStateRootHash = HashDigest<SHA256>.FromString(
+                        changedBlockStateRootHash
+                    );
+
+                    var stateStore = standaloneContext.StateStore;
+                    var baseTrieModel = stateStore.GetStateRoot(baseStateRootHash);
+                    var targetTrieModel = stateStore.GetStateRoot(targetStateRootHash);
+
+                    var diffs = baseTrieModel
+                        .Diff(targetTrieModel)
+                        .Select(x =>
+                        {
+                            var baseSubTrieModel = stateStore.GetStateRoot(
+                                new HashDigest<SHA256>((Binary)x.SourceValue)
+                            );
+                            if (x.TargetValue is not null)
+                            {
+                                var targetSubTrieModel = stateStore.GetStateRoot(
+                                    new HashDigest<SHA256>((Binary)x.TargetValue)
+                                );
+                                var stateDiffs = baseSubTrieModel
+                                    .Diff(targetSubTrieModel)
+                                    .Select(diff => new StateDiffType.Value(
+                                        Encoding.Default.GetString(diff.Path.ByteArray.ToArray()),
+                                        diff.SourceValue,
+                                        diff.TargetValue
+                                    ))
+                                    .ToArray();
+                                return (x.Path, stateDiffs);
+                            }
+                            return (x.Path, Array.Empty<StateDiffType.Value>());
+                        })
+                        .Select(diff => new RootStateDiffType.Value(
+                            Encoding.Default.GetString(diff.Path.ByteArray.ToArray()),
+                            diff.Item2
+                        ))
+                        .ToArray();
+
+                    return diffs;
                 }
             );
 
