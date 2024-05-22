@@ -75,26 +75,23 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            Field<ListGraphType<RootStateDiffType>>(
+            Field<NonNullGraphType<ListGraphType<NonNullGraphType<DiffGraphType>>>>(
                 name: "diffs",
+                description: "This field allows you to query the diffs between two blocks." +
+                             " `baseIndex` is the reference block index, and changedIndex is the block index from which to check" +
+                             " what changes have occurred relative to `baseIndex`." +
+                             " Both indices must not be higher than the current block on the chain nor lower than the genesis block index (0)." +
+                             " The difference between the two blocks must be greater than zero for a valid comparison and less than ten for performance reasons.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<LongGraphType>>
                     {
                         Name = "baseIndex",
-                        Description = "The index of the base block used to fetch state from the chain. " +
-                                    "It should be less than or equal to the chain tip index, " +
-                                    "greater than or equal to the genesis block index (0), " +
-                                    "and less than changedIndex. The difference between baseIndex " +
-                                    "and changedIndex should not be greater than 10 and should not be zero."
+                        Description = "The index of the reference block from which the state is retrieved."
                     },
                     new QueryArgument<NonNullGraphType<LongGraphType>>
                     {
                         Name = "changedIndex",
-                        Description = "The index of the target block used to fetch state from the chain. " +
-                                    "It should be less than or equal to the chain tip index, " +
-                                    "greater than or equal to the genesis block index (0), " +
-                                    "and greater than baseIndex. The difference between baseIndex " +
-                                    "and changedIndex should not be greater than 10 and should not be zero."
+                        Description = "The index of the target block for comparison."
                     }
                 ),
                 resolve: context =>
@@ -129,35 +126,37 @@ namespace NineChronicles.Headless.GraphTypes
                     var baseTrieModel = stateStore.GetStateRoot(baseStateRootHash);
                     var targetTrieModel = stateStore.GetStateRoot(targetStateRootHash);
 
-                    var diffs = baseTrieModel
+                    IDiffType[] diffs = baseTrieModel
                         .Diff(targetTrieModel)
                         .Select(x =>
                         {
-                            var baseSubTrieModel = stateStore.GetStateRoot(
-                                new HashDigest<SHA256>((Binary)x.SourceValue)
-                            );
                             if (x.TargetValue is not null)
-                            {
-                                var targetSubTrieModel = stateStore.GetStateRoot(
-                                    new HashDigest<SHA256>((Binary)x.TargetValue)
-                                );
-                                var stateDiffs = baseSubTrieModel
+                            {                            
+                                var baseSubTrieModel = stateStore.GetStateRoot(new HashDigest<SHA256>((Binary)x.SourceValue));
+                                var targetSubTrieModel = stateStore.GetStateRoot(new HashDigest<SHA256>((Binary)x.TargetValue));
+                                var subDiff = baseSubTrieModel
                                     .Diff(targetSubTrieModel)
-                                    .Select(diff => new StateDiffType.Value(
-                                        Encoding.Default.GetString(diff.Path.ByteArray.ToArray()),
-                                        diff.SourceValue,
-                                        diff.TargetValue
-                                    ))
-                                    .ToArray();
-                                return (x.Path, stateDiffs);
+                                    .Select(diff => 
+                                    {
+                                        return new StateDiffType.Value(
+                                            Encoding.Default.GetString(diff.Path.ByteArray.ToArray()),
+                                            diff.SourceValue,
+                                            diff.TargetValue);
+                                    }).ToArray();
+                                return (IDiffType)new RootStateDiffType.Value(
+                                    Encoding.Default.GetString(x.Path.ByteArray.ToArray()),
+                                    subDiff
+                                );
                             }
-                            return (x.Path, Array.Empty<StateDiffType.Value>());
-                        })
-                        .Select(diff => new RootStateDiffType.Value(
-                            Encoding.Default.GetString(diff.Path.ByteArray.ToArray()),
-                            diff.Item2
-                        ))
-                        .ToArray();
+                            else
+                            {
+                                return new StateDiffType.Value(
+                                    Encoding.Default.GetString(x.Path.ByteArray.ToArray()),
+                                    x.SourceValue,
+                                    x.TargetValue
+                                );
+                            }
+                        }).ToArray();
 
                     return diffs;
                 }

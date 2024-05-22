@@ -7,7 +7,7 @@ namespace NineChronicles.Headless.GraphTypes.Diff;
 
 public class StateDiffType : ObjectGraphType<StateDiffType.Value>
 {
-    public class Value
+    public class Value : IDiffType
     {
         public string Path { get; }
         public IValue BaseState { get; }
@@ -33,8 +33,7 @@ public class StateDiffType : ObjectGraphType<StateDiffType.Value>
         Field<NonNullGraphType<StringGraphType>>(
             "BaseState",
             description: "The base state before changes.",
-            resolve: context =>
-                ByteUtil.Hex(new Codec().Encode(context.Source.BaseState))
+            resolve: context => ByteUtil.Hex(new Codec().Encode(context.Source.BaseState))
         );
 
         Field<StringGraphType>(

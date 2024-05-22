@@ -4,7 +4,7 @@ namespace NineChronicles.Headless.GraphTypes.Diff;
 
 public class RootStateDiffType : ObjectGraphType<RootStateDiffType.Value>
 {
-    public class Value
+    public class Value : IDiffType
     {
         public string Path { get; }
         public StateDiffType.Value[] Diffs { get; }
