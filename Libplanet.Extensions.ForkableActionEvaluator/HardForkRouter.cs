@@ -52,7 +52,7 @@ internal class HardForkRouter
         {
             throw new ArgumentOutOfRangeException(
                 nameof(pairs),
-                "The pairs must cover all range over blockchain. Its last element's start index wasn't 0.");
+                $"The pairs must cover all range over blockchain. Its last element's end index wasn't long.MaxValue({long.MaxValue}).");
         }
 
         if (pairs.Length == 1)
