@@ -81,18 +81,20 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<LongGraphType>>
                     {
                         Name = "baseIndex",
-                        Description = "The index of the base block used to fetch state from chain." +
-                                      "It should be less than or equal to the chain tip index" +
-                                      " and greater than or equal to the genesis block index(0)" +
-                                      " and less than the changedIndex."
+                        Description = "The index of the base block used to fetch state from the chain. " +
+                                    "It should be less than or equal to the chain tip index, " +
+                                    "greater than or equal to the genesis block index (0), " +
+                                    "and less than changedIndex. The difference between baseIndex " +
+                                    "and changedIndex should not be greater than 10 and should not be zero."
                     },
                     new QueryArgument<NonNullGraphType<LongGraphType>>
                     {
                         Name = "changedIndex",
-                        Description = "The index of the target block used to fetch state from chain." +
-                                      "It should be less than or equal to the chain tip index" +
-                                      " and greater than or equal to the genesis block index(0)." +
-                                      " and greater than the baseIndex."
+                        Description = "The index of the target block used to fetch state from the chain. " +
+                                    "It should be less than or equal to the chain tip index, " +
+                                    "greater than or equal to the genesis block index (0), " +
+                                    "and greater than baseIndex. The difference between baseIndex " +
+                                    "and changedIndex should not be greater than 10 and should not be zero."
                     }
                 ),
                 resolve: context =>
@@ -107,12 +109,11 @@ namespace NineChronicles.Headless.GraphTypes
                     var baseIndex = context.GetArgument<long>("baseIndex");
                     var changedIndex = context.GetArgument<long>("changedIndex");
 
-                    var blockInterval = changedIndex - baseIndex;
-
-                    if (blockInterval < 0 || blockInterval >= 10)
+                    var blockInterval = Math.Abs(changedIndex - baseIndex);
+                    if (blockInterval >= 10 || blockInterval == 0)
                     {
                         throw new ExecutionError(
-                            "Interval between baseIndex and changedIndex should be greater than or equal to 0 and less than 10."
+                            "Interval between baseIndex and changedIndex should not be greater than 10 or zero"
                         );
                     }
 
