@@ -131,12 +131,12 @@ namespace NineChronicles.Headless.GraphTypes
                         .Select(x =>
                         {
                             if (x.TargetValue is not null)
-                            {                            
+                            {
                                 var baseSubTrieModel = stateStore.GetStateRoot(new HashDigest<SHA256>((Binary)x.SourceValue));
                                 var targetSubTrieModel = stateStore.GetStateRoot(new HashDigest<SHA256>((Binary)x.TargetValue));
                                 var subDiff = baseSubTrieModel
                                     .Diff(targetSubTrieModel)
-                                    .Select(diff => 
+                                    .Select(diff =>
                                     {
                                         return new StateDiffType.Value(
                                             Encoding.Default.GetString(diff.Path.ByteArray.ToArray()),
