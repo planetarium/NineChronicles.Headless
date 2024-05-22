@@ -80,12 +80,18 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<LongGraphType>>
                     {
                         Name = "baseIndex",
-                        Description = "The index of the block used to fetch state from chain."
+                        Description = "The index of the base block used to fetch state from chain." +
+                                      "It should be less than or equal to the chain tip index" +
+                                      " and greater than or equal to the genesis block index(0)" +
+                                      " and less than the changedIndex."
                     },
                     new QueryArgument<NonNullGraphType<LongGraphType>>
                     {
                         Name = "changedIndex",
-                        Description = "The index of the block used to fetch state from chain."
+                        Description = "The index of the target block used to fetch state from chain." +
+                                      "It should be less than or equal to the chain tip index" +
+                                      " and greater than or equal to the genesis block index(0)." +
+                                      " and greater than the baseIndex."
                     }
                 ),
                 resolve: context =>
