@@ -25,7 +25,7 @@ public class RootStateDiffType : ObjectGraphType<RootStateDiffType.Value>
             description: "The path to the root state difference."
         );
 
-        Field<ListGraphType<StateDiffType>>(
+        Field<NonNullGraphType<ListGraphType<NonNullGraphType<StateDiffType>>>>(
             "Diffs",
             description: "List of state differences under this root."
         );

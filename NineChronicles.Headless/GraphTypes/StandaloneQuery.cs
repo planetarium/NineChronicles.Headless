@@ -77,12 +77,12 @@ namespace NineChronicles.Headless.GraphTypes
             Field<ListGraphType<RootStateDiffType>>(
                 name: "diffs",
                 arguments: new QueryArguments(
-                    new QueryArgument<LongGraphType>
+                    new QueryArgument<NonNullGraphType<LongGraphType>>
                     {
                         Name = "baseIndex",
                         Description = "The index of the block used to fetch state from chain."
                     },
-                    new QueryArgument<LongGraphType>
+                    new QueryArgument<NonNullGraphType<LongGraphType>>
                     {
                         Name = "changedIndex",
                         Description = "The index of the block used to fetch state from chain."
@@ -97,24 +97,20 @@ namespace NineChronicles.Headless.GraphTypes
                         );
                     }
 
-                    var baseIndex = context.GetArgument<long?>("baseIndex");
-                    var changedIndex = context.GetArgument<long?>("changedIndex");
+                    var baseIndex = context.GetArgument<long>("baseIndex");
+                    var changedIndex = context.GetArgument<long>("changedIndex");
 
-                    long latestBlockIndex = blockChain.Tip.Index;
-                    var filledChangedIndex = baseIndex ?? latestBlockIndex;
-                    var filledBaseIndex = changedIndex ?? filledChangedIndex - 1;
+                    var blockInterval = changedIndex - baseIndex;
 
-                    var baseBlockStateRootHash = blockChain[filledBaseIndex].StateRootHash.ToString();
-                    var changedBlockStateRootHash = blockChain[filledChangedIndex].StateRootHash.ToString();
-
-                    var blockInterval = filledChangedIndex - filledBaseIndex;
-
-                    if (blockInterval >= 10)
+                    if (blockInterval >= 10 && blockInterval > 0)
                     {
                         throw new ExecutionError(
-                            "Block interval should be under 10"
+                            "Interval between baseIndex and changedIndex should under 10"
                         );
                     }
+
+                    var baseBlockStateRootHash = blockChain[baseIndex].StateRootHash.ToString();
+                    var changedBlockStateRootHash = blockChain[changedIndex].StateRootHash.ToString();
 
                     var baseStateRootHash = HashDigest<SHA256>.FromString(baseBlockStateRootHash);
                     var targetStateRootHash = HashDigest<SHA256>.FromString(

@@ -10,10 +10,10 @@ public class StateDiffType : ObjectGraphType<StateDiffType.Value>
     public class Value
     {
         public string Path { get; }
-        public IValue? BaseState { get; }
+        public IValue BaseState { get; }
         public IValue? ChangedState { get; }
 
-        public Value(string path, IValue? baseState, IValue? changedState)
+        public Value(string path, IValue baseState, IValue? changedState)
         {
             Path = path;
             BaseState = baseState;
@@ -32,13 +32,11 @@ public class StateDiffType : ObjectGraphType<StateDiffType.Value>
             description: "The path of the state difference."
         );
 
-        Field<StringGraphType>(
+        Field<NonNullGraphType<StringGraphType>>(
             "BaseState",
             description: "The base state before changes.",
             resolve: context =>
-                context.Source.BaseState is null
-                    ? null
-                    : ByteUtil.Hex(new Codec().Encode(context.Source.BaseState))
+                ByteUtil.Hex(new Codec().Encode(context.Source.BaseState))
         );
 
         Field<StringGraphType>(
