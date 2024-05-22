@@ -102,10 +102,10 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var blockInterval = changedIndex - baseIndex;
 
-                    if (blockInterval >= 10 && blockInterval > 0)
+                    if (blockInterval < 0 || blockInterval >= 10)
                     {
                         throw new ExecutionError(
-                            "Interval between baseIndex and changedIndex should under 10"
+                            "Interval between baseIndex and changedIndex should be greater than or equal to 0 and less than 10."
                         );
                     }
 
