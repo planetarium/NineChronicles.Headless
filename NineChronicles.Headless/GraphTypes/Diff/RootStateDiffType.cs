@@ -1,6 +1,6 @@
 using GraphQL.Types;
 
-namespace NineChronicles.Headless.GraphTypes.States;
+namespace NineChronicles.Headless.GraphTypes.Diff;
 
 public class RootStateDiffType : ObjectGraphType<RootStateDiffType.Value>
 {

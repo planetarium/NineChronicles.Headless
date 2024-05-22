@@ -3,7 +3,7 @@ using Bencodex.Types;
 using GraphQL.Types;
 using Libplanet.Common;
 
-namespace NineChronicles.Headless.GraphTypes.States;
+namespace NineChronicles.Headless.GraphTypes.Diff;
 
 public class StateDiffType : ObjectGraphType<StateDiffType.Value>
 {
@@ -19,8 +19,6 @@ public class StateDiffType : ObjectGraphType<StateDiffType.Value>
             BaseState = baseState;
             ChangedState = changedState;
         }
-
-        public bool IsAddressRelated(string address) => Path.Contains(address);
     }
 
     public StateDiffType()
