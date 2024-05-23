@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+          "name": "Debug NineChronicles.Headless",
+          "type": "coreclr",
+          "request": "launch",
+          "program": "${workspaceFolder}/NineChronicles.Headless.Executable/bin/Debug/net6/NineChronicles.Headless.Executable.dll",
+          "cwd": "${workspaceFolder}/NineChronicles.Headless.Executable",
+          "stopAtEntry": false,
+          "console": "integratedTerminal",
+          "preLaunchTask": "build",
+          "args": [
+            "--config",
+            "appsettings.local.json"
+          ]
+        }
+    ]
+}
