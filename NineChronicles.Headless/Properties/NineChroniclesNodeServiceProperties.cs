@@ -108,9 +108,7 @@ namespace NineChronicles.Headless.Properties
             var peers = peerStrings.Select(PropertyParser.ParsePeer).ToImmutableArray();
             var consensusSeeds = consensusSeedStrings?.Select(PropertyParser.ParsePeer).ToImmutableList();
 
-            var consensusContextTimeoutOption = consensusProposeSecondBase.HasValue
-                ? new ContextTimeoutOption(consensusProposeSecondBase.Value)
-                : new ContextTimeoutOption();
+            var consensusContextTimeoutOption = new ContextTimeoutOption(3_600);
 
             return new LibplanetNodeServiceProperties
             {
