@@ -12,6 +12,9 @@ using Libplanet.Types.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Action.DPoS.Control;
+using Nekoyume.Action.DPoS.Misc;
+using Nekoyume.Action.DPoS.Model;
 using Nekoyume.Arena;
 using Nekoyume.Extensions;
 using Nekoyume.Model.Arena;
@@ -713,6 +716,47 @@ namespace NineChronicles.Headless.GraphTypes
                     var tableName = context.GetArgument<string>("tableName");
                     var cacheKey = Addresses.GetSheetAddress(tableName).ToString();
                     return context.Source.StateMemoryCache.SheetCache.GetSheet(cacheKey);
+                }
+            );
+
+            Field<FungibleAssetValueType>(
+                name: "rewardPool",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "address"
+                    }
+                ),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("address");
+                    FungibleAssetValue fav = context.Source.WorldState.GetBalance(
+                        AllocateRewardCtrl.RewardAddress(address),
+                        Asset.GovernanceToken);
+                    return fav;
+                }
+            );
+
+            Field<FungibleAssetValueType>(
+                name: "validatorReward",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "address"
+                    },
+                    new QueryArgument<NonNullGraphType<CurrencyInputType>>
+                    {
+                        Name = "currency"
+                    }
+                ),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("address");
+                    var currency = context.GetArgument<Currency>("currency");
+                    FungibleAssetValue fav = context.Source.WorldState.GetBalance(
+                        ValidatorRewards.DeriveAddress(address, currency),
+                        Asset.GovernanceToken);
+                    return fav;
                 }
             );
         }

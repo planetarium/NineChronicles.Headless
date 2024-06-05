@@ -9,6 +9,12 @@ using Nekoyume.Model.State;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
+using Lib9c;
+using Libplanet.Types.Assets;
+using Nekoyume.Action.DPoS;
+using Nekoyume.Action.DPoS.Misc;
+using Nekoyume.Action.DPoS.Model;
 using Nekoyume.Module;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -82,7 +88,11 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new ActionBase[] { action };
-                        Transaction tx = blockChain.MakeTransaction(privateKey, actions);
+                        Transaction tx = blockChain.MakeTransaction(
+                            privateKey,
+                            actions,
+                            Currencies.Mead * 1,
+                            1L);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -427,6 +437,243 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new ActionBase[] { action };
+                        Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+
+            Field<NonNullGraphType<TxIdType>>("promoteValidator",
+                description: "Promote validator.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "validator",
+                        Description = "Validator public key to promote."
+                    },
+                    new QueryArgument<NonNullGraphType<BigIntGraphType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount of NCG to stake."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        string validatorString = context.GetArgument<string>("validator");
+                        PublicKey validator = PublicKey.FromHex(validatorString);
+                        BigInteger amount = context.GetArgument<BigInteger>("amount");
+                        var fav = new FungibleAssetValue(Asset.GovernanceToken, amount, 0);
+
+                        var action = new PromoteValidator(validator, fav);
+
+                        var actions = new[] { action };
+                        Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+
+            Field<NonNullGraphType<TxIdType>>("delegate",
+                description: "A action for DPoS that delegate specified amount of tokens " +
+                             "to a given validator.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "validator",
+                        Description = "Validator address to delegate."
+                    },
+                    new QueryArgument<NonNullGraphType<BigIntGraphType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount of governance token to delegate."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        Address validator = context.GetArgument<Address>("validator");
+                        BigInteger amount = context.GetArgument<BigInteger>("amount");
+                        var fav = new FungibleAssetValue(Asset.GovernanceToken, amount, 0);
+
+                        var action = new Nekoyume.Action.DPoS.Delegate(validator, fav);
+
+                        var actions = new[] { action };
+                        Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+
+            Field<NonNullGraphType<TxIdType>>("undelegate",
+                description: "A action for DPoS that cancels delegate " +
+                             "specified amount of shared tokens to a given validator.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "validator",
+                        Description = "Validator address to undelegate."
+                    },
+                    new QueryArgument<NonNullGraphType<BigIntGraphType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount of share to undelegate."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        Address validator = context.GetArgument<Address>("validator");
+                        BigInteger amount = context.GetArgument<BigInteger>("amount");
+                        var fav = new FungibleAssetValue(Asset.Share, amount, 0);
+
+                        var action = new Undelegate(validator, fav);
+
+                        var actions = new[] { action };
+                        Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+
+            Field<NonNullGraphType<TxIdType>>("cancelUndelegation",
+                description: "A action for DPoS that cancel undelegate " +
+                             "specified amount of tokens to a given validator.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "validator",
+                        Description = "Validator address to undelegate."
+                    },
+                    new QueryArgument<NonNullGraphType<BigIntGraphType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount of consensus token to undelegate."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        Address validator = context.GetArgument<Address>("validator");
+                        BigInteger amount = context.GetArgument<BigInteger>("amount");
+                        var fav = new FungibleAssetValue(Asset.ConsensusToken, amount, 0);
+
+                        var action = new CancelUndelegation(validator, fav);
+
+                        var actions = new[] { action };
+                        Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+
+            Field<NonNullGraphType<TxIdType>>("withdrawDelegator",
+                description: "Withdraw reward for delegator.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "address",
+                        Description = "Address to withdraw reward."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        Address address = context.GetArgument<Address>("address");
+                        var action = new WithdrawDelegator(Validator.DeriveAddress(address));
+
+                        var actions = new[] { action };
+                        Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+
+            Field<NonNullGraphType<TxIdType>>("withdrawValidator",
+                description: "Withdraw reward for validator.",
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+                        
+                        var action = new WithdrawValidator();
+                        var actions = new[] { action };
                         Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
                         return tx.Id;
                     }
