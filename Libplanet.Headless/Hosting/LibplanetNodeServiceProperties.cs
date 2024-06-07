@@ -5,6 +5,7 @@ using Libplanet.Action;
 using Libplanet.Types.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Net;
+using Libplanet.Net.Consensus;
 
 namespace Libplanet.Headless.Hosting
 {
@@ -66,6 +67,8 @@ namespace Libplanet.Headless.Hosting
         public TimeSpan MessageTimeout { get; set; } = TimeSpan.FromSeconds(60);
 
         public TimeSpan TipTimeout { get; set; } = TimeSpan.FromSeconds(60);
+
+        public ContextTimeoutOption ContextTimeoutOption { get; set; }
 
         public int DemandBuffer { get; set; } = 1150;
 

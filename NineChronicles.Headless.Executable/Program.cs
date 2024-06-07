@@ -205,6 +205,9 @@ namespace NineChronicles.Headless.Executable
             [Option("consensus-target-block-interval",
                 Description = "A target block interval used in consensus context. The unit is millisecond.")]
             double? consensusTargetBlockIntervalMilliseconds = null,
+            [Option("consensus-propose-second-base",
+                Description = "A propose second base for consensus context timeout. The unit is second.")]
+            int? consensusProposeSecondBase = null,
             [Option("maximum-transaction-per-block",
                 Description = "Maximum transactions allowed in a block. null by default.")]
             int? maxTransactionPerBlock = null,
@@ -219,6 +222,8 @@ namespace NineChronicles.Headless.Executable
             int? arenaParticipantsSyncInterval = null,
             [Option(Description = "arena participants list sync enable")]
             bool arenaParticipantsSync = true,
+            [Option(Description = "[DANGER] Turn on RemoteKeyValueService to debug.")]
+            bool remoteKeyValueService = false,
             [Ignore] CancellationToken? cancellationToken = null
         )
         {
@@ -304,8 +309,8 @@ namespace NineChronicles.Headless.Executable
                 logActionRenders, confirmations,
                 txLifeTime, messageTimeout, tipTimeout, demandBuffer, skipPreload,
                 minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers,
-                consensusPort, consensusPrivateKeyString, consensusSeedStrings, consensusTargetBlockIntervalMilliseconds,
-                maxTransactionPerBlock, sentryDsn, sentryTraceSampleRate, arenaParticipantsSyncInterval
+                consensusPort, consensusPrivateKeyString, consensusSeedStrings, consensusTargetBlockIntervalMilliseconds, consensusProposeSecondBase,
+                maxTransactionPerBlock, sentryDsn, sentryTraceSampleRate, arenaParticipantsSyncInterval, remoteKeyValueService
             );
 
 #if SENTRY || ! DEBUG
@@ -363,11 +368,6 @@ namespace NineChronicles.Headless.Executable
                 );
             }
 
-            if (headlessConfig.StateServiceManagerService is { } stateServiceManagerServiceOptions)
-            {
-                await DownloadStateServices(stateServiceManagerServiceOptions);
-            }
-
             try
             {
                 IHostBuilder hostBuilder = Host.CreateDefaultBuilder();
@@ -406,6 +406,7 @@ namespace NineChronicles.Headless.Executable
                         consensusPrivateKeyString: headlessConfig.ConsensusPrivateKeyString,
                         consensusSeedStrings: headlessConfig.ConsensusSeedStrings,
                         consensusTargetBlockIntervalMilliseconds: headlessConfig.ConsensusTargetBlockIntervalMilliseconds,
+                        consensusProposeSecondBase: headlessConfig.ConsensusProposeSecondBase,
                         maximumPollPeers: headlessConfig.MaximumPollPeers,
                         actionEvaluatorConfiguration: actionEvaluatorConfiguration
                     );
@@ -460,7 +461,7 @@ namespace NineChronicles.Headless.Executable
                     : new PrivateKey(ByteUtil.ParseHex(headlessConfig.MinerPrivateKeyString));
                 TimeSpan minerBlockInterval = TimeSpan.FromMilliseconds(headlessConfig.MinerBlockIntervalMilliseconds);
                 var nineChroniclesProperties =
-                    new NineChroniclesNodeServiceProperties(actionLoader, headlessConfig.StateServiceManagerService, headlessConfig.AccessControlService)
+                    new NineChroniclesNodeServiceProperties(actionLoader, headlessConfig.AccessControlService)
                     {
                         MinerPrivateKey = minerPrivateKey,
                         Libplanet = properties,
@@ -575,6 +576,7 @@ namespace NineChronicles.Headless.Executable
                         SecretToken = secretToken,
                         NoCors = headlessConfig.NoCors,
                         UseMagicOnion = headlessConfig.RpcServer,
+                        UseRemoteKeyValueService = headlessConfig.RemoteKeyValueService,
                         HttpOptions = headlessConfig.RpcServer && headlessConfig.RpcHttpServer == true
                             ? new GraphQLNodeServiceProperties.MagicOnionHttpOptions(
                                 $"{headlessConfig.RpcListenHost}:{headlessConfig.RpcListenPort}")
@@ -613,37 +615,6 @@ namespace NineChronicles.Headless.Executable
 
         static void ConfigureSentryOptions(SentryOptions o)
         {
-        }
-
-        private static Task DownloadStateServices(StateServiceManagerServiceOptions options)
-        {
-            Log.Information("Downloading StateServices...");
-
-            if (Directory.Exists(options.StateServicesDownloadPath))
-            {
-                Directory.Delete(options.StateServicesDownloadPath, true);
-            }
-
-            Directory.CreateDirectory(options.StateServicesDownloadPath);
-
-            async Task DownloadStateService(string url)
-            {
-                var hashed =
-                    Convert.ToHexString(HashDigest<SHA256>.DeriveFrom(Encoding.UTF8.GetBytes(url)).ToByteArray());
-                var logger = Log.ForContext("StateService", hashed);
-                using var httpClient = new HttpClient();
-                var downloadPath = Path.Join(options.StateServicesDownloadPath, hashed + ".zip");
-                var extractPath = Path.Join(options.StateServicesDownloadPath, hashed);
-                logger.Debug("Downloading...");
-                await File.WriteAllBytesAsync(downloadPath, await httpClient.GetByteArrayAsync(url));
-                logger.Debug("Finished downloading.");
-                logger.Debug("Extracting...");
-                ZipFile.ExtractToDirectory(downloadPath, extractPath);
-                logger.Debug("Finished extracting.");
-            }
-
-            return Task.WhenAll(options.StateServices.Select(stateService => DownloadStateService(stateService.Path)))
-                .ContinueWith(_ => Log.Information("Finished downloading StateServices..."));
         }
     }
 }

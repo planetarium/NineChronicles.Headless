@@ -43,6 +43,8 @@ namespace Libplanet.Headless.Hosting
 
         public readonly IStateStore StateStore;
 
+        public readonly IKeyValueStore StateKeyValueStore;
+
         public readonly BlockChain BlockChain;
 
         public readonly Swarm Swarm;
@@ -174,6 +176,8 @@ namespace Libplanet.Headless.Hosting
                 );
             }
 
+            StateKeyValueStore = keyValueStore;
+
             _obsoletedChainIds = chainIds.Where(chainId => chainId != BlockChain.Id).ToList();
 
             _exceptionHandlerAction = exceptionHandlerAction;
@@ -235,6 +239,7 @@ namespace Libplanet.Headless.Hosting
                     ConsensusPrivateKey = Properties.ConsensusPrivateKey,
                     ConsensusWorkers = 500,
                     TargetBlockInterval = TimeSpan.FromMilliseconds(Properties.ConsensusTargetBlockIntervalMilliseconds ?? 7000),
+                    ContextTimeoutOptions = Properties.ContextTimeoutOption,
                 };
             }
 

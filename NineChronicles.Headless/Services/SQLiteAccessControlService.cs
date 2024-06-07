@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using Libplanet.Crypto;
 using Nekoyume.Blockchain;
@@ -34,7 +35,7 @@ namespace NineChronicles.Headless.Services
             }
         }
 
-        public int? GetTxQuota(Address address)
+        public Task<int?> GetTxQuotaAsync(Address address)
         {
             try
             {
@@ -49,7 +50,7 @@ namespace NineChronicles.Headless.Services
 
                 if (queryResult != null && queryResult != DBNull.Value)
                 {
-                    return Convert.ToInt32(queryResult);
+                    return Task.FromResult<int?>(Convert.ToInt32(queryResult));
                 }
             }
             catch (Exception ex)
@@ -57,7 +58,7 @@ namespace NineChronicles.Headless.Services
                 Log.Error(ex, "An error occurred while getting transaction quota.");
             }
 
-            return null;
+            return Task.FromResult<int?>(null);
         }
 
         private void ExecuteNonQuery(SqliteConnection connection, string commandText)

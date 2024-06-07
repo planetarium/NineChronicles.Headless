@@ -7,6 +7,7 @@ using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
 using Libplanet.Headless;
+using Libplanet.Net.Consensus;
 using Nekoyume;
 
 namespace NineChronicles.Headless.Properties
@@ -14,10 +15,9 @@ namespace NineChronicles.Headless.Properties
     public class NineChroniclesNodeServiceProperties
     {
         public NineChroniclesNodeServiceProperties(
-            IActionLoader actionLoader, StateServiceManagerServiceOptions? stateServiceManagerServiceOptions, AccessControlServiceOptions? accessControlServiceOptions)
+            IActionLoader actionLoader, AccessControlServiceOptions? accessControlServiceOptions)
         {
             ActionLoader = actionLoader;
-            StateServiceManagerService = stateServiceManagerServiceOptions;
             AccessControlServiceOptions = accessControlServiceOptions;
         }
 
@@ -57,8 +57,6 @@ namespace NineChronicles.Headless.Properties
 
         public IActionLoader ActionLoader { get; init; }
 
-        public StateServiceManagerServiceOptions? StateServiceManagerService { get; }
-
         public AccessControlServiceOptions? AccessControlServiceOptions { get; }
 
         public static LibplanetNodeServiceProperties
@@ -93,6 +91,7 @@ namespace NineChronicles.Headless.Properties
                 string? consensusPrivateKeyString = null,
                 string[]? consensusSeedStrings = null,
                 double? consensusTargetBlockIntervalMilliseconds = null,
+                int? consensusProposeSecondBase = null,
                 IActionEvaluatorConfiguration? actionEvaluatorConfiguration = null)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
@@ -108,6 +107,10 @@ namespace NineChronicles.Headless.Properties
             var iceServers = iceServerStrings.Select(PropertyParser.ParseIceServer).ToImmutableArray();
             var peers = peerStrings.Select(PropertyParser.ParsePeer).ToImmutableArray();
             var consensusSeeds = consensusSeedStrings?.Select(PropertyParser.ParsePeer).ToImmutableList();
+
+            var consensusContextTimeoutOption = consensusProposeSecondBase.HasValue
+                ? new ContextTimeoutOption(consensusProposeSecondBase.Value)
+                : new ContextTimeoutOption();
 
             return new LibplanetNodeServiceProperties
             {
@@ -144,6 +147,7 @@ namespace NineChronicles.Headless.Properties
                 ConsensusSeeds = consensusSeeds,
                 ConsensusPrivateKey = consensusPrivateKey,
                 ConsensusTargetBlockIntervalMilliseconds = consensusTargetBlockIntervalMilliseconds,
+                ContextTimeoutOption = consensusContextTimeoutOption,
                 ActionEvaluatorConfiguration = actionEvaluatorConfiguration ?? new DefaultActionEvaluatorConfiguration(),
             };
         }

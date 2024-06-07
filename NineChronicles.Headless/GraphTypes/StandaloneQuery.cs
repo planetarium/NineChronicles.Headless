@@ -23,6 +23,9 @@ using Nekoyume.TableData;
 using Nekoyume.Model;
 using Nekoyume.Module;
 using NineChronicles.Headless.GraphTypes.States;
+using NineChronicles.Headless.GraphTypes.Diff;
+using System.Security.Cryptography;
+using System.Text;
 using static NineChronicles.Headless.NCActionUtils;
 using Transaction = Libplanet.Types.Tx.Transaction;
 
@@ -43,13 +46,20 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     Name = "hash",
                     Description = "Offset block hash for query.",
+                },
+                new QueryArgument<LongGraphType>
+                {
+                    Name = "index",
+                    Description = "Offset block index for query."
                 }),
                 resolve: context =>
                 {
-                    BlockHash? blockHash = context.GetArgument<byte[]>("hash") switch
+                    BlockHash blockHash = (context.GetArgument<byte[]?>("hash"), context.GetArgument<long?>("index")) switch
                     {
-                        byte[] bytes => new BlockHash(bytes),
-                        null => standaloneContext.BlockChain?.Tip?.Hash,
+                        ({ } bytes, null) => new BlockHash(bytes),
+                        (null, { } index) => standaloneContext.BlockChain[index].Hash,
+                        (not null, not null) => throw new ArgumentException("Only one of 'hash' and 'index' must be given."),
+                        (null, null) => standaloneContext.BlockChain.Tip.Hash,
                     };
 
                     if (!(standaloneContext.BlockChain is { } chain))
@@ -59,13 +69,96 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return new StateContext(
                         chain.GetWorldState(blockHash),
-                        blockHash switch
-                        {
-                            BlockHash bh => chain[bh].Index,
-                            null => chain.Tip!.Index,
-                        },
+                        chain[blockHash].Index,
                         stateMemoryCache
                     );
+                }
+            );
+
+            Field<NonNullGraphType<ListGraphType<NonNullGraphType<DiffGraphType>>>>(
+                name: "diffs",
+                description: "This field allows you to query the diffs between two blocks." +
+                             " `baseIndex` is the reference block index, and changedIndex is the block index from which to check" +
+                             " what changes have occurred relative to `baseIndex`." +
+                             " Both indices must not be higher than the current block on the chain nor lower than the genesis block index (0)." +
+                             " The difference between the two blocks must be greater than zero for a valid comparison and less than ten for performance reasons.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<LongGraphType>>
+                    {
+                        Name = "baseIndex",
+                        Description = "The index of the reference block from which the state is retrieved."
+                    },
+                    new QueryArgument<NonNullGraphType<LongGraphType>>
+                    {
+                        Name = "changedIndex",
+                        Description = "The index of the target block for comparison."
+                    }
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!"
+                        );
+                    }
+
+                    var baseIndex = context.GetArgument<long>("baseIndex");
+                    var changedIndex = context.GetArgument<long>("changedIndex");
+
+                    var blockInterval = Math.Abs(changedIndex - baseIndex);
+                    if (blockInterval >= 10 || blockInterval == 0)
+                    {
+                        throw new ExecutionError(
+                            "Interval between baseIndex and changedIndex should not be greater than 10 or zero"
+                        );
+                    }
+
+                    var baseBlockStateRootHash = blockChain[baseIndex].StateRootHash.ToString();
+                    var changedBlockStateRootHash = blockChain[changedIndex].StateRootHash.ToString();
+
+                    var baseStateRootHash = HashDigest<SHA256>.FromString(baseBlockStateRootHash);
+                    var targetStateRootHash = HashDigest<SHA256>.FromString(
+                        changedBlockStateRootHash
+                    );
+
+                    var stateStore = standaloneContext.StateStore;
+                    var baseTrieModel = stateStore.GetStateRoot(baseStateRootHash);
+                    var targetTrieModel = stateStore.GetStateRoot(targetStateRootHash);
+
+                    IDiffType[] diffs = baseTrieModel
+                        .Diff(targetTrieModel)
+                        .Select(x =>
+                        {
+                            if (x.TargetValue is not null)
+                            {
+                                var baseSubTrieModel = stateStore.GetStateRoot(new HashDigest<SHA256>((Binary)x.SourceValue));
+                                var targetSubTrieModel = stateStore.GetStateRoot(new HashDigest<SHA256>((Binary)x.TargetValue));
+                                var subDiff = baseSubTrieModel
+                                    .Diff(targetSubTrieModel)
+                                    .Select(diff =>
+                                    {
+                                        return new StateDiffType.Value(
+                                            Encoding.Default.GetString(diff.Path.ByteArray.ToArray()),
+                                            diff.SourceValue,
+                                            diff.TargetValue);
+                                    }).ToArray();
+                                return (IDiffType)new RootStateDiffType.Value(
+                                    Encoding.Default.GetString(x.Path.ByteArray.ToArray()),
+                                    subDiff
+                                );
+                            }
+                            else
+                            {
+                                return new StateDiffType.Value(
+                                    Encoding.Default.GetString(x.Path.ByteArray.ToArray()),
+                                    x.SourceValue,
+                                    x.TargetValue
+                                );
+                            }
+                        }).ToArray();
+
+                    return diffs;
                 }
             );
 
@@ -73,6 +166,7 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "state",
                 arguments: new QueryArguments(
                     new QueryArgument<ByteStringType> { Name = "hash", Description = "The hash of the block used to fetch state from chain." },
+                    new QueryArgument<LongGraphType> { Name = "index", Description = "The index of the block used to fetch state from chain." },
                     new QueryArgument<NonNullGraphType<AddressType>> { Name = "accountAddress", Description = "The address of account to fetch from the chain." },
                     new QueryArgument<NonNullGraphType<AddressType>> { Name = "address", Description = "The address of state to fetch from the account." }
                 ),
@@ -84,10 +178,14 @@ namespace NineChronicles.Headless.GraphTypes
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
                     }
 
-                    var blockHashByteArray = context.GetArgument<byte[]>("hash");
-                    var blockHash = blockHashByteArray is null
-                        ? blockChain.Tip.Hash
-                        : new BlockHash(blockHashByteArray);
+                    var blockHash = (context.GetArgument<byte[]?>("hash"), context.GetArgument<long?>("index")) switch
+                    {
+                        (not null, not null) => throw new ArgumentException(
+                            "Only one of 'hash' and 'index' must be given."),
+                        (null, { } index) => blockChain[index].Hash,
+                        ({ } bytes, null) => new BlockHash(bytes),
+                        (null, null) => blockChain.Tip.Hash,
+                    };
                     var accountAddress = context.GetArgument<Address>("accountAddress");
                     var address = context.GetArgument<Address>("address");
 

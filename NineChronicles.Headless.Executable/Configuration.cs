@@ -52,6 +52,9 @@ namespace NineChronicles.Headless.Executable
         public bool? RpcRemoteServer { get; set; }
         public bool? RpcHttpServer { get; set; }
 
+        // RemoteKeyValueService
+        public bool RemoteKeyValueService { get; set; } = false;
+
         // GraphQL Server
         public bool GraphQLServer { get; set; }
         public string? GraphQLHost { get; set; }
@@ -84,14 +87,13 @@ namespace NineChronicles.Headless.Executable
         public string[]? ConsensusSeedStrings { get; set; }
         public ushort? ConsensusPort { get; set; }
         public double? ConsensusTargetBlockIntervalMilliseconds { get; set; }
+        public int? ConsensusProposeSecondBase { get; set; }
 
         public int? MaxTransactionPerBlock { get; set; }
 
         public string SentryDsn { get; set; } = "";
 
         public double SentryTraceSampleRate { get; set; } = 0.01;
-
-        public StateServiceManagerServiceOptions? StateServiceManagerService { get; set; }
 
         public AccessControlServiceOptions? AccessControlService { get; set; }
 
@@ -143,10 +145,12 @@ namespace NineChronicles.Headless.Executable
             string? consensusPrivateKeyString,
             string[]? consensusSeedStrings,
             double? consensusTargetBlockIntervalMilliseconds,
+            int? consensusProposeSecondBase,
             int? maxTransactionPerBlock,
             string? sentryDsn,
             double? sentryTraceSampleRate,
-            int? arenaParticipantsSyncInterval
+            int? arenaParticipantsSyncInterval,
+            bool? remoteKeyValueService
         )
         {
             AppProtocolVersionString = appProtocolVersionString ?? AppProtocolVersionString;
@@ -195,10 +199,12 @@ namespace NineChronicles.Headless.Executable
             ConsensusSeedStrings = consensusSeedStrings ?? ConsensusSeedStrings;
             ConsensusPrivateKeyString = consensusPrivateKeyString ?? ConsensusPrivateKeyString;
             ConsensusTargetBlockIntervalMilliseconds = consensusTargetBlockIntervalMilliseconds ?? ConsensusTargetBlockIntervalMilliseconds;
+            ConsensusProposeSecondBase = consensusProposeSecondBase ?? ConsensusProposeSecondBase;
             MaxTransactionPerBlock = maxTransactionPerBlock ?? MaxTransactionPerBlock;
             SentryDsn = sentryDsn ?? SentryDsn;
             SentryTraceSampleRate = sentryTraceSampleRate ?? SentryTraceSampleRate;
             ArenaParticipantsSyncInterval = arenaParticipantsSyncInterval ?? ArenaParticipantsSyncInterval;
+            RemoteKeyValueService = remoteKeyValueService ?? RemoteKeyValueService;
         }
     }
 }

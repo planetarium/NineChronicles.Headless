@@ -27,7 +27,7 @@ namespace NineChronicles.Headless.AccessControlCenter.Controllers
         [HttpGet("entries/{address}")]
         public ActionResult<int?> GetTxQuota(string address)
         {
-            var result = _accessControlService.GetTxQuota(new Address(address));
+            var result = _accessControlService.GetTxQuotaAsync(new Address(address)).Result;
 
             return result != null ? result : NotFound();
         }

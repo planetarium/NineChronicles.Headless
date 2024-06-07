@@ -18,6 +18,7 @@ namespace NineChronicles.Headless
         private BlockChain? _blockChain;
         private IKeyStore? _keyStore;
         private IStore? _store;
+        private IStateStore? _stateStore;
         private Swarm? _swarm;
 
         public BlockChain BlockChain
@@ -62,6 +63,13 @@ namespace NineChronicles.Headless
             get => _store ??
                 throw new InvalidOperationException($"{nameof(Store)} property is not set yet.");
             internal set => _store = value;
+        }
+
+        public IStateStore StateStore
+        {
+            get => _stateStore ??
+                throw new InvalidOperationException($"{nameof(StateStore)} property is not set yet.");
+            internal set => _stateStore = value;
         }
 
         public Swarm Swarm
