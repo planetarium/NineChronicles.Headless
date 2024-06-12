@@ -120,7 +120,9 @@ namespace NineChronicles.Headless.Executable.Commands
             IStagePolicy stagePolicy = new VolatileStagePolicy();
             IBlockPolicy blockPolicy = new BlockPolicySource().GetPolicy();
             IStore store = storeType.CreateStore(storePath);
-            var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
+            var statesPath = Path.Combine(storePath, "states");
+            IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(statesPath);
+            var stateStore = new TrieStateStore(stateKeyValueStore);
             if (!(store.GetCanonicalChainId() is { } chainId))
             {
                 throw new CommandExitedException($"There is no canonical chain: {storePath}", -1);
@@ -217,6 +219,7 @@ namespace NineChronicles.Headless.Executable.Commands
             }
 
             store.Dispose();
+            stateStore.Dispose();
         }
 
         [Command(Description = "Truncate the chain from the tip by the input value (in blocks)")]
