@@ -50,6 +50,7 @@ public partial class ReplayCommand
                         stateRootHash
                     }
                     stateRootHash
+                    protocolVersion
                 }
             }}
         }
@@ -90,6 +91,7 @@ public partial class ReplayCommand
         public string? PreEvaluationHash { get; set; }
         public BlockType? PreviousBlock { get; set; }
         public string? StateRootHash { get; set; }
+        public int? ProtocolVersion { get; set; }
     }
 
     private sealed class TransactionQueryType

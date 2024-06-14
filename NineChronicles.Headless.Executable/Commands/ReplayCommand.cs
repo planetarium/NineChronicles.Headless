@@ -388,7 +388,12 @@ namespace NineChronicles.Headless.Executable.Commands
             var previousBlockHashStateRootHash = block?.PreviousBlock?.StateRootHash;
             var preEvaluationHashValue = block?.PreEvaluationHash;
             var minerValue = block?.Miner;
-            if (previousBlockHashValue is null || preEvaluationHashValue is null || minerValue is null || previousBlockHashStateRootHash is null)
+            var protocolVersion = block?.ProtocolVersion;
+            if (previousBlockHashValue is null
+                || preEvaluationHashValue is null
+                || minerValue is null
+                || previousBlockHashStateRootHash is null
+                || protocolVersion is null)
             {
                 throw new CommandExitedException("Failed to get block from query", -1);
             }
@@ -428,7 +433,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var actionEvaluations = EvaluateActions(
                 preEvaluationHash: HashDigest<SHA256>.FromString(preEvaluationHashValue),
                 blockIndex: transactionResult.BlockIndex ?? 0,
-                blockProtocolVersion: 0,
+                blockProtocolVersion: (int)protocolVersion,
                 txid: transaction.Id,
                 previousStates: previousStates,
                 miner: miner,
