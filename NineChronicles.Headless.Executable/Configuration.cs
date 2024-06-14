@@ -99,6 +99,8 @@ namespace NineChronicles.Headless.Executable
 
         public int ArenaParticipantsSyncInterval { get; set; } = 1000;
 
+        public string RedisConnectionString { get; set; } = "";
+
         public void Overwrite(
             string? appProtocolVersionString,
             string[]? trustedAppProtocolVersionSignerStrings,
@@ -150,7 +152,8 @@ namespace NineChronicles.Headless.Executable
             string? sentryDsn,
             double? sentryTraceSampleRate,
             int? arenaParticipantsSyncInterval,
-            bool? remoteKeyValueService
+            bool? remoteKeyValueService,
+            string? redisConnectionString
         )
         {
             AppProtocolVersionString = appProtocolVersionString ?? AppProtocolVersionString;
@@ -205,6 +208,7 @@ namespace NineChronicles.Headless.Executable
             SentryTraceSampleRate = sentryTraceSampleRate ?? SentryTraceSampleRate;
             ArenaParticipantsSyncInterval = arenaParticipantsSyncInterval ?? ArenaParticipantsSyncInterval;
             RemoteKeyValueService = remoteKeyValueService ?? RemoteKeyValueService;
+            RedisConnectionString = redisConnectionString ?? RedisConnectionString;
         }
     }
 }

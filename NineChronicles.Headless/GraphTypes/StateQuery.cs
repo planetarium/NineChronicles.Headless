@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL;
@@ -29,6 +30,7 @@ using NineChronicles.Headless.GraphTypes.States.Models;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
 using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
 using NineChronicles.Headless.GraphTypes.States.Models.Table;
+using StackExchange.Redis;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -36,9 +38,12 @@ namespace NineChronicles.Headless.GraphTypes
     {
         private readonly Codec _codec = new Codec();
 
-        public StateQuery()
+        private readonly IDatabase Database;
+
+        public StateQuery(IDatabase database)
         {
             Name = "StateQuery";
+            Database = database;
 
             AvatarStateType.AvatarStateContext? GetAvatarState(StateContext context, Address address)
             {
@@ -679,10 +684,10 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         playerScore = (Integer)scores[1];
                     }
-                    if (context.Source.StateMemoryCache.ArenaParticipantsCache.TryGetValue(cacheKey,
-                            out var cachedResult))
+
+                    if (Database.StringGet(cacheKey) is { } cachedResult)
                     {
-                        result = (cachedResult as List<ArenaParticipant>)!;
+                        result = JsonSerializer.Deserialize<List<ArenaParticipant>>(cachedResult.ToString())!;
                         foreach (var arenaParticipant in result)
                         {
                             var (win, lose, _) = ArenaHelper.GetScores(playerScore, arenaParticipant.Score);

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -22,7 +21,6 @@ using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.GraphTypes.States;
-using NineChronicles.Headless.Tests.Common;
 using Xunit;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 
