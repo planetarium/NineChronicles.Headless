@@ -127,6 +127,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ProposerPrivateKey,
                 lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
             BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
+            AppendEmptyBlock(GenesisValidators);
 
             var encodedActivationKey = activationKey.Encode();
             var queryResult = await ExecuteQueryAsync(
@@ -143,7 +144,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.True(result);
 
             Address userAddress = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!.Address;
-            IValue? state = BlockChain.GetWorldState().GetLegacyState(userAddress.Derive(ActivationKey.DeriveKey));
+            IValue? state = BlockChain.GetNextWorldState().GetLegacyState(userAddress.Derive(ActivationKey.DeriveKey));
             Assert.True((Bencodex.Types.Boolean)state);
         }
 
@@ -156,7 +157,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             NineChroniclesNodeService service = StandaloneContextFx.NineChroniclesNodeService!;
             Currency goldCurrency = new GoldCurrencyState(
-                (Dictionary)BlockChain.GetWorldState().GetLegacyState(GoldCurrencyState.Address)
+                (Dictionary)BlockChain.GetNextWorldState().GetLegacyState(GoldCurrencyState.Address)
             ).Currency;
 
             Address senderAddress = service.MinerPrivateKey!.Address;
@@ -173,7 +174,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             // 10 + 10 (mining rewards)
             Assert.Equal(
                 20 * goldCurrency,
-                BlockChain.GetWorldState().GetBalance(senderAddress, goldCurrency)
+                BlockChain.GetNextWorldState().GetBalance(senderAddress, goldCurrency)
             );
 
             var recipientKey = new PrivateKey();
@@ -227,13 +228,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 // 10 + 10 - 17.5(transfer)
                 Assert.Equal(
                     FungibleAssetValue.Parse(goldCurrency, "2.5"),
-                    BlockChain.GetWorldState().GetBalance(senderAddress, goldCurrency)
+                    BlockChain.GetNextWorldState().GetBalance(senderAddress, goldCurrency)
                 );
 
                 // 0 + 17.5(transfer) + 10(mining reward)
                 Assert.Equal(
                     FungibleAssetValue.Parse(goldCurrency, "27.5"),
-                    BlockChain.GetWorldState().GetBalance(recipient, goldCurrency)
+                    BlockChain.GetNextWorldState().GetBalance(recipient, goldCurrency)
                 );
             }
         }
@@ -243,7 +244,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             NineChroniclesNodeService service = StandaloneContextFx.NineChroniclesNodeService!;
             Currency goldCurrency = new GoldCurrencyState(
-                (Dictionary)BlockChain.GetWorldState().GetLegacyState(GoldCurrencyState.Address)
+                (Dictionary)BlockChain.GetNextWorldState().GetLegacyState(GoldCurrencyState.Address)
             ).Currency;
 
             Address senderAddress = service.MinerPrivateKey!.Address;
@@ -261,7 +262,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             // 10 + 10 (mining rewards)
             Assert.Equal(
                 20 * goldCurrency,
-                BlockChain.GetWorldState().GetBalance(senderAddress, goldCurrency)
+                BlockChain.GetNextWorldState().GetBalance(senderAddress, goldCurrency)
             );
 
             var recipientKey = new PrivateKey();
@@ -288,13 +289,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             // 10 + 10 - 17.5(transfer)
             Assert.Equal(
                 FungibleAssetValue.Parse(goldCurrency, "2.5"),
-                BlockChain.GetWorldState().GetBalance(senderAddress, goldCurrency)
+                BlockChain.GetNextWorldState().GetBalance(senderAddress, goldCurrency)
             );
 
             // 0 + 17.5(transfer) + 10(mining reward)
             Assert.Equal(
                 FungibleAssetValue.Parse(goldCurrency, "27.5"),
-                BlockChain.GetWorldState().GetBalance(recipient, goldCurrency)
+                BlockChain.GetNextWorldState().GetBalance(recipient, goldCurrency)
             );
         }
 
@@ -858,6 +859,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ProposerPrivateKey,
                 lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
             BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
+            AppendEmptyBlock(GenesisValidators);
             var encodedActivationKey = activationKey.Encode();
             var actionCommand = new ActionCommand(new StandardConsole());
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
@@ -879,7 +881,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var result = (bool)data["stageTx"];
             Assert.True(result);
 
-            IValue? state = BlockChain.GetWorldState().GetLegacyState(privateKey.Address.Derive(ActivationKey.DeriveKey));
+            IValue? state = BlockChain.GetNextWorldState().GetLegacyState(privateKey.Address.Derive(ActivationKey.DeriveKey));
             Assert.True((Bencodex.Types.Boolean)state);
         }
 
@@ -919,12 +921,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             IImmutableSet<Address> activatedAccounts,
             RankingState0? rankingState = null)
         {
-            var actionEvaluator = new ActionEvaluator(
-                _ => ServiceBuilder.BlockPolicy.BlockAction,
-                new TrieStateStore(new MemoryKeyValueStore()),
-                new NCActionLoader());
             return BlockChain.ProposeGenesisBlock(
-                actionEvaluator,
                 transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(0,
                     AdminPrivateKey, null, new ActionBase[]
                     {

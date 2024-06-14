@@ -15,13 +15,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 {
     public class AddressQueryTest
     {
-        private const string MinerPrivateKeyHex = "b8ce43967d7270348906c3b30efd41c30ab834ce07a36ee8ac5fd52cb7a3f579";
-        private const string NcgMinterAddress = "0x055D75489A163a5Ee9D2744e52dae1F598CA1817";
+        private const string NcgMinterAddress = "0x1c54b2F83D26E2db2D93dE4539c301d8aE32E69d";
         private readonly StandaloneContext _standaloneContext;
 
         public AddressQueryTest()
         {
-            var minerPrivateKey = new PrivateKey(MinerPrivateKeyHex);
             var initializeStates = new InitializeStates(
                     rankingState: new RankingState0(),
                     shopState: new ShopState(),
@@ -35,13 +33,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 #pragma warning disable CS0618
                     // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
                     goldCurrencyState:
-                    new GoldCurrencyState(Currency.Legacy("NCG", 2, minerPrivateKey.Address)),
+                    new GoldCurrencyState(Currency.Legacy("NCG", 2, MinerPrivateKey.Address)),
 #pragma warning restore CS0618
                     goldDistributions: Array.Empty<GoldDistribution>(),
                     tableSheets: new Dictionary<string, string>(),
                     pendingActivationStates: new PendingActivationState[] { }
                 );
-            _standaloneContext = CreateStandaloneContext(initializeStates, minerPrivateKey);
+            _standaloneContext = CreateStandaloneContext(initializeStates);
         }
 
         [Theory]

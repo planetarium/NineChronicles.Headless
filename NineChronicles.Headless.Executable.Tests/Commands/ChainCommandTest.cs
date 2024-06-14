@@ -57,11 +57,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         [InlineData(StoreType.RocksDb)]
         public void Tip(StoreType storeType)
         {
-            var actionEvaluator = new ActionEvaluator(
-                _ => new BlockPolicy().BlockAction,
-                new TrieStateStore(new MemoryKeyValueStore()),
-                new NCActionLoader());
-            Block genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
+            Block genesisBlock = BlockChain.ProposeGenesisBlock();
             IStore store = storeType.CreateStore(_storePath);
             Guid chainId = Guid.NewGuid();
             store.SetCanonicalChainId(chainId);
@@ -96,7 +92,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 stateStore,
                 new NCActionLoader());
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
-                actionEvaluator,
                 transactions: new IAction[]
                     {
                         new Initialize(
@@ -157,7 +152,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 stateStore,
                 new NCActionLoader());
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
-                actionEvaluator,
                 transactions: new IAction[]
                     {
                         new Initialize(

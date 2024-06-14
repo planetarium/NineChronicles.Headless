@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Store;
 using Libplanet.Types.Blocks;
@@ -47,6 +49,9 @@ public class AnonymousStore : IStore
     public Action<BlockCommit> PutBlockCommit { get; set; }
     public Action<BlockHash> DeleteBlockCommit { get; set; }
     public Func<IEnumerable<BlockHash>> GetBlockCommitHashes { get; set; }
+    public Func<BlockHash, HashDigest<SHA256>?> GetNextStateRootHash { get; set; }
+    public Action<BlockHash, HashDigest<SHA256>> PutNextStateRootHash { get; set; }
+    public Action<BlockHash> DeleteNextStateRootHash { get; set; }
 #pragma warning restore CS8618
 
     void IDisposable.Dispose()
@@ -236,5 +241,20 @@ public class AnonymousStore : IStore
     IEnumerable<BlockHash> IStore.GetBlockCommitHashes()
     {
         return GetBlockCommitHashes();
+    }
+
+    HashDigest<SHA256>? IStore.GetNextStateRootHash(BlockHash blockHash)
+    {
+        return GetNextStateRootHash(blockHash);
+    }
+
+    void IStore.PutNextStateRootHash(BlockHash blockHash, HashDigest<SHA256> nextStateRootHash)
+    {
+        PutNextStateRootHash(blockHash, nextStateRootHash);
+    }
+
+    void IStore.DeleteNextStateRootHash(BlockHash blockHash)
+    {
+        DeleteNextStateRootHash(blockHash);
     }
 }
