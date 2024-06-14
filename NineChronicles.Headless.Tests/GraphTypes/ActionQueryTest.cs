@@ -44,7 +44,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             _nonce = new byte[16];
             new Random().NextBytes(_nonce);
             (_activationKey, PendingActivationState pending) = ActivationKey.Create(_activationCodeSeed, _nonce);
-            var minerPrivateKey = new PrivateKey();
             var initializeStates = new InitializeStates(
                 rankingState: new RankingState0(),
                 shopState: new ShopState(),
@@ -57,13 +56,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 activatedAccountsState: new ActivatedAccountsState(),
 #pragma warning disable CS0618
                 // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
-                goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, minerPrivateKey.Address)),
+                goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, MinerPrivateKey.Address)),
 #pragma warning restore CS0618
                 goldDistributions: Array.Empty<GoldDistribution>(),
                 tableSheets: new Dictionary<string, string>(),
                 pendingActivationStates: new[] { pending }
             );
-            _standaloneContext = CreateStandaloneContext(initializeStates, minerPrivateKey);
+            _standaloneContext = CreateStandaloneContext(initializeStates);
         }
 
         [Theory]

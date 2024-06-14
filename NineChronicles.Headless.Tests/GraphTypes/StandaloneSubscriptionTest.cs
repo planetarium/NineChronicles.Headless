@@ -133,12 +133,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var actionEvaluator = new ActionEvaluator(
-                _ => null,
-                new TrieStateStore(new MemoryKeyValueStore()),
-                new SingleActionLoader(typeof(EmptyAction)));
             var genesisBlock = BlockChain.ProposeGenesisBlock(
-                actionEvaluator,
                 transactions: new IAction[]
                     {
                         new Initialize(
