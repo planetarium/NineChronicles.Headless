@@ -322,11 +322,10 @@ public class ArenaParticipantsWorker : BackgroundService
 
         var avatarAddrList = participants.AvatarAddresses;
         var avatarAddrAndScoresWithRank = AvatarAddrAndScoresWithRank(avatarAddrList, currentRoundData, worldState);
-        var sheetCache = _cache.SheetCache;
-        var runeListSheet = sheetCache.GetSheet<RuneListSheet>(worldState);
-        var costumeStatSheet = sheetCache.GetSheet<CostumeStatSheet>(worldState);
-        var characterSheet = sheetCache.GetSheet<CharacterSheet>(worldState);
-        var runeOptionSheet = sheetCache.GetSheet<RuneOptionSheet>(worldState);
+        var runeListSheet = worldState.GetSheet<RuneListSheet>();
+        var costumeStatSheet = worldState.GetSheet<CostumeStatSheet>();
+        var characterSheet = worldState.GetSheet<CharacterSheet>();
+        var runeOptionSheet = worldState.GetSheet<RuneOptionSheet>();
         var result = GetArenaParticipants(worldState, avatarAddrList, avatarAddrAndScoresWithRank, runeListSheet, costumeStatSheet, characterSheet, runeOptionSheet);
         _cache.ArenaParticipantsCache.Set(cacheKey, result, TimeSpan.FromHours(1));
         sw.Stop();
