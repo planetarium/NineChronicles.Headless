@@ -193,14 +193,21 @@ public class ArenaParticipantsWorker : BackgroundService
     /// <param name="worldState">The world state from which to retrieve the arena participants.</param>
     /// <param name="avatarAddrList">The list of avatar addresses to filter the matching participants.</param>
     /// <param name="avatarAddrAndScoresWithRank">The list of avatar addresses with their scores and ranks.</param>
+    /// <param name="runeListSheet"></param>
+    /// <param name="costumeStatSheet"></param>
+    /// <param name="characterSheet"></param>
+    /// <param name="runeOptionSheet"></param>
     /// <returns>A list of arena participants.</returns>
-    public static List<ArenaParticipant> GetArenaParticipants(IWorldState worldState, List<Address> avatarAddrList, List<(Address avatarAddr, int score, int rank)> avatarAddrAndScoresWithRank)
+    public static List<ArenaParticipant> GetArenaParticipants(
+        IWorldState worldState,
+        List<Address> avatarAddrList,
+        List<(Address avatarAddr, int score, int rank)> avatarAddrAndScoresWithRank,
+        RuneListSheet runeListSheet,
+        CostumeStatSheet costumeStatSheet,
+        CharacterSheet characterSheet,
+        RuneOptionSheet runeOptionSheet
+    )
     {
-        var runeListSheet = worldState.GetSheet<RuneListSheet>();
-        var costumeSheet = worldState.GetSheet<CostumeStatSheet>();
-        var characterSheet = worldState.GetSheet<CharacterSheet>();
-        var runeOptionSheet = worldState.GetSheet<RuneOptionSheet>();
-        var runeIds = runeListSheet.Values.Select(x => x.Id).ToList();
         var row = characterSheet[GameConfig.DefaultAvatarCharacterId];
         CollectionSheet collectionSheet = new CollectionSheet();
         var collectionStates = worldState.GetCollectionStates(avatarAddrList);
@@ -218,7 +225,7 @@ public class ArenaParticipantsWorker : BackgroundService
         {
             var (avatarAddr, score, rank) = tuple;
             var runeStates = worldState.GetRuneState(avatarAddr, out _);
-            var avatar = worldState.GetAvatarState(avatarAddr);
+            var avatar = worldState.GetAvatarState(avatarAddr, getWorldInformation: false, getQuestList: false);
             var itemSlotState =
                 worldState.GetLegacyState(ItemSlotState.DeriveAddress(avatarAddr, BattleType.Arena)) is
                     List itemSlotList
@@ -265,7 +272,7 @@ public class ArenaParticipantsWorker : BackgroundService
                 }
             }
 
-            var cp = CPHelper.TotalCP(equipments, costumes, runeOptions, avatar.level, row, costumeSheet, collectionModifiers,
+            var cp = CPHelper.TotalCP(equipments, costumes, runeOptions, avatar.level, row, costumeStatSheet, collectionModifiers,
                 RuneHelper.CalculateRuneLevelBonus(runeStates, runeListSheet, worldState.GetSheet<RuneLevelBonusSheet>())
             );
             var portraitId = StateQuery.GetPortraitId(equipments, costumes);
@@ -315,7 +322,12 @@ public class ArenaParticipantsWorker : BackgroundService
 
         var avatarAddrList = participants.AvatarAddresses;
         var avatarAddrAndScoresWithRank = AvatarAddrAndScoresWithRank(avatarAddrList, currentRoundData, worldState);
-        var result = GetArenaParticipants(worldState, avatarAddrList, avatarAddrAndScoresWithRank);
+        var sheetCache = _cache.SheetCache;
+        var runeListSheet = sheetCache.GetSheet<RuneListSheet>(worldState);
+        var costumeStatSheet = sheetCache.GetSheet<CostumeStatSheet>(worldState);
+        var characterSheet = sheetCache.GetSheet<CharacterSheet>(worldState);
+        var runeOptionSheet = sheetCache.GetSheet<RuneOptionSheet>(worldState);
+        var result = GetArenaParticipants(worldState, avatarAddrList, avatarAddrAndScoresWithRank, runeListSheet, costumeStatSheet, characterSheet, runeOptionSheet);
         _cache.ArenaParticipantsCache.Set(cacheKey, result, TimeSpan.FromHours(1));
         sw.Stop();
         _logger.Information("[ArenaParticipantsWorker]Set Arena Cache[{CacheKey}]: {Elapsed}", cacheKey, sw.Elapsed);

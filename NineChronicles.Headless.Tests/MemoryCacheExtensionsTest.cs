@@ -2,10 +2,13 @@ using System;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
+using Libplanet.Action.State;
+using Libplanet.Mocks;
 using MessagePack;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Nekoyume;
+using Nekoyume.Module;
 using Nekoyume.TableData;
 using Xunit;
 
@@ -35,5 +38,24 @@ public class MemoryCacheExtensionsTest
         Assert.Equal(csv, cache.GetSheet(cacheKey));
         await Task.Delay(100);
         Assert.False(cache.TryGetValue(cacheKey, out byte[] _));
+    }
+
+    [Fact]
+    public void GetSheet_With_Type()
+    {
+        var cache = new MemoryCache(new OptionsWrapper<MemoryCacheOptions>(new MemoryCacheOptions
+        {
+            SizeLimit = null
+        }));
+
+        var sheets = TableSheetsImporter.ImportSheets();
+        var tableName = nameof(ItemRequirementSheet);
+        var csv = sheets[tableName];
+        var sheetAddress = Addresses.GetSheetAddress(tableName);
+        var value = (Text)csv;
+        var state = (IWorld)new World(MockWorldState.CreateModern());
+        state = state.SetLegacyState(sheetAddress, value);
+        var cachedSheet = cache.GetSheet<ItemRequirementSheet>(state);
+        Assert.Equal(value, cachedSheet.Serialize());
     }
 }
