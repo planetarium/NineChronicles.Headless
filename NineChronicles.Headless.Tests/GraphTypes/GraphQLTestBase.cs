@@ -35,6 +35,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet.Types.Tx;
+using StackExchange.Redis;
 using Xunit.Abstractions;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
@@ -124,6 +125,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             services.AddSingleton(ncService);
             services.AddSingleton(ncService.Store);
             services.AddSingleton<StateMemoryCache>();
+            var options = ConfigurationOptions.Parse("127.0.0.1:6379");
+            var redis = ConnectionMultiplexer.Connect(options);
+            var db = redis.GetDatabase();
+            services.AddSingleton(db);
             ServiceProvider serviceProvider = services.BuildServiceProvider();
             Schema = new StandaloneSchema(serviceProvider);
 
