@@ -25,6 +25,7 @@ using Nekoyume.Action.Loader;
 using Nekoyume.Model.State;
 using Nekoyume.Module;
 using NineChronicles.Headless.Utils;
+using StackExchange.Redis;
 
 namespace NineChronicles.Headless.Tests
 {
@@ -61,6 +62,11 @@ namespace NineChronicles.Headless.Tests
 
             services.AddLibplanetExplorer();
             services.AddSingleton<StateMemoryCache>();
+
+            var options = ConfigurationOptions.Parse("127.0.0.1:6379");
+            var redis = ConnectionMultiplexer.Connect(options);
+            var db = redis.GetDatabase();
+            services.AddSingleton(db);
 
             var serviceProvider = services.BuildServiceProvider();
             return ExecuteQueryAsync<TObjectGraphType>(

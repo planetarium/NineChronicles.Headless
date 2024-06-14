@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet.Action.State;
 using Libplanet.Crypto;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
 using Nekoyume;
 using Nekoyume.Battle;
@@ -20,7 +20,9 @@ using Nekoyume.Module;
 using Nekoyume.TableData;
 using Nekoyume.TableData.Rune;
 using NineChronicles.Headless.GraphTypes;
+using NRedisStack.RedisStackCommands;
 using Serilog;
+using StackExchange.Redis;
 
 namespace NineChronicles.Headless;
 
@@ -28,15 +30,15 @@ public class ArenaParticipantsWorker : BackgroundService
 {
     private ILogger _logger;
 
-    private StateMemoryCache _cache;
+    private IDatabase _db;
 
     private StandaloneContext _context;
 
     private int _interval;
 
-    public ArenaParticipantsWorker(StateMemoryCache memoryCache, StandaloneContext context, int interval)
+    public ArenaParticipantsWorker(StandaloneContext context, int interval, IDatabase database)
     {
-        _cache = memoryCache;
+        _db = database;
         _context = context;
         _logger = Log.Logger.ForContext<ArenaParticipantsWorker>();
         _interval = interval;
@@ -308,7 +310,7 @@ public class ArenaParticipantsWorker : BackgroundService
         var cacheKey = $"{currentRoundData.ChampionshipId}_{currentRoundData.Round}";
         if (participants is null)
         {
-            _cache.ArenaParticipantsCache.Set(cacheKey, new List<ArenaParticipant>());
+            _db.StringSet(cacheKey, JsonSerializer.Serialize(new List<ArenaParticipant>()));
             _logger.Information("[ArenaParticipantsWorker] participants({CacheKey}) is null. set empty list", cacheKey);
             return;
         }
@@ -316,7 +318,7 @@ public class ArenaParticipantsWorker : BackgroundService
         var avatarAddrList = participants.AvatarAddresses;
         var avatarAddrAndScoresWithRank = AvatarAddrAndScoresWithRank(avatarAddrList, currentRoundData, worldState);
         var result = GetArenaParticipants(worldState, avatarAddrList, avatarAddrAndScoresWithRank);
-        _cache.ArenaParticipantsCache.Set(cacheKey, result, TimeSpan.FromHours(1));
+        _db.StringSet(cacheKey, JsonSerializer.Serialize(result), TimeSpan.FromHours(1));
         sw.Stop();
         _logger.Information("[ArenaParticipantsWorker]Set Arena Cache[{CacheKey}]: {Elapsed}", cacheKey, sw.Elapsed);
     }

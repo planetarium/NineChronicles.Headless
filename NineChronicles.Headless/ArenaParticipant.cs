@@ -5,15 +5,19 @@ namespace NineChronicles.Headless;
 
 public class ArenaParticipant
 {
-    public readonly Address AvatarAddr;
-    public readonly int Score;
-    public readonly int Rank;
-    public int WinScore;
-    public int LoseScore;
-    public readonly int Cp;
-    public readonly int PortraitId;
-    public readonly string NameWithHash;
-    public readonly int Level;
+    public Address AvatarAddr { get; set; }
+    public int Score { get; set; }
+    public int Rank { get; set; }
+    public int WinScore { get; set; }
+    public int LoseScore { get; set; }
+    public int Cp { get; set; }
+    public int PortraitId { get; set; }
+    public string NameWithHash { get; set; } = "";
+    public int Level { get; set; }
+
+    public ArenaParticipant()
+    {
+    }
 
     public ArenaParticipant(
         Address avatarAddr,
