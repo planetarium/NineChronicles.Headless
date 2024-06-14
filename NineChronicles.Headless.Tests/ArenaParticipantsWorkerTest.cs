@@ -5,6 +5,8 @@ using Lib9c.Tests;
 using Libplanet.Action.State;
 using Libplanet.Crypto;
 using Libplanet.Mocks;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.Arena;
@@ -13,6 +15,7 @@ using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.Module;
 using Nekoyume.TableData;
+using Nekoyume.TableData.Rune;
 using Xunit;
 using Random = Libplanet.Extensions.ActionEvaluatorCommonComponents.Random;
 
@@ -183,7 +186,11 @@ public class ArenaParticipantsWorkerTest
             state = state.SetLegacyState(Addresses.GetSheetAddress(key), s.Serialize());
         }
         var avatarAddrAndScoresWithRank = ArenaParticipantsWorker.AvatarAddrAndScoresWithRank(participants.AvatarAddresses, currentRoundData, state);
-        var actual = ArenaParticipantsWorker.GetArenaParticipants(state, participants.AvatarAddresses, avatarAddrAndScoresWithRank);
+        var cache = new MemoryCache(new OptionsWrapper<MemoryCacheOptions>(new MemoryCacheOptions
+        {
+            SizeLimit = null
+        }));
+        var actual = ArenaParticipantsWorker.GetArenaParticipants(state, participants.AvatarAddresses, avatarAddrAndScoresWithRank, cache.GetSheet<RuneListSheet>(state), cache.GetSheet<CostumeStatSheet>(state), cache.GetSheet<CharacterSheet>(state), cache.GetSheet<RuneOptionSheet>(state));
         Assert.Equal(2, actual.Count);
         var first = actual.First();
         Assert.Equal(avatarAddress, first.AvatarAddr);
