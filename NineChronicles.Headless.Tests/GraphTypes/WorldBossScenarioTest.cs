@@ -65,7 +65,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 [2] = false,
             };
             _stateContext = new StateContext(GetMockState(), 1L, new StateMemoryCache());
-            var minerPrivateKey = new PrivateKey();
             var initializeStates = new InitializeStates(
                 rankingState: new RankingState0(),
                 shopState: new ShopState(),
@@ -79,13 +78,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 #pragma warning disable CS0618
                 // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
                 goldCurrencyState:
-                new GoldCurrencyState(Currency.Legacy("NCG", 2, minerPrivateKey.Address)),
+                new GoldCurrencyState(Currency.Legacy("NCG", 2, MinerPrivateKey.Address)),
 #pragma warning restore CS0618
                 goldDistributions: Array.Empty<GoldDistribution>(),
                 tableSheets: new Dictionary<string, string>(),
                 pendingActivationStates: new PendingActivationState[] { }
             );
-            _standaloneContext = CreateStandaloneContext(initializeStates, minerPrivateKey);
+            _standaloneContext = CreateStandaloneContext(initializeStates);
         }
 
         [Theory]
