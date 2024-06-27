@@ -218,7 +218,7 @@ public class ArenaParticipantsWorker : BackgroundService
         {
             var (avatarAddr, score, rank) = tuple;
             var runeStates = worldState.GetRuneState(avatarAddr, out _);
-            var avatar = worldState.GetAvatarState(avatarAddr);
+            var avatar = worldState.GetAvatarState(avatarAddr, getWorldInformation: false, getQuestList: false);
             var itemSlotState =
                 worldState.GetLegacyState(ItemSlotState.DeriveAddress(avatarAddr, BattleType.Arena)) is
                     List itemSlotList
