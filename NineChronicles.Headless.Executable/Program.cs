@@ -483,7 +483,7 @@ namespace NineChronicles.Headless.Executable
                     services.AddSingleton<ConcurrentDictionary<string, ITransaction>>();
                     services.AddOpenTelemetry()
                         .ConfigureResource(resource => resource.AddService(
-                                serviceName: Assembly.GetEntryAssembly()?.GetName().Name ?? "NineChronicles.Headless",
+                                serviceName: Environment.MachineName,
                                 serviceVersion: Assembly.GetEntryAssembly()?.GetName().Version?.ToString(),
                                 serviceInstanceId: Environment.MachineName
                             ).AddAttributes(new Dictionary<string, object>
@@ -501,7 +501,6 @@ namespace NineChronicles.Headless.Executable
                                 .AddSource("Libplanet.Blockchain.BlockChainStates")
                                 .AddAspNetCoreInstrumentation()
                                 .AddGrpcClientInstrumentation()
-                                .AddConsoleExporter()
                                 .AddProcessor(new Pyroscope.OpenTelemetry.PyroscopeSpanProcessor())
                                 .AddOtlpExporter(opt =>
                                 {
