@@ -903,14 +903,31 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
 
             var pk = new PrivateKey();
+            ActionBase patronPrepareAction = new PrepareRewardAssets
+            {
+                RewardPoolAddress = MeadConfig.PatronAddress,
+                Assets = new List<FungibleAssetValue>
+                {
+                    1 * Currencies.Mead,
+                },
+            };
+            var tx = Transaction.Create(0, pk, BlockChain.Genesis.Hash, new[] { patronPrepareAction.PlainValue });
+            var payload = ByteUtil.Hex(tx.Serialize());
+            var stageTxMutation = $"mutation {{ stageTransaction(payload: \"{payload}\") }}";
+            var stageTxResult = await ExecuteQueryAsync(stageTxMutation);
+            Assert.Null(stageTxResult.Errors);
+
+            var block = service.BlockChain.ProposeBlock(ProposerPrivateKey, null);
+            service.BlockChain.Append(block, GenerateBlockCommit(1, block.Hash, new List<PrivateKey>() { ProposerPrivateKey }));
+
             ActionBase action = new ApprovePledge
             {
                 PatronAddress = new PrivateKey().Address
             };
-            var tx = Transaction.Create(0, pk, BlockChain.Genesis.Hash, new[] { action.PlainValue });
-            var payload = ByteUtil.Hex(tx.Serialize());
-            var stageTxMutation = $"mutation {{ stageTransaction(payload: \"{payload}\") }}";
-            var stageTxResult = await ExecuteQueryAsync(stageTxMutation);
+            tx = Transaction.Create(0, pk, BlockChain.Genesis.Hash, new[] { action.PlainValue });
+            payload = ByteUtil.Hex(tx.Serialize());
+            stageTxMutation = $"mutation {{ stageTransaction(payload: \"{payload}\") }}";
+            stageTxResult = await ExecuteQueryAsync(stageTxMutation);
             var error = Assert.Single(stageTxResult.Errors!);
             Assert.Contains("gas", error.Message);
         }
