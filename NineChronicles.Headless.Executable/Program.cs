@@ -482,6 +482,7 @@ namespace NineChronicles.Headless.Executable
                         .WithMetrics(
                             builder => builder
                                 .AddMeter("NineChronicles")
+                                .AddMeter("MagicOnion.Server")
                                 .AddPrometheusExporter());
 
                     // worker
