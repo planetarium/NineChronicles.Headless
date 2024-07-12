@@ -501,7 +501,6 @@ namespace NineChronicles.Headless.Executable
                                 .AddSource("Libplanet.Blockchain.BlockChainStates")
                                 //.AddAspNetCoreInstrumentation()
                                 .AddGrpcClientInstrumentation()
-                                .AddConsoleExporter()
                                 .AddProcessor(new Pyroscope.OpenTelemetry.PyroscopeSpanProcessor())
                                 .AddOtlpExporter(opt =>
                                 {
