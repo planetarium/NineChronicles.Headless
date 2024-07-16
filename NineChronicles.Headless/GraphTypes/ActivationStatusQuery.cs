@@ -14,7 +14,7 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class ActivationStatusQuery : ObjectGraphType
     {
-        public ActivationStatusQuery(StandaloneContext standaloneContext)
+        public ActivationStatusQuery(INodeContext nodeContext, IBlockChainContext blockChainContext)
         {
             DeprecationReason = "Since NCIP-15, it doesn't care account activation.";
 
@@ -23,36 +23,19 @@ namespace NineChronicles.Headless.GraphTypes
                 deprecationReason: "Since NCIP-15, it doesn't care account activation.",
                 resolve: context =>
                 {
-                    var service = standaloneContext.NineChroniclesNodeService;
-
-                    if (service is null)
-                    {
-                        return false;
-                    }
-
                     try
                     {
-                        if (!(service.MinerPrivateKey is { } privateKey))
-                        {
-                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
-                        }
-
-                        if (!(service.Swarm?.BlockChain is { } blockChain))
-                        {
-                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
-                        }
-
-                        Address userAddress = privateKey.Address;
+                        Address userAddress = nodeContext.Address;
                         Address activatedAddress = userAddress.Derive(ActivationKey.DeriveKey);
 
-                        if (blockChain.GetWorldState().GetLegacyState(activatedAddress) is Bencodex.Types.Boolean)
+                        if (blockChainContext.GetWorldState().GetLegacyState(activatedAddress) is Bencodex.Types.Boolean)
                         {
                             return true;
                         }
 
                         // Preserve previous check code due to migration period.
                         // TODO: Remove this code after v100061+
-                        IValue state = blockChain.GetWorldState().GetLegacyState(ActivatedAccountsState.Address);
+                        IValue state = blockChainContext.GetWorldState().GetLegacyState(ActivatedAccountsState.Address);
 
                         if (state is Bencodex.Types.Dictionary asDict)
                         {
@@ -85,31 +68,19 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    var service = standaloneContext.NineChroniclesNodeService;
-
-                    if (service is null)
-                    {
-                        return false;
-                    }
-
                     try
                     {
-                        if (!(service.Swarm?.BlockChain is { } blockChain))
-                        {
-                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
-                        }
-
                         var userAddress = context.GetArgument<Address>("address");
                         Address activatedAddress = userAddress.Derive(ActivationKey.DeriveKey);
 
-                        if (blockChain.GetWorldState().GetLegacyState(activatedAddress) is Bencodex.Types.Boolean)
+                        if (blockChainContext.GetWorldState().GetLegacyState(activatedAddress) is Bencodex.Types.Boolean)
                         {
                             return true;
                         }
 
                         // backward for launcher E2E test.
                         // TODO: Remove this code after launcher E2E test fixed.
-                        IValue state = blockChain.GetWorldState().GetLegacyState(ActivatedAccountsState.Address);
+                        IValue state = blockChainContext.GetWorldState().GetLegacyState(ActivatedAccountsState.Address);
 
                         if (state is Bencodex.Types.Dictionary asDict)
                         {

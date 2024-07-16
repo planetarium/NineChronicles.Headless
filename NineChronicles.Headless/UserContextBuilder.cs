@@ -19,7 +19,7 @@ namespace NineChronicles.Headless
         {
             return new ValueTask<IDictionary<string, object?>>(new Dictionary<string, object?>
             {
-                [nameof(IBlockChainContext.Store)] = _standaloneContext.Store,
+                [nameof(Libplanet.Explorer.Interfaces.IBlockChainContext.Store)] = _standaloneContext.Store,
             }).AsTask();
         }
     }

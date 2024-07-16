@@ -65,7 +65,6 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 ActionBase action = type switch
                 {
-                    nameof(ActivateAccount) => new ActivateAccount(),
                     nameof(Stake) => new Stake(),
                     nameof(ClaimStakeReward) => new ClaimStakeReward(),
                     nameof(TransferAsset) => new TransferAsset(),

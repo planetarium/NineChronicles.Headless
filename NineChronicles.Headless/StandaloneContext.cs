@@ -1,19 +1,21 @@
 using System;
 using System.Collections.Concurrent;
 using System.Reactive.Subjects;
+using Libplanet.Action.State;
 using Libplanet.Crypto;
 using Libplanet.Blockchain;
 using Libplanet.KeyStore;
 using Libplanet.Net;
 using Libplanet.Headless;
 using Libplanet.Store;
+using Libplanet.Types.Blocks;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Utils;
 
 namespace NineChronicles.Headless
 {
-    public class StandaloneContext
+    public class StandaloneContext : IBlockChainContext, INodeContext
     {
         private BlockChain? _blockChain;
         private IKeyStore? _keyStore;
@@ -92,5 +94,43 @@ namespace NineChronicles.Headless
         internal TimeSpan MonsterCollectionStateInterval { get; set; } = TimeSpan.FromSeconds(30);
 
         internal TimeSpan MonsterCollectionStatusInterval { get; set; } = TimeSpan.FromSeconds(30);
+
+        public IWorldState GetWorldState(BlockHash blockHash)
+        {
+            return BlockChain.GetWorldState(blockHash);
+        }
+
+        public IWorldState GetWorldState(long blockIndex)
+        {
+            return BlockChain.GetWorldState(BlockChain[blockIndex].Hash);
+        }
+
+        public IWorldState GetWorldState()
+        {
+            return BlockChain.GetWorldState();
+        }
+
+        public Block GetBlock(long blockIndex)
+        {
+            return BlockChain[blockIndex];
+        }
+
+        public Block GetBlock(BlockHash blockHash)
+        {
+            return BlockChain[blockHash];
+        }
+
+        public Block GetTip()
+        {
+            return BlockChain.Tip;
+        }
+
+        public long GetNextTxNonce(Address address)
+        {
+            return BlockChain.GetNextTxNonce(address);
+        }
+
+        public Address Address =>
+            NineChroniclesNodeService?.MinerPrivateKey?.Address ?? throw new InvalidOperationException();
     }
 }

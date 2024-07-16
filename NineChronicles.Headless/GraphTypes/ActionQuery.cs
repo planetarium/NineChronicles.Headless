@@ -425,35 +425,6 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
             Field<NonNullGraphType<ByteStringType>>(
-                "activateAccount",
-                deprecationReason: "Since NCIP-15, it doesn't care account activation.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "activationCode",
-                        Description = "Activation code that you've get."
-                    }
-                ),
-                resolve: context =>
-                {
-                    var activationCode = context.GetArgument<string>("activationCode");
-                    var activationKey = ActivationKey.Decode(activationCode);
-                    if (standaloneContext.BlockChain!.GetWorldState().GetLegacyState(activationKey.PendingAddress) is Dictionary dictionary)
-                    {
-                        var pending = new PendingActivationState(dictionary);
-                        var action = activationKey.CreateActivateAccount(pending.Nonce);
-                        if (pending.Verify(action))
-                        {
-                            return Encode(context, action);
-                        }
-
-                        throw new ExecutionError("Failed to verify activateAccount action.");
-                    }
-
-                    throw new InvalidOperationException("BlockChain not found in the context");
-                }
-            );
-            Field<NonNullGraphType<ByteStringType>>(
                 "createAvatar",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<IntGraphType>>

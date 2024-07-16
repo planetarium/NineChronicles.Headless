@@ -35,6 +35,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet.Types.Tx;
+using NineChronicles.Headless.Contexts;
+using NineChronicles.Headless.Tests.Contexts;
 using Xunit.Abstractions;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
@@ -42,6 +44,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
     public class GraphQLTestBase
     {
         protected ITestOutputHelper _output;
+        protected readonly MockBlockChainContext BlockChainContext = new();
+        protected readonly MockBlockChainStateContext BlockChainStateContext = new();
+        protected readonly MockNodeContext NodeContext = new();
 
         public GraphQLTestBase(ITestOutputHelper output)
         {
@@ -124,6 +129,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             services.AddSingleton(ncService);
             services.AddSingleton(ncService.Store);
             services.AddSingleton<StateMemoryCache>();
+            services.AddTransient<IBlockChainContext>(_ => BlockChainContext);
+            services.AddTransient<IBlockChainStateContext>(_ => BlockChainStateContext);
+            services.AddTransient<INodeContext>(_ => NodeContext);
             ServiceProvider serviceProvider = services.BuildServiceProvider();
             Schema = new StandaloneSchema(serviceProvider);
 

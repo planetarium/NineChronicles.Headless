@@ -6,7 +6,7 @@ using Libplanet.Store;
 
 namespace NineChronicles.Headless
 {
-    public class BlockChainContext : IBlockChainContext
+    public class BlockChainContext : Libplanet.Explorer.Interfaces.IBlockChainContext
     {
         private readonly StandaloneContext _standaloneContext;
 

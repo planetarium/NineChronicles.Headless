@@ -41,6 +41,7 @@ using Nekoyume.Action.Loader;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using Nekoyume;
+using NineChronicles.Headless.Contexts;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -480,6 +481,9 @@ namespace NineChronicles.Headless.Executable
                 hostBuilder.ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => standaloneContext);
+                    services.AddSingleton<IBlockChainContext>(_ => standaloneContext);
+                    services.AddSingleton<IBlockChainStateContext>(_ => standaloneContext);
+                    services.AddSingleton<INodeContext>(_ => standaloneContext);
                     services.AddSingleton<ConcurrentDictionary<string, ITransaction>>();
                     services.AddOpenTelemetry()
                         .ConfigureResource(resource => resource.AddService(
