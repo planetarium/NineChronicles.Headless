@@ -494,6 +494,8 @@ namespace NineChronicles.Headless.Executable
                             builder => builder
                                 .AddMeter("NineChronicles")
                                 .AddMeter("MagicOnion.Server")
+                                .AddAspNetCoreInstrumentation()
+                                .AddRuntimeInstrumentation()
                                 .AddPrometheusExporter())
                         .WithTracing(
                             builder => builder
