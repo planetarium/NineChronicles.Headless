@@ -476,7 +476,7 @@ namespace NineChronicles.Headless.Executable
                         MaxTransactionPerBlock = headlessConfig.MaxTransactionPerBlock
                     };
                 var arenaMemoryCache = new StateMemoryCache();
-                string otlpEndpoint = Environment.GetEnvironmentVariable("OPTL_ENDPOINT") ?? "http://localhost:4317";
+                string otlpEndpoint = Environment.GetEnvironmentVariable("OTLP_ENDPOINT") ?? "http://localhost:4317";
                 hostBuilder.ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => standaloneContext);
