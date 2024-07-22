@@ -105,6 +105,64 @@ public class ArenaParticipantsWorkerTest
     }
 
     [Fact]
+    public void AvatarAddrAndScoresWithRank_Tie()
+    {
+        var sheetAddress = Addresses.GetSheetAddress<ArenaSheet>();
+        var csv = _sheets[nameof(ArenaSheet)];
+        var arenaSheet = new ArenaSheet();
+        arenaSheet.Set(csv);
+        var row = arenaSheet.OrderedList.First();
+        var currentRoundData = row.Round.First();
+        var championshipId = currentRoundData.ChampionshipId;
+        var round = currentRoundData.Round;
+        var participantsAddr = ArenaParticipants.DeriveAddress(championshipId, round);
+        var participants = new ArenaParticipants(championshipId, round);
+        var avatarAddress = new Address("00012E5Ec54022e07C350E006F7355ED406FB0FF");
+        var avatar2Address = new Address("0002b1D7fa30a80bFAcB2e8BF880bA70C08AC690");
+        var avatar3Address = new Address("0003f98545f5c017a7A598E88fED80Ad5e8e19b0");
+        var avatar4Address = new Address("000536234B19047f359B5cA299Cd35f965Dc8bC9");
+        var avatar5Address = new Address("000828ba091C88e523EeA0EF2d41F1E1D42BDC56");
+        participants.AvatarAddresses.Add(avatarAddress);
+        participants.AvatarAddresses.Add(avatar2Address);
+        participants.AvatarAddresses.Add(avatar3Address);
+        participants.AvatarAddresses.Add(avatar4Address);
+        participants.AvatarAddresses.Add(avatar5Address);
+        var arenaScore = new ArenaScore(avatarAddress, championshipId, round);
+        arenaScore.AddScore(20);
+        var arenaScore2 = new ArenaScore(avatar2Address, championshipId, round);
+        arenaScore2.AddScore(20);
+        var arenaScore3 = new ArenaScore(avatar3Address, championshipId, round);
+        arenaScore3.AddScore(10);
+        var arenaScore4 = new ArenaScore(avatar4Address, championshipId, round);
+        arenaScore4.AddScore(10);
+        var state = _world
+            .SetLegacyState(sheetAddress, csv.Serialize())
+            .SetLegacyState(participantsAddr, participants.Serialize())
+            .SetLegacyState(arenaScore.Address, arenaScore.Serialize())
+            .SetLegacyState(arenaScore2.Address, arenaScore2.Serialize())
+            .SetLegacyState(arenaScore3.Address, arenaScore3.Serialize())
+            .SetLegacyState(arenaScore4.Address, arenaScore4.Serialize());
+        var actual = ArenaParticipantsWorker.AvatarAddrAndScoresWithRank(participants.AvatarAddresses, currentRoundData, state);
+        Assert.Equal(5, actual.Count);
+        var expectedResult = new Dictionary<int, (Address avatarAddr, int score, int rank)>
+        {
+            [0] = (avatarAddress, 1020, 2),
+            [1] = (avatar2Address, 1020, 2),
+            [2] = (avatar3Address, 1010, 4),
+            [3] = (avatar4Address, 1010, 4),
+            [4] = (avatar5Address, 1000, 5),
+        };
+        for (int i = 0; i < actual.Count; i++)
+        {
+            var participant = actual[i];
+            var expected = expectedResult[i];
+            Assert.Equal(expected.score, participant.score);
+            Assert.Equal(expected.avatarAddr, participant.avatarAddr);
+            Assert.Equal(expected.rank, participant.rank);
+        }
+    }
+
+    [Fact]
     public void GetArenaParticipants()
     {
         var tableSheets = new TableSheets(_sheets);
