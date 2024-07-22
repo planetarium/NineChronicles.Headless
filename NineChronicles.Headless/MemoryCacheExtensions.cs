@@ -20,7 +20,7 @@ public static class MemoryCacheExtensions
 
     public static bool TryGetSheet<T>(this MemoryCache cache, string cacheKey, out T cached)
     {
-        return cache.TryGetValue(cacheKey, out cached);
+        return cache.TryGetValue(cacheKey, out cached!);
     }
 
     public static string? GetSheet(this MemoryCache cache, string cacheKey)
