@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex.Types;
@@ -20,9 +19,8 @@ using Nekoyume.Module;
 using Nekoyume.TableData;
 using Nekoyume.TableData.Rune;
 using NineChronicles.Headless.GraphTypes;
-using NRedisStack.RedisStackCommands;
+using NineChronicles.Headless.Services;
 using Serilog;
-using StackExchange.Redis;
 
 namespace NineChronicles.Headless;
 
@@ -30,15 +28,15 @@ public class ArenaParticipantsWorker : BackgroundService
 {
     private ILogger _logger;
 
-    private IDatabase _db;
+    private IRedisArenaParticipantsService _service;
 
     private StandaloneContext _context;
 
     private int _interval;
 
-    public ArenaParticipantsWorker(StandaloneContext context, int interval, IDatabase database)
+    public ArenaParticipantsWorker(StandaloneContext context, int interval, IRedisArenaParticipantsService service)
     {
-        _db = database;
+        _service = service;
         _context = context;
         _logger = Log.Logger.ForContext<ArenaParticipantsWorker>();
         _interval = interval;
@@ -51,7 +49,7 @@ public class ArenaParticipantsWorker : BackgroundService
             while (!stoppingToken.IsCancellationRequested)
             {
                 await Task.Delay(_interval, stoppingToken);
-                PrepareArenaParticipants();
+                await PrepareArenaParticipants();
             }
         }
         catch (OperationCanceledException)
@@ -288,7 +286,8 @@ public class ArenaParticipantsWorker : BackgroundService
     /// <summary>
     /// Prepares the arena participants by syncing the arena cache.
     /// </summary>
-    public void PrepareArenaParticipants()
+    /// <returns>A <see cref="Task"/> completed when set arena cache.</returns>
+    public async Task PrepareArenaParticipants()
     {
         _logger.Information("[ArenaParticipantsWorker]Start Sync Arena Cache");
         var sw = new Stopwatch();
@@ -310,7 +309,7 @@ public class ArenaParticipantsWorker : BackgroundService
         var cacheKey = $"{currentRoundData.ChampionshipId}_{currentRoundData.Round}";
         if (participants is null)
         {
-            _db.StringSet(cacheKey, JsonSerializer.Serialize(new List<ArenaParticipant>()));
+            await _service.SetValueAsync(cacheKey, new List<ArenaParticipant>());
             _logger.Information("[ArenaParticipantsWorker] participants({CacheKey}) is null. set empty list", cacheKey);
             return;
         }
@@ -318,7 +317,7 @@ public class ArenaParticipantsWorker : BackgroundService
         var avatarAddrList = participants.AvatarAddresses;
         var avatarAddrAndScoresWithRank = AvatarAddrAndScoresWithRank(avatarAddrList, currentRoundData, worldState);
         var result = GetArenaParticipants(worldState, avatarAddrList, avatarAddrAndScoresWithRank);
-        _db.StringSet(cacheKey, JsonSerializer.Serialize(result), TimeSpan.FromHours(1));
+        await _service.SetValueAsync(cacheKey, result, TimeSpan.FromHours(1));
         sw.Stop();
         _logger.Information("[ArenaParticipantsWorker]Set Arena Cache[{CacheKey}]: {Elapsed}", cacheKey, sw.Elapsed);
     }

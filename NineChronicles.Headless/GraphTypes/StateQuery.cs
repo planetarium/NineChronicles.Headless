@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL;
@@ -30,7 +29,7 @@ using NineChronicles.Headless.GraphTypes.States.Models;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
 using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
 using NineChronicles.Headless.GraphTypes.States.Models.Table;
-using StackExchange.Redis;
+using NineChronicles.Headless.Services;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -38,12 +37,12 @@ namespace NineChronicles.Headless.GraphTypes
     {
         private readonly Codec _codec = new Codec();
 
-        private readonly IDatabase Database;
+        private readonly IRedisArenaParticipantsService ArenaParticipantsService;
 
-        public StateQuery(IDatabase database)
+        public StateQuery(IRedisArenaParticipantsService arenaParticipantsService)
         {
             Name = "StateQuery";
-            Database = database;
+            ArenaParticipantsService = arenaParticipantsService;
 
             AvatarStateType.AvatarStateContext? GetAvatarState(StateContext context, Address address)
             {
@@ -654,7 +653,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             RegisterGarages();
 
-            Field<NonNullGraphType<ListGraphType<ArenaParticipantType>>>(
+            FieldAsync<NonNullGraphType<ListGraphType<ArenaParticipantType>>>(
                 "arenaParticipants",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
@@ -667,7 +666,7 @@ namespace NineChronicles.Headless.GraphTypes
                         DefaultValue = true,
                     }
                 ),
-                resolve: context =>
+                resolve: async context =>
                 {
                     // Copy from NineChronicles RxProps.Arena
                     // https://github.com/planetarium/NineChronicles/blob/80.0.1/nekoyume/Assets/_Scripts/State/RxProps.Arena.cs#L279
@@ -685,15 +684,12 @@ namespace NineChronicles.Headless.GraphTypes
                         playerScore = (Integer)scores[1];
                     }
 
-                    if (Database.StringGet(cacheKey) is { } cachedResult)
+                    result = await ArenaParticipantsService.GetValueAsync(cacheKey);
+                    foreach (var arenaParticipant in result)
                     {
-                        result = JsonSerializer.Deserialize<List<ArenaParticipant>>(cachedResult.ToString())!;
-                        foreach (var arenaParticipant in result)
-                        {
-                            var (win, lose, _) = ArenaHelper.GetScores(playerScore, arenaParticipant.Score);
-                            arenaParticipant.WinScore = win;
-                            arenaParticipant.LoseScore = lose;
-                        }
+                        var (win, lose, _) = ArenaHelper.GetScores(playerScore, arenaParticipant.Score);
+                        arenaParticipant.WinScore = win;
+                        arenaParticipant.LoseScore = lose;
                     }
 
                     if (filterBounds)
