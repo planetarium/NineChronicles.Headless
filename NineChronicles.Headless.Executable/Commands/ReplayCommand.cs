@@ -510,7 +510,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var stateStore = new TrieStateStore(stateKeyValueStore);
             var blockChainStates = new BlockChainStates(store, stateStore);
             var actionEvaluator = new ActionEvaluator(
-                _ => policy.BlockAction,
+                policyActionsRegistry: policy.PolicyActionsRegistry,
                 stateStore,
                 new NCActionLoader());
             return (
@@ -557,7 +557,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var policy = new BlockPolicySource().GetPolicy();
             IActionLoader actionLoader = new NCActionLoader();
             return new ActionEvaluator(
-                _ => policy.BlockAction,
+                policyActionsRegistry: policy.PolicyActionsRegistry,
                 stateStore: stateStore,
                 actionTypeLoader: actionLoader);
         }
