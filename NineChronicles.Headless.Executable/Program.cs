@@ -219,7 +219,7 @@ namespace NineChronicles.Headless.Executable
             [Option(Description = "arena participants list sync interval time")]
             int? arenaParticipantsSyncInterval = null,
             [Option(Description = "arena participants list sync enable")]
-            bool arenaParticipantsSync = true,
+            bool arenaParticipantsSync = false,
             [Option(Description = "[DANGER] Turn on RemoteKeyValueService to debug.")]
             bool remoteKeyValueService = false,
             [Option(Description = "redis cache connection string")]
