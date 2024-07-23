@@ -39,6 +39,7 @@ using Libplanet.Net.Transports;
 using Nekoyume.Action.Loader;
 using OpenTelemetry.Metrics;
 using Nekoyume;
+using NineChronicles.Headless.Services;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using StackExchange.Redis;
@@ -449,11 +450,12 @@ namespace NineChronicles.Headless.Executable
                 };
 
                 var redis = await ConnectionMultiplexer.ConnectAsync(configurationOptions);
-                var db = redis.GetDatabase();
+                var arenaParticipantsService = new RedisArenaParticipantsService(redis);
 
                 hostBuilder.ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => standaloneContext);
+                    services.AddSingleton<IConnectionMultiplexer>(_ => redis);
                     services.AddOpenTelemetry()
                         .ConfigureResource(resource => resource.AddService(
                                 serviceName: Assembly.GetEntryAssembly()?.GetName().Name ?? "NineChronicles.Headless",
@@ -487,10 +489,10 @@ namespace NineChronicles.Headless.Executable
                     // worker
                     if (arenaParticipantsSync)
                     {
-                        services.AddHostedService(_ => new ArenaParticipantsWorker(standaloneContext, headlessConfig.ArenaParticipantsSyncInterval, db));
+                        services.AddHostedService(_ => new ArenaParticipantsWorker(standaloneContext, headlessConfig.ArenaParticipantsSyncInterval, arenaParticipantsService));
                     }
                     services.AddSingleton(arenaMemoryCache);
-                    services.AddSingleton(db);
+                    services.AddScoped<IRedisArenaParticipantsService, RedisArenaParticipantsService>(_ => arenaParticipantsService);
                 });
 
                 NineChroniclesNodeService service =

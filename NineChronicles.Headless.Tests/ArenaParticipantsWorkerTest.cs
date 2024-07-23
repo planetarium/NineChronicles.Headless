@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
 using Lib9c.Tests;
 using Libplanet.Action.State;
 using Libplanet.Crypto;
 using Libplanet.Mocks;
+using Moq;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.Arena;
@@ -13,6 +16,8 @@ using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.Module;
 using Nekoyume.TableData;
+using NineChronicles.Headless.Services;
+using StackExchange.Redis;
 using Xunit;
 using Random = Libplanet.Extensions.ActionEvaluatorCommonComponents.Random;
 
@@ -163,7 +168,7 @@ public class ArenaParticipantsWorkerTest
     }
 
     [Fact]
-    public void GetArenaParticipants()
+    public async Task GetArenaParticipants()
     {
         var tableSheets = new TableSheets(_sheets);
         var agentAddress = new PrivateKey().Address;
@@ -242,6 +247,25 @@ public class ArenaParticipantsWorkerTest
         }
         var avatarAddrAndScoresWithRank = ArenaParticipantsWorker.AvatarAddrAndScoresWithRank(participants.AvatarAddresses, currentRoundData, state);
         var actual = ArenaParticipantsWorker.GetArenaParticipants(state, participants.AvatarAddresses, avatarAddrAndScoresWithRank);
+        Assert_ArenaParticipants(actual, avatarAddress, equipment, avatar2Address);
+
+        // check cache
+        var serialized = JsonSerializer.Serialize(actual);
+        var mockDatabase = new Mock<IDatabase>();
+        var connectionMultiplexer = new Mock<IConnectionMultiplexer>();
+        var cacheKey = $"{currentRoundData.ChampionshipId}_{currentRoundData.Round}";
+        mockDatabase.Setup(db => db.StringGetAsync(cacheKey, It.IsAny<CommandFlags>()))
+            .ReturnsAsync(serialized);
+        connectionMultiplexer.Setup(cm => cm.GetDatabase(It.IsAny<int>(), It.IsAny<object>()))
+            .Returns(mockDatabase.Object);
+        var service = new RedisArenaParticipantsService(connectionMultiplexer.Object);
+        var cached = await service.GetValueAsync(cacheKey);
+        Assert_ArenaParticipants(cached, avatarAddress, equipment, avatar2Address);
+    }
+
+    private static void Assert_ArenaParticipants(List<ArenaParticipant> actual, Address avatarAddress, Equipment equipment,
+        Address avatar2Address)
+    {
         Assert.Equal(2, actual.Count);
         var first = actual.First();
         Assert.Equal(avatarAddress, first.AvatarAddr);
