@@ -104,7 +104,7 @@ namespace NineChronicles.Headless.GraphTypes
                                 return false;
                             }
 
-                            if(txStatusFilter is not null)
+                            if (txStatusFilter is not null)
                             {
                                 var txResult = TxResult(standaloneContext, tx.Id) as TxResult;
                                 if (txResult is not null && txStatusFilter.Contains(txResult.TxStatus))
