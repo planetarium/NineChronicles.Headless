@@ -78,7 +78,7 @@ namespace NineChronicles.Headless.GraphTypes
                     { Name = "limit", Description = "number of block to query." },
                     new QueryArgument<NonNullGraphType<StringGraphType>>
                     { Name = "actionType", Description = "filter tx by having actions' type. It is regular expression." },
-                    new QueryArgument<NonNullGraphType<ListGraphType<TxStatusType>>>
+                    new QueryArgument<ListGraphType<NonNullGraphType<TxStatusType>>>
                     { Name = "txStatusFilter", Description = "filter txStatus." }
                 ),
                 resolve: context =>
@@ -92,7 +92,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var startingBlockIndex = context.GetArgument<long>("startingBlockIndex");
                     var limit = context.GetArgument<long>("limit");
                     var actionType = context.GetArgument<string>("actionType");
-                    var txStatusFilter = context.GetArgument<List<TxStatus>>("txStatusFilter");
+                    var txStatusFilter = context.GetArgument<List<TxStatus>?>("txStatusFilter");
 
                     var blocks = ListBlocks(blockChain, startingBlockIndex, limit);
                     var transactions = blocks
@@ -104,10 +104,13 @@ namespace NineChronicles.Headless.GraphTypes
                                 return false;
                             }
 
-                            var txResult = TxResult(standaloneContext, tx.Id) as TxResult;
-                            if (txResult is not null && !txStatusFilter.Contains(txResult.TxStatus))
+                            if (txStatusFilter is not null)
                             {
-                                return false;
+                                var txResult = TxResult(standaloneContext, tx.Id) as TxResult;
+                                if (txResult is not null && !txStatusFilter.Contains(txResult.TxStatus))
+                                {
+                                    return false;
+                                }
                             }
 
                             return Regex.IsMatch(typeId, actionType);
