@@ -224,3 +224,16 @@ Actions in 0 transactions for block #1 pre-evaluation hash: 10d93de7... evaluate
 [NetMQTransport] Broadcasting message Libplanet.Net.Messages.BlockHeaderMessage as 0x7862DD9b....Unspecified/localhost:43210. to 0 peers
 [Swarm] Block broadcasting complete.
 ```
+
+---
+
+## How to replay tx with remote headless
+
+
+When using the replay remote-tx command, you can replay the results of a specific transaction on a remote node to verify the execution result.
+
+The remote headless node needs to enable the `--remote-key-value-service` option and enable the grpc options to retrieve chain information.
+
+```shell
+replay remote-tx --tx {txId(hex)} --endpoint {gqlUrl(fullState gql url)} --grpc-endpoint {grpcEndpoint(remote tx grpc url)}
+```
