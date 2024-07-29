@@ -45,7 +45,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             _stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             IBlockPolicy policy = new BlockPolicySource().GetPolicy();
             var actionEvaluator = new ActionEvaluator(
-                _ => policy.BlockAction,
+                policyActionsRegistry: policy.PolicyActionsRegistry,
                 _stateStore,
                 new NCActionLoader());
             Block genesisBlock = BlockChain.ProposeGenesisBlock(

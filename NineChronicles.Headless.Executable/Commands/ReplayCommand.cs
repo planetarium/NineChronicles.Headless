@@ -433,10 +433,16 @@ namespace NineChronicles.Headless.Executable.Commands
                 .Select(ToAction)
                 .Cast<IAction>()
                 .ToImmutableList();
+            var blockIndex = transactionResult.BlockIndex ?? 0;
+            var blockProtocolVersion = (int)protocolVersion;
+            var preEvaluationHash = HashDigest<SHA256>.FromString(preEvaluationHashValue);
+            byte[] preEvaluationHashBytes = preEvaluationHash.ToByteArray();
+            int seed = ActionEvaluator.GenerateRandomSeed(preEvaluationHashBytes, transaction.Signature, 0);
+            _console.Out.WriteLine($"BlockIndex: {blockIndex}, BlockProtocolVersion: {blockProtocolVersion}, Miner: {miner}, PreviousState: {previousStateRootHash}, RandomSeed: {seed}, Signer: {transaction.Signer}, TxId: {transactionId}");
             var actionEvaluations = EvaluateActions(
-                preEvaluationHash: HashDigest<SHA256>.FromString(preEvaluationHashValue),
-                blockIndex: transactionResult.BlockIndex ?? 0,
-                blockProtocolVersion: (int)protocolVersion,
+                preEvaluationHash: preEvaluationHash,
+                blockIndex: blockIndex,
+                blockProtocolVersion: blockProtocolVersion,
                 txid: transaction.Id,
                 previousStates: previousStates,
                 miner: miner,
@@ -510,7 +516,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var stateStore = new TrieStateStore(stateKeyValueStore);
             var blockChainStates = new BlockChainStates(store, stateStore);
             var actionEvaluator = new ActionEvaluator(
-                _ => policy.BlockAction,
+                policyActionsRegistry: policy.PolicyActionsRegistry,
                 stateStore,
                 new NCActionLoader());
             return (
@@ -557,7 +563,7 @@ namespace NineChronicles.Headless.Executable.Commands
             var policy = new BlockPolicySource().GetPolicy();
             IActionLoader actionLoader = new NCActionLoader();
             return new ActionEvaluator(
-                _ => policy.BlockAction,
+                policyActionsRegistry: policy.PolicyActionsRegistry,
                 stateStore: stateStore,
                 actionTypeLoader: actionLoader);
         }
