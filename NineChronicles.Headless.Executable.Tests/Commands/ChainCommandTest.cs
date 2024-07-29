@@ -88,7 +88,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             IStagePolicy stagePolicy = new VolatileStagePolicy();
             IBlockPolicy blockPolicy = new BlockPolicySource().GetPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
-                _ => blockPolicy.BlockAction,
+                policyActionsRegistry: blockPolicy.PolicyActionsRegistry,
                 stateStore,
                 new NCActionLoader());
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
@@ -148,7 +148,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             IStagePolicy stagePolicy = new VolatileStagePolicy();
             IBlockPolicy blockPolicy = new BlockPolicySource().GetPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
-                _ => blockPolicy.BlockAction,
+                policyActionsRegistry: blockPolicy.PolicyActionsRegistry,
                 stateStore,
                 new NCActionLoader());
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
@@ -226,7 +226,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             IStagePolicy stagePolicy = new VolatileStagePolicy();
             IBlockPolicy blockPolicy = new BlockPolicySource().GetPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
-                _ => blockPolicy.BlockAction,
+                policyActionsRegistry: blockPolicy.PolicyActionsRegistry,
                 stateStore,
                 new NCActionLoader());
             BlockChain chain = BlockChain.Create(
@@ -278,7 +278,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             IStagePolicy stagePolicy = new VolatileStagePolicy();
             IBlockPolicy blockPolicy = new BlockPolicySource().GetPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
-                _ => blockPolicy.BlockAction,
+                policyActionsRegistry: blockPolicy.PolicyActionsRegistry,
                 stateStore,
                 new NCActionLoader());
             BlockChain chain = BlockChain.Create(
