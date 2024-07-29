@@ -109,7 +109,7 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
                 block.Hash,
                 new[]
                 {
-                    new VoteMetadata(block.Index, 0, block.Hash, block.Timestamp, ValidatorKey.PublicKey, VoteFlag.PreCommit).Sign(ValidatorKey),
+                    new VoteMetadata(block.Index, 0, block.Hash, block.Timestamp, ValidatorKey.PublicKey, null, VoteFlag.PreCommit).Sign(ValidatorKey),
                 }.ToImmutableArray());
             blockChain.Append(block, blockCommit);
         }

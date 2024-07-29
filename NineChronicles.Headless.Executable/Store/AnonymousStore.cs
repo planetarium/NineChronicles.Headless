@@ -5,6 +5,7 @@ using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Store;
 using Libplanet.Types.Blocks;
+using Libplanet.Types.Evidence;
 using Libplanet.Types.Tx;
 
 namespace NineChronicles.Headless.Executable.Store;
@@ -49,9 +50,15 @@ public class AnonymousStore : IStore
     public Action<BlockCommit> PutBlockCommit { get; set; }
     public Action<BlockHash> DeleteBlockCommit { get; set; }
     public Func<IEnumerable<BlockHash>> GetBlockCommitHashes { get; set; }
-    public Func<BlockHash, HashDigest<SHA256>?> GetNextStateRootHash { get; set; }
-    public Action<BlockHash, HashDigest<SHA256>> PutNextStateRootHash { get; set; }
-    public Action<BlockHash> DeleteNextStateRootHash { get; set; }
+    public Func<IEnumerable<EvidenceId>> IteratePendingEvidenceIds { get; set; }
+    public Func<EvidenceId, EvidenceBase?> GetPendingEvidence { get; set; }
+    public Func<EvidenceId, EvidenceBase?> GetCommittedEvidence { get; set; }
+    public Action<EvidenceBase> PutPendingEvidence { get; set; }
+    public Action<EvidenceBase> PutCommittedEvidence { get; set; }
+    public Action<EvidenceId> DeletePendingEvidence { get; set; }
+    public Action<EvidenceId> DeleteCommittedEvidence { get; set; }
+    public Func<EvidenceId, bool> ContainsPendingEvidence { get; set; }
+    public Func<EvidenceId, bool> ContainsCommittedEvidence { get; set; }
 #pragma warning restore CS8618
 
     void IDisposable.Dispose()
@@ -243,18 +250,48 @@ public class AnonymousStore : IStore
         return GetBlockCommitHashes();
     }
 
-    HashDigest<SHA256>? IStore.GetNextStateRootHash(BlockHash blockHash)
+    IEnumerable<EvidenceId> IStore.IteratePendingEvidenceIds()
     {
-        return GetNextStateRootHash(blockHash);
+        return IteratePendingEvidenceIds();
     }
 
-    void IStore.PutNextStateRootHash(BlockHash blockHash, HashDigest<SHA256> nextStateRootHash)
+    EvidenceBase? IStore.GetPendingEvidence(EvidenceId evidenceId)
     {
-        PutNextStateRootHash(blockHash, nextStateRootHash);
+        return GetPendingEvidence(evidenceId);
     }
 
-    void IStore.DeleteNextStateRootHash(BlockHash blockHash)
+    EvidenceBase? IStore.GetCommittedEvidence(EvidenceId evidenceId)
     {
-        DeleteNextStateRootHash(blockHash);
+        return GetCommittedEvidence(evidenceId);
+    }
+
+    void IStore.PutPendingEvidence(EvidenceBase evidence)
+    {
+        PutPendingEvidence(evidence);
+    }
+
+    void IStore.PutCommittedEvidence(EvidenceBase evidence)
+    {
+        PutCommittedEvidence(evidence);
+    }
+
+    void IStore.DeletePendingEvidence(EvidenceId evidenceId)
+    {
+        DeletePendingEvidence(evidenceId);
+    }
+
+    void IStore.DeleteCommittedEvidence(EvidenceId evidenceId)
+    {
+        DeleteCommittedEvidence(evidenceId);
+    }
+
+    bool IStore.ContainsPendingEvidence(EvidenceId evidenceId)
+    {
+        return ContainsPendingEvidence(evidenceId);
+    }
+
+    bool IStore.ContainsCommittedEvidence(EvidenceId evidenceId)
+    {
+        return ContainsCommittedEvidence(evidenceId);
     }
 }

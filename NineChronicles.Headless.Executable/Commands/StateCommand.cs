@@ -125,7 +125,8 @@ namespace NineChronicles.Headless.Executable.Commands
                         throw new CommandExitedException($"The block of {blockHash} doesn't exist.", -1);
                 var preEvalBlock = new PreEvaluationBlock(
                     block,
-                    block.Transactions
+                    block.Transactions,
+                    block.Evidence
                 );
                 stderr.WriteLine(
                     "[{0}/{1}] Executing block #{2} {3}...",

@@ -41,6 +41,8 @@ using Nekoyume.Action.Loader;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using Nekoyume;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 namespace NineChronicles.Headless.Executable
 {
@@ -474,15 +476,40 @@ namespace NineChronicles.Headless.Executable
                         MaxTransactionPerBlock = headlessConfig.MaxTransactionPerBlock
                     };
                 var arenaMemoryCache = new StateMemoryCache();
+                string otlpEndpoint = Environment.GetEnvironmentVariable("OTLP_ENDPOINT") ?? "http://localhost:4317";
                 hostBuilder.ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => standaloneContext);
                     services.AddSingleton<ConcurrentDictionary<string, ITransaction>>();
                     services.AddOpenTelemetry()
+                        .ConfigureResource(resource => resource.AddService(
+                                serviceName: Assembly.GetEntryAssembly()?.GetName().Name ?? "NineChronicles.Headless",
+                                serviceVersion: Assembly.GetEntryAssembly()?.GetName().Version?.ToString(),
+                                serviceInstanceId: Environment.MachineName
+                            ).AddAttributes(new Dictionary<string, object>
+                            {
+                                { "deployment.environment", Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown" },
+                            }))
                         .WithMetrics(
                             builder => builder
                                 .AddMeter("NineChronicles")
-                                .AddPrometheusExporter());
+                                .AddMeter("MagicOnion.Server")
+                                .AddAspNetCoreInstrumentation()
+                                .AddRuntimeInstrumentation()
+                                .AddPrometheusExporter())
+                        .WithTracing(
+                            builder => builder
+                                .AddSource("Lib9c.Action.HackAndSlash")
+                                .AddSource("Libplanet.Action.State")
+                                .AddSource("Libplanet.Blockchain.BlockChainStates")
+                                //.AddAspNetCoreInstrumentation()
+                                .AddGrpcClientInstrumentation()
+                                .AddProcessor(new Pyroscope.OpenTelemetry.PyroscopeSpanProcessor())
+                                .AddOtlpExporter(opt =>
+                                {
+                                    opt.Endpoint = new Uri(otlpEndpoint, UriKind.Absolute);
+                                })
+                        );
 
                     // worker
                     if (arenaParticipantsSync)

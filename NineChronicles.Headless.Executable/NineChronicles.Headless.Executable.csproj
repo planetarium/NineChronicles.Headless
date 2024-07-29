@@ -24,6 +24,12 @@
     <PackageReference Include="GraphQL.Client" Version="5.1.1" />
     <PackageReference Include="GraphQL.Client.Serializer.SystemTextJson" Version="5.1.1" />
     <PackageReference Include="Destructurama.Attributed" Version="2.0.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.9.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.9.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.GrpcNetClient" Version="1.9.0-beta.1" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.9.0" />
+    <PackageReference Include="Pyroscope" Version="0.8.14" />
+    <PackageReference Include="Pyroscope.OpenTelemetry" Version="0.2.0" />
     <PackageReference Include="Sentry.Serilog" Version="3.23.0" />
     <PackageReference Include="Sentry" Version="3.23.0" />
     <PackageReference Include="Sentry.AspNetCore.Grpc" Version="3.22.0" />
@@ -42,10 +48,11 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Lib9c\.Libplanet\Libplanet.Extensions.Cocona\Libplanet.Extensions.Cocona.csproj" />
+    <ProjectReference Include="..\Lib9c\.Libplanet\tools\Libplanet.Extensions.Cocona\Libplanet.Extensions.Cocona.csproj" />
     <ProjectReference Include="..\Lib9c\Lib9c.Utils\Lib9c.Utils.csproj" />
     <ProjectReference Include="..\Lib9c\Lib9c.Abstractions\Lib9c.Abstractions.csproj" />
     <ProjectReference Include="..\NineChronicles.Headless\NineChronicles.Headless.csproj" />

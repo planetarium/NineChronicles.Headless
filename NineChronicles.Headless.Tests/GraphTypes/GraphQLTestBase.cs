@@ -244,6 +244,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             hash,
                             DateTimeOffset.UtcNow,
                             validator.PublicKey,
+                            null,
                             VoteFlag.PreCommit).Sign(validator)).ToImmutableArray())
                 : (BlockCommit?)null;
         }
