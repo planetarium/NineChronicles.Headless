@@ -34,7 +34,7 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneQuery : ObjectGraphType
     {
-        public StandaloneQuery(StandaloneContext standaloneContext, IConfiguration configuration, ActionEvaluationPublisher publisher, StateMemoryCache stateMemoryCache)
+        public StandaloneQuery(StandaloneContext standaloneContext, INodeContext nodeContext, IBlockChainContext blockChainContext, IConfiguration configuration, ActionEvaluationPublisher publisher, StateMemoryCache stateMemoryCache)
         {
             bool useSecretToken = configuration[GraphQLService.SecretTokenKey] is { };
             if (Convert.ToBoolean(configuration.GetSection("Jwt")["EnableJwtAuthentication"]))
@@ -379,7 +379,7 @@ namespace NineChronicles.Headless.GraphTypes
                     name: "activationStatus",
                     description: "Check if the provided address is activated.",
                     deprecationReason: "Since NCIP-15, it doesn't care account activation.",
-                    resolve: context => new ActivationStatusQuery(standaloneContext))
+                    resolve: context => new ActivationStatusQuery(nodeContext, blockChainContext))
                 .AuthorizeWithLocalPolicyIf(useSecretToken);
 
             Field<NonNullGraphType<PeerChainStateQuery>>(
@@ -550,79 +550,6 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "transaction",
                 description: "Query for transaction.",
                 resolve: context => new TransactionHeadlessQuery(standaloneContext)
-            );
-
-            Field<NonNullGraphType<BooleanGraphType>>(
-                name: "activated",
-                deprecationReason: "Since NCIP-15, it doesn't care account activation.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "invitationCode"
-                    }
-                ),
-                resolve: context =>
-                {
-                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
-
-                    string invitationCode = context.GetArgument<string>("invitationCode");
-                    ActivationKey activationKey = ActivationKey.Decode(invitationCode);
-                    if (blockChain.GetWorldState().GetLegacyState(activationKey.PendingAddress) is Dictionary dictionary)
-                    {
-                        var pending = new PendingActivationState(dictionary);
-                        ActivateAccount action = activationKey.CreateActivateAccount(pending.Nonce);
-                        if (pending.Verify(action))
-                        {
-                            return false;
-                        }
-
-                        throw new ExecutionError($"invitationCode is invalid.");
-                    }
-
-                    return true;
-                }
-            );
-
-            Field<NonNullGraphType<StringGraphType>>(
-                name: "activationKeyNonce",
-                deprecationReason: "Since NCIP-15, it doesn't care account activation.",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "invitationCode"
-                    }
-                ),
-                resolve: context =>
-                {
-                    if (!(standaloneContext.BlockChain is { } blockChain))
-                    {
-                        throw new ExecutionError(
-                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
-                    }
-
-                    ActivationKey activationKey;
-                    try
-                    {
-                        string invitationCode = context.GetArgument<string>("invitationCode");
-                        invitationCode = invitationCode.TrimEnd();
-                        activationKey = ActivationKey.Decode(invitationCode);
-                    }
-                    catch (Exception)
-                    {
-                        throw new ExecutionError("invitationCode format is invalid.");
-                    }
-                    if (blockChain.GetWorldState().GetLegacyState(activationKey.PendingAddress) is Dictionary dictionary)
-                    {
-                        var pending = new PendingActivationState(dictionary);
-                        return ByteUtil.Hex(pending.Nonce);
-                    }
-
-                    throw new ExecutionError("invitationCode is invalid.");
-                }
             );
 
             Field<NonNullGraphType<RpcInformationQuery>>(

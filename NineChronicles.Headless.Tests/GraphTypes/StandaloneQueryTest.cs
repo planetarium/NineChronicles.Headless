@@ -530,14 +530,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
             blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
 
-            action = activationKey.CreateActivateAccount(nonce);
-            blockChain.MakeTransaction(userPrivateKey, new[] { action });
-            block = blockChain.ProposeBlock(
-                ProposerPrivateKey,
-                lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
-            blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-            AppendEmptyBlock(GenesisValidators);
-
             queryResult = await ExecuteQueryAsync("query { activationStatus { activated } }");
             data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             result = (bool)
@@ -613,7 +605,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }
             var txs = new[]
             {
-                MakeTx(new TransferAsset0(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
                 MakeTx(new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
             };
 

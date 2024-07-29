@@ -33,49 +33,6 @@ namespace NineChronicles.Headless.Executable.Commands
             _console.Error.WriteLine(helpMessageBuilder.BuildAndRenderForCurrentContext());
         }
 
-        [Command(Description = "Create ActivateAccount action.")]
-        public int ActivateAccount(
-            [Argument("INVITATION-CODE", Description = "An invitation code.")]
-            string invitationCode,
-            [Argument("NONCE", Description = "A hex-encoded nonce for activation.")]
-            string nonceEncoded,
-            [Argument("PATH", Description = "A file path of base64 encoded action.")]
-            string? filePath = null
-        )
-        {
-            try
-            {
-                ActivationKey activationKey = ActivationKey.Decode(invitationCode);
-                byte[] nonce = ByteUtil.ParseHex(nonceEncoded);
-                Nekoyume.Action.ActivateAccount action = activationKey.CreateActivateAccount(nonce);
-                var list = new List(
-                    new[]
-                    {
-                        (Text) nameof(Nekoyume.Action.ActivateAccount),
-                        action.PlainValue
-                    }
-                );
-
-                byte[] raw = Codec.Encode(list);
-                string encoded = Convert.ToBase64String(raw);
-                if (filePath is null)
-                {
-                    _console.Out.Write(encoded);
-                }
-                else
-                {
-                    File.WriteAllText(filePath, encoded);
-                }
-
-                return 0;
-            }
-            catch (Exception e)
-            {
-                _console.Error.WriteLine(e);
-                return -1;
-            }
-        }
-
         [Command(Description = "Lists all actions' type ids.")]
         public IOrderedEnumerable<string?> List(
             [Option(

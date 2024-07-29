@@ -63,7 +63,7 @@ namespace NineChronicles.Headless
 
         public static IServiceCollection AddBlockChainContext(this IServiceCollection services)
         {
-            services.TryAddSingleton<IBlockChainContext, BlockChainContext>();
+            services.TryAddSingleton<Libplanet.Explorer.Interfaces.IBlockChainContext, BlockChainContext>();
 
             return services;
         }

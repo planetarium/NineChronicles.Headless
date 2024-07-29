@@ -12,6 +12,7 @@ using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
+using NineChronicles.Headless.Contexts;
 using NineChronicles.Headless.Middleware;
 using NineChronicles.Headless.Services;
 

@@ -319,8 +319,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task TransactionResultIsSuccess()
         {
             var privateKey = new PrivateKey();
-            // Because `AddActivatedAccount` doesn't need any prerequisites.
-            var action = new AddActivatedAccount(default);
+            // Because `RequestPledge` doesn't need any prerequisites.
+            var action = new RequestPledge
+            {
+                AgentAddress = default,
+                RefillMead = 4,
+            };
             Transaction tx = _blockChain.MakeTransaction(privateKey, new ActionBase[] { action });
             Block block = _blockChain.ProposeBlock(_proposer);
             _blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, _proposer));
@@ -344,8 +348,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public async Task TransactionResults()
         {
             var privateKey = new PrivateKey();
-            // Because `AddActivatedAccount` doesn't need any prerequisites.
-            var action = new AddActivatedAccount(default);
+            // Because `RequestPledge` doesn't need any prerequisites.
+            var action = new RequestPledge
+            {
+                AgentAddress = default,
+                RefillMead = 4,
+            };
             Transaction tx = _blockChain.MakeTransaction(privateKey, new ActionBase[] { action });
             var action2 = new DailyReward
             {
