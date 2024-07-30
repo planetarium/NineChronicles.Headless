@@ -6,6 +6,7 @@ using Libplanet.Action.State;
 using Libplanet.Types.Blocks;
 using Libplanet.Common;
 using Libplanet.Crypto;
+using Libplanet.Types.Evidence;
 using Libplanet.Types.Tx;
 using ArgumentOutOfRangeException = System.ArgumentOutOfRangeException;
 
@@ -133,6 +134,8 @@ class MockBlock : IPreEvaluationBlock
     public BlockHash? PreviousHash { get; }
     public HashDigest<SHA256>? TxHash { get; }
     public BlockCommit? LastCommit { get; }
+    public HashDigest<SHA256>? EvidenceHash { get; }
     public IReadOnlyList<ITransaction> Transactions { get; }
+    public IReadOnlyList<EvidenceBase> Evidence { get; }
     public HashDigest<SHA256> PreEvaluationHash { get; }
 }
