@@ -11,7 +11,6 @@ using Nekoyume.Blockchain.Policy;
 using NineChronicles.Headless.Executable.Commands;
 using NineChronicles.Headless.Executable.Store;
 using NineChronicles.Headless.Executable.Tests.IO;
-using Serilog.Core;
 using Xunit;
 using Libplanet.Action;
 using Nekoyume.Action.Loader;
@@ -48,11 +47,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             IStagePolicy stagePolicy = new VolatileStagePolicy();
             IBlockPolicy blockPolicy = new BlockPolicySource().GetPolicy();
             ActionEvaluator actionEvaluator = new ActionEvaluator(
-                new PolicyActionsRegistry(
-                    _ => blockPolicy.BeginBlockActions,
-                    _ => blockPolicy.EndBlockActions,
-                    _ => blockPolicy.BeginTxActions,
-                    _ => blockPolicy.EndTxActions),
+                blockPolicy.PolicyActionsRegistry,
                 stateStore,
                 new NCActionLoader());
             BlockChain chain = BlockChain.Create(

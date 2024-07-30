@@ -10,6 +10,7 @@ using Libplanet.Action;
 using Libplanet.Action.State;
 using Libplanet.Types.Assets;
 using Libplanet.Types.Blocks;
+using Libplanet.Types.Evidence;
 using Libplanet.Types.Tx;
 using Serilog;
 
@@ -30,7 +31,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 int blockProtocolVersion,
                 IWorld previousState,
                 int randomSeed,
-                bool isBlockAction,
+                bool isPolicyAction,
                 bool rehearsal = false)
             {
                 Signer = signer;
@@ -41,7 +42,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 Rehearsal = rehearsal;
                 PreviousState = previousState;
                 RandomSeed = randomSeed;
-                IsBlockAction = isBlockAction;
+                IsPolicyAction = isPolicyAction;
             }
 
             public Address Signer { get; }
@@ -53,6 +54,7 @@ namespace NineChronicles.Headless.Executable.Commands
             public long BlockIndex { get; }
 
             public int BlockProtocolVersion { get; }
+            
             public BlockCommit? LastCommit { get; }
 
             public bool Rehearsal { get; }
@@ -61,19 +63,13 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public int RandomSeed { get; }
             
-            public bool IsBlockAction { get; }
+            public bool IsPolicyAction { get; }
 
             // NOTE: Replay does not support block actions.
             public IReadOnlyList<ITransaction> Txs => ImmutableList<ITransaction>.Empty;
 
-            public void UseGas(long gas)
-            {
-            }
+            public IReadOnlyList<EvidenceBase> Evidence => ImmutableList<EvidenceBase>.Empty;
 
-            public long GasUsed() => 0;
-
-            public long GasLimit() => 0;
-            
             public FungibleAssetValue? MaxGasPrice => null;
 
             public IRandom GetRandom() => new Random(RandomSeed);
@@ -103,7 +99,7 @@ namespace NineChronicles.Headless.Executable.Commands
             Address signer,
             byte[] signature,
             IImmutableList<IAction> actions,
-            bool isBlockAction,
+            bool isPolicyAction,
             ILogger? logger = null)
         {
             ActionContext CreateActionContext(
@@ -118,7 +114,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     blockProtocolVersion: blockProtocolVersion,
                     previousState: prevState,
                     randomSeed: randomSeed,
-                    isBlockAction: isBlockAction);
+                    isPolicyAction: isPolicyAction);
             }
 
             byte[] preEvaluationHashBytes = preEvaluationHash.ToByteArray();

@@ -101,11 +101,7 @@ namespace NineChronicles.Headless.Tests
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             var policy = new BlockPolicy();
             var actionEvaluator = new ActionEvaluator(
-                new PolicyActionsRegistry(
-                    _ => policy.BeginBlockActions,
-                    _ => policy.EndBlockActions,
-                    _ => policy.BeginTxActions,
-                    _ => policy.EndTxActions),
+                policy.PolicyActionsRegistry,
                 stateStore,
                 new NCActionLoader());
             var genesisBlock = BlockChain.ProposeGenesisBlock();
@@ -135,11 +131,7 @@ namespace NineChronicles.Headless.Tests
             var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
             var policy = new BlockPolicy();
             var actionEvaluator = new ActionEvaluator(
-                new PolicyActionsRegistry(
-                    _ => policy.BeginBlockActions,
-                    _ => policy.EndBlockActions,
-                    _ => policy.BeginTxActions,
-                    _ => policy.EndTxActions),
+                policy.PolicyActionsRegistry,
                 stateStore,
                 new NCActionLoader());
             var genesisBlock = BlockChain.ProposeGenesisBlock(

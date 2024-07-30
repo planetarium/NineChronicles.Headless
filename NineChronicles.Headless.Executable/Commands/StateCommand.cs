@@ -20,6 +20,7 @@ using Libplanet.Store;
 using Libplanet.Store.Trie;
 using Libplanet.Types.Assets;
 using Libplanet.Types.Blocks;
+using Libplanet.Types.Evidence;
 using Nekoyume.Action.Loader;
 using NineChronicles.Headless.Executable.IO;
 using Serilog.Core;
@@ -109,11 +110,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 new MemoryStore(),
                 sStore);
             var actionEvaluator = new ActionEvaluator(
-                new PolicyActionsRegistry(
-                    _ => policy.BeginBlockActions,
-                    _ => policy.EndBlockActions,
-                    _ => policy.BeginTxActions,
-                    _ => policy.EndTxActions),
+                policy.PolicyActionsRegistry,
                 sStore,
                 new NCActionLoader());
 
@@ -129,7 +126,8 @@ namespace NineChronicles.Headless.Executable.Commands
                         throw new CommandExitedException($"The block of {blockHash} doesn't exist.", -1);
                 var preEvalBlock = new PreEvaluationBlock(
                     block,
-                    block.Transactions
+                    block.Transactions,
+                    ImmutableArray<EvidenceBase>.Empty
                 );
                 stderr.WriteLine(
                     "[{0}/{1}] Executing block #{2} {3}...",

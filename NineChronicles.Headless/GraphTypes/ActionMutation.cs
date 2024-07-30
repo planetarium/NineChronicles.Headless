@@ -498,9 +498,7 @@ namespace NineChronicles.Headless.GraphTypes
                         string validatorString = context.GetArgument<string>("validator");
                         PublicKey validator = PublicKey.FromHex(validatorString);
                         BigInteger amount = context.GetArgument<BigInteger>("amount");
-                        var fav = new FungibleAssetValue(Asset.GovernanceToken, amount, 0);
-
-                        var action = new PromoteValidator(validator, fav);
+                        var action = new PromoteValidator(validator, (long)amount);
 
                         var actions = new[] { action };
                         Transaction tx = blockChain.MakeTransaction(
@@ -546,9 +544,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                         Address validator = context.GetArgument<Address>("validator");
                         BigInteger amount = context.GetArgument<BigInteger>("amount");
-                        var fav = new FungibleAssetValue(Asset.GovernanceToken, amount, 0);
-
-                        var action = new Nekoyume.Action.DPoS.Delegate(validator, fav);
+                        var action = new Nekoyume.Action.DPoS.Delegate(validator, (long)amount);
 
                         var actions = new[] { action };
                         Transaction tx = blockChain.MakeTransaction(
@@ -597,6 +593,61 @@ namespace NineChronicles.Headless.GraphTypes
                         var fav = new FungibleAssetValue(Asset.Share, amount, 0);
 
                         var action = new Undelegate(validator, fav);
+
+                        var actions = new[] { action };
+                        Transaction tx = blockChain.MakeTransaction(
+                            service.MinerPrivateKey,
+                            actions,
+                            Currencies.Mead * 1,
+                            1L);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+            
+            Field<NonNullGraphType<TxIdType>>("redelegate",
+                description: "A action for DPoS that re-delegate " +
+                             "specified amount of shared tokens from the source validator " +
+                             "to the destination validator.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "src",
+                        Description = "Source validator address to undelegate."
+                    },
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "dst",
+                        Description = "Target validator address to re-delegate."
+                    },
+                    new QueryArgument<NonNullGraphType<BigIntGraphType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount of share to re-delegate."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        Address src = context.GetArgument<Address>("src");
+                        Address dst = context.GetArgument<Address>("dst");
+                        BigInteger amount = context.GetArgument<BigInteger>("amount");
+                        var fav = new FungibleAssetValue(Asset.Share, amount, 0);
+
+                        var action = new Redelegate(src, dst, fav);
 
                         var actions = new[] { action };
                         Transaction tx = blockChain.MakeTransaction(
@@ -721,6 +772,60 @@ namespace NineChronicles.Headless.GraphTypes
                             actions,
                             Currencies.Mead * 1,
                             1L);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+
+            // TODO: MUST BE REMOVED
+            Field<NonNullGraphType<TxIdType>>("transferAsset",
+                description: "Transfer asset to specific address.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "address",
+                        Description = "Address of recipient."
+                    },
+                    new QueryArgument<NonNullGraphType<CurrencyInputType>>
+                    {
+                        Name = "currency",
+                        Description = "Currency of FAV to transfer."
+                    },
+                    new QueryArgument<NonNullGraphType<BigIntGraphType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount of FAV to transfer."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+                        
+                        Address recipient = context.GetArgument<Address>("address");
+                        Currency currency = context.GetArgument<Currency>("currency");
+                        BigInteger amount = context.GetArgument<BigInteger>("amount");
+                        var action = new TransferAsset(
+                            sender: service.MinerPrivateKey!.Address,
+                            recipient: recipient,
+                            amount: currency * amount);
+                        var actions = new[] { action };
+                        Transaction tx = blockChain.MakeTransaction(
+                            service.MinerPrivateKey,
+                            actions,
+                            Currencies.Mead * 1,
+                            4L);
                         return tx.Id;
                     }
                     catch (Exception e)
