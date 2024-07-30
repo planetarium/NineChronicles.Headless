@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using GraphQL.Types;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Explorer.Interfaces;
+using Libplanet.Explorer.Mutations;
 using Libplanet.Explorer.Queries;
 using Libplanet.Explorer.Schemas;
 using Microsoft.Extensions.DependencyInjection;
@@ -85,6 +86,7 @@ namespace NineChronicles.Headless
             services.TryAddSingleton<HelperQuery>();
             services.TryAddSingleton<RawStateQuery>();
             services.TryAddSingleton<EvidenceQuery>();
+            services.TryAddSingleton<ExplorerMutation>();
             services.TryAddSingleton(_ => new StateQuery()
             {
                 Name = "LibplanetStateQuery",
