@@ -26,6 +26,7 @@ using NineChronicles.Headless.GraphTypes.States;
 using NineChronicles.Headless.GraphTypes.Diff;
 using System.Security.Cryptography;
 using System.Text;
+using Libplanet.Store.Trie;
 using static NineChronicles.Headless.NCActionUtils;
 using Transaction = Libplanet.Types.Tx.Transaction;
 
@@ -164,6 +165,77 @@ namespace NineChronicles.Headless.GraphTypes
                         }).ToArray();
 
                     return diffs;
+                }
+            );
+
+            Field<NonNullGraphType<ListGraphType<NonNullGraphType<StateDiffType>>>>(
+                name: "accountDiffs",
+                description: "This field allows you to query the diffs based accountAddress between two blocks." +
+                             " `baseIndex` is the reference block index, and changedIndex is the block index from which to check" +
+                             " what changes have occurred relative to `baseIndex`." +
+                             " Both indices must not be higher than the current block on the chain nor lower than the genesis block index (0)." +
+                             " The difference between the two blocks must be greater than zero for a valid comparison and less than ten for performance reasons.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<LongGraphType>>
+                    {
+                        Name = "baseIndex",
+                        Description = "The index of the reference block from which the state is retrieved."
+                    },
+                    new QueryArgument<NonNullGraphType<LongGraphType>>
+                    {
+                        Name = "changedIndex",
+                        Description = "The index of the target block for comparison."
+                    },
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "accountAddress",
+                        Description = "The target accountAddress."
+                    }
+                ),
+                resolve: context =>
+                {
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
+                    {
+                        throw new ExecutionError(
+                            $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!"
+                        );
+                    }
+                    var baseIndex = context.GetArgument<long>("baseIndex");
+                    var changedIndex = context.GetArgument<long>("changedIndex");
+                    var accountAddress = context.GetArgument<Address>("accountAddress");
+                    var blockInterval = Math.Abs(changedIndex - baseIndex);
+                    if (blockInterval >= 30 || blockInterval == 0)
+                    {
+                        throw new ExecutionError(
+                            "Interval between baseIndex and changedIndex should not be greater than 30 or zero"
+                        );
+                    }
+                    var baseBlockStateRootHash = blockChain[baseIndex].StateRootHash.ToString();
+                    var changedBlockStateRootHash = blockChain[changedIndex].StateRootHash.ToString();
+                    var baseStateRootHash = HashDigest<SHA256>.FromString(baseBlockStateRootHash);
+                    var targetStateRootHash = HashDigest<SHA256>.FromString(
+                        changedBlockStateRootHash
+                    );
+                    var stateStore = standaloneContext.StateStore;
+                    var baseTrieModel = stateStore.GetStateRoot(baseStateRootHash);
+                    var targetTrieModel = stateStore.GetStateRoot(targetStateRootHash);
+                    var accountKey = new KeyBytes(ByteUtil.Hex(accountAddress.ByteArray));
+                    Binary GetAccountState(ITrie model, KeyBytes key)
+                    {
+                        return model.Get(key) is Binary state ? state : throw new Exception($"Account state not found.");
+                    }
+                    var baseAccountState = GetAccountState(baseTrieModel, accountKey);
+                    var targetAccountState = GetAccountState(targetTrieModel, accountKey);
+                    var baseSubTrieModel = stateStore.GetStateRoot(new HashDigest<SHA256>(baseAccountState));
+                    var targetSubTrieModel = stateStore.GetStateRoot(new HashDigest<SHA256>(targetAccountState));
+                    var subDiff = baseSubTrieModel
+                        .Diff(targetSubTrieModel)
+                        .Select(diff => new StateDiffType.Value(
+                            Encoding.Default.GetString(diff.Path.ByteArray.ToArray()),
+                            diff.SourceValue,
+                            diff.TargetValue))
+                        .ToArray();
+                    return subDiff;
                 }
             );
 
