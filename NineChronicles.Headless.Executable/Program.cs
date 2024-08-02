@@ -25,6 +25,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
+using System.Runtime;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -353,6 +354,8 @@ namespace NineChronicles.Headless.Executable
             }
 
             Log.Logger = loggerConf.CreateLogger();
+
+            Log.Information("The {0} garbage collector is running.", GCSettings.IsServerGC ? "server" : "workstation");
 
             if (!headlessConfig.NoMiner && headlessConfig.MinerPrivateKeyString is null)
             {
