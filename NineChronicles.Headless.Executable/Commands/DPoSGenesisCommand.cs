@@ -30,7 +30,7 @@ public class DPoSGenesisCommand
         [Argument("CONFIG", Description = "JSON config path to mine genesis block")]
         string configPath)
     {
-        var options = new JsonSerializerOptions
+        /*var options = new JsonSerializerOptions
         {
             AllowTrailingCommas = true,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -51,7 +51,7 @@ public class DPoSGenesisCommand
             validators.ToDictionary(
                 v => PublicKey.FromHex(v.PublicKey),
                 v => (BigInteger)v.Power));
-        Lib9cUtils.ExportBlock(block, "genesis-block");
+        Lib9cUtils.ExportBlock(block, "genesis-block");*/
     }
     
 #pragma warning disable S3459
