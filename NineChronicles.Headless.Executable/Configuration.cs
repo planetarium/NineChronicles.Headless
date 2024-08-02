@@ -91,10 +91,6 @@ namespace NineChronicles.Headless.Executable
 
         public int? MaxTransactionPerBlock { get; set; }
 
-        public string SentryDsn { get; set; } = "";
-
-        public double SentryTraceSampleRate { get; set; } = 0.01;
-
         public AccessControlServiceOptions? AccessControlService { get; set; }
 
         public int ArenaParticipantsSyncInterval { get; set; } = 1000;
@@ -147,8 +143,6 @@ namespace NineChronicles.Headless.Executable
             double? consensusTargetBlockIntervalMilliseconds,
             int? consensusProposeSecondBase,
             int? maxTransactionPerBlock,
-            string? sentryDsn,
-            double? sentryTraceSampleRate,
             int? arenaParticipantsSyncInterval,
             bool? remoteKeyValueService
         )
@@ -201,8 +195,6 @@ namespace NineChronicles.Headless.Executable
             ConsensusTargetBlockIntervalMilliseconds = consensusTargetBlockIntervalMilliseconds ?? ConsensusTargetBlockIntervalMilliseconds;
             ConsensusProposeSecondBase = consensusProposeSecondBase ?? ConsensusProposeSecondBase;
             MaxTransactionPerBlock = maxTransactionPerBlock ?? MaxTransactionPerBlock;
-            SentryDsn = sentryDsn ?? SentryDsn;
-            SentryTraceSampleRate = sentryTraceSampleRate ?? SentryTraceSampleRate;
             ArenaParticipantsSyncInterval = arenaParticipantsSyncInterval ?? ArenaParticipantsSyncInterval;
             RemoteKeyValueService = remoteKeyValueService ?? RemoteKeyValueService;
         }
