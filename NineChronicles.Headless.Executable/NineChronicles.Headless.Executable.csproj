@@ -6,7 +6,6 @@
     <VersionPrefix>1.0.0</VersionPrefix>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CodeAnalysisRuleSet>..\NineChronicles.Headless.Common.ruleset</CodeAnalysisRuleSet>
-    <ServerGarbageCollection>true</ServerGarbageCollection>
     <Nullable>enable</Nullable>
     <Configurations>Debug;Release;DevEx</Configurations>
     <Platforms>AnyCPU</Platforms>
