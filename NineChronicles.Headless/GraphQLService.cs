@@ -181,7 +181,6 @@ namespace NineChronicles.Headless
                     .AddDataLoader()
                     .AddGraphTypes(typeof(StandaloneSchema))
                     .AddLibplanetExplorer()
-                    .AddUserContextBuilder<UserContextBuilder>()
                     .AddGraphQLAuthorization(
                         options =>
                         {
