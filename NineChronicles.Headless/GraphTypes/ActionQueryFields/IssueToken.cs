@@ -16,12 +16,12 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<ByteStringType>>(
                 "issueToken",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<ListGraphType<FungibleAssetValueInputType>>>
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<FungibleAssetValueInputType>>>>
                     {
                         Name = "fungibleAssetValues",
                         Description = "List of FungibleAssetValues for wrapping token"
                     },
-                    new QueryArgument<NonNullGraphType<ListGraphType<ItemIdAndCountInputType>>>
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<ItemIdAndCountInputType>>>>
                     {
                         Name = "items",
                         Description = "List of pair of item id, count for wrapping token"
