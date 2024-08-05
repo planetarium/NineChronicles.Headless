@@ -25,7 +25,6 @@ using Nekoyume;
 using Nekoyume.Model.State;
 using Nekoyume.Module;
 using Nekoyume.Shared.Services;
-using Sentry;
 using Serilog;
 using static NineChronicles.Headless.NCActionUtils;
 using NodeExceptionType = Libplanet.Headless.NodeExceptionType;
@@ -42,7 +41,6 @@ namespace NineChronicles.Headless
         private Codec _codec;
         private LibplanetNodeServiceProperties _libplanetNodeServiceProperties;
         private ActionEvaluationPublisher _publisher;
-        private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
         private MemoryCache _memoryCache;
 
         public BlockChainService(
@@ -51,7 +49,6 @@ namespace NineChronicles.Headless
             RpcContext context,
             LibplanetNodeServiceProperties libplanetNodeServiceProperties,
             ActionEvaluationPublisher actionEvaluationPublisher,
-            ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces,
             StateMemoryCache cache
             )
         {
@@ -61,7 +58,6 @@ namespace NineChronicles.Headless
             _codec = new Codec();
             _libplanetNodeServiceProperties = libplanetNodeServiceProperties;
             _publisher = actionEvaluationPublisher;
-            _sentryTraces = sentryTraces;
             _memoryCache = cache.SheetCache;
         }
 
@@ -76,13 +72,6 @@ namespace NineChronicles.Headless
                     ? $"{action}"
                     : "NoAction";
                 var txId = tx.Id.ToString();
-                var sentryTrace = SentrySdk.StartTransaction(
-                    actionName,
-                    "PutTransaction");
-                sentryTrace.SetTag("TxId", txId);
-                var span = sentryTrace.StartChild(
-                    "BroadcastTX",
-                    $"Broadcast Transaction {txId}");
 
                 try
                 {
@@ -101,17 +90,11 @@ namespace NineChronicles.Headless
                         Log.Debug("Skip StageTransaction({TxId}) reason: {Msg}", tx.Id, validationExc.Message);
                     }
 
-                    span.Finish();
-                    sentryTrace.StartChild(
-                        "ExecuteAction",
-                        $"Execute Action {actionName} from tx {txId}");
-                    _sentryTraces.TryAdd(txId, sentryTrace);
                     return new UnaryResult<bool>(true);
                 }
                 catch (InvalidTxException ite)
                 {
                     Log.Error(ite, $"{nameof(InvalidTxException)} occurred during {nameof(PutTransaction)}(). {{e}}", ite);
-                    sentryTrace.Finish(ite);
                     return new UnaryResult<bool>(false);
                 }
             }
