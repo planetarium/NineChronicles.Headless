@@ -35,7 +35,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var fungibleAssetValues = context.GetArgument<List<FungibleAssetValue>>("fungibleAssetValues");
-                    var items = context.GetArgument<List<(int ItemIdAndCountInputType, int count)>>("items");
+                    var items = context.GetArgument<List<(int itemId, int count)>>("items");
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     ActionBase action = new IssueToken
                     {
