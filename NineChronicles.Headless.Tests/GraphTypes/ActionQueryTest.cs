@@ -1552,7 +1552,7 @@ actionPoint: {actionPoint},
                 ? "[{ticker: \"CRYSTAL\", decimalPlaces: 18, quantity: 100}]"
                 : "[]";
             var items = itemExist
-                ? "[{itemId: 500000, count: 100}]"
+                ? "[{itemId: 500000, count: 100, tradable: true}, {itemId: 500000, count: 100, tradable: false}]"
                 : "[]";
             var query = $@"{{
                 issueToken(
@@ -1581,9 +1581,13 @@ actionPoint: {actionPoint},
 
             if (itemExist)
             {
-                var (itemId, count) = action.Items.First();
-                Assert.Equal(500000, itemId);
-                Assert.Equal(100, count);
+                for (int i = 0; i < action.Items.Count; i++)
+                {
+                    var (itemId, count, tradable) = action.Items[i];
+                    Assert.Equal(500000, itemId);
+                    Assert.Equal(100, count);
+                    Assert.Equal(i == 0, tradable);
+                }
             }
         }
     }
