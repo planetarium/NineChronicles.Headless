@@ -57,7 +57,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public int RandomSeed { get; }
 
-            public bool BlockAction => TxId is null;
+            public bool IsPolicyAction => TxId is null;
 
             // NOTE: Replay does not support block actions.
             public IReadOnlyList<ITransaction> Txs => ImmutableList<ITransaction>.Empty;
