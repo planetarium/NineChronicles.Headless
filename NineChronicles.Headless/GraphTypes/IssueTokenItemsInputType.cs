@@ -7,7 +7,7 @@ namespace NineChronicles.Headless.GraphTypes.Input
     {
         public IssueTokenItemsInputType()
         {
-            Name = "ItemIdAndCountInput";
+            Name = "IssueTokenItemsInputType";
 
             Field<NonNullGraphType<IntGraphType>>(
                 name: "itemId",
