@@ -21,7 +21,7 @@ namespace NineChronicles.Headless.GraphTypes
                         Name = "fungibleAssetValues",
                         Description = "List of FungibleAssetValues for wrapping token"
                     },
-                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<ItemIdAndCountInputType>>>>
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<IssueTokenItemsInputType>>>>
                     {
                         Name = "items",
                         Description = "List of pair of item id, count for wrapping token"
@@ -35,7 +35,7 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var fungibleAssetValues = context.GetArgument<List<FungibleAssetValue>>("fungibleAssetValues");
-                    var items = context.GetArgument<List<(int itemId, int count)>>("items");
+                    var items = context.GetArgument<List<(int itemId, int count, bool tradable)>>("items");
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
                     ActionBase action = new IssueToken
                     {

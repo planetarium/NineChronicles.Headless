@@ -3,9 +3,9 @@ using GraphQL.Types;
 
 namespace NineChronicles.Headless.GraphTypes.Input
 {
-    public class ItemIdAndCountInputType : InputObjectGraphType<(int itemId, int count)>
+    public class IssueTokenItemsInputType : InputObjectGraphType<(int itemId, int count, bool tradable)>
     {
-        public ItemIdAndCountInputType()
+        public IssueTokenItemsInputType()
         {
             Name = "ItemIdAndCountInput";
 
@@ -16,13 +16,18 @@ namespace NineChronicles.Headless.GraphTypes.Input
             Field<NonNullGraphType<IntGraphType>>(
                 name: "count",
                 description: "Count");
+
+            Field<NonNullGraphType<BooleanGraphType>>(
+                name: "tradable",
+                description: "item can be tradable");
         }
 
         public override object ParseDictionary(IDictionary<string, object?> value)
         {
             var itemId = (int)value["itemId"]!;
             var count = (int)value["count"]!;
-            return (itemId, count);
+            var tradable = (bool)value["tradable"]!;
+            return (itemId, count, tradable);
         }
     }
 }
