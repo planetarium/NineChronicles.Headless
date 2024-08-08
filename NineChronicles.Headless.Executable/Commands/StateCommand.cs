@@ -109,7 +109,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 new MemoryStore(),
                 sStore);
             var actionEvaluator = new ActionEvaluator(
-                _ => policy.BlockAction,
+                policyActionsRegistry: policy.PolicyActionsRegistry,
                 sStore,
                 new NCActionLoader());
 

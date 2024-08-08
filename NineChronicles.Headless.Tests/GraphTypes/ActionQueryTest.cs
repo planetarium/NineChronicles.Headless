@@ -1539,5 +1539,56 @@ actionPoint: {actionPoint},
 
             Assert.Equal(avatarAddress, action.AvatarAddress);
         }
+
+        [Theory]
+        [InlineData(true, true)]
+        [InlineData(true, false)]
+        [InlineData(false, true)]
+        [InlineData(false, false)]
+        public async Task IssueToken(bool favExist, bool itemExist)
+        {
+            var avatarAddress = new PrivateKey().Address;
+            var fungibleAssetValues = favExist
+                ? "[{ticker: \"CRYSTAL\", decimalPlaces: 18, quantity: 100}]"
+                : "[]";
+            var items = itemExist
+                ? "[{itemId: 500000, count: 100, tradable: true}, {itemId: 500000, count: 100, tradable: false}]"
+                : "[]";
+            var query = $@"{{
+                issueToken(
+                    avatarAddress: ""{avatarAddress}"",
+                    fungibleAssetValues: {fungibleAssetValues},
+                    items: {items}
+                )
+            }}";
+
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["issueToken"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var actionBase = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<IssueToken>(actionBase);
+
+            Assert.Equal(avatarAddress, action.AvatarAddress);
+            Assert.Equal(favExist, action.FungibleAssetValues.Any());
+            Assert.Equal(itemExist, action.Items.Any());
+
+            if (favExist)
+            {
+                var fav = action.FungibleAssetValues.First();
+                Assert.Equal(Currencies.Crystal * 100, fav);
+            }
+
+            if (itemExist)
+            {
+                for (int i = 0; i < action.Items.Count; i++)
+                {
+                    var (itemId, count, tradable) = action.Items[i];
+                    Assert.Equal(500000, itemId);
+                    Assert.Equal(100, count);
+                    Assert.Equal(i == 0, tradable);
+                }
+            }
+        }
     }
 }

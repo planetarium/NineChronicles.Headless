@@ -27,7 +27,6 @@ namespace NineChronicles.Headless.Tests
                 "",
                 0,
                 new RpcContext(),
-                new ConcurrentDictionary<string, Sentry.ITransaction>(),
                 new StateMemoryCache()
             );
             _startup = new GraphQLService.GraphQLStartup(_configuration, standaloneContext, publisher);
