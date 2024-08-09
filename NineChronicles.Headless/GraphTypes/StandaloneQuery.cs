@@ -200,9 +200,11 @@ namespace NineChronicles.Headless.GraphTypes
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!"
                         );
                     }
+
                     var baseIndex = context.GetArgument<long>("baseIndex");
                     var changedIndex = context.GetArgument<long>("changedIndex");
                     var accountAddress = context.GetArgument<Address>("accountAddress");
+
                     var blockInterval = Math.Abs(changedIndex - baseIndex);
                     if (blockInterval >= 30 || blockInterval == 0)
                     {
@@ -210,24 +212,32 @@ namespace NineChronicles.Headless.GraphTypes
                             "Interval between baseIndex and changedIndex should not be greater than 30 or zero"
                         );
                     }
+
                     var baseBlockStateRootHash = blockChain[baseIndex].StateRootHash.ToString();
                     var changedBlockStateRootHash = blockChain[changedIndex].StateRootHash.ToString();
+
                     var baseStateRootHash = HashDigest<SHA256>.FromString(baseBlockStateRootHash);
                     var targetStateRootHash = HashDigest<SHA256>.FromString(
                         changedBlockStateRootHash
                     );
+
                     var stateStore = standaloneContext.StateStore;
                     var baseTrieModel = stateStore.GetStateRoot(baseStateRootHash);
                     var targetTrieModel = stateStore.GetStateRoot(targetStateRootHash);
+
                     var accountKey = new KeyBytes(ByteUtil.Hex(accountAddress.ByteArray));
+
                     Binary GetAccountState(ITrie model, KeyBytes key)
                     {
                         return model.Get(key) is Binary state ? state : throw new Exception($"Account state not found.");
                     }
+
                     var baseAccountState = GetAccountState(baseTrieModel, accountKey);
                     var targetAccountState = GetAccountState(targetTrieModel, accountKey);
+
                     var baseSubTrieModel = stateStore.GetStateRoot(new HashDigest<SHA256>(baseAccountState));
                     var targetSubTrieModel = stateStore.GetStateRoot(new HashDigest<SHA256>(targetAccountState));
+
                     var subDiff = baseSubTrieModel
                         .Diff(targetSubTrieModel)
                         .Select(diff => new StateDiffType.Value(
