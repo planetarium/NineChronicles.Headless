@@ -168,7 +168,6 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<StateDiffType>>>>(
                 name: "accountDiffs",
                 description: "This field allows you to query the diffs based accountAddress between two blocks." +
@@ -246,7 +245,6 @@ namespace NineChronicles.Headless.GraphTypes
                             diff.SourceValue,
                             diff.TargetValue))
                         .ToArray();
-
                     return subDiff;
                 }
             );

@@ -113,7 +113,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 "",
                 0,
                 new RpcContext(),
-                new ConcurrentDictionary<string, Sentry.ITransaction>(),
                 new StateMemoryCache()
             );
             services.AddSingleton(publisher);
