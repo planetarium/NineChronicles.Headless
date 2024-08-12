@@ -2,6 +2,7 @@ using GraphQL.Types;
 using Libplanet.Crypto;
 using Libplanet.Types.Blocks;
 using Libplanet.Explorer.GraphTypes;
+using Block = NineChronicles.Headless.Domain.Model.BlockChain.Block;
 
 namespace NineChronicles.Headless.GraphTypes
 {

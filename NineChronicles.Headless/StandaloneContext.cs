@@ -36,7 +36,7 @@ namespace NineChronicles.Headless
         public bool BootstrapEnded { get; set; }
         public bool PreloadEnded { get; set; }
         public bool IsMining { get; set; }
-        public ReplaySubject<NodeStatusType> NodeStatusSubject { get; } = new(1);
+        public ReplaySubject<NodeStatusType.NodeStatus> NodeStatusSubject { get; } = new(1);
         public ReplaySubject<BlockSyncState> PreloadStateSubject { get; } = new(5);
 
         public Subject<DifferentAppProtocolVersionEncounter> DifferentAppProtocolVersionEncounterSubject { get; } =
@@ -51,12 +51,8 @@ namespace NineChronicles.Headless
             AgentAddresses
         { get; } = new ConcurrentDictionary<Address, ReplaySubject<string>>();
 
-        public NodeStatusType NodeStatus => new(this)
-        {
-            BootstrapEnded = BootstrapEnded,
-            PreloadEnded = PreloadEnded,
-            IsMining = IsMining,
-        };
+        public NodeStatusType.NodeStatus NodeStatus => new(
+            BootstrapEnded: BootstrapEnded, PreloadEnded: PreloadEnded, IsMining: IsMining);
 
         public IStore Store
         {

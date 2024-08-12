@@ -1,6 +1,5 @@
 using GraphQL;
 using GraphQL.Types;
-using Libplanet.Blockchain;
 using Libplanet.Crypto;
 using Libplanet.Types.Blocks;
 using Libplanet.Explorer.GraphTypes;
@@ -10,11 +9,17 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
+using NineChronicles.Headless.Repositories.BlockChain;
+using Block = NineChronicles.Headless.Domain.Model.BlockChain.Block;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    public class NodeStatusType : ObjectGraphType<NodeStatusType>
+    public class NodeStatusType : ObjectGraphType<NodeStatusType.NodeStatus>
     {
+#pragma warning disable SA1313
+        public record NodeStatus(bool BootstrapEnded, bool PreloadEnded, bool IsMining);
+#pragma warning restore SA1313
+
         private static readonly string _productVersion =
             Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "Unknown";
 
@@ -22,13 +27,7 @@ namespace NineChronicles.Headless.GraphTypes
             Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                 ?.InformationalVersion ?? "Unknown";
 
-        public bool BootstrapEnded { get; set; }
-
-        public bool PreloadEnded { get; set; }
-
-        public bool IsMining { get; set; }
-
-        public NodeStatusType(StandaloneContext context)
+        public NodeStatusType(StandaloneContext context, IBlockChainRepository blockChainRepository)
         {
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "bootstrapEnded",
@@ -43,9 +42,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<BlockHeaderType>>(
                 name: "tip",
                 description: "Block header of the tip block from the current canonical chain.",
-                resolve: _ => context.BlockChain is { } blockChain
-                    ? BlockHeaderType.FromBlock(blockChain.Tip)
-                    : null
+                resolve: _ => BlockHeaderType.FromBlock(blockChainRepository.GetTip())
             );
             Field<NonNullGraphType<ListGraphType<BlockHeaderType>>>(
                 name: "topmostBlocks",
@@ -72,13 +69,8 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "The topmost blocks from the current node.",
                 resolve: fieldContext =>
                 {
-                    if (context.BlockChain is null)
-                    {
-                        throw new InvalidOperationException($"{nameof(context.BlockChain)} is null.");
-                    }
-
                     IEnumerable<Block> blocks =
-                        GetTopmostBlocks(context.BlockChain, fieldContext.GetArgument<int>("offset"));
+                        blockChainRepository.IterateBlocksDescending(fieldContext.GetArgument<int>("offset"));
                     if (fieldContext.GetArgument<Address?>("miner") is { } miner)
                     {
                         blocks = blocks.Where(b => b.Miner.Equals(miner));
@@ -136,9 +128,7 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "genesis",
                 description: "Block header of the genesis block from the current chain.",
                 resolve: fieldContext =>
-                    context.BlockChain is { } blockChain
-                        ? BlockHeaderType.FromBlock(blockChain.Genesis)
-                        : null
+                    BlockHeaderType.FromBlock(blockChainRepository.GetBlock(0))
             );
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "isMining",
@@ -172,33 +162,6 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "A informational version (a.k.a. version suffix) of NineChronicles.Headless",
                 resolve: _ => _informationalVersion
             );
-        }
-
-        private IEnumerable<Block> GetTopmostBlocks(BlockChain blockChain, int offset)
-        {
-            Block block = blockChain.Tip;
-
-            while (offset > 0)
-            {
-                offset--;
-                if (block.PreviousHash is { } prev)
-                {
-                    block = blockChain[prev];
-                }
-            }
-
-            while (true)
-            {
-                yield return block;
-                if (block.PreviousHash is { } prev)
-                {
-                    block = blockChain[prev];
-                }
-                else
-                {
-                    break;
-                }
-            }
         }
     }
 }
