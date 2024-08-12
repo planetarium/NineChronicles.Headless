@@ -334,7 +334,8 @@ namespace Libplanet.Headless.Hosting
                         path,
                         maxTotalWalSize: 16 * 1024 * 1024,
                         maxLogFileSize: 16 * 1024 * 1024,
-                        keepLogFileNum: 1
+                        keepLogFileNum: 1,
+                        dbConnectionCacheSize: 5
                     );
                     Log.Debug("RocksDB is initialized.");
                 }
