@@ -42,16 +42,17 @@ public class DPoSGenesisCommand
         var validators = genesisConfig.InitialValidators ?? new List<ValidatorConfig>();
         string stateStorePath = Path.Combine(storePath, "states");
         IStateStore stateStore = new TrieStateStore(new RocksDBKeyValueStore(stateStorePath));
-        var block = DPoSBlockHelper.ProposeGenesisBlock(
-            privateKey,
-            stateStore,
-            initialNCGs.ToDictionary(
+        /*var block = DPoSBlockHelper.ProposeGenesisBlock(
+            stateStore: stateStore,
+            privateKey: privateKey,
+            goldCurrency: null,
+            initialNCGs: initialNCGs.ToDictionary(
                 v => new Address(v.Address),
                 v => (BigInteger)v.Amount),
-            validators.ToDictionary(
+            initialValidators: validators.ToDictionary(
                 v => PublicKey.FromHex(v.PublicKey),
                 v => (BigInteger)v.Power));
-        Lib9cUtils.ExportBlock(block, "genesis-block");
+        Lib9cUtils.ExportBlock(block, "genesis-block");*/
     }
     
 #pragma warning disable S3459

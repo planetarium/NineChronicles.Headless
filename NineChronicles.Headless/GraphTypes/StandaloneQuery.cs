@@ -72,11 +72,6 @@ namespace NineChronicles.Headless.GraphTypes
                         return null;
                     }
 
-                    if (!(blockHash is { } hash))
-                    {
-                        return null;
-                    }
-
                     return new StateContext(
                         chain.GetWorldState(hash),
                         chain[blockHash].Index,
