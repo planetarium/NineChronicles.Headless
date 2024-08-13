@@ -35,7 +35,8 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneQuery : ObjectGraphType
     {
-        private readonly ActivitySource _activitySource = new ActivitySource("GraphQL");
+        private readonly ActivitySource _activitySource = new ActivitySource("NineChronicles.Headless.GraphTypes.StandaloneQuery");
+
         public StandaloneQuery(StandaloneContext standaloneContext, IConfiguration configuration, ActionEvaluationPublisher publisher, StateMemoryCache stateMemoryCache)
         {
             bool useSecretToken = configuration[GraphQLService.SecretTokenKey] is { };
@@ -106,6 +107,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
+                    using var activity = _activitySource.StartActivity("diffs");
                     if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
@@ -198,6 +200,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
+                    using var activity = _activitySource.StartActivity("accountDiffs");
                     if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
@@ -278,9 +281,12 @@ namespace NineChronicles.Headless.GraphTypes
                         ({ } bytes, null) => new BlockHash(bytes),
                         (null, null) => blockChain.Tip.Hash,
                     };
-                    activity?.AddTag("BlockHash", blockHash.ToString());
                     var accountAddress = context.GetArgument<Address>("accountAddress");
                     var address = context.GetArgument<Address>("address");
+
+                    activity?
+                        .AddTag("BlockHash", blockHash.ToString())
+                        .AddTag("Address", address.ToString());
 
                     var state = blockChain
                         .GetWorldState(blockHash)
@@ -368,8 +374,11 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<NodeStatusType>>(
                 name: "nodeStatus",
-                resolve: _ => new NodeStatusType(standaloneContext)
-            );
+                resolve: _ =>
+                {
+                    using var activity = _activitySource.StartActivity("nodeStatus");
+                    return new NodeStatusType(standaloneContext);
+                });
 
             Field<NonNullGraphType<Libplanet.Explorer.Queries.ExplorerQuery>>(
                 name: "chainQuery",
