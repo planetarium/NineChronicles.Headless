@@ -1,6 +1,9 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine AS build-env
 WORKDIR /app
 ARG COMMIT
+
+RUN apk update \
+    && apk add --no-cache gcompat libc6-compat protoc libc-dev jq curl libstdc++ rocksdb-dev
 
 # Copy csproj and restore as distinct layers
 COPY ./Lib9c/Lib9c/Lib9c.csproj ./Lib9c/
@@ -18,22 +21,19 @@ RUN dotnet restore NineChronicles.Headless.Executable
 COPY . ./
 RUN dotnet publish NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj \
     -c Release \
-    -r linux-x64 \
+    -r linux-musl-x64 \
     -o out \
     --self-contained \
     --version-suffix $COMMIT
 
 # Build runtime image
-FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/aspnet:6.0-bullseye-slim
+FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/aspnet:6.0-alpine
 WORKDIR /app
-RUN apt-get update && apt-get install -y libc6-dev liblz4-dev zlib1g-dev libsnappy-dev libzstd-dev
 COPY --from=build-env /app/out .
 
 # Install native deps & utilities for production
-RUN apt-get update \
-    && apt-get install -y --allow-unauthenticated \
-        libc6-dev liblz4-dev zlib1g-dev libsnappy-dev libzstd-dev jq curl \
-     && rm -rf /var/lib/apt/lists/*
+RUN apk update \
+    && apk add --no-cache gcompat libc6-compat protoc libc-dev jq curl libstdc++ rocksdb-dev
 
 VOLUME /data
 
