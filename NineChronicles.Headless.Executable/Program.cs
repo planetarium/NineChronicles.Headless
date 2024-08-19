@@ -466,7 +466,7 @@ namespace NineChronicles.Headless.Executable
                                 .AddSource("NineChronicles.Headless.GraphTypes.StandaloneQuery")
                                 .AddSource("NineChronicles.Headless.GraphTypes.StandaloneMutation")
                                 .AddSource("NineChronicles.Headless.GraphTypes.TransactionHeadlessQuery")
-                                //.AddAspNetCoreInstrumentation()
+                                .AddAspNetCoreInstrumentation()
                                 .AddGrpcClientInstrumentation()
                                 .AddProcessor(new Pyroscope.OpenTelemetry.PyroscopeSpanProcessor())
                                 .AddOtlpExporter(opt =>
