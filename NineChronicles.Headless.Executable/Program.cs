@@ -37,11 +37,12 @@ using Libplanet.Headless;
 using Libplanet.Headless.Hosting;
 using Libplanet.Net.Transports;
 using Nekoyume.Action.Loader;
-using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using Nekoyume;
+using NineChronicles.Headless.Services;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using StackExchange.Redis;
 
 namespace NineChronicles.Headless.Executable
 {
@@ -218,9 +219,11 @@ namespace NineChronicles.Headless.Executable
             [Option(Description = "arena participants list sync interval time")]
             int? arenaParticipantsSyncInterval = null,
             [Option(Description = "arena participants list sync enable")]
-            bool arenaParticipantsSync = true,
+            bool arenaParticipantsSync = false,
             [Option(Description = "[DANGER] Turn on RemoteKeyValueService to debug.")]
             bool remoteKeyValueService = false,
+            [Option(Description = "redis cache connection string")]
+            string? redisConnectionString = "localhost:6379",
             [Ignore] CancellationToken? cancellationToken = null
         )
         {
@@ -303,7 +306,7 @@ namespace NineChronicles.Headless.Executable
                 txLifeTime, messageTimeout, tipTimeout, demandBuffer, skipPreload,
                 minimumBroadcastTarget, bucketSize, chainTipStaleBehaviorType, txQuotaPerSigner, maximumPollPeers,
                 consensusPort, consensusPrivateKeyString, consensusSeedStrings, consensusTargetBlockIntervalMilliseconds, consensusProposeSecondBase,
-                maxTransactionPerBlock, arenaParticipantsSyncInterval, remoteKeyValueService
+                maxTransactionPerBlock,  arenaParticipantsSyncInterval, remoteKeyValueService, redisConnectionString
             );
 
             // Clean-up previous temporary log files.
@@ -439,9 +442,20 @@ namespace NineChronicles.Headless.Executable
                     };
                 var arenaMemoryCache = new StateMemoryCache();
                 string otlpEndpoint = Environment.GetEnvironmentVariable("OTLP_ENDPOINT") ?? "http://localhost:4317";
+                var configurationOptions = new ConfigurationOptions
+                {
+                    EndPoints = { headlessConfig.RedisConnectionString },
+                    ConnectTimeout = 5000,
+                    SyncTimeout = 5000,
+                };
+
+                var redis = await ConnectionMultiplexer.ConnectAsync(configurationOptions);
+                var arenaParticipantsService = new RedisArenaParticipantsService(redis);
+
                 hostBuilder.ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => standaloneContext);
+                    services.AddSingleton<IConnectionMultiplexer>(_ => redis);
                     services.AddOpenTelemetry()
                         .ConfigureResource(resource => resource.AddService(
                                 serviceName: Assembly.GetEntryAssembly()?.GetName().Name ?? "NineChronicles.Headless",
@@ -473,11 +487,8 @@ namespace NineChronicles.Headless.Executable
                         );
 
                     // worker
-                    if (arenaParticipantsSync)
-                    {
-                        services.AddHostedService(_ => new ArenaParticipantsWorker(arenaMemoryCache, standaloneContext, headlessConfig.ArenaParticipantsSyncInterval));
-                    }
                     services.AddSingleton(arenaMemoryCache);
+                    services.AddScoped<IRedisArenaParticipantsService, RedisArenaParticipantsService>(_ => arenaParticipantsService);
                 });
 
                 NineChroniclesNodeService service =

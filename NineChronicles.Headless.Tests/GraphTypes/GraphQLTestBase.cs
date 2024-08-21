@@ -1,7 +1,5 @@
 using GraphQL;
-using Libplanet;
 using Libplanet.Action;
-using Libplanet.Action.Loader;
 using Libplanet.Action.Sys;
 using Libplanet.Types.Assets;
 using Libplanet.Blockchain;
@@ -12,15 +10,11 @@ using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
 using Libplanet.KeyStore;
 using Libplanet.Net;
-using Libplanet.Store;
-using Libplanet.Store.Trie;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Nekoyume.Action;
-using Nekoyume.Action.Loader;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
-using Nekoyume.Blockchain.Policy;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common;
 using Serilog;
@@ -35,6 +29,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using Libplanet.Types.Tx;
+using Moq;
+using NineChronicles.Headless.Services;
+using StackExchange.Redis;
 using Xunit.Abstractions;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
@@ -123,6 +120,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             services.AddSingleton(ncService);
             services.AddSingleton(ncService.Store);
             services.AddSingleton<StateMemoryCache>();
+            var connectionMultiplexer = new Mock<IConnectionMultiplexer>();
+            var service = new RedisArenaParticipantsService(connectionMultiplexer.Object);
+            services.AddSingleton<IConnectionMultiplexer>(_ => connectionMultiplexer.Object);
+            services.AddScoped<IRedisArenaParticipantsService, RedisArenaParticipantsService>(_ => service);
             ServiceProvider serviceProvider = services.BuildServiceProvider();
             Schema = new StandaloneSchema(serviceProvider);
 

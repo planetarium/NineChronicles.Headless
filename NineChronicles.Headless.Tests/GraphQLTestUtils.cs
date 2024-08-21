@@ -19,12 +19,15 @@ using Libplanet.Types.Blocks;
 using Libplanet.Types.Consensus;
 using Libplanet.Types.Tx;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Action.Loader;
 using Nekoyume.Model.State;
 using Nekoyume.Module;
+using NineChronicles.Headless.Services;
 using NineChronicles.Headless.Utils;
+using StackExchange.Redis;
 
 namespace NineChronicles.Headless.Tests
 {
@@ -61,6 +64,11 @@ namespace NineChronicles.Headless.Tests
 
             services.AddLibplanetExplorer();
             services.AddSingleton<StateMemoryCache>();
+
+            var connectionMultiplexer = new Mock<IConnectionMultiplexer>();
+            var service = new RedisArenaParticipantsService(connectionMultiplexer.Object);
+            services.AddSingleton<IConnectionMultiplexer>(_ => connectionMultiplexer.Object);
+            services.AddScoped<IRedisArenaParticipantsService, RedisArenaParticipantsService>(_ => service);
 
             var serviceProvider = services.BuildServiceProvider();
             return ExecuteQueryAsync<TObjectGraphType>(

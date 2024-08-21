@@ -95,6 +95,8 @@ namespace NineChronicles.Headless.Executable
 
         public int ArenaParticipantsSyncInterval { get; set; } = 1000;
 
+        public string RedisConnectionString { get; set; } = "";
+
         public void Overwrite(
             string? appProtocolVersionString,
             string[]? trustedAppProtocolVersionSignerStrings,
@@ -144,7 +146,8 @@ namespace NineChronicles.Headless.Executable
             int? consensusProposeSecondBase,
             int? maxTransactionPerBlock,
             int? arenaParticipantsSyncInterval,
-            bool? remoteKeyValueService
+            bool? remoteKeyValueService,
+            string? redisConnectionString
         )
         {
             AppProtocolVersionString = appProtocolVersionString ?? AppProtocolVersionString;
@@ -197,6 +200,7 @@ namespace NineChronicles.Headless.Executable
             MaxTransactionPerBlock = maxTransactionPerBlock ?? MaxTransactionPerBlock;
             ArenaParticipantsSyncInterval = arenaParticipantsSyncInterval ?? ArenaParticipantsSyncInterval;
             RemoteKeyValueService = remoteKeyValueService ?? RemoteKeyValueService;
+            RedisConnectionString = redisConnectionString ?? RedisConnectionString;
         }
     }
 }

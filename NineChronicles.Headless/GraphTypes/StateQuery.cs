@@ -29,6 +29,7 @@ using NineChronicles.Headless.GraphTypes.States.Models;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
 using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
 using NineChronicles.Headless.GraphTypes.States.Models.Table;
+using NineChronicles.Headless.Services;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -36,9 +37,12 @@ namespace NineChronicles.Headless.GraphTypes
     {
         private readonly Codec _codec = new Codec();
 
-        public StateQuery()
+        private readonly IRedisArenaParticipantsService ArenaParticipantsService;
+
+        public StateQuery(IRedisArenaParticipantsService arenaParticipantsService)
         {
             Name = "StateQuery";
+            ArenaParticipantsService = arenaParticipantsService;
 
             AvatarStateType.AvatarStateContext? GetAvatarState(StateContext context, Address address)
             {
@@ -649,7 +653,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             RegisterGarages();
 
-            Field<NonNullGraphType<ListGraphType<ArenaParticipantType>>>(
+            FieldAsync<NonNullGraphType<ListGraphType<ArenaParticipantType>>>(
                 "arenaParticipants",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
@@ -662,7 +666,7 @@ namespace NineChronicles.Headless.GraphTypes
                         DefaultValue = true,
                     }
                 ),
-                resolve: context =>
+                resolve: async context =>
                 {
                     // Copy from NineChronicles RxProps.Arena
                     // https://github.com/planetarium/NineChronicles/blob/80.0.1/nekoyume/Assets/_Scripts/State/RxProps.Arena.cs#L279
@@ -679,16 +683,13 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         playerScore = (Integer)scores[1];
                     }
-                    if (context.Source.StateMemoryCache.ArenaParticipantsCache.TryGetValue(cacheKey,
-                            out var cachedResult))
+
+                    result = await ArenaParticipantsService.GetValueAsync(cacheKey);
+                    foreach (var arenaParticipant in result)
                     {
-                        result = (cachedResult as List<ArenaParticipant>)!;
-                        foreach (var arenaParticipant in result)
-                        {
-                            var (win, lose, _) = ArenaHelper.GetScores(playerScore, arenaParticipant.Score);
-                            arenaParticipant.WinScore = win;
-                            arenaParticipant.LoseScore = lose;
-                        }
+                        var (win, lose, _) = ArenaHelper.GetScores(playerScore, arenaParticipant.Score);
+                        arenaParticipant.WinScore = win;
+                        arenaParticipant.LoseScore = lose;
                     }
 
                     if (filterBounds)
