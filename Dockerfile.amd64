@@ -3,7 +3,9 @@ WORKDIR /app
 ARG COMMIT
 
 RUN apk update \
-    && apk add --no-cache gcompat libc6-compat protoc libc-dev jq curl libstdc++ rocksdb-dev
+    && apk add --no-cache gcompat libc6-compat protoc grpc-plugins libc-dev jq curl libstdc++ rocksdb-dev
+
+ENV PROTOBUF_PROTOC=/usr/bin/protoc GRPC_PROTOC_PLUGIN=/usr/bin/grpc_csharp_plugin
 
 # Copy csproj and restore as distinct layers
 COPY ./Lib9c/Lib9c/Lib9c.csproj ./Lib9c/
@@ -33,7 +35,9 @@ COPY --from=build-env /app/out .
 
 # Install native deps & utilities for production
 RUN apk update \
-    && apk add --no-cache gcompat libc6-compat protoc libc-dev jq curl libstdc++ rocksdb-dev
+    && apk add --no-cache gcompat libc6-compat protoc grpc-plugins libc-dev jq curl libstdc++ rocksdb-dev
+
+ENV PROTOBUF_PROTOC=/usr/bin/protoc GRPC_PROTOC_PLUGIN=/usr/bin/grpc_csharp_plugin
 
 VOLUME /data
 
