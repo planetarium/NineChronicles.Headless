@@ -445,8 +445,8 @@ namespace NineChronicles.Headless.Executable
                 var configurationOptions = new ConfigurationOptions
                 {
                     EndPoints = { headlessConfig.RedisConnectionString },
-                    ConnectTimeout = 500,
-                    SyncTimeout = 500,
+                    ConnectTimeout = 5000,
+                    SyncTimeout = 5000,
                 };
 
                 var redis = await ConnectionMultiplexer.ConnectAsync(configurationOptions);
@@ -487,10 +487,6 @@ namespace NineChronicles.Headless.Executable
                         );
 
                     // worker
-                    if (arenaParticipantsSync)
-                    {
-                        services.AddHostedService(_ => new ArenaParticipantsWorker(standaloneContext, headlessConfig.ArenaParticipantsSyncInterval, arenaParticipantsService));
-                    }
                     services.AddSingleton(arenaMemoryCache);
                     services.AddScoped<IRedisArenaParticipantsService, RedisArenaParticipantsService>(_ => arenaParticipantsService);
                 });
