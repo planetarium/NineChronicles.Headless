@@ -35,8 +35,7 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneQuery : ObjectGraphType
     {
-        private static readonly ActivitySource _activitySource 
-            = new ActivitySource("NineChronicles.Headless.GraphTypes.StandaloneQuery");
+        private static readonly ActivitySource ActivitySource = new ActivitySource("NineChronicles.Headless.GraphTypes.StandaloneQuery");
 
         public StandaloneQuery(StandaloneContext standaloneContext, IConfiguration configuration, ActionEvaluationPublisher publisher, StateMemoryCache stateMemoryCache)
         {
@@ -59,7 +58,7 @@ namespace NineChronicles.Headless.GraphTypes
                 }),
                 resolve: context =>
                 {
-                    using var activity = _activitySource.StartActivity("stateQuery");
+                    using var activity = ActivitySource.StartActivity("stateQuery");
                     BlockHash blockHash = (context.GetArgument<byte[]?>("hash"), context.GetArgument<long?>("index")) switch
                     {
                         ({ } bytes, null) => new BlockHash(bytes),
@@ -108,7 +107,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    using var activity = _activitySource.StartActivity("diffs");
+                    using var activity = ActivitySource.StartActivity("diffs");
                     if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
@@ -201,7 +200,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    using var activity = _activitySource.StartActivity("accountDiffs");
+                    using var activity = ActivitySource.StartActivity("accountDiffs");
                     if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
@@ -257,7 +256,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    using var activity = _activitySource.StartActivity("state");
+                    using var activity = ActivitySource.StartActivity("state");
                     if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
@@ -306,7 +305,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 ), resolve: context =>
                 {
-                    using var activity = _activitySource.StartActivity("transferNCGHistories");
+                    using var activity = ActivitySource.StartActivity("transferNCGHistories");
                     BlockHash blockHash = new BlockHash(context.GetArgument<byte[]>("blockHash"));
 
                     activity?.AddTag("BlockHash", blockHash.ToString());
@@ -367,7 +366,7 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "nodeStatus",
                 resolve: _ =>
                 {
-                    using var activity = _activitySource.StartActivity("nodeStatus");
+                    using var activity = ActivitySource.StartActivity("nodeStatus");
                     return new NodeStatusType(standaloneContext);
                 });
 
@@ -402,7 +401,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    using var activity = _activitySource.StartActivity("goldBalance");
+                    using var activity = ActivitySource.StartActivity("goldBalance");
                     if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
@@ -438,7 +437,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    using var activity = _activitySource.StartActivity("nextTxNonce");
+                    using var activity = ActivitySource.StartActivity("nextTxNonce");
                     if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
@@ -499,7 +498,7 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Get monster collection status by address.",
                 resolve: context =>
                 {
-                    using var activity = _activitySource.StartActivity(nameof(MonsterCollectionStatus));
+                    using var activity = ActivitySource.StartActivity(nameof(MonsterCollectionStatus));
                     if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
@@ -570,7 +569,7 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Query for transaction.",
                 resolve: context =>
                 {
-                    using var activity = _activitySource.StartActivity("transaction");
+                    using var activity = ActivitySource.StartActivity("transaction");
                     return new TransactionHeadlessQuery(standaloneContext);
                 });
 
@@ -658,7 +657,7 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Query to create action transaction.",
                 resolve: context =>
                 {
-                    using var activity = _activitySource.StartActivity("actionQuery");
+                    using var activity = ActivitySource.StartActivity("actionQuery");
                     return new ActionQuery(standaloneContext);
                 });
 
@@ -688,7 +687,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    using var activity = _activitySource.StartActivity("actionTxQuery");
+                    using var activity = ActivitySource.StartActivity("actionTxQuery");
                     return new ActionTxQuery(standaloneContext);
                 });
 
@@ -697,7 +696,7 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Query to get derived address.",
                 resolve: context =>
                 {
-                    using var activity = _activitySource.StartActivity("addressQuery");
+                    using var activity = ActivitySource.StartActivity("addressQuery");
                     return new AddressQuery(standaloneContext);
                 });
         }

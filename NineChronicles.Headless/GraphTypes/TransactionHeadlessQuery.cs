@@ -30,7 +30,7 @@ namespace NineChronicles.Headless.GraphTypes
 {
     class TransactionHeadlessQuery : ObjectGraphType
     {
-        private static readonly ActivitySource _activitySource =
+        private static readonly ActivitySource ActivitySource =
             new ActivitySource("NineChronicles.Headless.GraphTypes.TransactionHeadlessQuery");
 
         public TransactionHeadlessQuery(StandaloneContext standaloneContext)
@@ -42,7 +42,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    using var activity = _activitySource.StartActivity("nextTxNonce");
+                    using var activity = ActivitySource.StartActivity("nextTxNonce");
                     if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
@@ -90,7 +90,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    using var activity = _activitySource.StartActivity("ncTransactions");
+                    using var activity = ActivitySource.StartActivity("ncTransactions");
                     if (standaloneContext.BlockChain is not { } blockChain)
                     {
                         throw new ExecutionError(
@@ -213,7 +213,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    using var activity = _activitySource.StartActivity("transactionResult");
+                    using var activity = ActivitySource.StartActivity("transactionResult");
                     var txId = context.GetArgument<TxId>("txId");
                     activity?.AddTag("txId", txId.ToString());
                     return TxResult(standaloneContext, txId);
@@ -227,7 +227,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    using var activity = _activitySource.StartActivity("transactionResults");
+                    using var activity = ActivitySource.StartActivity("transactionResults");
                     return context.GetArgument<List<TxId>>("txIds")
                         .AsParallel()
                         .AsOrdered()
@@ -303,7 +303,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    using var activity = _activitySource.StartActivity("signTransaction");
+                    using var activity = ActivitySource.StartActivity("signTransaction");
                     byte[] signature = ByteUtil.ParseHex(context.GetArgument<string>("signature"));
                     IUnsignedTx unsignedTransaction =
                         TxMarshaler.DeserializeUnsignedTx(
@@ -383,7 +383,7 @@ namespace NineChronicles.Headless.GraphTypes
 
         private IEnumerable<Block> ListBlocks(BlockChain chain, long from, long limit)
         {
-            using var activity = _activitySource.StartActivity();
+            using var activity = ActivitySource.StartActivity();
             if (chain.Tip.Index < from)
             {
                 return new List<Block>();
