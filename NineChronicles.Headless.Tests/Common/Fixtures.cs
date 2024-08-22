@@ -68,10 +68,7 @@ namespace NineChronicles.Headless.Tests
             }
             return shopState;
         }
-
-        public static readonly List<CombinationSlotState> CombinationSlotStatesFx =
-            AvatarStateFX.combinationSlotAddresses.Select(x => new CombinationSlotState(x, 0)).ToList();
-
+        
         public static ShardedShopStateV2 ShardedWeapon0ShopStateV2FX()
         {
             Address shardedWeapon0ShopStateV2Address = ShardedShopStateV2.DeriveAddress(ItemSubType.Weapon, "0");

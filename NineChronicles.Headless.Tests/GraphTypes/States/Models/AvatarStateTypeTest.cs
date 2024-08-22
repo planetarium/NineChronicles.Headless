@@ -75,17 +75,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 true,
                 true);
             world = world.SetAgentState(Fixtures.UserAddress, Fixtures.AgentStateFx);
-
-            world.GetAllCombinationSlotState(Fixtures.AvatarAddress);
-
-            for (int i = 0; i < Fixtures.AvatarStateFX.combinationSlotAddresses.Count; i++)
-            {
-                world = world
-                    .SetLegacyState(
-                        Fixtures.AvatarStateFX.combinationSlotAddresses[i],
-                        Fixtures.CombinationSlotStatesFx[i].Serialize());
-            }
-
             var queryResult = await ExecuteQueryAsync<AvatarStateType>(
                 query,
                 source: new AvatarStateType.AvatarStateContext(
@@ -151,7 +140,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 new Dictionary<string, object>
                 {
                     ["address"] = Fixtures.AvatarAddress.ToString(),
-                    ["combinationSlots"] = Fixtures.CombinationSlotStatesFx.Select(x => new Dictionary<string, object?>
+                    ["combinationSlots"] = new World(MockWorldState.CreateModern()).GetAllCombinationSlotState(Fixtures.AvatarAddress).Select(x => new Dictionary<string, object?>
                     {
                         ["address"] = x.address.ToString(),
                         ["unlockBlockIndex"] = x.UnlockBlockIndex,
