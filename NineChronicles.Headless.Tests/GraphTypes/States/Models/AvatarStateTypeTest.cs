@@ -60,7 +60,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 combinationSlots {
                     address
                     unlockBlockIndex
-                    unlockStage
+                    isUnlocked
                     startBlockIndex
                     petId
                 }
@@ -75,6 +75,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                 true,
                 true);
             world = world.SetAgentState(Fixtures.UserAddress, Fixtures.AgentStateFx);
+
+            world.GetAllCombinationSlotState(Fixtures.AvatarAddress);
 
             for (int i = 0; i < Fixtures.AvatarStateFX.combinationSlotAddresses.Count; i++)
             {
@@ -153,7 +155,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     {
                         ["address"] = x.address.ToString(),
                         ["unlockBlockIndex"] = x.UnlockBlockIndex,
-                        ["unlockStage"] = x.UnlockStage,
+                        ["isUnlocked"] = x.IsUnlocked,
                         ["startBlockIndex"] = x.StartBlockIndex,
                         ["petId"] = x.PetId
                     }).ToArray<object>(),
