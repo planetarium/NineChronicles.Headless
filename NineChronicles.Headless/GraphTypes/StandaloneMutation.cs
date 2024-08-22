@@ -20,7 +20,7 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneMutation : ObjectGraphType
     {
-        private readonly ActivitySource _activitySource = new ActivitySource("NineChronicles.Headless.GraphTypes.StandaloneMutation");
+        private static readonly ActivitySource ActivitySource = new ActivitySource("NineChronicles.Headless.GraphTypes.StandaloneMutation");
 
         public StandaloneMutation(
             StandaloneContext standaloneContext,
@@ -63,7 +63,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    using var activity = _activitySource.StartActivity("stageTx");
+                    using var activity = ActivitySource.StartActivity("stageTx");
                     try
                     {
                         byte[] bytes = Convert.FromBase64String(context.GetArgument<string>("payload"));
@@ -183,7 +183,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    using var activity = _activitySource.StartActivity("transfer");
+                    using var activity = ActivitySource.StartActivity("transfer");
                     if (!(standaloneContext.NineChroniclesNodeService is { } service))
                     {
                         throw new InvalidOperationException($"{nameof(NineChroniclesNodeService)} is null.");
@@ -294,7 +294,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        using var activity = _activitySource.StartActivity("stageTransaction");
+                        using var activity = ActivitySource.StartActivity("stageTransaction");
                         byte[] bytes = ByteUtil.ParseHex(context.GetArgument<string>("payload"));
                         Transaction tx = Transaction.Deserialize(bytes);
                         NineChroniclesNodeService? service = standaloneContext.NineChroniclesNodeService;
