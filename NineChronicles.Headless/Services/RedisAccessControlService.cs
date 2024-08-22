@@ -18,6 +18,7 @@ namespace NineChronicles.Headless.Services
                 EndPoints = { storageUri },
                 ConnectTimeout = 500,
                 SyncTimeout = 500,
+                AbortOnConnectFail = false,
             };
 
             var redis = ConnectionMultiplexer.Connect(configurationOptions);
