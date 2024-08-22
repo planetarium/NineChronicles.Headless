@@ -66,9 +66,10 @@ namespace NineChronicles.Headless.Tests
                 var shopItem = new ShopItem(UserAddress, AvatarAddress, Guid.NewGuid(), i * CurrencyFX, equipment);
                 shopState.Register(shopItem);
             }
+
             return shopState;
         }
-        
+
         public static ShardedShopStateV2 ShardedWeapon0ShopStateV2FX()
         {
             Address shardedWeapon0ShopStateV2Address = ShardedShopStateV2.DeriveAddress(ItemSubType.Weapon, "0");
