@@ -142,19 +142,13 @@ namespace NineChronicles.Headless.GraphTypes.States
                     return runeStates.Runes.Values.ToList();
                 }
             );
-            Field<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>(
-                nameof(AvatarState.combinationSlotAddresses),
-                description: "Address list of combination slot.",
-                resolve: context => context.Source.AvatarState.combinationSlotAddresses);
             Field<NonNullGraphType<ListGraphType<NonNullGraphType<CombinationSlotStateType>>>>(
                 "combinationSlots",
                 description: "Combination slots.",
                 resolve: context =>
                 {
-                    var addresses = context.Source.AvatarState.combinationSlotAddresses;
-                    return context.Source.WorldState.GetLegacyStates(addresses)
-                        .OfType<Dictionary>()
-                        .Select(x => new CombinationSlotState(x));
+                    var allSlotState = context.Source.WorldState.GetAllCombinationSlotState(context.Source.AvatarState.address);
+                    return allSlotState.ToList();
                 });
             Field<NonNullGraphType<CollectionMapType>>(
                 nameof(AvatarState.itemMap),
