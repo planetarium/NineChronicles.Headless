@@ -239,7 +239,6 @@ namespace NineChronicles.Headless
                 app.UseAuthorization();
                 if (Convert.ToBoolean(Configuration.GetSection("IpRateLimiting")["EnableEndpointRateLimiting"]))
                 {
-                    app.UseMiddleware<CustomRateLimitMiddleware>();
                     app.UseMiddleware<IpBanMiddleware>();
                     app.UseMvc();
                 }
