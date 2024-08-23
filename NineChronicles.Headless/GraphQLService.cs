@@ -220,8 +220,6 @@ namespace NineChronicles.Headless
                         Publisher);
                 }
 
-                app.UseMiddleware<HttpCaptureMiddleware>();
-
                 app.UseMiddleware<LocalAuthenticationMiddleware>();
                 if (Convert.ToBoolean(Configuration.GetSection("Jwt")["EnableJwtAuthentication"]))
                 {
