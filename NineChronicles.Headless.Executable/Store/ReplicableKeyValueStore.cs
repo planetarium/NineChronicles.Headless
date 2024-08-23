@@ -42,6 +42,9 @@ public class ReplicableKeyValueStore : IKeyValueStore
         throw new KeyNotFoundException();
     }
 
+    public IDictionary<KeyBytes, byte[]> Get(IEnumerable<KeyBytes> keys) =>
+        throw new System.NotImplementedException();
+
     public void Set(in KeyBytes key, byte[] value)
     {
         _writeKvStore.Set(key, value);

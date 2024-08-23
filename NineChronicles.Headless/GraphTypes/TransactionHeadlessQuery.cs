@@ -30,7 +30,7 @@ namespace NineChronicles.Headless.GraphTypes
 {
     class TransactionHeadlessQuery : ObjectGraphType
     {
-        private readonly ActivitySource _activitySource =
+        private static readonly ActivitySource _activitySource =
             new ActivitySource("NineChronicles.Headless.GraphTypes.TransactionHeadlessQuery");
 
         public TransactionHeadlessQuery(StandaloneContext standaloneContext)

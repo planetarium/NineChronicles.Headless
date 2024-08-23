@@ -20,7 +20,8 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneMutation : ObjectGraphType
     {
-        private readonly ActivitySource _activitySource = new ActivitySource("NineChronicles.Headless.GraphTypes.StandaloneMutation");
+        private static readonly ActivitySource _activitySource 
+            = new ActivitySource("NineChronicles.Headless.GraphTypes.StandaloneMutation");
 
         public StandaloneMutation(
             StandaloneContext standaloneContext,

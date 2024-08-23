@@ -57,6 +57,8 @@ namespace NineChronicles.Headless
         public IKeyValueStore StateKeyValueStore => NodeService.StateKeyValueStore;
 
         public PrivateKey? MinerPrivateKey { get; set; }
+        
+        private static readonly Meter Metric = new Meter("NineChronicles");
 
         static NineChroniclesNodeService()
         {
@@ -224,23 +226,22 @@ namespace NineChronicles.Headless
                 acsOptions: properties.AccessControlServiceOptions
             );
             service.ConfigureContext(context);
-            var meter = new Meter("NineChronicles");
-            meter.CreateObservableGauge(
+            Metric.CreateObservableGauge(
                 "ninechronicles_tip_index",
                 () => service.BlockChain.Tip.Index,
                 description: "The tip block's index.");
-            meter.CreateObservableGauge(
+            Metric.CreateObservableGauge(
                 "ninechronicles_staged_txids_count",
                 () => service.BlockChain.GetStagedTransactionIds().Count,
                 description: "Number of staged transactions.");
-            meter.CreateObservableGauge(
+            Metric.CreateObservableGauge(
                 "ninechronicles_subscriber_addresses_count",
                 () => context.AgentAddresses.Count);
-            meter.CreateObservableGauge(
+            Metric.CreateObservableGauge(
                 "ninechronicles_tx_count",
                 () => service.BlockChain.Tip.Transactions.Count,
                 description: "The count of the tip block's transactions.");
-            meter.CreateObservableGauge(
+            Metric.CreateObservableGauge(
                 "ninechronicles_block_interval",
                 () =>
                 {

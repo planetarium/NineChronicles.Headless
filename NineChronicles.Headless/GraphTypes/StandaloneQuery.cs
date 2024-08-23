@@ -35,7 +35,8 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneQuery : ObjectGraphType
     {
-        private readonly ActivitySource _activitySource = new ActivitySource("NineChronicles.Headless.GraphTypes.StandaloneQuery");
+        private static readonly ActivitySource _activitySource 
+            = new ActivitySource("NineChronicles.Headless.GraphTypes.StandaloneQuery");
 
         public StandaloneQuery(StandaloneContext standaloneContext, IConfiguration configuration, ActionEvaluationPublisher publisher, StateMemoryCache stateMemoryCache)
         {

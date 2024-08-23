@@ -391,7 +391,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public byte[] Get(in KeyBytes key) => _dictionary[key];
 
-            public IReadOnlyDictionary<KeyBytes, byte[]> Get(IEnumerable<KeyBytes> keys)
+            public IDictionary<KeyBytes, byte[]> Get(IEnumerable<KeyBytes> keys)
             {
                 var dictBuilder = ImmutableDictionary.CreateBuilder<KeyBytes, byte[]>();
                 foreach (KeyBytes key in keys)
