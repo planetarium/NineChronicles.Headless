@@ -303,7 +303,7 @@ namespace NineChronicles.Headless
                 var serializedInput = "key";
 
                 // Check cache
-                if (_memoryCache.TryGetValue(serializedInput, out List<(HashSet<string> IPs, HashSet<string> IDs)> cachedResult))
+                if (_memoryCache.TryGetValue(serializedInput, out List<(HashSet<string> IPs, HashSet<string> IDs)>? cachedResult) && cachedResult is { })
                 {
                     return cachedResult;
                 }
