@@ -955,9 +955,16 @@ actionPoint: {actionPoint},
         public async Task RapidCombination()
         {
             var avatarAddress = new PrivateKey().Address;
-            var slotIndex = 0;
+            var slotIndexList = new List<int> { 0 };
+            
+            var slotIndexQuery = new StringBuilder("[");
+            foreach (var slotIndex in slotIndexList)
+            {
+                slotIndexQuery.Append($" {slotIndex}");
+            }
+            slotIndexQuery.Append("]");
 
-            var query = $"{{rapidCombination(avatarAddress: \"{avatarAddress}\", slotIndex: {slotIndex})}}";
+            var query = $"{{rapidCombination(avatarAddress: \"{avatarAddress}\", slotIndexList: {slotIndexQuery})}}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
             Assert.Null(queryResult.Errors);
 
@@ -967,7 +974,7 @@ actionPoint: {actionPoint},
             var actionBase = DeserializeNCAction(plainValue);
             var action = Assert.IsType<RapidCombination>(actionBase);
             Assert.Equal(avatarAddress, action.avatarAddress);
-            Assert.Equal(slotIndex, action.slotIndex);
+            Assert.Equal(slotIndexList, action.slotIndexList);
         }
 
         [Fact]

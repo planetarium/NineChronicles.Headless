@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet.Crypto;
@@ -18,20 +19,20 @@ public partial class ActionQuery
                     Name = "avatarAddress",
                     Description = "Avatar address to execute rapid combination"
                 },
-                new QueryArgument<NonNullGraphType<IntGraphType>>
+                new QueryArgument<NonNullGraphType<ListGraphType<IntGraphType>>>
                 {
-                    Name = "slotIndex",
-                    Description = "Slot index to execute rapid"
+                    Name = "slotIndexList",
+                    Description = "Slot index list to execute rapid"
                 }
             ),
             resolve: context =>
             {
                 var avatarAddress = context.GetArgument<Address>("avatarAddress");
-                var slotIndex = context.GetArgument<int>("slotIndex");
+                var slotIndexList = context.GetArgument<List<int>>("slotIndexList");
                 ActionBase action = new RapidCombination
                 {
                     avatarAddress = avatarAddress,
-                    slotIndex = slotIndex
+                    slotIndexList = slotIndexList
                 };
                 return Encode(context, action);
             });
