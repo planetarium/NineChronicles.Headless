@@ -4,14 +4,13 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Libplanet.Crypto;
-using Microsoft.Extensions.Options;
 using Nekoyume.Blockchain;
 using Serilog;
 
-namespace NineChronicles.Headless.Services
+namespace NineChronicles.Headless.Services;
+
+public class LocalAccessControlService : IAccessControlService
 {
-    public class LocalAccessControlService : IAccessControlService
-    {
         private Dictionary<string, string> _whitelist;
 
         public LocalAccessControlService(string connectionString)
@@ -50,6 +49,5 @@ namespace NineChronicles.Headless.Services
 
             return await Task.FromResult<int?>(null);
         }
-    }
+    
 }
-
