@@ -26,7 +26,7 @@ namespace NineChronicles.Headless.Services
                 throw;
             }
         }
-        
+
         private async Task<Dictionary<string, string>> LoadDataAsync(string url)
         {
             using HttpClient client = new HttpClient();
@@ -37,7 +37,7 @@ namespace NineChronicles.Headless.Services
                 return new Dictionary<string, string>();
             }
 
-            return JsonSerializer.Deserialize<Dictionary<string, string>>(jsonString) 
+            return JsonSerializer.Deserialize<Dictionary<string, string>>(jsonString)
                    ?? new Dictionary<string, string>();
         }
 
@@ -47,7 +47,7 @@ namespace NineChronicles.Headless.Services
             {
                 return await Task.FromResult<int?>(Convert.ToInt32(result));
             }
-            
+
             return await Task.FromResult<int?>(null);
         }
     }
