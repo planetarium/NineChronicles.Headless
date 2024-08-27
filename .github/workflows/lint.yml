@@ -6,9 +6,9 @@ jobs:
     format:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
             - name: Setup .NET Core
-              uses: actions/setup-dotnet@v3
+              uses: actions/setup-dotnet@v4
               with:
                   dotnet-version: 6.0.x
             - name: dotnet format
@@ -16,7 +16,7 @@ jobs:
     validate-appsettings-json:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
             - name: Install ajv-cli
               run: yarn global add ajv-cli
             - name: Validate appsettings.*.json
@@ -31,6 +31,6 @@ jobs:
     typos:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v4
             - name: Check typos
               uses: crate-ci/typos@v1.15.5
