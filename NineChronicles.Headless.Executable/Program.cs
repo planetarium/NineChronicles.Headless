@@ -463,7 +463,10 @@ namespace NineChronicles.Headless.Executable
                                 .AddSource("Lib9c.Action.HackAndSlash")
                                 .AddSource("Libplanet.Action.State")
                                 .AddSource("Libplanet.Blockchain.BlockChainStates")
-                                //.AddAspNetCoreInstrumentation()
+                                .AddSource("NineChronicles.Headless.GraphTypes.StandaloneQuery")
+                                .AddSource("NineChronicles.Headless.GraphTypes.StandaloneMutation")
+                                .AddSource("NineChronicles.Headless.GraphTypes.TransactionHeadlessQuery")
+                                .AddAspNetCoreInstrumentation()
                                 .AddGrpcClientInstrumentation()
                                 .AddProcessor(new Pyroscope.OpenTelemetry.PyroscopeSpanProcessor())
                                 .AddOtlpExporter(opt =>
