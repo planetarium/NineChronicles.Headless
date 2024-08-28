@@ -26,9 +26,9 @@ public class Program
     )
     {
         var client = new GithubClient();
-        Console.WriteLine($"Download {version} headless");
+        Console.WriteLine($"Downloading version {version} of NineChronicles Headless...");
         await client.DownloadAndExtract(version, os);
-        Console.WriteLine($"Finish!");
+        Console.WriteLine("Installation complete!");
     }
 
     [Command(Description = "List installed headless versions")]
