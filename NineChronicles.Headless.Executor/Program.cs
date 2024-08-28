@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Cocona;
+using Cocona.Docs;
 using Libplanet.Common;
 using Libplanet.Crypto;
 using NineChronicles.Headless.Executor.Client;
@@ -8,6 +9,7 @@ using NineChronicles.Headless.Executor.Models;
 
 namespace NineChronicles.Headless.Executor;
 
+[HasSubCommands(typeof(DocumentCommand), "docs")]
 public class Program
 {
     static async Task Main(string[] args)
