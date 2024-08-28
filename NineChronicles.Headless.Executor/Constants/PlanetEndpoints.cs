@@ -18,7 +18,7 @@ public static class PlanetEndpoints
             return endpoint;
         }
         throw new Exception(
-            $"GraphQL endpoint not defined for planet: {planet}. Please ensure the planet is correctly mapped in PlanetEndpoints."
+            $"GraphQL endpoint not defined for planet: {planet}. Please ensure the planet is correctly mapped in {nameof(GraphQLEndpoints)}."
         );
     }
 }
