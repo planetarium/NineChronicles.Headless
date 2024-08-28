@@ -64,6 +64,7 @@ public class Program
 
         var appSettingsData = new AppSettingsData();
         string storePath = Path.Combine(Paths.StorePath, version, planet.ToString());
+        var settingsClient = new SettingsClient();
 
         switch (planet)
         {
@@ -91,42 +92,28 @@ public class Program
 
             case Planet.Single:
                 var pkey = new PrivateKey(Secret.PrivateKeyForSingleNode);
-                string genesisBlockSourcePath = Path.Combine(
-                    "resources",
-                    "genesis-block-for-single"
-                );
-                string genesisBlockDestinationPath = Path.Combine(
+                string genesisBlockPath = Path.Combine(
                     Paths.GenesisBlockPath,
                     "genesis-block-for-single"
                 );
 
-                if (!Directory.Exists(Paths.GenesisBlockPath))
+                if (!File.Exists(genesisBlockPath))
                 {
                     Directory.CreateDirectory(Paths.GenesisBlockPath);
-                }
-
-                if (File.Exists(genesisBlockSourcePath))
-                {
-                    File.Copy(genesisBlockSourcePath, genesisBlockDestinationPath, overwrite: true);
-                }
-                else
-                {
-                    throw new FileNotFoundException(
-                        $"Genesis block file not found in {genesisBlockSourcePath}"
-                    );
+                    await settingsClient.DownloadGenesisBlockAsync(genesisBlockPath);
                 }
 
                 appSettingsData = new AppSettingsData
                 {
                     StorePath = storePath,
-                    GenesisBlockPath = genesisBlockDestinationPath,
+                    GenesisBlockPath = genesisBlockPath,
                     MinerPrivateKeyString = ByteUtil.Hex(pkey.ToByteArray()),
                     ConsensusPrivateKeyString = ByteUtil.Hex(pkey.ToByteArray()),
                     ConsensusSeedPublicKey = ByteUtil.Hex(pkey.PublicKey.Format(true))
                 };
                 break;
         }
-        CreateAppSettingsFile(planet.ToString(), appSettingsData);
+        await CreateAppSettingsFile(planet, settingsClient, appSettingsData);
 
         var appsettingsPath = Path.Combine(Paths.AppsettingsPath, $"appsettings.{planet}.json");
 
@@ -168,15 +155,21 @@ public class Program
         }
     }
 
-    private void CreateAppSettingsFile(string planet, AppSettingsData data)
+    private async Task CreateAppSettingsFile(
+        Planet planet,
+        SettingsClient client,
+        AppSettingsData data
+    )
     {
-        var templateFilePath = Path.Combine("templates", $"appsettings.{planet}.tpl");
-        if (!File.Exists(templateFilePath))
+        string templatePath = Path.Combine(Paths.AppsettingsTplPath, $"appsettings.{planet}.tpl");
+
+        if (!File.Exists(templatePath))
         {
-            throw new FileNotFoundException($"Template file {templateFilePath} not found.");
+            Directory.CreateDirectory(Paths.AppsettingsTplPath);
+            await client.DownloadTemplateAsync(planet, templatePath);
         }
 
-        var templateContent = File.ReadAllText(templateFilePath);
+        var templateContent = File.ReadAllText(templatePath);
 
         templateContent = templateContent
             .Replace("${Apv}", data.Apv)
@@ -190,7 +183,5 @@ public class Program
 
         Directory.CreateDirectory(Paths.AppsettingsPath);
         File.WriteAllText(appsettingsPath, templateContent);
-
-        Console.WriteLine($"AppSettings file created at: {appsettingsPath}");
     }
 }
