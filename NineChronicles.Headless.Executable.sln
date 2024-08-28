@@ -82,6 +82,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Mocks", "Lib9c\.L
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Store.Remote", "Lib9c\.Libplanet\src\Libplanet.Store.Remote\Libplanet.Store.Remote.csproj", "{D1E15F81-8765-4DCA-9299-675415686C23}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NineChronicles.Headless.Executor", "NineChronicles.Headless.Executor\NineChronicles.Headless.Executor.csproj", "{59AD477A-B23C-4E0B-AA26-A528B3BC5234}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -743,6 +745,24 @@ Global
 		{D1E15F81-8765-4DCA-9299-675415686C23}.Release|x64.Build.0 = Release|Any CPU
 		{D1E15F81-8765-4DCA-9299-675415686C23}.Release|x86.ActiveCfg = Release|Any CPU
 		{D1E15F81-8765-4DCA-9299-675415686C23}.Release|x86.Build.0 = Release|Any CPU
+		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Debug|x64.Build.0 = Debug|Any CPU
+		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Debug|x86.Build.0 = Debug|Any CPU
+		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.DevEx|Any CPU.ActiveCfg = Debug|Any CPU
+		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.DevEx|Any CPU.Build.0 = Debug|Any CPU
+		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.DevEx|x64.ActiveCfg = Debug|Any CPU
+		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.DevEx|x64.Build.0 = Debug|Any CPU
+		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.DevEx|x86.ActiveCfg = Debug|Any CPU
+		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.DevEx|x86.Build.0 = Debug|Any CPU
+		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Release|x64.ActiveCfg = Release|Any CPU
+		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Release|x64.Build.0 = Release|Any CPU
+		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Release|x86.ActiveCfg = Release|Any CPU
+		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
