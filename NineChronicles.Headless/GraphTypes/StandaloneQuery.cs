@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Bencodex;
 using Bencodex.Types;
@@ -34,6 +35,8 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneQuery : ObjectGraphType
     {
+        private static readonly ActivitySource ActivitySource = new ActivitySource("NineChronicles.Headless.GraphTypes.StandaloneQuery");
+
         public StandaloneQuery(StandaloneContext standaloneContext, IConfiguration configuration, ActionEvaluationPublisher publisher, StateMemoryCache stateMemoryCache)
         {
             bool useSecretToken = configuration[GraphQLService.SecretTokenKey] is { };
@@ -55,6 +58,7 @@ namespace NineChronicles.Headless.GraphTypes
                 }),
                 resolve: context =>
                 {
+                    using var activity = ActivitySource.StartActivity("stateQuery");
                     BlockHash blockHash = (context.GetArgument<byte[]?>("hash"), context.GetArgument<long?>("index")) switch
                     {
                         ({ } bytes, null) => new BlockHash(bytes),
@@ -62,6 +66,7 @@ namespace NineChronicles.Headless.GraphTypes
                         (not null, not null) => throw new ArgumentException("Only one of 'hash' and 'index' must be given."),
                         (null, null) => standaloneContext.BlockChain.Tip.Hash,
                     };
+                    activity?.AddTag("BlockHash", blockHash.ToString());
 
                     if (!(standaloneContext.BlockChain is { } chain))
                     {
@@ -102,6 +107,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
+                    using var activity = ActivitySource.StartActivity("diffs");
                     if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
@@ -194,6 +200,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
+                    using var activity = ActivitySource.StartActivity("accountDiffs");
                     if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
@@ -259,6 +266,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
+                    using var activity = ActivitySource.StartActivity("state");
                     if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
@@ -275,6 +283,10 @@ namespace NineChronicles.Headless.GraphTypes
                     };
                     var accountAddress = context.GetArgument<Address>("accountAddress");
                     var address = context.GetArgument<Address>("address");
+
+                    activity?
+                        .AddTag("BlockHash", blockHash.ToString())
+                        .AddTag("Address", address.ToString());
 
                     var state = blockChain
                         .GetWorldState(blockHash)
@@ -303,7 +315,10 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 ), resolve: context =>
                 {
+                    using var activity = ActivitySource.StartActivity("transferNCGHistories");
                     BlockHash blockHash = new BlockHash(context.GetArgument<byte[]>("blockHash"));
+
+                    activity?.AddTag("BlockHash", blockHash.ToString());
 
                     if (!(standaloneContext.Store is { } store))
                     {
@@ -359,8 +374,11 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<NodeStatusType>>(
                 name: "nodeStatus",
-                resolve: _ => new NodeStatusType(standaloneContext)
-            );
+                resolve: _ =>
+                {
+                    using var activity = ActivitySource.StartActivity("nodeStatus");
+                    return new NodeStatusType(standaloneContext);
+                });
 
             Field<NonNullGraphType<Libplanet.Explorer.Queries.ExplorerQuery>>(
                 name: "chainQuery",
@@ -393,6 +411,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
+                    using var activity = ActivitySource.StartActivity("goldBalance");
                     if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
@@ -407,6 +426,10 @@ namespace NineChronicles.Headless.GraphTypes
                     Currency currency = new GoldCurrencyState(
                         (Dictionary)blockChain.GetWorldState(blockHash).GetLegacyState(GoldCurrencyState.Address)
                     ).Currency;
+
+                    activity?
+                        .AddTag("BlockHash", blockHash.ToString())
+                        .AddTag("Address", address.ToString());
 
                     return blockChain.GetWorldState(blockHash).GetBalance(
                         address,
@@ -424,6 +447,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
+                    using var activity = ActivitySource.StartActivity("nextTxNonce");
                     if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
@@ -431,6 +455,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     Address address = context.GetArgument<Address>("address");
+                    activity?.AddTag("Address", address.ToString());
                     return blockChain.GetNextTxNonce(address);
                 }
             );
@@ -483,6 +508,7 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Get monster collection status by address.",
                 resolve: context =>
                 {
+                    using var activity = ActivitySource.StartActivity(nameof(MonsterCollectionStatus));
                     if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
@@ -508,6 +534,10 @@ namespace NineChronicles.Headless.GraphTypes
 
 
                     BlockHash offset = blockChain.Tip.Hash;
+
+                    activity?
+                        .AddTag("BlockHash", offset.ToString())
+                        .AddTag("Address", address.ToString());
                     IWorldState worldState = blockChain.GetWorldState(offset);
 #pragma warning disable S3247
                     if (worldState.GetAgentState(agentAddress) is { } agentState)
@@ -547,8 +577,11 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<TransactionHeadlessQuery>>(
                 name: "transaction",
                 description: "Query for transaction.",
-                resolve: context => new TransactionHeadlessQuery(standaloneContext)
-            );
+                resolve: context =>
+                {
+                    using var activity = ActivitySource.StartActivity("transaction");
+                    return new TransactionHeadlessQuery(standaloneContext);
+                });
 
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "activated",
@@ -632,7 +665,11 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<ActionQuery>>(
                 name: "actionQuery",
                 description: "Query to create action transaction.",
-                resolve: context => new ActionQuery(standaloneContext));
+                resolve: context =>
+                {
+                    using var activity = ActivitySource.StartActivity("actionQuery");
+                    return new ActionQuery(standaloneContext);
+                });
 
             Field<NonNullGraphType<ActionTxQuery>>(
                 name: "actionTxQuery",
@@ -658,12 +695,20 @@ namespace NineChronicles.Headless.GraphTypes
                         DefaultValue = 1 * Currencies.Mead
                     }
                 ),
-                resolve: context => new ActionTxQuery(standaloneContext));
+                resolve: context =>
+                {
+                    using var activity = ActivitySource.StartActivity("actionTxQuery");
+                    return new ActionTxQuery(standaloneContext);
+                });
 
             Field<NonNullGraphType<AddressQuery>>(
                 name: "addressQuery",
                 description: "Query to get derived address.",
-                resolve: context => new AddressQuery(standaloneContext));
+                resolve: context =>
+                {
+                    using var activity = ActivitySource.StartActivity("addressQuery");
+                    return new AddressQuery(standaloneContext);
+                });
         }
     }
 }

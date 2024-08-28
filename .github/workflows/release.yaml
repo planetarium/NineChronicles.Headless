@@ -15,7 +15,7 @@ jobs:
         submodules: true
     - name: Git Sumbodule Update
       run: git submodule update --init --recursive
-    - uses: actions/setup-dotnet@v3
+    - uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 6.0.x
     - run: .github/bin/dist-pack.sh
