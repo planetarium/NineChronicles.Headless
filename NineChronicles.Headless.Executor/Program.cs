@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Cocona;
 using Libplanet.Common;
 using Libplanet.Crypto;
