@@ -967,7 +967,7 @@ actionPoint: {actionPoint},
             var actionBase = DeserializeNCAction(plainValue);
             var action = Assert.IsType<RapidCombination>(actionBase);
             Assert.Equal(avatarAddress, action.avatarAddress);
-            Assert.Equal(slotIndex, action.slotIndex);
+            Assert.Equal(slotIndex, action.slotIndexList.First());
         }
 
         [Fact]
