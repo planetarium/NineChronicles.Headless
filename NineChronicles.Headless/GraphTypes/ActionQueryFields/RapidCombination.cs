@@ -19,20 +19,20 @@ public partial class ActionQuery
                     Name = "avatarAddress",
                     Description = "Avatar address to execute rapid combination"
                 },
-                new QueryArgument<NonNullGraphType<ListGraphType<IntGraphType>>>
+                new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<IntGraphType>>>>
                 {
                     Name = "slotIndexList",
-                    Description = "Slot index to execute rapid"
+                    Description = "Slot index list to execute rapid"
                 }
             ),
             resolve: context =>
             {
                 var avatarAddress = context.GetArgument<Address>("avatarAddress");
-                var slotIndex = context.GetArgument<List<int>>("slotIndexList");
+                var slotIndexList = context.GetArgument<List<int>>("slotIndexList");
                 ActionBase action = new RapidCombination
                 {
                     avatarAddress = avatarAddress,
-                    slotIndexList = slotIndex
+                    slotIndexList = slotIndexList
                 };
                 return Encode(context, action);
             });
