@@ -19,9 +19,9 @@ public partial class ActionQuery
                     Name = "avatarAddress",
                     Description = "Avatar address to execute rapid combination"
                 },
-                new QueryArgument<NonNullGraphType<IntGraphType>>
+                new QueryArgument<NonNullGraphType<ListGraphType<IntGraphType>>>
                 {
-                    Name = "slotIndex",
+                    Name = "slotIndexList",
                     Description = "Slot index to execute rapid"
                 }
             ),

@@ -957,7 +957,7 @@ actionPoint: {actionPoint},
             var avatarAddress = new PrivateKey().Address;
             var slotIndex = 0;
 
-            var query = $"{{rapidCombination(avatarAddress: \"{avatarAddress}\", slotIndex: {slotIndex})}}";
+            var query = $"{{rapidCombination(avatarAddress: \"{avatarAddress}\", slotIndex: [{slotIndex}])}}";
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
             Assert.Null(queryResult.Errors);
 
