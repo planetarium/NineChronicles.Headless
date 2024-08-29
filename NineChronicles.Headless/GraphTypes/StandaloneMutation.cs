@@ -13,12 +13,15 @@ using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Serilog;
 using System;
+using System.Diagnostics;
 using Nekoyume.Module;
 
 namespace NineChronicles.Headless.GraphTypes
 {
     public class StandaloneMutation : ObjectGraphType
     {
+        private static readonly ActivitySource ActivitySource = new ActivitySource("NineChronicles.Headless.GraphTypes.StandaloneMutation");
+
         public StandaloneMutation(
             StandaloneContext standaloneContext,
             NineChroniclesNodeService nodeService,
@@ -60,6 +63,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
+                    using var activity = ActivitySource.StartActivity("stageTx");
                     try
                     {
                         byte[] bytes = Convert.FromBase64String(context.GetArgument<string>("payload"));
@@ -179,6 +183,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
+                    using var activity = ActivitySource.StartActivity("transfer");
                     if (!(standaloneContext.NineChroniclesNodeService is { } service))
                     {
                         throw new InvalidOperationException($"{nameof(NineChroniclesNodeService)} is null.");
@@ -289,6 +294,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
+                        using var activity = ActivitySource.StartActivity("stageTransaction");
                         byte[] bytes = ByteUtil.ParseHex(context.GetArgument<string>("payload"));
                         Transaction tx = Transaction.Deserialize(bytes);
                         NineChroniclesNodeService? service = standaloneContext.NineChroniclesNodeService;

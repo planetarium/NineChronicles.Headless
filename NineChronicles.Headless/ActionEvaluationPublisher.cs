@@ -56,7 +56,6 @@ namespace NineChronicles.Headless
         private MemoryCache _memoryCache;
 
         private RpcContext _context;
-        private ConcurrentDictionary<string, Sentry.ITransaction> _sentryTraces;
 
         public ActionEvaluationPublisher(
             BlockRenderer blockRenderer,
@@ -67,7 +66,6 @@ namespace NineChronicles.Headless
             string host,
             int port,
             RpcContext context,
-            ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces,
             StateMemoryCache cache)
         {
             _blockRenderer = blockRenderer;
@@ -78,7 +76,6 @@ namespace NineChronicles.Headless
             _host = host;
             _port = port;
             _context = context;
-            _sentryTraces = sentryTraces;
             var memoryCacheOptions = new MemoryCacheOptions();
             var options = Options.Create(memoryCacheOptions);
             _cache = new MemoryCache(options);
@@ -137,7 +134,7 @@ namespace NineChronicles.Headless
             };
 
             GrpcChannel channel = GrpcChannel.ForAddress($"http://{_host}:{_port}", options);
-            Client client = await Client.CreateAsync(channel, _blockChainStates, clientAddress, _context, _sentryTraces);
+            Client client = await Client.CreateAsync(channel, _blockChainStates, clientAddress, _context);
             if (_clients.TryAdd(clientAddress, client))
             {
                 if (clientAddress == default)
@@ -401,29 +398,24 @@ namespace NineChronicles.Headless
 
             public ImmutableHashSet<Address> TargetAddresses { get; set; }
 
-            public readonly ConcurrentDictionary<string, Sentry.ITransaction> SentryTraces;
-
             private Client(
                 IActionEvaluationHub hub,
                 IBlockChainStates blockChainStates,
                 Address clientAddress,
-                RpcContext context,
-                ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces)
+                RpcContext context)
             {
                 _hub = hub;
                 _blockChainStates = blockChainStates;
                 _clientAddress = clientAddress;
                 _context = context;
                 TargetAddresses = ImmutableHashSet<Address>.Empty;
-                SentryTraces = sentryTraces;
             }
 
             public static async Task<Client> CreateAsync(
                 GrpcChannel channel,
                 IBlockChainStates blockChainStates,
                 Address clientAddress,
-                RpcContext context,
-                ConcurrentDictionary<string, Sentry.ITransaction> sentryTraces)
+                RpcContext context)
             {
                 IActionEvaluationHub hub = await StreamingHubClient.ConnectAsync<IActionEvaluationHub, IActionEvaluationHubReceiver>(
                     channel,
@@ -431,7 +423,7 @@ namespace NineChronicles.Headless
                 );
                 await hub.JoinAsync(clientAddress.ToHex());
 
-                return new Client(hub, blockChainStates, clientAddress, context, sentryTraces);
+                return new Client(hub, blockChainStates, clientAddress, context);
             }
 
             public void Subscribe(
@@ -529,13 +521,6 @@ namespace NineChronicles.Headless
                             {
                                 // FIXME add logger as property
                                 Log.Error(e, "[{ClientAddress}] Skip broadcasting render due to the unexpected exception", _clientAddress);
-                            }
-
-                            if (ev.TxId is TxId txId && SentryTraces.TryRemove(txId.ToString() ?? "", out var sentryTrace))
-                            {
-                                var span = sentryTrace.GetLastActiveSpan();
-                                span?.Finish();
-                                sentryTrace.Finish();
                             }
                         }
                     );

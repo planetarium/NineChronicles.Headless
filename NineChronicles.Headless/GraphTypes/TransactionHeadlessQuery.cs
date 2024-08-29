@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -29,6 +30,9 @@ namespace NineChronicles.Headless.GraphTypes
 {
     class TransactionHeadlessQuery : ObjectGraphType
     {
+        private static readonly ActivitySource ActivitySource =
+            new ActivitySource("NineChronicles.Headless.GraphTypes.TransactionHeadlessQuery");
+
         public TransactionHeadlessQuery(StandaloneContext standaloneContext)
         {
             Field<NonNullGraphType<LongGraphType>>(
@@ -38,6 +42,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
+                    using var activity = ActivitySource.StartActivity("nextTxNonce");
                     if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
@@ -45,6 +50,8 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     Address address = context.GetArgument<Address>("address");
+
+                    activity?.AddTag("Address", address.ToString());
                     return blockChain.GetNextTxNonce(address);
                 }
             );
@@ -83,6 +90,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
+                    using var activity = ActivitySource.StartActivity("ncTransactions");
                     if (standaloneContext.BlockChain is not { } blockChain)
                     {
                         throw new ExecutionError(
@@ -205,7 +213,9 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
+                    using var activity = ActivitySource.StartActivity("transactionResult");
                     var txId = context.GetArgument<TxId>("txId");
+                    activity?.AddTag("txId", txId.ToString());
                     return TxResult(standaloneContext, txId);
                 });
 
@@ -217,6 +227,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
+                    using var activity = ActivitySource.StartActivity("transactionResults");
                     return context.GetArgument<List<TxId>>("txIds")
                         .AsParallel()
                         .AsOrdered()
@@ -292,6 +303,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
+                    using var activity = ActivitySource.StartActivity("signTransaction");
                     byte[] signature = ByteUtil.ParseHex(context.GetArgument<string>("signature"));
                     IUnsignedTx unsignedTransaction =
                         TxMarshaler.DeserializeUnsignedTx(
@@ -371,6 +383,7 @@ namespace NineChronicles.Headless.GraphTypes
 
         private IEnumerable<Block> ListBlocks(BlockChain chain, long from, long limit)
         {
+            using var activity = ActivitySource.StartActivity();
             if (chain.Tip.Index < from)
             {
                 return new List<Block>();

@@ -20,19 +20,24 @@ namespace NineChronicles.Headless.Services
             /// <summary>
             /// Use RestAPI
             /// </summary>
-            RestAPI
+            RestAPI,
+
+            /// <summary>
+            /// Use local
+            /// </summary>
+            Local
         }
 
         public static IAccessControlService Create(
             StorageType storageType,
-            string connectionString
-        )
+            string connectionString)
         {
             return storageType switch
             {
                 StorageType.Redis => new RedisAccessControlService(connectionString),
                 StorageType.SQLite => new SQLiteAccessControlService(connectionString),
                 StorageType.RestAPI => new RestAPIAccessControlService(connectionString),
+                StorageType.Local => new LocalAccessControlService(connectionString),
                 _ => throw new ArgumentOutOfRangeException(nameof(storageType), storageType, null)
             };
         }
