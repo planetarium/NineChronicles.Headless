@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet.Crypto;
@@ -27,11 +28,11 @@ public partial class ActionQuery
             resolve: context =>
             {
                 var avatarAddress = context.GetArgument<Address>("avatarAddress");
-                var slotIndex = context.GetArgument<int>("slotIndex");
+                var slotIndex = context.GetArgument<List<int>>("slotIndexList");
                 ActionBase action = new RapidCombination
                 {
                     avatarAddress = avatarAddress,
-                    slotIndex = slotIndex
+                    slotIndexList = slotIndex
                 };
                 return Encode(context, action);
             });
