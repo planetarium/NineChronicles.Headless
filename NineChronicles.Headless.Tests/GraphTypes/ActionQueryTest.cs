@@ -934,6 +934,7 @@ actionPoint: {actionPoint},
             {
                 materialQuery.Append($" \"{materialId}\"");
             }
+
             materialQuery.Append("]");
             var query = $"{{itemEnhancement(avatarAddress: \"{avatarAddress}\", slotIndex: {slotIndex}, " +
                         $"itemId: \"{itemId}\", materialIds: {materialQuery})}}";
@@ -956,12 +957,13 @@ actionPoint: {actionPoint},
         {
             var avatarAddress = new PrivateKey().Address;
             var slotIndexList = new List<int> { 0 };
-            
+
             var slotIndexQuery = new StringBuilder("[");
             foreach (var slotIndex in slotIndexList)
             {
                 slotIndexQuery.Append($" {slotIndex}");
             }
+
             slotIndexQuery.Append("]");
 
             var query = $"{{rapidCombination(avatarAddress: \"{avatarAddress}\", slotIndexList: {slotIndexQuery})}}";
