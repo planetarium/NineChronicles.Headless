@@ -99,15 +99,15 @@ namespace NineChronicles.Headless.GraphTypes
 
                     if (!fieldContext.HasArgument("address"))
                     {
-                        return context.BlockChain.GetStagedTransactionIds();
+                        return context.BlockChain.StagePolicy.Iterate(context.BlockChain).Select(tx => tx.Id)
+                            .ToImmutableHashSet();
                     }
                     else
                     {
                         Address address = fieldContext.GetArgument<Address>("address");
-                        IImmutableSet<TxId> stagedTransactionIds = context.BlockChain.GetStagedTransactionIds();
 
-                        return stagedTransactionIds.Where(txId =>
-                        context.BlockChain.GetTransaction(txId).Signer.Equals(address));
+                        return context.BlockChain.StagePolicy.Iterate(context.BlockChain)
+                            .Where(tx => tx.Signer.Equals(address)).Select(tx => tx.Id).ToImmutableHashSet();
                     }
                 }
             );
@@ -121,7 +121,7 @@ namespace NineChronicles.Headless.GraphTypes
                         throw new InvalidOperationException($"{nameof(context.BlockChain)} is null.");
                     }
 
-                    return context.BlockChain.GetStagedTransactionIds().Count;
+                    return context.BlockChain.StagePolicy.Iterate(context.BlockChain).ToImmutableHashSet().Count;
                 }
             );
             Field<NonNullGraphType<BlockHeaderType>>(
