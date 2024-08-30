@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Cocona;
 using Cocona.Docs;
 using Libplanet.Common;
@@ -90,8 +92,8 @@ public class Program
                         $"It is recommended to download and extract the snapshot to {storePath} to avoid starting synchronization from block 0, which can take a long time."
                     );
                 }
+                await CreateAppSettingsFile(planet, settingsClient, appSettingsData);
                 break;
-
             case Planet.Single:
                 var pkey = new PrivateKey(Secret.PrivateKeyForSingleNode);
                 string genesisBlockPath = Path.Combine(
@@ -107,15 +109,16 @@ public class Program
 
                 appSettingsData = new AppSettingsData
                 {
+                    Apv = "1/b4179Ad0d7565A6EcFA70d2a0f727461039e0159/MEUCIQDvIIp8IKCpjKojE8LzgYZzeRg9fUPl.sWHrowzHhmrxgIgBhTkSRc8BHXZwwIAwBQN8J3wGlAbOD7FRyp8bA6OH6Y=",
                     StorePath = storePath,
                     GenesisBlockPath = genesisBlockPath,
                     MinerPrivateKeyString = ByteUtil.Hex(pkey.ToByteArray()),
                     ConsensusPrivateKeyString = ByteUtil.Hex(pkey.ToByteArray()),
                     ConsensusSeedPublicKey = ByteUtil.Hex(pkey.PublicKey.Format(true))
                 };
+                await CreateAppSettingsFile(planet, settingsClient, appSettingsData);
                 break;
         }
-        await CreateAppSettingsFile(planet, settingsClient, appSettingsData);
 
         var appsettingsPath = Path.Combine(Paths.AppsettingsPath, $"appsettings.{planet}.json");
 
@@ -171,19 +174,46 @@ public class Program
             await client.DownloadTemplateAsync(planet, templatePath);
         }
 
-        var templateContent = File.ReadAllText(templatePath);
-
-        templateContent = templateContent
-            .Replace("${Apv}", data.Apv)
-            .Replace("${GenesisBlockPath}", data.GenesisBlockPath)
-            .Replace("${StorePath}", data.StorePath)
-            .Replace("${MinerPrivateKeyString}", data.MinerPrivateKeyString)
-            .Replace("${ConsensusPrivateKeyString}", data.ConsensusPrivateKeyString)
-            .Replace("${ConsensusSeedPublicKey}", data.ConsensusSeedPublicKey);
-
         var appsettingsPath = Path.Combine(Paths.AppsettingsPath, $"appsettings.{planet}.json");
+        string result;
+
+        if (!File.Exists(appsettingsPath))
+        {
+            var templateContent = File.ReadAllText(templatePath);
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                templateContent = templateContent
+                    .Replace("${Apv}", data.Apv)
+                    .Replace("${GenesisBlockPath}", data.GenesisBlockPath.Replace("\\", "\\\\"))
+                    .Replace("${StorePath}", data.StorePath.Replace("\\", "\\\\"))
+                    .Replace("${MinerPrivateKeyString}", data.MinerPrivateKeyString)
+                    .Replace("${ConsensusPrivateKeyString}", data.ConsensusPrivateKeyString)
+                    .Replace("${ConsensusSeedPublicKey}", data.ConsensusSeedPublicKey);
+            }
+            else
+            {
+                templateContent = templateContent
+                    .Replace("${Apv}", data.Apv)
+                    .Replace("${GenesisBlockPath}", data.GenesisBlockPath)
+                    .Replace("${StorePath}", data.StorePath)
+                    .Replace("${MinerPrivateKeyString}", data.MinerPrivateKeyString)
+                    .Replace("${ConsensusPrivateKeyString}", data.ConsensusPrivateKeyString)
+                    .Replace("${ConsensusSeedPublicKey}", data.ConsensusSeedPublicKey);
+            }
+            result = templateContent;
+        }
+        else
+        {
+            var appsettingsContent = File.ReadAllText(appsettingsPath);
+            var jsonDoc = JsonNode.Parse(appsettingsContent);
+            if (jsonDoc != null && jsonDoc["Headless"] != null)
+            {
+                jsonDoc["Headless"]["AppProtocolVersionString"] = data.Apv;
+            }
+            result = jsonDoc.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+        }
 
         Directory.CreateDirectory(Paths.AppsettingsPath);
-        File.WriteAllText(appsettingsPath, templateContent);
+        File.WriteAllText(appsettingsPath, result);
     }
 }
