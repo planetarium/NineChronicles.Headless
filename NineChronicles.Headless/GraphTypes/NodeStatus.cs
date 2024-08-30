@@ -87,6 +87,12 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "address",
                         Description = "Target address to query"
+                    },
+                    new QueryArgument<BooleanGraphType>
+                    {
+                        Name = "filtered",
+                        Description = "Whether to filter masked staged Transactions or not.",
+                        DefaultValue = true,
                     }
                 ),
                 description: "Ids of staged transactions from the current node.",
@@ -97,16 +103,17 @@ namespace NineChronicles.Headless.GraphTypes
                         throw new InvalidOperationException($"{nameof(context.BlockChain)} is null.");
                     }
 
+                    var filtered = fieldContext.GetArgument<bool>("filtered");
                     if (!fieldContext.HasArgument("address"))
                     {
-                        return context.BlockChain.StagePolicy.Iterate(context.BlockChain).Select(tx => tx.Id)
+                        return context.BlockChain.StagePolicy.Iterate(context.BlockChain, filtered).Select(tx => tx.Id)
                             .ToImmutableHashSet();
                     }
                     else
                     {
                         Address address = fieldContext.GetArgument<Address>("address");
 
-                        return context.BlockChain.StagePolicy.Iterate(context.BlockChain)
+                        return context.BlockChain.StagePolicy.Iterate(context.BlockChain, filtered)
                             .Where(tx => tx.Signer.Equals(address)).Select(tx => tx.Id).ToImmutableHashSet();
                     }
                 }
@@ -114,6 +121,14 @@ namespace NineChronicles.Headless.GraphTypes
             Field<IntGraphType>(
                 name: "stagedTxIdsCount",
                 description: "The number of ids of staged transactions from the current node.",
+                arguments: new QueryArguments(
+                    new QueryArgument<BooleanGraphType>
+                    {
+                        Name = "filtered",
+                        Description = "Whether to filter masked staged Transactions or not.",
+                        DefaultValue = true,
+                    }
+                ),
                 resolve: fieldContext =>
                 {
                     if (context.BlockChain is null)
@@ -121,7 +136,8 @@ namespace NineChronicles.Headless.GraphTypes
                         throw new InvalidOperationException($"{nameof(context.BlockChain)} is null.");
                     }
 
-                    return context.BlockChain.StagePolicy.Iterate(context.BlockChain).ToImmutableHashSet().Count;
+                    var filtered = fieldContext.GetArgument<bool>("filtered");
+                    return context.BlockChain.StagePolicy.Iterate(context.BlockChain, filtered).ToImmutableHashSet().Count;
                 }
             );
             Field<NonNullGraphType<BlockHeaderType>>(
