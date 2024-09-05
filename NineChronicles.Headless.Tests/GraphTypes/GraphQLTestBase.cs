@@ -34,6 +34,8 @@ using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex.Types;
+using Libplanet.Action.State;
+using Libplanet.Mocks;
 using Libplanet.Types.Tx;
 using Moq;
 using NineChronicles.Headless.Executable.Tests.KeyStore;
@@ -199,6 +201,25 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             );
             await swarm.WaitForRunningAsync();
             return task;
+        }
+
+        protected void SetupStatesOnTip(Func<IWorld, IWorld> func)
+        {
+            var worldState = func(new World(MockUtil.MockModernWorldState));
+            var stateRootHash = worldState.Trie.Hash;
+            var tip = new Domain.Model.BlockChain.Block(
+                BlockHash.FromString("613dfa26e104465790625ae7bc03fc27a64947c02a9377565ec190405ef7154b"),
+                BlockHash.FromString("36456be15af9a5b9b13a02c7ce1e849ae9cba8781ec309010499cdb93e29237d"),
+                default(Address),
+                0,
+                Timestamp: DateTimeOffset.UtcNow,
+                StateRootHash: stateRootHash,
+                Transactions: ImmutableArray<Transaction>.Empty
+            );
+            BlockChainRepository.Setup(repository => repository.GetTip())
+                .Returns(tip);
+            WorldStateRepository.Setup(repository => repository.GetWorldState(stateRootHash))
+                .Returns(worldState);
         }
 
         protected LibplanetNodeService CreateLibplanetNodeService(
