@@ -161,7 +161,7 @@ namespace NineChronicles.Headless
                 }
 
                 services.AddTransient<LocalAuthenticationMiddleware>();
-                
+
                 // Repositories
                 services.AddSingleton<IWorldStateRepository, WorldStateRepository>();
                 services.AddSingleton<IBlockChainRepository, BlockChainRepository>();

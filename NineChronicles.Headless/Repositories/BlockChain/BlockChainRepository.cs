@@ -79,7 +79,7 @@ public class BlockChainRepository : IBlockChainRepository
     {
         return Convert(_blockChain[blockHash]);
     }
-    
+
     private Block FetchBlock(long index)
     {
         return Convert(_blockChain[index]);

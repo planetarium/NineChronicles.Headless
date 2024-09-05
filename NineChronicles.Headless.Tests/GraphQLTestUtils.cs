@@ -88,7 +88,7 @@ namespace NineChronicles.Headless.Tests
             var graphType = (IObjectGraphType)serviceProvider.GetService(typeof(TObjectGraphType))!;
             return ExecuteQueryAsync(graphType, query, userContext, source);
         }
-        
+
         public static Task<ExecutionResult> ExecuteQueryAsync(
             IObjectGraphType graphType,
             string query,

@@ -623,7 +623,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 },
                 data
             );
-            
+
             worldState = worldState.MintAsset(new ActionContext(), userAddress, Currencies.Crystal * 10);
             stateRootHash = worldState.Trie.Hash;
             tip = new Domain.Model.BlockChain.Block(
@@ -813,7 +813,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 StandaloneContextFx.NineChroniclesNodeService.MinerPrivateKey = null;
             }
-            
+
             // FIXME: Remove the above lines after removing `StandaloneContext` dependency.
             var worldState = new World(MockUtil.MockModernWorldState)
                 .SetLegacyState(Addresses.GoldCurrency, new GoldCurrencyState(Currencies.Crystal).Serialize())
@@ -949,7 +949,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Single(queryResult.Errors!);
             Assert.Equal(msg, queryResult.Errors!.First().Message);
         }
-        
+
         [Theory]
         [InlineData("9330b3287bd2bbc38770c69ae7cd380350c60a1dff9ec41254f3048d5b3eb01c/44C889Af1e1e90213Cff5d69C9086c34ecCb60B0", "invitationCode is invalid.")]
         public async Task ActivationKeyNonce_ThrowError_WithOutdatedCode(string code, string msg)
@@ -998,7 +998,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StateRootHash: stateRootHash,
                 Transactions: ImmutableArray<Transaction>.Empty
             );
-            
+
             BlockChainRepository.Setup(repo => repo.GetTip())
                 .Returns(tip);
             WorldStateRepository.Setup(repo => repo.GetWorldState(stateRootHash))
