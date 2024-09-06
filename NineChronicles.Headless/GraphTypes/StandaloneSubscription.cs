@@ -143,6 +143,7 @@ namespace NineChronicles.Headless.GraphTypes
             AddField(new EventStreamFieldType
             {
                 Name = "preloadProgress",
+                DeprecationReason = "Since Libplanet 5.3.0 preload progress is no longer reported.",
                 Type = typeof(PreloadStateType),
                 Resolver = new FuncFieldResolver<BlockSyncState>(context => (context.Source as BlockSyncState)!),
                 Subscriber = new EventStreamResolver<BlockSyncState>(context => StandaloneContext.PreloadStateSubject.AsObservable()),
