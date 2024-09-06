@@ -199,7 +199,6 @@ namespace Libplanet.Headless.Hosting
             var hostOptions = new Net.Options.HostOptions(Properties.Host, shuffledIceServers, Properties.Port ?? default);
             var swarmOptions = new Net.Options.SwarmOptions
             {
-                BranchpointThreshold = 50,
                 MinimumBroadcastTarget = Properties.MinimumBroadcastTarget,
                 BucketSize = Properties.BucketSize,
                 MaximumPollPeers = Properties.MaximumPollPeers,
