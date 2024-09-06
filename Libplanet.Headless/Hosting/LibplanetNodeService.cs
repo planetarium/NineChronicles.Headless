@@ -373,9 +373,6 @@ namespace Libplanet.Headless.Hosting
                     dialTimeout: null,
                     cancellationToken: cancellationToken);
 
-            // We assume the first phase of preloading is BlockHashDownloadState...
-            ((IProgress<BlockSyncState>)PreloadProgress)?.Report(new BlockHashDownloadState());
-
             if (peers.Any())
             {
                 try
