@@ -36,7 +36,7 @@ jobs:
       - name: Install .NET dependencies
         run: dotnet restore
       - name: Build GraphQL Node
-        run: dotnet build --no-restore --project NineChronicles.Headless.Executable
+        run: dotnet build --no-restore NineChronicles.Headless.Executable
       - name: Build GraphQL Schema
         run: |
           dotnet run --project NineChronicles.Headless.Executable -- \
