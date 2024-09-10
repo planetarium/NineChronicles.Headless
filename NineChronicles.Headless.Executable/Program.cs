@@ -449,7 +449,7 @@ namespace NineChronicles.Headless.Executable
                                 serviceInstanceId: Environment.MachineName
                             ).AddAttributes(new Dictionary<string, object>
                             {
-                                { "deployment.environment", Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown" },
+                                { "deployment.environment", Environment.GetEnvironmentVariable("DD_ENV") ?? "Unknown" },
                             }))
                         .WithMetrics(
                             builder => builder
