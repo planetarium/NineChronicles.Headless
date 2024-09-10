@@ -357,7 +357,7 @@ namespace Libplanet.Headless.Hosting
 
             store ??= new DefaultStore(path, flush: false);
 
-            store.PruneOutdatedChains();
+            store.PruneOutdatedChains(true);
             Log.Debug("RocksDB Store pruned outdated chains");
 
             IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states"));
