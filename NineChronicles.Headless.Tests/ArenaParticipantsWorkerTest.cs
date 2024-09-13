@@ -7,9 +7,11 @@ using Libplanet.Crypto;
 using Libplanet.Mocks;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Model;
 using Nekoyume.Model.Arena;
 using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Item;
+using Nekoyume.Model.Quest;
 using Nekoyume.Model.State;
 using Nekoyume.Module;
 using Nekoyume.TableData;
@@ -92,7 +94,8 @@ public class ArenaParticipantsWorkerTest
             .SetLegacyState(sheetAddress, csv.Serialize())
             .SetLegacyState(participantsAddr, participants.Serialize())
             .SetLegacyState(arenaScore.Address, arenaScore.Serialize());
-        var actual = ArenaParticipantsWorker.AvatarAddrAndScoresWithRank(participants.AvatarAddresses, currentRoundData, state);
+        var actual =
+            ArenaParticipantsWorker.AvatarAddrAndScoresWithRank(participants.AvatarAddresses, currentRoundData, state);
         Assert.Equal(2, actual.Count);
         var first = actual.First();
         Assert.Equal(avatarAddress, first.avatarAddr);
@@ -114,7 +117,16 @@ public class ArenaParticipantsWorkerTest
             avatarAddress,
             agentAddress,
             0,
-            tableSheets.GetAvatarSheets(),
+            new QuestList(
+                tableSheets.QuestSheet,
+                tableSheets.QuestRewardSheet,
+                tableSheets.QuestItemRewardSheet,
+                tableSheets.EquipmentItemRecipeSheet,
+                tableSheets.EquipmentItemSubRecipeSheet
+            ),
+            new WorldInformation(
+                0, tableSheets.WorldSheet, GameConfig.IsEditor, "test"
+            ),
             new Address(),
             "avatar_state"
         );
@@ -123,7 +135,16 @@ public class ArenaParticipantsWorkerTest
             avatar2Address,
             agentAddress,
             0,
-            tableSheets.GetAvatarSheets(),
+            new QuestList(
+                tableSheets.QuestSheet,
+                tableSheets.QuestRewardSheet,
+                tableSheets.QuestItemRewardSheet,
+                tableSheets.EquipmentItemRecipeSheet,
+                tableSheets.EquipmentItemSubRecipeSheet
+            ),
+            new WorldInformation(
+                0, tableSheets.WorldSheet, GameConfig.IsEditor, "test"
+            ),
             new Address(),
             "avatar_state2"
         );
@@ -131,7 +152,9 @@ public class ArenaParticipantsWorkerTest
         // equipment
         var equipmentSheet = tableSheets.EquipmentItemSheet;
         var random = new Random(0);
-        var equipment = (Equipment)ItemFactory.CreateItem(equipmentSheet.Values.First(r => r.ItemSubType == ItemSubType.Armor), random);
+        var equipment =
+            (Equipment)ItemFactory.CreateItem(equipmentSheet.Values.First(r => r.ItemSubType == ItemSubType.Armor),
+                random);
         equipment.equipped = true;
         avatarState.inventory.AddItem(equipment);
         avatarState2.inventory.AddItem(equipment);
@@ -182,8 +205,12 @@ public class ArenaParticipantsWorkerTest
         {
             state = state.SetLegacyState(Addresses.GetSheetAddress(key), s.Serialize());
         }
-        var avatarAddrAndScoresWithRank = ArenaParticipantsWorker.AvatarAddrAndScoresWithRank(participants.AvatarAddresses, currentRoundData, state);
-        var actual = ArenaParticipantsWorker.GetArenaParticipants(state, participants.AvatarAddresses, avatarAddrAndScoresWithRank);
+
+        var avatarAddrAndScoresWithRank =
+            ArenaParticipantsWorker.AvatarAddrAndScoresWithRank(participants.AvatarAddresses, currentRoundData, state);
+        var actual =
+            ArenaParticipantsWorker.GetArenaParticipants(state, participants.AvatarAddresses,
+                avatarAddrAndScoresWithRank);
         Assert.Equal(2, actual.Count);
         var first = actual.First();
         Assert.Equal(avatarAddress, first.AvatarAddr);

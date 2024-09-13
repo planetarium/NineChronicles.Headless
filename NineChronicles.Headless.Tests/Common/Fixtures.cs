@@ -6,7 +6,10 @@ using Lib9c.Tests;
 using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
+using Nekoyume;
+using Nekoyume.Model;
 using Nekoyume.Model.Item;
+using Nekoyume.Model.Quest;
 using Nekoyume.Model.State;
 
 namespace NineChronicles.Headless.Tests
@@ -30,7 +33,15 @@ namespace NineChronicles.Headless.Tests
             AvatarAddress,
             UserAddress,
             0,
-            TableSheetsFX.GetAvatarSheets(),
+            new QuestList(
+                TableSheetsFX.GetAvatarSheets().QuestSheet,
+                TableSheetsFX.GetAvatarSheets().QuestRewardSheet,
+                TableSheetsFX.GetAvatarSheets().QuestItemRewardSheet,
+                TableSheetsFX.GetAvatarSheets().EquipmentItemRecipeSheet,
+                TableSheetsFX.GetAvatarSheets().EquipmentItemSubRecipeSheet
+            ),
+            new WorldInformation(0, TableSheetsFX.GetAvatarSheets().WorldSheet,
+                GameConfig.IsEditor, "test"),
             new Address(),
             "avatar_state_fx"
         );
@@ -54,7 +65,8 @@ namespace NineChronicles.Headless.Tests
                 var equipment = ItemFactory.CreateItemUsable(row, Guid.Empty, 0);
                 if (equipment is ITradableItem tradableItem)
                 {
-                    var shopItem = new ShopItem(UserAddress, AvatarAddress, Guid.NewGuid(), index * CurrencyFX, tradableItem);
+                    var shopItem = new ShopItem(UserAddress, AvatarAddress, Guid.NewGuid(), index * CurrencyFX,
+                        tradableItem);
                     shopState.Register(shopItem);
                 }
             }
