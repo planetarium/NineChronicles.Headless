@@ -54,6 +54,8 @@ namespace NineChronicles.Headless
 
         public IStore Store => NodeService.Store;
 
+        public IStateStore StateStore => NodeService.StateStore;
+
         public IKeyValueStore StateKeyValueStore => NodeService.StateKeyValueStore;
 
         public PrivateKey? MinerPrivateKey { get; set; }
