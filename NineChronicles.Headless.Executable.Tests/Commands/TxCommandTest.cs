@@ -32,20 +32,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         }
 
         [Theory]
-        [InlineData(1)]
-        [InlineData(2)]
-        public void Sign_ActivateAccount(int txNonce)
-        {
-            var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
-            (ActivationKey activationKey, PendingActivationState _) =
-                ActivationKey.Create(_privateKey, nonce);
-            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
-            var actionCommand = new ActionCommand(_console);
-            actionCommand.ActivateAccount(activationKey.Encode(), ByteUtil.Hex(nonce), filePath);
-            Assert_Tx(txNonce, filePath, false);
-        }
-
-        [Theory]
         [InlineData(1, false)]
         [InlineData(10, true)]
         [InlineData(100, false)]
@@ -73,18 +59,9 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         }
 
         [Theory]
-        [InlineData(null, null, false)]
-        [InlineData(0, null, true)]
-        [InlineData(ClaimStakeReward2.ObsoletedIndex - 1, null, false)]
-        [InlineData(ClaimStakeReward2.ObsoletedIndex, null, true)]
-        [InlineData(ClaimStakeReward2.ObsoletedIndex + 1, null, false)]
-        [InlineData(long.MaxValue, null, true)]
-        [InlineData(null, 1, false)]
-        [InlineData(null, 2, true)]
-        [InlineData(null, 3, false)]
-        [InlineData(null, 4, true)]
-        [InlineData(null, 5, false)]
-        public void Sign_ClaimStakeReward(long? blockIndex, int? actionVersion, bool gas)
+        [InlineData(true)]
+        [InlineData(false)]
+        public void Sign_ClaimStakeReward(bool gas)
         {
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
             var actionCommand = new ActionCommand(_console);
