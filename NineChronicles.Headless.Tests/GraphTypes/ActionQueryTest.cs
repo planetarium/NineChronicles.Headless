@@ -582,25 +582,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }
         }
 
-        [Fact]
-        public async Task ActivateAccount()
-        {
-            var activationCode = _activationKey.Encode();
-            var signature = _activationKey.PrivateKey.Sign(_nonce);
-
-            var query = $"{{ activateAccount(activationCode: \"{activationCode}\") }}";
-            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
-
-            Assert.Null(queryResult.Errors);
-            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
-            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["activateAccount"]));
-            Assert.IsType<Dictionary>(plainValue);
-            var actionBase = DeserializeNCAction(plainValue);
-            var action = Assert.IsType<ActivateAccount>(actionBase);
-
-            Assert.Equal(signature, action.Signature);
-        }
-
         [Theory]
         [InlineData(-1, "ab", null, null, null, null, false)]
         [InlineData(0, "ab", null, null, null, null, true)]
