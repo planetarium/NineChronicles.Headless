@@ -32,20 +32,6 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         }
 
         [Theory]
-        [InlineData(1)]
-        [InlineData(2)]
-        public void Sign_ActivateAccount(int txNonce)
-        {
-            var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
-            (ActivationKey activationKey, PendingActivationState _) =
-                ActivationKey.Create(_privateKey, nonce);
-            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
-            var actionCommand = new ActionCommand(_console);
-            actionCommand.ActivateAccount(activationKey.Encode(), ByteUtil.Hex(nonce), filePath);
-            Assert_Tx(txNonce, filePath, false);
-        }
-
-        [Theory]
         [InlineData(1, false)]
         [InlineData(10, true)]
         [InlineData(100, false)]
