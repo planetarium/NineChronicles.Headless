@@ -24,6 +24,10 @@ using Nekoyume.Action;
 using Nekoyume.Action.Loader;
 using Nekoyume.Model.State;
 using Nekoyume.Module;
+using NineChronicles.Headless.Repositories.BlockChain;
+using NineChronicles.Headless.Repositories.StateTrie;
+using NineChronicles.Headless.Repositories.Transaction;
+using NineChronicles.Headless.Repositories.WorldState;
 using NineChronicles.Headless.Utils;
 
 namespace NineChronicles.Headless.Tests
@@ -61,6 +65,10 @@ namespace NineChronicles.Headless.Tests
 
             services.AddLibplanetExplorer();
             services.AddSingleton<StateMemoryCache>();
+            services.AddTransient<IWorldStateRepository, WorldStateRepository>();
+            services.AddTransient<IBlockChainRepository, BlockChainRepository>();
+            services.AddSingleton<IStateTrieRepository, StateTrieRepository>();
+            services.AddSingleton<ITransactionRepository, TransactionRepository>();
 
             var serviceProvider = services.BuildServiceProvider();
             return ExecuteQueryAsync<TObjectGraphType>(
@@ -78,6 +86,15 @@ namespace NineChronicles.Headless.Tests
             where TObjectGraphType : IObjectGraphType
         {
             var graphType = (IObjectGraphType)serviceProvider.GetService(typeof(TObjectGraphType))!;
+            return ExecuteQueryAsync(graphType, query, userContext, source);
+        }
+
+        public static Task<ExecutionResult> ExecuteQueryAsync(
+            IObjectGraphType graphType,
+            string query,
+            IDictionary<string, object>? userContext = null,
+            object? source = null)
+        {
             var documentExecutor = new DocumentExecuter();
             return documentExecutor.ExecuteAsync(new ExecutionOptions
             {

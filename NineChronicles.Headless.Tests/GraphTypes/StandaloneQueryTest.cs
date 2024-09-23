@@ -6,11 +6,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
 using GraphQL.Execution;
+using GraphQL.Types;
+using Lib9c;
 using Libplanet.Action;
 using Libplanet.Action.State;
 using Libplanet.Action.Sys;
@@ -19,19 +22,28 @@ using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
 using Libplanet.KeyStore;
+using Libplanet.Mocks;
 using Libplanet.Net;
+using Libplanet.Store.Trie;
 using Libplanet.Types.Assets;
 using Libplanet.Types.Blocks;
 using Libplanet.Types.Consensus;
 using Libplanet.Types.Tx;
+using Moq;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Blockchain.Policy;
 using Nekoyume.Helper;
 using Nekoyume.Model;
+using Nekoyume.Model.Item;
+using Nekoyume.Model.Quest;
 using Nekoyume.Model.State;
 using Nekoyume.Module;
 using Nekoyume.TableData;
+using NineChronicles.Headless.Executable;
+using NineChronicles.Headless.GraphTypes;
+using NineChronicles.Headless.Repositories.WorldState;
+using NineChronicles.Headless.Tests.Action;
 using NineChronicles.Headless.Tests.Common;
 using Xunit;
 using Xunit.Abstractions;
@@ -42,6 +54,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
     public partial class StandaloneQueryTest : GraphQLTestBase
     {
         private readonly Dictionary<string, string> _sheets;
+        private readonly IObjectGraphType _graph;
 
         public StandaloneQueryTest(ITestOutputHelper output) : base(output)
         {
@@ -51,14 +64,18 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task GetState()
         {
-            AppendEmptyBlock(GenesisValidators);
+            var adminAddress = new PrivateKey().Address;
             Address adminStateAddress = AdminState.Address;
+
+            SetupStatesOnTip(world => world
+                .SetLegacyState(adminStateAddress, new AdminState(adminAddress, 10000).Serialize()));
+
             var result = await ExecuteQueryAsync($"query {{ state(accountAddress: \"{ReservedAddresses.LegacyAccount}\", address: \"{adminStateAddress}\") }}");
             var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             IValue rawVal = new Codec().Decode(ByteUtil.ParseHex((string)data!["state"]));
             AdminState adminState = new AdminState((Dictionary)rawVal);
 
-            Assert.Equal(AdminAddress, adminState.AdminAddress);
+            Assert.Equal(adminAddress, adminState.AdminAddress);
         }
 
         [Theory]
@@ -230,24 +247,38 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task NodeStatusGetTopMostBlocks()
         {
-            PrivateKey userPrivateKey = new PrivateKey();
-            var validators = new List<PrivateKey>
+            Domain.Model.BlockChain.Block MakeFakeBlock(long index)
             {
-                ProposerPrivateKey,
-                userPrivateKey,
-            }.OrderBy(x => x.Address).ToList();
-            var service = MakeNineChroniclesNodeService(userPrivateKey);
-            StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
-
-            var blockChain = StandaloneContextFx.BlockChain;
-            for (int i = 0; i < 10; i++)
-            {
-                Block block = blockChain!.ProposeBlock(
-                    userPrivateKey,
-                    lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, validators));
-                blockChain!.Append(block, GenerateBlockCommit(block.Index, block.Hash, validators));
+                return new Domain.Model.BlockChain.Block(
+                    BlockHash.FromString("613dfa26e104465790625ae7bc03fc27a64947c02a9377565ec190405ef7154b"), null,
+                    default, index, DateTimeOffset.UtcNow, MerkleTrie.EmptyRootHash, ImmutableArray<Transaction>.Empty);
             }
+
+            BlockChainRepository.Setup(repo => repo.IterateBlocksDescending(0))
+                .Returns(new List<Domain.Model.BlockChain.Block>
+                {
+                    MakeFakeBlock(10),
+                    MakeFakeBlock(9),
+                    MakeFakeBlock(8),
+                    MakeFakeBlock(7),
+                    MakeFakeBlock(6),
+                    MakeFakeBlock(5),
+                    MakeFakeBlock(4),
+                    MakeFakeBlock(3),
+                    MakeFakeBlock(2),
+                    MakeFakeBlock(1),
+                    MakeFakeBlock(0),
+                });
+            BlockChainRepository.Setup(repo => repo.IterateBlocksDescending(5))
+                .Returns(new List<Domain.Model.BlockChain.Block>
+                {
+                    MakeFakeBlock(5),
+                    MakeFakeBlock(4),
+                    MakeFakeBlock(3),
+                    MakeFakeBlock(2),
+                    MakeFakeBlock(1),
+                    MakeFakeBlock(0),
+                });
 
             var queryWithoutOffset = @"query {
                 nodeStatus {
@@ -422,145 +453,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(privateKey.Address.ToString(), publicKeyResult["address"]);
         }
 
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public async Task ActivationStatus(bool existsActivatedAccounts)
-        {
-            var adminPrivateKey = new PrivateKey();
-            var adminAddress = adminPrivateKey.Address;
-            var activatedAccounts = ImmutableHashSet<Address>.Empty;
-
-            if (existsActivatedAccounts)
-            {
-                activatedAccounts = new[] { adminAddress }.ToImmutableHashSet();
-            }
-
-            ValidatorSet validatorSetCandidate = new ValidatorSet(new[]
-            {
-                new Libplanet.Types.Consensus.Validator(ProposerPrivateKey.PublicKey, BigInteger.One),
-            }.ToList());
-            Block genesis =
-                BlockChain.ProposeGenesisBlock(
-                    transactions: ImmutableList<Transaction>.Empty
-                        .Add(Transaction.Create(0, ProposerPrivateKey, null,
-                            new ActionBase[]
-                            {
-                                new InitializeStates(
-                                    rankingState: new RankingState0(),
-                                    shopState: new ShopState(),
-                                    gameConfigState: new GameConfigState(),
-                                    redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                                        .Add("address", RedeemCodeState.Address.Serialize())
-                                        .Add("map", Bencodex.Types.Dictionary.Empty)
-                                    ),
-                                    adminAddressState: new AdminState(adminAddress, 1500000),
-                                    activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-#pragma warning disable CS0618
-                                    // Use of obsolete method Currency.Legacy():
-                                    // https://github.com/planetarium/lib9c/discussions/1319
-                                    goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
-#pragma warning restore CS0618
-                                    goldDistributions: new GoldDistribution[0],
-                                    tableSheets: _sheets,
-                                    pendingActivationStates: new PendingActivationState[] { }
-                                ),
-                            }.ToPlainValues()))
-                        .AddRange(new IAction[]
-                            {
-                                new Initialize(
-                                    validatorSet: validatorSetCandidate,
-                                    states: ImmutableDictionary<Address, IValue>.Empty),
-                            }.Select((sa, nonce) =>
-                                Transaction.Create(nonce + 1, ProposerPrivateKey, null,
-                                    new[] { sa.PlainValue }))
-                        ),
-                    privateKey: ProposerPrivateKey
-                );
-
-            var apvPrivateKey = new PrivateKey();
-            var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var userPrivateKey = new PrivateKey();
-            var consensusPrivateKey = new PrivateKey();
-            var properties = new LibplanetNodeServiceProperties
-            {
-                Host = System.Net.IPAddress.Loopback.ToString(),
-                AppProtocolVersion = apv,
-                GenesisBlock = genesis,
-                StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
-                StoreStatesCacheSize = 2,
-                SwarmPrivateKey = new PrivateKey(),
-                ConsensusPrivateKey = consensusPrivateKey,
-                ConsensusPort = null,
-                Port = null,
-                NoMiner = true,
-                Render = false,
-                Peers = ImmutableHashSet<BoundPeer>.Empty,
-                TrustedAppProtocolVersionSigners = null,
-                IceServers = ImmutableList<IceServer>.Empty,
-                ConsensusSeeds = ImmutableList<BoundPeer>.Empty,
-                ConsensusPeers = ImmutableList<BoundPeer>.Empty
-            };
-            var blockPolicy = new BlockPolicySource().GetPolicy();
-
-            var service = new NineChroniclesNodeService(
-                userPrivateKey, properties, blockPolicy, Planet.Odin, StaticActionLoaderSingleton.Instance);
-            StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
-
-            var blockChain = StandaloneContextFx.BlockChain!;
-            AppendEmptyBlock(GenesisValidators);
-
-            var queryResult = await ExecuteQueryAsync("query { activationStatus { activated } }");
-            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
-            var result = (bool)
-                ((Dictionary<string, object>)data["activationStatus"])["activated"];
-
-            // If we don't use activated accounts, bypass check (always true).
-            Assert.Equal(!existsActivatedAccounts, result);
-
-            var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
-            var privateKey = new PrivateKey();
-            (ActivationKey activationKey, PendingActivationState pendingActivation) =
-                ActivationKey.Create(privateKey, nonce);
-            ActionBase action = new CreatePendingActivation(pendingActivation);
-            blockChain.MakeTransaction(adminPrivateKey, new[] { action });
-            Block block = blockChain.ProposeBlock(
-                ProposerPrivateKey,
-                lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
-            blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-
-            action = activationKey.CreateActivateAccount(nonce);
-            blockChain.MakeTransaction(userPrivateKey, new[] { action });
-            block = blockChain.ProposeBlock(
-                ProposerPrivateKey,
-                lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
-            blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-            AppendEmptyBlock(GenesisValidators);
-
-            queryResult = await ExecuteQueryAsync("query { activationStatus { activated } }");
-            data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
-            result = (bool)
-                ((Dictionary<string, object>)data["activationStatus"])["activated"];
-
-            Assert.True(result);
-        }
-
         [Fact]
         public async Task GoldBalance()
         {
-            var userPrivateKey = new PrivateKey();
-            var userAddress = userPrivateKey.Address;
-            var validators = new List<PrivateKey>
-            {
-                ProposerPrivateKey, userPrivateKey
-            }.OrderBy(x => x.Address).ToList();
-            var service = MakeNineChroniclesNodeService(userPrivateKey);
-            StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
-            AppendEmptyBlock(validators);
+            var userAddress = new PrivateKey().Address;
 
-            var blockChain = StandaloneContextFx.BlockChain;
+            SetupStatesOnTip(world =>
+                world.SetLegacyState(Addresses.GoldCurrency, new GoldCurrencyState(Currencies.Crystal).Serialize()));
+
             var query = $"query {{ goldBalance(address: \"{userAddress}\") }}";
             var queryResult = await ExecuteQueryAsync(query);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
@@ -572,11 +472,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 data
             );
 
-            Block block = blockChain!.ProposeBlock(
-                userPrivateKey,
-                lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, validators));
-            blockChain!.Append(block, GenerateBlockCommit(block.Index, block.Hash, validators));
-            AppendEmptyBlock(validators);
+            SetupStatesOnTip(world =>
+                world.SetLegacyState(Addresses.GoldCurrency, new GoldCurrencyState(Currencies.Crystal).Serialize())
+                    .MintAsset(new ActionContext(), userAddress, Currencies.Crystal * 10));
 
             queryResult = await ExecuteQueryAsync(query);
             data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
@@ -594,37 +492,35 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [InlineData("memo")]
         public async Task TransferNCGHistories(string? memo)
         {
-            PrivateKey senderKey = ProposerPrivateKey, recipientKey = new PrivateKey();
+            PrivateKey senderKey = new PrivateKey(), recipientKey = new PrivateKey();
             Address sender = senderKey.Address, recipient = recipientKey.Address;
 
-            Block block = BlockChain.ProposeBlock(
-                ProposerPrivateKey,
-                lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
-            BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-            block = BlockChain.ProposeBlock(
-                ProposerPrivateKey,
-                lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
-            BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-
-            var currency = new GoldCurrencyState((Dictionary)BlockChain.GetWorldState().GetLegacyState(Addresses.GoldCurrency)).Currency;
-            Transaction MakeTx(ActionBase action)
+            var blockHash = BlockHash.FromString("613dfa26e104465790625ae7bc03fc27a64947c02a9377565ec190405ef7154b");
+            Transaction MakeTx(long nonce, ActionBase action)
             {
-                return BlockChain.MakeTransaction(ProposerPrivateKey, new ActionBase[] { action });
+                return Transaction.Create(nonce, senderKey, blockHash, new[] { action.PlainValue });
             }
+
+            var currency = Currency.Uncapped("NCG", 2, null);
             var txs = new[]
             {
-                MakeTx(new TransferAsset0(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
-                MakeTx(new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
+                MakeTx(0, new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
             };
+            var block = new Domain.Model.BlockChain.Block(
+                blockHash,
+                BlockHash.FromString("36456be15af9a5b9b13a02c7ce1e849ae9cba8781ec309010499cdb93e29237d"),
+                default(Address),
+                0,
+                Timestamp: DateTimeOffset.UtcNow,
+                StateRootHash: MerkleTrie.EmptyRootHash,
+                Transactions: txs.ToImmutableArray()
+            );
 
-            block = BlockChain.ProposeBlock(
-                ProposerPrivateKey, lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
-            BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-
-            foreach (var tx in txs)
-            {
-                Assert.NotNull(StandaloneContextFx.Store?.GetTxExecution(block.Hash, tx.Id));
-            }
+            BlockChainRepository.Setup(repo => repo.GetBlock(blockHash))
+                .Returns(block);
+            TransactionRepository.Setup(repo => repo.GetTxExecution(blockHash, txs[0].Id))
+                .Returns(new TxExecution(
+                    blockHash, txs[0].Id, false, MerkleTrie.EmptyRootHash, MerkleTrie.EmptyRootHash, new List<string?>()));
 
             var blockHashHex = ByteUtil.Hex(block.Hash.ToByteArray());
             var result =
@@ -691,6 +587,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 Assert.Equal(userPrivateKey, StandaloneContextFx.NineChroniclesNodeService.MinerPrivateKey!);
             }
+
+            // FIXME: Remove the above lines after removing `StandaloneContext` dependency.
+            SetupStatesOnTip(world =>
+                world.SetLegacyState(Addresses.GoldCurrency, new GoldCurrencyState(Currencies.Crystal).Serialize())
+                    .MintAsset(new ActionContext(), userAddress, Currencies.Crystal * 10));
+
             string queryArgs = miner ? "" : $@"(address: ""{userAddress}"")";
             string query = $@"query {{
                 monsterCollectionStatus{queryArgs} {{
@@ -729,23 +631,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             {
                 StandaloneContextFx.NineChroniclesNodeService.MinerPrivateKey = null;
             }
-            var action = new CreateAvatar
-            {
-                index = 0,
-                hair = 1,
-                lens = 2,
-                ear = 3,
-                tail = 4,
-                name = "action",
-            };
-            var blockChain = StandaloneContextFx.BlockChain;
-            var transaction = blockChain.MakeTransaction(userPrivateKey, new ActionBase[] { action });
-            blockChain.StageTransaction(transaction);
-            Block block = blockChain.ProposeBlock(
-                userPrivateKey,
-                lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, validators));
-            blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, validators));
-            AppendEmptyBlock(validators);
+
+            // FIXME: Remove the above lines after removing `StandaloneContext` dependency.
+            SetupStatesOnTip(world => world
+                .SetLegacyState(Addresses.GoldCurrency, new GoldCurrencyState(Currencies.Crystal).Serialize())
+                .SetAgentState(userAddress, new AgentState(userAddress))
+                .MintAsset(new ActionContext(), userAddress, Currencies.Crystal * 10));
 
             string queryArgs = miner ? "" : $@"(address: ""{userAddress}"")";
             string query = $@"query {{
@@ -772,40 +663,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact]
         public async Task Avatar()
         {
-            var userPrivateKey = new PrivateKey();
-            var userAddress = userPrivateKey.Address;
-            var validators = new List<PrivateKey>
-            {
-                ProposerPrivateKey, userPrivateKey
-            }.OrderBy(x => x.Address).ToList();
-            var service = MakeNineChroniclesNodeService(userPrivateKey);
-            StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm!.BlockChain;
-            var action = new CreateAvatar
-            {
-                index = 0,
-                hair = 1,
-                lens = 2,
-                ear = 3,
-                tail = 4,
-                name = "action",
-            };
-            var blockChain = StandaloneContextFx.BlockChain;
-            var transaction = blockChain.MakeTransaction(userPrivateKey, new ActionBase[] { action });
-            blockChain.StageTransaction(transaction);
-            Block block = blockChain.ProposeBlock(
-                userPrivateKey,
-                lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, validators));
-            blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, validators));
-            AppendEmptyBlock(validators);
+            var agentAddress = new Address("f189c04126e2e708cd7d17cd68a7b7f10bbb6f16");
+            var avatarAddress = new Address("f1a005c01e683dbcab9a306d5cc70d5e57fccfa9");
+            var worldInformation = new WorldInformation(Dictionary.Empty);
+            var questList = new QuestList(new List((Integer)0, List.Empty, List.Empty));
+            var avatarState = new AvatarState(
+                agentAddress, avatarAddress, 0, questList, worldInformation, default, "name");
+            avatarState.inventory = new Inventory();
 
-            var avatarAddress = userAddress.Derive(
-                string.Format(
-                    CultureInfo.InvariantCulture,
-                    CreateAvatar.DeriveFormat,
-                    0
-                )
-            );
+            SetupStatesOnTip(world => world
+                .SetAvatarState(avatarAddress, avatarState));
 
             string query = $@"query {{
                 stateQuery {{
@@ -823,90 +690,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [InlineData(false)]
         public async Task ActivationKeyNonce(bool trim)
         {
-            var adminPrivateKey = new PrivateKey();
-            var adminAddress = adminPrivateKey.Address;
-            var activatedAccounts = ImmutableHashSet<Address>.Empty;
-            var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
             var privateKey = new PrivateKey();
-            (ActivationKey activationKey, PendingActivationState pendingActivation) =
-                ActivationKey.Create(privateKey, nonce);
-            var pendingActivationStates = new List<PendingActivationState>
-            {
-                pendingActivation,
-            };
-            Block genesis =
-                BlockChain.ProposeGenesisBlock(
-                    transactions: ImmutableList<Transaction>.Empty
-                        .Add(
-                            Transaction.Create(
-                                0, ProposerPrivateKey,
-                                null,
-                                new IAction[]
-                                {
-                                    new Initialize(
-                                        new ValidatorSet(
-                                            GenesisValidators.Select(
-                                                v => new Validator(v.PublicKey, BigInteger.One)).ToList()),
-                                        ImmutableDictionary.Create<Address, IValue>())
-                                }.Select(a => a.PlainValue)))
-                        .Add(
-                            Transaction.Create(
-                                1,
-                                ProposerPrivateKey,
-                                null,
-                                new ActionBase[]
-                                {
-                                    new InitializeStates(
-                                        rankingState: new RankingState0(),
-                                        shopState: new ShopState(),
-                                        gameConfigState: new GameConfigState(),
-                                        redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                                            .Add("address", RedeemCodeState.Address.Serialize())
-                                            .Add("map", Bencodex.Types.Dictionary.Empty)
-                                        ),
-                                        adminAddressState: new AdminState(adminAddress, 1500000),
-                                        activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-#pragma warning disable CS0618
-                                        // Use of obsolete method Currency.Legacy():
-                                        // https://github.com/planetarium/lib9c/discussions/1319
-                                        goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
-#pragma warning restore CS0618
-                                        goldDistributions: new GoldDistribution[0],
-                                        tableSheets: _sheets,
-                                        pendingActivationStates: pendingActivationStates.ToArray()
-                                    ),
-                                }.ToPlainValues()))
-                );
+            var random = new Random();
+            var nonce = new byte[10];
+            random.NextBytes(nonce);
+            var (activationKey, pendingActivationState) = ActivationKey.Create(privateKey, nonce);
 
-            var apvPrivateKey = new PrivateKey();
-            var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var userPrivateKey = new PrivateKey();
-            var consensusPrivateKey = new PrivateKey();
-            var properties = new LibplanetNodeServiceProperties
-            {
-                Host = System.Net.IPAddress.Loopback.ToString(),
-                AppProtocolVersion = apv,
-                GenesisBlock = genesis,
-                StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
-                StoreStatesCacheSize = 2,
-                SwarmPrivateKey = new PrivateKey(),
-                ConsensusPrivateKey = consensusPrivateKey,
-                ConsensusPort = null,
-                Port = null,
-                NoMiner = true,
-                Render = false,
-                Peers = ImmutableHashSet<BoundPeer>.Empty,
-                TrustedAppProtocolVersionSigners = null,
-                IceServers = ImmutableList<IceServer>.Empty,
-                ConsensusSeeds = ImmutableList<BoundPeer>.Empty,
-                ConsensusPeers = ImmutableList<BoundPeer>.Empty
-            };
-
-            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(Planet.Odin, StaticActionLoaderSingleton.Instance, null);
-            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, Planet.Odin, StaticActionLoaderSingleton.Instance);
-            StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
-            AppendEmptyBlock(GenesisValidators);
+            SetupStatesOnTip(world => world
+                .SetLegacyState(activationKey.PendingAddress, pendingActivationState.Serialize()));
 
             var code = activationKey.Encode();
             if (trim)
@@ -923,150 +714,41 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Theory]
         [InlineData("1", "invitationCode format is invalid.")]
         [InlineData("9330b3287bd2bbc38770c69ae7cd380350c60a1dff9ec41254f3048d5b3eb01c", "invitationCode format is invalid.")]
-        [InlineData("9330b3287bd2bbc38770c69ae7cd380350c60a1dff9ec41254f3048d5b3eb01c/44C889Af1e1e90213Cff5d69C9086c34ecCb60B0", "invitationCode is invalid.")]
-        public async Task ActivationKeyNonce_Throw_ExecutionError(string code, string msg)
+        public async Task ActivationKeyNonce_ThrowError_WithInvalidFormatCode(string code, string msg)
         {
-            var adminPrivateKey = new PrivateKey();
-            var adminAddress = adminPrivateKey.Address;
-            var activatedAccounts = ImmutableHashSet<Address>.Empty;
-            var pendingActivationStates = new List<PendingActivationState>();
+            var query = $"query {{ activationKeyNonce(invitationCode: \"{code}\") }}";
+            var queryResult = await ExecuteQueryAsync(query);
+            Assert.NotNull(queryResult.Errors);
+            Assert.Single(queryResult.Errors!);
+            Assert.Equal(msg, queryResult.Errors!.First().Message);
+        }
 
-            Block genesis =
-                BlockChain.ProposeGenesisBlock(
-                    transactions: ImmutableList<Transaction>.Empty
-                        .Add(Transaction.Create(
-                            0,
-                            new PrivateKey(),
-                            null,
-                            new ActionBase[]
-                            {
-                                new InitializeStates(
-                                    rankingState: new RankingState0(),
-                                    shopState: new ShopState(),
-                                    gameConfigState: new GameConfigState(),
-                                    redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                                        .Add("address", RedeemCodeState.Address.Serialize())
-                                        .Add("map", Bencodex.Types.Dictionary.Empty)
-                                    ),
-                                    adminAddressState: new AdminState(adminAddress, 1500000),
-                                    activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-#pragma warning disable CS0618
-                                    // Use of obsolete method Currency.Legacy():
-                                    // https://github.com/planetarium/lib9c/discussions/1319
-                                    goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
-#pragma warning restore CS0618
-                                    goldDistributions: new GoldDistribution[0],
-                                    tableSheets: _sheets,
-                                    pendingActivationStates: pendingActivationStates.ToArray()
-                                ),
-                            }.ToPlainValues()))
-                        );
+        [Theory]
+        [InlineData("9330b3287bd2bbc38770c69ae7cd380350c60a1dff9ec41254f3048d5b3eb01c/44C889Af1e1e90213Cff5d69C9086c34ecCb60B0", "invitationCode is invalid.")]
+        public async Task ActivationKeyNonce_ThrowError_WithOutdatedCode(string code, string msg)
+        {
+            var activationKey = ActivationKey.Decode(code);
 
-            var apvPrivateKey = new PrivateKey();
-            var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var userPrivateKey = new PrivateKey();
-            var consensusPrivateKey = new PrivateKey();
-            var properties = new LibplanetNodeServiceProperties
-            {
-                Host = System.Net.IPAddress.Loopback.ToString(),
-                AppProtocolVersion = apv,
-                GenesisBlock = genesis,
-                StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
-                StoreStatesCacheSize = 2,
-                SwarmPrivateKey = new PrivateKey(),
-                ConsensusPrivateKey = consensusPrivateKey,
-                ConsensusPort = null,
-                Port = null,
-                NoMiner = true,
-                Render = false,
-                Peers = ImmutableHashSet<BoundPeer>.Empty,
-                TrustedAppProtocolVersionSigners = null,
-                IceServers = ImmutableList<IceServer>.Empty,
-                ConsensusSeeds = ImmutableList<BoundPeer>.Empty,
-                ConsensusPeers = ImmutableList<BoundPeer>.Empty
-            };
-            var blockPolicy = new BlockPolicySource().GetPolicy();
-
-            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, Planet.Odin, StaticActionLoaderSingleton.Instance);
-            StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
+            SetupStatesOnTip(world => world
+                .SetLegacyState(activationKey.PendingAddress, Bencodex.Types.Null.Value));
 
             var query = $"query {{ activationKeyNonce(invitationCode: \"{code}\") }}";
             var queryResult = await ExecuteQueryAsync(query);
             Assert.NotNull(queryResult.Errors);
             Assert.Single(queryResult.Errors!);
             Assert.Equal(msg, queryResult.Errors!.First().Message);
-
         }
 
         [Fact]
         public async Task Balance()
         {
-            var adminPrivateKey = new PrivateKey();
-            var adminAddress = adminPrivateKey.Address;
-            var activatedAccounts = ImmutableHashSet<Address>.Empty;
-            var pendingActivationStates = new List<PendingActivationState>();
+            var address = new PrivateKey().Address;
 
-            Block genesis =
-                BlockChain.ProposeGenesisBlock(
-                    transactions: ImmutableList<Transaction>.Empty.Add(
-                        Transaction.Create(0, new PrivateKey(), null,
-                            new ActionBase[]
-                            {
-                                new InitializeStates(
-                                    rankingState: new RankingState0(),
-                                    shopState: new ShopState(),
-                                    gameConfigState: new GameConfigState(),
-                                    redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                                        .Add("address", RedeemCodeState.Address.Serialize())
-                                        .Add("map", Bencodex.Types.Dictionary.Empty)
-                                    ),
-                                    adminAddressState: new AdminState(adminAddress, 1500000),
-                                    activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-#pragma warning disable CS0618
-                                    // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
-                                    goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
-#pragma warning restore CS0618
-                                    goldDistributions: new GoldDistribution[0],
-                                    tableSheets: _sheets,
-                                    pendingActivationStates: pendingActivationStates.ToArray()
-                                ),
-                            }.ToPlainValues()))
-                );
-
-            var apvPrivateKey = new PrivateKey();
-            var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-
-            var userPrivateKey = new PrivateKey();
-            var consensusPrivateKey = new PrivateKey();
-            var properties = new LibplanetNodeServiceProperties
-            {
-                Host = System.Net.IPAddress.Loopback.ToString(),
-                AppProtocolVersion = apv,
-                GenesisBlock = genesis,
-                StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
-                StoreStatesCacheSize = 2,
-                SwarmPrivateKey = new PrivateKey(),
-                ConsensusPrivateKey = consensusPrivateKey,
-                ConsensusPort = null,
-                Port = null,
-                NoMiner = true,
-                Render = false,
-                Peers = ImmutableHashSet<BoundPeer>.Empty,
-                TrustedAppProtocolVersionSigners = null,
-                IceServers = ImmutableList<IceServer>.Empty,
-                ConsensusSeeds = ImmutableList<BoundPeer>.Empty,
-                ConsensusPeers = ImmutableList<BoundPeer>.Empty
-            };
-            var blockPolicy = new BlockPolicySource().GetPolicy();
-
-            var service = new NineChroniclesNodeService(userPrivateKey, properties, blockPolicy, Planet.Odin, StaticActionLoaderSingleton.Instance);
-            StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
+            SetupStatesOnTip(world => world);
 
             var query = $@"query {{
                 stateQuery {{
-                    balance(address: ""{adminAddress}"", currency: {{ decimalPlaces: 18, ticker: ""CRYSTAL"" }}) {{
+                    balance(address: ""{address}"", currency: {{ decimalPlaces: 18, ticker: ""CRYSTAL"" }}) {{
                         quantity
                         currency {{
                             ticker

@@ -15,7 +15,7 @@ namespace NineChronicles.Headless
             _standaloneContext = standaloneContext;
         }
 
-        public bool Preloaded => _standaloneContext.NodeStatus.PreloadEnded;
+        public bool Preloaded => _standaloneContext.PreloadEnded;
         public BlockChain BlockChain => _standaloneContext.BlockChain;
         public IStore Store => _standaloneContext.Store;
         public Swarm Swarm => _standaloneContext.Swarm;
