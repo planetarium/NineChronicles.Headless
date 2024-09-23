@@ -453,130 +453,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(privateKey.Address.ToString(), publicKeyResult["address"]);
         }
 
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public async Task ActivationStatus(bool existsActivatedAccounts)
-        {
-            var adminPrivateKey = new PrivateKey();
-            var adminAddress = adminPrivateKey.Address;
-            var activatedAccounts = ImmutableHashSet<Address>.Empty;
-
-            if (existsActivatedAccounts)
-            {
-                activatedAccounts = new[] { adminAddress }.ToImmutableHashSet();
-            }
-
-            ValidatorSet validatorSetCandidate = new ValidatorSet(new[]
-            {
-                new Libplanet.Types.Consensus.Validator(ProposerPrivateKey.PublicKey, BigInteger.One),
-            }.ToList());
-            Block genesis =
-                BlockChain.ProposeGenesisBlock(
-                    transactions: ImmutableList<Transaction>.Empty
-                        .Add(Transaction.Create(0, ProposerPrivateKey, null,
-                            new ActionBase[]
-                            {
-                                new InitializeStates(
-                                    rankingState: new RankingState0(),
-                                    shopState: new ShopState(),
-                                    gameConfigState: new GameConfigState(),
-                                    redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                                        .Add("address", RedeemCodeState.Address.Serialize())
-                                        .Add("map", Bencodex.Types.Dictionary.Empty)
-                                    ),
-                                    adminAddressState: new AdminState(adminAddress, 1500000),
-                                    activatedAccountsState: new ActivatedAccountsState(activatedAccounts),
-#pragma warning disable CS0618
-                                    // Use of obsolete method Currency.Legacy():
-                                    // https://github.com/planetarium/lib9c/discussions/1319
-                                    goldCurrencyState: new GoldCurrencyState(Currency.Legacy("NCG", 2, null)),
-#pragma warning restore CS0618
-                                    goldDistributions: new GoldDistribution[0],
-                                    tableSheets: _sheets,
-                                    pendingActivationStates: new PendingActivationState[] { }
-                                ),
-                            }.ToPlainValues()))
-                        .AddRange(new IAction[]
-                            {
-                                new Initialize(
-                                    validatorSet: validatorSetCandidate,
-                                    states: ImmutableDictionary<Address, IValue>.Empty),
-                            }.Select((sa, nonce) =>
-                                Transaction.Create(nonce + 1, ProposerPrivateKey, null,
-                                    new[] { sa.PlainValue }))
-                        ),
-                    privateKey: ProposerPrivateKey
-                );
-
-            var apvPrivateKey = new PrivateKey();
-            var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var userPrivateKey = new PrivateKey();
-            var consensusPrivateKey = new PrivateKey();
-            var properties = new LibplanetNodeServiceProperties
-            {
-                Host = System.Net.IPAddress.Loopback.ToString(),
-                AppProtocolVersion = apv,
-                GenesisBlock = genesis,
-                StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
-                StoreStatesCacheSize = 2,
-                SwarmPrivateKey = new PrivateKey(),
-                ConsensusPrivateKey = consensusPrivateKey,
-                ConsensusPort = null,
-                Port = null,
-                NoMiner = true,
-                Render = false,
-                Peers = ImmutableHashSet<BoundPeer>.Empty,
-                TrustedAppProtocolVersionSigners = null,
-                IceServers = ImmutableList<IceServer>.Empty,
-                ConsensusSeeds = ImmutableList<BoundPeer>.Empty,
-                ConsensusPeers = ImmutableList<BoundPeer>.Empty
-            };
-            var blockPolicy = new BlockPolicySource().GetPolicy();
-
-            var service = new NineChroniclesNodeService(
-                userPrivateKey, properties, blockPolicy, Planet.Odin, StaticActionLoaderSingleton.Instance);
-            StandaloneContextFx.NineChroniclesNodeService = service;
-            StandaloneContextFx.BlockChain = service.Swarm?.BlockChain;
-
-            var blockChain = StandaloneContextFx.BlockChain!;
-            AppendEmptyBlock(GenesisValidators);
-
-            var queryResult = await ExecuteQueryAsync("query { activationStatus { activated } }");
-            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
-            var result = (bool)
-                ((Dictionary<string, object>)data["activationStatus"])["activated"];
-
-            // If we don't use activated accounts, bypass check (always true).
-            Assert.Equal(!existsActivatedAccounts, result);
-
-            var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
-            var privateKey = new PrivateKey();
-            (ActivationKey activationKey, PendingActivationState pendingActivation) =
-                ActivationKey.Create(privateKey, nonce);
-            ActionBase action = new CreatePendingActivation(pendingActivation);
-            blockChain.MakeTransaction(adminPrivateKey, new[] { action });
-            Block block = blockChain.ProposeBlock(
-                ProposerPrivateKey,
-                lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
-            blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-
-            action = activationKey.CreateActivateAccount(nonce);
-            blockChain.MakeTransaction(userPrivateKey, new[] { action });
-            block = blockChain.ProposeBlock(
-                ProposerPrivateKey,
-                lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
-            blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-            AppendEmptyBlock(GenesisValidators);
-
-            queryResult = await ExecuteQueryAsync("query { activationStatus { activated } }");
-            data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
-            result = (bool)
-                ((Dictionary<string, object>)data["activationStatus"])["activated"];
-
-            Assert.True(result);
-        }
-
         [Fact]
         public async Task GoldBalance()
         {
@@ -628,8 +504,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var currency = Currency.Uncapped("NCG", 2, null);
             var txs = new[]
             {
-                MakeTx(0, new TransferAsset0(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
-                MakeTx(1, new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
+                MakeTx(0, new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 1, 0), memo)),
             };
             var block = new Domain.Model.BlockChain.Block(
                 blockHash,
@@ -646,9 +521,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             TransactionRepository.Setup(repo => repo.GetTxExecution(blockHash, txs[0].Id))
                 .Returns(new TxExecution(
                     blockHash, txs[0].Id, false, MerkleTrie.EmptyRootHash, MerkleTrie.EmptyRootHash, new List<string?>()));
-            TransactionRepository.Setup(repo => repo.GetTxExecution(blockHash, txs[1].Id))
-                .Returns(new TxExecution(
-                    blockHash, txs[1].Id, false, MerkleTrie.EmptyRootHash, MerkleTrie.EmptyRootHash, new List<string?>()));
 
             var blockHashHex = ByteUtil.Hex(block.Hash.ToByteArray());
             var result =

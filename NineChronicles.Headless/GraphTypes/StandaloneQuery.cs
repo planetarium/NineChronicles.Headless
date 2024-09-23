@@ -485,8 +485,8 @@ namespace NineChronicles.Headless.GraphTypes
                     if (worldState.GetLegacyState(activationKey.PendingAddress) is Dictionary dictionary)
                     {
                         var pending = new PendingActivationState(dictionary);
-                        ActivateAccount action = activationKey.CreateActivateAccount(pending.Nonce);
-                        if (pending.Verify(action))
+                        var signature = activationKey.PrivateKey.Sign(pending.Nonce);
+                        if (pending.Verify(signature))
                         {
                             return false;
                         }
