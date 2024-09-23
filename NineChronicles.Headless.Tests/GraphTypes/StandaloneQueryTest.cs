@@ -521,9 +521,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             TransactionRepository.Setup(repo => repo.GetTxExecution(blockHash, txs[0].Id))
                 .Returns(new TxExecution(
                     blockHash, txs[0].Id, false, MerkleTrie.EmptyRootHash, MerkleTrie.EmptyRootHash, new List<string?>()));
-            TransactionRepository.Setup(repo => repo.GetTxExecution(blockHash, txs[1].Id))
-                .Returns(new TxExecution(
-                    blockHash, txs[1].Id, false, MerkleTrie.EmptyRootHash, MerkleTrie.EmptyRootHash, new List<string?>()));
 
             var blockHashHex = ByteUtil.Hex(block.Hash.ToByteArray());
             var result =
