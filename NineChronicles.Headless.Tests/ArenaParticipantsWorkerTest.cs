@@ -7,11 +7,9 @@ using Libplanet.Crypto;
 using Libplanet.Mocks;
 using Nekoyume;
 using Nekoyume.Action;
-using Nekoyume.Model;
 using Nekoyume.Model.Arena;
 using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Item;
-using Nekoyume.Model.Quest;
 using Nekoyume.Model.State;
 using Nekoyume.Module;
 using Nekoyume.TableData;
@@ -117,16 +115,7 @@ public class ArenaParticipantsWorkerTest
             avatarAddress,
             agentAddress,
             0,
-            new QuestList(
-                tableSheets.QuestSheet,
-                tableSheets.QuestRewardSheet,
-                tableSheets.QuestItemRewardSheet,
-                tableSheets.EquipmentItemRecipeSheet,
-                tableSheets.EquipmentItemSubRecipeSheet
-            ),
-            new WorldInformation(
-                0, tableSheets.WorldSheet, GameConfig.IsEditor, "test"
-            ),
+            tableSheets.GetAvatarSheets(),
             new Address(),
             "avatar_state"
         );
@@ -135,16 +124,7 @@ public class ArenaParticipantsWorkerTest
             avatar2Address,
             agentAddress,
             0,
-            new QuestList(
-                tableSheets.QuestSheet,
-                tableSheets.QuestRewardSheet,
-                tableSheets.QuestItemRewardSheet,
-                tableSheets.EquipmentItemRecipeSheet,
-                tableSheets.EquipmentItemSubRecipeSheet
-            ),
-            new WorldInformation(
-                0, tableSheets.WorldSheet, GameConfig.IsEditor, "test"
-            ),
+            tableSheets.GetAvatarSheets(),
             new Address(),
             "avatar_state2"
         );
