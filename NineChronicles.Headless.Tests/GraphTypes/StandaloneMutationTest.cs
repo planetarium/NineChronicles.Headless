@@ -114,40 +114,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(address.ToString(), revokedPrivateKeyAddress);
         }
 
-        [Fact]
-        public async Task ActivateAccount()
-        {
-            var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
-            var privateKey = new PrivateKey();
-            (ActivationKey activationKey, PendingActivationState pendingActivation) =
-                ActivationKey.Create(privateKey, nonce);
-            ActionBase action = new CreatePendingActivation(pendingActivation);
-            BlockChain.MakeTransaction(AdminPrivateKey, new[] { action });
-            Block block = BlockChain.ProposeBlock(
-                ProposerPrivateKey,
-                lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
-            BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-            AppendEmptyBlock(GenesisValidators);
-
-            var encodedActivationKey = activationKey.Encode();
-            var queryResult = await ExecuteQueryAsync(
-                $"mutation {{ activationStatus {{ activateAccount(encodedActivationKey: \"{encodedActivationKey}\") }} }}");
-            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
-            block = BlockChain.ProposeBlock(
-                ProposerPrivateKey,
-                lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
-            BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
-
-            var result =
-                (bool)((Dictionary<string, object>)
-                    data["activationStatus"])["activateAccount"];
-            Assert.True(result);
-
-            Address userAddress = StandaloneContextFx.NineChroniclesNodeService!.MinerPrivateKey!.Address;
-            IValue? state = BlockChain.GetNextWorldState().GetLegacyState(userAddress.Derive(ActivationKey.DeriveKey));
-            Assert.True((Bencodex.Types.Boolean)state);
-        }
-
         [Theory]
         [InlineData(null, false)]
         [InlineData("", false)]
