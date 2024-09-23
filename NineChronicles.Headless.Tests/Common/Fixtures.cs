@@ -11,6 +11,7 @@ using Nekoyume.Model;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Quest;
 using Nekoyume.Model.State;
+using Nekoyume.TableData;
 
 namespace NineChronicles.Headless.Tests
 {
@@ -33,15 +34,7 @@ namespace NineChronicles.Headless.Tests
             AvatarAddress,
             UserAddress,
             0,
-            new QuestList(
-                TableSheetsFX.GetAvatarSheets().QuestSheet,
-                TableSheetsFX.GetAvatarSheets().QuestRewardSheet,
-                TableSheetsFX.GetAvatarSheets().QuestItemRewardSheet,
-                TableSheetsFX.GetAvatarSheets().EquipmentItemRecipeSheet,
-                TableSheetsFX.GetAvatarSheets().EquipmentItemSubRecipeSheet
-            ),
-            new WorldInformation(0, TableSheetsFX.GetAvatarSheets().WorldSheet,
-                GameConfig.IsEditor, "test"),
+            TableSheetsFX.GetAvatarSheets(),
             new Address(),
             "avatar_state_fx"
         );
