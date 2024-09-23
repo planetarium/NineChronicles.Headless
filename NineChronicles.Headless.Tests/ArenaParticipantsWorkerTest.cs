@@ -113,7 +113,7 @@ public class ArenaParticipantsWorkerTest
         var tableSheets = new TableSheets(_sheets);
         var agentAddress = new PrivateKey().Address;
         var avatarAddress = Addresses.GetAvatarAddress(agentAddress, 0);
-        var avatarState = new AvatarState(
+        var avatarState = AvatarState.Create(
             avatarAddress,
             agentAddress,
             0,
@@ -131,7 +131,7 @@ public class ArenaParticipantsWorkerTest
             "avatar_state"
         );
         var avatar2Address = Addresses.GetAvatarAddress(agentAddress, 1);
-        var avatarState2 = new AvatarState(
+        var avatarState2 = AvatarState.Create(
             avatar2Address,
             agentAddress,
             0,

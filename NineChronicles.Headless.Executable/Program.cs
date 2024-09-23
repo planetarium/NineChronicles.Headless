@@ -442,6 +442,7 @@ namespace NineChronicles.Headless.Executable
                 hostBuilder.ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => standaloneContext);
+                    services.AddSingleton<IKeyStore>(standaloneContext.KeyStore);
                     services.AddOpenTelemetry()
                         .ConfigureResource(resource => resource.AddService(
                                 serviceName: Assembly.GetEntryAssembly()?.GetName().Name ?? "NineChronicles.Headless",

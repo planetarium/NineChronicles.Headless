@@ -34,7 +34,16 @@ using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex.Types;
+using Libplanet.Action.State;
+using Libplanet.Mocks;
 using Libplanet.Types.Tx;
+using Moq;
+using NineChronicles.Headless.Executable.Tests.KeyStore;
+using NineChronicles.Headless.Repositories;
+using NineChronicles.Headless.Repositories.BlockChain;
+using NineChronicles.Headless.Repositories.StateTrie;
+using NineChronicles.Headless.Repositories.Transaction;
+using NineChronicles.Headless.Repositories.WorldState;
 using Xunit.Abstractions;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
@@ -86,12 +95,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 privateKey: AdminPrivateKey);
 
             var ncService = ServiceBuilder.CreateNineChroniclesNodeService(genesisBlock, ProposerPrivateKey);
-            var tempKeyStorePath = Path.Join(Path.GetTempPath(), Path.GetRandomFileName());
-            var keyStore = new Web3KeyStore(tempKeyStorePath);
 
             StandaloneContextFx = new StandaloneContext
             {
-                KeyStore = keyStore,
+                KeyStore = KeyStore,
                 DifferentAppProtocolVersionEncounterInterval = TimeSpan.FromSeconds(1),
                 NotificationInterval = TimeSpan.FromSeconds(1),
                 NodeExceptionInterval = TimeSpan.FromSeconds(1),
@@ -117,6 +124,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             );
             services.AddSingleton(publisher);
             services.AddSingleton(StandaloneContextFx);
+            services.AddTransient(provider => provider.GetService<StandaloneContext>().BlockChain);
+            services.AddSingleton<IWorldStateRepository>(WorldStateRepository.Object);
+            services.AddSingleton<IBlockChainRepository>(BlockChainRepository.Object);
+            services.AddSingleton<IStateTrieRepository>(StateTrieRepository.Object);
+            services.AddSingleton<ITransactionRepository>(TransactionRepository.Object);
+            services.AddSingleton<IKeyStore>(KeyStore);
             services.AddSingleton<IConfiguration>(configuration);
             services.AddGraphTypes();
             services.AddLibplanetExplorer();
@@ -128,6 +141,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             DocumentExecutor = new DocumentExecuter();
         }
+
+        protected Mock<IWorldStateRepository> WorldStateRepository { get; } = new();
+        protected Mock<IStateTrieRepository> StateTrieRepository { get; } = new();
+        protected Mock<IBlockChainRepository> BlockChainRepository { get; } = new();
+        protected Mock<ITransactionRepository> TransactionRepository { get; } = new();
+        protected IKeyStore KeyStore { get; } = new InMemoryKeyStore();
 
         protected PrivateKey AdminPrivateKey { get; } = new PrivateKey();
 
@@ -149,9 +168,6 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         protected BlockChain BlockChain =>
             StandaloneContextFx.BlockChain!;
-
-        protected IKeyStore KeyStore =>
-            StandaloneContextFx.KeyStore!;
 
         protected IDocumentExecuter DocumentExecutor { get; }
 
@@ -185,6 +201,25 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             );
             await swarm.WaitForRunningAsync();
             return task;
+        }
+
+        protected void SetupStatesOnTip(Func<IWorld, IWorld> func)
+        {
+            var worldState = func(new World(MockUtil.MockModernWorldState));
+            var stateRootHash = worldState.Trie.Hash;
+            var tip = new Domain.Model.BlockChain.Block(
+                BlockHash.FromString("613dfa26e104465790625ae7bc03fc27a64947c02a9377565ec190405ef7154b"),
+                BlockHash.FromString("36456be15af9a5b9b13a02c7ce1e849ae9cba8781ec309010499cdb93e29237d"),
+                default(Address),
+                0,
+                Timestamp: DateTimeOffset.UtcNow,
+                StateRootHash: stateRootHash,
+                Transactions: ImmutableArray<Transaction>.Empty
+            );
+            BlockChainRepository.Setup(repository => repository.GetTip())
+                .Returns(tip);
+            WorldStateRepository.Setup(repository => repository.GetWorldState(stateRootHash))
+                .Returns(worldState);
         }
 
         protected LibplanetNodeService CreateLibplanetNodeService(

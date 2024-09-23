@@ -29,7 +29,7 @@ namespace NineChronicles.Headless.Tests
 
         public static readonly TableSheets TableSheetsFX = new(TableSheetsImporter.ImportSheets());
 
-        public static readonly AvatarState AvatarStateFX = new(
+        public static readonly AvatarState AvatarStateFX = AvatarState.Create(
             AvatarAddress,
             UserAddress,
             0,
