@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using GraphQL.Execution;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
+using Libplanet.Types.Consensus;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes;
@@ -21,24 +22,25 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         public AddressQueryTest()
         {
             var initializeStates = new InitializeStates(
-                    rankingState: new RankingState0(),
-                    shopState: new ShopState(),
-                    gameConfigState: new GameConfigState(),
-                    redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                        .Add("address", RedeemCodeState.Address.Serialize())
-                        .Add("map", Bencodex.Types.Dictionary.Empty)
-                    ),
-                    adminAddressState: new AdminState(new PrivateKey().Address, 1500000),
-                    activatedAccountsState: new ActivatedAccountsState(),
+                validatorSet: new ValidatorSet(new List<Validator> { new Validator(MinerPrivateKey.PublicKey, 1) }),
+                rankingState: new RankingState0(),
+                shopState: new ShopState(),
+                gameConfigState: new GameConfigState(),
+                redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
+                    .Add("address", RedeemCodeState.Address.Serialize())
+                    .Add("map", Bencodex.Types.Dictionary.Empty)
+                ),
+                adminAddressState: new AdminState(new PrivateKey().Address, 1500000),
+                activatedAccountsState: new ActivatedAccountsState(),
 #pragma warning disable CS0618
-                    // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
-                    goldCurrencyState:
-                    new GoldCurrencyState(Currency.Legacy("NCG", 2, MinerPrivateKey.Address)),
+                // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                goldCurrencyState:
+                new GoldCurrencyState(Currency.Legacy("NCG", 2, MinerPrivateKey.Address)),
 #pragma warning restore CS0618
-                    goldDistributions: Array.Empty<GoldDistribution>(),
-                    tableSheets: new Dictionary<string, string>(),
-                    pendingActivationStates: new PendingActivationState[] { }
-                );
+                goldDistributions: Array.Empty<GoldDistribution>(),
+                tableSheets: new Dictionary<string, string>(),
+                pendingActivationStates: new PendingActivationState[] { }
+            );
             _standaloneContext = CreateStandaloneContext(initializeStates);
         }
 

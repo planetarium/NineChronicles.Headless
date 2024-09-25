@@ -943,6 +943,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     AdminPrivateKey, null, new ActionBase[]
                     {
                         new InitializeStates(
+                            validatorSet: new ValidatorSet(new List<Validator> { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }),
                             rankingState: rankingState ?? new RankingState0(),
                             shopState: new ShopState(),
                             gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
@@ -965,14 +966,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                 1 * Currencies.Mead
                             }
                         }
-                    }.ToPlainValues())).AddRange(new IAction[]
-                    {
-                        new Initialize(
-                            new ValidatorSet(
-                                new[] { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }
-                                    .ToList()),
-                            states: ImmutableDictionary.Create<Address, IValue>())
-                    }.Select((sa, nonce) => Transaction.Create(nonce + 1, AdminPrivateKey, null, new[] { sa.PlainValue }))),
+                    }.ToPlainValues())),
                 privateKey: AdminPrivateKey);
         }
     }
