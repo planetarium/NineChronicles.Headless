@@ -250,7 +250,7 @@ namespace NineChronicles.Headless.GraphTypes
             StakeStateType.StakeStateContext? GetStakeState(StateContext ctx, Address agentAddress)
             {
                 var stakeStateAddress = StakeState.DeriveAddress(agentAddress);
-                if (ctx.WorldState.TryGetStakeStateV2(agentAddr: agentAddress, out StakeStateV2 stakeStateV2))
+                if (ctx.WorldState.TryGetStakeState(agentAddr: agentAddress, out StakeState stakeStateV2))
                 {
                     return new StakeStateType.StakeStateContext(
                         stakeStateV2,
@@ -389,7 +389,7 @@ namespace NineChronicles.Headless.GraphTypes
                     StakeRegularRewardSheet stakeRegularRewardSheet;
                     StakeRegularFixedRewardSheet stakeRegularFixedRewardSheet;
 
-                    if (context.Source.BlockIndex < StakeState.StakeRewardSheetV2Index)
+                    if (context.Source.BlockIndex < LegacyStakeState.StakeRewardSheetV2Index)
                     {
                         stakeRegularRewardSheet = new StakeRegularRewardSheet();
                         //stakeRegularRewardSheet.Set(ClaimStakeReward8.V1.StakeRegularRewardSheetCsv);

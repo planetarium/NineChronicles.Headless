@@ -79,19 +79,18 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
             AdminState adminState =
                 new AdminState(new Address(genesisConfig.AdminAddress), genesisConfig.AdminValidUntil);
             Block genesisBlock = BlockHelper.ProposeGenesisBlock(
+                new ValidatorSet(
+                    genesisValidatorSet?.Select(kv => new Validator(kv.Key, kv.Value)).ToList()
+                    ?? new List<Validator>
+                    {
+                        new Validator(ValidatorKey.PublicKey, BigInteger.One)
+                    }),
                 tableSheets,
                 goldDistributions,
                 pendingActivationStates.ToArray(),
                 adminState,
                 authorizedMinersState,
                 ImmutableHashSet<Address>.Empty,
-                genesisValidatorSet ?? new Dictionary<PublicKey, BigInteger>
-                {
-                    {
-                        ValidatorKey.PublicKey,
-                        BigInteger.One
-                    }
-                },
                 genesisConfig.ActivationKeyCount != 0,
                 null,
                 new PrivateKey(ByteUtil.ParseHex(genesisConfig.PrivateKey))
