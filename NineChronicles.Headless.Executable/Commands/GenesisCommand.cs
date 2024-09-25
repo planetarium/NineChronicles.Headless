@@ -11,6 +11,7 @@ using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
 using Libplanet.Types.Blocks;
+using Libplanet.Types.Consensus;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
@@ -266,15 +267,17 @@ namespace NineChronicles.Headless.Executable.Commands
                 // Mine genesis block
                 _console.Out.WriteLine("\nMining genesis block...\n");
                 Block block = BlockHelper.ProposeGenesisBlock(
+                    validatorSet: new ValidatorSet(
+                        initialValidatorSet.Select(
+                            v => new Libplanet.Types.Consensus.Validator(
+                                new PublicKey(ByteUtil.ParseHex(v.PublicKey)),
+                                new BigInteger(v.Power))).ToList()),
                     tableSheets: tableSheets,
                     goldDistributions: initialDepositList.ToArray(),
                     pendingActivationStates: Array.Empty<PendingActivationState>(),
                     // FIXME Should remove default value after fixing parameter type on Lib9c side.
                     adminState: adminState ?? new AdminState(default, 0L),
                     privateKey: initialMinter,
-                    initialValidators: initialValidatorSet.ToDictionary(
-                        item => new PublicKey(ByteUtil.ParseHex(item.PublicKey)),
-                        item => new BigInteger(item.Power)),
                     actionBases: adminMeads.Concat(initialMeads).Concat(initialPledges).Concat(GetAdditionalActionBases()),
                     goldCurrency: currency
                 );

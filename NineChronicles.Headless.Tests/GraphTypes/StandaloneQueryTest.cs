@@ -447,6 +447,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             new ActionBase[]
                             {
                                 new InitializeStates(
+                                    validatorSet: new ValidatorSet(new List<Validator> { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }),
                                     rankingState: new RankingState0(),
                                     shopState: new ShopState(),
                                     gameConfigState: new GameConfigState(),
@@ -465,16 +466,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                     tableSheets: _sheets,
                                     pendingActivationStates: new PendingActivationState[] { }
                                 ),
-                            }.ToPlainValues()))
-                        .AddRange(new IAction[]
-                            {
-                                new Initialize(
-                                    validatorSet: validatorSetCandidate,
-                                    states: ImmutableDictionary<Address, IValue>.Empty),
-                            }.Select((sa, nonce) =>
-                                Transaction.Create(nonce + 1, ProposerPrivateKey, null,
-                                    new[] { sa.PlainValue }))
-                        ),
+                            }.ToPlainValues())),
                     privateKey: ProposerPrivateKey
                 );
 
@@ -857,6 +849,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                 new ActionBase[]
                                 {
                                     new InitializeStates(
+                                        validatorSet: new ValidatorSet(new List<Validator> { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }),
                                         rankingState: new RankingState0(),
                                         shopState: new ShopState(),
                                         gameConfigState: new GameConfigState(),
@@ -941,6 +934,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             new ActionBase[]
                             {
                                 new InitializeStates(
+                                    validatorSet: new ValidatorSet(new List<Validator> { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }),
                                     rankingState: new RankingState0(),
                                     shopState: new ShopState(),
                                     gameConfigState: new GameConfigState(),
@@ -1014,6 +1008,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             new ActionBase[]
                             {
                                 new InitializeStates(
+                                    validatorSet: new ValidatorSet(new List<Validator> { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }),
                                     rankingState: new RankingState0(),
                                     shopState: new ShopState(),
                                     gameConfigState: new GameConfigState(),
@@ -1115,6 +1110,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                 new ActionBase[]
                                 {
                                     new InitializeStates(
+                                        validatorSet: new ValidatorSet(new List<Validator> { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }),
                                         rankingState: new RankingState0(),
                                         shopState: new ShopState(),
                                         gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),
