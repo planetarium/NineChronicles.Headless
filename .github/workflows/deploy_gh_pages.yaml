@@ -8,19 +8,19 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
-      - uses: actions/setup-dotnet@v3
+      - uses: actions/setup-dotnet@v4
         name: Set up .NET Core SDK
         with:
           dotnet-version: 6.0.x
       - name: Cache node modules
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         env:
           cache-name: cache-node-modules
         with:
@@ -33,10 +33,12 @@ jobs:
             ${{ runner.os }}-
       - name: Install dependencies
         run: yarn global add graphql @graphql-inspector/cli
+      - name: Install .NET dependencies
+        run: dotnet restore
+      - name: Build GraphQL Node
+        run: dotnet build --no-restore NineChronicles.Headless.Executable
       - name: Build GraphQL Schema
         run: |
-          dotnet restore
-          dotnet build
           dotnet run --project NineChronicles.Headless.Executable -- \
             --graphql-server \
             --graphql-port 30000 \

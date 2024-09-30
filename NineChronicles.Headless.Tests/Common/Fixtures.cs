@@ -6,8 +6,12 @@ using Lib9c.Tests;
 using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
+using Nekoyume;
+using Nekoyume.Model;
 using Nekoyume.Model.Item;
+using Nekoyume.Model.Quest;
 using Nekoyume.Model.State;
+using Nekoyume.TableData;
 
 namespace NineChronicles.Headless.Tests
 {
@@ -26,7 +30,7 @@ namespace NineChronicles.Headless.Tests
 
         public static readonly TableSheets TableSheetsFX = new(TableSheetsImporter.ImportSheets());
 
-        public static readonly AvatarState AvatarStateFX = new(
+        public static readonly AvatarState AvatarStateFX = AvatarState.Create(
             AvatarAddress,
             UserAddress,
             0,
@@ -54,7 +58,8 @@ namespace NineChronicles.Headless.Tests
                 var equipment = ItemFactory.CreateItemUsable(row, Guid.Empty, 0);
                 if (equipment is ITradableItem tradableItem)
                 {
-                    var shopItem = new ShopItem(UserAddress, AvatarAddress, Guid.NewGuid(), index * CurrencyFX, tradableItem);
+                    var shopItem = new ShopItem(UserAddress, AvatarAddress, Guid.NewGuid(), index * CurrencyFX,
+                        tradableItem);
                     shopState.Register(shopItem);
                 }
             }
@@ -66,11 +71,9 @@ namespace NineChronicles.Headless.Tests
                 var shopItem = new ShopItem(UserAddress, AvatarAddress, Guid.NewGuid(), i * CurrencyFX, equipment);
                 shopState.Register(shopItem);
             }
+
             return shopState;
         }
-
-        public static readonly List<CombinationSlotState> CombinationSlotStatesFx =
-            AvatarStateFX.combinationSlotAddresses.Select(x => new CombinationSlotState(x, 0)).ToList();
 
         public static ShardedShopStateV2 ShardedWeapon0ShopStateV2FX()
         {

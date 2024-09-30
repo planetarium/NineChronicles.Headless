@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <IsPublishable>false</IsPublishable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
@@ -21,10 +21,12 @@
   <ItemGroup>
     <Compile Include="..\Lib9c\.Lib9c.Tests\TableSheets.cs" Link="TableSheets.cs" />
     <Compile Include="..\Lib9c\.Lib9c.Tests\TableSheetsImporter.cs" Link="TableSheetsImporter.cs" />
+    <Compile Remove="Repositories\MockWorldStateRepository.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
+    <PackageReference Include="Moq" Version="4.20.70" />
     <PackageReference Include="SonarAnalyzer.CSharp" Version="8.49.0.57237">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -42,6 +44,10 @@
     <ProjectReference Include="..\NineChronicles.Headless.Executable.Tests\NineChronicles.Headless.Executable.Tests.csproj" />
     <ProjectReference Include="..\NineChronicles.Headless.Executable\NineChronicles.Headless.Executable.csproj" />
     <ProjectReference Include="..\NineChronicles.Headless\NineChronicles.Headless.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Repositories\" />
   </ItemGroup>
 
 </Project>

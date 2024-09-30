@@ -92,7 +92,8 @@ public class ArenaParticipantsWorkerTest
             .SetLegacyState(sheetAddress, csv.Serialize())
             .SetLegacyState(participantsAddr, participants.Serialize())
             .SetLegacyState(arenaScore.Address, arenaScore.Serialize());
-        var actual = ArenaParticipantsWorker.AvatarAddrAndScoresWithRank(participants.AvatarAddresses, currentRoundData, state);
+        var actual =
+            ArenaParticipantsWorker.AvatarAddrAndScoresWithRank(participants.AvatarAddresses, currentRoundData, state);
         Assert.Equal(2, actual.Count);
         var first = actual.First();
         Assert.Equal(avatarAddress, first.avatarAddr);
@@ -110,7 +111,7 @@ public class ArenaParticipantsWorkerTest
         var tableSheets = new TableSheets(_sheets);
         var agentAddress = new PrivateKey().Address;
         var avatarAddress = Addresses.GetAvatarAddress(agentAddress, 0);
-        var avatarState = new AvatarState(
+        var avatarState = AvatarState.Create(
             avatarAddress,
             agentAddress,
             0,
@@ -119,7 +120,7 @@ public class ArenaParticipantsWorkerTest
             "avatar_state"
         );
         var avatar2Address = Addresses.GetAvatarAddress(agentAddress, 1);
-        var avatarState2 = new AvatarState(
+        var avatarState2 = AvatarState.Create(
             avatar2Address,
             agentAddress,
             0,
@@ -131,7 +132,9 @@ public class ArenaParticipantsWorkerTest
         // equipment
         var equipmentSheet = tableSheets.EquipmentItemSheet;
         var random = new Random(0);
-        var equipment = (Equipment)ItemFactory.CreateItem(equipmentSheet.Values.First(r => r.ItemSubType == ItemSubType.Armor), random);
+        var equipment =
+            (Equipment)ItemFactory.CreateItem(equipmentSheet.Values.First(r => r.ItemSubType == ItemSubType.Armor),
+                random);
         equipment.equipped = true;
         avatarState.inventory.AddItem(equipment);
         avatarState2.inventory.AddItem(equipment);
@@ -182,8 +185,12 @@ public class ArenaParticipantsWorkerTest
         {
             state = state.SetLegacyState(Addresses.GetSheetAddress(key), s.Serialize());
         }
-        var avatarAddrAndScoresWithRank = ArenaParticipantsWorker.AvatarAddrAndScoresWithRank(participants.AvatarAddresses, currentRoundData, state);
-        var actual = ArenaParticipantsWorker.GetArenaParticipants(state, participants.AvatarAddresses, avatarAddrAndScoresWithRank);
+
+        var avatarAddrAndScoresWithRank =
+            ArenaParticipantsWorker.AvatarAddrAndScoresWithRank(participants.AvatarAddresses, currentRoundData, state);
+        var actual =
+            ArenaParticipantsWorker.GetArenaParticipants(state, participants.AvatarAddresses,
+                avatarAddrAndScoresWithRank);
         Assert.Equal(2, actual.Count);
         var first = actual.First();
         Assert.Equal(avatarAddress, first.AvatarAddr);

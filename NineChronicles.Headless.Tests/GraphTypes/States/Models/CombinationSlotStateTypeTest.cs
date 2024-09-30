@@ -18,7 +18,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             {
                 address
                 unlockBlockIndex
-                unlockStage
+                isUnlocked
                 startBlockIndex
             }";
 
@@ -30,7 +30,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             {
                 ["address"] = address.ToString(),
                 ["unlockBlockIndex"] = 0L,
-                ["unlockStage"] = 1,
+                ["isUnlocked"] = true,
                 ["startBlockIndex"] = 0L,
             };
             Assert.Equal(expected, data);

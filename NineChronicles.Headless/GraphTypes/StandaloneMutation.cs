@@ -42,11 +42,6 @@ namespace NineChronicles.Headless.GraphTypes
                 deprecationReason: "Use `planet key` command instead.  https://www.npmjs.com/package/@planetarium/cli",
                 resolve: context => standaloneContext.KeyStore);
 
-            Field<ActivationStatusMutation>(
-                name: "activationStatus",
-                resolve: _ => new ActivationStatusMutation(nodeService),
-                deprecationReason: "Since NCIP-15, it doesn't care account activation.");
-
             Field<ActionMutation>(
                 name: "action",
                 resolve: _ => new ActionMutation(nodeService));

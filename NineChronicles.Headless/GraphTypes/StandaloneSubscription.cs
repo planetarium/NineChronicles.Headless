@@ -90,34 +90,11 @@ namespace NineChronicles.Headless.GraphTypes
 
             public PreloadStateType()
             {
-                Field<NonNullGraphType<LongGraphType>>(name: "currentPhase", resolve: context => context.Source.CurrentPhase);
-                Field<NonNullGraphType<LongGraphType>>(name: "totalPhase", resolve: context => BlockSyncState.TotalPhase);
+                // Dummy report.
+                Field<NonNullGraphType<LongGraphType>>(name: "currentPhase", resolve: context => 0);
+                Field<NonNullGraphType<LongGraphType>>(name: "totalPhase", resolve: context => 0);
                 Field<NonNullGraphType<PreloadStateExtraType>>(name: "extra", resolve: context =>
-                {
-                    var preloadState = context.Source;
-                    return preloadState switch
-                    {
-                        ActionExecutionState actionExecutionState => new PreloadStateExtra(nameof(ActionExecutionState),
-                            actionExecutionState.ExecutedBlockCount,
-                            actionExecutionState.TotalBlockCount),
-                        BlockDownloadState blockDownloadState => new PreloadStateExtra(nameof(BlockDownloadState),
-                            blockDownloadState.ReceivedBlockCount,
-                            blockDownloadState.TotalBlockCount),
-                        BlockHashDownloadState blockHashDownloadState => new PreloadStateExtra(
-                            nameof(BlockHashDownloadState),
-                            blockHashDownloadState.ReceivedBlockHashCount,
-                            blockHashDownloadState.EstimatedTotalBlockHashCount),
-                        BlockVerificationState blockVerificationState => new PreloadStateExtra(
-                            nameof(BlockVerificationState),
-                            blockVerificationState.VerifiedBlockCount,
-                            blockVerificationState.TotalBlockCount),
-                        StateDownloadState stateDownloadState => new PreloadStateExtra(
-                            nameof(StateDownloadState),
-                            stateDownloadState.ReceivedIterationCount,
-                            stateDownloadState.TotalIterationCount),
-                        _ => throw new ExecutionError($"Not supported preload state. {preloadState.GetType()}"),
-                    };
-                });
+                    new PreloadStateExtra(nameof(BlockSyncState), 0, 0));
             }
         }
 
@@ -166,6 +143,7 @@ namespace NineChronicles.Headless.GraphTypes
             AddField(new EventStreamFieldType
             {
                 Name = "preloadProgress",
+                DeprecationReason = "Since Libplanet 5.3.0 preload progress is no longer reported.",
                 Type = typeof(PreloadStateType),
                 Resolver = new FuncFieldResolver<BlockSyncState>(context => (context.Source as BlockSyncState)!),
                 Subscriber = new EventStreamResolver<BlockSyncState>(context => StandaloneContext.PreloadStateSubject.AsObservable()),
@@ -174,8 +152,8 @@ namespace NineChronicles.Headless.GraphTypes
             {
                 Name = "nodeStatus",
                 Type = typeof(NodeStatusType),
-                Resolver = new FuncFieldResolver<NodeStatusType>(context => (context.Source as NodeStatusType)!),
-                Subscriber = new EventStreamResolver<NodeStatusType>(context => StandaloneContext.NodeStatusSubject.AsObservable()),
+                Resolver = new FuncFieldResolver<NodeStatusType.NodeStatus>(context => (context.Source as NodeStatusType.NodeStatus)!),
+                Subscriber = new EventStreamResolver<NodeStatusType.NodeStatus>(context => StandaloneContext.NodeStatusSubject.AsObservable()),
             });
             AddField(new EventStreamFieldType
             {

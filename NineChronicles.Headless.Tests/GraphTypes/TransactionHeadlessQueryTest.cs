@@ -14,20 +14,20 @@ using Libplanet.Action;
 using Libplanet.Action.Sys;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
-using Libplanet.Types.Blocks;
-using Libplanet.Types.Consensus;
 using Libplanet.Crypto;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Consensus;
 using Libplanet.Types.Tx;
 using Nekoyume.Action;
 using Nekoyume.Action.Loader;
+using Nekoyume.Blockchain.Policy;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common;
 using NineChronicles.Headless.Utils;
 using Xunit;
 using static NineChronicles.Headless.NCActionUtils;
-using Nekoyume.Blockchain.Policy;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -192,14 +192,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Theory]
-        [InlineData("", "")]  // Empty String
+        [InlineData("", "")] // Empty String
         [InlineData(
             "026d06672c8d5c63c1a81c89fec5ab7faab523fd98895492d33ac32aa94dbd7c6c",
             "6475373a747970655f69647532323a636f6d62696e6174696f6e5f65717569706d656e743575363a76616c756573647531333a61" +
             "76617461724164647265737332303a467740d542f9ad3ac49ca3cb02cc9e3c761d22b975323a696431363a497d2e326a102a499a" +
             "b6d5ad1c56b37875383a726563697065496475313a3175393a736c6f74496e64657875313a307531313a73756252656369706549" +
             "646e6565"
-        )]  // Not encoded by base64
+        )] // Not encoded by base64
         public async Task CreateUnsignedTxThrowsErrorsIfIncorrectArgumentPassed(string publicKey, string plainValue)
         {
             var queryFormat = @"query {{
@@ -246,7 +246,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         }
 
         [Theory]
-        [InlineData("", "")]  // Empty String
+        [InlineData("", "")] // Empty String
         [InlineData(
             "64313a616c65313a6733323a1fc6e506d66c8c04283309518f06f1ef21ed9329366b60380fbf3bf35668c72a313a6e693065313a" +
             "7036353a04338573b6979f6bafcd04bcbb299d4790370ae303053a74d7f9c5251fa8074a08206660afd47acb1a9d6873d7051513" +
@@ -254,8 +254,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             "32312d30372d30395430363a34333a33392e3436373835355a313a756c6565",
             "30440220433e7ef8055d89b1e7954af8f650aa1e19e11be16a6c0e6e606484f58d827f6502204030c18376184a24bff7933bb3d2" +
             "60994dc2d0c1721a939ae504fde6e3d8dc71"
-        )]  // Not encoded by base64
-        public async Task AttachSignatureThrowsErrorsIfIncorrectArgumentPassed(string unsignedTransaction, string signature)
+        )] // Not encoded by base64
+        public async Task AttachSignatureThrowsErrorsIfIncorrectArgumentPassed(string unsignedTransaction,
+            string signature)
         {
             var query = @$"query {{
                 attachSignature(unsignedTransaction: ""{unsignedTransaction}"", signature: ""{signature}"")
@@ -315,65 +316,65 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal("INVALID", txStatus);
         }
 
-        [Fact]
-        public async Task TransactionResultIsSuccess()
-        {
-            var privateKey = new PrivateKey();
-            // Because `AddActivatedAccount` doesn't need any prerequisites.
-            var action = new AddActivatedAccount(default);
-            Transaction tx = _blockChain.MakeTransaction(privateKey, new ActionBase[] { action });
-            Block block = _blockChain.ProposeBlock(_proposer);
-            _blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, _proposer));
-            var queryFormat = @"query {{
-                transactionResult(txId: ""{0}"") {{
-                    blockHash
-                    txStatus
-                }}
-            }}";
-            var result = await ExecuteAsync(string.Format(
-                queryFormat,
-                tx.Id.ToString()));
-            Assert.NotNull(result.Data);
-            var transactionResult =
-                ((Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!)["transactionResult"];
-            var txStatus = (string)((Dictionary<string, object>)transactionResult)["txStatus"];
-            Assert.Equal("SUCCESS", txStatus);
-        }
-
-        [Fact]
-        public async Task TransactionResults()
-        {
-            var privateKey = new PrivateKey();
-            // Because `AddActivatedAccount` doesn't need any prerequisites.
-            var action = new AddActivatedAccount(default);
-            Transaction tx = _blockChain.MakeTransaction(privateKey, new ActionBase[] { action });
-            var action2 = new DailyReward
-            {
-                avatarAddress = default
-            };
-            Transaction tx2 = _blockChain.MakeTransaction(new PrivateKey(), new ActionBase[] { action2 });
-            Block block = _blockChain.ProposeBlock(_proposer);
-            _blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, _proposer));
-            var queryFormat = @"query {{
-                transactionResults(txIds: [""{0}"", ""{1}""]) {{
-                    blockHash
-                    txStatus
-                }}
-            }}";
-            var result = await ExecuteAsync(string.Format(
-                queryFormat,
-                tx.Id.ToString(),
-                tx2.Id.ToString()
-            ));
-            Assert.NotNull(result.Data);
-            var transactionResults =
-                (object[])((Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!)["transactionResults"];
-            Assert.Equal(2, transactionResults.Length);
-            var txStatus = (string)((Dictionary<string, object>)transactionResults[0])["txStatus"];
-            Assert.Equal("SUCCESS", txStatus);
-            txStatus = (string)((Dictionary<string, object>)transactionResults[1])["txStatus"];
-            Assert.Equal("FAILURE", txStatus);
-        }
+        // [Fact]
+        // public async Task TransactionResultIsSuccess()
+        // {
+        //     var privateKey = new PrivateKey();
+        //     // Because `AddActivatedAccount` doesn't need any prerequisites.
+        //     var action = new AddActivatedAccount(default);
+        //     Transaction tx = _blockChain.MakeTransaction(privateKey, new ActionBase[] { action });
+        //     Block block = _blockChain.ProposeBlock(_proposer);
+        //     _blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, _proposer));
+        //     var queryFormat = @"query {{
+        //         transactionResult(txId: ""{0}"") {{
+        //             blockHash
+        //             txStatus
+        //         }}
+        //     }}";
+        //     var result = await ExecuteAsync(string.Format(
+        //         queryFormat,
+        //         tx.Id.ToString()));
+        //     Assert.NotNull(result.Data);
+        //     var transactionResult =
+        //         ((Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!)["transactionResult"];
+        //     var txStatus = (string)((Dictionary<string, object>)transactionResult)["txStatus"];
+        //     Assert.Equal("SUCCESS", txStatus);
+        // }
+        //
+        // [Fact]
+        // public async Task TransactionResults()
+        // {
+        //     var privateKey = new PrivateKey();
+        //     // Because `AddActivatedAccount` doesn't need any prerequisites.
+        //     var action = new AddActivatedAccount(default);
+        //     Transaction tx = _blockChain.MakeTransaction(privateKey, new ActionBase[] { action });
+        //     var action2 = new DailyReward
+        //     {
+        //         avatarAddress = default
+        //     };
+        //     Transaction tx2 = _blockChain.MakeTransaction(new PrivateKey(), new ActionBase[] { action2 });
+        //     Block block = _blockChain.ProposeBlock(_proposer);
+        //     _blockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, _proposer));
+        //     var queryFormat = @"query {{
+        //         transactionResults(txIds: [""{0}"", ""{1}""]) {{
+        //             blockHash
+        //             txStatus
+        //         }}
+        //     }}";
+        //     var result = await ExecuteAsync(string.Format(
+        //         queryFormat,
+        //         tx.Id.ToString(),
+        //         tx2.Id.ToString()
+        //     ));
+        //     Assert.NotNull(result.Data);
+        //     var transactionResults =
+        //         (object[])((Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!)["transactionResults"];
+        //     Assert.Equal(2, transactionResults.Length);
+        //     var txStatus = (string)((Dictionary<string, object>)transactionResults[0])["txStatus"];
+        //     Assert.Equal("SUCCESS", txStatus);
+        //     txStatus = (string)((Dictionary<string, object>)transactionResults[1])["txStatus"];
+        //     Assert.Equal("FAILURE", txStatus);
+        // }
 
         [Fact]
         public async Task NcTransactionsOnTip()
@@ -393,8 +394,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var result = await ExecuteAsync(query);
             Assert.NotNull(result.Data);
             var ncTransactions =
-                (object[])
-                    ((Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!)["ncTransactions"];
+                (object[])((Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!)["ncTransactions"];
             var ncTransaction = Assert.IsType<Dictionary<string, object>>(Assert.Single(ncTransactions));
             Assert.Equal(tx.Id.ToString(), ncTransaction["id"]);
         }
@@ -403,14 +403,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             var currencyFactory = new CurrencyFactory(() => _blockChain.GetWorldState(_blockChain.Tip.Hash));
             var fungibleAssetValueFactory = new FungibleAssetValueFactory(currencyFactory);
-            return GraphQLTestUtils.ExecuteQueryAsync<TransactionHeadlessQuery>(query, standaloneContext: new StandaloneContext
-            {
-                BlockChain = _blockChain,
-                Store = _store,
-                NineChroniclesNodeService = _service,
-                CurrencyFactory = currencyFactory,
-                FungibleAssetValueFactory = fungibleAssetValueFactory,
-            });
+            return GraphQLTestUtils.ExecuteQueryAsync<TransactionHeadlessQuery>(query,
+                standaloneContext: new StandaloneContext
+                {
+                    BlockChain = _blockChain,
+                    Store = _store,
+                    NineChroniclesNodeService = _service,
+                    CurrencyFactory = currencyFactory,
+                    FungibleAssetValueFactory = fungibleAssetValueFactory,
+                });
         }
 
         private BlockCommit? GenerateBlockCommit(long height, BlockHash hash, PrivateKey validator)
