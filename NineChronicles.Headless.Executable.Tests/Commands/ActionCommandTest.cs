@@ -62,7 +62,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             }
             else
             {
-                Assert.Contains("System.FormatException: Input string was not in a correct format.", _console.Error.ToString());
+                Assert.Contains("System.FormatException", _console.Error.ToString());
             }
         }
 
@@ -104,7 +104,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             }
             else
             {
-                Assert.Contains("System.FormatException: Input string was not in a correct format.", _console.Error.ToString());
+                Assert.Contains("System.FormatException", _console.Error.ToString());
             }
         }
 
@@ -131,7 +131,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             }
             else
             {
-                Assert.Contains("System.FormatException: Input string was not in a correct format.", _console.Error.ToString());
+                Assert.Contains("System.FormatException", _console.Error.ToString());
             }
         }
     }

@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
 WORKDIR /app
 ARG COMMIT
 
@@ -24,7 +24,7 @@ RUN dotnet publish NineChronicles.Headless.Executable/NineChronicles.Headless.Ex
     --version-suffix $COMMIT
 
 # Build runtime image
-FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/aspnet:6.0-bullseye-slim
+FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim
 WORKDIR /app
 RUN apt-get update && apt-get install -y libc6-dev liblz4-dev zlib1g-dev libsnappy-dev libzstd-dev
 COPY --from=build-env /app/out .
