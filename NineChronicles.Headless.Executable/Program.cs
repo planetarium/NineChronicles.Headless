@@ -57,6 +57,7 @@ namespace NineChronicles.Headless.Executable
     [HasSubCommands(typeof(MarketCommand), "market")]
     [HasSubCommands(typeof(GenesisCommand), "genesis")]
     [HasSubCommands(typeof(ReplayCommand), "replay")]
+    [HasSubCommands(typeof(GraphQLCommand), "graphql")]
     public class Program : CoconaLiteConsoleAppBase
     {
         static async Task Main(string[] args)
