@@ -54,6 +54,8 @@ jobs:
             -f ${{ matrix.docker.dockerfile }}.amd64 \
             -t ${{ matrix.docker.repo }}:git-${{ github.sha }}-amd64 \
             --build-arg COMMIT=git-${{ github.sha }}
+            --build-arg TARGETPLATFORM=linux/amd64
+            --build-arg BUILDPLATFORM=linux/amd64
           docker push ${{ matrix.docker.repo }}:git-${{ github.sha }}-amd64
       - name: build-and-push-arm64v8
         run: |
@@ -61,6 +63,8 @@ jobs:
             -f ${{ matrix.docker.dockerfile }}.arm64v8 \
             -t ${{ matrix.docker.repo }}:git-${{ github.sha }}-arm64v8 \
             --build-arg COMMIT=git-${{ github.sha }}
+            --build-arg TARGETPLATFORM=linux/arm64
+            --build-arg BUILDPLATFORM=linux/arm64
           docker push ${{ matrix.docker.repo }}:git-${{ github.sha }}-arm64v8
       - name: merge-manifest-and-push
         run: |
