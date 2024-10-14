@@ -2,7 +2,6 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
 WORKDIR /app
 ARG COMMIT
 ARG TARGETPLATFORM
-ARG BUILDPLATFORM
 
 # Copy csproj and restore as distinct layers
 COPY ./Lib9c/Lib9c/Lib9c.csproj ./Lib9c/
@@ -44,7 +43,7 @@ fi
 EOF
 
 # Build runtime image
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim
+FROM --platform=$TARGETPLATFORM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build-env /app/out .
 
