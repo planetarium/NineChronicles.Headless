@@ -69,6 +69,7 @@ namespace NineChronicles.Headless.Executable.Commands
                     nameof(ClaimStakeReward) => new ClaimStakeReward(),
                     nameof(TransferAsset) => new TransferAsset(),
                     nameof(MigrateMonsterCollection) => new MigrateMonsterCollection(),
+                    nameof(ValidatorSetOperate) => new ValidatorSetOperate(),
                     _ => throw new CommandExitedException($"Unsupported action type was passed '{type}'", 128)
                 };
                 action.LoadPlainValue(plainValue);

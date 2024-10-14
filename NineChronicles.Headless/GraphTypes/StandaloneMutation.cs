@@ -71,7 +71,8 @@ namespace NineChronicles.Headless.GraphTypes
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
                         }
 
-                        if (blockChain.Policy.ValidateNextBlockTx(blockChain, tx) is null)
+                        var err = blockChain.Policy.ValidateNextBlockTx(blockChain, tx);
+                        if (err is null)
                         {
                             blockChain.StageTransaction(tx);
 
@@ -83,7 +84,7 @@ namespace NineChronicles.Headless.GraphTypes
                         }
                         else
                         {
-                            context.Errors.Add(new ExecutionError("The given transaction is invalid."));
+                            context.Errors.Add(new ExecutionError($"The given transaction is invalid., {err.Message}"));
                             return false;
                         }
                     }
