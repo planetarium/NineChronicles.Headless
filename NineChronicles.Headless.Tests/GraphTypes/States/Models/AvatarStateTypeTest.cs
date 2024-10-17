@@ -143,9 +143,9 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     ["combinationSlots"] = new World(MockWorldState.CreateModern()).GetAllCombinationSlotState(Fixtures.AvatarAddress).Select(x => new Dictionary<string, object?>
                     {
                         ["address"] = x.address.ToString(),
-                        ["unlockBlockIndex"] = x.UnlockBlockIndex,
+                        ["unlockBlockIndex"] = x.WorkCompleteBlockIndex,
                         ["isUnlocked"] = x.IsUnlocked,
-                        ["startBlockIndex"] = x.StartBlockIndex,
+                        ["startBlockIndex"] = x.WorkStartBlockIndex,
                         ["petId"] = x.PetId
                     }).ToArray<object>(),
                 }
