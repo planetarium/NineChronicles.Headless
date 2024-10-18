@@ -40,6 +40,21 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.World
                         ? world
                         : throw new ExecutionError($"Failed to fetch world {worldId}.");
                 });
+
+            Field<NonNullGraphType<ClearedStageType>>(
+                "lastClearedStage",
+                resolve: context =>
+                {
+                    var found = context.Source.TryGetLastClearedStageId(out var stageId);
+                    if (!found)
+                    {
+                        stageId = 0;
+                    }
+
+                    var worldFound = context.Source.TryGetWorldByStageId(stageId, out var world);
+                    return (worldFound ? world.Id : 0, stageId);
+                }
+            );
         }
     }
 }
