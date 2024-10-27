@@ -17,7 +17,7 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public ActionMutation(NineChroniclesNodeService service)
         {
-            DeprecationReason = "Since NCIP-15, it doesn't care account activation.";
+            DeprecationReason = "This API is insecure and must not be used.";
 
             Field<NonNullGraphType<TxIdType>>("createAvatar",
                 description: "Create new avatar.",
