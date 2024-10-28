@@ -17,8 +17,11 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public ActionMutation(NineChroniclesNodeService service)
         {
+            DeprecationReason = "This API is insecure and must not be used.";
+
             Field<NonNullGraphType<TxIdType>>("createAvatar",
                 description: "Create new avatar.",
+                deprecationReason: DeprecationReason,
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
@@ -96,6 +99,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<TxIdType>>("hackAndSlash",
                 description: "Start stage to get material.",
+                deprecationReason: DeprecationReason,
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
@@ -179,6 +183,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<TxIdType>>("combinationEquipment",
                 description: "Combine new equipment.",
+                deprecationReason: DeprecationReason,
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
@@ -239,6 +244,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<TxIdType>>("itemEnhancement",
                 description: "Upgrade equipment.",
+                deprecationReason: DeprecationReason,
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
@@ -303,6 +309,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<TxIdType>>("dailyReward",
                 description: "Get daily reward.",
+                deprecationReason: DeprecationReason,
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
@@ -345,6 +352,7 @@ namespace NineChronicles.Headless.GraphTypes
                 });
             Field<NonNullGraphType<TxIdType>>("chargeActionPoint",
                 description: "Charge Action Points using Material.",
+                deprecationReason: DeprecationReason,
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
@@ -388,6 +396,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<TxIdType>>("combinationConsumable",
                 description: "Combine new Consumable.",
+                deprecationReason: DeprecationReason,
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
