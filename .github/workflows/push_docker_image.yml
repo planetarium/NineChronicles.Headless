@@ -59,6 +59,7 @@ jobs:
             platforms: linux/arm64,linux/amd64
             tags: ${{ matrix.docker.repo }}:git-${{ github.sha }}
             file: ${{ matrix.docker.dockerfile }}
+            build-args: COMMIT=git-${{ github.sha }}
 
   tag:
     name: tag (${{ matrix.docker.repo }})
