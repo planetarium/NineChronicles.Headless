@@ -48,28 +48,17 @@ jobs:
           docker run --rm --privileged multiarch/qemu-user-static \
             --reset \
             -p yes
-      - name: build-and-push-amd64
-        run: |
-          docker build . \
-            -f ${{ matrix.docker.dockerfile }}.amd64 \
-            -t ${{ matrix.docker.repo }}:git-${{ github.sha }}-amd64 \
-            --build-arg COMMIT=git-${{ github.sha }} \
-            --build-arg TARGETPLATFORM=linux/amd64
-          docker push ${{ matrix.docker.repo }}:git-${{ github.sha }}-amd64
-      - name: build-and-push-arm64v8
-        run: |
-          docker build . \
-            -f ${{ matrix.docker.dockerfile }}.arm64v8 \
-            -t ${{ matrix.docker.repo }}:git-${{ github.sha }}-arm64v8 \
-            --build-arg COMMIT=git-${{ github.sha }} \
-            --build-arg TARGETPLATFORM=linux/arm64
-          docker push ${{ matrix.docker.repo }}:git-${{ github.sha }}-arm64v8
-      - name: merge-manifest-and-push
-        run: |
-          docker manifest create ${{ matrix.docker.repo }}:git-${{ github.sha }} \
-            --amend ${{ matrix.docker.repo }}:git-${{ github.sha }}-amd64 \
-            --amend ${{ matrix.docker.repo }}:git-${{ github.sha }}-arm64v8
-          docker manifest push ${{ matrix.docker.repo }}:git-${{ github.sha }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+            platforms: linux/arm/v8,linux/amd64
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+            push: ${{ github.event_name != 'pull_request' }}
+            platforms: linux/arm64,linux/amd64
+            tags: ${{ matrix.docker.repo }}:git-${{ github.sha }}
+            file: ${{ matrix.docker.dockerfile }}
 
   tag:
     name: tag (${{ matrix.docker.repo }})
@@ -87,7 +76,7 @@ jobs:
             --password '${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}'
       - name: push git tagged version
         run: |
-          docker pull ${{ matrix.docker.repo }}:git-${{ github.sha }}-amd64
+          docker pull ${{ matrix.docker.repo }}:git-${{ github.sha }}
           if [[ -z "${{ github.event.inputs.imageTag }}" ]]; then
             export IMAGE_TAG=${{ github.ref_name }}
           else
@@ -95,15 +84,6 @@ jobs:
           fi
 
           docker tag \
-            ${{ matrix.docker.repo }}:git-${{ github.sha }}-amd64 \
-            ${{ matrix.docker.repo }}:$IMAGE_TAG-amd64
-          docker push ${{ matrix.docker.repo }}:$IMAGE_TAG-amd64
-          docker pull ${{ matrix.docker.repo }}:git-${{ github.sha }}-arm64v8
-          docker tag \
-            ${{ matrix.docker.repo }}:git-${{ github.sha }}-arm64v8 \
-            ${{ matrix.docker.repo }}:$IMAGE_TAG-arm64v8
-          docker push ${{ matrix.docker.repo }}:$IMAGE_TAG-arm64v8
-          docker manifest create ${{ matrix.docker.repo }}:$IMAGE_TAG \
-            --amend ${{ matrix.docker.repo }}:$IMAGE_TAG-amd64 \
-            --amend ${{ matrix.docker.repo }}:$IMAGE_TAG-arm64v8
-          docker manifest push ${{ matrix.docker.repo }}:$IMAGE_TAG
+            ${{ matrix.docker.repo }}:git-${{ github.sha }} \
+            ${{ matrix.docker.repo }}:$IMAGE_TAG
+          docker push ${{ matrix.docker.repo }}:$IMAGE_TAG
