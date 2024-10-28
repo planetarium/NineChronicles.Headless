@@ -238,17 +238,20 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var filtered = block.Transactions
                         .Where(tx => tx.Actions.Count == 1)
+                        .Where(tx =>
+                            tx.Actions[0] is Dictionary dictionary && dictionary.ContainsKey("type_id") &&
+                            dictionary["type_id"] is Text typeId && typeId == TransferAsset.TypeIdentifier)
                         .Select(tx =>
                         (
                             transactionRepository.GetTxExecution(blockHash, tx.Id) ??
-                                throw new InvalidOperationException($"TxExecution {tx.Id} not found."),
+                            throw new InvalidOperationException($"TxExecution {tx.Id} not found."),
                             ToAction(tx.Actions[0])
                         ))
                         .Where(pair => pair.Item2 is ITransferAsset)
                         .Select(pair => (pair.Item1!, (ITransferAsset)pair.Item2))
                         .Where(pair => !pair.Item1.Fail &&
-                            (!recipient.HasValue || pair.Item2.Recipient == recipient) &&
-                            pair.Item2.Amount.Currency.Ticker == "NCG");
+                                       (!recipient.HasValue || pair.Item2.Recipient == recipient) &&
+                                       pair.Item2.Amount.Currency.Ticker == "NCG");
 
                     var histories = filtered.Select(pair =>
                         new TransferNCGHistory(
