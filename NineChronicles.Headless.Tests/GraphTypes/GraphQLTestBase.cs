@@ -69,7 +69,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     AdminPrivateKey, null, new ActionBase[]
                     {
                         new InitializeStates(
-                            validatorSet: new ValidatorSet(new List<Validator> { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }),
+                            validatorSet: new ValidatorSet(new List<Validator>
+                            { 
+                                new Validator(ProposerPrivateKey.PublicKey, 10_000_000_000_000_000_000) 
+                            }),
                             rankingState: new RankingState0(),
                             shopState: new ShopState(),
                             gameConfigState: new GameConfigState(sheets[nameof(GameConfigSheet)]),
@@ -272,7 +275,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             hash,
                             DateTimeOffset.UtcNow,
                             validator.PublicKey,
-                            null,
+                            10_000_000_000_000_000_000,
                             VoteFlag.PreCommit).Sign(validator)).ToImmutableArray())
                 : (BlockCommit?)null;
         }

@@ -10,6 +10,7 @@ using GraphQL.Execution;
 using GraphQL.NewtonsoftJson;
 using Lib9c;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;

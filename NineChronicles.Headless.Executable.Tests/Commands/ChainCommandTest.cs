@@ -32,6 +32,7 @@ using Serilog.Core;
 using Xunit;
 using Lib9cUtils = Lib9c.DevExtensions.Utils;
 using CoconaUtils = Libplanet.Extensions.Cocona.Utils;
+using Libplanet.Types.Assets;
 
 namespace NineChronicles.Headless.Executable.Tests.Commands
 {
@@ -94,12 +95,11 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
                 transactions: new IAction[]
                     {
-                        new Initialize(
-                            validatorSet: new ValidatorSet(
-                                new[] { new Validator(proposer.PublicKey, BigInteger.One) }.ToList()
-                            ),
-                            states: ImmutableDictionary.Create<Address, IValue>()
-                        )
+                        new InitializeValidator(
+                            new ValidatorSet(
+                                new[] { new Validator(proposer.PublicKey, 10_000_000_000_000_000_000) }
+                                    .ToList()),
+                            Currency.Uncapped("ncg", 2, null))
                     }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa.PlainValue }))
                     .ToImmutableList());
             BlockChain chain = BlockChain.Create(
@@ -154,12 +154,11 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
                 transactions: new IAction[]
                     {
-                        new Initialize(
-                            validatorSet: new ValidatorSet(
-                                new[] { new Validator(proposer.PublicKey, BigInteger.One) }.ToList()
-                            ),
-                            states: ImmutableDictionary.Create<Address, IValue>()
-                        )
+                        new InitializeValidator(
+                            new ValidatorSet(
+                                new[] { new Validator(proposer.PublicKey, 10_000_000_000_000_000_000) }
+                                    .ToList()),
+                            Currency.Uncapped("ncg", 2, null))
                     }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa.PlainValue }))
                     .ToImmutableList());
             BlockChain chain = BlockChain.Create(
@@ -407,7 +406,10 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
             AdminState adminState =
                 new AdminState(new Address(genesisConfig.AdminAddress), genesisConfig.AdminValidUntil);
             Block genesisBlock = BlockHelper.ProposeGenesisBlock(
-                new ValidatorSet(new List<Validator> { new Validator(GenesisHelper.ValidatorKey.PublicKey, BigInteger.One) }),
+                new ValidatorSet(new List<Validator>
+                { 
+                    new Validator(GenesisHelper.ValidatorKey.PublicKey, 10_000_000_000_000_000_000) 
+                }),
                 tableSheets,
                 goldDistributions,
                 pendingActivationStates.ToArray(),
@@ -434,7 +436,7 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
                         block.Hash,
                         DateTimeOffset.UtcNow,
                         validator.PublicKey,
-                        BigInteger.One,
+                        10_000_000_000_000_000_000,
                         VoteFlag.PreCommit).Sign(validator)))
                 : null;
         }
