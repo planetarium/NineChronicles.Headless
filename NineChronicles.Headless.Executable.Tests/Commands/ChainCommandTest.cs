@@ -434,7 +434,7 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
                         block.Hash,
                         DateTimeOffset.UtcNow,
                         validator.PublicKey,
-                        null,
+                        BigInteger.One,
                         VoteFlag.PreCommit).Sign(validator)))
                 : null;
         }

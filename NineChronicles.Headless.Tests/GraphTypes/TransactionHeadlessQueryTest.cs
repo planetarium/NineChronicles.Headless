@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Numerics;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
@@ -11,12 +10,12 @@ using GraphQL.Execution;
 using GraphQL.NewtonsoftJson;
 using Lib9c;
 using Libplanet.Action;
-using Libplanet.Action.Sys;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
+using Libplanet.Types.Assets;
 using Libplanet.Types.Blocks;
 using Libplanet.Types.Consensus;
 using Libplanet.Types.Tx;
@@ -25,6 +24,7 @@ using Nekoyume.Action.Loader;
 using Nekoyume.Blockchain.Policy;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common;
+using NineChronicles.Headless.Tests.Common.Actions;
 using NineChronicles.Headless.Utils;
 using Xunit;
 using static NineChronicles.Headless.NCActionUtils;
@@ -51,11 +51,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
                 transactions: new IAction[]
                     {
-                        new Initialize(
+                        new InitializeValidator(
                             new ValidatorSet(
-                                new[] { new Validator(_proposer.PublicKey, BigInteger.One) }
+                                new[] { new Validator(_proposer.PublicKey, 10_000_000_000_000_000_000) }
                                     .ToList()),
-                            states: ImmutableDictionary.Create<Address, IValue>())
+                            Currency.Uncapped("ncg", 2, null))
                     }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa.PlainValue }))
                     .ToImmutableList(),
                 privateKey: new PrivateKey()
@@ -428,7 +428,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             hash,
                             DateTimeOffset.UtcNow,
                             validator.PublicKey,
-                            null,
+                            10_000_000_000_000_000_000,
                             VoteFlag.PreCommit).Sign(validator)))
                 : (BlockCommit?)null;
         }

@@ -21,7 +21,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
     {
         [Theory]
         [MemberData(nameof(Members))]
-        public async Task Query(StakeStateV2 stakeState, Address stakeStateAddress, long deposit, long blockIndex, Dictionary<string, object> expected)
+        public async Task Query(StakeState stakeState, Address stakeStateAddress, long deposit, long blockIndex, Dictionary<string, object> expected)
         {
 #pragma warning disable CS0618
             // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
@@ -60,7 +60,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
         {
             new object[]
             {
-                new StakeStateV2(
+                new StakeState(
                     new Contract("StakeRegularFixedRewardSheet_V1", "StakeRegularRewardSheet_V1", 50400, 201600), 0),
                 Fixtures.StakeStateAddress,
                 100,
@@ -70,14 +70,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     ["address"] = Fixtures.StakeStateAddress.ToString(),
                     ["deposit"] = "100.00",
                     ["startedBlockIndex"] = 0L,
-                    ["cancellableBlockIndex"] = StakeState.LockupInterval,
+                    ["cancellableBlockIndex"] = LegacyStakeState.LockupInterval,
                     ["receivedBlockIndex"] = 0L,
-                    ["claimableBlockIndex"] = 0L + StakeState.RewardInterval,
+                    ["claimableBlockIndex"] = 0L + LegacyStakeState.RewardInterval,
                 }
             },
             new object[]
             {
-                new StakeStateV2(new Contract("StakeRegularFixedRewardSheet_V1", "StakeRegularRewardSheet_V1", 50400, 201600), 100),
+                new StakeState(new Contract("StakeRegularFixedRewardSheet_V1", "StakeRegularRewardSheet_V1", 50400, 201600), 100),
                 Fixtures.StakeStateAddress,
                 100,
                 0,
@@ -86,14 +86,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     ["address"] = Fixtures.StakeStateAddress.ToString(),
                     ["deposit"] = "100.00",
                     ["startedBlockIndex"] = 100L,
-                    ["cancellableBlockIndex"] = 100 + StakeState.LockupInterval,
+                    ["cancellableBlockIndex"] = 100 + LegacyStakeState.LockupInterval,
                     ["receivedBlockIndex"] = 0L,
-                    ["claimableBlockIndex"] = 100 + StakeState.RewardInterval,
+                    ["claimableBlockIndex"] = 100 + LegacyStakeState.RewardInterval,
                 }
             },
             new object[]
             {
-                new StakeStateV2(new Contract("StakeRegularFixedRewardSheet_V1", "StakeRegularRewardSheet_V1", 50400, 201600), 100),
+                new StakeState(new Contract("StakeRegularFixedRewardSheet_V1", "StakeRegularRewardSheet_V1", 50400, 201600), 100),
                 Fixtures.StakeStateAddress,
                 100,
                 0,
@@ -102,14 +102,14 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     ["address"] = Fixtures.StakeStateAddress.ToString(),
                     ["deposit"] = "100.00",
                     ["startedBlockIndex"] = 100L,
-                    ["cancellableBlockIndex"] = StakeState.LockupInterval + 100,
+                    ["cancellableBlockIndex"] = LegacyStakeState.LockupInterval + 100,
                     ["receivedBlockIndex"] = 0L,
-                    ["claimableBlockIndex"] = StakeState.RewardInterval + 100,
+                    ["claimableBlockIndex"] = LegacyStakeState.RewardInterval + 100,
                 }
             },
             new object[]
             {
-                new StakeStateV2(
+                new StakeState(
                     new Contract("StakeRegularFixedRewardSheet_V1", "StakeRegularRewardSheet_V1", 50400, 201600), 10, 50412),
                 Fixtures.StakeStateAddress,
                 100,
@@ -126,7 +126,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             },
             new object[]
             {
-                new StakeStateV2(new Contract("StakeRegularFixedRewardSheet_V1", "StakeRegularRewardSheet_V1", 50400, 201600), 10, 50412),
+                new StakeState(new Contract("StakeRegularFixedRewardSheet_V1", "StakeRegularRewardSheet_V1", 50400, 201600), 10, 50412),
                 Fixtures.StakeStateAddress,
                 100,
                 ActionObsoleteConfig.V100290ObsoleteIndex,
