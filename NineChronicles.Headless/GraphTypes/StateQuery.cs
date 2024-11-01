@@ -33,6 +33,7 @@ using Nekoyume.Model.Guild;
 using NineChronicles.Headless.Utils;
 using Nekoyume.Module.Guild;
 using Nekoyume.TypedAddress;
+using Nekoyume.ValidatorDelegation;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -742,6 +743,38 @@ namespace NineChronicles.Headless.GraphTypes
                     var joinedGuild = repository.GetJoinedGuild(agentAddress);
 
                     return joinedGuild;
+                }
+            );
+
+            Field<IntGraphType>(
+                name: "share",
+                description: "State for delegation share.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "agentAddress",
+                        Description = "Address of agent."
+                    },
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "validatorAddress",
+                        Description = "Address of validator."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var agentAddress = new AgentAddress(context.GetArgument<Address>("agentAddress"));
+                    var validatorAddress = context.GetArgument<Address>("validatorAddress");
+                    if (!(context.Source.WorldState.GetAgentState(agentAddress) is { } agentState))
+                    {
+                        return null;
+                    }
+
+                    var repository = new ValidatorRepository(new World(context.Source.WorldState), new HallowActionContext { });
+                    var delegatee = repository.GetValidatorDelegatee(validatorAddress);
+                    var share = repository.GetBond(delegatee, agentAddress).Share;
+
+                    return share;
                 }
             );
         }
