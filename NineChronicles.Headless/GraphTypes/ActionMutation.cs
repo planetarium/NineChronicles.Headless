@@ -16,6 +16,7 @@ using Nekoyume.Action.ValidatorDelegation;
 using System.Numerics;
 using Nekoyume.Action.Guild.Migration;
 using Nekoyume.TypedAddress;
+using Nekoyume.ValidatorDelegation;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -471,8 +472,7 @@ namespace NineChronicles.Headless.GraphTypes
                         string validatorString = context.GetArgument<string>("validator");
                         PublicKey validator = PublicKey.FromHex(validatorString);
                         BigInteger amount = context.GetArgument<BigInteger>("amount");
-                        var goldCurrency = blockChain.GetWorldState().GetGoldCurrency();
-                        var fav = new FungibleAssetValue(goldCurrency, amount, 0);
+                        var fav = new FungibleAssetValue(ValidatorDelegatee.ValidatorDelegationCurrency, amount, 0);
                         var action = new PromoteValidator(validator, fav);
                         var actions = new[] { action };
                         Transaction tx = blockChain.MakeTransaction(
