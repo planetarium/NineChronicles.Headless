@@ -746,7 +746,7 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            Field<IntGraphType>(
+            Field<StringGraphType>(
                 name: "share",
                 description: "State for delegation share.",
                 arguments: new QueryArguments(
@@ -774,7 +774,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var delegatee = repository.GetValidatorDelegatee(validatorAddress);
                     var share = repository.GetBond(delegatee, agentAddress).Share;
 
-                    return share;
+                    return share.ToString();
                 }
             );
         }
