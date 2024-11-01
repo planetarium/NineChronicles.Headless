@@ -591,6 +591,44 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 }
             );
+
+            Field<NonNullGraphType<TxIdType>>("stake",
+                description: "Claim reward for self delegation of validator.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount to stake."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        BigInteger amount = context.GetArgument<BigInteger>("amount");
+
+                        var actions = new[] { new Stake(amount) };
+                        Transaction tx = blockChain.MakeTransaction(
+                            service.MinerPrivateKey,
+                            actions,
+                            Currencies.Mead * 1,
+                            1L);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
         }
     }
 }
