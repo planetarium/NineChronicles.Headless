@@ -740,7 +740,7 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     var repository = new GuildRepository(new World(context.Source.WorldState), new HallowActionContext { });
-                    var joinedGuild = repository.GetJoinedGuild(agentAddress);
+                    var joinedGuild = (Address?)repository.GetJoinedGuild(agentAddress);
 
                     return joinedGuild;
                 }
