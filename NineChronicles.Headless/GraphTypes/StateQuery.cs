@@ -29,6 +29,10 @@ using NineChronicles.Headless.GraphTypes.States.Models;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
 using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
 using NineChronicles.Headless.GraphTypes.States.Models.Table;
+using Nekoyume.Model.Guild;
+using NineChronicles.Headless.Utils;
+using Nekoyume.Module.Guild;
+using Nekoyume.TypedAddress;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -713,6 +717,31 @@ namespace NineChronicles.Headless.GraphTypes
                     var tableName = context.GetArgument<string>("tableName");
                     var cacheKey = Addresses.GetSheetAddress(tableName).ToString();
                     return context.Source.StateMemoryCache.SheetCache.GetSheet(cacheKey);
+                }
+            );
+
+            Field<AddressType>(
+                name: "guild",
+                description: "State for guild.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "agentAddress",
+                        Description = "Address of agent."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var agentAddress = new AgentAddress(context.GetArgument<Address>("agentAddress"));
+                    if (!(context.Source.WorldState.GetAgentState(agentAddress) is { } agentState))
+                    {
+                        return null;
+                    }
+
+                    var repository = new GuildRepository(new World(context.Source.WorldState), new HallowActionContext { });
+                    var joinedGuild = repository.GetJoinedGuild(agentAddress);
+
+                    return joinedGuild;
                 }
             );
         }
