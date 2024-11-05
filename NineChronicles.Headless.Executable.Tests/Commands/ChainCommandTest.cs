@@ -33,6 +33,7 @@ using Xunit;
 using Lib9cUtils = Lib9c.DevExtensions.Utils;
 using CoconaUtils = Libplanet.Extensions.Cocona.Utils;
 using Libplanet.Types.Assets;
+using Nekoyume.TableData;
 
 namespace NineChronicles.Headless.Executable.Tests.Commands
 {
@@ -42,6 +43,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         // Because the purpose of ChainCommandTest is to store and read blockchain data.
         private readonly StringIOConsole _console;
         private readonly ChainCommand _command;
+        private readonly Dictionary<string, string> _sheets;
 
         private readonly string _storePath;
 
@@ -51,6 +53,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             _command = new ChainCommand(_console);
 
             _storePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            _sheets = TableSheetsImporter.ImportSheets();
         }
 
         [Theory]
@@ -92,14 +95,29 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 policyActionsRegistry: blockPolicy.PolicyActionsRegistry,
                 stateStore,
                 new NCActionLoader());
+            var sheets = TableSheetsImporter.ImportSheets();
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
                 transactions: new IAction[]
                     {
-                        new InitializeValidator(
-                            new ValidatorSet(
-                                new[] { new Validator(proposer.PublicKey, 10_000_000_000_000_000_000) }
-                                    .ToList()),
-                            Currency.Uncapped("ncg", 2, null))
+                        new InitializeStates(
+                            validatorSet: new ValidatorSet(new List<Validator>
+                            { 
+                                new Validator(proposer.PublicKey, 10_000_000_000_000_000_000) 
+                            }),
+                            rankingState: new RankingState0(),
+                            shopState: new ShopState(),
+                            gameConfigState: new GameConfigState(sheets[nameof(GameConfigSheet)]),
+                            redeemCodeState: new RedeemCodeState(
+                                Bencodex.Types.Dictionary.Empty
+                                    .Add("address", RedeemCodeState.Address.Serialize())
+                                    .Add("map", Bencodex.Types.Dictionary.Empty)
+                            ),
+                            activatedAccountsState: new ActivatedAccountsState(),
+                            goldCurrencyState: new GoldCurrencyState(Currency.Uncapped("ncg", 2, null)),
+                            goldDistributions: new GoldDistribution[] { },
+                            tableSheets: sheets,
+                            pendingActivationStates: new PendingActivationState[] { }
+                        )
                     }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa.PlainValue }))
                     .ToImmutableList());
             BlockChain chain = BlockChain.Create(
@@ -151,14 +169,25 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 policyActionsRegistry: blockPolicy.PolicyActionsRegistry,
                 stateStore,
                 new NCActionLoader());
+            var validatorSet = new ValidatorSet(
+                new[] { new Validator(proposer.PublicKey, 10_000_000_000_000_000_000) }.ToList());
+            var gameConfigState = new GameConfigState(_sheets[nameof(GameConfigSheet)]);
+            var redeemCodeListSheet = new RedeemCodeListSheet();
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
                 transactions: new IAction[]
                     {
-                        new InitializeValidator(
-                            new ValidatorSet(
-                                new[] { new Validator(proposer.PublicKey, 10_000_000_000_000_000_000) }
-                                    .ToList()),
-                            Currency.Uncapped("ncg", 2, null))
+                        new InitializeStates(
+                            validatorSet: validatorSet,
+                            rankingState: new RankingState0(),
+                            shopState: new ShopState(),
+                            tableSheets: _sheets,
+                            gameConfigState: gameConfigState,
+                            redeemCodeState: new RedeemCodeState(redeemCodeListSheet),
+                            adminAddressState: null,
+                            activatedAccountsState: new ActivatedAccountsState(ImmutableHashSet<Address>.Empty),
+                            goldCurrencyState: new GoldCurrencyState(Currency.Uncapped("ncg", 2, null), 0),
+                            goldDistributions: Array.Empty<GoldDistribution>(),
+                            pendingActivationStates: Array.Empty<PendingActivationState>())
                     }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa.PlainValue }))
                     .ToImmutableList());
             BlockChain chain = BlockChain.Create(
