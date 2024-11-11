@@ -57,6 +57,8 @@ jobs:
             tags: ${{ matrix.docker.repo }}:git-${{ github.sha }}
             file: ${{ matrix.docker.dockerfile }}
             build-args: COMMIT=git-${{ github.sha }}
+        env:
+            BUILDKIT_PROGRESS: 'plain'
 
   tag:
     name: tag (${{ matrix.docker.repo }})
