@@ -31,7 +31,7 @@ fi
 EOF
 
 # Build runtime image
-FROM --platform=$TARGETPLATFORM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM --platform=$TARGETPLATFORM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim
 WORKDIR /app
 COPY --from=build-env /app/out .
 
