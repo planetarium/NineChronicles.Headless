@@ -25,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Libplanet.Mocks" Version="$(LibplanetVersion)" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
     <PackageReference Include="Moq" Version="4.20.70" />
     <PackageReference Include="SonarAnalyzer.CSharp" Version="8.49.0.57237">

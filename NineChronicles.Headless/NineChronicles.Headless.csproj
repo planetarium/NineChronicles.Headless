@@ -21,8 +21,6 @@
     <ProjectReference Include="..\Lib9c\Lib9c.Policy\Lib9c.Policy.csproj" />
     <ProjectReference Include="..\Lib9c\Lib9c.Renderers\Lib9c.Renderers.csproj" />
     <ProjectReference Include="..\Lib9c\Lib9c.DevExtensions\Lib9c.DevExtensions.csproj" Condition=" '$(Configuration)' == 'DevEx' " />
-    <ProjectReference Include="..\Lib9c\.Libplanet\tools\Libplanet.Explorer\Libplanet.Explorer.csproj" />
-    <ProjectReference Include="..\Lib9c\.Libplanet\src\Libplanet.Store.Remote\Libplanet.Store.Remote.csproj" />
     <ProjectReference Include="..\Lib9c\Libplanet.Crypto.Secp256k1\Libplanet.Crypto.Secp256k1.csproj" />
     <ProjectReference Include="..\Libplanet.Headless\Libplanet.Headless.csproj" />
     <ProjectReference Include="..\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared\NineChronicles.RPC.Shared.csproj" />
@@ -36,6 +34,7 @@
     <PackageReference Include="GraphQL.Server.Transports.Subscriptions.WebSockets" Version="5.1.1" />
     <PackageReference Include="GraphQL.Server.Ui.Playground" Version="5.1.1" />
     <PackageReference Include="GraphQL.SystemTextJson" Version="4.7.1" />
+    <PackageReference Include="Libplanet.Store.Remote" Version="$(LibplanetVersion)" />
     <PackageReference Include="MagicOnion" Version="6.1.3" />
     <PackageReference Include="MagicOnion.Abstractions" Version="6.1.3" />
     <PackageReference Include="MagicOnion.Server" Version="6.1.3" />
