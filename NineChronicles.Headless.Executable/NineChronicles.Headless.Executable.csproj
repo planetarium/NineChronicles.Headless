@@ -23,6 +23,7 @@
     <PackageReference Include="GraphQL.Client" Version="5.1.1" />
     <PackageReference Include="GraphQL.Client.Serializer.SystemTextJson" Version="5.1.1" />
     <PackageReference Include="Destructurama.Attributed" Version="2.0.0" />
+    <PackageReference Include="Libplanet.Extensions.Cocona" Version="$(LibplanetVersion)" />
     <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.9.0" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.9.0" />
     <PackageReference Include="OpenTelemetry.Instrumentation.GrpcNetClient" Version="1.9.0-beta.1" />
@@ -47,7 +48,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Lib9c\.Libplanet\tools\Libplanet.Extensions.Cocona\Libplanet.Extensions.Cocona.csproj" />
     <ProjectReference Include="..\Lib9c\Lib9c.Utils\Lib9c.Utils.csproj" />
     <ProjectReference Include="..\Lib9c\Lib9c.Abstractions\Lib9c.Abstractions.csproj" />
     <ProjectReference Include="..\NineChronicles.Headless\NineChronicles.Headless.csproj" />

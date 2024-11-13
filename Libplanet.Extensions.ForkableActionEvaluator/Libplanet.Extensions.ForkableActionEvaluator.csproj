@@ -5,9 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-  
-  <ItemGroup>
-    <ProjectReference Include="..\Lib9c\.Libplanet\src\Libplanet\Libplanet.csproj" />
-  </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Libplanet.Action" Version="$(LibplanetVersion)" />
+  </ItemGroup>
 </Project>
