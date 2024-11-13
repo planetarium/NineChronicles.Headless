@@ -20,10 +20,9 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\Libplanet.Extensions.ForkableActionEvaluator\Libplanet.Extensions.ForkableActionEvaluator.csproj" />
-    <ProjectReference Include="..\Lib9c\.Libplanet.Extensions.ActionEvaluatorCommonComponents\Libplanet.Extensions.ActionEvaluatorCommonComponents.csproj" />
   </ItemGroup>
 
 </Project>
