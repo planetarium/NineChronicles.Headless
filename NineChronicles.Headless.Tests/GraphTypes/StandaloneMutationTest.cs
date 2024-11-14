@@ -871,7 +871,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     {
                         new InitializeStates(
                             validatorSet: new ValidatorSet(new List<Validator>
-                            { 
+                            {
                                 new Validator(ProposerPrivateKey.PublicKey, 10_000_000_000_000_000_000)
                             }),
                             rankingState: rankingState ?? new RankingState0(),

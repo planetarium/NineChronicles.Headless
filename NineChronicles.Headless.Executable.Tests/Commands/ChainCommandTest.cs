@@ -101,8 +101,8 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                     {
                         new InitializeStates(
                             validatorSet: new ValidatorSet(new List<Validator>
-                            { 
-                                new Validator(proposer.PublicKey, 10_000_000_000_000_000_000) 
+                            {
+                                new Validator(proposer.PublicKey, 10_000_000_000_000_000_000)
                             }),
                             rankingState: new RankingState0(),
                             shopState: new ShopState(),
@@ -436,8 +436,8 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
                 new AdminState(new Address(genesisConfig.AdminAddress), genesisConfig.AdminValidUntil);
             Block genesisBlock = BlockHelper.ProposeGenesisBlock(
                 new ValidatorSet(new List<Validator>
-                { 
-                    new Validator(GenesisHelper.ValidatorKey.PublicKey, 10_000_000_000_000_000_000) 
+                {
+                    new Validator(GenesisHelper.ValidatorKey.PublicKey, 10_000_000_000_000_000_000)
                 }),
                 tableSheets,
                 goldDistributions,
