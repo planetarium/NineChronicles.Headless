@@ -12,6 +12,7 @@ using Nekoyume.Action;
 using Nekoyume.TableData;
 using Nekoyume.Action.ValidatorDelegation;
 using Nekoyume.Action.Guild.Migration;
+using Lib9c;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -524,14 +525,37 @@ namespace NineChronicles.Headless.GraphTypes
                         RuneId = runeId,
                         TryCount = tryCount
                     };
+
                     return Encode(context, action);
                 });
 
             Field<ByteStringType>(
                 name: "promoteValidator",
-                resolve: context => Encode(
-                    context,
-                    new PromoteValidator()));
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Description = "Public key of validator.",
+                        Name = "publicKey",
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Description = "A string value to be transferred.",
+                        Name = "amount",
+                    }),
+                resolve: context =>
+                {
+                    var currency = FungibleAssetValue.Parse(
+                        Currencies.GuildGold,
+                        context.GetArgument<string>("amount"));
+                    var publicKey = PublicKey.FromHex(
+                        context.GetArgument<string>("publicKey"));
+
+                    return Encode(
+                        context,
+                        new PromoteValidator(
+                            publicKey,
+                            currency));
+                });
 
             Field<ByteStringType>(
                 name: "migrateDelegationHeight",
