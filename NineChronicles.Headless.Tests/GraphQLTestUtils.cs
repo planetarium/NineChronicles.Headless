@@ -189,7 +189,7 @@ namespace NineChronicles.Headless.Tests
                 0,
                 block.Hash,
                 ValidatorPrivateKeys.Select(
-                    k => new VoteMetadata(block.Index, 0, block.Hash, block.Timestamp, k.PublicKey, null, VoteFlag.PreCommit).Sign(k))
+                    k => new VoteMetadata(block.Index, 0, block.Hash, block.Timestamp, k.PublicKey, BigInteger.One, VoteFlag.PreCommit).Sign(k))
                 .ToImmutableArray());
 
             blockchain.Append(block, blockCommit);

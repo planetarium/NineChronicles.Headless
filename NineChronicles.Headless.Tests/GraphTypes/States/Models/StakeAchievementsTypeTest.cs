@@ -12,7 +12,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
     {
         [Theory]
         [MemberData(nameof(Members))]
-        public async Task AchievementsByLevel(StakeState.StakeAchievements achievements, int level, Dictionary<string, object> expected)
+        public async Task AchievementsByLevel(LegacyStakeState.StakeAchievements achievements, int level, Dictionary<string, object> expected)
         {
             string query = @$"
             {{
@@ -27,7 +27,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
         {
             new object[]
             {
-                new StakeState.StakeAchievements(new Dictionary<int, int>
+                new LegacyStakeState.StakeAchievements(new Dictionary<int, int>
                 {
                     [1] = 1,
                     [2] = 3,

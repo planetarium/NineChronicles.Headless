@@ -26,7 +26,7 @@ namespace NineChronicles.Headless.Tests
 
         public static readonly Address AvatarAddress = new Address("983c3Fbfe8243a0e36D55C6C1aE26A7c8Bb6CBd4");
 
-        public static readonly Address StakeStateAddress = StakeState.DeriveAddress(UserAddress);
+        public static readonly Address StakeStateAddress = LegacyStakeState.DeriveAddress(UserAddress);
 
         public static readonly TableSheets TableSheetsFX = new(TableSheetsImporter.ImportSheets());
 

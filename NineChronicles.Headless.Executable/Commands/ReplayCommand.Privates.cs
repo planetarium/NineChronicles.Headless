@@ -11,6 +11,8 @@ using Libplanet.Action.State;
 using Libplanet.Types.Tx;
 using Serilog;
 using Libplanet.Types.Evidence;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Assets;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
@@ -51,6 +53,8 @@ namespace NineChronicles.Headless.Executable.Commands
 
             public int BlockProtocolVersion { get; }
 
+            public BlockCommit? LastCommit { get; }
+
             public bool Rehearsal { get; }
 
             public IWorld PreviousState { get; }
@@ -68,9 +72,7 @@ namespace NineChronicles.Headless.Executable.Commands
             {
             }
 
-            public long GasUsed() => 0;
-
-            public long GasLimit() => 0;
+            public FungibleAssetValue? MaxGasPrice => null;
 
             public IRandom GetRandom() => new Random(RandomSeed);
         }

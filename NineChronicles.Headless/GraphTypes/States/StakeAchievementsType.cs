@@ -5,7 +5,7 @@ using Nekoyume.Model.State;
 
 namespace NineChronicles.Headless.GraphTypes.States
 {
-    public class StakeAchievementsType : ObjectGraphType<StakeState.StakeAchievements>
+    public class StakeAchievementsType : ObjectGraphType<LegacyStakeState.StakeAchievements>
     {
         public StakeAchievementsType()
         {

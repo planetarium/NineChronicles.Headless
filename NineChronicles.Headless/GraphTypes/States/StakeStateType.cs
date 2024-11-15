@@ -18,14 +18,14 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class StakeStateContext : StateContext
         {
-            public StakeStateContext(StakeStateV2 stakeState, Address address, IWorldState worldState, long blockIndex, StateMemoryCache stateMemoryCache)
+            public StakeStateContext(StakeState stakeState, Address address, IWorldState worldState, long blockIndex, StateMemoryCache stateMemoryCache)
                 : base(worldState, blockIndex, stateMemoryCache)
             {
                 StakeState = stakeState;
                 Address = address;
             }
 
-            public StakeStateV2 StakeState { get; }
+            public StakeState StakeState { get; }
             public Address Address { get; }
         }
 
@@ -60,7 +60,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                 description: "The block index the user can claim rewards.",
                 resolve: context => context.Source.StakeState.ClaimableBlockIndex);
             Field<StakeAchievementsType>(
-                nameof(StakeState.Achievements),
+                nameof(LegacyStakeState.Achievements),
                 description: "The staking achievements.",
                 deprecationReason: "Since StakeStateV2, the achievement became removed.",
                 resolve: _ => null);
