@@ -20,6 +20,11 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Compile Include="..\Lib9c\.Lib9c.Tests\TableSheets.cs" Link="TableSheets.cs" />
+        <Compile Include="..\Lib9c\.Lib9c.Tests\TableSheetsImporter.cs" Link="TableSheetsImporter.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\NineChronicles.Headless.Executable\NineChronicles.Headless.Executable.csproj" />
         <ProjectReference Include="..\Lib9c\.Libplanet\test\Libplanet.Mocks\Libplanet.Mocks.csproj" />
     </ItemGroup>

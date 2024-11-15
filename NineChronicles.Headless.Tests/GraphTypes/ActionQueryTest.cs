@@ -13,6 +13,7 @@ using Lib9c;
 using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
+using Libplanet.Types.Consensus;
 using Libplanet.Types.Tx;
 using Nekoyume;
 using Nekoyume.Action;
@@ -45,6 +46,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             new Random().NextBytes(_nonce);
             (_activationKey, PendingActivationState pending) = ActivationKey.Create(_activationCodeSeed, _nonce);
             var initializeStates = new InitializeStates(
+                validatorSet: new ValidatorSet(new List<Validator> { new Validator(MinerPrivateKey.PublicKey, 1) }),
                 rankingState: new RankingState0(),
                 shopState: new ShopState(),
                 gameConfigState: new GameConfigState(),
