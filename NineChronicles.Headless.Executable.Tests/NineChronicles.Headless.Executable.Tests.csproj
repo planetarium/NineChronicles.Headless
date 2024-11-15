@@ -26,7 +26,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\NineChronicles.Headless.Executable\NineChronicles.Headless.Executable.csproj" />
-        <ProjectReference Include="..\Lib9c\.Libplanet\test\Libplanet.Mocks\Libplanet.Mocks.csproj" />
     </ItemGroup>
 
 </Project>

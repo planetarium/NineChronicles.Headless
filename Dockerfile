@@ -1,19 +1,7 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
 WORKDIR /app
 ARG COMMIT
 ARG TARGETPLATFORM
-
-# Copy csproj and restore as distinct layers
-COPY ./Lib9c/Lib9c/Lib9c.csproj ./Lib9c/
-COPY ./Libplanet.Headless/Libplanet.Headless.csproj ./Libplanet.Headless/
-COPY ./NineChronicles.RPC.Shared/NineChronicles.RPC.Shared/NineChronicles.RPC.Shared.csproj ./NineChronicles.RPC.Shared/
-COPY ./NineChronicles.Headless/NineChronicles.Headless.csproj ./NineChronicles.Headless/
-COPY ./NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj ./NineChronicles.Headless.Executable/
-RUN dotnet restore Lib9c
-RUN dotnet restore Libplanet.Headless
-RUN dotnet restore NineChronicles.RPC.Shared
-RUN dotnet restore NineChronicles.Headless
-RUN dotnet restore NineChronicles.Headless.Executable
 
 # Copy everything else and build
 COPY . ./
@@ -43,7 +31,7 @@ fi
 EOF
 
 # Build runtime image
-FROM --platform=$TARGETPLATFORM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM --platform=$TARGETPLATFORM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim
 WORKDIR /app
 COPY --from=build-env /app/out .
 
