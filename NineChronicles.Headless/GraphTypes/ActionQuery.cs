@@ -3,18 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Bencodex;
-using Bencodex.Types;
-using Google.Protobuf.WellKnownTypes;
 using GraphQL;
 using GraphQL.Types;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
 using Libplanet.Explorer.GraphTypes;
 using Nekoyume.Action;
-using Nekoyume.Model;
-using Nekoyume.Model.State;
-using Nekoyume.Module;
 using Nekoyume.TableData;
+using Nekoyume.Action.ValidatorDelegation;
+using Nekoyume.Action.Guild.Migration;
+using Lib9c;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -527,8 +525,54 @@ namespace NineChronicles.Headless.GraphTypes
                         RuneId = runeId,
                         TryCount = tryCount
                     };
+
                     return Encode(context, action);
                 });
+
+            Field<ByteStringType>(
+                name: "promoteValidator",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Description = "Public key of validator.",
+                        Name = "publicKey",
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Description = "A string value to be transferred.",
+                        Name = "amount",
+                    }),
+                resolve: context =>
+                {
+                    var currency = FungibleAssetValue.Parse(
+                        Currencies.GuildGold,
+                        context.GetArgument<string>("amount"));
+                    var publicKey = PublicKey.FromHex(
+                        context.GetArgument<string>("publicKey"));
+
+                    return Encode(
+                        context,
+                        new PromoteValidator(
+                            publicKey,
+                            currency));
+                });
+
+            Field<ByteStringType>(
+                name: "migrateDelegationHeight",
+                arguments: new QueryArguments(new QueryArgument<LongGraphType>
+                {
+                    Name = "height",
+                    Description = "An migration height.",
+                }),
+                resolve: context => Encode(
+                    context,
+                    new MigrateDelegationHeight(context.GetArgument<long>("amount"))));
+
+            Field<ByteStringType>(
+                name: "migratePlanetariumGuild",
+                resolve: context => Encode(
+                    context,
+                    new MigratePlanetariumGuild()));
 
             RegisterHackAndSlash();
             RegisterHackAndSlashSweep();
