@@ -169,7 +169,8 @@ namespace NineChronicles.Headless.Executable.Commands
                 initialValidatorSet.Add(new Validator
                 {
                     PublicKey = initialValidator.PublicKey.ToString(),
-                    Power = 1,
+                    // To act as a validator, you need at least 10 GuildGold, and since the DecimalPlaces of GuildGold are 18 digits, it is recommended to specify a value around 10^20.
+                    Power = "10000000000000000000",
                 }
                 );
             }
@@ -271,7 +272,7 @@ namespace NineChronicles.Headless.Executable.Commands
                         initialValidatorSet.Select(
                             v => new Libplanet.Types.Consensus.Validator(
                                 new PublicKey(ByteUtil.ParseHex(v.PublicKey)),
-                                new BigInteger(v.Power))).ToList()),
+                                BigInteger.Parse(v.Power))).ToList()),
                     tableSheets: tableSheets,
                     goldDistributions: initialDepositList.ToArray(),
                     pendingActivationStates: Array.Empty<PendingActivationState>(),
@@ -400,7 +401,7 @@ namespace NineChronicles.Headless.Executable.Commands
         {
             public string PublicKey { get; set; }
 
-            public long Power { get; set; }
+            public string Power { get; set; }
         }
 
         [Serializable]
