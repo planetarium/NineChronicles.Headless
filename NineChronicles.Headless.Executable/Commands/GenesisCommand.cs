@@ -265,6 +265,16 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 ProcessInitialPledgeConfigs(genesisConfig.InitialPledgeConfigs, out var initialPledges);
 
+                ISet<Address>? assetMinters = null;
+                if (genesisConfig.AssetMinters is not null)
+                {
+                    foreach (var address in genesisConfig.AssetMinters)
+                    {
+                        _console.Out.WriteLine($"Preparing asset minter address {address}...");
+                    }
+                    assetMinters = genesisConfig.AssetMinters.ToHashSet();
+                }
+
                 // Mine genesis block
                 _console.Out.WriteLine("\nMining genesis block...\n");
                 Block block = BlockHelper.ProposeGenesisBlock(
@@ -280,7 +290,8 @@ namespace NineChronicles.Headless.Executable.Commands
                     adminState: adminState ?? new AdminState(default, 0L),
                     privateKey: initialMinter,
                     actionBases: adminMeads.Concat(initialMeads).Concat(initialPledges).Concat(GetAdditionalActionBases()),
-                    goldCurrency: currency
+                    goldCurrency: currency,
+                    assetMinters: assetMinters
                 );
 
                 Lib9cUtils.ExportBlock(block, "genesis-block");
@@ -458,6 +469,8 @@ namespace NineChronicles.Headless.Executable.Commands
             public List<MeadConfig>? InitialMeadConfigs { get; set; }
 
             public List<PledgeConfig>? InitialPledgeConfigs { get; set; }
+
+            public List<Address>? AssetMinters { get; set; }
         }
 #pragma warning restore S3459
     }
