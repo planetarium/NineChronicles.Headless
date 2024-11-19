@@ -17,6 +17,8 @@ using Nekoyume.Model.State;
 using NineChronicles.Headless.Executable.IO;
 using CoconaUtils = Libplanet.Extensions.Cocona.Utils;
 using Lib9cUtils = Lib9c.DevExtensions.Utils;
+using NineChronicles.Headless.Executable.Models.Genesis;
+using MeadConfig = NineChronicles.Headless.Executable.Models.Genesis.MeadConfig;
 
 namespace NineChronicles.Headless.Executable.Commands
 {
@@ -332,129 +334,5 @@ namespace NineChronicles.Headless.Executable.Commands
 
             };
         }
-
-#pragma warning disable S3459
-        /// <summary>
-        /// Game data to set into genesis block.
-        /// </summary>
-        /// <seealso cref="GenesisConfig"/>
-        [Serializable]
-        private struct DataConfig
-        {
-            /// <value>A path of game data table directory.</value>
-            public string TablePath { get; set; }
-        }
-
-        /// <summary>
-        /// Currency related configurations.<br/>
-        /// Set initial minter(Tx signer) and/or initial currency depositions.<br/>
-        /// If not provided, default values will set.
-        /// </summary>
-        [Serializable]
-        private struct CurrencyConfig
-        {
-            /// <value>
-            /// Private Key of initial currency minter.<br/>
-            /// If not provided, a new private key will be created and used.<br/>
-            /// </value>
-            public string? InitialMinter { get; set; } // PrivateKey, not Address
-
-            /// <value>
-            /// Initial currency deposition list.<br/>
-            /// If you leave it to empty list or even not provide, the `InitialMinter` will get 10000 currency.<br.>
-            /// You can see newly created deposition info in <c>initial_deposit.csv</c> file.
-            /// </value>
-            public List<GoldDistribution>? InitialCurrencyDeposit { get; set; }
-
-            public bool AllowMint { get; set; }
-        }
-
-        /// <summary>
-        /// Admin related configurations.<br/>
-        /// If not provided, no admin will be set.
-        /// </summary>
-        [Serializable]
-        private struct AdminConfig
-        {
-            /// <value>Whether active admin address or not.</value>
-            public bool Activate { get; set; }
-
-            /// <value>
-            /// Address to give admin privilege.<br/>
-            /// If <c>Activate</c> is <c>true</c> and no <c>Address</c> provided, the <see cref="CurrencyConfig.InitialMinter"/> will get admin privilege.
-            /// </value>
-            public string Address { get; set; }
-
-            /// <value>
-            /// The block count to persist admin privilege.<br/>
-            /// After this block, admin will no longer be admin.
-            /// </value>
-            public long ValidUntil { get; set; }
-        }
-
-        [Serializable]
-        private struct Validator
-        {
-            public string PublicKey { get; set; }
-
-            public long Power { get; set; }
-        }
-
-        [Serializable]
-        private struct MeadConfig
-        {
-            public string Address { get; set; }
-
-            public string Amount { get; set; }
-        }
-
-        [Serializable]
-        private struct PledgeConfig
-        {
-            public string AgentAddress { get; set; }
-
-            public string PatronAddress { get; set; }
-
-            public int Mead { get; set; }
-        }
-
-        /// <summary>
-        /// Config to mine new genesis block.
-        /// </summary>
-        /// <list type="table">
-        /// <listheader>
-        /// <term>Config</term>
-        /// <description>Description</description>
-        /// </listheader>
-        /// <item>
-        /// <term><see cref="DataConfig">Data</see></term>
-        /// <description>Required. Sets game data to genesis block.</description>
-        /// </item>
-        /// <item>
-        /// <term><see cref="CurrencyConfig">Currency</see></term>
-        /// <description>Optional. Sets initial currency mint/deposition data to genesis block.</description>
-        /// </item>
-        /// <item>
-        /// <term><see cref="AdminConfig">Admin</see></term>
-        /// <description>Optional. Sets game admin and lifespan to genesis block.</description>
-        /// </item>
-        /// <item>
-        /// <term><see cref="InitialValidatorSet">Initial validator set</see></term>
-        /// <description>Optional. Sets game admin and lifespan to genesis block.</description>
-        /// </item>
-        /// </list>
-        [Serializable]
-        private struct GenesisConfig
-        {
-            public DataConfig Data { get; set; } // Required
-            public CurrencyConfig? Currency { get; set; }
-            public AdminConfig? Admin { get; set; }
-            public List<Validator>? InitialValidatorSet { get; set; }
-
-            public List<MeadConfig>? InitialMeadConfigs { get; set; }
-
-            public List<PledgeConfig>? InitialPledgeConfigs { get; set; }
-        }
-#pragma warning restore S3459
     }
 }
