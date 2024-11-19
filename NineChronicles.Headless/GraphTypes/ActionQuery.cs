@@ -574,6 +574,22 @@ namespace NineChronicles.Headless.GraphTypes
                     context,
                     new MigratePlanetariumGuild()));
 
+            Field<ByteStringType>(
+                name: "fixToRefundFromNonValidator",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>
+                    {
+                        Description = "List of addresses to refund",
+                        Name = "addresses",
+                    }),
+                resolve: context =>
+                {
+                    var addresses = context.GetArgument<List<Address>>("addresses");
+                    return Encode(
+                        context,
+                        new FixToRefundFromNonValidator(addresses));
+                });
+
             RegisterHackAndSlash();
             RegisterHackAndSlashSweep();
             RegisterDailyReward();
