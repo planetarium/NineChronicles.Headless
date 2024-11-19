@@ -17,6 +17,7 @@ using System.Numerics;
 using Nekoyume.Action.Guild.Migration;
 using Nekoyume.TypedAddress;
 using Nekoyume.ValidatorDelegation;
+using LiteDB;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -444,6 +445,139 @@ namespace NineChronicles.Headless.GraphTypes
 
                         var actions = new ActionBase[] { action };
                         Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+
+            Field<NonNullGraphType<TxIdType>>("promoteValidator",
+                description: "Promote validator.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "validator",
+                        Description = "Validator public key to promote."
+                    },
+                    new QueryArgument<NonNullGraphType<BigIntGraphType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount of NCG to stake."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+                        string validatorString = context.GetArgument<string>("validator");
+                        PublicKey validator = PublicKey.FromHex(validatorString);
+                        BigInteger amount = context.GetArgument<BigInteger>("amount");
+                        var fav = new FungibleAssetValue(ValidatorDelegatee.ValidatorDelegationCurrency, amount, 0);
+                        var action = new PromoteValidator(validator, fav);
+                        var actions = new[] { action };
+                        Transaction tx = blockChain.MakeTransaction(
+                            service.MinerPrivateKey,
+                            actions,
+                            Currencies.Mead * 1,
+                            1L);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+
+            Field<NonNullGraphType<TxIdType>>("transferNCG",
+                description: "Transfer ncg to validtor to promote.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "validator",
+                        Description = "Validator public key to promote."
+                    },
+                    new QueryArgument<NonNullGraphType<BigIntGraphType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount of NCG to stake."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        var amount = context.GetArgument<BigInteger>("amount");
+                        var sender = service.MinerPrivateKey!.Address;
+                        var recipient = context.GetArgument<Address>("validator");
+                        var currency = blockChain.GetWorldState().GetGoldCurrency();
+                        var fav = currency * amount;
+
+#pragma warning disable CS0618
+                        var actions = new[] { new TransferAsset(sender, recipient, fav, "To promote") };
+#pragma warning restore CS0618
+
+                        Transaction tx = blockChain.MakeTransaction(
+                            service.MinerPrivateKey,
+                            actions,
+                            Currencies.Mead * 4,
+                            4L);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+
+            Field<NonNullGraphType<TxIdType>>("stake",
+                description: "Claim reward for self delegation of validator.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount to stake."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        BigInteger amount = context.GetArgument<BigInteger>("amount");
+
+                        var actions = new[] { new Stake(amount) };
+                        Transaction tx = blockChain.MakeTransaction(
+                            service.MinerPrivateKey,
+                            actions,
+                            Currencies.Mead * 1,
+                            1L);
                         return tx.Id;
                     }
                     catch (Exception e)
