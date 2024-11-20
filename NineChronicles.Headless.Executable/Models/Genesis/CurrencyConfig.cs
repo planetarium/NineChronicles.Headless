@@ -11,19 +11,23 @@ namespace NineChronicles.Headless.Executable.Models.Genesis
     [Serializable]
     public struct CurrencyConfig
     {
-        /// <value>
-        /// Private Key of initial currency minter.<br/>
-        /// If not provided, a new private key will be created and used.<br/>
-        /// </value>
+        /// <summary>
+        /// Gets or sets the private key of initial currency minter.
+        /// If not provided, a new private key will be created and used.
+        /// </summary>
         public string? InitialMinter { get; set; } // PrivateKey, not Address
 
-        /// <value>
-        /// Initial currency deposition list.<br/>
-        /// If you leave it to empty list or even not provide, the `InitialMinter` will get 10000 currency.<br.>
+        /// <summary>
+        /// Gets or sets initial currency deposition list.
+        /// If you leave it to empty list or even not provide,
+        /// the <see cref="InitialMinter"/> will get 10000 currency.
         /// You can see newly created deposition info in <c>initial_deposit.csv</c> file.
-        /// </value>
+        /// </summary>
         public List<Nekoyume.Action.GoldDistribution>? InitialCurrencyDeposit { get; set; }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether to allow mint.
+        /// </summary>
         public bool AllowMint { get; set; }
     }
 }

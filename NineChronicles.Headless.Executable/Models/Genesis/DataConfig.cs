@@ -9,7 +9,9 @@ namespace NineChronicles.Headless.Executable.Models.Genesis
     [Serializable]
     public struct DataConfig
     {
-        /// <value>A path of game data table directory.</value>
+        /// <summary>
+        /// Gets or sets a path of game data table directory.
+        /// </summary>
         public string TablePath { get; set; }
     }
 }
