@@ -591,9 +591,10 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var addresses = context.GetArgument<List<Address>>("addresses");
                     var amounts = context.GetArgument<List<int>>("amounts");
+                    var targets = addresses.Zip(amounts, (address, amount) => (address, amount));
                     return Encode(
                         context,
-                        new FixToRefundFromNonValidator(addresses, amounts));
+                        new FixToRefundFromNonValidator(targets));
                 });
 
             RegisterHackAndSlash();
