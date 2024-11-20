@@ -637,6 +637,43 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 }
             );
+            Field<NonNullGraphType<TxIdType>>("migrateDelegationHeight",
+                description: "Migration of delegation height.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<LongGraphType>>
+                    {
+                        Name = "height",
+                        Description = "Height to migrate."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        long height = context.GetArgument<long>("height");
+
+                        var actions = new[] { new MigrateDelegationHeight(height) };
+                        Transaction tx = blockChain.MakeTransaction(
+                            service.MinerPrivateKey,
+                            actions,
+                            Currencies.Mead * 1,
+                            1L);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
         }
     }
 }
