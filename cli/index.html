@@ -494,6 +494,16 @@
         <li class="flex flex-col gap-2">
           <div class="flex items-center gap-2">
             <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">consensus-propose-second-base</span>
+            <span class="text-slate-400 text-sm">&lt;Int32?&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">A propose second base for consensus context timeout. The unit is second.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
             <span class="px-2 bg-slate-200 font-bold text-slate-800">maximum-transaction-per-block</span>
             <span class="text-slate-400 text-sm">&lt;Int32?&gt;</span>
           </div>
@@ -514,41 +524,11 @@
         <li class="flex flex-col gap-2">
           <div class="flex items-center gap-2">
             <span class="font-['fira-code']">&#10148;</span>
-            <span class="px-2 bg-slate-200 font-bold text-slate-800">sentry-dsn</span>
-            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
-          </div>
-          <div class="ml-6 text-sm text-slate-400"></div>
-          <div class="ml-6">Sentry DSN</div>
-      </li>
-
-        <li class="flex flex-col gap-2">
-          <div class="flex items-center gap-2">
-            <span class="font-['fira-code']">&#10148;</span>
-            <span class="px-2 bg-slate-200 font-bold text-slate-800">sentry-trace-sample-rate</span>
-            <span class="text-slate-400 text-sm">&lt;Double?&gt;</span>
-          </div>
-          <div class="ml-6 text-sm text-slate-400"></div>
-          <div class="ml-6">Trace sample rate for sentry</div>
-      </li>
-
-        <li class="flex flex-col gap-2">
-          <div class="flex items-center gap-2">
-            <span class="font-['fira-code']">&#10148;</span>
-            <span class="px-2 bg-slate-200 font-bold text-slate-800">arena-participants-sync-interval</span>
-            <span class="text-slate-400 text-sm">&lt;Int32?&gt;</span>
-          </div>
-          <div class="ml-6 text-sm text-slate-400"></div>
-          <div class="ml-6">arena participants list sync interval time</div>
-      </li>
-
-        <li class="flex flex-col gap-2">
-          <div class="flex items-center gap-2">
-            <span class="font-['fira-code']">&#10148;</span>
-            <span class="px-2 bg-slate-200 font-bold text-slate-800">arena-participants-sync</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">remote-key-value-service</span>
             <span class="text-slate-400 text-sm">&lt;Boolean&gt;</span>
           </div>
-          <div class="ml-6 text-sm text-slate-400">Default Value : True</div>
-          <div class="ml-6">arena participants list sync enable</div>
+          <div class="ml-6 text-sm text-slate-400">Default Value : False</div>
+          <div class="ml-6">[DANGER] Turn on RemoteKeyValueService to debug.</div>
       </li>
 </ul>
 </li>
@@ -1397,41 +1377,6 @@
       </ul>
 </li>
 <li class="border-b border-slate-700"></li>
-<li id="action_activate-account" class="flex flex-col gap-6 scroll-mt-24">
-      <div class="flex flex-col gap-2">
-        <h1 class="text-xl font-bold">action activate-account</h1>
-    <p class="text-slate-400">Create ActivateAccount action.</p></div>
-      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
-      <ul class="flex flex-col gap-4">
-    
-        <li class="flex flex-col gap-2">
-          <div class="flex items-center gap-2">
-            <span class="font-['fira-code']">&#10148;</span>
-            <span class="px-2 bg-slate-200 font-bold text-slate-800">invitation-code</span>
-            <span class="text-slate-400 text-sm">String</span>
-          </div>
-          <div class="ml-6">An invitation code.</div>
-        </li>
-      
-        <li class="flex flex-col gap-2">
-          <div class="flex items-center gap-2">
-            <span class="font-['fira-code']">&#10148;</span>
-            <span class="px-2 bg-slate-200 font-bold text-slate-800">nonce</span>
-            <span class="text-slate-400 text-sm">String</span>
-          </div>
-          <div class="ml-6">A hex-encoded nonce for activation.</div>
-        </li>
-      
-        <li class="flex flex-col gap-2">
-          <div class="flex items-center gap-2">
-            <span class="font-['fira-code']">&#10148;</span>
-            <span class="px-2 bg-slate-200 font-bold text-slate-800">path</span>
-            <span class="text-slate-400 text-sm">String</span>
-          </div>
-          <div class="ml-6">A file path of base64 encoded action.</div>
-        </li>
-      </ul>
-</li>
 <li id="action_list" class="flex flex-col gap-6 scroll-mt-24">
       <div class="flex flex-col gap-2">
         <h1 class="text-xl font-bold">action list</h1>
@@ -1870,32 +1815,6 @@
       <div class="flex flex-col gap-2">
         <h1 class="text-xl font-bold">tx migration-activated-accounts-state</h1>
     <p class="text-slate-400">Create MigrationActivatedAccountsState action and dump it.</p></div></li>
-<li id="tx_migration-avatar-state" class="flex flex-col gap-6 scroll-mt-24">
-      <div class="flex flex-col gap-2">
-        <h1 class="text-xl font-bold">tx migration-avatar-state</h1>
-    <p class="text-slate-400">Create MigrationAvatarState action and dump it.</p></div>
-      <h2 class="px-4 w-fit bg-blue-500">Arguments</h2>
-      <ul class="flex flex-col gap-4">
-    
-        <li class="flex flex-col gap-2">
-          <div class="flex items-center gap-2">
-            <span class="font-['fira-code']">&#10148;</span>
-            <span class="px-2 bg-slate-200 font-bold text-slate-800">directory-path</span>
-            <span class="text-slate-400 text-sm">String</span>
-          </div>
-          <div class="ml-6">path of the directory contained hex-encoded avatar states.</div>
-        </li>
-      
-        <li class="flex flex-col gap-2">
-          <div class="flex items-center gap-2">
-            <span class="font-['fira-code']">&#10148;</span>
-            <span class="px-2 bg-slate-200 font-bold text-slate-800">output-path</span>
-            <span class="text-slate-400 text-sm">String</span>
-          </div>
-          <div class="ml-6">path of the output file dumped action.</div>
-        </li>
-      </ul>
-</li>
 <li id="tx_add-redeem-code" class="flex flex-col gap-6 scroll-mt-24">
       <div class="flex flex-col gap-2">
         <h1 class="text-xl font-bold">tx add-redeem-code</h1>
@@ -2212,7 +2131,17 @@
             <span class="text-slate-400 text-sm">&lt;String&gt;</span>
           </div>
           <div class="ml-6 text-sm text-slate-400"></div>
-          <div class="ml-6">GraphQL endpoint to get remote state</div>
+          <div class="ml-6">GraphQL endpoint to get block data.</div>
+      </li>
+
+        <li class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-['fira-code']">&#10148;</span>
+            <span class="px-2 bg-slate-200 font-bold text-slate-800">grpc-endpoint</span>
+            <span class="text-slate-400 text-sm">&lt;String&gt;</span>
+          </div>
+          <div class="ml-6 text-sm text-slate-400"></div>
+          <div class="ml-6">gRPC endpoint to get remote states.</div>
       </li>
 </ul>
 </li>
@@ -2247,8 +2176,7 @@
 <li><a href="#apv_verify" class="block" onclick="toggle()">apv verify</a></li>
 <li><a href="#apv_analyze" class="block" onclick="toggle()">apv analyze</a></li>
 <li><a href="#apv_query" class="block" onclick="toggle()">apv query</a></li>
-<li class="border-b border-slate-700"></li><li><a href="#action_activate-account" class="block" onclick="toggle()">action activate-account</a></li>
-<li><a href="#action_list" class="block" onclick="toggle()">action list</a></li>
+<li class="border-b border-slate-700"></li><li><a href="#action_list" class="block" onclick="toggle()">action list</a></li>
 <li><a href="#action_transfer-asset" class="block" onclick="toggle()">action transfer-asset</a></li>
 <li><a href="#action_stake" class="block" onclick="toggle()">action stake</a></li>
 <li><a href="#action_claim-stake-reward" class="block" onclick="toggle()">action claim-stake-reward</a></li>
@@ -2259,7 +2187,6 @@
 <li><a href="#tx_transfer-asset" class="block" onclick="toggle()">tx transfer-asset</a></li>
 <li><a href="#tx_patch-table" class="block" onclick="toggle()">tx patch-table</a></li>
 <li><a href="#tx_migration-activated-accounts-state" class="block" onclick="toggle()">tx migration-activated-accounts-state</a></li>
-<li><a href="#tx_migration-avatar-state" class="block" onclick="toggle()">tx migration-avatar-state</a></li>
 <li><a href="#tx_add-redeem-code" class="block" onclick="toggle()">tx add-redeem-code</a></li>
 <li><a href="#tx_create-pending-activations" class="block" onclick="toggle()">tx create-pending-activations</a></li>
 <li><a href="#tx_renew-admin-state" class="block" onclick="toggle()">tx renew-admin-state</a></li>
