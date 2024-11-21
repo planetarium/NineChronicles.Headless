@@ -279,7 +279,7 @@ namespace NineChronicles.Headless.Executable
                     ActionEvaluatorType.ForkableActionEvaluator => new ForkableActionEvaluatorConfiguration
                     {
                         Pairs = (configuration.GetSection("Pairs") ??
-                                 throw new KeyNotFoundException()).GetChildren().Select(pair =>
+                            throw new KeyNotFoundException()).GetChildren().Select(pair =>
                         {
                             var range = new ForkableActionEvaluatorRange();
                             pair.Bind("Range", range);
@@ -291,6 +291,7 @@ namespace NineChronicles.Headless.Executable
                     },
                     ActionEvaluatorType.PluggedActionEvaluator => new PluggedActionEvaluatorConfiguration
                     {
+                        Version = configuration.GetValue<long>("Version", PluggedActionEvaluatorConfiguration.DefaultVersion),
                         PluginPath = configuration.GetValue<string>("PluginPath"),
                     },
                     _ => throw new InvalidOperationException("Unexpected type."),

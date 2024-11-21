@@ -127,7 +127,7 @@ namespace Libplanet.Headless.Hosting
                 {
                     PluggedActionEvaluatorConfiguration pluginActionEvaluatorConfiguration =>
                         new PluggedActionEvaluator(
-                            ResolvePluginPath(pluginActionEvaluatorConfiguration.PluginPath),
+                            ResolvePluginPath(pluginActionEvaluatorConfiguration),
                             pluginActionEvaluatorConfiguration.TypeName,
                             keyValueStore,
                             actionLoader),
@@ -638,15 +638,23 @@ namespace Libplanet.Headless.Hosting
             Log.Debug("Store disposed.");
         }
 
-        private string ResolvePluginPath(string path)
+        private string ResolvePluginPath(PluggedActionEvaluatorConfiguration configuration)
         {
-            if (Uri.IsWellFormedUriString(path, UriKind.Absolute))
+            var pluginPath = configuration.PluginPath;
+            if (configuration.Version == 1)
             {
-                // Run the download on a background thread
-                return Task.Run(() => DownloadPlugin(path)).GetAwaiter().GetResult();
+                if (Uri.IsWellFormedUriString(pluginPath, UriKind.Absolute))
+                {
+                    // Run the download on a background thread
+                    return Task.Run(() => DownloadPlugin(pluginPath)).GetAwaiter().GetResult();
+                }
+
+                return pluginPath;   
             }
 
-            return path;
+            throw new ArgumentOutOfRangeException(
+                nameof(configuration),
+                $"Unsupported version: {configuration.Version}");
         }
 
         private async Task<string> DownloadPlugin(string url)
