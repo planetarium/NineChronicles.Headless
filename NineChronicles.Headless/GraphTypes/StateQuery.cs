@@ -772,6 +772,44 @@ namespace NineChronicles.Headless.GraphTypes
                     return share.ToString();
                 }
             );
+
+            Field<BooleanGraphType>(
+                name: "jailed",
+                description: "Jail state for validator.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "validatorAddress",
+                        Description = "Address of validator."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var validatorAddress = context.GetArgument<Address>("validatorAddress");
+                    var repository = new ValidatorRepository(new World(context.Source.WorldState), new HallowActionContext { });
+                    var delegatee = repository.GetValidatorDelegatee(validatorAddress);
+                    return delegatee.Jailed;
+                }
+            );
+
+            Field<LongGraphType>(
+                name: "jailedUntil",
+                description: "JailUntil state for validator.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "validatorAddress",
+                        Description = "Address of validator."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var validatorAddress = context.GetArgument<Address>("validatorAddress");
+                    var repository = new ValidatorRepository(new World(context.Source.WorldState), new HallowActionContext { });
+                    var delegatee = repository.GetValidatorDelegatee(validatorAddress);
+                    return delegatee.JailedUntil;
+                }
+            );
         }
 
         public static List<RuneOptionSheet.Row.RuneOptionInfo> GetRuneOptions(
