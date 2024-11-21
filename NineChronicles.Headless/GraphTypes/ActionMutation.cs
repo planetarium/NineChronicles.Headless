@@ -702,6 +702,43 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 }
             );
+            Field<NonNullGraphType<TxIdType>>("delegateValidator",
+                description: "Unjail validator",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<BigIntGraphType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount of guild gold to stake."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        BigInteger amount = context.GetArgument<BigInteger>("amount");
+                        var fav = new FungibleAssetValue(ValidatorDelegatee.ValidatorDelegationCurrency, amount, 0);
+                        var actions = new[] { new DelegateValidator(fav) };
+                        Transaction tx = blockChain.MakeTransaction(
+                            service.MinerPrivateKey,
+                            actions,
+                            Currencies.Mead * 1,
+                            1L);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
         }
     }
 }
