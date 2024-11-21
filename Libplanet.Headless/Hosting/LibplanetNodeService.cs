@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 using Bencodex;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
@@ -650,6 +651,40 @@ namespace Libplanet.Headless.Hosting
                 }
 
                 return pluginPath;   
+            }
+
+            if (configuration.Version == 2)
+            {
+                
+                string os = null switch
+                {
+                    _ when RuntimeInformation.IsOSPlatform(OSPlatform.Windows) => "win",
+                    _ when RuntimeInformation.IsOSPlatform(OSPlatform.Linux) => "linux",
+                    _ when RuntimeInformation.IsOSPlatform(OSPlatform.OSX) => "osx",
+                    _ => throw new NotSupportedException("Unsupported OS."),
+                };
+
+                string arch = RuntimeInformation.OSArchitecture switch
+                {
+                    Architecture.X64 => "x64",
+                    Architecture.Arm64 => "arm64",
+                    Architecture.X86 => "x86",
+                    Architecture.Arm => "arm",
+                    _ => throw new NotSupportedException("Unsupported architecture."),
+                };
+
+                string runtimeIdentifier = $"{os}-{arch}";
+
+                // FIXME: When becoming to use .NET 8, use RuntimeInformation.RuntimeIdentifier.
+                //        Because, since .NET 8, it returns as expected format (e.g., `osx-arm64`).
+                return pluginPath
+                    .Replace("<os>", os)
+                    .Replace("<arch>", arch)
+#if NET8_0_OR_GREATER
+                    .Replace("<rid>", runtimeIdentifier);    
+#else
+                    .Replace("<rid>", runtimeIdentifier);
+#endif
             }
 
             throw new ArgumentOutOfRangeException(
