@@ -215,6 +215,8 @@ namespace NineChronicles.Headless.Executable
             [Option("config", new[] { 'C' },
                 Description = "Absolute path of \"appsettings.json\" file to provide headless configurations.")]
             string? configPath = "appsettings.json",
+            bool odin = false,
+            bool heimdall = false,
             [Option(Description = "[DANGER] Turn on RemoteKeyValueService to debug.")]
             bool remoteKeyValueService = false,
             [Ignore] CancellationToken? cancellationToken = null
@@ -232,7 +234,16 @@ namespace NineChronicles.Headless.Executable
             }
             else
             {
-                configurationBuilder.AddJsonFile(configPath!)
+                var finalConfigPath = (odin, heimdall) switch
+                {
+                    (true, false) => "appsettings.odin.json",
+                    (false, true) => "appsettings.heimdall.json",
+                    (true, true) =>
+                        throw new ArgumentException("You must provide only one of the --odin and --heimdall options."),
+                    _ => configPath
+                };
+
+                configurationBuilder.AddJsonFile(finalConfigPath!)
                     .AddEnvironmentVariables();
             }
 
