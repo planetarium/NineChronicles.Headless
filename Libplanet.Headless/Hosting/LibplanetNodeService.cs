@@ -656,7 +656,7 @@ namespace Libplanet.Headless.Hosting
             if (configuration.Version == 2)
             {
                 
-                string os = null switch
+                string os = "" switch
                 {
                     _ when RuntimeInformation.IsOSPlatform(OSPlatform.Windows) => "win",
                     _ when RuntimeInformation.IsOSPlatform(OSPlatform.Linux) => "linux",
