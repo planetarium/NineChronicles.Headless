@@ -641,8 +641,7 @@ namespace Libplanet.Headless.Hosting
 
         private string ResolvePluginPath(PluggedActionEvaluatorConfiguration configuration)
         {
-            var pluginPath = configuration.PluginPath;
-            if (configuration.Version == 1)
+            string ResolvePluginPathImpl(string pluginPath)
             {
                 if (Uri.IsWellFormedUriString(pluginPath, UriKind.Absolute))
                 {
@@ -653,9 +652,8 @@ namespace Libplanet.Headless.Hosting
                 return pluginPath;   
             }
 
-            if (configuration.Version == 2)
+            string RenderPluginPath(string pluginPath)
             {
-                
                 string os = "" switch
                 {
                     _ when RuntimeInformation.IsOSPlatform(OSPlatform.Windows) => "win",
@@ -685,6 +683,16 @@ namespace Libplanet.Headless.Hosting
 #else
                     .Replace("<rid>", runtimeIdentifier);
 #endif
+            }
+
+            if (configuration.Version == 1)
+            {
+                return ResolvePluginPathImpl(configuration.PluginPath);                
+            }
+
+            if (configuration.Version == 2)
+            {
+                return ResolvePluginPathImpl(RenderPluginPath(configuration.PluginPath));
             }
 
             throw new ArgumentOutOfRangeException(
