@@ -89,10 +89,10 @@ namespace NineChronicles.Headless.Executable.Models.Genesis
                     }
                 };
 
-    #pragma warning disable CS0618
+#pragma warning disable CS0618
                 // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
                 currency = Currency.Legacy("NCG", 2, minters: null);
-    #pragma warning restore CS0618
+#pragma warning restore CS0618
                 return;
             }
 
@@ -124,10 +124,10 @@ namespace NineChronicles.Headless.Executable.Models.Genesis
                 initialDepositList = config.Value.InitialCurrencyDeposit;
             }
 
-    #pragma warning disable CS0618
+#pragma warning disable CS0618
             // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
             currency = Currency.Legacy("NCG", 2, minters: config.Value.AllowMint ? null : ImmutableHashSet.Create(initialMinter.Address));
-    #pragma warning restore CS0618
+#pragma warning restore CS0618
         }
 
         private static void ProcessAdmin(
@@ -266,7 +266,7 @@ namespace NineChronicles.Headless.Executable.Models.Genesis
                 }
             }
         }
-        
+
         /// <summary>
         /// Actions to be appended on end of transaction actions.
         /// You can add actions code to this method before generate genesis block.

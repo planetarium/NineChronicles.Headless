@@ -649,7 +649,7 @@ namespace Libplanet.Headless.Hosting
                     return Task.Run(() => DownloadPlugin(pluginPath)).GetAwaiter().GetResult();
                 }
 
-                return pluginPath;   
+                return pluginPath;
             }
 
             string RenderPluginPath(string pluginPath)
@@ -687,7 +687,7 @@ namespace Libplanet.Headless.Hosting
 
             if (configuration.Version == 1)
             {
-                return ResolvePluginPathImpl(configuration.PluginPath);                
+                return ResolvePluginPathImpl(configuration.PluginPath);
             }
 
             if (configuration.Version == 2)
