@@ -458,6 +458,10 @@ namespace NineChronicles.Headless.Executable
                         .WithTracing(
                             builder => builder
                                 .AddSource("Lib9c.Action.HackAndSlash")
+                                .AddSource("Lib9c.Action.Stake")
+                                .AddSource("Lib9c.Model.Guild.GuildParticipant")
+                                .AddSource("Lib9c.Delegation.Delegatee")
+                                .AddSource("Lib9c.Delegation.Delegator")
                                 .AddSource("Libplanet.Action.State")
                                 .AddSource("Libplanet.Blockchain.BlockChainStates")
                                 .AddSource("NineChronicles.Headless.GraphTypes.StandaloneQuery")
