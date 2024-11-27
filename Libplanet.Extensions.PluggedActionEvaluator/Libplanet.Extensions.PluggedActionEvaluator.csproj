@@ -7,9 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Lib9c\.Libplanet\src\Libplanet\Libplanet.csproj" />
     <ProjectReference Include="..\Lib9c\.Lib9c.Plugin.Shared\Lib9c.Plugin.Shared.csproj" />
     <ProjectReference Include="..\Lib9c\.Libplanet.Extensions.ActionEvaluatorCommonComponents\Libplanet.Extensions.ActionEvaluatorCommonComponents.csproj" />
   </ItemGroup>
-  
+
+  <ItemGroup>
+    <PackageReference Include="Libplanet.Action" Version="$(LibplanetVersion)" />
+  </ItemGroup>
+
 </Project>
