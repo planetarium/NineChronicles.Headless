@@ -215,6 +215,8 @@ namespace NineChronicles.Headless.Executable
             [Option("config", new[] { 'C' },
                 Description = "Absolute path of \"appsettings.json\" file to provide headless configurations.")]
             string? configPath = "appsettings.json",
+            bool odin = false,
+            bool heimdall = false,
             [Option(Description = "[DANGER] Turn on RemoteKeyValueService to debug.")]
             bool remoteKeyValueService = false,
             [Ignore] CancellationToken? cancellationToken = null
@@ -232,7 +234,16 @@ namespace NineChronicles.Headless.Executable
             }
             else
             {
-                configurationBuilder.AddJsonFile(configPath!)
+                var finalConfigPath = (odin, heimdall) switch
+                {
+                    (true, false) => "appsettings.odin.json",
+                    (false, true) => "appsettings.heimdall.json",
+                    (true, true) =>
+                        throw new ArgumentException("You must provide only one of the --odin and --heimdall options."),
+                    _ => configPath
+                };
+
+                configurationBuilder.AddJsonFile(finalConfigPath!)
                     .AddEnvironmentVariables();
             }
 
@@ -268,7 +279,7 @@ namespace NineChronicles.Headless.Executable
                     ActionEvaluatorType.ForkableActionEvaluator => new ForkableActionEvaluatorConfiguration
                     {
                         Pairs = (configuration.GetSection("Pairs") ??
-                                 throw new KeyNotFoundException()).GetChildren().Select(pair =>
+                            throw new KeyNotFoundException()).GetChildren().Select(pair =>
                         {
                             var range = new ForkableActionEvaluatorRange();
                             pair.Bind("Range", range);
@@ -280,6 +291,7 @@ namespace NineChronicles.Headless.Executable
                     },
                     ActionEvaluatorType.PluggedActionEvaluator => new PluggedActionEvaluatorConfiguration
                     {
+                        Version = configuration.GetValue<long>("Version", PluggedActionEvaluatorConfiguration.DefaultVersion),
                         PluginPath = configuration.GetValue<string>("PluginPath"),
                     },
                     _ => throw new InvalidOperationException("Unexpected type."),
