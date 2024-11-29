@@ -797,6 +797,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                                 new ActionBase[]
                                 {
                                     new InitializeStates(
+                                        validatorSet: new ValidatorSet(new List<Validator>
+                                        {
+                                            new Validator(ProposerPrivateKey.PublicKey, 10_000_000_000_000_000_000)
+                                        }),
                                         rankingState: new RankingState0(),
                                         shopState: new ShopState(),
                                         gameConfigState: new GameConfigState(_sheets[nameof(GameConfigSheet)]),

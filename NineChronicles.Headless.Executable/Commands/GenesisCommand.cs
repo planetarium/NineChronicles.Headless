@@ -11,6 +11,7 @@ using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
 using Libplanet.Types.Blocks;
+using Libplanet.Types.Consensus;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
@@ -168,7 +169,8 @@ namespace NineChronicles.Headless.Executable.Commands
                 initialValidatorSet.Add(new Validator
                 {
                     PublicKey = initialValidator.PublicKey.ToString(),
-                    Power = 1,
+                    // To act as a validator, you need at least 10 GuildGold, and since the DecimalPlaces of GuildGold are 18 digits, it is recommended to specify a value around 10^20.
+                    Power = "10000000000000000000",
                 }
                 );
             }
@@ -263,20 +265,33 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 ProcessInitialPledgeConfigs(genesisConfig.InitialPledgeConfigs, out var initialPledges);
 
+                ISet<Address>? assetMinters = null;
+                if (genesisConfig.AssetMinters is not null)
+                {
+                    foreach (var address in genesisConfig.AssetMinters)
+                    {
+                        _console.Out.WriteLine($"Preparing asset minter address {address}...");
+                    }
+                    assetMinters = genesisConfig.AssetMinters.ToHashSet();
+                }
+
                 // Mine genesis block
                 _console.Out.WriteLine("\nMining genesis block...\n");
                 Block block = BlockHelper.ProposeGenesisBlock(
+                    validatorSet: new ValidatorSet(
+                        initialValidatorSet.Select(
+                            v => new Libplanet.Types.Consensus.Validator(
+                                new PublicKey(ByteUtil.ParseHex(v.PublicKey)),
+                                BigInteger.Parse(v.Power))).ToList()),
                     tableSheets: tableSheets,
                     goldDistributions: initialDepositList.ToArray(),
                     pendingActivationStates: Array.Empty<PendingActivationState>(),
                     // FIXME Should remove default value after fixing parameter type on Lib9c side.
                     adminState: adminState ?? new AdminState(default, 0L),
                     privateKey: initialMinter,
-                    initialValidators: initialValidatorSet.ToDictionary(
-                        item => new PublicKey(ByteUtil.ParseHex(item.PublicKey)),
-                        item => new BigInteger(item.Power)),
                     actionBases: adminMeads.Concat(initialMeads).Concat(initialPledges).Concat(GetAdditionalActionBases()),
-                    goldCurrency: currency
+                    goldCurrency: currency,
+                    assetMinters: assetMinters
                 );
 
                 Lib9cUtils.ExportBlock(block, "genesis-block");
@@ -397,7 +412,7 @@ namespace NineChronicles.Headless.Executable.Commands
         {
             public string PublicKey { get; set; }
 
-            public long Power { get; set; }
+            public string Power { get; set; }
         }
 
         [Serializable]
@@ -454,6 +469,8 @@ namespace NineChronicles.Headless.Executable.Commands
             public List<MeadConfig>? InitialMeadConfigs { get; set; }
 
             public List<PledgeConfig>? InitialPledgeConfigs { get; set; }
+
+            public List<Address>? AssetMinters { get; set; }
         }
 #pragma warning restore S3459
     }

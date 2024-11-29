@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Numerics;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
@@ -11,20 +10,24 @@ using GraphQL.Execution;
 using GraphQL.NewtonsoftJson;
 using Lib9c;
 using Libplanet.Action;
-using Libplanet.Action.Sys;
+using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
 using Libplanet.Store;
 using Libplanet.Store.Trie;
+using Libplanet.Types.Assets;
 using Libplanet.Types.Blocks;
 using Libplanet.Types.Consensus;
 using Libplanet.Types.Tx;
 using Nekoyume.Action;
 using Nekoyume.Action.Loader;
 using Nekoyume.Blockchain.Policy;
+using Nekoyume.Model.State;
+using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common;
+using NineChronicles.Headless.Tests.Common.Actions;
 using NineChronicles.Headless.Utils;
 using Xunit;
 using static NineChronicles.Headless.NCActionUtils;
@@ -38,6 +41,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         private readonly IStateStore _stateStore;
         private readonly NineChroniclesNodeService _service;
         private readonly PrivateKey _proposer = new PrivateKey();
+        private readonly Dictionary<string, string> _sheets = TableSheetsImporter.ImportSheets();
 
         public TransactionHeadlessQueryTest()
         {
@@ -48,14 +52,25 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 policyActionsRegistry: policy.PolicyActionsRegistry,
                 _stateStore,
                 new NCActionLoader());
+            var validatorSet = new ValidatorSet(
+                new[] { new Validator(_proposer.PublicKey, 10_000_000_000_000_000_000) }.ToList());
+            var gameConfigState = new GameConfigState(_sheets[nameof(GameConfigSheet)]);
+            var redeemCodeListSheet = new RedeemCodeListSheet();
             Block genesisBlock = BlockChain.ProposeGenesisBlock(
                 transactions: new IAction[]
                     {
-                        new Initialize(
-                            new ValidatorSet(
-                                new[] { new Validator(_proposer.PublicKey, BigInteger.One) }
-                                    .ToList()),
-                            states: ImmutableDictionary.Create<Address, IValue>())
+                        new InitializeStates(
+                            validatorSet: validatorSet,
+                            rankingState: new RankingState0(),
+                            shopState: new ShopState(),
+                            tableSheets: _sheets,
+                            gameConfigState: gameConfigState,
+                            redeemCodeState: new RedeemCodeState(redeemCodeListSheet),
+                            adminAddressState: null,
+                            activatedAccountsState: new ActivatedAccountsState(ImmutableHashSet<Address>.Empty),
+                            goldCurrencyState: new GoldCurrencyState(Currency.Uncapped("ncg", 2, null), 0),
+                            goldDistributions: Array.Empty<GoldDistribution>(),
+                            pendingActivationStates: Array.Empty<PendingActivationState>())
                     }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa.PlainValue }))
                     .ToImmutableList(),
                 privateKey: new PrivateKey()
@@ -428,7 +443,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                             hash,
                             DateTimeOffset.UtcNow,
                             validator.PublicKey,
-                            null,
+                            10_000_000_000_000_000_000,
                             VoteFlag.PreCommit).Sign(validator)))
                 : (BlockCommit?)null;
         }

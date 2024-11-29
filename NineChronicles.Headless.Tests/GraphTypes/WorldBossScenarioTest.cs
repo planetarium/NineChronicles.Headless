@@ -9,6 +9,7 @@ using Libplanet.Action.State;
 using Libplanet.Crypto;
 using Libplanet.Mocks;
 using Libplanet.Types.Assets;
+using Libplanet.Types.Consensus;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
@@ -66,6 +67,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             };
             _stateContext = new StateContext(GetMockState(), 1L, new StateMemoryCache());
             var initializeStates = new InitializeStates(
+                validatorSet: new ValidatorSet(new List<Validator> { new Validator(new PrivateKey().PublicKey, BigInteger.One) }),
                 rankingState: new RankingState0(),
                 shopState: new ShopState(),
                 gameConfigState: new GameConfigState(),
