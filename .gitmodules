@@ -4,3 +4,7 @@
 [submodule "NineChronicles.RPC.Shared"]
 	path = NineChronicles.RPC.Shared
 	url = https://github.com/planetarium/NineChronicles.RPC.Shared.git
+[submodule "Libplanet"]
+	path = Libplanet
+	url = https://github.com/planetarium/libplanet.git
+	branch = public-validator-test

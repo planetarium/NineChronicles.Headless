@@ -1,5 +1,14 @@
 <Project>
     <PropertyGroup>
         <LibplanetVersion>5.4.1</LibplanetVersion>
+
+        <!-- Fill with Libplanet's absolute path to debug with local Libplanet.
+             Example: $(MSBuildThisFileDirectory).Libplanet -->
+        <LibplanetDirectory>$(MSBuildThisFileDirectory)Libplanet</LibplanetDirectory>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <UseLocalLibplanet Condition="Exists('$(LibplanetDirectory)')">true</UseLocalLibplanet>
+        <UseLocalLibplanet Condition=" '$(UseLocalLibplanet)' == '' ">false</UseLocalLibplanet>
     </PropertyGroup>
 </Project>
