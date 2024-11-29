@@ -52,8 +52,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libplanet.Extensions.Plugge
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lib9c.Plugin.Shared", "Lib9c\.Lib9c.Plugin.Shared\Lib9c.Plugin.Shared.csproj", "{3D32DA34-E619-429F-8421-848FF4F14417}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NineChronicles.Headless.Executor", "NineChronicles.Headless.Executor\NineChronicles.Headless.Executor.csproj", "{59AD477A-B23C-4E0B-AA26-A528B3BC5234}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -463,29 +461,9 @@ Global
 		{3D32DA34-E619-429F-8421-848FF4F14417}.Release|x64.Build.0 = Release|Any CPU
 		{3D32DA34-E619-429F-8421-848FF4F14417}.Release|x86.ActiveCfg = Release|Any CPU
 		{3D32DA34-E619-429F-8421-848FF4F14417}.Release|x86.Build.0 = Release|Any CPU
-		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Debug|x64.Build.0 = Debug|Any CPU
-		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Debug|x86.Build.0 = Debug|Any CPU
-		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.DevEx|Any CPU.ActiveCfg = Debug|Any CPU
-		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.DevEx|Any CPU.Build.0 = Debug|Any CPU
-		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.DevEx|x64.ActiveCfg = Debug|Any CPU
-		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.DevEx|x64.Build.0 = Debug|Any CPU
-		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.DevEx|x86.ActiveCfg = Debug|Any CPU
-		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.DevEx|x86.Build.0 = Debug|Any CPU
-		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Release|Any CPU.Build.0 = Release|Any CPU
-		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Release|x64.ActiveCfg = Release|Any CPU
-		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Release|x64.Build.0 = Release|Any CPU
-		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Release|x86.ActiveCfg = Release|Any CPU
-		{59AD477A-B23C-4E0B-AA26-A528B3BC5234}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4A2DD82-CCC1-4D74-88FF-91BBEBB5A47F}
