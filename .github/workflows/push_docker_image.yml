@@ -76,14 +76,13 @@ jobs:
             --password '${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}'
       - name: push git tagged version
         run: |
-          docker pull ${{ matrix.docker.repo }}:git-${{ github.sha }}
           if [[ -z "${{ github.event.inputs.imageTag }}" ]]; then
             export IMAGE_TAG=${{ github.ref_name }}
           else
             export IMAGE_TAG=${{ github.event.inputs.imageTag }}
           fi
 
-          docker tag \
-            ${{ matrix.docker.repo }}:git-${{ github.sha }} \
-            ${{ matrix.docker.repo }}:$IMAGE_TAG
-          docker push ${{ matrix.docker.repo }}:$IMAGE_TAG
+          docker buildx imagetools create \
+            --progress=plain \
+            --tag ${{ matrix.docker.repo }}:$IMAGE_TAG \
+            ${{ matrix.docker.repo }}:git-${{ github.sha }}
