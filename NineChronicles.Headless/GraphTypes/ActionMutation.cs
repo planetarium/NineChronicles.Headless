@@ -601,12 +601,12 @@ namespace NineChronicles.Headless.GraphTypes
             );
 
             Field<NonNullGraphType<TxIdType>>("stake",
-                description: "Claim reward for self delegation of validator.",
+                description: "Stake the NCG.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "amount",
-                        Description = "Amount to stake."
+                        Description = "Total amount of NCG to stake."
                     }
                 ),
                 resolve: context =>
@@ -731,12 +731,12 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
             Field<NonNullGraphType<TxIdType>>("delegateValidator",
-                description: "Unjail validator",
+                description: "Delegate Validator",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<BigIntGraphType>>
                     {
                         Name = "amount",
-                        Description = "Amount of guild gold to stake."
+                        Description = "Amount of guild gold to delegate."
                     }
                 ),
                 resolve: context =>
@@ -762,6 +762,79 @@ namespace NineChronicles.Headless.GraphTypes
                     catch (Exception e)
                     {
                         var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+            Field<NonNullGraphType<TxIdType>>("undelegateValidator",
+                description: "Undelegate validator",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "share",
+                        Description = "Share to undelegate."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        var shareString = context.GetArgument<string>("share");
+                        var share = BigInteger.Parse(shareString);
+                        var actions = new[] { new UndelegateValidator(share) };
+                        Transaction tx = blockChain.MakeTransaction(
+                            service.MinerPrivateKey,
+                            actions,
+                            Currencies.Mead * 1,
+                            1L);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+            Field<NonNullGraphType<TxIdType>>("claimStakeReward",
+                description: "Claim Stake Reward",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "Avatar address to claim stake reward."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        Address avatarAddress = context.GetArgument<Address>("avatarAddress");
+                        var actions = new[] { new ClaimStakeReward(avatarAddress) };
+                        Transaction tx = blockChain.MakeTransaction(
+                            service.MinerPrivateKey,
+                            actions,
+                            Currencies.Mead * 1,
+                            1L);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpe치cted exception occurred during {typeof(ActionMutation)}: {e}";
                         context.Errors.Add(new ExecutionError(msg, e));
                         throw;
                     }
