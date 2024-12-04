@@ -331,6 +331,7 @@ namespace NineChronicles.Headless.Executable
             try
             {
                 IHostBuilder hostBuilder = Host.CreateDefaultBuilder();
+                hostBuilder.ConfigureAppConfiguration(builder => builder.AddConfiguration(configuration));
 
                 var standaloneContext = new StandaloneContext
                 {
