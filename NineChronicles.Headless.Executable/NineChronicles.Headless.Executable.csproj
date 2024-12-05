@@ -23,7 +23,6 @@
     <PackageReference Include="GraphQL.Client" Version="5.1.1" />
     <PackageReference Include="GraphQL.Client.Serializer.SystemTextJson" Version="5.1.1" />
     <PackageReference Include="Destructurama.Attributed" Version="2.0.0" />
-    <PackageReference Include="Libplanet.Extensions.Cocona" Version="$(LibplanetVersion)" />
     <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.9.0" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.9.0" />
     <PackageReference Include="OpenTelemetry.Instrumentation.GrpcNetClient" Version="1.9.0-beta.1" />
@@ -45,6 +44,14 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="!$(UseLocalLibplanet)">
+    <PackageReference Include="Libplanet.Extensions.Cocona" Version="$(LibplanetVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(UseLocalLibplanet)">
+    <ProjectReference Include="$(LibplanetDirectory)\tools\Libplanet.Extensions.Cocona\Libplanet.Extensions.Cocona.csproj" />
   </ItemGroup>
 
   <ItemGroup>
