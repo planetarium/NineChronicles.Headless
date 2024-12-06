@@ -772,6 +772,25 @@ namespace NineChronicles.Headless.GraphTypes
                     return share.ToString();
                 }
             );
+
+            Field<ValidatorType>(
+                name: "validator",
+                description: "State for validator.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "validatorAddress",
+                        Description = "Address of validator."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var validatorAddress = context.GetArgument<Address>("validatorAddress");
+                    var repository = new ValidatorRepository(new World(context.Source.WorldState), new HallowActionContext { });
+                    var delegatee = repository.GetValidatorDelegatee(validatorAddress);
+                    return ValidatorType.FromDelegatee(delegatee);
+                }
+            );
         }
 
         public static List<RuneOptionSheet.Row.RuneOptionInfo> GetRuneOptions(
