@@ -68,7 +68,7 @@ namespace Libplanet.Headless.Hosting
 
         public TimeSpan TipTimeout { get; set; } = TimeSpan.FromSeconds(60);
 
-        public ContextTimeoutOption ContextTimeoutOption { get; set; }
+        public ContextOption ContextOption { get; set; }
 
         public int DemandBuffer { get; set; } = 1150;
 
