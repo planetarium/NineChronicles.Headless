@@ -410,6 +410,7 @@ namespace NineChronicles.Headless.Executable
                         consensusSeedStrings: headlessConfig.ConsensusSeedStrings,
                         consensusTargetBlockIntervalMilliseconds: headlessConfig.ConsensusTargetBlockIntervalMilliseconds,
                         consensusProposeTimeoutBase: headlessConfig.ConsensusProposeTimeoutBase,
+                        consensusEnterPreCommitDelay: headlessConfig.ConsensusEnterPreCommitDelay,
                         maximumPollPeers: headlessConfig.MaximumPollPeers,
                         actionEvaluatorConfiguration: actionEvaluatorConfiguration
                     );
