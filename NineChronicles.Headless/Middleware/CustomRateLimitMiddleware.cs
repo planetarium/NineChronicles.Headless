@@ -83,7 +83,6 @@ namespace NineChronicles.Headless.Middleware
                     if (scheme.Equals("Bearer", System.StringComparison.OrdinalIgnoreCase))
                     {
                         _tokenHandler.ValidateToken(token, _validationParams, out _);
-                        _logger.Information("[IP-RATE-LIMITER] Valid JWT token provided. Updating ClientIp to whitelisted IP.");
                         identity.ClientIp = _whitelistedIp;
                     }
                 }

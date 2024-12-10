@@ -85,7 +85,6 @@ namespace NineChronicles.Headless.Middleware
                         if (scheme.Equals("Bearer", System.StringComparison.OrdinalIgnoreCase))
                         {
                             _tokenHandler.ValidateToken(token, _validationParams, out _);
-                            _logger.Information("[GRAPHQL-MULTI-ACCOUNT-MANAGER] Valid JWT token provided. Updating ClientIp to whitelisted IP.");
                             await _next(context);
                             return;
                         }
@@ -210,13 +209,6 @@ namespace NineChronicles.Headless.Middleware
                     "[GRAPHQL-MULTI-ACCOUNT-MANAGER] Creating a new list for IP: {IP}",
                     ip);
                 _ipSignerList[ip] = new HashSet<Address>();
-            }
-            else
-            {
-                _logger.Information(
-                    "[GRAPHQL-MULTI-ACCOUNT-MANAGER] List already created for IP: {IP} Count: {Count}",
-                    ip,
-                    _ipSignerList[ip].Count);
             }
 
             _ipSignerList[ip].Add(agent);
