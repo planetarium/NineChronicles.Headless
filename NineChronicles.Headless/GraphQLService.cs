@@ -202,11 +202,14 @@ namespace NineChronicles.Headless
                                         "Admin"));
 
                             // FIXME: Use ConfigurationException after bumping to .NET 8 or later.
-                            options.AddPolicy(
-                                JwtPolicyKey,
-                                p =>
-                                    p.RequireClaim("iss",
-                                        jwtOptions["Issuer"] ?? throw new ArgumentException("jwtOptions[\"Issuer\"] is null.")));
+                            if (Convert.ToBoolean(Configuration.GetSection("Jwt")["EnableJwtAuthentication"]))
+                            {
+                                options.AddPolicy(
+                                    JwtPolicyKey,
+                                    p =>
+                                        p.RequireClaim("iss",
+                                            jwtOptions["Issuer"] ?? throw new ArgumentException("jwtOptions[\"Issuer\"] is null.")));
+                            }
                         });
 
                 services.AddGraphTypes();
@@ -220,6 +223,17 @@ namespace NineChronicles.Headless
                 }
 
                 // Capture requests
+                app.UseMiddleware<HttpCaptureMiddleware>();
+
+                app.UseRouting();
+                app.UseAuthorization();
+                if (Convert.ToBoolean(Configuration.GetSection("IpRateLimiting")["EnableEndpointRateLimiting"]))
+                {
+                    app.UseMiddleware<CustomRateLimitMiddleware>();
+                    app.UseMiddleware<IpBanMiddleware>();
+                    app.UseMvc();
+                }
+
                 if (Convert.ToBoolean(Configuration.GetSection("MultiAccountManaging")["EnableManaging"]))
                 {
                     ConcurrentDictionary<string, HashSet<Address>> ipSignerList = new();
@@ -229,7 +243,6 @@ namespace NineChronicles.Headless
                         Publisher);
                 }
 
-                app.UseMiddleware<HttpCaptureMiddleware>();
 
                 app.UseMiddleware<LocalAuthenticationMiddleware>();
                 if (Convert.ToBoolean(Configuration.GetSection("Jwt")["EnableJwtAuthentication"]))
@@ -244,15 +257,6 @@ namespace NineChronicles.Headless
                 else
                 {
                     app.UseCors("AllowAllOrigins");
-                }
-
-                app.UseRouting();
-                app.UseAuthorization();
-                if (Convert.ToBoolean(Configuration.GetSection("IpRateLimiting")["EnableEndpointRateLimiting"]))
-                {
-                    app.UseMiddleware<CustomRateLimitMiddleware>();
-                    app.UseMiddleware<IpBanMiddleware>();
-                    app.UseMvc();
                 }
 
                 app.UseEndpoints(endpoints =>
