@@ -13,6 +13,8 @@ using Nekoyume.TableData;
 using Nekoyume.Action.ValidatorDelegation;
 using Nekoyume.Action.Guild.Migration;
 using Lib9c;
+using Libplanet.Blockchain;
+using Nekoyume.ValidatorDelegation;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -596,6 +598,23 @@ namespace NineChronicles.Headless.GraphTypes
                         context,
                         new FixToRefundFromNonValidator(targets));
                 });
+            Field<ByteStringType>(
+                name: "delegateValidator",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<BigIntGraphType>>
+                    {
+                        Name = "amount",
+                        Description = "Amount of guild gold to delegate."
+                    }
+                ),
+                resolve: context =>
+                {
+                    BigInteger amount = context.GetArgument<BigInteger>("amount");
+                    var fav = new FungibleAssetValue(ValidatorDelegatee.ValidatorDelegationCurrency, amount, 0);
+                    var action = new DelegateValidator(fav);
+                    return Encode(context, action);
+                }
+            );
 
             RegisterHackAndSlash();
             RegisterHackAndSlashSweep();
