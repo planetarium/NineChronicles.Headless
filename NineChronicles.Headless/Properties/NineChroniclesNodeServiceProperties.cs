@@ -91,7 +91,8 @@ namespace NineChronicles.Headless.Properties
                 string? consensusPrivateKeyString = null,
                 string[]? consensusSeedStrings = null,
                 double? consensusTargetBlockIntervalMilliseconds = null,
-                int? consensusProposeSecondBase = null,
+                int? consensusProposeTimeoutBase = null,
+                int? consensusEnterPreCommitDelay = null,
                 IActionEvaluatorConfiguration? actionEvaluatorConfiguration = null)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
@@ -108,9 +109,10 @@ namespace NineChronicles.Headless.Properties
             var peers = peerStrings.Select(PropertyParser.ParsePeer).ToImmutableArray();
             var consensusSeeds = consensusSeedStrings?.Select(PropertyParser.ParsePeer).ToImmutableList();
 
-            var consensusContextTimeoutOption = consensusProposeSecondBase.HasValue
-                ? new ContextTimeoutOption(consensusProposeSecondBase.Value)
-                : new ContextTimeoutOption();
+            var defaultContextOption = new ContextOption();
+            var consensusContextOption = new ContextOption(
+                proposeTimeoutBase: consensusProposeTimeoutBase ?? defaultContextOption.ProposeTimeoutBase,
+                enterPreCommitDelay: consensusEnterPreCommitDelay ?? defaultContextOption.EnterPreCommitDelay);
 
             return new LibplanetNodeServiceProperties
             {
@@ -147,7 +149,7 @@ namespace NineChronicles.Headless.Properties
                 ConsensusSeeds = consensusSeeds,
                 ConsensusPrivateKey = consensusPrivateKey,
                 ConsensusTargetBlockIntervalMilliseconds = consensusTargetBlockIntervalMilliseconds,
-                ContextTimeoutOption = consensusContextTimeoutOption,
+                ContextOption = consensusContextOption,
                 ActionEvaluatorConfiguration = actionEvaluatorConfiguration ?? new DefaultActionEvaluatorConfiguration(),
             };
         }
