@@ -15,6 +15,8 @@ using Nekoyume.Action.ValidatorDelegation;
 using System.Numerics;
 using Nekoyume.Action.Guild.Migration;
 using Nekoyume.ValidatorDelegation;
+using Nekoyume.Action.Guild;
+using Nekoyume.TypedAddress;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -870,6 +872,290 @@ namespace NineChronicles.Headless.GraphTypes
                         }
 
                         var actions = new[] { new SetValidatorCommission() };
+                        Transaction tx = blockChain.MakeTransaction(
+                            service.MinerPrivateKey,
+                            actions,
+                            Currencies.Mead * 1,
+                            1L);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+            Field<NonNullGraphType<TxIdType>>("makeGuild",
+                description: "Make a guild",
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        var actions = new[] { new MakeGuild() };
+                        Transaction tx = blockChain.MakeTransaction(
+                            service.MinerPrivateKey,
+                            actions,
+                            Currencies.Mead * 1,
+                            1L);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+            Field<NonNullGraphType<TxIdType>>("removeGuild",
+                description: "Remove a guild",
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        var actions = new[] { new RemoveGuild() };
+                        Transaction tx = blockChain.MakeTransaction(
+                            service.MinerPrivateKey,
+                            actions,
+                            Currencies.Mead * 1,
+                            1L);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+            Field<NonNullGraphType<TxIdType>>("joinGuild",
+                description: "Join a guild",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "guildAddress",
+                        Description = "Guild address to join."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        var guildAddress = context.GetArgument<Address>("guildAddress");
+                        var actions = new[] { new JoinGuild(new GuildAddress(guildAddress)) };
+                        Transaction tx = blockChain.MakeTransaction(
+                            service.MinerPrivateKey,
+                            actions,
+                            Currencies.Mead * 1,
+                            1L);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+            Field<NonNullGraphType<TxIdType>>("quitGuild",
+                description: "Quit a guild",
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        var actions = new[] { new QuitGuild() };
+                        Transaction tx = blockChain.MakeTransaction(
+                            service.MinerPrivateKey,
+                            actions,
+                            Currencies.Mead * 1,
+                            1L);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+            Field<NonNullGraphType<TxIdType>>("moveGuild",
+                description: "Move a guild",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "guildAddress",
+                        Description = "Guild address to move."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        var guildAddress = context.GetArgument<Address>("guildAddress");
+                        var actions = new[] { new MoveGuild(new GuildAddress(guildAddress)) };
+                        Transaction tx = blockChain.MakeTransaction(
+                            service.MinerPrivateKey,
+                            actions,
+                            Currencies.Mead * 1,
+                            1L);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+            Field<NonNullGraphType<TxIdType>>("banGuildMember",
+                description: "Ban a guild member",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "agentAddress",
+                        Description = "Agent address to ban."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        var agentAddress = context.GetArgument<Address>("agentAddress");
+                        var actions = new[] { new BanGuildMember(new AgentAddress(agentAddress)) };
+                        Transaction tx = blockChain.MakeTransaction(
+                            service.MinerPrivateKey,
+                            actions,
+                            Currencies.Mead * 1,
+                            1L);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+            Field<NonNullGraphType<TxIdType>>("unbanGuildMember",
+                description: "Unban a guild member",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "agentAddress",
+                        Description = "Agent address to unban."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        var agentAddress = context.GetArgument<Address>("agentAddress");
+                        var actions = new[] { new UnbanGuildMember(new AgentAddress(agentAddress)) };
+                        Transaction tx = blockChain.MakeTransaction(
+                            service.MinerPrivateKey,
+                            actions,
+                            Currencies.Mead * 1,
+                            1L);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+            Field<NonNullGraphType<TxIdType>>("claimReward",
+                description: "Claim reward",
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        var actions = new[] { new ClaimReward() };
+                        Transaction tx = blockChain.MakeTransaction(
+                            service.MinerPrivateKey,
+                            actions,
+                            Currencies.Mead * 1,
+                            1L);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        throw;
+                    }
+                }
+            );
+            Field<NonNullGraphType<TxIdType>>("claimGuildReward",
+                description: "Claim guild reward",
+                resolve: context =>
+                {
+                    try
+                    {
+                        BlockChain? blockChain = service.BlockChain;
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        var actions = new[] { new ClaimGuildReward() };
                         Transaction tx = blockChain.MakeTransaction(
                             service.MinerPrivateKey,
                             actions,
