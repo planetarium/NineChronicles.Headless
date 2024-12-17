@@ -34,7 +34,6 @@
     <PackageReference Include="GraphQL.Server.Transports.Subscriptions.WebSockets" Version="5.1.1" />
     <PackageReference Include="GraphQL.Server.Ui.Playground" Version="5.1.1" />
     <PackageReference Include="GraphQL.SystemTextJson" Version="4.7.1" />
-    <PackageReference Include="Libplanet.Store.Remote" Version="$(LibplanetVersion)" />
     <PackageReference Include="MagicOnion" Version="6.1.3" />
     <PackageReference Include="MagicOnion.Abstractions" Version="6.1.3" />
     <PackageReference Include="MagicOnion.Server" Version="6.1.3" />
@@ -62,6 +61,15 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.0" />
+  </ItemGroup>
+
+
+  <ItemGroup Condition="!$(UseLocalLibplanet)">
+    <PackageReference Include="Libplanet.Store.Remote" Version="$(LibplanetVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(UseLocalLibplanet)">
+    <ProjectReference Include="$(LibplanetDirectory)\src\Libplanet.Store.Remote\Libplanet.Store.Remote.csproj" />
   </ItemGroup>
 
   <ItemGroup>
