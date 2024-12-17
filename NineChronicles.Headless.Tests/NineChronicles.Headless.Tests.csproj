@@ -25,7 +25,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Libplanet.Mocks" Version="$(LibplanetVersion)" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
     <PackageReference Include="Moq" Version="4.20.70" />
     <PackageReference Include="SonarAnalyzer.CSharp" Version="8.49.0.57237">
@@ -39,6 +38,14 @@
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3" />
     <PackageReference Include="coverlet.collector" Version="3.2.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="!$(UseLocalLibplanet)">
+    <PackageReference Include="Libplanet.Mocks" Version="$(LibplanetVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(UseLocalLibplanet)">
+    <ProjectReference Include="$(LibplanetDirectory)\test\Libplanet.Mocks\Libplanet.Mocks.csproj" />
   </ItemGroup>
 
   <ItemGroup>
