@@ -721,7 +721,7 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            Field<AddressType>(
+            Field<GuildType>(
                 name: "guild",
                 description: "State for guild.",
                 arguments: new QueryArguments(
@@ -740,9 +740,13 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     var repository = new GuildRepository(new World(context.Source.WorldState), new HallowActionContext { });
-                    var joinedGuild = (Address?)repository.GetJoinedGuild(agentAddress);
+                    if (repository.GetJoinedGuild(agentAddress) is { } guildAddress)
+                    {
+                        var guild = repository.GetGuild(guildAddress);
+                        return GuildType.FromDelegatee(guild);
+                    }
 
-                    return joinedGuild;
+                    return null;
                 }
             );
 
