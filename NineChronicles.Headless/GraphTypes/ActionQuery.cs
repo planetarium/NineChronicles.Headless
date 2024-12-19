@@ -577,6 +577,12 @@ namespace NineChronicles.Headless.GraphTypes
                     new MigratePlanetariumGuild()));
 
             Field<ByteStringType>(
+                name: "migratePlanetariumValidator",
+                resolve: context => Encode(
+                    context,
+                    new MigratePlanetariumValidator()));
+
+            Field<ByteStringType>(
                 name: "fixToRefundFromNonValidator",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>
