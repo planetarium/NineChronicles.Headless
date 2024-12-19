@@ -39,6 +39,16 @@ namespace NineChronicles.Headless.Middleware
             }
         }
 
+        public static bool IsIpBanned(string ip)
+        {
+            if (_bannedIps.ContainsKey(ip))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         public Task InvokeAsync(HttpContext context)
         {
             var remoteIp = context.Connection.RemoteIpAddress!.ToString();
