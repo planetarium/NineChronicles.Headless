@@ -18,6 +18,7 @@ namespace NineChronicles.Headless.Middleware
         private readonly IRateLimitConfiguration _config;
         private readonly IOptions<CustomIpRateLimitOptions> _options;
         private readonly string _whitelistedIp;
+        private readonly int _banCount;
         private readonly System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler _tokenHandler = new();
         private readonly Microsoft.IdentityModel.Tokens.TokenValidationParameters _validationParams;
 
@@ -36,6 +37,7 @@ namespace NineChronicles.Headless.Middleware
             var issuer = jwtConfig["Issuer"] ?? "";
             var key = jwtConfig["Key"] ?? "";
             _whitelistedIp = configuration.GetSection("IpRateLimiting:IpWhitelist")?.Get<string[]>()?.FirstOrDefault() ?? "127.0.0.1";
+            _banCount = configuration.GetValue<int>("IpRateLimiting:TransactionResultsBanThresholdCount", 100);
             _validationParams = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
             {
                 ValidateIssuer = true,
@@ -70,6 +72,18 @@ namespace NineChronicles.Headless.Middleware
                 if (body.Contains("stageTransaction"))
                 {
                     identity.Path = "/graphql/stagetransaction";
+                }
+                else if (body.Contains("transactionResults"))
+                {
+                    identity.Path = "/graphql/transactionresults";
+
+                    // Check for txIds count
+                    var txIdsCount = CountTxIds(body);
+                    if (txIdsCount > _banCount)
+                    {
+                        _logger.Information($"[IP-RATE-LIMITER] Banning IP {identity.ClientIp} due to excessive txIds count: {txIdsCount}");
+                        IpBanMiddleware.BanIp(identity.ClientIp);
+                    }
                 }
             }
 
@@ -109,6 +123,54 @@ namespace NineChronicles.Headless.Middleware
             }
 
             return (headerValues[0], headerValues[1]);
+        }
+
+        private int CountTxIds(string body)
+        {
+            try
+            {
+                var json = System.Text.Json.JsonDocument.Parse(body);
+
+                // Check for txIds in query variables first
+                if (json.RootElement.TryGetProperty("variables", out var variables) &&
+                    variables.TryGetProperty("txIds", out var txIdsElement) &&
+                    txIdsElement.ValueKind == System.Text.Json.JsonValueKind.Array)
+                {
+                    // Count from variables
+                    return txIdsElement.GetArrayLength();
+                }
+
+                // Fallback to check the query string if variables are not set
+                if (json.RootElement.TryGetProperty("query", out var queryElement))
+                {
+                    var query = queryElement.GetString();
+                    if (!string.IsNullOrWhiteSpace(query))
+                    {
+                        // Extract txIds from the query string using regex
+                        var txIdMatches = System.Text.RegularExpressions.Regex.Matches(
+                            query, @"transactionResults\s*\(\s*txIds\s*:\s*\[(?<txIds>[^\]]*)\]"
+                        );
+
+                        if (txIdMatches.Count > 0)
+                        {
+                            // Extract the inner contents of txIds
+                            var txIdList = txIdMatches[0].Groups["txIds"].Value;
+
+                            // Count txIds using commas
+                            var txIds = txIdList.Split(',', System.StringSplitOptions.RemoveEmptyEntries | System.StringSplitOptions.TrimEntries);
+
+                            return txIds.Length;
+                        }
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                _logger.Warning("[IP-RATE-LIMITER] Error parsing request body: {Message}", ex.Message);
+            }
+
+            // Return 0 if txIds not found
+            return 0;
         }
     }
 }
