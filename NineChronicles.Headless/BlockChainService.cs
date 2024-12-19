@@ -277,7 +277,7 @@ namespace NineChronicles.Headless
             sw.Restart();
             if (addresses.Any())
             {
-                var stateRootHash = new BlockHash(stateRootHashBytes);
+                var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
                 IReadOnlyList<IValue> values = _blockChain.GetWorldState(stateRootHash).GetLegacyStates(addresses);
                 sw.Stop();
                 Log.Information("[GetSheets]Get sheet from state: {Count}, Elapsed: {Elapsed}", addresses.Count, sw.Elapsed);
