@@ -87,7 +87,8 @@ namespace NineChronicles.Headless.Executable
         public string[]? ConsensusSeedStrings { get; set; }
         public ushort? ConsensusPort { get; set; }
         public double? ConsensusTargetBlockIntervalMilliseconds { get; set; }
-        public int? ConsensusProposeSecondBase { get; set; }
+        public int? ConsensusProposeTimeoutBase { get; set; }
+        public int? ConsensusEnterPreCommitDelay { get; set; }
 
         public int? MaxTransactionPerBlock { get; set; }
 
@@ -139,7 +140,8 @@ namespace NineChronicles.Headless.Executable
             string? consensusPrivateKeyString,
             string[]? consensusSeedStrings,
             double? consensusTargetBlockIntervalMilliseconds,
-            int? consensusProposeSecondBase,
+            int? consensusProposeTimeoutBase,
+            int? consensusEnterPreCommitDelay,
             int? maxTransactionPerBlock,
             bool? remoteKeyValueService
         )
@@ -190,7 +192,8 @@ namespace NineChronicles.Headless.Executable
             ConsensusSeedStrings = consensusSeedStrings ?? ConsensusSeedStrings;
             ConsensusPrivateKeyString = consensusPrivateKeyString ?? ConsensusPrivateKeyString;
             ConsensusTargetBlockIntervalMilliseconds = consensusTargetBlockIntervalMilliseconds ?? ConsensusTargetBlockIntervalMilliseconds;
-            ConsensusProposeSecondBase = consensusProposeSecondBase ?? ConsensusProposeSecondBase;
+            ConsensusProposeTimeoutBase = consensusProposeTimeoutBase ?? ConsensusProposeTimeoutBase;
+            ConsensusEnterPreCommitDelay = consensusEnterPreCommitDelay ?? ConsensusEnterPreCommitDelay;
             MaxTransactionPerBlock = maxTransactionPerBlock ?? MaxTransactionPerBlock;
             RemoteKeyValueService = remoteKeyValueService ?? RemoteKeyValueService;
         }
