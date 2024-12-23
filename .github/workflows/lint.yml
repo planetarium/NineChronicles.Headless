@@ -33,4 +33,4 @@ jobs:
         steps:
             - uses: actions/checkout@v4
             - name: Check typos
-              uses: crate-ci/typos@v1.15.5
+              uses: crate-ci/typos@v1.28.4
