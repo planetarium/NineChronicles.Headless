@@ -21,6 +21,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         private readonly StringIOConsole _console;
         private readonly TxCommand _command;
         private readonly PrivateKey _privateKey;
+        private readonly Address _avatarAddress;
         private readonly BlockHash _blockHash;
 
         public TxCommandTest()
@@ -28,6 +29,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             _console = new StringIOConsole();
             _command = new TxCommand(_console);
             _privateKey = new PrivateKey();
+            _avatarAddress = new PrivateKey().Address;
             _blockHash = BlockHash.FromHashDigest(default);
         }
 
@@ -54,7 +56,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         {
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
             var actionCommand = new ActionCommand(_console);
-            actionCommand.Stake(1, filePath);
+            actionCommand.Stake(1, _avatarAddress, filePath);
             Assert_Tx(1, filePath, gas);
         }
 
