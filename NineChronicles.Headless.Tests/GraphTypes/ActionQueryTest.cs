@@ -73,7 +73,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             string query = $@"
             {{
-                stake(amount: {amount}, avatarAddress: {avatarAddress})
+                stake(amount: {amount}, avatarAddress: ""{avatarAddress.ToString()}"")
             }}";
 
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
