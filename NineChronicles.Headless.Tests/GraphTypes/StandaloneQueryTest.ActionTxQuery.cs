@@ -19,10 +19,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         {
             var publicKey = new PrivateKey().PublicKey;
             long nonce = 0;
+            var avatarAddress = new PrivateKey().Address;
             var result = await ExecuteQueryAsync($@"
 query {{
     actionTxQuery(publicKey: ""{publicKey.ToString()}"", nonce: {nonce}) {{
-        stake(amount: 100)
+        stake(amount: 100, avatarAddress: ""{avatarAddress.ToString()}"")
     }}
 }}");
             Assert.Null(result.Errors);
@@ -49,10 +50,11 @@ query {{
         {
             var publicKey = new PrivateKey().PublicKey;
             long nonce = 0;
+            var avatarAddress = new PrivateKey().Address;
             var result = await ExecuteQueryAsync($@"
 query {{
     actionTxQuery(publicKey: ""{publicKey.ToString()}"", nonce: {nonce}, timestamp: ""{timestamp}"") {{
-        stake(amount: 100)
+        stake(amount: 100, avatarAddress: ""{avatarAddress.ToString()}"")
     }}
 }}");
             Assert.Null(result.Errors);
