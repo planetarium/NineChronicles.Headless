@@ -571,35 +571,6 @@ namespace NineChronicles.Headless.GraphTypes
                     new MigrateDelegationHeight(context.GetArgument<long>("amount"))));
 
             Field<ByteStringType>(
-                name: "migratePlanetariumGuild",
-                resolve: context => Encode(
-                    context,
-                    new MigratePlanetariumGuild()));
-
-            Field<ByteStringType>(
-                name: "fixToRefundFromNonValidator",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>
-                    {
-                        Description = "List of addresses to refund",
-                        Name = "addresses",
-                    },
-                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<IntGraphType>>>>
-                    {
-                        Description = "List of amounts to refund",
-                        Name = "amounts",
-                    }),
-                resolve: context =>
-                {
-                    var addresses = context.GetArgument<List<Address>>("addresses");
-                    var amounts = context.GetArgument<List<int>>("amounts");
-                    var targets = addresses.Zip(amounts, (address, amount) => (address, amount));
-                    return Encode(
-                        context,
-                        new FixToRefundFromNonValidator(targets));
-                });
-
-            Field<ByteStringType>(
                 name: "makeGuild",
                 resolve: context => Encode(context, new MakeGuild()));
 

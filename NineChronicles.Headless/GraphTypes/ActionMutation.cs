@@ -701,34 +701,6 @@ namespace NineChronicles.Headless.GraphTypes
                     }
                 }
             );
-            Field<NonNullGraphType<TxIdType>>("migratePlanetariumGuild",
-                description: "Migrate Planetarium Guild",
-                resolve: context =>
-                {
-                    try
-                    {
-                        BlockChain? blockChain = service.BlockChain;
-                        if (blockChain is null)
-                        {
-                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
-                        }
-
-                        var actions = new[] { new MigratePlanetariumGuild() };
-                        Transaction tx = blockChain.MakeTransaction(
-                            service.MinerPrivateKey,
-                            actions,
-                            Currencies.Mead * 1,
-                            1L);
-                        return tx.Id;
-                    }
-                    catch (Exception e)
-                    {
-                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
-                        context.Errors.Add(new ExecutionError(msg, e));
-                        throw;
-                    }
-                }
-            );
             Field<NonNullGraphType<TxIdType>>("unjailValidator",
                 description: "Unjail validator",
                 resolve: context =>

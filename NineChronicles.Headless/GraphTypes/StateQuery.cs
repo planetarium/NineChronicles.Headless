@@ -770,7 +770,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var agentAddress = new AgentAddress(context.GetArgument<Address>("agentAddress"));
                     var validatorAddress = context.GetArgument<Address>("validatorAddress");
                     var repository = new ValidatorRepository(new World(context.Source.WorldState), new HallowActionContext { });
-                    var delegatee = repository.GetValidatorDelegatee(validatorAddress);
+                    var delegatee = repository.GetDelegatee(validatorAddress);
                     var share = repository.GetBond(delegatee, agentAddress).Share;
 
                     return share.ToString();
@@ -791,7 +791,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var validatorAddress = context.GetArgument<Address>("validatorAddress");
                     var repository = new ValidatorRepository(new World(context.Source.WorldState), new HallowActionContext { });
-                    var delegatee = repository.GetValidatorDelegatee(validatorAddress);
+                    var delegatee = repository.GetDelegatee(validatorAddress);
                     return ValidatorType.FromDelegatee(delegatee);
                 }
             );
