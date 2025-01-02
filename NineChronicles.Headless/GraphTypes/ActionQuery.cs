@@ -572,7 +572,17 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<ByteStringType>(
                 name: "makeGuild",
-                resolve: context => Encode(context, new MakeGuild()));
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "validatorAddress",
+                        Description = "The validator address to create a guild."
+                    }),
+                resolve: context =>
+                {
+                    var validatorAddress = context.GetArgument<Address>("validatorAddress");
+                    return Encode(context, new MakeGuild(validatorAddress));
+                });
 
             Field<ByteStringType>(
                 name: "removeGuild",
