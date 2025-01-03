@@ -734,11 +734,6 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var agentAddress = new AgentAddress(context.GetArgument<Address>("agentAddress"));
-                    if (!(context.Source.WorldState.GetAgentState(agentAddress) is { } agentState))
-                    {
-                        return null;
-                    }
-
                     var repository = new GuildRepository(new World(context.Source.WorldState), new HallowActionContext { });
                     if (repository.GetJoinedGuild(agentAddress) is { } guildAddress)
                     {
