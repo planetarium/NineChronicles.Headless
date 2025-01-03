@@ -22,6 +22,7 @@ using MagicOnion;
 using MagicOnion.Server;
 using Microsoft.Extensions.Caching.Memory;
 using Nekoyume;
+using Nekoyume.Action;
 using Nekoyume.Delegation;
 using Nekoyume.Model.Guild;
 using Nekoyume.Model.State;
@@ -485,35 +486,58 @@ namespace NineChronicles.Headless
         private static IValue GetUnbondClaimableHeight(IWorldState worldState, Address address)
         {
             var repository = new GuildRepository(new World(worldState), new HallowActionContext { });
-            var guildAddress = repository.GetGuildParticipant(address).GuildAddress;
-            var validatorAddress = repository.GetGuild(guildAddress).ValidatorAddress;
-            var guildDelegatee = repository.GetDelegatee(validatorAddress);
-            var unbondLockIn = repository.GetUnbondLockIn(guildDelegatee, address);
-            var unbondClaimableHeight = unbondLockIn.LowestExpireHeight;
-
-            return new Integer(unbondClaimableHeight);
+            try
+            {
+                var guildAddress = repository.GetGuildParticipant(address).GuildAddress;
+                var validatorAddress = repository.GetGuild(guildAddress).ValidatorAddress;
+                var guildDelegatee = repository.GetDelegatee(validatorAddress);
+                var unbondLockIn = repository.GetUnbondLockIn(guildDelegatee, address);
+                var unbondClaimableHeight = unbondLockIn.LowestExpireHeight;
+                return new Integer(unbondClaimableHeight);
+            }
+            catch (FailedLoadStateException)
+            {
+                return new Integer(-1L);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to get unbond claimable height. {e}", e);
+                return null;
+            }
         }
 
         private static IValue GetClaimableRewards(IWorldState worldState, Address address)
         {
-            var repository = new GuildRepository(new World(worldState), new HallowActionContext { });
-            var guildAddress = repository.GetGuildParticipant(address).GuildAddress;
-            var validatorAddress = repository.GetGuild(guildAddress).ValidatorAddress;
-            var guildDelegatee = repository.GetDelegatee(validatorAddress);
-            var bond = repository.GetBond(guildDelegatee, address);
-            var share = bond.Share;
-
-            if (share.IsZero
-                || bond.LastDistributeHeight is null
-                || repository.GetCurrentRewardBase(guildDelegatee) is not RewardBase rewardBase)
+            try
             {
-                return Null.Value;
+                var repository = new GuildRepository(new World(worldState), new HallowActionContext { });
+                var guildAddress = repository.GetGuildParticipant(address).GuildAddress;
+                var validatorAddress = repository.GetGuild(guildAddress).ValidatorAddress;
+                var guildDelegatee = repository.GetDelegatee(validatorAddress);
+                var bond = repository.GetBond(guildDelegatee, address);
+                var share = bond.Share;
+
+                if (share.IsZero
+                    || bond.LastDistributeHeight is null
+                    || repository.GetCurrentRewardBase(guildDelegatee) is not RewardBase rewardBase)
+                {
+                    return List.Empty;
+                }
+
+                var lastRewardBase = repository.GetRewardBase(guildDelegatee, bond.LastDistributeHeight.Value);
+                var rewards = guildDelegatee.CalculateRewards(share, rewardBase, lastRewardBase);
+
+                return new List(rewards.Select(r => r.Serialize()));
             }
-
-            var lastRewardBase = repository.GetRewardBase(guildDelegatee, bond.LastDistributeHeight.Value);
-            var rewards = guildDelegatee.CalculateRewards(share, rewardBase, lastRewardBase);
-
-            return new List(rewards.Select(r => r.Serialize()));
+            catch (FailedLoadStateException)
+            {
+                return List.Empty;
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to get claimable rewards. {e}", e);
+                return null;
+            }
         }
 
         // Returning value is a list of [ Avatar, Inventory, QuestList, WorldInformation ]
