@@ -790,6 +790,43 @@ namespace NineChronicles.Headless.GraphTypes
                     return ValidatorType.FromDelegatee(delegatee);
                 }
             );
+
+            Field<DelegatorType>(
+                name: "delegator",
+                description: "State for delegator.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "agentAddress",
+                        Description = "Address of agent."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("agentAddress");
+                    var agentAddress = new AgentAddress(address);
+                    var repository = new GuildRepository(new World(context.Source.WorldState), new HallowActionContext { });
+                    if (repository.TryGetGuildParticipant(agentAddress, out var guildParticipant))
+                    {
+                        var guild = repository.GetGuild(guildParticipant.GuildAddress);
+                        var delegatee = repository.GetDelegatee(guild.ValidatorAddress);
+                        var bond = repository.GetBond(delegatee, guildParticipant.Address);
+                        var totalDelegated = delegatee.Metadata.TotalDelegatedFAV;
+                        var totalShare = delegatee.Metadata.TotalShares;
+                        var lastDistributeHeight = bond.LastDistributeHeight ?? -1;
+                        var share = bond.Share;
+                        var fav = (share * totalDelegated).DivRem(totalShare).Quotient;
+                        return new DelegatorType
+                        {
+                            LastDistributeHeight = lastDistributeHeight,
+                            Share = share,
+                            Fav = fav,
+                        };
+                    }
+
+                    return null;
+                }
+            );
         }
 
         public static List<RuneOptionSheet.Row.RuneOptionInfo> GetRuneOptions(
