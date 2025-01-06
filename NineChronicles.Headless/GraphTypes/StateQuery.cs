@@ -34,6 +34,7 @@ using NineChronicles.Headless.Utils;
 using Nekoyume.Module.Guild;
 using Nekoyume.TypedAddress;
 using Nekoyume.ValidatorDelegation;
+using Nekoyume.Module.ValidatorDelegation;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -797,22 +798,42 @@ namespace NineChronicles.Headless.GraphTypes
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
-                        Name = "agentAddress",
-                        Description = "Address of agent."
+                        Name = "address",
+                        Description = "Agent or Validator address."
                     }
                 ),
                 resolve: context =>
                 {
-                    var address = context.GetArgument<Address>("agentAddress");
+                    var address = context.GetArgument<Address>("address");
                     var agentAddress = new AgentAddress(address);
-                    var repository = new GuildRepository(new World(context.Source.WorldState), new HallowActionContext { });
-                    if (repository.TryGetGuildParticipant(agentAddress, out var guildParticipant))
+                    var guildRepository = new GuildRepository(
+                        new World(context.Source.WorldState), new HallowActionContext { });
+                    if (guildRepository.TryGetGuildParticipant(agentAddress, out var guildParticipant))
                     {
-                        var guild = repository.GetGuild(guildParticipant.GuildAddress);
-                        var delegatee = repository.GetDelegatee(guild.ValidatorAddress);
-                        var bond = repository.GetBond(delegatee, guildParticipant.Address);
-                        var totalDelegated = delegatee.Metadata.TotalDelegatedFAV;
-                        var totalShare = delegatee.Metadata.TotalShares;
+                        var guild = guildRepository.GetGuild(guildParticipant.GuildAddress);
+                        var guildDelegatee = guildRepository.GetDelegatee(guild.ValidatorAddress);
+                        var bond = guildRepository.GetBond(guildDelegatee, guildParticipant.Address);
+                        var totalDelegated = guildDelegatee.Metadata.TotalDelegatedFAV;
+                        var totalShare = guildDelegatee.Metadata.TotalShares;
+                        var lastDistributeHeight = bond.LastDistributeHeight ?? -1;
+                        var share = bond.Share;
+                        var fav = (share * totalDelegated).DivRem(totalShare).Quotient;
+                        return new DelegatorType
+                        {
+                            LastDistributeHeight = lastDistributeHeight,
+                            Share = share,
+                            Fav = fav,
+                        };
+                    }
+
+                    var validatorAddress = address;
+                    var validatorRepository = new ValidatorRepository(
+                        new World(context.Source.WorldState), new HallowActionContext { });
+                    if (validatorRepository.TryGetValidatorDelegatee(validatorAddress, out var validatorDelegatee))
+                    {
+                        var bond = validatorRepository.GetBond(validatorDelegatee, address);
+                        var totalDelegated = validatorDelegatee.Metadata.TotalDelegatedFAV;
+                        var totalShare = validatorDelegatee.Metadata.TotalShares;
                         var lastDistributeHeight = bond.LastDistributeHeight ?? -1;
                         var share = bond.Share;
                         var fav = (share * totalDelegated).DivRem(totalShare).Quotient;

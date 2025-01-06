@@ -1,7 +1,6 @@
 using System.Numerics;
 using GraphQL.Types;
 using Libplanet.Types.Assets;
-using Nekoyume.ValidatorDelegation;
 
 namespace NineChronicles.Headless.GraphTypes;
 
