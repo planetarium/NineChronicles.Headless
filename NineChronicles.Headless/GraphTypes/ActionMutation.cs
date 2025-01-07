@@ -501,17 +501,17 @@ namespace NineChronicles.Headless.GraphTypes
             );
 
             Field<NonNullGraphType<TxIdType>>("transferNCG",
-                description: "Transfer ncg to validtor to promote.",
+                description: "Transfer ncg to the recipient.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
-                        Name = "validator",
-                        Description = "Validator public key to promote."
+                        Name = "recipient",
+                        Description = "The address of the recipient."
                     },
                     new QueryArgument<NonNullGraphType<BigIntGraphType>>
                     {
                         Name = "amount",
-                        Description = "Amount of NCG to stake."
+                        Description = "The amount of NCG to transfer."
                     }
                 ),
                 resolve: context =>
@@ -551,17 +551,17 @@ namespace NineChronicles.Headless.GraphTypes
             );
 
             Field<NonNullGraphType<TxIdType>>("transferMead",
-                description: "Transfer ncg to validtor to promote.",
+                description: "Transfer mead to the recipient.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<AddressType>>
                     {
-                        Name = "validator",
-                        Description = "Validator public key to promote."
+                        Name = "recipient",
+                        Description = "The address of the recipient."
                     },
                     new QueryArgument<NonNullGraphType<BigIntGraphType>>
                     {
                         Name = "amount",
-                        Description = "Amount of NCG to stake."
+                        Description = "The amount of mead to transfer."
                     }
                 ),
                 resolve: context =>
