@@ -78,6 +78,7 @@ namespace NineChronicles.Headless
                     ? $"{action}"
                     : "NoAction";
                 var txId = tx.Id.ToString();
+                var stage = true;
 
                 try
                 {
@@ -88,6 +89,7 @@ namespace NineChronicles.Headless
 #pragma warning restore CS8632
                     if (validationExc is null)
                     {
+                        stage = _blockChainRepository.StageTransaction(tx);
                         _swarmRepository.BroadcastTxs(new[] { tx });
                     }
                     else
@@ -95,7 +97,7 @@ namespace NineChronicles.Headless
                         Log.Debug("Skip StageTransaction({TxId}) reason: {Msg}", tx.Id, validationExc.Message);
                     }
 
-                    return new UnaryResult<bool>(true);
+                    return new UnaryResult<bool>(stage);
                 }
                 catch (InvalidTxException ite)
                 {
