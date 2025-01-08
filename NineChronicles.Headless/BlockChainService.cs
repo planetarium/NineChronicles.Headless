@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
 using Libplanet.Action.State;
-using Libplanet.Blockchain;
 using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
-using Libplanet.Net;
 using Libplanet.Types.Assets;
 using Libplanet.Types.Blocks;
 using Libplanet.Types.Tx;
@@ -22,9 +20,12 @@ using MagicOnion;
 using MagicOnion.Server;
 using Microsoft.Extensions.Caching.Memory;
 using Nekoyume;
-using Nekoyume.Model.State;
 using Nekoyume.Module;
 using Nekoyume.Shared.Services;
+using NineChronicles.Headless.Repositories.BlockChain;
+using NineChronicles.Headless.Repositories.Swarm;
+using NineChronicles.Headless.Repositories.Transaction;
+using NineChronicles.Headless.Repositories.WorldState;
 using Serilog;
 using static NineChronicles.Headless.NCActionUtils;
 using NodeExceptionType = Libplanet.Headless.NodeExceptionType;
@@ -34,8 +35,10 @@ namespace NineChronicles.Headless
 {
     public class BlockChainService : ServiceBase<IBlockChainService>, IBlockChainService
     {
-        private BlockChain _blockChain;
-        private Swarm _swarm;
+        private IBlockChainRepository _blockChainRepository;
+        private ITransactionRepository _transactionRepository;
+        private IWorldStateRepository _worldStateRepository;
+        private ISwarmRepository _swarmRepository;
         private RpcContext _context;
         private Codec _codec;
         private LibplanetNodeServiceProperties _libplanetNodeServiceProperties;
@@ -43,16 +46,20 @@ namespace NineChronicles.Headless
         private MemoryCache _memoryCache;
 
         public BlockChainService(
-            BlockChain blockChain,
-            Swarm swarm,
+            IBlockChainRepository blockChainRepository,
+            ITransactionRepository transactionRepository,
+            IWorldStateRepository worldStateRepository,
+            ISwarmRepository swarmRepository,
             RpcContext context,
             LibplanetNodeServiceProperties libplanetNodeServiceProperties,
             ActionEvaluationPublisher actionEvaluationPublisher,
             StateMemoryCache cache
             )
         {
-            _blockChain = blockChain;
-            _swarm = swarm;
+            _blockChainRepository = blockChainRepository;
+            _transactionRepository = transactionRepository;
+            _worldStateRepository = worldStateRepository;
+            _swarmRepository = swarmRepository;
             _context = context;
             _codec = new Codec();
             _libplanetNodeServiceProperties = libplanetNodeServiceProperties;
@@ -75,14 +82,13 @@ namespace NineChronicles.Headless
                 try
                 {
                     Log.Debug("PutTransaction: (nonce: {nonce}, id: {id})", tx.Nonce, tx.Id);
-                    Log.Debug("StagedTransactions: {txIds}", string.Join(", ", _blockChain.GetStagedTransactionIds()));
+                    Log.Debug("StagedTransactions: {txIds}", string.Join(", ", _blockChainRepository.GetStagedTransactionIds()));
 #pragma warning disable CS8632
-                    Exception? validationExc = _blockChain.Policy.ValidateNextBlockTx(_blockChain, tx);
+                    Exception? validationExc = _blockChainRepository.ValidateNextBlockTx(tx);
 #pragma warning restore CS8632
                     if (validationExc is null)
                     {
-                        _blockChain.StageTransaction(tx);
-                        _swarm.BroadcastTxs(new[] { tx });
+                        _swarmRepository.BroadcastTxs(new[] { tx });
                     }
                     else
                     {
@@ -112,7 +118,7 @@ namespace NineChronicles.Headless
             var hash = new BlockHash(blockHashBytes);
             var accountAddress = new Address(accountAddressBytes);
             var address = new Address(addressBytes);
-            IValue state = _blockChain
+            IValue state = _worldStateRepository
                 .GetWorldState(hash)
                 .GetAccountState(accountAddress)
                 .GetState(address);
@@ -129,7 +135,7 @@ namespace NineChronicles.Headless
             var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
             var accountAddress = new Address(accountAddressBytes);
             var address = new Address(addressBytes);
-            IValue state = _blockChain
+            IValue state = _worldStateRepository
                 .GetWorldState(stateRootHash)
                 .GetAccountState(accountAddress)
                 .GetState(address);
@@ -142,7 +148,7 @@ namespace NineChronicles.Headless
             IEnumerable<byte[]> addressBytesList)
         {
             var hash = new BlockHash(blockHashBytes);
-            var worldState = _blockChain.GetWorldState(hash);
+            var worldState = _worldStateRepository.GetWorldState(hash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
             var taskList = addressBytesList.Select(addressByte => Task.Run(() =>
             {
@@ -159,7 +165,7 @@ namespace NineChronicles.Headless
             IEnumerable<byte[]> addressBytesList)
         {
             var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
-            var worldState = _blockChain.GetWorldState(stateRootHash);
+            var worldState = _worldStateRepository.GetWorldState(stateRootHash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
             var taskList = addressBytesList.Select(addressByte => Task.Run(() =>
             {
@@ -176,7 +182,7 @@ namespace NineChronicles.Headless
             IEnumerable<byte[]> addressBytesList)
         {
             var hash = new BlockHash(blockHashBytes);
-            var worldState = _blockChain.GetWorldState(hash);
+            var worldState = _worldStateRepository.GetWorldState(hash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
             var addresses = addressBytesList.Select(a => new Address(a)).ToList();
             var taskList = addresses.Select(address => Task.Run(() =>
@@ -195,7 +201,7 @@ namespace NineChronicles.Headless
         {
             var addresses = addressBytesList.Select(a => new Address(a)).ToList();
             var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
-            var worldState = _blockChain.GetWorldState(stateRootHash);
+            var worldState = _worldStateRepository.GetWorldState(stateRootHash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
             var taskList = addresses.Select(address => Task.Run(() =>
             {
@@ -217,7 +223,7 @@ namespace NineChronicles.Headless
             List<Address> addresses = addressBytesList.Select(b => new Address(b)).ToList();
 
             var result = new Dictionary<byte[], byte[]>();
-            IReadOnlyList<IValue> values = _blockChain
+            IReadOnlyList<IValue> values = _worldStateRepository
                 .GetWorldState(blockHash)
                 .GetAccountState(accountAddress)
                 .GetStates(addresses);
@@ -239,7 +245,7 @@ namespace NineChronicles.Headless
             List<Address> addresses = addressBytesList.Select(b => new Address(b)).ToList();
 
             var result = new Dictionary<byte[], byte[]>();
-            IReadOnlyList<IValue> values = _blockChain
+            IReadOnlyList<IValue> values = _worldStateRepository
                 .GetWorldState(stateRootHash)
                 .GetAccountState(accountAddress)
                 .GetStates(addresses);
@@ -278,7 +284,7 @@ namespace NineChronicles.Headless
             if (addresses.Any())
             {
                 var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
-                IReadOnlyList<IValue> values = _blockChain.GetWorldState(stateRootHash).GetLegacyStates(addresses);
+                IReadOnlyList<IValue> values = _worldStateRepository.GetWorldState(stateRootHash).GetLegacyStates(addresses);
                 sw.Stop();
                 Log.Information("[GetSheets]Get sheet from state: {Count}, Elapsed: {Elapsed}", addresses.Count, sw.Elapsed);
                 sw.Restart();
@@ -303,7 +309,7 @@ namespace NineChronicles.Headless
             var address = new Address(addressBytes);
             var serializedCurrency = (Bencodex.Types.Dictionary)_codec.Decode(currencyBytes);
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
-            FungibleAssetValue balance = _blockChain
+            FungibleAssetValue balance = _worldStateRepository
                 .GetWorldState(blockHash)
                 .GetBalance(address, currency);
             byte[] encoded = _codec.Encode(
@@ -327,7 +333,7 @@ namespace NineChronicles.Headless
             var address = new Address(addressBytes);
             var serializedCurrency = (Bencodex.Types.Dictionary)_codec.Decode(currencyBytes);
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
-            FungibleAssetValue balance = _blockChain
+            FungibleAssetValue balance = _worldStateRepository
                 .GetWorldState(stateRootHash)
                 .GetBalance(address, currency);
             byte[] encoded = _codec.Encode(
@@ -344,7 +350,7 @@ namespace NineChronicles.Headless
 
         public UnaryResult<byte[]> GetTip()
         {
-            Bencodex.Types.Dictionary headerDict = _blockChain.Tip.MarshalBlock();
+            Bencodex.Types.Dictionary headerDict = _blockChainRepository.Tip.MarshalBlock();
             byte[] headerBytes = _codec.Encode(headerDict);
             return new UnaryResult<byte[]>(headerBytes);
         }
@@ -353,7 +359,7 @@ namespace NineChronicles.Headless
         {
             try
             {
-                return new UnaryResult<byte[]>(_codec.Encode(_blockChain[blockIndex].Hash.Bencoded));
+                return new UnaryResult<byte[]>(_codec.Encode(_blockChainRepository.GetBlock(blockIndex).Hash.Bencoded));
             }
             catch (ArgumentOutOfRangeException)
             {
@@ -364,7 +370,7 @@ namespace NineChronicles.Headless
         public UnaryResult<long> GetNextTxNonce(byte[] addressBytes)
         {
             var address = new Address(addressBytes);
-            var nonce = _blockChain.GetNextTxNonce(address);
+            var nonce = _transactionRepository.GetNextTxNonce(address);
             Log.Debug("GetNextTxNonce: {nonce}", nonce);
             return new UnaryResult<long>(nonce);
         }
@@ -389,7 +395,7 @@ namespace NineChronicles.Headless
         public UnaryResult<bool> IsTransactionStaged(byte[] txidBytes)
         {
             var id = new TxId(txidBytes);
-            var isStaged = _blockChain.GetStagedTransactionIds().Contains(id);
+            var isStaged = _blockChainRepository.GetStagedTransactionIds().Contains(id);
             Log.Debug(
                 "Transaction {id} is {1}.",
                 id,
