@@ -829,7 +829,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var validatorAddress = address;
                     var validatorRepository = new ValidatorRepository(
                         new World(context.Source.WorldState), new HallowActionContext { });
-                    if (validatorRepository.TryGetValidatorDelegatee(validatorAddress, out var validatorDelegatee))
+                    if (validatorRepository.TryGetDelegatee(validatorAddress, out var validatorDelegatee))
                     {
                         var bond = validatorRepository.GetBond(validatorDelegatee, address);
                         var totalDelegated = validatorDelegatee.Metadata.TotalDelegatedFAV;
