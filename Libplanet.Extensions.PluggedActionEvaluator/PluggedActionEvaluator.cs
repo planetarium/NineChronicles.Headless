@@ -4,7 +4,7 @@ using Lib9c.Plugin.Shared;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
 using Libplanet.Common;
-using Libplanet.Extensions.ActionEvaluatorCommonComponents;
+using Lib9c.ActionEvaluatorCommonComponents;
 using Libplanet.Store.Trie;
 using Libplanet.Types.Blocks;
 

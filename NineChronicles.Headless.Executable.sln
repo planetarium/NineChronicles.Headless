@@ -44,7 +44,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libplanet.Extensions.Forkab
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libplanet.Extensions.ForkableActionEvaluator.Tests", "Libplanet.Extensions.ForkableActionEvaluator.Tests\Libplanet.Extensions.ForkableActionEvaluator.Tests.csproj", "{490D20B6-FC0C-4459-8412-17777DB95931}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libplanet.Extensions.ActionEvaluatorCommonComponents", "Lib9c\.Libplanet.Extensions.ActionEvaluatorCommonComponents\Libplanet.Extensions.ActionEvaluatorCommonComponents.csproj", "{A6922395-36E5-4B0A-BEBD-9BCE34D08722}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lib9c.ActionEvaluatorCommonComponents", "Lib9c\.Lib9c.ActionEvaluatorCommonComponents\Lib9c.ActionEvaluatorCommonComponents.csproj", "{A6922395-36E5-4B0A-BEBD-9BCE34D08722}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NineChronicles.Headless.AccessControlCenter", "NineChronicles.Headless.AccessControlCenter\NineChronicles.Headless.AccessControlCenter.csproj", "{162C0F4B-A1D9-4132-BC34-31F1247BC26B}"
 EndProject
