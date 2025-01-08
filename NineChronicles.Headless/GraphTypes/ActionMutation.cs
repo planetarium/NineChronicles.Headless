@@ -526,7 +526,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                         var amount = context.GetArgument<BigInteger>("amount");
                         var sender = service.MinerPrivateKey!.Address;
-                        var recipient = context.GetArgument<Address>("validator");
+                        var recipient = context.GetArgument<Address>("recipient");
                         var currency = blockChain.GetWorldState().GetGoldCurrency();
                         var fav = currency * amount;
 
@@ -576,7 +576,7 @@ namespace NineChronicles.Headless.GraphTypes
 
                         var amount = context.GetArgument<BigInteger>("amount");
                         var sender = service.MinerPrivateKey!.Address;
-                        var recipient = context.GetArgument<Address>("validator");
+                        var recipient = context.GetArgument<Address>("recipient");
                         var fav = Currencies.Mead * amount;
 
 #pragma warning disable CS0618
