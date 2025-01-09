@@ -19,7 +19,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
 {
     public class StakeStateTypeTest
     {
-        [Theory(Skip = "RewardInterval is 2")]
+        [Theory(Skip = "RewardInterval is 10")]
         [MemberData(nameof(Members))]
         public async Task Query(StakeState stakeState, Address stakeStateAddress, long deposit, long blockIndex, Dictionary<string, object> expected)
         {
