@@ -10,7 +10,7 @@ jobs:
             - name: Setup .NET Core
               uses: actions/setup-dotnet@v4
               with:
-                  dotnet-version: 6.0.x
+                  dotnet-version: 8.0.x
             - name: dotnet format
               run: dotnet format --exclude Lib9c --exclude NineChronicles.RPC.Shared -v=d --no-restore --verify-no-changes
     validate-appsettings-json:
