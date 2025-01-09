@@ -52,9 +52,9 @@ namespace NineChronicles.Headless.GraphTypes.States
                 description: "The block index the user received rewards.",
                 resolve: context => context.Source.StakeState.ReceivedBlockIndex);
             Field<NonNullGraphType<LongGraphType>>(
-                "cancellableBlockIndex",
-                description: "The block index the user can cancel the staking.",
-                resolve: context => context.Source.StakeState.CancellableBlockIndex);
+                "unstakableBlockIndex",
+                description: "The block index the user can unstake.",
+                resolve: context => context.Source.StakeState.UnstakableBlockIndex);
             Field<NonNullGraphType<LongGraphType>>(
                 "claimableBlockIndex",
                 description: "The block index the user can claim rewards.",
