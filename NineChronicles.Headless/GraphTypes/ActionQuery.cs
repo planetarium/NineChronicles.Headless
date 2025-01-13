@@ -13,6 +13,8 @@ using Nekoyume.TableData;
 using Nekoyume.Action.ValidatorDelegation;
 using Nekoyume.Action.Guild.Migration;
 using Lib9c;
+using Nekoyume.Action.Guild;
+using Nekoyume.TypedAddress;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -573,6 +575,96 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context => Encode(
                     context,
                     new MigrateDelegationHeight(context.GetArgument<long>("amount"))));
+
+            Field<ByteStringType>(
+                name: "makeGuild",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "validatorAddress",
+                        Description = "The validator address to create a guild."
+                    }),
+                resolve: context =>
+                {
+                    var validatorAddress = context.GetArgument<Address>("validatorAddress");
+                    return Encode(context, new MakeGuild(validatorAddress));
+                });
+
+            Field<ByteStringType>(
+                name: "removeGuild",
+                resolve: context => Encode(context, new RemoveGuild()));
+
+            Field<ByteStringType>(
+                name: "joinGuild",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "guildAddress",
+                        Description = "The guild address to join."
+                    }),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("guildAddress");
+                    var guildAddress = new GuildAddress(address);
+                    return Encode(context, new JoinGuild(guildAddress));
+                });
+
+            Field<ByteStringType>(
+                name: "quitGuild",
+                resolve: context => Encode(context, new QuitGuild()));
+
+            Field<ByteStringType>(
+                name: "moveGuild",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "guildAddress",
+                        Description = "The guild address to move."
+                    }),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("guildAddress");
+                    var guildAddress = new GuildAddress(address);
+                    return Encode(context, new MoveGuild(guildAddress));
+                });
+
+            Field<ByteStringType>(
+                name: "banGuildMember",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "agentAddress",
+                        Description = "The agent address to ban."
+                    }),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("agentAddress");
+                    var agentAddress = new AgentAddress(address);
+                    return Encode(context, new BanGuildMember(agentAddress));
+                });
+
+            Field<ByteStringType>(
+                name: "unbanGuildMember",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "agentAddress",
+                        Description = "The agent address to unban."
+                    }),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("agentAddress");
+                    var agentAddress = new AgentAddress(address);
+                    return Encode(context, new UnbanGuildMember(agentAddress));
+                });
+
+            Field<ByteStringType>(
+                name: "claimReward",
+                resolve: context => Encode(context, new ClaimReward()));
+
+            Field<ByteStringType>(
+                name: "claimGuildReward",
+                resolve: context => Encode(context, new ClaimGuildReward()));
 
             RegisterHackAndSlash();
             RegisterHackAndSlashSweep();
