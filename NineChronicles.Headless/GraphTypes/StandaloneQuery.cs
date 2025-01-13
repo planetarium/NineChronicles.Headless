@@ -571,7 +571,7 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<FungibleAssetValueInputType>
                     {
                         Name = "maxGasPrice",
-                        DefaultValue = 1 * Currencies.Mead
+                        DefaultValue = 0.00001 * Currencies.Mead
                     }
                 ),
                 resolve: context =>

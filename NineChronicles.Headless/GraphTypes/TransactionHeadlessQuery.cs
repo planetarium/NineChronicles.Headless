@@ -169,7 +169,7 @@ namespace NineChronicles.Headless.GraphTypes
                                 genesisHash: blockChain.Genesis.Hash,
                                 actions: new TxActionList(new[] { action.PlainValue }),
                                 gasLimit: action is ITransferAsset or ITransferAssets ? RequestPledge.DefaultRefillMead : 1L,
-                                maxGasPrice: 1 * Currencies.Mead
+                                maxGasPrice: 0.00001 * Currencies.Mead
                             ),
                             new TxSigningMetadata(publicKey: publicKey, nonce: nonce)
                         );
