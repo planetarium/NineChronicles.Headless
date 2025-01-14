@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
+using Humanizer.Bytes;
 using Libplanet.Action.State;
 using Libplanet.Blockchain;
 using Libplanet.Common;
@@ -27,6 +28,7 @@ using Nekoyume.Delegation;
 using Nekoyume.Model.Guild;
 using Nekoyume.Model.State;
 using Nekoyume.Module;
+using Nekoyume.Module.Guild;
 using Nekoyume.Shared.Services;
 using NineChronicles.Headless.Utils;
 using Serilog;
@@ -395,6 +397,54 @@ namespace NineChronicles.Headless
             return new UnaryResult<byte[]>(encoded);
         }
 
+        public UnaryResult<byte[]> GetDelegationInfoByBlockHash(
+            byte[] blockHashBytes, byte[] addressBytes)
+        {
+            var blockHash = new BlockHash(blockHashBytes);
+            var address = new Address(addressBytes);
+            var worldState = _blockChain.GetWorldState(blockHash);
+            var result = GetDelegationInfo(worldState, address);
+
+            byte[] encoded = _codec.Encode(result);
+            return new UnaryResult<byte[]>(encoded);
+        }
+
+        public UnaryResult<byte[]> GetDelegationInfoByStateRootHash(
+            byte[] stateRootHashBytes, byte[] addressBytes)
+        {
+            var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var address = new Address(addressBytes);
+            var worldState = _blockChain.GetWorldState(stateRootHash);
+            var result = GetDelegationInfo(worldState, address);
+
+            byte[] encoded = _codec.Encode(result);
+            return new UnaryResult<byte[]>(encoded);
+        }
+
+        public UnaryResult<byte[]> GetStakedByBlockHash(
+            byte[] blockHashBytes, byte[] addressBytes)
+        {
+            var blockHash = new BlockHash(blockHashBytes);
+            var address = new Address(addressBytes);
+            var worldState = _blockChain.GetWorldState(blockHash);
+            var result = GetStaked(worldState, address);
+
+            byte[] encoded = _codec.Encode(result);
+            return new UnaryResult<byte[]>(encoded);
+        }
+
+        public UnaryResult<byte[]> GetStakedByStateRootHash(
+            byte[] stateRootHashBytes, byte[] addressBytes)
+        {
+            var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var address = new Address(addressBytes);
+            var worldState = _blockChain.GetWorldState(stateRootHash);
+            var result = GetStaked(worldState, address);
+
+            byte[] encoded = _codec.Encode(result);
+            return new UnaryResult<byte[]>(encoded);
+        }
+
         public UnaryResult<byte[]> GetTip()
         {
             Bencodex.Types.Dictionary headerDict = _blockChain.Tip.MarshalBlock();
@@ -539,6 +589,30 @@ namespace NineChronicles.Headless
                 return null;
             }
         }
+
+        private static IValue GetDelegationInfo(IWorldState worldState, Address address)
+        {
+            try
+            {
+                var delegationInfo = new World(worldState).GetDelegationInfo(address);
+                return List.Empty
+                    .Add(delegationInfo.Share)
+                    .Add(delegationInfo.TotalShare)
+                    .Add(delegationInfo.TotalDelegated.Serialize());
+            }
+            catch (InvalidOperationException)
+            {
+                return List.Empty;
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to get delegation info. {e}", e);
+                return null;
+            }
+        }
+
+        private static IValue GetStaked(IWorldState worldState, Address address)
+            => new World(worldState).GetStaked(address).Serialize();
 
         // Returning value is a list of [ Avatar, Inventory, QuestList, WorldInformation ]
         private static IValue GetFullAvatarStateRaw(IWorldState worldState, Address address)
