@@ -258,6 +258,7 @@ namespace NineChronicles.Headless.GraphTypes
                 if (ctx.WorldState.TryGetStakeState(agentAddr: agentAddress, out StakeState stakeStateV2))
                 {
                     return new StakeStateType.StakeStateContext(
+                        agentAddress,
                         stakeStateV2,
                         stakeStateAddress,
                         ctx.WorldState,
