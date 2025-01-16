@@ -1,3 +1,11 @@
+using System;
+using System.Collections.Immutable;
+using System.Security.Cryptography;
+using Libplanet.Action.State;
+using Libplanet.Common;
+using Libplanet.Crypto;
+using Libplanet.Types.Tx;
+
 namespace NineChronicles.Headless.Repositories.BlockChain;
 
 using System.Collections.Generic;
@@ -69,6 +77,38 @@ public class BlockChainRepository : IBlockChainRepository
             }
         }
     }
+
+    public bool StageTransaction(Libplanet.Types.Tx.Transaction tx)
+    {
+        return _blockChain.StageTransaction(tx);
+    }
+
+    public Exception? ValidateNextBlockTx(Libplanet.Types.Tx.Transaction tx)
+    {
+        return _blockChain.Policy.ValidateNextBlockTx(_blockChain, tx);
+    }
+
+    public IImmutableSet<TxId> GetStagedTransactionIds()
+    {
+        return _blockChain.GetStagedTransactionIds();
+    }
+
+    public IWorldState GetWorldState(HashDigest<SHA256> stateRootHash)
+    {
+        return _blockChain.GetWorldState(stateRootHash);
+    }
+
+    public IWorldState GetWorldState(BlockHash blockHash)
+    {
+        return _blockChain.GetWorldState(blockHash);
+    }
+
+    public long GetNextTxNonce(Address address)
+    {
+        return _blockChain.GetNextTxNonce(address);
+    }
+
+    public LibplanetBlock Tip => _blockChain.Tip;
 
     private Block FetchTip()
     {
