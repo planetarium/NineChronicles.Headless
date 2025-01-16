@@ -39,7 +39,7 @@ namespace NineChronicles.Headless.Tests
             // Mocking dependencies
             mockPolicy
                 .Setup(bc => bc.ValidateNextBlockTx(It.IsAny<BlockChain>(), It.IsAny<Transaction>()))
-                .Returns((TxPolicyViolationException?) null);
+                .Returns((TxPolicyViolationException?)null);
             mockBlockChain
                 .Setup(bc => bc.StageTransaction(It.IsAny<Transaction>()))
                 .Returns(stageResult);
