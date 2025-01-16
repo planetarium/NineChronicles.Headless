@@ -48,7 +48,7 @@ namespace NineChronicles.Headless.GraphTypes.States
                 "deposit",
                 description: "The staked amount.",
                 resolve: context => new World(context.Source.WorldState).GetStaked(
-                        context.Source.Address).GetQuantityString(true));
+                        context.Source.AgentAddress).GetQuantityString(true));
             Field<NonNullGraphType<LongGraphType>>(
                 "startedBlockIndex",
                 description: "The block index the user started to stake.",

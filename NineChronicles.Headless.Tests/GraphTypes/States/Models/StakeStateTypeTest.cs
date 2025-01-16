@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using GraphQL.Execution;
+using Lib9c;
 using Libplanet.Action.State;
 using Libplanet.Crypto;
 using Libplanet.Mocks;
@@ -40,7 +41,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
                     ReservedAddresses.LegacyAccount,
                     new Account(mockWorldState.GetAccountState(ReservedAddresses.LegacyAccount))
                         .SetState(GoldCurrencyState.Address, new GoldCurrencyState(goldCurrency).Serialize()))
-                .SetBalance(Fixtures.StakeStateAddress, goldCurrency, (goldCurrency * deposit).RawValue);
+                .SetBalance(Fixtures.StakeStateAddress, Currencies.GuildGold, (Currencies.GuildGold * deposit).RawValue);
 
             const string query = @"
             {
@@ -85,6 +86,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             },
             new object[]
             {
+                Fixtures.UserAddress,
                 new StakeState(new Contract("StakeRegularFixedRewardSheet_V1", "StakeRegularRewardSheet_V1", 50400, 201600), 100),
                 Fixtures.StakeStateAddress,
                 100,
@@ -101,6 +103,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             },
             new object[]
             {
+                Fixtures.UserAddress,
                 new StakeState(new Contract("StakeRegularFixedRewardSheet_V1", "StakeRegularRewardSheet_V1", 50400, 201600), 100),
                 Fixtures.StakeStateAddress,
                 100,
@@ -117,6 +120,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             },
             new object[]
             {
+                Fixtures.UserAddress,
                 new StakeState(
                     new Contract("StakeRegularFixedRewardSheet_V1", "StakeRegularRewardSheet_V1", 50400, 201600), 10, 50412),
                 Fixtures.StakeStateAddress,
@@ -134,6 +138,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             },
             new object[]
             {
+                Fixtures.UserAddress,
                 new StakeState(new Contract("StakeRegularFixedRewardSheet_V1", "StakeRegularRewardSheet_V1", 50400, 201600), 10, 50412),
                 Fixtures.StakeStateAddress,
                 100,
