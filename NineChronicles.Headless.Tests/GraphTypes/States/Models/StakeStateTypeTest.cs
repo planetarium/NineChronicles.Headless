@@ -21,7 +21,13 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
     {
         [Theory]
         [MemberData(nameof(Members))]
-        public async Task Query(StakeState stakeState, Address stakeStateAddress, long deposit, long blockIndex, Dictionary<string, object> expected)
+        public async Task Query(
+            Address agentAddress,
+            StakeState stakeState, 
+            Address stakeStateAddress,
+            long deposit,
+            long blockIndex,
+            Dictionary<string, object> expected)
         {
 #pragma warning disable CS0618
             // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
@@ -48,6 +54,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             var queryResult = await ExecuteQueryAsync<StakeStateType>(
                 query,
                 source: new StakeStateType.StakeStateContext(
+                    agentAddress,
                     stakeState,
                     stakeStateAddress,
                     new World(mockWorldState),
@@ -60,6 +67,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
         {
             new object[]
             {
+                Fixtures.UserAddress,
                 new StakeState(
                     new Contract("StakeRegularFixedRewardSheet_V1", "StakeRegularRewardSheet_V1", 50400, 201600), 0),
                 Fixtures.StakeStateAddress,
