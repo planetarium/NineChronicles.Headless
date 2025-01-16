@@ -32,6 +32,7 @@ using NineChronicles.Headless.Repositories.BlockChain;
 using NineChronicles.Headless.Repositories.Swarm;
 using NineChronicles.Headless.Repositories.Transaction;
 using NineChronicles.Headless.Repositories.WorldState;
+using NineChronicles.Headless.Utils;
 using Serilog;
 using static NineChronicles.Headless.NCActionUtils;
 using NodeExceptionType = Libplanet.Headless.NodeExceptionType;
@@ -409,7 +410,7 @@ namespace NineChronicles.Headless
         {
             var blockHash = new BlockHash(blockHashBytes);
             var address = new Address(addressBytes);
-            var worldState = _blockChain.GetWorldState(blockHash);
+            var worldState = _worldStateRepository.GetWorldState(blockHash);
             var result = GetDelegationInfo(worldState, address);
 
             byte[] encoded = _codec.Encode(result);
@@ -421,7 +422,7 @@ namespace NineChronicles.Headless
         {
             var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
             var address = new Address(addressBytes);
-            var worldState = _blockChain.GetWorldState(stateRootHash);
+            var worldState = _worldStateRepository.GetWorldState(stateRootHash);
             var result = GetDelegationInfo(worldState, address);
 
             byte[] encoded = _codec.Encode(result);
@@ -433,7 +434,7 @@ namespace NineChronicles.Headless
         {
             var blockHash = new BlockHash(blockHashBytes);
             var address = new Address(addressBytes);
-            var worldState = _blockChain.GetWorldState(blockHash);
+            var worldState = _worldStateRepository.GetWorldState(blockHash);
             var result = GetStaked(worldState, address);
 
             byte[] encoded = _codec.Encode(result);
@@ -445,7 +446,7 @@ namespace NineChronicles.Headless
         {
             var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
             var address = new Address(addressBytes);
-            var worldState = _blockChain.GetWorldState(stateRootHash);
+            var worldState = _worldStateRepository.GetWorldState(stateRootHash);
             var result = GetStaked(worldState, address);
 
             byte[] encoded = _codec.Encode(result);
