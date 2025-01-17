@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
+using Humanizer.Bytes;
 using Libplanet.Action.State;
 using Libplanet.Common;
 using Libplanet.Crypto;
@@ -20,12 +21,18 @@ using MagicOnion;
 using MagicOnion.Server;
 using Microsoft.Extensions.Caching.Memory;
 using Nekoyume;
+using Nekoyume.Action;
+using Nekoyume.Delegation;
+using Nekoyume.Model.Guild;
+using Nekoyume.Model.State;
 using Nekoyume.Module;
+using Nekoyume.Module.Guild;
 using Nekoyume.Shared.Services;
 using NineChronicles.Headless.Repositories.BlockChain;
 using NineChronicles.Headless.Repositories.Swarm;
 using NineChronicles.Headless.Repositories.Transaction;
 using NineChronicles.Headless.Repositories.WorldState;
+using NineChronicles.Headless.Utils;
 using Serilog;
 using static NineChronicles.Headless.NCActionUtils;
 using NodeExceptionType = Libplanet.Headless.NodeExceptionType;
@@ -350,6 +357,102 @@ namespace NineChronicles.Headless
             return new UnaryResult<byte[]>(encoded);
         }
 
+        public UnaryResult<byte[]> GetUnbondClaimableHeightByBlockHash(
+            byte[] blockHashBytes, byte[] addressBytes)
+        {
+            var blockHash = new BlockHash(blockHashBytes);
+            var address = new Address(addressBytes);
+            var worldState = _worldStateRepository.GetWorldState(blockHash);
+            var result = GetUnbondClaimableHeight(worldState, address);
+
+            byte[] encoded = _codec.Encode(result);
+            return new UnaryResult<byte[]>(encoded);
+        }
+
+        public UnaryResult<byte[]> GetUnbondClaimableHeightByStateRootHash(
+            byte[] stateRootHashBytes, byte[] addressBytes)
+        {
+            var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var address = new Address(addressBytes);
+            var worldState = _worldStateRepository.GetWorldState(stateRootHash);
+            var result = GetUnbondClaimableHeight(worldState, address);
+
+            byte[] encoded = _codec.Encode(result);
+            return new UnaryResult<byte[]>(encoded);
+        }
+
+        public UnaryResult<byte[]> GetClaimableRewardsByBlockHash(
+            byte[] blockHashBytes, byte[] addressBytes)
+        {
+            var blockHash = new BlockHash(blockHashBytes);
+            var address = new Address(addressBytes);
+            var worldState = _worldStateRepository.GetWorldState(blockHash);
+            var result = GetClaimableRewards(worldState, address);
+
+            byte[] encoded = _codec.Encode(result);
+            return new UnaryResult<byte[]>(encoded);
+        }
+
+        public UnaryResult<byte[]> GetClaimableRewardsByStateRootHash(
+            byte[] stateRootHashBytes, byte[] addressBytes)
+        {
+            var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var address = new Address(addressBytes);
+            var worldState = _worldStateRepository.GetWorldState(stateRootHash);
+            var result = GetClaimableRewards(worldState, address);
+
+            byte[] encoded = _codec.Encode(result);
+            return new UnaryResult<byte[]>(encoded);
+        }
+
+        public UnaryResult<byte[]> GetDelegationInfoByBlockHash(
+            byte[] blockHashBytes, byte[] addressBytes)
+        {
+            var blockHash = new BlockHash(blockHashBytes);
+            var address = new Address(addressBytes);
+            var worldState = _worldStateRepository.GetWorldState(blockHash);
+            var result = GetDelegationInfo(worldState, address);
+
+            byte[] encoded = _codec.Encode(result);
+            return new UnaryResult<byte[]>(encoded);
+        }
+
+        public UnaryResult<byte[]> GetDelegationInfoByStateRootHash(
+            byte[] stateRootHashBytes, byte[] addressBytes)
+        {
+            var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var address = new Address(addressBytes);
+            var worldState = _worldStateRepository.GetWorldState(stateRootHash);
+            var result = GetDelegationInfo(worldState, address);
+
+            byte[] encoded = _codec.Encode(result);
+            return new UnaryResult<byte[]>(encoded);
+        }
+
+        public UnaryResult<byte[]> GetStakedByBlockHash(
+            byte[] blockHashBytes, byte[] addressBytes)
+        {
+            var blockHash = new BlockHash(blockHashBytes);
+            var address = new Address(addressBytes);
+            var worldState = _worldStateRepository.GetWorldState(blockHash);
+            var result = GetStaked(worldState, address);
+
+            byte[] encoded = _codec.Encode(result);
+            return new UnaryResult<byte[]>(encoded);
+        }
+
+        public UnaryResult<byte[]> GetStakedByStateRootHash(
+            byte[] stateRootHashBytes, byte[] addressBytes)
+        {
+            var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var address = new Address(addressBytes);
+            var worldState = _worldStateRepository.GetWorldState(stateRootHash);
+            var result = GetStaked(worldState, address);
+
+            byte[] encoded = _codec.Encode(result);
+            return new UnaryResult<byte[]>(encoded);
+        }
+
         public UnaryResult<byte[]> GetTip()
         {
             Bencodex.Types.Dictionary headerDict = _blockChainRepository.Tip.MarshalBlock();
@@ -437,6 +540,87 @@ namespace NineChronicles.Headless
             _publisher.RemoveClient(address).Wait();
             return new UnaryResult<bool>(true);
         }
+
+        private static IValue GetUnbondClaimableHeight(IWorldState worldState, Address address)
+        {
+            var repository = new GuildRepository(new World(worldState), new HallowActionContext { });
+            try
+            {
+                var guildAddress = repository.GetGuildParticipant(address).GuildAddress;
+                var validatorAddress = repository.GetGuild(guildAddress).ValidatorAddress;
+                var guildDelegatee = repository.GetDelegatee(validatorAddress);
+                var unbondLockIn = repository.GetUnbondLockIn(guildDelegatee, address);
+                var unbondClaimableHeight = unbondLockIn.LowestExpireHeight;
+                return new Integer(unbondClaimableHeight);
+            }
+            catch (FailedLoadStateException)
+            {
+                return new Integer(-1L);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to get unbond claimable height. {e}", e);
+                return null;
+            }
+        }
+
+        private static IValue GetClaimableRewards(IWorldState worldState, Address address)
+        {
+            try
+            {
+                var repository = new GuildRepository(new World(worldState), new HallowActionContext { });
+                var guildAddress = repository.GetGuildParticipant(address).GuildAddress;
+                var validatorAddress = repository.GetGuild(guildAddress).ValidatorAddress;
+                var guildDelegatee = repository.GetDelegatee(validatorAddress);
+                var bond = repository.GetBond(guildDelegatee, address);
+                var share = bond.Share;
+
+                if (share.IsZero
+                    || bond.LastDistributeHeight is null
+                    || repository.GetCurrentRewardBase(guildDelegatee) is not RewardBase rewardBase)
+                {
+                    return List.Empty;
+                }
+
+                var lastRewardBase = repository.GetRewardBase(guildDelegatee, bond.LastDistributeHeight.Value);
+                var rewards = guildDelegatee.CalculateRewards(share, rewardBase, lastRewardBase);
+
+                return new List(rewards.Select(r => r.Serialize()));
+            }
+            catch (FailedLoadStateException)
+            {
+                return List.Empty;
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to get claimable rewards. {e}", e);
+                return null;
+            }
+        }
+
+        private static IValue GetDelegationInfo(IWorldState worldState, Address address)
+        {
+            try
+            {
+                var delegationInfo = new World(worldState).GetDelegationInfo(address);
+                return List.Empty
+                    .Add(delegationInfo.Share)
+                    .Add(delegationInfo.TotalShare)
+                    .Add(delegationInfo.TotalDelegated.Serialize());
+            }
+            catch (InvalidOperationException)
+            {
+                return List.Empty;
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to get delegation info. {e}", e);
+                return null;
+            }
+        }
+
+        private static IValue GetStaked(IWorldState worldState, Address address)
+            => new World(worldState).GetStaked(address).Serialize();
 
         // Returning value is a list of [ Avatar, Inventory, QuestList, WorldInformation ]
         private static IValue GetFullAvatarStateRaw(IWorldState worldState, Address address)
