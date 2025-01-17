@@ -5,10 +5,12 @@ using GraphQL.Execution;
 using Lib9c;
 using Libplanet.Common;
 using Libplanet.Crypto;
+using Libplanet.Types.Assets;
 using Libplanet.Types.Tx;
 using Nekoyume.Action;
 using Nekoyume.Action.Loader;
 using Xunit;
+using BigInteger = System.Numerics.BigInteger;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -35,7 +37,7 @@ query {{
             Assert.Equal(publicKey.Address, tx.Signer);
             Assert.Equal(0, tx.Nonce);
             Assert.Equal(1, tx.GasLimit);
-            Assert.Equal(1 * Currencies.Mead, tx.MaxGasPrice);
+            Assert.Equal(FungibleAssetValue.FromRawValue(Currencies.Mead, 10000000000000), tx.MaxGasPrice);
             var rawAction = Assert.Single(tx.Actions);
             var action = new NCActionLoader().LoadAction(0, rawAction);
             Assert.IsType<Stake>(action);
@@ -63,15 +65,17 @@ query {{
             Assert.Equal(DateTimeOffset.Parse(timestamp), tx.Timestamp);
         }
 
-        [Fact]
-        public async Task ActionTxQuery_With_Gas()
+        [Theory]
+        [InlineData("1", 1000000000000000000)]
+        [InlineData("0.00001", 10000000000000)]
+        public async Task ActionTxQuery_With_Gas(string quantity, BigInteger expected)
         {
             var publicKey = new PrivateKey().PublicKey;
             var address = new PrivateKey().Address;
             long nonce = 0;
             var result = await ExecuteQueryAsync($@"
 query {{
-    actionTxQuery(publicKey: ""{publicKey.ToString()}"", nonce: {nonce}, maxGasPrice: {{ quantity: 1, decimalPlaces: 18, ticker: ""Mead"" }}) {{
+    actionTxQuery(publicKey: ""{publicKey.ToString()}"", nonce: {nonce}, maxGasPrice: {{ quantity: ""{quantity}"", decimalPlaces: 18, ticker: ""Mead"" }}) {{
         requestPledge(agentAddress: ""{address}"")
     }}
 }}");
@@ -85,7 +89,7 @@ query {{
             Assert.Equal(0, tx.Nonce);
             Assert.IsType<DateTimeOffset>(tx.Timestamp);
             Assert.Equal(1, tx.GasLimit);
-            Assert.Equal(1 * Currencies.Mead, tx.MaxGasPrice);
+            Assert.Equal(FungibleAssetValue.FromRawValue(Currencies.Mead, expected), tx.MaxGasPrice);
             var rawAction = Assert.Single(tx.Actions);
             var action = Assert.IsType<RequestPledge>(new NCActionLoader().LoadAction(0, rawAction));
             Assert.Equal(address, action.AgentAddress);
