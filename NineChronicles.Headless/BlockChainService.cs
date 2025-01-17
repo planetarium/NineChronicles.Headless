@@ -357,18 +357,6 @@ namespace NineChronicles.Headless
             return new UnaryResult<byte[]>(encoded);
         }
 
-        public UnaryResult<byte[]> GetUnbondClaimableHeightByBlockHash(
-            byte[] blockHashBytes, byte[] addressBytes)
-        {
-            var blockHash = new BlockHash(blockHashBytes);
-            var address = new Address(addressBytes);
-            var worldState = _worldStateRepository.GetWorldState(blockHash);
-            var result = GetUnbondClaimableHeight(worldState, address);
-
-            byte[] encoded = _codec.Encode(result);
-            return new UnaryResult<byte[]>(encoded);
-        }
-
         public UnaryResult<byte[]> GetUnbondClaimableHeightByStateRootHash(
             byte[] stateRootHashBytes, byte[] addressBytes)
         {
@@ -376,18 +364,6 @@ namespace NineChronicles.Headless
             var address = new Address(addressBytes);
             var worldState = _worldStateRepository.GetWorldState(stateRootHash);
             var result = GetUnbondClaimableHeight(worldState, address);
-
-            byte[] encoded = _codec.Encode(result);
-            return new UnaryResult<byte[]>(encoded);
-        }
-
-        public UnaryResult<byte[]> GetClaimableRewardsByBlockHash(
-            byte[] blockHashBytes, byte[] addressBytes)
-        {
-            var blockHash = new BlockHash(blockHashBytes);
-            var address = new Address(addressBytes);
-            var worldState = _worldStateRepository.GetWorldState(blockHash);
-            var result = GetClaimableRewards(worldState, address);
 
             byte[] encoded = _codec.Encode(result);
             return new UnaryResult<byte[]>(encoded);
@@ -405,18 +381,6 @@ namespace NineChronicles.Headless
             return new UnaryResult<byte[]>(encoded);
         }
 
-        public UnaryResult<byte[]> GetDelegationInfoByBlockHash(
-            byte[] blockHashBytes, byte[] addressBytes)
-        {
-            var blockHash = new BlockHash(blockHashBytes);
-            var address = new Address(addressBytes);
-            var worldState = _worldStateRepository.GetWorldState(blockHash);
-            var result = GetDelegationInfo(worldState, address);
-
-            byte[] encoded = _codec.Encode(result);
-            return new UnaryResult<byte[]>(encoded);
-        }
-
         public UnaryResult<byte[]> GetDelegationInfoByStateRootHash(
             byte[] stateRootHashBytes, byte[] addressBytes)
         {
@@ -424,18 +388,6 @@ namespace NineChronicles.Headless
             var address = new Address(addressBytes);
             var worldState = _worldStateRepository.GetWorldState(stateRootHash);
             var result = GetDelegationInfo(worldState, address);
-
-            byte[] encoded = _codec.Encode(result);
-            return new UnaryResult<byte[]>(encoded);
-        }
-
-        public UnaryResult<byte[]> GetStakedByBlockHash(
-            byte[] blockHashBytes, byte[] addressBytes)
-        {
-            var blockHash = new BlockHash(blockHashBytes);
-            var address = new Address(addressBytes);
-            var worldState = _worldStateRepository.GetWorldState(blockHash);
-            var result = GetStaked(worldState, address);
 
             byte[] encoded = _codec.Encode(result);
             return new UnaryResult<byte[]>(encoded);
@@ -546,16 +498,20 @@ namespace NineChronicles.Headless
             var repository = new GuildRepository(new World(worldState), new HallowActionContext { });
             try
             {
-                var guildAddress = repository.GetGuildParticipant(address).GuildAddress;
-                var validatorAddress = repository.GetGuild(guildAddress).ValidatorAddress;
-                var guildDelegatee = repository.GetDelegatee(validatorAddress);
-                var unbondLockIn = repository.GetUnbondLockIn(guildDelegatee, address);
-                var unbondClaimableHeight = unbondLockIn.LowestExpireHeight;
-                return new Integer(unbondClaimableHeight);
-            }
-            catch (FailedLoadStateException)
-            {
-                return new Integer(-1L);
+                var delegator = repository.GetDelegator(address);
+                var expireHeights = delegator.UnbondingRefs
+                    .Select(r => UnbondingFactory.GetUnbondingFromRef(r, repository))
+                    .Where(u => u is UnbondLockIn)
+                    .Select(u => u.LowestExpireHeight);
+
+                if (expireHeights.Any())
+                {
+                    return new Integer(expireHeights.Min());
+                }
+                else
+                {
+                    return new Integer(-1L);
+                }
             }
             catch (Exception e)
             {
