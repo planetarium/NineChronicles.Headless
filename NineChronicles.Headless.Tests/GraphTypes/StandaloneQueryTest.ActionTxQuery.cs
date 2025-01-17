@@ -66,9 +66,9 @@ query {{
         }
 
         [Theory]
-        [InlineData("1", 1000000000000000000)]
-        [InlineData("0.00001", 10000000000000)]
-        public async Task ActionTxQuery_With_Gas(string quantity, BigInteger expected)
+        [InlineData("1")]
+        [InlineData("0.00001")]
+        public async Task ActionTxQuery_With_Gas(string quantity)
         {
             var publicKey = new PrivateKey().PublicKey;
             var address = new PrivateKey().Address;
@@ -89,7 +89,7 @@ query {{
             Assert.Equal(0, tx.Nonce);
             Assert.IsType<DateTimeOffset>(tx.Timestamp);
             Assert.Equal(1, tx.GasLimit);
-            Assert.Equal(FungibleAssetValue.FromRawValue(Currencies.Mead, expected), tx.MaxGasPrice);
+            Assert.Equal(FungibleAssetValue.Parse(Currencies.Mead, quantity), tx.MaxGasPrice);
             var rawAction = Assert.Single(tx.Actions);
             var action = Assert.IsType<RequestPledge>(new NCActionLoader().LoadAction(0, rawAction));
             Assert.Equal(address, action.AgentAddress);
