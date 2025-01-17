@@ -24,7 +24,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
         [MemberData(nameof(Members))]
         public async Task Query(
             Address agentAddress,
-            StakeState stakeState, 
+            StakeState stakeState,
             Address stakeStateAddress,
             long deposit,
             long blockIndex,
