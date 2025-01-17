@@ -69,16 +69,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         [Theory]
         [ClassData(typeof(StakeFixture))]
-        public async Task Stake(BigInteger amount)
+        public async Task Stake(BigInteger amount, Address avatarAddress)
         {
             string query = $@"
             {{
-                stake(amount: {amount})
+                stake(amount: {amount}, avatarAddress: ""{avatarAddress.ToString()}"")
             }}";
 
             var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
             var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
-            ActionBase action = new Stake(amount);
+            ActionBase action = new Stake(amount, avatarAddress);
             var expected = new Dictionary<string, object>()
             {
                 ["stake"] = ByteUtil.Hex(_codec.Encode(action.PlainValue)),
@@ -134,10 +134,12 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new object[]
                 {
                     new BigInteger(1),
+                    new Address("0xD84F1893A1912DEC1834A31a43f5619e0b2D5915")
                 },
                 new object[]
                 {
                     new BigInteger(100),
+                    new Address("0x35FdEee2fABE6aa916a36620E104a3E9433E4698")
                 },
             };
 

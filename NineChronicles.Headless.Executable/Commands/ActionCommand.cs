@@ -138,13 +138,14 @@ namespace NineChronicles.Headless.Executable.Commands
         [Command(Description = "Create Stake action.")]
         public int Stake(
             long amount,
+            Address avatarAddress,
             [Argument("PATH", Description = "A file path of base64 encoded action.")]
             string? filePath = null
         )
         {
             try
             {
-                Nekoyume.Action.Stake action = new Stake(amount);
+                Nekoyume.Action.Stake action = new Stake(amount, avatarAddress);
                 byte[] raw = Codec.Encode(new List(
                     new[]
                     {

@@ -90,7 +90,6 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var (exception, result) =
                         CreateOrReplaceAvatarFactory.TryGetByBlockIndex(
-                            chain.Tip.Index,
                             avatarIndex: avatarIndex,
                             name: name,
                             hair: context.GetArgument<int>("hair"),
