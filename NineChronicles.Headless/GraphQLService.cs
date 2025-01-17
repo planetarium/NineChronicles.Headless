@@ -20,6 +20,7 @@ using NineChronicles.Headless.Middleware;
 using NineChronicles.Headless.Properties;
 using NineChronicles.Headless.Repositories.BlockChain;
 using NineChronicles.Headless.Repositories.StateTrie;
+using NineChronicles.Headless.Repositories.Swarm;
 using NineChronicles.Headless.Repositories.Transaction;
 using NineChronicles.Headless.Repositories.WorldState;
 using Serilog;
@@ -167,6 +168,7 @@ namespace NineChronicles.Headless
                 services.AddSingleton<IBlockChainRepository, BlockChainRepository>();
                 services.AddSingleton<ITransactionRepository, TransactionRepository>();
                 services.AddSingleton<IStateTrieRepository, StateTrieRepository>();
+                services.AddSingleton<ISwarmRepository, SwarmRepository>();
 
                 services.AddHealthChecks();
 

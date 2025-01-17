@@ -11,6 +11,7 @@ using Nekoyume.Model.Stake;
 using Nekoyume.Module;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.Abstractions;
+using Nekoyume.Module.Guild;
 
 namespace NineChronicles.Headless.GraphTypes.States
 {
@@ -18,13 +19,21 @@ namespace NineChronicles.Headless.GraphTypes.States
     {
         public class StakeStateContext : StateContext
         {
-            public StakeStateContext(StakeState stakeState, Address address, IWorldState worldState, long blockIndex, StateMemoryCache stateMemoryCache)
+            public StakeStateContext(
+                Address agentAddress,
+                StakeState stakeState,
+                Address address,
+                IWorldState worldState,
+                long blockIndex,
+                StateMemoryCache stateMemoryCache)
                 : base(worldState, blockIndex, stateMemoryCache)
             {
+                AgentAddress = agentAddress;
                 StakeState = stakeState;
                 Address = address;
             }
 
+            public Address AgentAddress { get; }
             public StakeState StakeState { get; }
             public Address Address { get; }
         }
@@ -38,11 +47,8 @@ namespace NineChronicles.Headless.GraphTypes.States
             Field<NonNullGraphType<StringGraphType>>(
                 "deposit",
                 description: "The staked amount.",
-                resolve: context => context.Source.WorldState.GetBalance(
-                        context.Source.Address,
-                        new GoldCurrencyState(
-                            (Dictionary)context.Source.WorldState.GetLegacyState(GoldCurrencyState.Address)!).Currency)
-                    .GetQuantityString(true));
+                resolve: context => new World(context.Source.WorldState).GetStaked(
+                        context.Source.AgentAddress).GetQuantityString(true));
             Field<NonNullGraphType<LongGraphType>>(
                 "startedBlockIndex",
                 description: "The block index the user started to stake.",

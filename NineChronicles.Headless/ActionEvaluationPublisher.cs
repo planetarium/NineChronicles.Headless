@@ -32,6 +32,13 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Action.AdventureBoss;
+using Nekoyume.Action.Coupons;
+using Nekoyume.Action.CustomEquipmentCraft;
+using Nekoyume.Action.Garages;
+using Nekoyume.Action.Guild;
+using Nekoyume.Action.Guild.Migration;
+using Nekoyume.Action.ValidatorDelegation;
 using Nekoyume.Shared.Hubs;
 using Serilog;
 
@@ -388,6 +395,7 @@ namespace NineChronicles.Headless
             private readonly IBlockChainStates _blockChainStates;
             private readonly RpcContext _context;
             private readonly Address _clientAddress;
+            private readonly List<Address> _avatarAddresses;
 
             private IDisposable? _blockSubscribe;
             private IDisposable? _actionEveryRenderSubscribe;
@@ -410,6 +418,8 @@ namespace NineChronicles.Headless
                 _clientAddress = clientAddress;
                 _context = context;
                 TargetAddresses = ImmutableHashSet<Address>.Empty;
+                _avatarAddresses = Enumerable.Range(0, GameConfig.SlotCount)
+                    .Select(index => Addresses.GetAvatarAddress(_clientAddress, index)).ToList();
             }
 
             public static async Task<Client> CreateAsync(
@@ -456,6 +466,7 @@ namespace NineChronicles.Headless
 
                 _actionEveryRenderSubscribe = actionRenderer.EveryRender<ActionBase>()
                     .SubscribeOn(NewThreadScheduler.Default)
+                    .Where(FilterEvaluation)
                     .ObserveOn(NewThreadScheduler.Default)
                     .Subscribe(
                         async ev =>
@@ -581,6 +592,117 @@ namespace NineChronicles.Headless
                 _nodeStatusSubscribe?.Dispose();
                 await _hub.DisposeAsync();
             }
+
+            /// <summary>
+            /// Evaluates whether a given action should be filtered based on the signer and action type.
+            /// </summary>
+            /// <param name="eval">The evaluation object containing the action and signer information.</param>
+            /// <returns>
+            /// Returns true if the action passes the filter criteria; otherwise, false.
+            /// </returns>
+            private bool FilterEvaluation(ActionEvaluation<ActionBase> eval)
+            {
+                var actionBase = eval.Action;
+                var isSigner = eval.Signer.Equals(_clientAddress);
+
+                switch (actionBase)
+                {
+                    // Actions that require the signer to be the client
+                    case ApprovePledge
+                        or ExploreAdventureBoss
+                        or SweepAdventureBoss
+                        or UnlockFloor
+                        or AuraSummon
+                        or BattleArena
+                        or ChargeActionPoint
+                        or ClaimGifts
+                        or ClaimRaidReward
+                        or ClaimStakeReward
+                        or ClaimWordBossKillReward
+                        or CombinationConsumable
+                        or CombinationEquipment
+                        or CostumeSummon
+                        or CreateAvatar
+                        or CustomEquipmentCraft
+                        or DailyReward
+                        or EndPledge
+                        or EventConsumableItemCrafts
+                        or EventDungeonBattle
+                        or EventMaterialItemCrafts
+                        or Grinding
+                        or ClaimReward
+                        or HackAndSlash
+                        or HackAndSlashRandomBuff
+                        or HackAndSlashSweep
+                        or ItemEnhancement
+                        or JoinArena
+                        or PetEnhancement
+                        or Raid
+                        or RapidCombination
+                        or RuneEnhancement
+                        or RuneSummon
+                        or UnlockCombinationSlot
+                        or UnlockEquipmentRecipe
+                        or UnlockRuneSlot
+                        or UnlockWorld:
+                        return isSigner;
+
+                    // Actions that are always allowed
+                    case ClaimAdventureBossReward or Wanted or BuyProduct or CancelProductRegistration:
+                        return true;
+
+                    // Actions with specific conditions
+                    case ClaimItems claimItems:
+                        return isSigner || claimItems.ClaimData.Any(c => _avatarAddresses.Contains(c.address));
+
+                    case UnloadFromMyGarages unloadFromMyGarages:
+                        return IsUnloadFromMyGaragesValid(unloadFromMyGarages, _avatarAddresses, _clientAddress);
+
+                    case RequestPledge requestPledge:
+                        return isSigner || requestPledge.AgentAddress.Equals(_clientAddress);
+
+                    case TransferAsset transferAsset:
+                        return isSigner || IsRecipientValid(transferAsset.Recipient, _avatarAddresses, _clientAddress);
+
+                    case TransferAssets transferAssets:
+                        return isSigner || transferAssets.Recipients.Any(r => IsRecipientValid(r.recipient, _avatarAddresses, _clientAddress));
+
+                    default:
+                        return true;
+                }
+            }
+
+            /// <summary>
+            /// Validates if the 'UnloadFromMyGarages' action is valid based on recipient and asset values.
+            /// </summary>
+            /// <param name="unloadFromMyGarages">The action to validate.</param>
+            /// <param name="avatarAddresses">List of avatar addresses to check against.</param>
+            /// <param name="clientAddress">The client's address for validation.</param>
+            /// <returns>
+            /// Returns true if the action is valid; otherwise, false.
+            /// </returns>
+            private bool IsUnloadFromMyGaragesValid(UnloadFromMyGarages unloadFromMyGarages, List<Address> avatarAddresses, Address clientAddress)
+            {
+                return avatarAddresses.Contains(unloadFromMyGarages.RecipientAvatarAddr) ||
+                    (unloadFromMyGarages.FungibleAssetValues != null &&
+                        unloadFromMyGarages.FungibleAssetValues.Any(e =>
+                            e.balanceAddr.Equals(clientAddress) || avatarAddresses.Contains(e.balanceAddr)));
+            }
+
+            /// <summary>
+            /// Checks if a recipient address is valid by comparing it to the client and avatar addresses.
+            /// </summary>
+            /// <param name="recipient">The recipient address to validate.</param>
+            /// <param name="avatarAddresses">List of avatar addresses to check against.</param>
+            /// <param name="clientAddress">The client's address for validation.</param>
+            /// <returns>
+            /// Returns true if the recipient is valid; otherwise, false.
+            /// </returns>
+            private bool IsRecipientValid(Address recipient, List<Address> avatarAddresses, Address clientAddress)
+            {
+                return recipient.Equals(clientAddress) || avatarAddresses.Contains(recipient);
+            }
+
         }
     }
 }

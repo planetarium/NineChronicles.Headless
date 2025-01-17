@@ -27,14 +27,20 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<ByteStringType>(
                 name: "stake",
-                arguments: new QueryArguments(new QueryArgument<BigIntGraphType>
-                {
-                    Name = "amount",
-                    Description = "An amount to stake.",
-                }),
+                arguments: new QueryArguments(
+                    new QueryArgument<BigIntGraphType>
+                    {
+                        Name = "amount",
+                        Description = "An amount to stake.",
+                    },
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "Address of avatar.",
+                    }),
                 resolve: context => Encode(
                     context,
-                    new Stake(context.GetArgument<BigInteger>("amount"))));
+                    new Stake(context.GetArgument<BigInteger>("amount"), context.GetArgument<Address>("avatarAddress"))));
 
             Field<ByteStringType>(
                 name: "claimStakeReward",
@@ -567,35 +573,6 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context => Encode(
                     context,
                     new MigrateDelegationHeight(context.GetArgument<long>("amount"))));
-
-            Field<ByteStringType>(
-                name: "migratePlanetariumGuild",
-                resolve: context => Encode(
-                    context,
-                    new MigratePlanetariumGuild()));
-
-            Field<ByteStringType>(
-                name: "fixToRefundFromNonValidator",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<AddressType>>>>
-                    {
-                        Description = "List of addresses to refund",
-                        Name = "addresses",
-                    },
-                    new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<IntGraphType>>>>
-                    {
-                        Description = "List of amounts to refund",
-                        Name = "amounts",
-                    }),
-                resolve: context =>
-                {
-                    var addresses = context.GetArgument<List<Address>>("addresses");
-                    var amounts = context.GetArgument<List<int>>("amounts");
-                    var targets = addresses.Zip(amounts, (address, amount) => (address, amount));
-                    return Encode(
-                        context,
-                        new FixToRefundFromNonValidator(targets));
-                });
 
             RegisterHackAndSlash();
             RegisterHackAndSlashSweep();

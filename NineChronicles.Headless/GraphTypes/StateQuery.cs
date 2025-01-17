@@ -34,6 +34,7 @@ using NineChronicles.Headless.Utils;
 using Nekoyume.Module.Guild;
 using Nekoyume.TypedAddress;
 using Nekoyume.ValidatorDelegation;
+using Nekoyume.Module.ValidatorDelegation;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -258,6 +259,7 @@ namespace NineChronicles.Headless.GraphTypes
                 if (ctx.WorldState.TryGetStakeState(agentAddr: agentAddress, out StakeState stakeStateV2))
                 {
                     return new StakeStateType.StakeStateContext(
+                        agentAddress,
                         stakeStateV2,
                         stakeStateAddress,
                         ctx.WorldState,
@@ -721,7 +723,7 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            Field<AddressType>(
+            Field<GuildType>(
                 name: "guild",
                 description: "State for guild.",
                 arguments: new QueryArguments(
@@ -734,15 +736,14 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: context =>
                 {
                     var agentAddress = new AgentAddress(context.GetArgument<Address>("agentAddress"));
-                    if (!(context.Source.WorldState.GetAgentState(agentAddress) is { } agentState))
+                    var repository = new GuildRepository(new World(context.Source.WorldState), new HallowActionContext { });
+                    if (repository.GetJoinedGuild(agentAddress) is { } guildAddress)
                     {
-                        return null;
+                        var guild = repository.GetGuild(guildAddress);
+                        return GuildType.FromDelegatee(guild);
                     }
 
-                    var repository = new GuildRepository(new World(context.Source.WorldState), new HallowActionContext { });
-                    var joinedGuild = (Address?)repository.GetJoinedGuild(agentAddress);
-
-                    return joinedGuild;
+                    return null;
                 }
             );
 
@@ -766,7 +767,7 @@ namespace NineChronicles.Headless.GraphTypes
                     var agentAddress = new AgentAddress(context.GetArgument<Address>("agentAddress"));
                     var validatorAddress = context.GetArgument<Address>("validatorAddress");
                     var repository = new ValidatorRepository(new World(context.Source.WorldState), new HallowActionContext { });
-                    var delegatee = repository.GetValidatorDelegatee(validatorAddress);
+                    var delegatee = repository.GetDelegatee(validatorAddress);
                     var share = repository.GetBond(delegatee, agentAddress).Share;
 
                     return share.ToString();
@@ -787,8 +788,65 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var validatorAddress = context.GetArgument<Address>("validatorAddress");
                     var repository = new ValidatorRepository(new World(context.Source.WorldState), new HallowActionContext { });
-                    var delegatee = repository.GetValidatorDelegatee(validatorAddress);
+                    var delegatee = repository.GetDelegatee(validatorAddress);
                     return ValidatorType.FromDelegatee(delegatee);
+                }
+            );
+
+            Field<DelegatorType>(
+                name: "delegator",
+                description: "State for delegator.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "address",
+                        Description = "Agent or Validator address."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("address");
+                    var agentAddress = new AgentAddress(address);
+                    var guildRepository = new GuildRepository(
+                        new World(context.Source.WorldState), new HallowActionContext { });
+                    if (guildRepository.TryGetGuildParticipant(agentAddress, out var guildParticipant))
+                    {
+                        var guild = guildRepository.GetGuild(guildParticipant.GuildAddress);
+                        var guildDelegatee = guildRepository.GetDelegatee(guild.ValidatorAddress);
+                        var bond = guildRepository.GetBond(guildDelegatee, guildParticipant.Address);
+                        var totalDelegated = guildDelegatee.Metadata.TotalDelegatedFAV;
+                        var totalShare = guildDelegatee.Metadata.TotalShares;
+                        var lastDistributeHeight = bond.LastDistributeHeight ?? -1;
+                        var share = bond.Share;
+                        var fav = (share * totalDelegated).DivRem(totalShare).Quotient;
+                        return new DelegatorType
+                        {
+                            LastDistributeHeight = lastDistributeHeight,
+                            Share = share,
+                            Fav = fav,
+                        };
+                    }
+
+                    var validatorAddress = address;
+                    var validatorRepository = new ValidatorRepository(
+                        new World(context.Source.WorldState), new HallowActionContext { });
+                    if (validatorRepository.TryGetDelegatee(validatorAddress, out var validatorDelegatee))
+                    {
+                        var bond = validatorRepository.GetBond(validatorDelegatee, address);
+                        var totalDelegated = validatorDelegatee.Metadata.TotalDelegatedFAV;
+                        var totalShare = validatorDelegatee.Metadata.TotalShares;
+                        var lastDistributeHeight = bond.LastDistributeHeight ?? -1;
+                        var share = bond.Share;
+                        var fav = (share * totalDelegated).DivRem(totalShare).Quotient;
+                        return new DelegatorType
+                        {
+                            LastDistributeHeight = lastDistributeHeight,
+                            Share = share,
+                            Fav = fav,
+                        };
+                    }
+
+                    return null;
                 }
             );
         }
