@@ -15,6 +15,7 @@ using Nekoyume.Action.Guild.Migration;
 using Lib9c;
 using Nekoyume.Action.Guild;
 using Nekoyume.TypedAddress;
+using System.Globalization;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -569,6 +570,42 @@ namespace NineChronicles.Headless.GraphTypes
                         new PromoteValidator(
                             publicKey,
                             currency));
+                });
+
+            Field<ByteStringType>(
+                name: "unjailValidator",
+                resolve: context => Encode(context, new UnjailValidator()));
+
+            Field<ByteStringType>(
+                name: "delegateValidator",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Description = "A string value of guild gold to delegate.",
+                        Name = "amount",
+                    }),
+                resolve: context =>
+                {
+                    var fav = FungibleAssetValue.Parse(
+                        currency: Currencies.GuildGold,
+                        value: context.GetArgument<string>("amount"));
+                    return Encode(context, new DelegateValidator(fav));
+                });
+
+            Field<ByteStringType>(
+                name: "undelegateValidator",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Description = "A string value of share to undelegate.",
+                        Name = "share",
+                    }),
+                resolve: context =>
+                {
+                    var share = BigInteger.Parse(
+                        value: context.GetArgument<string>("share"),
+                        style: NumberStyles.Number);
+                    return Encode(context, new UndelegateValidator(share));
                 });
 
             Field<ByteStringType>(
