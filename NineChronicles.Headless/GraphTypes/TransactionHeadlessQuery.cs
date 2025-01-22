@@ -169,7 +169,7 @@ namespace NineChronicles.Headless.GraphTypes
                                 genesisHash: blockChain.Genesis.Hash,
                                 actions: new TxActionList(new[] { action.PlainValue }),
                                 gasLimit: action is ITransferAsset or ITransferAssets ? RequestPledge.DefaultRefillMead : 1L,
-                                maxGasPrice: FungibleAssetValue.Parse(Currencies.Mead, "0.00001")
+                                maxGasPrice: 1 * Currencies.Mead
                             ),
                             new TxSigningMetadata(publicKey: publicKey, nonce: nonce)
                         );
@@ -253,10 +253,10 @@ namespace NineChronicles.Headless.GraphTypes
                         Name = "nonce",
                         Description = "The nonce for Transaction.",
                     },
-                    new QueryArgument<FixedFungibleAssetValueInputType>
+                    new QueryArgument<FungibleAssetValueInputType>
                     {
                         Name = "maxGasPrice",
-                        DefaultValue = FungibleAssetValue.Parse(Currencies.Mead, "0.00001"),
+                        DefaultValue = 1 * Currencies.Mead
                     }
                 ),
                 resolve: context =>

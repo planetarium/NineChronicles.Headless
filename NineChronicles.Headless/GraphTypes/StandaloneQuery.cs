@@ -568,10 +568,10 @@ namespace NineChronicles.Headless.GraphTypes
                         Name = "timestamp",
                         Description = "The time this transaction is created.",
                     },
-                    new QueryArgument<FixedFungibleAssetValueInputType>
+                    new QueryArgument<FungibleAssetValueInputType>
                     {
                         Name = "maxGasPrice",
-                        DefaultValue = FungibleAssetValue.Parse(Currencies.Mead, "0.00001"),
+                        DefaultValue = 1 * Currencies.Mead
                     }
                 ),
                 resolve: context =>
