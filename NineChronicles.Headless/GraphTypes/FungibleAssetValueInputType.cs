@@ -14,7 +14,6 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public FungibleAssetValueInputType()
         {
-            DeprecationReason = "incorrect handling of decimal points or improper conversion logic. please use A";
             Field<NonNullGraphType<BigIntGraphType>>("quantity");
             Field<NonNullGraphType<StringGraphType>>("ticker");
             Field<NonNullGraphType<ByteGraphType>>("decimalPlaces");

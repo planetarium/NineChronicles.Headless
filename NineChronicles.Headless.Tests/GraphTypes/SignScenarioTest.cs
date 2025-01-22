@@ -168,7 +168,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(sender, action.AgentAddresses.Single().Item1);
             Assert.Equal(MeadConfig.PatronAddress, action.PatronAddress);
             Assert.Equal(1, signedTx.GasLimit);
-            Assert.Equal(FungibleAssetValue.FromRawValue(Currencies.Mead, 10000000000000), signedTx.MaxGasPrice);
+            Assert.Equal(1 * Currencies.Mead, signedTx.MaxGasPrice);
             await StageTransaction(signedTx, hex);
         }
 
@@ -206,7 +206,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             // Create unsigned Transaction.
             var unsignedQuery = gas ? $@"query {{
-                    unsignedTransaction(publicKey: ""{hexedPublicKey}"", plainValue: ""{plainValue}"", nonce: {nonce}, maxGasPrice: {{ quantity: ""0.00001"", decimalPlaces: 18, ticker: ""Mead"" }})
+                    unsignedTransaction(publicKey: ""{hexedPublicKey}"", plainValue: ""{plainValue}"", nonce: {nonce}, maxGasPrice: {{ quantity: 1, decimalPlaces: 18, ticker: ""Mead"" }})
                 }}" : $@"query {{
                     unsignedTransaction(publicKey: ""{hexedPublicKey}"", plainValue: ""{plainValue}"", nonce: {nonce})
                 }}";
@@ -249,7 +249,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Single(unsignedTx.Actions);
             Assert.Single(signedTx.Actions!);
             Assert.Equal(expectedGasLimit, signedTx.GasLimit);
-            Assert.Equal(FungibleAssetValue.FromRawValue(Currencies.Mead, 10000000000000), signedTx.MaxGasPrice);
+            Assert.Equal(1 * Currencies.Mead, signedTx.MaxGasPrice);
             return (signedTx, hex);
         }
 
