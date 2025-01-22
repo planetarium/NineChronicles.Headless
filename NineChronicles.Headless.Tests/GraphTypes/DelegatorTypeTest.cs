@@ -1,14 +1,10 @@
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Numerics;
 using System.Threading.Tasks;
 using GraphQL.Execution;
 using Lib9c;
-using Libplanet.Types.Tx;
-using Nekoyume.ValidatorDelegation;
 using NineChronicles.Headless.GraphTypes;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {

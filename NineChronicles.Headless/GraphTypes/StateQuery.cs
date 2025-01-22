@@ -793,7 +793,38 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            Field<DelegatorType>(
+            Field<DelegateeRepositoryType>(
+                name: "delegatee",
+                description: "State for delegatee.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "address",
+                        Description = "Address of the validator."
+                    }
+                ),
+                resolve: context =>
+                {
+                    var address = context.GetArgument<Address>("address");
+                    var guildRepository = new GuildRepository(
+                        new World(context.Source.WorldState), new HallowActionContext { });
+                    var validatorRepository = new ValidatorRepository(
+                        new World(context.Source.WorldState), new HallowActionContext { });
+
+                    if (validatorRepository.TryGetDelegatee(address, out var validatorDelegatee))
+                    {
+                        return new DelegateeRepositoryType
+                        {
+                            GuildDelegatee = DelegateeType.From(guildRepository, address),
+                            ValidatorDelegatee = DelegateeType.From(validatorRepository, address),
+                        };
+                    }
+
+                    return null;
+                }
+            );
+
+            Field<DelegatorRepositoryType>(
                 name: "delegator",
                 description: "State for delegator.",
                 arguments: new QueryArguments(
@@ -809,41 +840,18 @@ namespace NineChronicles.Headless.GraphTypes
                     var agentAddress = new AgentAddress(address);
                     var guildRepository = new GuildRepository(
                         new World(context.Source.WorldState), new HallowActionContext { });
+                    var validatorRepository = new ValidatorRepository(
+                        new World(context.Source.WorldState), new HallowActionContext { });
+
                     if (guildRepository.TryGetGuildParticipant(agentAddress, out var guildParticipant))
                     {
-                        var guild = guildRepository.GetGuild(guildParticipant.GuildAddress);
-                        var guildDelegatee = guildRepository.GetDelegatee(guild.ValidatorAddress);
-                        var bond = guildRepository.GetBond(guildDelegatee, guildParticipant.Address);
-                        var totalDelegated = guildDelegatee.Metadata.TotalDelegatedFAV;
-                        var totalShare = guildDelegatee.Metadata.TotalShares;
-                        var lastDistributeHeight = bond.LastDistributeHeight ?? -1;
-                        var share = bond.Share;
-                        var fav = (share * totalDelegated).DivRem(totalShare).Quotient;
-                        return new DelegatorType
-                        {
-                            LastDistributeHeight = lastDistributeHeight,
-                            Share = share,
-                            Fav = fav,
-                        };
+                        return DelegatorRepositoryType.From(guildRepository, guildParticipant);
                     }
 
                     var validatorAddress = address;
-                    var validatorRepository = new ValidatorRepository(
-                        new World(context.Source.WorldState), new HallowActionContext { });
                     if (validatorRepository.TryGetDelegatee(validatorAddress, out var validatorDelegatee))
                     {
-                        var bond = validatorRepository.GetBond(validatorDelegatee, address);
-                        var totalDelegated = validatorDelegatee.Metadata.TotalDelegatedFAV;
-                        var totalShare = validatorDelegatee.Metadata.TotalShares;
-                        var lastDistributeHeight = bond.LastDistributeHeight ?? -1;
-                        var share = bond.Share;
-                        var fav = (share * totalDelegated).DivRem(totalShare).Quotient;
-                        return new DelegatorType
-                        {
-                            LastDistributeHeight = lastDistributeHeight,
-                            Share = share,
-                            Fav = fav,
-                        };
+                        return DelegatorRepositoryType.From(validatorRepository, validatorAddress);
                     }
 
                     return null;
