@@ -35,14 +35,20 @@ namespace NineChronicles.Headless.GraphTypes
                         Name = "amount",
                         Description = "An amount to stake.",
                     },
-                    new QueryArgument<NonNullGraphType<AddressType>>
+                    new QueryArgument<AddressType>
                     {
                         Name = "avatarAddress",
                         Description = "Address of avatar.",
                     }),
-                resolve: context => Encode(
-                    context,
-                    new Stake(context.GetArgument<BigInteger>("amount"), context.GetArgument<Address>("avatarAddress"))));
+                resolve: context =>
+                {
+                    var amount = context.GetArgument<BigInteger>("amount");
+                    var avatarAddress = context.GetArgument<Address?>("avatarAddress");
+                    var stake = avatarAddress is not null
+                        ? new Stake(amount, avatarAddress.Value)
+                        : new Stake(amount);
+                    return Encode(context, stake);
+                });
 
             Field<ByteStringType>(
                 name: "claimStakeReward",
