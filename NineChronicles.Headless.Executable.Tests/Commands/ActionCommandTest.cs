@@ -70,7 +70,8 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
         public void Stake()
         {
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
-            var resultCode = _command.Stake(1, filePath);
+            var resultCode = _command.Stake(
+                1, new Address("0xab1dce17dCE1Db1424BB833Af6cC087cd4F5CB6d"), filePath);
             Assert.Equal(0, resultCode);
             var rawAction = Convert.FromBase64String(File.ReadAllText(filePath));
             var decoded = (List)_codec.Decode(rawAction);

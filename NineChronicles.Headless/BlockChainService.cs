@@ -9,12 +9,11 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
+using Humanizer.Bytes;
 using Libplanet.Action.State;
-using Libplanet.Blockchain;
 using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
-using Libplanet.Net;
 using Libplanet.Types.Assets;
 using Libplanet.Types.Blocks;
 using Libplanet.Types.Tx;
@@ -22,9 +21,18 @@ using MagicOnion;
 using MagicOnion.Server;
 using Microsoft.Extensions.Caching.Memory;
 using Nekoyume;
+using Nekoyume.Action;
+using Nekoyume.Delegation;
+using Nekoyume.Model.Guild;
 using Nekoyume.Model.State;
 using Nekoyume.Module;
+using Nekoyume.Module.Guild;
 using Nekoyume.Shared.Services;
+using NineChronicles.Headless.Repositories.BlockChain;
+using NineChronicles.Headless.Repositories.Swarm;
+using NineChronicles.Headless.Repositories.Transaction;
+using NineChronicles.Headless.Repositories.WorldState;
+using NineChronicles.Headless.Utils;
 using Serilog;
 using static NineChronicles.Headless.NCActionUtils;
 using NodeExceptionType = Libplanet.Headless.NodeExceptionType;
@@ -34,8 +42,10 @@ namespace NineChronicles.Headless
 {
     public class BlockChainService : ServiceBase<IBlockChainService>, IBlockChainService
     {
-        private BlockChain _blockChain;
-        private Swarm _swarm;
+        private IBlockChainRepository _blockChainRepository;
+        private ITransactionRepository _transactionRepository;
+        private IWorldStateRepository _worldStateRepository;
+        private ISwarmRepository _swarmRepository;
         private RpcContext _context;
         private Codec _codec;
         private LibplanetNodeServiceProperties _libplanetNodeServiceProperties;
@@ -43,16 +53,20 @@ namespace NineChronicles.Headless
         private MemoryCache _memoryCache;
 
         public BlockChainService(
-            BlockChain blockChain,
-            Swarm swarm,
+            IBlockChainRepository blockChainRepository,
+            ITransactionRepository transactionRepository,
+            IWorldStateRepository worldStateRepository,
+            ISwarmRepository swarmRepository,
             RpcContext context,
             LibplanetNodeServiceProperties libplanetNodeServiceProperties,
             ActionEvaluationPublisher actionEvaluationPublisher,
             StateMemoryCache cache
             )
         {
-            _blockChain = blockChain;
-            _swarm = swarm;
+            _blockChainRepository = blockChainRepository;
+            _transactionRepository = transactionRepository;
+            _worldStateRepository = worldStateRepository;
+            _swarmRepository = swarmRepository;
             _context = context;
             _codec = new Codec();
             _libplanetNodeServiceProperties = libplanetNodeServiceProperties;
@@ -71,25 +85,26 @@ namespace NineChronicles.Headless
                     ? $"{action}"
                     : "NoAction";
                 var txId = tx.Id.ToString();
+                var stage = true;
 
                 try
                 {
                     Log.Debug("PutTransaction: (nonce: {nonce}, id: {id})", tx.Nonce, tx.Id);
-                    Log.Debug("StagedTransactions: {txIds}", string.Join(", ", _blockChain.GetStagedTransactionIds()));
+                    Log.Debug("StagedTransactions: {txIds}", string.Join(", ", _blockChainRepository.GetStagedTransactionIds()));
 #pragma warning disable CS8632
-                    Exception? validationExc = _blockChain.Policy.ValidateNextBlockTx(_blockChain, tx);
+                    Exception? validationExc = _blockChainRepository.ValidateNextBlockTx(tx);
 #pragma warning restore CS8632
                     if (validationExc is null)
                     {
-                        _blockChain.StageTransaction(tx);
-                        _swarm.BroadcastTxs(new[] { tx });
+                        stage = _blockChainRepository.StageTransaction(tx);
+                        _swarmRepository.BroadcastTxs(new[] { tx });
                     }
                     else
                     {
                         Log.Debug("Skip StageTransaction({TxId}) reason: {Msg}", tx.Id, validationExc.Message);
                     }
 
-                    return new UnaryResult<bool>(true);
+                    return new UnaryResult<bool>(stage);
                 }
                 catch (InvalidTxException ite)
                 {
@@ -112,7 +127,7 @@ namespace NineChronicles.Headless
             var hash = new BlockHash(blockHashBytes);
             var accountAddress = new Address(accountAddressBytes);
             var address = new Address(addressBytes);
-            IValue state = _blockChain
+            IValue state = _worldStateRepository
                 .GetWorldState(hash)
                 .GetAccountState(accountAddress)
                 .GetState(address);
@@ -129,7 +144,7 @@ namespace NineChronicles.Headless
             var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
             var accountAddress = new Address(accountAddressBytes);
             var address = new Address(addressBytes);
-            IValue state = _blockChain
+            IValue state = _worldStateRepository
                 .GetWorldState(stateRootHash)
                 .GetAccountState(accountAddress)
                 .GetState(address);
@@ -142,7 +157,7 @@ namespace NineChronicles.Headless
             IEnumerable<byte[]> addressBytesList)
         {
             var hash = new BlockHash(blockHashBytes);
-            var worldState = _blockChain.GetWorldState(hash);
+            var worldState = _worldStateRepository.GetWorldState(hash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
             var taskList = addressBytesList.Select(addressByte => Task.Run(() =>
             {
@@ -159,7 +174,7 @@ namespace NineChronicles.Headless
             IEnumerable<byte[]> addressBytesList)
         {
             var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
-            var worldState = _blockChain.GetWorldState(stateRootHash);
+            var worldState = _worldStateRepository.GetWorldState(stateRootHash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
             var taskList = addressBytesList.Select(addressByte => Task.Run(() =>
             {
@@ -176,7 +191,7 @@ namespace NineChronicles.Headless
             IEnumerable<byte[]> addressBytesList)
         {
             var hash = new BlockHash(blockHashBytes);
-            var worldState = _blockChain.GetWorldState(hash);
+            var worldState = _worldStateRepository.GetWorldState(hash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
             var addresses = addressBytesList.Select(a => new Address(a)).ToList();
             var taskList = addresses.Select(address => Task.Run(() =>
@@ -195,7 +210,7 @@ namespace NineChronicles.Headless
         {
             var addresses = addressBytesList.Select(a => new Address(a)).ToList();
             var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
-            var worldState = _blockChain.GetWorldState(stateRootHash);
+            var worldState = _worldStateRepository.GetWorldState(stateRootHash);
             var result = new ConcurrentDictionary<byte[], byte[]>();
             var taskList = addresses.Select(address => Task.Run(() =>
             {
@@ -217,7 +232,7 @@ namespace NineChronicles.Headless
             List<Address> addresses = addressBytesList.Select(b => new Address(b)).ToList();
 
             var result = new Dictionary<byte[], byte[]>();
-            IReadOnlyList<IValue> values = _blockChain
+            IReadOnlyList<IValue> values = _worldStateRepository
                 .GetWorldState(blockHash)
                 .GetAccountState(accountAddress)
                 .GetStates(addresses);
@@ -239,7 +254,7 @@ namespace NineChronicles.Headless
             List<Address> addresses = addressBytesList.Select(b => new Address(b)).ToList();
 
             var result = new Dictionary<byte[], byte[]>();
-            IReadOnlyList<IValue> values = _blockChain
+            IReadOnlyList<IValue> values = _worldStateRepository
                 .GetWorldState(stateRootHash)
                 .GetAccountState(accountAddress)
                 .GetStates(addresses);
@@ -278,7 +293,7 @@ namespace NineChronicles.Headless
             if (addresses.Any())
             {
                 var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
-                IReadOnlyList<IValue> values = _blockChain.GetWorldState(stateRootHash).GetLegacyStates(addresses);
+                IReadOnlyList<IValue> values = _worldStateRepository.GetWorldState(stateRootHash).GetLegacyStates(addresses);
                 sw.Stop();
                 Log.Information("[GetSheets]Get sheet from state: {Count}, Elapsed: {Elapsed}", addresses.Count, sw.Elapsed);
                 sw.Restart();
@@ -303,7 +318,7 @@ namespace NineChronicles.Headless
             var address = new Address(addressBytes);
             var serializedCurrency = (Bencodex.Types.Dictionary)_codec.Decode(currencyBytes);
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
-            FungibleAssetValue balance = _blockChain
+            FungibleAssetValue balance = _worldStateRepository
                 .GetWorldState(blockHash)
                 .GetBalance(address, currency);
             byte[] encoded = _codec.Encode(
@@ -327,7 +342,7 @@ namespace NineChronicles.Headless
             var address = new Address(addressBytes);
             var serializedCurrency = (Bencodex.Types.Dictionary)_codec.Decode(currencyBytes);
             Currency currency = CurrencyExtensions.Deserialize(serializedCurrency);
-            FungibleAssetValue balance = _blockChain
+            FungibleAssetValue balance = _worldStateRepository
                 .GetWorldState(stateRootHash)
                 .GetBalance(address, currency);
             byte[] encoded = _codec.Encode(
@@ -342,9 +357,57 @@ namespace NineChronicles.Headless
             return new UnaryResult<byte[]>(encoded);
         }
 
+        public UnaryResult<byte[]> GetUnbondClaimableHeightByStateRootHash(
+            byte[] stateRootHashBytes, byte[] addressBytes)
+        {
+            var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var address = new Address(addressBytes);
+            var worldState = _worldStateRepository.GetWorldState(stateRootHash);
+            var result = GetUnbondClaimableHeight(worldState, address);
+
+            byte[] encoded = _codec.Encode(result);
+            return new UnaryResult<byte[]>(encoded);
+        }
+
+        public UnaryResult<byte[]> GetClaimableRewardsByStateRootHash(
+            byte[] stateRootHashBytes, byte[] addressBytes)
+        {
+            var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var address = new Address(addressBytes);
+            var worldState = _worldStateRepository.GetWorldState(stateRootHash);
+            var result = GetClaimableRewards(worldState, address);
+
+            byte[] encoded = _codec.Encode(result);
+            return new UnaryResult<byte[]>(encoded);
+        }
+
+        public UnaryResult<byte[]> GetDelegationInfoByStateRootHash(
+            byte[] stateRootHashBytes, byte[] addressBytes)
+        {
+            var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var address = new Address(addressBytes);
+            var worldState = _worldStateRepository.GetWorldState(stateRootHash);
+            var result = GetDelegationInfo(worldState, address);
+
+            byte[] encoded = _codec.Encode(result);
+            return new UnaryResult<byte[]>(encoded);
+        }
+
+        public UnaryResult<byte[]> GetStakedByStateRootHash(
+            byte[] stateRootHashBytes, byte[] addressBytes)
+        {
+            var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+            var address = new Address(addressBytes);
+            var worldState = _worldStateRepository.GetWorldState(stateRootHash);
+            var result = GetStaked(worldState, address);
+
+            byte[] encoded = _codec.Encode(result);
+            return new UnaryResult<byte[]>(encoded);
+        }
+
         public UnaryResult<byte[]> GetTip()
         {
-            Bencodex.Types.Dictionary headerDict = _blockChain.Tip.MarshalBlock();
+            Bencodex.Types.Dictionary headerDict = _blockChainRepository.Tip.MarshalBlock();
             byte[] headerBytes = _codec.Encode(headerDict);
             return new UnaryResult<byte[]>(headerBytes);
         }
@@ -353,7 +416,7 @@ namespace NineChronicles.Headless
         {
             try
             {
-                return new UnaryResult<byte[]>(_codec.Encode(_blockChain[blockIndex].Hash.Bencoded));
+                return new UnaryResult<byte[]>(_codec.Encode(_blockChainRepository.GetBlock(blockIndex).Hash.Bencoded));
             }
             catch (ArgumentOutOfRangeException)
             {
@@ -364,7 +427,7 @@ namespace NineChronicles.Headless
         public UnaryResult<long> GetNextTxNonce(byte[] addressBytes)
         {
             var address = new Address(addressBytes);
-            var nonce = _blockChain.GetNextTxNonce(address);
+            var nonce = _transactionRepository.GetNextTxNonce(address);
             Log.Debug("GetNextTxNonce: {nonce}", nonce);
             return new UnaryResult<long>(nonce);
         }
@@ -389,7 +452,7 @@ namespace NineChronicles.Headless
         public UnaryResult<bool> IsTransactionStaged(byte[] txidBytes)
         {
             var id = new TxId(txidBytes);
-            var isStaged = _blockChain.GetStagedTransactionIds().Contains(id);
+            var isStaged = _blockChainRepository.GetStagedTransactionIds().Contains(id);
             Log.Debug(
                 "Transaction {id} is {1}.",
                 id,
@@ -429,6 +492,91 @@ namespace NineChronicles.Headless
             _publisher.RemoveClient(address).Wait();
             return new UnaryResult<bool>(true);
         }
+
+        private static IValue GetUnbondClaimableHeight(IWorldState worldState, Address address)
+        {
+            var repository = new GuildRepository(new World(worldState), new HallowActionContext { });
+            try
+            {
+                var delegator = repository.GetDelegator(address);
+                var expireHeights = delegator.UnbondingRefs
+                    .Select(r => UnbondingFactory.GetUnbondingFromRef(r, repository))
+                    .Where(u => u is UnbondLockIn)
+                    .Select(u => u.LowestExpireHeight);
+
+                if (expireHeights.Any())
+                {
+                    return new Integer(expireHeights.Min());
+                }
+                else
+                {
+                    return new Integer(-1L);
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to get unbond claimable height. {e}", e);
+                return null;
+            }
+        }
+
+        private static IValue GetClaimableRewards(IWorldState worldState, Address address)
+        {
+            try
+            {
+                var repository = new GuildRepository(new World(worldState), new HallowActionContext { });
+                var guildAddress = repository.GetGuildParticipant(address).GuildAddress;
+                var validatorAddress = repository.GetGuild(guildAddress).ValidatorAddress;
+                var guildDelegatee = repository.GetDelegatee(validatorAddress);
+                var bond = repository.GetBond(guildDelegatee, address);
+                var share = bond.Share;
+
+                if (share.IsZero
+                    || bond.LastDistributeHeight is null
+                    || repository.GetCurrentRewardBase(guildDelegatee) is not RewardBase rewardBase)
+                {
+                    return List.Empty;
+                }
+
+                var lastRewardBase = repository.GetRewardBase(guildDelegatee, bond.LastDistributeHeight.Value);
+                var rewards = guildDelegatee.CalculateRewards(share, rewardBase, lastRewardBase);
+
+                return new List(rewards.Select(r => r.Serialize()));
+            }
+            catch (FailedLoadStateException)
+            {
+                return List.Empty;
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to get claimable rewards. {e}", e);
+                return null;
+            }
+        }
+
+        private static IValue GetDelegationInfo(IWorldState worldState, Address address)
+        {
+            try
+            {
+                var delegationInfo = new World(worldState).GetDelegationInfo(address);
+                return List.Empty
+                    .Add(delegationInfo.Share)
+                    .Add(delegationInfo.TotalShare)
+                    .Add(delegationInfo.TotalDelegated.Serialize());
+            }
+            catch (InvalidOperationException)
+            {
+                return List.Empty;
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to get delegation info. {e}", e);
+                return null;
+            }
+        }
+
+        private static IValue GetStaked(IWorldState worldState, Address address)
+            => new World(worldState).GetStaked(address).Serialize();
 
         // Returning value is a list of [ Avatar, Inventory, QuestList, WorldInformation ]
         private static IValue GetFullAvatarStateRaw(IWorldState worldState, Address address)
