@@ -713,6 +713,21 @@ namespace NineChronicles.Headless.GraphTypes
                 name: "claimUnbonded",
                 resolve: context => Encode(context, new ClaimUnbonded()));
 
+            Field<ByteStringType>(
+                name: "migrateStakeAndJoinGuild",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "targetAddress",
+                        Description = "The agent address to migrate."
+                    }),
+                resolve: context =>
+                {
+                    var targetAddress = context.GetArgument<Address>("targetAddress");
+                    var agentAddress = new AgentAddress(targetAddress);
+                    return Encode(context, new MigrateStakeAndJoinGuild(agentAddress));
+                });
+
             RegisterHackAndSlash();
             RegisterHackAndSlashSweep();
             RegisterDailyReward();
