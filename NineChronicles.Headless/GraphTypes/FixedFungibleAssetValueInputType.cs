@@ -10,12 +10,11 @@ using Libplanet.Explorer.GraphTypes;
 
 namespace NineChronicles.Headless.GraphTypes
 {
-    public class FungibleAssetValueInputType : InputObjectGraphType<FungibleAssetValue>
+    public class FixedFungibleAssetValueInputType : InputObjectGraphType<FungibleAssetValue>
     {
-        public FungibleAssetValueInputType()
+        public FixedFungibleAssetValueInputType()
         {
-            DeprecationReason = "incorrect handling of decimal points or improper conversion logic. please use A";
-            Field<NonNullGraphType<BigIntGraphType>>("quantity");
+            Field<NonNullGraphType<StringGraphType>>("quantity");
             Field<NonNullGraphType<StringGraphType>>("ticker");
             Field<NonNullGraphType<ByteGraphType>>("decimalPlaces");
             Field<ListGraphType<NonNullGraphType<AddressType>>>("minters");
@@ -39,7 +38,7 @@ namespace NineChronicles.Headless.GraphTypes
 #pragma warning disable CS0618
             // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
             var currency = Currency.Legacy((string)value["ticker"]!, (byte)value["decimalPlaces"]!, minters: minters);
-            return currency * (BigInteger)value["quantity"]!;
+            return FungibleAssetValue.Parse(currency, (string)value["quantity"]!);
 #pragma warning restore CS0618
         }
 
@@ -56,7 +55,7 @@ namespace NineChronicles.Headless.GraphTypes
                 }
                 return new ObjectValue(new List<ObjectField>
                 {
-                    new("quantity", new BigIntValue(fav.RawValue)),
+                    new("quantity", new StringValue(fav.GetQuantityString())),
                     new("ticker", new StringValue(fav.Currency.Ticker)),
                     new("decimalPlaces", new IntValue(fav.Currency.DecimalPlaces)),
                     new("minters", mintersValue),
