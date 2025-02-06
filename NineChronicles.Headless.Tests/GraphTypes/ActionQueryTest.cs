@@ -18,6 +18,7 @@ using Libplanet.Types.Tx;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Action.Garages;
+using Nekoyume.Action.Guild.Migration;
 using Nekoyume.Helper;
 using Nekoyume.Model;
 using Nekoyume.Model.EnumType;
@@ -1583,6 +1584,22 @@ actionPoint: {actionPoint},
                     Assert.Equal(i == 0, tradable);
                 }
             }
+        }
+
+        [Fact]
+        public async Task MigrateStakeAndJoinGuild()
+        {
+            var targetAddress = new PrivateKey().Address;
+            var query = $"{{migrateStakeAndJoinGuild(targetAddress: \"{targetAddress}\")}}";
+            var queryResult = await ExecuteQueryAsync<ActionQuery>(query, standaloneContext: _standaloneContext);
+            Assert.Null(queryResult.Errors);
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var plainValue = _codec.Decode(ByteUtil.ParseHex((string)data["migrateStakeAndJoinGuild"]));
+            Assert.IsType<Dictionary>(plainValue);
+            var polymorphicAction = DeserializeNCAction(plainValue);
+            var action = Assert.IsType<MigrateStakeAndJoinGuild>(polymorphicAction);
+            Assert.Equal(targetAddress, action.Target);
         }
     }
 }
