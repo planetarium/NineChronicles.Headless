@@ -11,8 +11,12 @@
     <ProjectReference Include="..\Lib9c\.Lib9c.Plugin.Shared\Lib9c.Plugin.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="!$(UseLocalLibplanet)">
     <PackageReference Include="Libplanet.Action" Version="$(LibplanetVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(UseLocalLibplanet)">
+    <ProjectReference Include="$(LibplanetDirectory)\src\Libplanet.Action\Libplanet.Action.csproj" />
   </ItemGroup>
 
 </Project>
