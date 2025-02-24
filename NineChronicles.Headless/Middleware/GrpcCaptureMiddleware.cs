@@ -24,40 +24,41 @@ namespace NineChronicles.Headless.Middleware
         public override async Task<TResponse> UnaryServerHandler<TRequest, TResponse>(
             TRequest request, ServerCallContext context, UnaryServerMethod<TRequest, TResponse> continuation)
         {
-            if (context.Method is "/IBlockChainService/AddClient" && request is byte[] addClientAddressBytes)
+            var httpContext = context.GetHttpContext();
+            var ipAddress = httpContext.Connection.RemoteIpAddress + ":" + httpContext.Connection.RemotePort;
+            long requestSize = request is byte[] requestBytes ? requestBytes.Length : 0;
+
+            // Process request and capture response size
+            var response = await continuation(request, context);
+            long responseSize = response is byte[] responseBytes ? responseBytes.Length : 0;
+
+            // Preserve existing logic
+            if (context.Method == "/IBlockChainService/AddClient" && request is byte[] addClientAddressBytes)
             {
                 var agent = new Address(addClientAddressBytes);
-                var httpContext = context.GetHttpContext();
-                var ipAddress = httpContext.Connection.RemoteIpAddress + ":" + httpContext.Connection.RemotePort;
                 var uaHeader = httpContext.Request.Headers["User-Agent"].FirstOrDefault()!;
                 AddClientByDevice(agent, uaHeader);
 
                 _logger.Information(
-                    "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method} Agent: {Agent} Header: {Header}",
-                    ipAddress, context.Method, agent, uaHeader);
+                    "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method} Agent: {Agent} Header: {Header} Request Size: {RequestSize} bytes Response Size: {ResponseSize} bytes",
+                    ipAddress, context.Method, agent, uaHeader, requestSize, responseSize);
             }
 
-            if (context.Method is "/IBlockChainService/GetNextTxNonce" && request is byte[] getNextTxNonceAddressBytes)
+            if (context.Method == "/IBlockChainService/GetNextTxNonce" && request is byte[] getNextTxNonceAddressBytes)
             {
                 var agent = new Address(getNextTxNonceAddressBytes);
-                var httpContext = context.GetHttpContext();
-                var ipAddress = httpContext.Connection.RemoteIpAddress + ":" + httpContext.Connection.RemotePort;
 
                 _logger.Information(
-                    "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method} Agent: {Agent}",
-                    ipAddress, context.Method, agent);
+                    "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method} Agent: {Agent} Request Size: {RequestSize} bytes Response Size: {ResponseSize} bytes",
+                    ipAddress, context.Method, agent, requestSize, responseSize);
             }
 
-            if (context.Method is "/IBlockChainService/PutTransaction" && request is byte[] txBytes)
+            if (context.Method == "/IBlockChainService/PutTransaction" && request is byte[] txBytes)
             {
-                Transaction tx =
-                    Transaction.Deserialize(txBytes);
-                var actionName = ToAction(tx.Actions[0]) is { } action
-                    ? $"{action}"
-                    : "NoAction";
-                var httpContext = context.GetHttpContext();
-                var ipAddress = httpContext.Connection.RemoteIpAddress + ":" + httpContext.Connection.RemotePort;
+                Transaction tx = Transaction.Deserialize(txBytes);
+                var actionName = ToAction(tx.Actions[0]) is { } action ? $"{action}" : "NoAction";
                 var uaHeader = httpContext.Request.Headers["User-Agent"].FirstOrDefault()!;
+
                 if (!_actionEvaluationPublisher.GetClients().Contains(tx.Signer))
                 {
                     await _actionEvaluationPublisher.AddClient(tx.Signer);
@@ -65,20 +66,26 @@ namespace NineChronicles.Headless.Middleware
                 }
 
                 _logger.Information(
-                    "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method} Agent: {Agent} Action: {Action}",
-                    ipAddress, context.Method, tx.Signer, actionName);
+                    "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method} Agent: {Agent} Action: {Action} Request Size: {RequestSize} bytes Response Size: {ResponseSize} bytes",
+                    ipAddress, context.Method, tx.Signer, actionName, requestSize, responseSize);
             }
 
-            if (context.Method is "/IBlockChainService/GetSheets")
+            if (context.Method == "/IBlockChainService/GetSheets")
             {
-                var httpContext = context.GetHttpContext();
-                var ipAddress = httpContext.Connection.RemoteIpAddress + ":" + httpContext.Connection.RemotePort;
                 _logger.Information(
-                    "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method}",
-                    ipAddress, context.Method);
+                    "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method} Request Size: {RequestSize} bytes Response Size: {ResponseSize} bytes",
+                    ipAddress, context.Method, requestSize, responseSize);
             }
 
-            return await base.UnaryServerHandler(request, context, continuation);
+            // Log for any other gRPC method not explicitly covered
+            if (!new[] { "/IBlockChainService/AddClient", "/IBlockChainService/GetNextTxNonce", "/IBlockChainService/PutTransaction", "/IBlockChainService/GetSheets" }.Contains(context.Method))
+            {
+                _logger.Information(
+                    "[GRPC-REQUEST-CAPTURE] IP: {IP} Method: {Method} Request Size: {RequestSize} bytes Response Size: {ResponseSize} bytes",
+                    ipAddress, context.Method, requestSize, responseSize);
+            }
+
+            return response;
         }
 
         private void AddClientByDevice(Address agentAddress, string userAgentHeader)
