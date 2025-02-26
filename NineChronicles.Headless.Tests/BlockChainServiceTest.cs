@@ -1,6 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
+using System.IO.Compression;
 using System.Threading.Tasks;
+using Bencodex;
 using Bencodex.Types;
 using Lib9c.Renderers;
 using Libplanet.Blockchain;
@@ -82,6 +86,28 @@ namespace NineChronicles.Headless.Tests
             Assert.Equal(stageResult, result);
             mockBlockChain.Verify(bc => bc.StageTransaction(It.IsAny<Transaction>()), Times.Once);
             mockSwarm.Verify(s => s.BroadcastTxs(It.IsAny<Transaction[]>()), Times.Once);
+        }
+
+        [Fact]
+        public void Compress()
+        {
+            var codec = new Codec();
+            var compressed = BlockChainService.CompressState(codec, Null.Value);
+            IValue result = null;
+            using (var cp = new MemoryStream(compressed))
+            {
+                using (var decompressed = new MemoryStream())
+                {
+                    using (var df = new DeflateStream(cp, CompressionMode.Decompress))
+                    {
+                        df.CopyTo(decompressed);
+                        decompressed.Seek(0, SeekOrigin.Begin);
+                        var dec = decompressed.ToArray();
+                        result = codec.Decode(dec);
+                    }
+                }
+            }
+            Assert.Equal(Null.Value, result);
         }
     }
 }

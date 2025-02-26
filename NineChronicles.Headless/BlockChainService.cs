@@ -4,12 +4,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
-using Humanizer.Bytes;
 using Libplanet.Action.State;
 using Libplanet.Common;
 using Libplanet.Crypto;
@@ -24,7 +25,6 @@ using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Delegation;
 using Nekoyume.Model.Guild;
-using Nekoyume.Model.State;
 using Nekoyume.Module;
 using Nekoyume.Module.Guild;
 using Nekoyume.Shared.Services;
@@ -132,7 +132,7 @@ namespace NineChronicles.Headless
                 .GetAccountState(accountAddress)
                 .GetState(address);
             // FIXME: Null과 null 구분해서 반환해야 할 듯
-            byte[] encoded = _codec.Encode(state ?? Null.Value);
+            byte[] encoded = CompressState(_codec, state ?? Null.Value);
             return new UnaryResult<byte[]>(encoded);
         }
 
@@ -148,7 +148,7 @@ namespace NineChronicles.Headless
                 .GetWorldState(stateRootHash)
                 .GetAccountState(accountAddress)
                 .GetState(address);
-            byte[] encoded = _codec.Encode(state ?? Null.Value);
+            byte[] encoded = CompressState(_codec, state ?? Null.Value);
             return new UnaryResult<byte[]>(encoded);
         }
 
@@ -162,7 +162,7 @@ namespace NineChronicles.Headless
             var taskList = addressBytesList.Select(addressByte => Task.Run(() =>
             {
                 var value = worldState.GetResolvedState(new Address(addressByte), Addresses.Agent);
-                result.TryAdd(addressByte, _codec.Encode(value ?? Null.Value));
+                result.TryAdd(addressByte, CompressState(_codec, value ?? Null.Value));
             }));
 
             await Task.WhenAll(taskList);
@@ -179,7 +179,7 @@ namespace NineChronicles.Headless
             var taskList = addressBytesList.Select(addressByte => Task.Run(() =>
             {
                 var value = worldState.GetResolvedState(new Address(addressByte), Addresses.Agent);
-                result.TryAdd(addressByte, _codec.Encode(value ?? Null.Value));
+                result.TryAdd(addressByte, CompressState(_codec, value ?? Null.Value));
             }));
 
             await Task.WhenAll(taskList);
@@ -197,7 +197,7 @@ namespace NineChronicles.Headless
             var taskList = addresses.Select(address => Task.Run(() =>
             {
                 var value = GetFullAvatarStateRaw(worldState, address);
-                result.TryAdd(address.ToByteArray(), _codec.Encode(value ?? Null.Value));
+                result.TryAdd(address.ToByteArray(), CompressState(_codec, value ?? Null.Value));
             }));
 
             await Task.WhenAll(taskList);
@@ -215,7 +215,7 @@ namespace NineChronicles.Headless
             var taskList = addresses.Select(address => Task.Run(() =>
             {
                 var value = GetFullAvatarStateRaw(worldState, address);
-                result.TryAdd(address.ToByteArray(), _codec.Encode(value ?? Null.Value));
+                result.TryAdd(address.ToByteArray(), CompressState(_codec, value ?? Null.Value));
             }));
 
             await Task.WhenAll(taskList);
@@ -238,7 +238,7 @@ namespace NineChronicles.Headless
                 .GetStates(addresses);
             for (int i = 0; i < addresses.Count; i++)
             {
-                result.TryAdd(addresses[i].ToByteArray(), _codec.Encode(values[i] ?? Null.Value));
+                result.TryAdd(addresses[i].ToByteArray(), CompressState(_codec, values[i] ?? Null.Value));
             }
 
             return new UnaryResult<Dictionary<byte[], byte[]>>(result);
@@ -260,7 +260,7 @@ namespace NineChronicles.Headless
                 .GetStates(addresses);
             for (int i = 0; i < addresses.Count; i++)
             {
-                result.TryAdd(addresses[i].ToByteArray(), _codec.Encode(values[i] ?? Null.Value));
+                result.TryAdd(addresses[i].ToByteArray(), CompressState(_codec, values[i] ?? Null.Value));
             }
 
             return new UnaryResult<Dictionary<byte[], byte[]>>(result);
@@ -321,7 +321,7 @@ namespace NineChronicles.Headless
             FungibleAssetValue balance = _worldStateRepository
                 .GetWorldState(blockHash)
                 .GetBalance(address, currency);
-            byte[] encoded = _codec.Encode(
+            byte[] encoded = CompressState(_codec,
               new Bencodex.Types.List(
                 new IValue[]
                 {
@@ -345,7 +345,7 @@ namespace NineChronicles.Headless
             FungibleAssetValue balance = _worldStateRepository
                 .GetWorldState(stateRootHash)
                 .GetBalance(address, currency);
-            byte[] encoded = _codec.Encode(
+            byte[] encoded = CompressState(_codec,
               new Bencodex.Types.List(
                 new IValue[]
                 {
@@ -365,7 +365,7 @@ namespace NineChronicles.Headless
             var worldState = _worldStateRepository.GetWorldState(stateRootHash);
             var result = GetUnbondClaimableHeight(worldState, address);
 
-            byte[] encoded = _codec.Encode(result);
+            byte[] encoded = CompressState(_codec, result);
             return new UnaryResult<byte[]>(encoded);
         }
 
@@ -377,7 +377,7 @@ namespace NineChronicles.Headless
             var worldState = _worldStateRepository.GetWorldState(stateRootHash);
             var result = GetClaimableRewards(worldState, address);
 
-            byte[] encoded = _codec.Encode(result);
+            byte[] encoded = CompressState(_codec, result);
             return new UnaryResult<byte[]>(encoded);
         }
 
@@ -389,7 +389,7 @@ namespace NineChronicles.Headless
             var worldState = _worldStateRepository.GetWorldState(stateRootHash);
             var result = GetDelegationInfo(worldState, address);
 
-            byte[] encoded = _codec.Encode(result);
+            byte[] encoded = CompressState(_codec, result);
             return new UnaryResult<byte[]>(encoded);
         }
 
@@ -401,7 +401,7 @@ namespace NineChronicles.Headless
             var worldState = _worldStateRepository.GetWorldState(stateRootHash);
             var result = GetStaked(worldState, address);
 
-            byte[] encoded = _codec.Encode(result);
+            byte[] encoded = CompressState(_codec, result);
             return new UnaryResult<byte[]>(encoded);
         }
 
@@ -416,11 +416,11 @@ namespace NineChronicles.Headless
         {
             try
             {
-                return new UnaryResult<byte[]>(_codec.Encode(_blockChainRepository.GetBlock(blockIndex).Hash.Bencoded));
+                return new UnaryResult<byte[]>(CompressState(_codec, _blockChainRepository.GetBlock(blockIndex).Hash.Bencoded));
             }
             catch (ArgumentOutOfRangeException)
             {
-                return new UnaryResult<byte[]>(_codec.Encode(Null.Value));
+                return new UnaryResult<byte[]>(CompressState(_codec, Null.Value));
             }
         }
 
@@ -604,6 +604,17 @@ namespace NineChronicles.Headless
                 serializedInventoryRaw!,
                 serializedQuestListRaw!,
                 serializedWorldInformationRaw!);
+        }
+
+        public static byte[] CompressState(Codec codec, IValue state)
+        {
+            using var c = new MemoryStream();
+            using (var df = new DeflateStream(c, CompressionLevel.Fastest))
+            {
+                var encoded = codec.Encode(state ?? Null.Value);
+                df.Write(encoded, 0, encoded.Length);
+            }
+            return c.ToArray();
         }
     }
 }
