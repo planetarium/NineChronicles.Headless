@@ -56,7 +56,7 @@ public class JwtAuthenticationMiddleware : IMiddleware
                 context.Response.ContentType = "application/json";
                 await context.Response.WriteAsync(
                     JsonConvert.SerializeObject(
-                        new { errpr = e.Message }
+                        new { error = e.Message }
                         ));
                 return;
             }
