@@ -273,7 +273,7 @@ namespace NineChronicles.Headless
             return new UnaryResult<Dictionary<byte[], byte[]>>(GetSheetsInternal("GetSheets", stateRootHashBytes, addressBytesList));
         }
 
-        public UnaryResult<Dictionary<byte[], byte[]>> GetSheetHashes(
+        public UnaryResult<Dictionary<byte[], byte[]>> GetSheetsHash(
             byte[] stateRootHashBytes,
             IEnumerable<byte[]> addressBytesList)
         {
