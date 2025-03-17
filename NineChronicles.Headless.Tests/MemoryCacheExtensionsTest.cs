@@ -30,7 +30,7 @@ public class MemoryCacheExtensionsTest
         var csv = sheets[tableName];
         var cacheKey = Addresses.GetSheetAddress(tableName).ToString();
         var value = (Text)csv;
-        var compressed = MessagePackSerializer.Serialize(codec.Encode(value), lz4Options);
+        var compressed = MemoryCacheExtensions.NormalizedBytes(csv);
         cache.SetSheet(cacheKey, value, TimeSpan.FromMilliseconds(100));
         Assert.True(cache.TryGetValue(cacheKey, out byte[] cached));
         Assert.Equal(compressed, cached);
