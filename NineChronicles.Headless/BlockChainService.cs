@@ -626,8 +626,16 @@ namespace NineChronicles.Headless
                 {
                     var address = addresses[i];
                     var value = values[i] ?? Null.Value;
-                    var compressed = _memoryCache.SetSheet(address.ToString(), value, TimeSpan.FromMinutes(1));
-                    result.TryAdd(address.ToByteArray(), compressed);
+                    if (value is Text text)
+                    {
+                        var compressed = _memoryCache.SetSheet(address.ToString(), text.Value, TimeSpan.FromMinutes(1));
+                        result.TryAdd(address.ToByteArray(), compressed);
+                    }
+                    else
+                    {
+                        var compressed = CompressState(_codec, value);
+                        result.TryAdd(address.ToByteArray(), compressed);
+                    }
                 }
             }
             Log.Information("[{FName}]Total: {Elapsed}", fName, DateTime.UtcNow - started);
