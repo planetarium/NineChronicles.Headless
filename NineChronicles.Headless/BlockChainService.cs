@@ -633,7 +633,7 @@ namespace NineChronicles.Headless
                     }
                     else
                     {
-                        var compressed = CompressState(_codec, value);
+                        var compressed = MemoryCacheExtensions.NormalizedBytes(string.Empty);
                         result.TryAdd(address.ToByteArray(), compressed);
                     }
                 }
