@@ -18,8 +18,6 @@ public class MemoryCacheExtensionsTest
     [Fact]
     public async Task Sheet()
     {
-        var codec = new Codec();
-        var lz4Options = MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
         var cache = new MemoryCache(new OptionsWrapper<MemoryCacheOptions>(new MemoryCacheOptions
         {
             SizeLimit = null
@@ -28,13 +26,14 @@ public class MemoryCacheExtensionsTest
         var sheets = TableSheetsImporter.ImportSheets();
         var tableName = nameof(ItemRequirementSheet);
         var csv = sheets[tableName];
-        var cacheKey = Addresses.GetSheetAddress(tableName).ToString();
+        var cacheKey = Addresses.GetSheetAddress(tableName).ToString().Replace("\r\n", "\n");
         var value = (Text)csv;
         var compressed = MemoryCacheExtensions.NormalizedBytes(csv);
         cache.SetSheet(cacheKey, value, TimeSpan.FromMilliseconds(100));
+        var expected = Encoding.UTF8.GetString(compressed);
         Assert.True(cache.TryGetValue(cacheKey, out byte[] cached));
         Assert.Equal(compressed, cached);
-        Assert.Equal(csv, cache.GetSheet(cacheKey));
+        Assert.Equal(expected, cache.GetSheet(cacheKey));
         await Task.Delay(100);
         Assert.False(cache.TryGetValue(cacheKey, out byte[] _));
     }
