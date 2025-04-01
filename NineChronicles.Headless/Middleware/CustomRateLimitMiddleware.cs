@@ -11,7 +11,6 @@ using Microsoft.Extensions.Configuration;
 
 namespace NineChronicles.Headless.Middleware
 {
-
     public class CustomRateLimitMiddleware : RateLimitMiddleware<CustomIpRateLimitProcessor>
     {
         private readonly ILogger _logger;
@@ -27,17 +26,20 @@ namespace NineChronicles.Headless.Middleware
             IOptions<CustomIpRateLimitOptions> options,
             IIpPolicyStore policyStore,
             IRateLimitConfiguration config,
-            Microsoft.Extensions.Configuration.IConfiguration configuration)
+            IConfiguration configuration)
             : base(next, options?.Value, new CustomIpRateLimitProcessor(options?.Value!, policyStore, processingStrategy), config)
         {
             _config = config;
             _options = options!;
             _logger = Log.Logger.ForContext<CustomRateLimitMiddleware>();
+
             var jwtConfig = configuration.GetSection("Jwt");
             var issuer = jwtConfig["Issuer"] ?? "";
             var key = jwtConfig["Key"] ?? "";
+
             _whitelistedIp = configuration.GetSection("IpRateLimiting:IpWhitelist")?.Get<string[]>()?.FirstOrDefault() ?? "127.0.0.1";
             _banCount = configuration.GetValue<int>("IpRateLimiting:TransactionResultsBanThresholdCount", 100);
+
             _validationParams = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
             {
                 ValidateIssuer = true,
@@ -51,10 +53,13 @@ namespace NineChronicles.Headless.Middleware
 
         protected override void LogBlockedRequest(HttpContext context, ClientRequestIdentity identity, RateLimitCounter counter, RateLimitRule rule)
         {
+            var isJwtAuthenticated = identity.ClientIp == _whitelistedIp;
+
             _logger.Information($"[IP-RATE-LIMITER] Request {identity.HttpVerb}:{identity.Path} from IP {identity.ClientIp} has been blocked, " +
                                 $"quota {rule.Limit}/{rule.Period} exceeded by {counter.Count - rule.Limit}. Blocked by rule {rule.Endpoint}, " +
                                 $"TraceIdentifier {context.TraceIdentifier}. MonitorMode: {rule.MonitorMode}");
-            if (counter.Count - rule.Limit >= _options.Value.IpBanThresholdCount)
+
+            if (!isJwtAuthenticated && counter.Count - rule.Limit >= _options.Value.IpBanThresholdCount)
             {
                 _logger.Information($"[IP-RATE-LIMITER] Banning IP {identity.ClientIp}.");
                 IpBanMiddleware.BanIp(identity.ClientIp);
@@ -64,30 +69,9 @@ namespace NineChronicles.Headless.Middleware
         public override async Task<ClientRequestIdentity> ResolveIdentityAsync(HttpContext context)
         {
             var identity = await base.ResolveIdentityAsync(context);
+            bool isJwtAuthenticated = false;
 
-            if (context.Request.Protocol == "HTTP/1.1")
-            {
-                var body = context.Items["RequestBody"]!.ToString()!;
-                context.Request.Body.Seek(0, SeekOrigin.Begin);
-                if (body.Contains("stageTransaction"))
-                {
-                    identity.Path = "/graphql/stagetransaction";
-                }
-                else if (body.Contains("transactionResults"))
-                {
-                    identity.Path = "/graphql/transactionresults";
-
-                    // Check for txIds count
-                    var txIdsCount = CountTxIds(body);
-                    if (txIdsCount > _banCount)
-                    {
-                        _logger.Information($"[IP-RATE-LIMITER] Banning IP {identity.ClientIp} due to excessive txIds count: {txIdsCount}");
-                        IpBanMiddleware.BanIp(identity.ClientIp);
-                    }
-                }
-            }
-
-            // Check for JWT secret key in headers
+            // Validate JWT first
             if (context.Request.Headers.TryGetValue("Authorization", out var authHeaderValue) &&
                 authHeaderValue.Count > 0)
             {
@@ -98,11 +82,34 @@ namespace NineChronicles.Headless.Middleware
                     {
                         _tokenHandler.ValidateToken(token, _validationParams, out _);
                         identity.ClientIp = _whitelistedIp;
+                        isJwtAuthenticated = true;
                     }
                 }
                 catch (System.Exception ex)
                 {
                     _logger.Warning("[IP-RATE-LIMITER] JWT validation failed: {Message}", ex.Message);
+                }
+            }
+
+            if (context.Request.Protocol == "HTTP/1.1")
+            {
+                var body = context.Items["RequestBody"]!.ToString()!;
+                context.Request.Body.Seek(0, SeekOrigin.Begin);
+
+                if (body.Contains("stageTransaction"))
+                {
+                    identity.Path = "/graphql/stagetransaction";
+                }
+                else if (body.Contains("transactionResults"))
+                {
+                    identity.Path = "/graphql/transactionresults";
+
+                    var txIdsCount = CountTxIds(body);
+                    if (!isJwtAuthenticated && txIdsCount > _banCount)
+                    {
+                        _logger.Information($"[IP-RATE-LIMITER] Banning IP {identity.ClientIp} due to excessive txIds count: {txIdsCount}");
+                        IpBanMiddleware.BanIp(identity.ClientIp);
+                    }
                 }
             }
 
@@ -131,34 +138,26 @@ namespace NineChronicles.Headless.Middleware
             {
                 var json = System.Text.Json.JsonDocument.Parse(body);
 
-                // Check for txIds in query variables first
                 if (json.RootElement.TryGetProperty("variables", out var variables) &&
                     variables.TryGetProperty("txIds", out var txIdsElement) &&
                     txIdsElement.ValueKind == System.Text.Json.JsonValueKind.Array)
                 {
-                    // Count from variables
                     return txIdsElement.GetArrayLength();
                 }
 
-                // Fallback to check the query string if variables are not set
                 if (json.RootElement.TryGetProperty("query", out var queryElement))
                 {
                     var query = queryElement.GetString();
                     if (!string.IsNullOrWhiteSpace(query))
                     {
-                        // Extract txIds from the query string using regex
                         var txIdMatches = System.Text.RegularExpressions.Regex.Matches(
                             query, @"transactionResults\s*\(\s*txIds\s*:\s*\[(?<txIds>[^\]]*)\]"
                         );
 
                         if (txIdMatches.Count > 0)
                         {
-                            // Extract the inner contents of txIds
                             var txIdList = txIdMatches[0].Groups["txIds"].Value;
-
-                            // Count txIds using commas
                             var txIds = txIdList.Split(',', System.StringSplitOptions.RemoveEmptyEntries | System.StringSplitOptions.TrimEntries);
-
                             return txIds.Length;
                         }
                     }
@@ -169,7 +168,6 @@ namespace NineChronicles.Headless.Middleware
                 _logger.Warning("[IP-RATE-LIMITER] Error parsing request body: {Message}", ex.Message);
             }
 
-            // Return 0 if txIds not found
             return 0;
         }
     }
