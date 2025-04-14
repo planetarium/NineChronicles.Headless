@@ -270,42 +270,26 @@ namespace NineChronicles.Headless
             byte[] stateRootHashBytes,
             IEnumerable<byte[]> addressBytesList)
         {
-            var started = DateTime.UtcNow;
+            return new UnaryResult<Dictionary<byte[], byte[]>>(GetSheetsInternal("GetSheets", stateRootHashBytes, addressBytesList));
+        }
+
+        public UnaryResult<Dictionary<byte[], byte[]>> GetSheetsHash(
+            byte[] stateRootHashBytes,
+            IEnumerable<byte[]> addressBytesList)
+        {
+            var sheets = GetSheetsInternal("GetSheetHashes", stateRootHashBytes, addressBytesList);
+            Log.Information("[GetSheetHashes]Total: Start hashing");
             var sw = new Stopwatch();
             sw.Start();
             var result = new Dictionary<byte[], byte[]>();
-            List<Address> addresses = new List<Address>();
-            foreach (var b in addressBytesList)
+            foreach (var kv in sheets)
             {
-                var address = new Address(b);
-                if (_memoryCache.TryGetSheet(address.ToString(), out byte[] cached))
-                {
-                    result.TryAdd(b, cached);
-                }
-                else
-                {
-                    addresses.Add(address);
-                }
+                using var sha256 = SHA256.Create();
+                var hash = sha256.ComputeHash(kv.Value);
+                result.TryAdd(kv.Key, hash);
             }
             sw.Stop();
-            Log.Information("[GetSheets]Get sheet from cache count: {CachedCount}, not Cached: {CacheMissedCount}, Elapsed: {Elapsed}", result.Count, addresses.Count, sw.Elapsed);
-            sw.Restart();
-            if (addresses.Any())
-            {
-                var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
-                IReadOnlyList<IValue> values = _worldStateRepository.GetWorldState(stateRootHash).GetLegacyStates(addresses);
-                sw.Stop();
-                Log.Information("[GetSheets]Get sheet from state: {Count}, Elapsed: {Elapsed}", addresses.Count, sw.Elapsed);
-                sw.Restart();
-                for (int i = 0; i < addresses.Count; i++)
-                {
-                    var address = addresses[i];
-                    var value = values[i] ?? Null.Value;
-                    var compressed = _memoryCache.SetSheet(address.ToString(), value, TimeSpan.FromMinutes(1));
-                    result.TryAdd(address.ToByteArray(), compressed);
-                }
-            }
-            Log.Information("[GetSheets]Total: {Elapsed}", DateTime.UtcNow - started);
+            Log.Information("[GetSheetHashes]Hashing count: {CachedCount}, Elapsed: {Elapsed}", result.Count, sw.Elapsed);
             return new UnaryResult<Dictionary<byte[], byte[]>>(result);
         }
 
@@ -604,6 +588,58 @@ namespace NineChronicles.Headless
                 serializedInventoryRaw!,
                 serializedQuestListRaw!,
                 serializedWorldInformationRaw!);
+        }
+
+        private Dictionary<byte[], byte[]> GetSheetsInternal(
+            string fName,
+            byte[] stateRootHashBytes,
+            IEnumerable<byte[]> addressBytesList)
+        {
+            var started = DateTime.UtcNow;
+            var sw = new Stopwatch();
+            sw.Start();
+            var result = new Dictionary<byte[], byte[]>();
+            List<Address> addresses = new List<Address>();
+            foreach (var b in addressBytesList)
+            {
+                var address = new Address(b);
+                if (_memoryCache.TryGetSheet(address.ToString(), out byte[] cached))
+                {
+                    result.TryAdd(b, cached);
+                }
+                else
+                {
+                    addresses.Add(address);
+                }
+            }
+            sw.Stop();
+            Log.Information("[{FName}]Get sheet from cache count: {CachedCount}, not Cached: {CacheMissedCount}, Elapsed: {Elapsed}", fName, result.Count, addresses.Count, sw.Elapsed);
+            sw.Restart();
+            if (addresses.Any())
+            {
+                var stateRootHash = new HashDigest<SHA256>(stateRootHashBytes);
+                IReadOnlyList<IValue> values = _worldStateRepository.GetWorldState(stateRootHash).GetLegacyStates(addresses);
+                sw.Stop();
+                Log.Information("[{FName}]Get sheet from state: {Count}, Elapsed: {Elapsed}", fName, addresses.Count, sw.Elapsed);
+                sw.Restart();
+                for (int i = 0; i < addresses.Count; i++)
+                {
+                    var address = addresses[i];
+                    var value = values[i] ?? Null.Value;
+                    if (value is Text text)
+                    {
+                        var compressed = _memoryCache.SetSheet(address.ToString(), text.Value, TimeSpan.FromMinutes(1));
+                        result.TryAdd(address.ToByteArray(), compressed);
+                    }
+                    else
+                    {
+                        var compressed = MemoryCacheExtensions.NormalizedBytes(string.Empty);
+                        result.TryAdd(address.ToByteArray(), compressed);
+                    }
+                }
+            }
+            Log.Information("[{FName}]Total: {Elapsed}", fName, DateTime.UtcNow - started);
+            return result;
         }
 
         public static byte[] CompressState(Codec codec, IValue state)
