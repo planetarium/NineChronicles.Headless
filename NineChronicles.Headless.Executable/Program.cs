@@ -239,6 +239,7 @@ namespace NineChronicles.Headless.Executable
                     .AddEnvironmentVariables();
             }
 
+
             // Setup logger.
             var configuration = configurationBuilder.Build();
             var loggerConf = new LoggerConfiguration()
@@ -481,6 +482,19 @@ namespace NineChronicles.Headless.Executable
                 string otlpEndpoint = Environment.GetEnvironmentVariable("OTLP_ENDPOINT") ?? "http://localhost:4317";
                 hostBuilder.ConfigureServices(services =>
                 {
+                    // Make sure your app can use this mutable IConfigurationRoot
+                    services.AddSingleton<IConfiguration>(configuration);
+                    services.AddSingleton(configuration);
+
+                    // If configPath is a URL, we attach the reloader
+                    if (Uri.IsWellFormedUriString(configPath, UriKind.Absolute))
+                    {
+                        services.AddHostedService(sp => new RemoteConfigReloadService(
+                            configuration,
+                            configPath
+                        ));
+                    }
+
                     services.AddSingleton(_ => standaloneContext);
                     services.AddSingleton<IKeyStore>(standaloneContext.KeyStore);
                     services.AddOpenTelemetry()
