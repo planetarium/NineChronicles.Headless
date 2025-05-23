@@ -16,7 +16,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<LongGraphType>>(
                 name: "nonce",
-                description: "The nonce of the transaction.",
+                description: "The starting nonce before the block executes.",
                 resolve: context => context.Source.Nonce
             );
         }

@@ -823,7 +823,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 new Dictionary<string, object>
                 {
                     ["signer"] = sender.ToString(),
-                    ["nonce"] = 4L  // 5 - 1
+                    ["nonce"] = 5L
                 }
             };
 

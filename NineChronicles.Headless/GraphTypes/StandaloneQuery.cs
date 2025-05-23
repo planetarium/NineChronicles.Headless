@@ -611,7 +611,8 @@ namespace NineChronicles.Headless.GraphTypes
                         .GroupBy(tx => tx.Signer)
                         .Select(group => (
                             Signer: group.Key,
-                            Nonce: group.Min(tx => tx.Nonce) - 1))
+                            Nonce: group.Min(tx => tx.Nonce)))
+                        .OrderBy(x => x.Signer)
                         .ToArray();
                 });
         }
