@@ -1054,10 +1054,16 @@ namespace NineChronicles.Headless.Executable.Commands
             IStore store)
         {
             store.ForkBlockIndexes(src, dest, branchPointHash);
-            if (store.GetBlockCommit(branchPointHash) is { })
+            try
             {
-                store.PutChainBlockCommit(dest, GetBlockCommit(store, branchPointHash));
+                store.PutChainBlockCommit(dest, GetChainBlockCommit(branchPointHash, src));
             }
+            catch (Exception ex)
+            {
+                _console.Error.WriteLine(ex.Message);
+                _console.Error.WriteLine(ex.StackTrace);
+            }
+
             store.ForkTxNonces(src, dest);
 
             for (
@@ -1076,6 +1082,39 @@ namespace NineChronicles.Headless.Executable.Commands
                     store.IncreaseTxNonce(dest, address, -txCount);
                 }
             }
+        }
+
+        private BlockCommit GetChainBlockCommit(BlockHash blockHash, Guid chainId)
+        {
+            var tipHash = _store.IndexBlockHash(chainId, -1)
+                ?? throw new CommandExitedException("The given chain seems empty.", -1);
+            if (!(_store.GetBlockIndex(tipHash) is { } tipIndex))
+            {
+                throw new CommandExitedException(
+                    $"The index of {tipHash} doesn't exist.",
+                    -1);
+            }
+
+            if (!(_store.GetBlockIndex(blockHash) is { } blockIndex))
+            {
+                throw new CommandExitedException(
+                    $"The index of {blockHash} doesn't exist.",
+                    -1);
+            }
+
+            if (blockIndex == tipIndex)
+            {
+                return _store.GetChainBlockCommit(chainId);
+            }
+
+            if (!(_store.IndexBlockHash(chainId, blockIndex + 1) is { } nextHash))
+            {
+                throw new CommandExitedException(
+                    $"The hash of index {blockIndex + 1} doesn't exist.",
+                    -1);
+            }
+
+            return _store.GetBlock(nextHash).LastCommit;
         }
     }
 }
