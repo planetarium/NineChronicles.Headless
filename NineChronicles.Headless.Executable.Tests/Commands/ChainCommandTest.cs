@@ -210,35 +210,43 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 RuneInfos = new List<RuneSlotInfo>(),
             };
 
-
+            var blockCommits = new List<BlockCommit>();
             for (var i = 0; i < 2; i++)
             {
                 chain.MakeTransaction(proposer, new ActionBase[] { action });
                 if (chain.Tip.Index < 1)
                 {
                     Block block = chain.ProposeBlock(proposer);
-                    chain.Append(block, GenerateBlockCommit(block, proposer));
+                    BlockCommit blockCommit = GenerateBlockCommit(block, proposer);
+                    chain.Append(block, blockCommit);
+                    blockCommits.Add(blockCommit);
                 }
                 else
                 {
                     Block block = chain.ProposeBlock(
                         proposer,
                         lastCommit: GenerateBlockCommit(chain.Tip, proposer));
-                    chain.Append(block, GenerateBlockCommit(block, proposer));
+                    BlockCommit blockCommit = GenerateBlockCommit(block, proposer);
+                    chain.Append(block, blockCommit);
+                    blockCommits.Add(blockCommit);
                 }
             }
 
             var indexCountBeforeTruncate = store.CountIndex(chainId);
+            var blockCommitBeforeTruncate = store.GetChainBlockCommit(chainId);
             store.Dispose();
             stateStore.Dispose();
             _command.Truncate(storeType, _storePath, 1);
             IStore storeAfterTruncate = storeType.CreateStore(_storePath);
             chainId = storeAfterTruncate.GetCanonicalChainId() ?? new Guid();
             var indexCountAfterTruncate = storeAfterTruncate.CountIndex(chainId);
+            var blockCommitAfterTruncate = storeAfterTruncate.GetChainBlockCommit(chainId);
             storeAfterTruncate.Dispose();
 
             Assert.Equal(3, indexCountBeforeTruncate);
             Assert.Equal(2, indexCountAfterTruncate);
+            Assert.Equal(blockCommits[1], blockCommitBeforeTruncate);
+            Assert.Equal(blockCommits[2], blockCommitAfterTruncate);
         }
 
         [Theory]
