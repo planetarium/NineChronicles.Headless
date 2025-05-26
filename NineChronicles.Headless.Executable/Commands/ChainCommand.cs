@@ -1056,7 +1056,11 @@ namespace NineChronicles.Headless.Executable.Commands
             store.ForkBlockIndexes(src, dest, branchPointHash);
             try
             {
-                store.PutChainBlockCommit(dest, GetChainBlockCommit(branchPointHash, src));
+                var blockCommit = GetChainBlockCommit(branchPointHash, src, store);
+                if (blockCommit is not null)
+                {
+                    store.PutChainBlockCommit(dest, blockCommit);
+                }
             }
             catch (Exception ex)
             {
@@ -1084,18 +1088,18 @@ namespace NineChronicles.Headless.Executable.Commands
             }
         }
 
-        private BlockCommit GetChainBlockCommit(BlockHash blockHash, Guid chainId)
+        private BlockCommit? GetChainBlockCommit(BlockHash blockHash, Guid chainId, IStore store)
         {
-            var tipHash = _store.IndexBlockHash(chainId, -1)
+            var tipHash = store.IndexBlockHash(chainId, -1)
                 ?? throw new CommandExitedException("The given chain seems empty.", -1);
-            if (!(_store.GetBlockIndex(tipHash) is { } tipIndex))
+            if (!(store.GetBlockIndex(tipHash) is { } tipIndex))
             {
                 throw new CommandExitedException(
                     $"The index of {tipHash} doesn't exist.",
                     -1);
             }
 
-            if (!(_store.GetBlockIndex(blockHash) is { } blockIndex))
+            if (!(store.GetBlockIndex(blockHash) is { } blockIndex))
             {
                 throw new CommandExitedException(
                     $"The index of {blockHash} doesn't exist.",
@@ -1104,17 +1108,17 @@ namespace NineChronicles.Headless.Executable.Commands
 
             if (blockIndex == tipIndex)
             {
-                return _store.GetChainBlockCommit(chainId);
+                return store.GetChainBlockCommit(chainId);
             }
 
-            if (!(_store.IndexBlockHash(chainId, blockIndex + 1) is { } nextHash))
+            if (!(store.IndexBlockHash(chainId, blockIndex + 1) is { } nextHash))
             {
                 throw new CommandExitedException(
                     $"The hash of index {blockIndex + 1} doesn't exist.",
                     -1);
             }
 
-            return _store.GetBlock(nextHash).LastCommit;
+            return store.GetBlock(nextHash)?.LastCommit;
         }
     }
 }
