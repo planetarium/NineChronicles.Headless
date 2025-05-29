@@ -225,7 +225,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 {
                     Block block = chain.ProposeBlock(
                         proposer,
-                        lastCommit: GenerateBlockCommit(chain.Tip, proposer));
+                        lastCommit: blockCommits[0]);
                     BlockCommit blockCommit = GenerateBlockCommit(block, proposer);
                     chain.Append(block, blockCommit);
                     blockCommits.Add(blockCommit);
@@ -246,7 +246,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             Assert.Equal(3, indexCountBeforeTruncate);
             Assert.Equal(2, indexCountAfterTruncate);
             Assert.Equal(blockCommits[1], blockCommitBeforeTruncate);
-            Assert.Equal(blockCommits[2], blockCommitAfterTruncate);
+            Assert.Equal(blockCommits[0], blockCommitAfterTruncate);
         }
 
         [Theory]
