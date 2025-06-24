@@ -776,6 +776,60 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Assert.Equal(0 * CrystalCalculator.CRYSTAL, 0 * currency);
         }
 
+        [Fact]
+        public async Task BlockStartingTxNonces()
+        {
+            PrivateKey senderKey = new PrivateKey(), recipientKey = new PrivateKey();
+            Address sender = senderKey.Address, recipient = recipientKey.Address;
+
+            var blockHash = BlockHash.FromString("613dfa26e104465790625ae7bc03fc27a64947c02a9377565ec190405ef7154b");
+            Transaction MakeTx(long nonce, ActionBase action)
+            {
+                return Transaction.Create(nonce, senderKey, blockHash, new[] { action.PlainValue });
+            }
+
+            var currency = Currency.Uncapped("NCG", 2, null);
+            var txs = new[]
+            {
+                MakeTx(5, new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 1, 0))),
+                MakeTx(6, new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 1, 0))),
+                MakeTx(7, new TransferAsset(sender, recipient, new FungibleAssetValue(currency, 1, 0))),
+            };
+            var block = new Domain.Model.BlockChain.Block(
+                blockHash,
+                BlockHash.FromString("36456be15af9a5b9b13a02c7ce1e849ae9cba8781ec309010499cdb93e29237d"),
+                default(Address),
+                0,
+                Timestamp: DateTimeOffset.UtcNow,
+                StateRootHash: MerkleTrie.EmptyRootHash,
+                Transactions: txs.ToImmutableArray()
+            );
+
+            BlockChainRepository.Setup(repo => repo.GetBlock(blockHash))
+                .Returns(block);
+
+            var blockHashHex = ByteUtil.Hex(block.Hash.ToByteArray());
+            var result = await ExecuteQueryAsync(
+                $"{{ blockStartingTxNoncesQuery(hash: \"{blockHashHex}\") {{ signer nonce }} }}");
+
+            Assert.Null(result.Errors);
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
+            var actual = ((IList)data["blockStartingTxNoncesQuery"])
+                .Cast<Dictionary<string, object>>()
+                .ToList();
+
+            var expected = new List<Dictionary<string, object>>
+            {
+                new Dictionary<string, object>
+                {
+                    ["signer"] = sender.ToString(),
+                    ["nonce"] = 5L
+                }
+            };
+
+            Assert.Equal(expected, actual);
+        }
+
         private NineChroniclesNodeService MakeNineChroniclesNodeService(PrivateKey privateKey)
         {
 #pragma warning disable CS0618
