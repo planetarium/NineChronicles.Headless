@@ -1054,10 +1054,20 @@ namespace NineChronicles.Headless.Executable.Commands
             IStore store)
         {
             store.ForkBlockIndexes(src, dest, branchPointHash);
-            if (store.GetBlockCommit(branchPointHash) is { })
+            try
             {
-                store.PutChainBlockCommit(dest, GetBlockCommit(store, branchPointHash));
+                var blockCommit = GetChainBlockCommit(branchPointHash, src, store);
+                if (blockCommit is not null)
+                {
+                    store.PutChainBlockCommit(dest, blockCommit);
+                }
             }
+            catch (Exception ex)
+            {
+                _console.Error.WriteLine(ex.Message);
+                _console.Error.WriteLine(ex.StackTrace);
+            }
+
             store.ForkTxNonces(src, dest);
 
             for (
@@ -1076,6 +1086,39 @@ namespace NineChronicles.Headless.Executable.Commands
                     store.IncreaseTxNonce(dest, address, -txCount);
                 }
             }
+        }
+
+        private BlockCommit? GetChainBlockCommit(BlockHash blockHash, Guid chainId, IStore store)
+        {
+            var tipHash = store.IndexBlockHash(chainId, -1)
+                ?? throw new CommandExitedException("The given chain seems empty.", -1);
+            if (!(store.GetBlockIndex(tipHash) is { } tipIndex))
+            {
+                throw new CommandExitedException(
+                    $"The index of {tipHash} doesn't exist.",
+                    -1);
+            }
+
+            if (!(store.GetBlockIndex(blockHash) is { } blockIndex))
+            {
+                throw new CommandExitedException(
+                    $"The index of {blockHash} doesn't exist.",
+                    -1);
+            }
+
+            if (blockIndex == tipIndex)
+            {
+                return store.GetChainBlockCommit(chainId);
+            }
+
+            if (!(store.IndexBlockHash(chainId, blockIndex + 1) is { } nextHash))
+            {
+                throw new CommandExitedException(
+                    $"The hash of index {blockIndex + 1} doesn't exist.",
+                    -1);
+            }
+
+            return store.GetBlock(nextHash)?.LastCommit;
         }
     }
 }
