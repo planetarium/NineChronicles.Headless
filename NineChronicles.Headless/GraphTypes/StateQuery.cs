@@ -253,7 +253,7 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            StakeStateType.StakeStateContext? GetStakeState(StateContext ctx, Address agentAddress)
+            StakeStateType.StakeStateContext? GetStakeState(StateContext ctx, Address agentAddress, long blockIndex)
             {
                 var stakeStateAddress = StakeState.DeriveAddress(agentAddress);
                 if (ctx.WorldState.TryGetStakeState(agentAddr: agentAddress, out StakeState stakeStateV2))
@@ -263,7 +263,7 @@ namespace NineChronicles.Headless.GraphTypes
                         stakeStateV2,
                         stakeStateAddress,
                         ctx.WorldState,
-                        ctx.BlockIndex,
+                        blockIndex,
                         ctx.StateMemoryCache
                     );
                 }
@@ -278,11 +278,17 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     Name = "address",
                     Description = "Address of agent who staked."
+                },
+                new QueryArgument<LongGraphType>
+                {
+                    Name = "blockIndex",
+                    Description = "Block index"
                 }),
                 resolve: context =>
                 {
                     var address = context.GetArgument<Address>("address");
-                    return GetStakeState(context.Source, address);
+                    var blockIndex = context.GetArgument<long?>("blockIndex");
+                    return GetStakeState(context.Source, address, blockIndex ?? context.Source.StandaloneContext.BlockChain.Tip.Index);
                 }
             );
 
@@ -294,14 +300,21 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "addresses",
                         Description = "Addresses of agent who staked."
+                    },
+                    new QueryArgument<LongGraphType>
+                    {
+                        Name = "blockIndex",
+                        Description = "Block index"
                     }
                 ),
                 resolve: context =>
                 {
-                    return context.GetArgument<List<Address>>("addresses")
+                    var addresses = context.GetArgument<List<Address>>("addresses");
+                    var blockIndex = context.GetArgument<long?>("blockIndex");
+                    return addresses
                         .AsParallel()
                         .AsOrdered()
-                        .Select(address => GetStakeState(context.Source, address));
+                        .Select(address => GetStakeState(context.Source, address, blockIndex ?? context.Source.StandaloneContext.BlockChain.Tip.Index));
                 }
             );
 
