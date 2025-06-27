@@ -288,7 +288,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     var address = context.GetArgument<Address>("address");
                     var blockIndex = context.GetArgument<long?>("blockIndex");
-                    return GetStakeState(context.Source, address, blockIndex ?? context.Source.StandaloneContext.BlockChain.Tip.Index);
+                    return GetStakeState(context.Source, address, blockIndex ?? context.Source.BlockIndex);
                 }
             );
 
@@ -314,7 +314,7 @@ namespace NineChronicles.Headless.GraphTypes
                     return addresses
                         .AsParallel()
                         .AsOrdered()
-                        .Select(address => GetStakeState(context.Source, address, blockIndex ?? context.Source.StandaloneContext.BlockChain.Tip.Index));
+                        .Select(address => GetStakeState(context.Source, address, blockIndex ?? context.Source.BlockIndex));
                 }
             );
 
