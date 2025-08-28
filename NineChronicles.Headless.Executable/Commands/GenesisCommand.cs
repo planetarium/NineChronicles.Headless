@@ -108,9 +108,9 @@ namespace NineChronicles.Headless.Executable.Commands
 
         private void ProcessAdmin(
             AdminConfig? config,
-            PrivateKey initialMinter,
             out AdminState? adminState,
-            out List<ActionBase> meadActions
+            out List<ActionBase> meadActions,
+            out PrivateKey adminPrivateKey
         )
         {
             // FIXME: If the `adminState` is not required inside `MineGenesisBlock`,
@@ -119,24 +119,17 @@ namespace NineChronicles.Headless.Executable.Commands
             adminState = default;
             meadActions = new List<ActionBase>();
 
-            if (config is null)
+            if (config is null || string.IsNullOrEmpty(config.Value.PrivateKey))
             {
                 _console.Out.WriteLine("AdminConfig not provided. Skip admin setting...");
-                return;
+                throw new Exception();
             }
+
+            adminPrivateKey = new PrivateKey(config.Value.PrivateKey);
 
             if (config.Value.Activate)
             {
-                Address adminAddress;
-                if (string.IsNullOrEmpty(config.Value.Address))
-                {
-                    _console.Out.WriteLine("Admin address not provided. Give admin privilege to initialMinter");
-                    adminAddress = initialMinter.Address;
-                }
-                else
-                {
-                    adminAddress = new Address(config.Value.Address);
-                }
+                Address adminAddress = adminPrivateKey.Address;
 
                 adminState = new AdminState(adminAddress, config.Value.ValidUntil);
                 meadActions.Add(new PrepareRewardAssets
@@ -257,7 +250,7 @@ namespace NineChronicles.Headless.Executable.Commands
 
                 ProcessCurrency(genesisConfig.Currency, out var currency, out var initialMinter, out var initialDepositList);
 
-                ProcessAdmin(genesisConfig.Admin, initialMinter, out var adminState, out var adminMeads);
+                ProcessAdmin(genesisConfig.Admin, out var adminState, out var adminMeads, out var adminPrivateKey);
 
                 ProcessValidator(genesisConfig.InitialValidatorSet, initialMinter, out var initialValidatorSet);
 
@@ -288,7 +281,8 @@ namespace NineChronicles.Headless.Executable.Commands
                     pendingActivationStates: Array.Empty<PendingActivationState>(),
                     // FIXME Should remove default value after fixing parameter type on Lib9c side.
                     adminState: adminState ?? new AdminState(default, 0L),
-                    privateKey: initialMinter,
+                    minerPrivateKey: initialMinter,
+                    signerPrivateKey: adminPrivateKey,
                     actionBases: adminMeads.Concat(initialMeads).Concat(initialPledges).Concat(GetAdditionalActionBases()),
                     goldCurrency: currency,
                     assetMinters: assetMinters
@@ -297,7 +291,7 @@ namespace NineChronicles.Headless.Executable.Commands
                 Lib9cUtils.ExportBlock(block, "genesis-block");
                 if (genesisConfig.Admin?.Activate == true)
                 {
-                    if (string.IsNullOrEmpty(genesisConfig.Admin.Value.Address))
+                    if (string.IsNullOrEmpty(genesisConfig.Admin.Value.PrivateKey))
                     {
                         _console.Out.WriteLine("Initial minter has admin privilege. Keep this account in secret.");
                     }
@@ -398,7 +392,7 @@ namespace NineChronicles.Headless.Executable.Commands
             /// Address to give admin privilege.<br/>
             /// If <c>Activate</c> is <c>true</c> and no <c>Address</c> provided, the <see cref="CurrencyConfig.InitialMinter"/> will get admin privilege.
             /// </value>
-            public string Address { get; set; }
+            public string PrivateKey { get; set; }
 
             /// <value>
             /// The block count to persist admin privilege.<br/>
