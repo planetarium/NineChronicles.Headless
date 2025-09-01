@@ -442,6 +442,7 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
                 .LoadInDescendingEndBlockOrder(goldDistributionPath);
             AdminState adminState =
                 new AdminState(new Address(genesisConfig.AdminAddress), genesisConfig.AdminValidUntil);
+            var pk = new PrivateKey(ByteUtil.ParseHex(genesisConfig.PrivateKey));
             Block genesisBlock = BlockHelper.ProposeGenesisBlock(
                 new ValidatorSet(new List<Validator>
                 {
@@ -455,7 +456,8 @@ Fb90278C67f9b266eA309E6AE8463042f5461449,100000000000,2,2
                 ImmutableHashSet<Address>.Empty,
                 genesisConfig.ActivationKeyCount != 0,
                 null,
-                new PrivateKey(ByteUtil.ParseHex(genesisConfig.PrivateKey))
+                minerPrivateKey: pk,
+                signerPrivateKey: pk
             );
             return genesisBlock;
         }

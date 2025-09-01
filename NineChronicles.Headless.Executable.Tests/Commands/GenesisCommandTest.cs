@@ -103,10 +103,11 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             }
 
             // AdminConfig: activate, address, validUntil
+            var pk = new PrivateKey();
             var adminConfig = new Dictionary<string, object>
             {
                 ["activate"] = true,
-                ["address"] = "0000000000000000000000000000000000000005",
+                ["privateKey"] = ByteUtil.Hex(pk.ByteArray),
                 ["validUntil"] = 1500000,
             };
             config["admin"] = adminConfig;
