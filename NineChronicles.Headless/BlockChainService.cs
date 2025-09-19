@@ -11,6 +11,7 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bencodex;
 using Bencodex.Types;
+using Grpc.Core;
 using Libplanet.Action.State;
 using Libplanet.Common;
 using Libplanet.Crypto;
@@ -215,7 +216,14 @@ namespace NineChronicles.Headless
             var taskList = addresses.Select(address => Task.Run(() =>
             {
                 var value = GetFullAvatarStateRaw(worldState, address);
-                result.TryAdd(address.ToByteArray(), CompressState(_codec, value ?? Null.Value));
+                try
+                {
+                    result.TryAdd(address.ToByteArray(), CompressState(_codec, value ?? Null.Value));
+                }
+                catch (NullReferenceException)
+                {
+                    throw new ReturnStatusException(StatusCode.FailedPrecondition, $"{address} avatar state is null");
+                }
             }));
 
             await Task.WhenAll(taskList);
