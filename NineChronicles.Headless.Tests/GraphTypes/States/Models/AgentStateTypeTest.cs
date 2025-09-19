@@ -115,5 +115,175 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             };
             Assert.Equal(expected, data);
         }
+
+        [Fact]
+        public async Task Query_WithoutInventoryField_ShouldNotLoadInventory()
+        {
+            const string query = @"
+            {
+                address
+                avatarStates {
+                    address
+                    name
+                    level
+                }
+            }";
+
+            var agentState = new AgentState(new Address())
+            {
+                avatarAddresses =
+                {
+                    [0] = Fixtures.AvatarAddress
+                }
+            };
+
+            MockWorldState mockWorldState = MockWorldState.CreateModern();
+            IWorld world = new World(mockWorldState);
+
+            // Set avatar state without inventory (getInventory: false)
+            world = world.SetAvatarState(
+                Fixtures.AvatarAddress,
+                Fixtures.AvatarStateFX,
+                true,  // getInventory: true
+                true,  // getWorldInformation: false
+                true,  // getQuestList: true
+                true); // getRuneState: true
+
+            var queryResult = await ExecuteQueryAsync<AgentStateType>(
+                query,
+                source: new AgentStateType.AgentStateContext(agentState, world, 0, new StateMemoryCache())
+            );
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var avatarStates = (object[])data["avatarStates"];
+            var avatarState = (Dictionary<string, object>)avatarStates[0];
+
+            // Should have basic fields but no inventory field in the query
+            Assert.Equal(Fixtures.AvatarAddress.ToString(), avatarState["address"]);
+            Assert.Equal(Fixtures.AvatarStateFX.name, avatarState["name"]);
+            Assert.Equal(Fixtures.AvatarStateFX.level, avatarState["level"]);
+            Assert.False(avatarState.ContainsKey("inventory"));
+        }
+
+        [Fact]
+        public async Task Query_WithInventoryField_ShouldLoadInventory()
+        {
+            const string query = @"
+            {
+                address
+                avatarStates {
+                    address
+                    name
+                    level
+                    inventory {
+                        equipments {
+                            id
+                        }
+                    }
+                }
+            }";
+
+            var agentState = new AgentState(new Address())
+            {
+                avatarAddresses =
+                {
+                    [0] = Fixtures.AvatarAddress
+                }
+            };
+
+            MockWorldState mockWorldState = MockWorldState.CreateModern();
+            IWorld world = new World(mockWorldState);
+
+            // Set avatar state with inventory (getInventory: true)
+            world = world.SetAvatarState(
+                Fixtures.AvatarAddress,
+                Fixtures.AvatarStateFX,
+                true,  // getInventory: true
+                true,  // getWorldInformation: true
+                true,  // getQuestList: true
+                true); // getRuneState: true
+
+            var queryResult = await ExecuteQueryAsync<AgentStateType>(
+                query,
+                source: new AgentStateType.AgentStateContext(agentState, world, 0, new StateMemoryCache())
+            );
+
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var avatarStates = (object[])data["avatarStates"];
+            var avatarState = (Dictionary<string, object>)avatarStates[0];
+
+            // Should have basic fields and inventory field
+            Assert.Equal(Fixtures.AvatarAddress.ToString(), avatarState["address"]);
+            Assert.Equal(Fixtures.AvatarStateFX.name, avatarState["name"]);
+            Assert.Equal(Fixtures.AvatarStateFX.level, avatarState["level"]);
+            Assert.True(avatarState.ContainsKey("inventory"));
+
+            var inventory = (Dictionary<string, object>)avatarState["inventory"];
+            Assert.True(inventory.ContainsKey("equipments"));
+        }
+
+        [Fact]
+        public async Task Query_WithNullInventory_ShouldHandleGracefully()
+        {
+            const string query = @"
+            {
+                address
+                avatarStates {
+                    address
+                    name
+                    level
+                }
+            }";
+
+            var agentState = new AgentState(new Address())
+            {
+                avatarAddresses =
+                {
+                    [0] = Fixtures.AvatarAddress
+                }
+            };
+
+            // Create an avatar state with null inventory
+            var avatarStateWithNullInventory = AvatarState.Create(
+                Fixtures.AvatarAddress,
+                Fixtures.UserAddress,
+                0,
+                Fixtures.TableSheetsFX.GetAvatarSheets(),
+                default,
+                "TestAvatar"
+            );
+            avatarStateWithNullInventory.inventory = null; // Explicitly set inventory to null
+
+            MockWorldState mockWorldState = MockWorldState.CreateModern();
+            IWorld world = new World(mockWorldState);
+
+            // Set avatar state without inventory (getInventory: false)
+            world = world.SetAvatarState(
+                Fixtures.AvatarAddress,
+                avatarStateWithNullInventory,
+                true, // setAvatar: true
+                false, // setInventory: false - don't set inventory
+                true,  // setWorldInformation: true
+                true); // setQuestList: true
+
+            var queryResult = await ExecuteQueryAsync<AgentStateType>(
+                query,
+                source: new AgentStateType.AgentStateContext(agentState, world, 0, new StateMemoryCache())
+            );
+
+            // Should not throw exception and return data
+            Assert.NotNull(queryResult.Data);
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
+            var avatarStates = data["avatarStates"];
+
+            // Should return the avatar even with null inventory when inventory is not requested
+            Assert.NotNull(avatarStates);
+            if (avatarStates is object[] avatarStatesArray && avatarStatesArray.Length > 0)
+            {
+                var avatarState = (Dictionary<string, object>)avatarStatesArray[0];
+                Assert.Equal(Fixtures.AvatarAddress.ToString(), avatarState["address"]);
+                Assert.Equal(avatarStateWithNullInventory.name, avatarState["name"]);
+            }
+        }
     }
 }
