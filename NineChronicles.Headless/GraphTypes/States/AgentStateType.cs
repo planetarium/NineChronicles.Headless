@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Bencodex.Types;
+using GraphQL;
 using GraphQL.Types;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
@@ -46,12 +48,30 @@ namespace NineChronicles.Headless.GraphTypes.States
                 resolve: context =>
                 {
                     IReadOnlyList<Address> avatarAddresses = context.Source.GetAvatarAddresses();
-                    return avatarAddresses.Select(avatarAddress => context.Source.WorldState.GetAvatarState(avatarAddress)).Select(
-                        x => new AvatarStateType.AvatarStateContext(
-                            x,
-                            context.Source.WorldState,
-                            context.Source.BlockIndex,
-                            context.Source.StateMemoryCache));
+
+                    // Check if inventory field is requested in the GraphQL query
+                    bool inventoryRequested = IsFieldRequested(context, "inventory");
+
+                    return avatarAddresses.Select(avatarAddress =>
+                    {
+                        try
+                        {
+                            var avatarState = context.Source.WorldState.GetAvatarState(
+                                avatarAddress,
+                                getInventory: inventoryRequested);
+                            return new AvatarStateType.AvatarStateContext(
+                                avatarState,
+                                context.Source.WorldState,
+                                context.Source.BlockIndex,
+                                context.Source.StateMemoryCache);
+                        }
+                        catch (Exception)
+                        {
+                            // Log the error and return null to skip this avatar
+                            // This prevents the entire query from failing due to one problematic avatar
+                            return null;
+                        }
+                    }).Where(x => x != null);
                 });
             Field<NonNullGraphType<StringGraphType>>(
                 "gold",
@@ -132,6 +152,27 @@ namespace NineChronicles.Headless.GraphTypes.States
             return questList
                 .OfType<TradeQuest>()
                 .Any(q => q.Complete);
+        }
+
+        private static bool IsFieldRequested(IResolveFieldContext<AgentStateContext> context, string fieldName)
+        {
+            // Check if the field is requested in the current selection set
+            var selectionSet = context.FieldAst?.SelectionSet;
+            if (selectionSet == null)
+            {
+                return false;
+            }
+
+            // Look for the field in the selection set
+            foreach (var selection in selectionSet.Selections)
+            {
+                if (selection is GraphQL.Language.AST.Field field && field.Name == fieldName)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
