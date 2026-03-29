@@ -114,7 +114,7 @@ namespace NineChronicles.Headless.GraphTypes
         {
             StandaloneContext = standaloneContext;
             Configuration = configuration;
-            if (Convert.ToBoolean(configuration.GetSection("Jwt")["EnableJwtAuthentication"]))
+            if (configuration.GetSection("Jwt")["EnableJwtAuthentication"] is { } enableJwtAuthentication && Convert.ToBoolean(enableJwtAuthentication))
             {
                 this.AuthorizeWith(GraphQLService.JwtPolicyKey);
             }
