@@ -297,7 +297,7 @@ namespace Libplanet.Headless.Hosting
         {
             var address = new Address(addr);
             var boundPeer = await Swarm.FindSpecificPeerAsync(
-                address, -1, cancellationToken: SwarmCancellationToken);
+                address, 10, cancellationToken: SwarmCancellationToken);
             return !(boundPeer is null);
         }
 
