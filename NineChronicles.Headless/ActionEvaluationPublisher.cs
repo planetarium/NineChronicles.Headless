@@ -267,7 +267,17 @@ namespace NineChronicles.Headless
             if (_clients.TryGetValue(clientAddress, out Client? client) && client is { })
             {
                 Log.Information("[{ClientAddress}] RemoveClient", clientAddress);
-                await client.LeaveAsync();
+                try
+                {
+                    await client.LeaveAsync();
+                }
+                catch (Exception e)
+                {
+                    Log.Warning(
+                        e,
+                        "[{ClientAddress}] LeaveAsync failed (hub likely already disposed); proceeding to dispose",
+                        clientAddress);
+                }
                 await client.DisposeAsync();
                 _clients.TryRemove(clientAddress, out _);
             }
