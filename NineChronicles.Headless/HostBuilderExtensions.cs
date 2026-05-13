@@ -97,6 +97,17 @@ namespace NineChronicles.Headless
                 {
                     hostBuilder.ConfigureKestrel(options =>
                     {
+                        // HTTP/2 keepalive PING to detect zombie gRPC connections.
+                        // Disabled by default (0 = Kestrel default of TimeSpan.MaxValue) so behavior is unchanged
+                        // until operators opt in per environment via Helm values.
+                        if (int.TryParse(
+                                Environment.GetEnvironmentVariable("RPC_KEEPALIVE_PING_DELAY_SECONDS"),
+                                out var keepAlivePingDelaySeconds) && keepAlivePingDelaySeconds > 0)
+                        {
+                            options.Limits.Http2.KeepAlivePingDelay =
+                                TimeSpan.FromSeconds(keepAlivePingDelaySeconds);
+                        }
+
                         options.ListenAnyIP(properties.RpcListenPort, listenOptions =>
                         {
                             listenOptions.Protocols = HttpProtocols.Http2;
