@@ -24,6 +24,11 @@
     <PackageReference Include="GraphQL.Client.Serializer.SystemTextJson" Version="5.1.1" />
     <PackageReference Include="Destructurama.Attributed" Version="2.0.0" />
     <PackageReference Include="Libplanet.Extensions.Cocona" Version="$(LibplanetVersion)" />
+    <!-- TEST ONLY: pin Planetarium.NetMQ to a prerelease that adds null guards
+         in StreamEngine.MechanismReady / ProcessHandshakeCommand to defuse the
+         Heimdall Exit 139 crash (planetarium/libplanet#4050). Revert before
+         merging once the upstream Libplanet bump is in place. -->
+    <PackageReference Include="Planetarium.NetMQ" Version="4.0.0.262-planetarium-pre1" />
     <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.15.3" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
     <PackageReference Include="OpenTelemetry.Instrumentation.GrpcNetClient" Version="1.15.1-beta.1" />
