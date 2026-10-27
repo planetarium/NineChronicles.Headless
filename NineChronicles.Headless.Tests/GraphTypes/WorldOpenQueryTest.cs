@@ -11,6 +11,7 @@ using Nekoyume.Module;
 using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.GraphTypes.States;
+using NineChronicles.Headless.GraphTypes.States.Models.WorldOpen;
 using Xunit;
 using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 
@@ -126,7 +127,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var draft = OpenCsv.Replace("1,12,570,,0,1000,0", "1,12,570,,500,1000,0");
             var r = await Query(LiveWorld(), 9, $"({Arg("worldOpenSheetCsv", draft)})");
             Assert.Empty((IEnumerable<object>)r["errors"]);
-            Assert.True((int)World12(r) <= 520);
+            Assert.Equal(520, World12(r));
         }
 
         [Fact]
@@ -136,6 +137,69 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var r = await Query(LiveWorld(), 9, $"({Arg("worldOpenSheetCsv", draft)})");
             Assert.Single((IEnumerable<object>)r["errors"]);
             Assert.Equal(570, World12(r));
+        }
+
+        [Fact]
+        public async Task Draft_LoweringThreshold_ConfirmsAtEvaluatedBlock()
+        {
+            var world = LiveWorld(withSheets: false);
+            world = Set<GlobalCounterSheet>(world, CounterCsv);
+            world = Set<WorldOpenSheet>(world, OpenCsv);
+            world = Set<WorldOpenConditionSheet>(world, ConditionCsv.Replace(",1,5", ",1,10"));
+            world = world.AddCounter(1, 5);
+            var draft = ConditionCsv;
+            var r = await Query(world, 9, $"({Arg("worldOpenConditionSheetCsv", draft)})");
+            Assert.Empty((IEnumerable<object>)r["errors"]);
+            var open = Assert.Single(((IEnumerable<object>)r["opens"]).Cast<Dictionary<string, object>>());
+            Assert.Equal(10L, open["confirmedBlockIndex"]);
+            Assert.False((bool)open["pending"]);
+
+            // Without the draft it stays pending.
+            var live = await Query(world, 9);
+            var liveOpen = Assert.Single(((IEnumerable<object>)live["opens"]).Cast<Dictionary<string, object>>());
+            Assert.Null(liveOpen["confirmedBlockIndex"]);
+            Assert.True((bool)liveOpen["pending"]);
+        }
+
+        [Fact]
+        public async Task Draft_TooLarge_ReturnsErrorAndKeepsLive()
+        {
+            var draft = OpenCsv + "\n" + new string('x', WorldOpenEvaluator.MaxDraftCsvBytes);
+            var r = await Query(LiveWorld(), 9, $"({Arg("worldOpenSheetCsv", draft)})");
+            var error = Assert.Single(((IEnumerable<object>)r["errors"]).Cast<string>());
+            Assert.StartsWith("WorldOpenSheet: draft is too large (", error);
+            Assert.Contains($"max {WorldOpenEvaluator.MaxDraftCsvBytes})", error);
+            Assert.Equal(570, World12(r));
+        }
+
+        [Fact]
+        public async Task Draft_AllThreeTogether_AddsNewCounterAndOpen()
+        {
+            var counters = CounterCsv + "\n2,STAGE_PLAY,11,11,0";
+            var opens = OpenCsv + "\n2,12,580,1,0,1000,0";
+            var conditions = ConditionCsv + "\n2,1,2,3";
+            var args = "(" + Arg("globalCounterSheetCsv", counters) + ", "
+                + Arg("worldOpenSheetCsv", opens) + ", "
+                + Arg("worldOpenConditionSheetCsv", conditions) + ")";
+            var r = await Query(LiveWorld(), 9, args);
+            Assert.Empty((IEnumerable<object>)r["errors"]);
+            var added = ((IEnumerable<object>)r["opens"]).Cast<Dictionary<string, object>>()
+                .Single(o => (int)o["id"] == 2);
+            Assert.True((bool)added["pending"]);
+            Assert.False((bool)added["applied"]);
+        }
+
+        [Fact]
+        public async Task Condition_WithMissingCounterRow_HasNullType()
+        {
+            var world = LiveWorld(withSheets: false);
+            world = Set<WorldOpenSheet>(world, OpenCsv);
+            world = Set<WorldOpenConditionSheet>(world, ConditionCsv);
+            var r = await Query(world, 9);
+            var open = Assert.Single(((IEnumerable<object>)r["opens"]).Cast<Dictionary<string, object>>());
+            var group = Assert.Single(((IEnumerable<object>)open["conditionGroups"]).Cast<Dictionary<string, object>>());
+            var cond = Assert.Single(((IEnumerable<object>)group["conditions"]).Cast<Dictionary<string, object>>());
+            Assert.Null(cond["type"]);
         }
     }
 }

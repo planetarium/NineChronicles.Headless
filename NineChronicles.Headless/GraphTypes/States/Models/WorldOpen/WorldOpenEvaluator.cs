@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Bencodex.Types;
 using Libplanet.Action.State;
 using Nekoyume;
@@ -15,6 +16,9 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.WorldOpen
     /// </summary>
     public static class WorldOpenEvaluator
     {
+        /// <summary>Largest accepted draft CSV, in UTF-8 bytes, per sheet.</summary>
+        public const int MaxDraftCsvBytes = 64 * 1024;
+
         public static WorldOpenResult Evaluate(
             IWorldState worldState,
             long tipBlockIndex,
@@ -27,9 +31,9 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.WorldOpen
             var result = new WorldOpenResult { EvaluatedBlockIndex = block };
 
             IWorld world = new Libplanet.Action.State.World(worldState);
-            world = Overlay<GlobalCounterSheet>(world, globalCounterSheetCsv, result.Errors);
-            world = Overlay<WorldOpenSheet>(world, worldOpenSheetCsv, result.Errors);
-            world = Overlay<WorldOpenConditionSheet>(world, worldOpenConditionSheetCsv, result.Errors);
+            world = Overlay<GlobalCounterSheet>(world, globalCounterSheetCsv, block, result.Errors);
+            world = Overlay<WorldOpenSheet>(world, worldOpenSheetCsv, block, result.Errors);
+            world = Overlay<WorldOpenConditionSheet>(world, worldOpenConditionSheetCsv, block, result.Errors);
 
             if (world.TryGetPatchedSheet<WorldSheet>(out var worldSheet))
             {
@@ -62,7 +66,7 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.WorldOpen
 
         // Same order as the patch action: validate, check identity, store. A rejected sheet is not
         // laid over, so the judgement keeps using the live one.
-        private static IWorld Overlay<T>(IWorld world, string? csv, List<string> errors)
+        private static IWorld Overlay<T>(IWorld world, string? csv, long block, List<string> errors)
             where T : ISheet, new()
         {
             if (csv is null)
@@ -71,15 +75,25 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.WorldOpen
             }
 
             var name = typeof(T).Name;
+            var size = Encoding.UTF8.GetByteCount(csv);
+            if (size > MaxDraftCsvBytes)
+            {
+                errors.Add($"{name}: draft is too large ({size} bytes, max {MaxDraftCsvBytes})");
+                return world;
+            }
+
             try
             {
                 TableSheetPatchValidation.Validate(name, csv);
                 var recorded = WorldOpenIdentity.CheckAndRecord(world, name, csv);
-                return recorded.SetLegacyState(Addresses.GetSheetAddress<T>(), (Text)csv);
+                var stored = recorded.SetLegacyState(Addresses.GetSheetAddress<T>(), (Text)csv);
+
+                // The patch action also confirms openings the new sheet already satisfies.
+                return WorldOpenCounter.ConfirmSatisfiedAfterPatch(stored, name, block);
             }
             catch (SheetRowValidateException e)
             {
-                errors.Add($"{name}: {e.Message}");
+                errors.Add(e.Message.StartsWith($"{name}:") ? e.Message : $"{name}: {e.Message}");
                 return world;
             }
         }
