@@ -15,7 +15,8 @@ then
     -r linux-x64 \
     -o out \
     --self-contained \
-    --version-suffix $COMMIT
+    --version-suffix $COMMIT \
+    -p:NuGetAudit=false
 elif [[ "$TARGETPLATFORM" = "linux/arm64" ]]
 then
   dotnet publish NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj \
@@ -23,7 +24,8 @@ then
     -r linux-arm64 \
     -o out \
     --self-contained \
-    --version-suffix $COMMIT
+    --version-suffix $COMMIT \
+    -p:NuGetAudit=false
 else
   echo "Not supported target platform: '$TARGETPLATFORM'."
   exit -1
