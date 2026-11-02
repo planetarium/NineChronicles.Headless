@@ -364,8 +364,10 @@ namespace NineChronicles.Headless.Executable.Commands
             string endpoint,
             [Option("grpc-endpoint", new []{ 'g' }, Description = "gRPC endpoint to get remote states.")]
             string grpcEndpoint,
-            [Option("grpc-token-file", Description = "File holding a JWT sent as a bearer token to the gRPC endpoint " +
-                                                     "(needed by nodes running --remote-key-value-service-read-only).")]
+            [Option("grpc-token-file", Description = "File holding a JWT (with or without a \"Bearer \" prefix) sent " +
+                                                     "as a bearer token to the gRPC endpoint (needed by nodes running " +
+                                                     "--remote-key-value-service-read-only). It travels in clear " +
+                                                     "text over http:// endpoints, so keep it short-lived.")]
             string? grpcTokenFile = null)
         {
             var graphQlClient = new GraphQLHttpClient(new Uri(endpoint), new SystemTextJsonSerializer());
@@ -408,7 +410,13 @@ namespace NineChronicles.Headless.Executable.Commands
             CallInvoker callInvoker = channel.CreateCallInvoker();
             if (grpcTokenFile is not null)
             {
-                var authorization = $"Bearer {File.ReadAllText(grpcTokenFile).Trim()}";
+                var token = File.ReadAllText(grpcTokenFile).Trim();
+                if (token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                {
+                    token = token.Substring("Bearer ".Length).Trim();
+                }
+
+                var authorization = $"Bearer {token}";
                 callInvoker = callInvoker.Intercept(metadata =>
                 {
                     metadata.Add("authorization", authorization);

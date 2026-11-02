@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Lib9c.Renderers;
+using Libplanet.Store.Trie;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,6 +50,31 @@ namespace NineChronicles.Headless.Tests
 
             var options = serviceProvider.GetService<IOptions<CorsOptions>>();
             Assert.Equal(noCors, !(options!.Value.GetPolicy(GraphQLService.NoCorsPolicyName) is null));
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void ConfigureReadOnlyRemoteKeyValueService(bool enabled)
+        {
+            if (enabled)
+            {
+                _configuration[GraphQLService.UseReadOnlyRemoteKeyValueServiceKey] = string.Empty;
+            }
+
+            var services = new ServiceCollection();
+            services.AddLogging();
+            services.AddSingleton<IConfiguration>(_configuration);
+            services.AddSingleton<IKeyValueStore>(new MemoryKeyValueStore());
+            _startup.ConfigureServices(services);
+            ServiceProvider serviceProvider = services.BuildServiceProvider();
+
+            var service = serviceProvider.GetService<ReadOnlyRemoteKeyValueService>();
+            Assert.Equal(enabled, service is not null);
+            if (enabled)
+            {
+                Assert.Same(service, serviceProvider.GetService<ReadOnlyRemoteKeyValueService>());
+            }
         }
     }
 }
