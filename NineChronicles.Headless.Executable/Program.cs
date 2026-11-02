@@ -220,6 +220,10 @@ namespace NineChronicles.Headless.Executable
             string? configPath = "appsettings.json",
             [Option(Description = "[DANGER] Turn on RemoteKeyValueService to debug.")]
             bool remoteKeyValueService = false,
+            [Option(Description = "Turn on a read-only RemoteKeyValueService (GetValue/ExistsKey only) " +
+                                  "for remote replays. Every call requires a JWT signed with Jwt:Key " +
+                                  "carrying the \"remote-kv:read\" scope.")]
+            bool remoteKeyValueServiceReadOnly = false,
             [Ignore] CancellationToken? cancellationToken = null
         )
         {
@@ -341,7 +345,8 @@ namespace NineChronicles.Headless.Executable
                 consensusProposeSecondBase * 1_000,
                 consensusEnterPreCommitDelay,
                 maxTransactionPerBlock,
-                remoteKeyValueService
+                remoteKeyValueService,
+                remoteKeyValueServiceReadOnly ? true : null
             );
 
             // Clean-up previous temporary log files.
@@ -602,6 +607,7 @@ namespace NineChronicles.Headless.Executable
                         NoCors = headlessConfig.NoCors,
                         UseMagicOnion = headlessConfig.RpcServer,
                         UseRemoteKeyValueService = headlessConfig.RemoteKeyValueService,
+                        UseReadOnlyRemoteKeyValueService = headlessConfig.RemoteKeyValueServiceReadOnly,
                         HttpOptions = headlessConfig.RpcServer && headlessConfig.RpcHttpServer == true
                             ? new GraphQLNodeServiceProperties.MagicOnionHttpOptions(
                                 $"{headlessConfig.RpcListenHost}:{headlessConfig.RpcListenPort}")

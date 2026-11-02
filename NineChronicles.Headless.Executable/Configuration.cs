@@ -55,6 +55,9 @@ namespace NineChronicles.Headless.Executable
         // RemoteKeyValueService
         public bool RemoteKeyValueService { get; set; } = false;
 
+        // Read-only RemoteKeyValueService (GetValue/ExistsKey only, JWT required)
+        public bool RemoteKeyValueServiceReadOnly { get; set; } = false;
+
         // GraphQL Server
         public bool GraphQLServer { get; set; }
         public string? GraphQLHost { get; set; }
@@ -143,7 +146,8 @@ namespace NineChronicles.Headless.Executable
             int? consensusProposeTimeoutBase,
             int? consensusEnterPreCommitDelay,
             int? maxTransactionPerBlock,
-            bool? remoteKeyValueService
+            bool? remoteKeyValueService,
+            bool? remoteKeyValueServiceReadOnly
         )
         {
             AppProtocolVersionString = appProtocolVersionString ?? AppProtocolVersionString;
@@ -196,6 +200,7 @@ namespace NineChronicles.Headless.Executable
             ConsensusEnterPreCommitDelay = consensusEnterPreCommitDelay ?? ConsensusEnterPreCommitDelay;
             MaxTransactionPerBlock = maxTransactionPerBlock ?? MaxTransactionPerBlock;
             RemoteKeyValueService = remoteKeyValueService ?? RemoteKeyValueService;
+            RemoteKeyValueServiceReadOnly = remoteKeyValueServiceReadOnly ?? RemoteKeyValueServiceReadOnly;
         }
     }
 }
