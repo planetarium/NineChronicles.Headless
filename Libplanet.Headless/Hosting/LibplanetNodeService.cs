@@ -30,6 +30,7 @@ using Libplanet.Store.Trie;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.RPC.Shared.Exceptions;
 using Nito.AsyncEx;
+using RocksDbSharp;
 using Serilog;
 using Serilog.Events;
 
@@ -37,6 +38,9 @@ namespace Libplanet.Headless.Hosting
 {
     public class LibplanetNodeService : BackgroundService, IDisposable
     {
+        // ROCKSDB_PARALLELISM sizes a pool shared by ~11 DBs; cap it so a typo can't flood the disk.
+        private const int MaxRocksDbParallelism = 32;
+
         private static readonly Codec Codec = new Codec();
 
         public readonly IStore Store;
@@ -356,7 +360,9 @@ namespace Libplanet.Headless.Hosting
 
             store ??= new DefaultStore(path, flush: false);
 
-            IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states"));
+            IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(
+                Path.Combine(path, "states"),
+                options: CreateStatesDbOptions());
             IStateStore stateStore = new TrieStateStore(stateKeyValueStore);
             return (store, stateStore, stateKeyValueStore);
         }
@@ -726,6 +732,59 @@ namespace Libplanet.Headless.Hosting
             }
 
             public long Index { get; }
+        }
+
+        // Opt-in RocksDB tuning for the states DB. Unset env vars keep the library defaults.
+        // ROCKSDB_PARALLELISM grows the background thread pool of the default Env, which every
+        // RocksDB instance in this process shares, so a long compaction in one DB (e.g. txbindex)
+        // no longer starves the states DB and trips its level-0 write stop.
+        private static DbOptions CreateStatesDbOptions()
+        {
+            int? parallelism = ReadPositiveIntEnv("ROCKSDB_PARALLELISM");
+            int? readaheadSize = ReadPositiveIntEnv("ROCKSDB_COMPACTION_READAHEAD_SIZE");
+            if (parallelism is null && readaheadSize is null)
+            {
+                return null;
+            }
+
+            // Same as RocksDBKeyValueStore's default options.
+            var options = new DbOptions()
+                .SetCreateIfMissing()
+                .SetSoftPendingCompactionBytesLimit(1000000000000)
+                .SetHardPendingCompactionBytesLimit(1038176821042);
+            if (parallelism is int p)
+            {
+                parallelism = Math.Min(p, MaxRocksDbParallelism);
+                options = options.IncreaseParallelism(parallelism.Value);
+            }
+
+            if (readaheadSize is int r)
+            {
+                options = options.SetCompactionReadaheadSize((ulong)r);
+            }
+
+            Log.Information(
+                "RocksDB states options: parallelism={Parallelism}, compactionReadaheadSize={ReadaheadSize}",
+                parallelism,
+                readaheadSize);
+            return options;
+        }
+
+        private static int? ReadPositiveIntEnv(string name)
+        {
+            var raw = Environment.GetEnvironmentVariable(name);
+            if (string.IsNullOrEmpty(raw))
+            {
+                return null;
+            }
+
+            if (int.TryParse(raw, out var value) && value > 0)
+            {
+                return value;
+            }
+
+            Log.Warning("Ignoring {Name}={Value}: expected a positive integer.", name, raw);
+            return null;
         }
 
         private static string CreateSha256Hash(string input)
