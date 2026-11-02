@@ -14,6 +14,8 @@ using Cocona;
 using Cocona.Help;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.SystemTextJson;
+using Grpc.Core;
+using Grpc.Core.Interceptors;
 using Grpc.Net.Client;
 using Libplanet.Action;
 using Libplanet.Action.Loader;
@@ -361,7 +363,12 @@ namespace NineChronicles.Headless.Executable.Commands
             [Option("endpoint", new[] { 'e' }, Description = "GraphQL endpoint to get block data.")]
             string endpoint,
             [Option("grpc-endpoint", new []{ 'g' }, Description = "gRPC endpoint to get remote states.")]
-            string grpcEndpoint)
+            string grpcEndpoint,
+            [Option("grpc-token-file", Description = "File holding a JWT (with or without a \"Bearer \" prefix) sent " +
+                                                     "as a bearer token to the gRPC endpoint (needed by nodes running " +
+                                                     "--remote-key-value-service-read-only). It travels in clear " +
+                                                     "text over http:// endpoints, so keep it short-lived.")]
+            string? grpcTokenFile = null)
         {
             var graphQlClient = new GraphQLHttpClient(new Uri(endpoint), new SystemTextJsonSerializer());
             var transactionResponse = GetTransactionData(graphQlClient, transactionId);
@@ -400,7 +407,24 @@ namespace NineChronicles.Headless.Executable.Commands
             var miner = new Address(minerValue);
 
             var channel = GrpcChannel.ForAddress(grpcEndpoint);
-            var keyValueServiceClient = new KeyValueStore.KeyValueStoreClient(channel);
+            CallInvoker callInvoker = channel.CreateCallInvoker();
+            if (grpcTokenFile is not null)
+            {
+                var token = File.ReadAllText(grpcTokenFile).Trim();
+                if (token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                {
+                    token = token.Substring("Bearer ".Length).Trim();
+                }
+
+                var authorization = $"Bearer {token}";
+                callInvoker = callInvoker.Intercept(metadata =>
+                {
+                    metadata.Add("authorization", authorization);
+                    return metadata;
+                });
+            }
+
+            var keyValueServiceClient = new KeyValueStore.KeyValueStoreClient(callInvoker);
             var cacheKeyValueStore =
                 new RocksDBKeyValueStore(Path.Combine(Path.GetTempPath(), "9c-headless-replay-remotetx"));
             var keyValueStore = new ReplicableKeyValueStore(
