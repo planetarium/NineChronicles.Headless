@@ -38,6 +38,9 @@ public class ReadOnlyRemoteKeyValueService : KeyValueStore.KeyValueStoreBase
 
     public static readonly TimeSpan MaxTokenLifetime = TimeSpan.FromHours(1);
 
+    // Tolerated clock difference between the token issuer and this node.
+    private static readonly TimeSpan ClockSkew = TimeSpan.FromMinutes(2);
+
     private readonly ILogger _logger;
     private readonly IKeyValueStore _baseStore;
     private readonly JwtSecurityTokenHandler _tokenHandler = new JwtSecurityTokenHandler { MapInboundClaims = false };
@@ -68,8 +71,15 @@ public class ReadOnlyRemoteKeyValueService : KeyValueStore.KeyValueStoreBase
             ValidateIssuerSigningKey = true,
             ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha256 },
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
-            LifetimeValidator = (_, expires, _, _) =>
-                expires is { } exp && exp > DateTime.UtcNow && exp - DateTime.UtcNow <= MaxTokenLifetime,
+            // Replaces the default lifetime check, so exp presence, expiry and nbf are all handled here.
+            LifetimeValidator = (notBefore, expires, _, _) =>
+            {
+                var now = DateTime.UtcNow;
+                return expires is { } exp
+                       && exp > now - ClockSkew
+                       && exp - now <= MaxTokenLifetime + ClockSkew
+                       && (notBefore is not { } nbf || nbf <= now + ClockSkew);
+            },
         };
     }
 
