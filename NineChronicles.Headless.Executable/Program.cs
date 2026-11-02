@@ -222,9 +222,8 @@ namespace NineChronicles.Headless.Executable
             bool remoteKeyValueService = false,
             [Option(Description = "Turn on a read-only RemoteKeyValueService (GetValue/ExistsKey only) " +
                                   "for remote replays; needs --rpc-server. Every call requires an HS256 JWT " +
-                                  "signed with RemoteKeyValueService:JwtKey (env RemoteKeyValueService__JwtKey; 32+ bytes, " +
-                                  "never the Jwt:Key value), " +
-                                  "carrying the \"remote-kv:read\" scope and expiring within an hour.")]
+                                  "signed with Jwt:Key (issuer Jwt:Issuer) expiring within an hour; refused " +
+                                  "while Jwt:Key is unset or the default.")]
             bool remoteKeyValueServiceReadOnly = false,
             [Ignore] CancellationToken? cancellationToken = null
         )

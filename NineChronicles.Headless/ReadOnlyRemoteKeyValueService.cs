@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Google.Protobuf;
@@ -21,20 +19,16 @@ namespace NineChronicles.Headless;
 /// <para>
 /// Only <see cref="GetValue"/> and <see cref="ExistsKey"/> are implemented; writes, deletes and
 /// <c>ListKeys</c> are left to the generated base class, which answers <see cref="StatusCode.Unimplemented"/>.
-/// Every call requires an HS256 JWT signed with <c>RemoteKeyValueService:JwtKey</c> — a key of its own,
-/// so these tokens grant nothing elsewhere (the GraphQL <c>Jwt:Key</c> is not accepted) — whose
-/// <c>scope</c> claim contains <see cref="RequiredScope"/> and which expires within
-/// <see cref="MaxTokenLifetime"/>. Without a key of at least <see cref="MinKeyLength"/> bytes every call
-/// is refused.
+/// Every call requires an HS256 JWT verified the same way as <see cref="Middleware.JwtAuthenticationMiddleware"/>
+/// (<c>Jwt:Key</c>, issuer <c>Jwt:Issuer</c>) that expires within <see cref="MaxTokenLifetime"/>, since tokens
+/// travel over plain h2c. When <c>Jwt:Key</c> is unset or still the public default shipped in
+/// appsettings.json, every call is refused.
 /// </para>
 /// </summary>
 public class ReadOnlyRemoteKeyValueService : KeyValueStore.KeyValueStoreBase
 {
-    public const string JwtKeyConfigurationKey = "RemoteKeyValueService:JwtKey";
-
-    public const string RequiredScope = "remote-kv:read";
-
-    public const int MinKeyLength = 32;
+    // The value shipped in appsettings.json; anyone can sign with it.
+    public const string DefaultJwtKey = "secretKey";
 
     public static readonly TimeSpan MaxTokenLifetime = TimeSpan.FromHours(1);
 
@@ -51,26 +45,26 @@ public class ReadOnlyRemoteKeyValueService : KeyValueStore.KeyValueStoreBase
         _logger = Log.Logger.ForContext<ReadOnlyRemoteKeyValueService>();
         _baseStore = baseStore;
 
-        var key = configuration[JwtKeyConfigurationKey];
-        if (key is null || Encoding.UTF8.GetByteCount(key) < MinKeyLength)
+        var jwtConfig = configuration.GetSection("Jwt");
+        var key = jwtConfig["Key"];
+        if (string.IsNullOrEmpty(key) || key == DefaultJwtKey)
         {
             _logger.Warning(
-                "{ConfigKey} is missing or shorter than {MinKeyLength} bytes; " +
-                "every read-only remote key-value request will be refused.",
-                JwtKeyConfigurationKey,
-                MinKeyLength);
+                "Jwt:Key is unset or the public default; every read-only remote key-value request will be refused.");
             return;
         }
 
+        // Same key derivation and issuer as JwtAuthenticationMiddleware, so existing JWTs work here.
         _validationParams = new TokenValidationParameters
         {
-            ValidateIssuer = false,
+            ValidateIssuer = true,
+            ValidIssuer = jwtConfig["Issuer"] ?? "",
             ValidateAudience = false,
             ValidateLifetime = true,
             RequireExpirationTime = true,
             ValidateIssuerSigningKey = true,
             ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha256 },
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key.PadRight(512 / 8, '\0'))),
             // Replaces the default lifetime check, so exp presence, expiry and nbf are all handled here.
             LifetimeValidator = (notBefore, expires, _, _) =>
             {
@@ -121,22 +115,15 @@ public class ReadOnlyRemoteKeyValueService : KeyValueStore.KeyValueStoreBase
             throw new RpcException(new Status(StatusCode.Unauthenticated, "Bearer token is required."));
         }
 
-        ClaimsPrincipal principal;
         try
         {
-            principal = _tokenHandler.ValidateToken(authorization.Substring(bearer.Length).Trim(), _validationParams, out _);
+            _tokenHandler.ValidateToken(authorization.Substring(bearer.Length).Trim(), _validationParams, out _);
         }
         catch (Exception e) when (e is SecurityTokenException or ArgumentException)
         {
             // Debug, not Information: anyone can send these, and they must not be able to flood the logs.
             _logger.Debug("Rejected read-only remote key-value request from {Peer}: {Message}", context.Peer, e.Message);
             throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token."));
-        }
-
-        var scopes = principal.FindAll("scope").SelectMany(c => c.Value.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-        if (!scopes.Contains(RequiredScope))
-        {
-            throw new RpcException(new Status(StatusCode.PermissionDenied, $"Token lacks the {RequiredScope} scope."));
         }
     }
 }
