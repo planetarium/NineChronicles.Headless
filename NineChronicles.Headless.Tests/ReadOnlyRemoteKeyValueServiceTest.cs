@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,8 +17,8 @@ namespace NineChronicles.Headless.Tests
 {
     public class ReadOnlyRemoteKeyValueServiceTest
     {
-        private const string Key = "read-only-remote-kv-test-key-0123456789";
-        private const string GraphQLJwtKey = "graphql-jwt-key-that-must-not-be-accepted";
+        private const string Key = "read-only-remote-kv-test-key";
+        private const string Issuer = "planetariumhq.com";
 
         private static readonly byte[] StoredKey = { 0x01, 0x02 };
         private static readonly byte[] StoredValue = { 0x0a, 0x0b, 0x0c };
@@ -56,13 +56,29 @@ namespace NineChronicles.Headless.Tests
             Assert.False(missing.Exists);
         }
 
+        // A token built by hand, the way an external issuer (e.g. a script) would, with the
+        // JwtAuthenticationMiddleware key derivation: ASCII key right-padded with NULs to 64 bytes.
+        [Fact]
+        public async Task GetValue_HandBuiltToken()
+        {
+            static string Encode(byte[] bytes) => Base64UrlEncoder.Encode(bytes);
+            var exp = DateTimeOffset.UtcNow.AddMinutes(10).ToUnixTimeSeconds();
+            var signingInput = Encode(Encoding.UTF8.GetBytes("{\"alg\":\"HS256\",\"typ\":\"JWT\"}")) + "." +
+                               Encode(Encoding.UTF8.GetBytes($"{{\"iss\":\"{Issuer}\",\"exp\":{exp}}}"));
+            using var hmac = new HMACSHA256(Encoding.ASCII.GetBytes(Key.PadRight(64, '\0')));
+            var token = signingInput + "." + Encode(hmac.ComputeHash(Encoding.ASCII.GetBytes(signingInput)));
+
+            var response = await _service.GetValue(GetRequest(StoredKey), Context(token));
+            Assert.Equal(StoredValue, response.Data.ToByteArray());
+        }
+
         public static IEnumerable<object?[]> UnauthenticatedHeaders() => new[]
         {
             new object?[] { null },
             new object?[] { "Basic abc" },
             new object?[] { "Bearer not-a-jwt" },
-            new object?[] { "Bearer " + Token(key: "another-key-another-key-another-key") },
-            new object?[] { "Bearer " + Token(key: GraphQLJwtKey) },
+            new object?[] { "Bearer " + Token(key: "another-key") },
+            new object?[] { "Bearer " + Token(issuer: "someone-else") },
             new object?[] { "Bearer " + Token(expires: DateTime.UtcNow.AddMinutes(-10)) },
             new object?[] { "Bearer " + Token(expires: DateTime.UtcNow.AddHours(2)) },
             new object?[] { "Bearer " + Token(withExpiry: false) },
@@ -84,32 +100,12 @@ namespace NineChronicles.Headless.Tests
 
         [Theory]
         [InlineData(null)]
-        [InlineData("graphql:read")]
-        [InlineData("remote-kv:readwrite")]
-        public async Task PermissionDeniedWithoutScope(string? scope)
-        {
-            var e = await Assert.ThrowsAsync<RpcException>(
-                () => _service.GetValue(GetRequest(StoredKey), Context(Token(scope: scope))));
-            Assert.Equal(StatusCode.PermissionDenied, e.StatusCode);
-        }
-
-        [Fact]
-        public async Task ScopeAmongOthers()
-        {
-            var response = await _service.GetValue(
-                GetRequest(StoredKey),
-                Context(Token(scope: "graphql:read " + ReadOnlyRemoteKeyValueService.RequiredScope)));
-            Assert.Equal(StoredValue, response.Data.ToByteArray());
-        }
-
-        [Theory]
-        [InlineData(null)]
-        [InlineData("too-short-key")]
+        [InlineData(ReadOnlyRemoteKeyValueService.DefaultJwtKey)]
         public async Task RefusesEverythingWithoutUsableKey(string? key)
         {
             var service = CreateService(key);
             var e = await Assert.ThrowsAsync<RpcException>(
-                () => service.GetValue(GetRequest(StoredKey), Context(Token())));
+                () => service.GetValue(GetRequest(StoredKey), Context(Token(key: key ?? Key))));
             Assert.Equal(StatusCode.Unauthenticated, e.StatusCode);
         }
 
@@ -143,11 +139,10 @@ namespace NineChronicles.Headless.Tests
 
         private ReadOnlyRemoteKeyValueService CreateService(string? key)
         {
-            // Jwt:Key is the GraphQL key; it must never be accepted by this service.
-            var settings = new Dictionary<string, string?> { ["Jwt:Key"] = GraphQLJwtKey };
+            var settings = new Dictionary<string, string?> { ["Jwt:Issuer"] = Issuer };
             if (key is not null)
             {
-                settings[ReadOnlyRemoteKeyValueService.JwtKeyConfigurationKey] = key;
+                settings["Jwt:Key"] = key;
             }
 
             var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
@@ -164,30 +159,20 @@ namespace NineChronicles.Headless.Tests
 
         private static string Token(
             string key = Key,
-            string? scope = ReadOnlyRemoteKeyValueService.RequiredScope,
+            string issuer = Issuer,
             DateTime? expires = null,
             bool withExpiry = true,
-            string algorithm = SecurityAlgorithms.HmacSha256,
-            DateTime? notBefore = null)
+            DateTime? notBefore = null,
+            string algorithm = SecurityAlgorithms.HmacSha256)
         {
-            var claims = new List<Claim>();
-            if (scope is not null)
-            {
-                claims.Add(new Claim("scope", scope));
-            }
-
-            var keyBytes = Encoding.UTF8.GetBytes(key);
-            if (algorithm == SecurityAlgorithms.HmacSha512 && keyBytes.Length < 64)
-            {
-                keyBytes = Encoding.UTF8.GetBytes(key.PadRight(64, '0'));
-            }
-
             var exp = expires ?? DateTime.UtcNow.AddMinutes(5);
             var token = new JwtSecurityToken(
-                claims: claims,
+                issuer: issuer,
                 notBefore: notBefore,
                 expires: withExpiry ? exp : null,
-                signingCredentials: new SigningCredentials(new SymmetricSecurityKey(keyBytes), algorithm));
+                signingCredentials: new SigningCredentials(
+                    new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key.PadRight(512 / 8, '\0'))),
+                    algorithm));
             return new JwtSecurityTokenHandler { SetDefaultTimesOnTokenCreation = false }.WriteToken(token);
         }
 
@@ -196,7 +181,7 @@ namespace NineChronicles.Headless.Tests
             static string Encode(string json) => Base64UrlEncoder.Encode(Encoding.UTF8.GetBytes(json));
             var exp = DateTimeOffset.UtcNow.AddMinutes(5).ToUnixTimeSeconds();
             return Encode("{\"alg\":\"none\",\"typ\":\"JWT\"}") + "." +
-                   Encode($"{{\"scope\":\"{ReadOnlyRemoteKeyValueService.RequiredScope}\",\"exp\":{exp}}}") + ".";
+                   Encode($"{{\"iss\":\"{Issuer}\",\"exp\":{exp}}}") + ".";
         }
 
         private sealed class FakeServerCallContext : ServerCallContext
