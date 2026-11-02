@@ -15,6 +15,8 @@ namespace NineChronicles.Headless.Properties
         public bool UseMagicOnion { get; set; }
         public bool UseRemoteKeyValueService { get; set; }
 
+        public bool UseReadOnlyRemoteKeyValueService { get; set; }
+
         public MagicOnionHttpOptions? HttpOptions { get; set; }
 
         public readonly struct MagicOnionHttpOptions

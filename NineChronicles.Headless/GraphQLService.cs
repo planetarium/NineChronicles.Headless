@@ -43,6 +43,8 @@ namespace NineChronicles.Headless
 
         public const string UseRemoteKeyValueServiceKey = "useRemoteKeyValueService";
 
+        public const string UseReadOnlyRemoteKeyValueServiceKey = "useReadOnlyRemoteKeyValueService";
+
         public const string MagicOnionTargetKey = "magicOnionTarget";
 
         private StandaloneContext StandaloneContext { get; }
@@ -92,6 +94,11 @@ namespace NineChronicles.Headless
                         if (GraphQlNodeServiceProperties.UseRemoteKeyValueService)
                         {
                             dictionary[UseRemoteKeyValueServiceKey] = string.Empty;
+                        }
+
+                        if (GraphQlNodeServiceProperties.UseReadOnlyRemoteKeyValueService)
+                        {
+                            dictionary[UseReadOnlyRemoteKeyValueServiceKey] = string.Empty;
                         }
 
                         if (GraphQlNodeServiceProperties.HttpOptions is { } options)
@@ -265,7 +272,12 @@ namespace NineChronicles.Headless
                 {
                     endpoints.MapControllers();
 
-                    if (Configuration[UseRemoteKeyValueServiceKey] is not null)
+                    // The read-only service wins when both are on: the writable one is a debugging tool.
+                    if (Configuration[UseReadOnlyRemoteKeyValueServiceKey] is not null)
+                    {
+                        endpoints.MapGrpcService<ReadOnlyRemoteKeyValueService>();
+                    }
+                    else if (Configuration[UseRemoteKeyValueServiceKey] is not null)
                     {
                         endpoints.MapGrpcService<RemoteKeyValueService>();
                     }
