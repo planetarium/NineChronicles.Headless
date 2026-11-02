@@ -43,6 +43,8 @@ namespace NineChronicles.Headless
 
         public const string UseRemoteKeyValueServiceKey = "useRemoteKeyValueService";
 
+        public const string UseReadOnlyRemoteKeyValueServiceKey = "useReadOnlyRemoteKeyValueService";
+
         public const string MagicOnionTargetKey = "magicOnionTarget";
 
         private StandaloneContext StandaloneContext { get; }
@@ -94,6 +96,11 @@ namespace NineChronicles.Headless
                             dictionary[UseRemoteKeyValueServiceKey] = string.Empty;
                         }
 
+                        if (GraphQlNodeServiceProperties.UseReadOnlyRemoteKeyValueService)
+                        {
+                            dictionary[UseReadOnlyRemoteKeyValueServiceKey] = string.Empty;
+                        }
+
                         if (GraphQlNodeServiceProperties.HttpOptions is { } options)
                         {
                             dictionary[MagicOnionTargetKey] = options.Target;
@@ -129,6 +136,13 @@ namespace NineChronicles.Headless
 
             public void ConfigureServices(IServiceCollection services)
             {
+                if (Configuration[UseReadOnlyRemoteKeyValueServiceKey] is not null)
+                {
+                    // One instance for the process: the token validation setup (and its warning when the key
+                    // is missing) is not repeated per call, as it would be for a per-request gRPC service.
+                    services.AddSingleton<ReadOnlyRemoteKeyValueService>();
+                }
+
                 if (Convert.ToBoolean(Configuration.GetSection("IpRateLimiting")["EnableEndpointRateLimiting"]))
                 {
                     services.AddOptions();
@@ -265,7 +279,18 @@ namespace NineChronicles.Headless
                 {
                     endpoints.MapControllers();
 
-                    if (Configuration[UseRemoteKeyValueServiceKey] is not null)
+                    // The read-only service wins when both are on: the writable one is a debugging tool.
+                    if (Configuration[UseReadOnlyRemoteKeyValueServiceKey] is not null)
+                    {
+                        if (Configuration[UseRemoteKeyValueServiceKey] is not null)
+                        {
+                            Log.Warning(
+                                "Both remote key-value services are on; serving only the read-only one.");
+                        }
+
+                        endpoints.MapGrpcService<ReadOnlyRemoteKeyValueService>();
+                    }
+                    else if (Configuration[UseRemoteKeyValueServiceKey] is not null)
                     {
                         endpoints.MapGrpcService<RemoteKeyValueService>();
                     }
