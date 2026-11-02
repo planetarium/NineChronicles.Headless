@@ -66,6 +66,7 @@ namespace NineChronicles.Headless.Tests
             new object?[] { "Bearer " + Token(expires: DateTime.UtcNow.AddMinutes(-10)) },
             new object?[] { "Bearer " + Token(expires: DateTime.UtcNow.AddHours(2)) },
             new object?[] { "Bearer " + Token(withExpiry: false) },
+            new object?[] { "Bearer " + Token(notBefore: DateTime.UtcNow.AddMinutes(10), expires: DateTime.UtcNow.AddMinutes(30)) },
             new object?[] { "Bearer " + Token(algorithm: SecurityAlgorithms.HmacSha512) },
             new object?[] { "Bearer " + UnsignedToken() },
         };
@@ -166,7 +167,8 @@ namespace NineChronicles.Headless.Tests
             string? scope = ReadOnlyRemoteKeyValueService.RequiredScope,
             DateTime? expires = null,
             bool withExpiry = true,
-            string algorithm = SecurityAlgorithms.HmacSha256)
+            string algorithm = SecurityAlgorithms.HmacSha256,
+            DateTime? notBefore = null)
         {
             var claims = new List<Claim>();
             if (scope is not null)
@@ -183,6 +185,7 @@ namespace NineChronicles.Headless.Tests
             var exp = expires ?? DateTime.UtcNow.AddMinutes(5);
             var token = new JwtSecurityToken(
                 claims: claims,
+                notBefore: notBefore,
                 expires: withExpiry ? exp : null,
                 signingCredentials: new SigningCredentials(new SymmetricSecurityKey(keyBytes), algorithm));
             return new JwtSecurityTokenHandler { SetDefaultTimesOnTokenCreation = false }.WriteToken(token);
