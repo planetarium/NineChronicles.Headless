@@ -21,13 +21,22 @@ namespace NineChronicles.Headless;
 /// <para>
 /// Only <see cref="GetValue"/> and <see cref="ExistsKey"/> are implemented; writes, deletes and
 /// <c>ListKeys</c> are left to the generated base class, which answers <see cref="StatusCode.Unimplemented"/>.
-/// Every call requires a JWT signed with <c>Jwt:Key</c> (issuer <c>Jwt:Issuer</c>) whose <c>scope</c>
-/// claim contains <see cref="RequiredScope"/>. Without <c>Jwt:Key</c> every call is refused.
+/// Every call requires an HS256 JWT signed with <c>RemoteKeyValueService:JwtKey</c> — a key of its own,
+/// so these tokens grant nothing elsewhere (the GraphQL <c>Jwt:Key</c> is not accepted) — whose
+/// <c>scope</c> claim contains <see cref="RequiredScope"/> and which expires within
+/// <see cref="MaxTokenLifetime"/>. Without a key of at least <see cref="MinKeyLength"/> bytes every call
+/// is refused.
 /// </para>
 /// </summary>
 public class ReadOnlyRemoteKeyValueService : KeyValueStore.KeyValueStoreBase
 {
+    public const string JwtKeyConfigurationKey = "RemoteKeyValueService:JwtKey";
+
     public const string RequiredScope = "remote-kv:read";
+
+    public const int MinKeyLength = 32;
+
+    public static readonly TimeSpan MaxTokenLifetime = TimeSpan.FromHours(1);
 
     private readonly ILogger _logger;
     private readonly IKeyValueStore _baseStore;
@@ -39,24 +48,28 @@ public class ReadOnlyRemoteKeyValueService : KeyValueStore.KeyValueStoreBase
         _logger = Log.Logger.ForContext<ReadOnlyRemoteKeyValueService>();
         _baseStore = baseStore;
 
-        var jwtConfig = configuration.GetSection("Jwt");
-        var key = jwtConfig["Key"];
-        if (string.IsNullOrEmpty(key))
+        var key = configuration[JwtKeyConfigurationKey];
+        if (key is null || Encoding.UTF8.GetByteCount(key) < MinKeyLength)
         {
-            _logger.Warning("Jwt:Key is not configured; every read-only remote key-value request will be refused.");
+            _logger.Warning(
+                "{ConfigKey} is missing or shorter than {MinKeyLength} bytes; " +
+                "every read-only remote key-value request will be refused.",
+                JwtKeyConfigurationKey,
+                MinKeyLength);
             return;
         }
 
-        // Same key derivation as JwtAuthenticationMiddleware, so one issuer serves both.
         _validationParams = new TokenValidationParameters
         {
-            ValidateIssuer = true,
+            ValidateIssuer = false,
             ValidateAudience = false,
             ValidateLifetime = true,
             RequireExpirationTime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtConfig["Issuer"] ?? "",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key.PadRight(512 / 8, '\0'))),
+            ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha256 },
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+            LifetimeValidator = (_, expires, _, _) =>
+                expires is { } exp && exp > DateTime.UtcNow && exp - DateTime.UtcNow <= MaxTokenLifetime,
         };
     }
 
@@ -105,7 +118,8 @@ public class ReadOnlyRemoteKeyValueService : KeyValueStore.KeyValueStoreBase
         }
         catch (Exception e) when (e is SecurityTokenException or ArgumentException)
         {
-            _logger.Information("Rejected read-only remote key-value request from {Peer}: {Message}", context.Peer, e.Message);
+            // Debug, not Information: anyone can send these, and they must not be able to flood the logs.
+            _logger.Debug("Rejected read-only remote key-value request from {Peer}: {Message}", context.Peer, e.Message);
             throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token."));
         }
 
