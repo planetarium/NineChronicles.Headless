@@ -29,6 +29,7 @@ using NineChronicles.Headless.GraphTypes.States.Models;
 using NineChronicles.Headless.GraphTypes.States.Models.Item;
 using NineChronicles.Headless.GraphTypes.States.Models.Item.Enum;
 using NineChronicles.Headless.GraphTypes.States.Models.Table;
+using NineChronicles.Headless.GraphTypes.States.Models.WorldOpen;
 using Nekoyume.Model.Guild;
 using NineChronicles.Headless.Utils;
 using Nekoyume.Module.Guild;
@@ -856,6 +857,35 @@ namespace NineChronicles.Headless.GraphTypes
 
                     return null;
                 }
+            );
+
+            Field<NonNullGraphType<WorldOpenType>>(
+                name: "worldOpen",
+                description: "Hard world opening state at tip + 1. Draft sheet CSVs are laid over the " +
+                    "tip state to preview them; draft problems are returned in `errors`.",
+                arguments: new QueryArguments(
+                    new QueryArgument<StringGraphType>
+                    {
+                        Name = "worldOpenSheetCsv",
+                        Description = "Draft WorldOpenSheet CSV."
+                    },
+                    new QueryArgument<StringGraphType>
+                    {
+                        Name = "worldOpenConditionSheetCsv",
+                        Description = "Draft WorldOpenConditionSheet CSV."
+                    },
+                    new QueryArgument<StringGraphType>
+                    {
+                        Name = "globalCounterSheetCsv",
+                        Description = "Draft GlobalCounterSheet CSV."
+                    }
+                ),
+                resolve: context => WorldOpenEvaluator.Evaluate(
+                    context.Source.WorldState,
+                    context.Source.BlockIndex,
+                    context.GetArgument<string?>("worldOpenSheetCsv"),
+                    context.GetArgument<string?>("worldOpenConditionSheetCsv"),
+                    context.GetArgument<string?>("globalCounterSheetCsv"))
             );
         }
 
